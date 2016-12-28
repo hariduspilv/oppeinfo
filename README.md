@@ -1,2 +1,2 @@
-# oppeinfo
-Haridustasemete ülene õppeinfosüsteem (ÕIS2)
+# ÕIS2
+Haridustasemete ülene õppeinfosüsteem
