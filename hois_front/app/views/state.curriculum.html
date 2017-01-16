@@ -1,0 +1,330 @@
+<div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+  <div>
+        <div class="indentForToast"></div>
+        <form name="stateCurriculumForm">
+          <div layout="column">
+            <!--  {"paramName": "nameEt", "url": "/stateCurriculum/unique", "id" : stateCurriculum.id}-->
+            <!--   ng-model-options="{ debounce: 250 }" unique='{{nameEtUniqueQuery}}'  -->
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.nameEt' | translate}}</label>
+              <input ng-model="stateCurriculum.nameEt" type="text" required md-maxlength="255" name="nameEt">
+              <div ng-messages="stateCurriculumForm.nameEt.$error" ng-show="stateCurriculumForm.nameEt.$dirty">
+                  <div ng-message="notUnique">
+                    {{'stateCurriculum.error.unique.name' | translate}}
+                  </div>
+              </div>
+            </md-input-container>
+            <!--  ng-model-options="{ debounce: 250 }" unique="{{nameEnUniqueQuery}}"   -->
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.nameEn' | translate}}</label>
+              <input ng-model="stateCurriculum.nameEn" type="text" required md-maxlength="255" name="nameEn">
+              <div ng-messages="stateCurriculumForm.nameEn.$error" ng-show="true">
+                  <div ng-message="notUnique">
+                    {{'stateCurriculum.error.unique.name' | translate}}
+                  </div>
+              </div>
+            </md-input-container>
+
+            <div>
+            <md-input-container flex="150">
+              <label>{{'curriculum.areaOfStudy' | translate}}</label>
+              <md-select ng-model="stateCurriculum.iscedVald" required ng-change="resetAndGetClassifierSuuns()">
+                <md-option ng-repeat="classifier in listOfClassifierValds" ng-value="classifier.code">
+                  {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+            <br>
+            <md-input-container>
+              <label>{{'curriculum.fieldOfStudy' | translate}}</label>
+              <md-select ng-model="stateCurriculum.iscedSuun" ng-disabled="!stateCurriculum.iscedVald" required ng-change="getClassifierGroups()">
+                <md-option ng-repeat="classifier in listOfClassifierSuuns" ng-value="classifier.code">
+                  {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+            <br>
+            <md-input-container>
+              <label>{{'curriculum.group' | translate}}</label>
+              <md-select ng-model="stateCurriculum.iscedClass" ng-disabled="!stateCurriculum.iscedSuun" required ng-model-options="{trackBy: '$value.code'}">
+                <md-option ng-repeat="classifier in listOfClassifierGroups track by classifier.code" ng-value="classifier">
+                  {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+          </div>
+
+            <p ng-class="{invalid: autocompleteTouched && !hasAnyOccupation() }">{{'stateCurriculum.enter.occupation.acquiredMany' | translate}}&nbsp;*</p>
+
+            <md-autocomplete
+                name="occupationInput"
+                md-selected-item="occupation"
+                md-search-text="queryText"
+                md-items="item in querySearch(queryText, connection.code)"
+                md-item-text="currentLanguage()=='en' ? item.nameEn : item.nameEt"
+                md-min-length="0"
+                placeholder="{{'stateCurriculum.enter.occupation.add' | translate}}"
+                ng-model="queryText"
+                md-no-cache
+                md-selected-item-change="addOcupation(occupation)"
+                >
+
+              <md-item-template>
+                <span md-highlight-text="queryText" md-highlight-flags="^i">{{currentLanguage()=='en' ? item.nameEn : item.nameEt}}</span>
+              </md-item-template>
+
+              <md-not-found>
+                {{'main.messages.error.notFound' | translate}}
+              </md-not-found>
+
+            </md-autocomplete>
+
+            <div ng-repeat="occupation in stateCurriculum.occupations">
+              <p class="occupationTitle"><b>{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}: </b>{{currentLanguage()=='en' ? occupation.occupation.nameEn : occupation.occupation.nameEt}}
+                <md-button class="remove" ng-click="removeOcupation(occupation)">&times;</md-button>
+              </p>
+              <p ng-if="hasSpetsialiseerumised(occupation.occupation.children)"><b>{{'stateCurriculum.enter.occupation.specialties' | translate}}:</b></p>
+              <span ng-repeat="child in occupation.occupation.children | filter:{ mainClassCode: 'SPETSKUTSE'}"><span ng-if="$index > 0">; </span>{{child.nameEt}}</span>
+              <p ng-if="hasOsakutsed(occupation.occupation.children)"><b>
+                {{'stateCurriculum.enter.occupation.partials' | translate}}:</b></p>
+              <span ng-repeat="child in occupation.occupation.children | filter:{ mainClassCode: 'OSAKUTSE'}"><span ng-if="$index > 0">; </span>{{child.nameEt}}</span>
+              <hr>
+            </div>
+            <br>
+
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.objectivesEt' | translate}}</label>
+              <textarea ng-model="stateCurriculum.objectivesEt" type="text" required md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.objectivesEn' | translate}}</label>
+              <textarea ng-model="stateCurriculum.objectivesEn" type="text" md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.outcome.outcomeLabelEt' | translate}}</label>
+              <textarea ng-model="stateCurriculum.outcomesEt" type="text" required md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.outcome.outcomeLabelEn' | translate}}</label>
+              <textarea ng-model="stateCurriculum.outcomesEn" type="text" md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.admission.requirementsEt' | translate}}</label>
+              <textarea ng-model="stateCurriculum.admissionRequirementsEt" type="text" required md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.admission.requirementsEn' | translate}}</label>
+              <textarea ng-model="stateCurriculum.admissionRequirementsEn" type="text" md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.graduation.requirementsEt' | translate}}</label>
+              <textarea ng-model="stateCurriculum.graduationRequirementsEt" type="text" required md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.graduation.requirementsEn' | translate}}</label>
+              <textarea ng-model="stateCurriculum.graduationRequirementsEn" type="text" md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.credits.credits' | translate}}</label>
+              <input ng-model="stateCurriculum.credits" type="number" pattern="^\d+$" required min="0" name="credits">
+              <!--TODO: removed for testing other features. Do not forget to put it back-->
+              <!-- credits-correct-->
+
+              <div ng-messages="stateCurriculumForm.credits.$error" ng-show="stateCurriculumForm.credits.$dirty">
+                  <div ng-message="min">
+                    {{'stateCurriculum.enter.credits.positive' | translate}}
+                  </div>
+                  <div ng-message="pattern">
+                    {{'stateCurriculum.enter.credits.integer' | translate}}
+                  </div>
+                  <div ng-message="wrongCredits">
+                    Wrong number of credits!
+                  </div>
+              </div>
+
+            </md-input-container>
+            <!--KUTSED-->
+            <md-input-container>
+              <label>{{'stateCurriculum.enter.ROKclassifier' | translate}}</label>
+              <md-select ng-model="stateCurriculum.stateCurrClass" required ng-model-options="{ trackBy: '$value.code' }">
+                <md-option ng-repeat="classifier in listOfStateCurrClassifiers track by classifier.code" ng-value="classifier">
+                  {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+            <div ng-if="stateCurriculum.occupations.length > 0">
+              <h3>{{'stateCurriculum.enter.module.modules' | translate}}&nbsp;*</h3>
+              <a class="addNew" href="#/stateCurriculum/module" ng-click="saveForm()">{{'stateCurriculum.enter.module.add' | translate}}</a>
+              <br><br>
+              <div ng-repeat="occupation in stateCurriculum.occupations">
+                <br>
+                <p class="occupationTitle"><b>{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}: </b>{{currentLanguage()=='en' ? occupation.occupation.nameEn : occupation.occupation.nameEt}}</p>
+                <h4>{{'stateCurriculum.enter.module.modules1' | translate}}</h4>
+                  <p ng-repeat="module in stateCurriculum.modules | filter: filterModules(occupation.occupation, 'KUTSEMOODUL_Y')">
+                  <a ng-click="editModule(module)" href="#/stateCurriculum/module">{{'stateCurriculum.enter.module.modules11' | translate}} {{$index + 1}} ({{currentLanguage()=='en' ? module.nameEn : module.nameEt}})</a>&nbsp;&nbsp;&nbsp;{{module.credits}}&nbsp; EKAP <md-button class="remove" ng-click="removeModule(occupation.occupation, module)">&times;</md-button>
+                </p>
+                <h4 ng-class="{invalid: hasNoPmodule(occupation.occupation)}">{{'stateCurriculum.enter.module.modules2' | translate}}&nbsp;*</h4>
+                <p ng-repeat="module in stateCurriculum.modules | filter: filterModules(occupation.occupation, 'KUTSEMOODUL_P')">
+                  <a ng-click="editModule(module)" href="#/stateCurriculum/module">{{'stateCurriculum.enter.module.modules22' | translate}} {{$index + 1}} ({{currentLanguage()=='en' ? module.nameEn : module.nameEt}})</a>&nbsp;&nbsp;&nbsp;{{module.credits}}&nbsp; EKAP <md-button class="remove" ng-click="removeModule(occupation.occupation, module)">&times;</md-button>
+                </p>
+              </div>
+            </div>
+            <!--SPETSKUTSED-->
+            <div ng-repeat="occupation in stateCurriculum.occupations">
+              <div ng-repeat = "suboccupation in occupation.occupation.children | filter: {mainClassCode: 'SPETSKUTSE'}" >
+                <p class="occupationTitle"><b>{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: </b>{{currentLanguage()=='en' ? suboccupation.nameEn : suboccupation.nameEt}}</p>
+                <h4>{{'stateCurriculum.enter.module.modules1' | translate}}</h4>
+                <ul>
+                  <li ng-repeat="module in stateCurriculum.modules | filter: filterModules(suboccupation, 'KUTSEMOODUL_Y')">
+                    <a ng-click="editModule(module)" href="#/stateCurriculum/module">{{'stateCurriculum.enter.module.modules11' | translate}} {{$index + 1}} ({{currentLanguage()=='en' ? module.nameEn : module.nameEt}})</a>&nbsp;&nbsp;&nbsp;{{module.credits}}&nbsp; EKAP <md-button class="remove" ng-click="removeModule(suboccupation, module)">&times;</md-button>
+                  </li>
+                </ul>
+                <!--TODO: add ng class invalid!-->
+                <h4 ng-class="">{{'stateCurriculum.enter.module.modules2' | translate}}&nbsp;*</h4>
+                <ul>
+                  <li ng-repeat="module in stateCurriculum.modules | filter: filterModules(suboccupation, 'KUTSEMOODUL_P')">
+                    <a ng-click="editModule(module)" href="#/stateCurriculum/module">{{'stateCurriculum.enter.module.modules22' | translate}} {{$index + 1}} ({{currentLanguage()=='en' ? module.nameEn : module.nameEt}})</a>&nbsp;&nbsp;&nbsp;{{module.credits}}&nbsp;EKAP <md-button class="remove" ng-click="removeModule(suboccupation, module)">&times;</md-button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <br>
+            <!-- OSAKUTSED-->
+            <div ng-repeat="occupation in stateCurriculum.occupations">
+              <div ng-repeat = "suboccupation in occupation.occupation.children | filter: {mainClassCode: 'OSAKUTSE'}" >
+                <p class="occupationTitle"><b>{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}: </b>{{currentLanguage()=='en' ? suboccupation.nameEn : suboccupation.nameEt}}</p>
+                <h4>{{'stateCurriculum.enter.module.modules1' | translate}}</h4>
+                <ul>
+                  <li ng-repeat="module in stateCurriculum.modules | filter: filterModules(suboccupation, 'KUTSEMOODUL_Y')">
+                    <a ng-click="editModule(module)" href="#/stateCurriculum/module">{{'stateCurriculum.enter.module.modules11' | translate}} {{$index + 1}} ({{currentLanguage()=='en' ? module.nameEn : module.nameEt}})</a>&nbsp;&nbsp;&nbsp;{{module.credits}}&nbsp; EKAP <md-button class="remove" ng-click="removeModule(suboccupation, module)">&times;</md-button>
+                  </li>
+                </ul>
+                <!--TODO: add ng class invalid!-->
+                <h4 ng-class="">{{'stateCurriculum.enter.module.modules2' | translate}}&nbsp;*</h4>
+                <ul>
+                  <li ng-repeat="module in stateCurriculum.modules | filter: filterModules(suboccupation, 'KUTSEMOODUL_P')">
+                    <a ng-click="editModule(module)" href="#/stateCurriculum/module">{{'stateCurriculum.enter.module.modules22' | translate}} {{$index + 1}} ({{currentLanguage()=='en' ? module.nameEn : module.nameEt}})</a>&nbsp;&nbsp;&nbsp;{{module.credits}}&nbsp; EKAP <md-button class="remove" ng-click="removeModule(suboccupation, module)">&times;</md-button>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            <br>
+
+            <!--TODO: try to style position of this div's content
+            without css and !important-->
+            <div layout="row">
+              <h4>{{'stateCurriculum.enter.module.modules3' | translate}}&nbsp;*</h4>
+              &nbsp;&nbsp;&nbsp;
+              <md-input-container class="numberInput">
+                <input name="vocationalCredits" type="number" ng-model="stateCurriculum.optionalStudyCredits" required aria-label="optional credits" class="shiftDown1" min="0">
+
+              <div ng-messages="stateCurriculumForm.vocationalCredits.$error" ng-show="stateCurriculumForm.vocationalCredits.$dirty">
+                  <div ng-message="min">
+                    {{'stateCurriculum.enter.credits.positive' | translate}}
+                  </div>
+              </div>
+              </md-input-container><span class="shiftDown2">EKAP</span>
+            </div>
+
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.practice' | translate}}</label>
+              <textarea ng-model="stateCurriculum.practiceDescription" type="text" md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.finalExam' | translate}}</label>
+              <textarea ng-model="stateCurriculum.finalExamDescription" type="text" md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+
+            <div layput="row">
+              <label>{{'stateCurriculum.enter.validPeriod' | translate}}</label>
+              <md-input-container>
+                  <label>{{'stateCurriculum.enter.validFrom' | translate}}</label>
+                  <md-datepicker ng-model="stateCurriculum.validFrom" required md-open-on-focus>
+                  </md-datepicker>
+              </md-input-container>
+              <md-input-container>
+                  <label>{{'stateCurriculum.enter.validThru' | translate}}</label>
+                  <md-datepicker ng-model="stateCurriculum.validThru" md-min-date="stateCurriculum.validFrom" md-open-on-focus>
+                  </md-datepicker>
+              </md-input-container>
+            </div>
+
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.comment' | translate}}</label>
+              <textarea ng-model="stateCurriculum.description" type="text" md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'stateCurriculum.enter.riigiteataja' | translate}}</label>
+              <input ng-model="stateCurriculum.riigiteatajaUrl" type="text"  md-maxlength="4000">
+            </md-input-container>
+
+            <div>
+              <span>{{'stateCurriculum.status' | translate}}: <b>{{stateCurriculum.status.nameEt}}</b>   </span>&nbsp;&nbsp;&nbsp;
+
+                <md-button ng-if="stateCurriculum.id" ng-repeat="status in statuses | filter: filterStatuses" ng-click="setStatus(status)">{{status.change}}</md-button>
+
+              <br><br><br>
+            </div>
+
+            <div layout="column">
+              <span class="md-headline">{{'curriculum.informativeSection' | translate}}</span>
+              <span class="md-subtitle">{{'main.insertedOrChanged' | translate}}</span>
+
+              <md-table-container>
+                <table md-table md-progress="promise">
+                  <thead md-head md-order="query.order">
+                  <tr md-row>
+                    <th md-column><span>{{'main.status' | translate}}</span></th>
+                    <th md-column><span>{{'main.insertOrChangeDate' | translate}}</span></th>
+                    <th md-column>{{'main.insertedOrChangedByFirstAndLastName' | translate}}</th>
+                  </tr>
+                  </thead>
+                  <tbody md-body>
+                  <tr md-row>
+                    <td md-cell>test</td>
+                    <td md-cell>test</td>
+                    <td md-cell>test</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </md-table-container>
+
+              <span class="md-subtitle">{{'stateCurriculum.info.createdOccupationalCurriculums' | translate}}</span>
+              <md-table-container>
+                <table md-table md-progress="promise">
+                  <thead md-head md-order="query.order">
+                  <tr md-row>
+                    <th md-column>{{'stateCurriculum.info.schoolName' | translate}}</th>
+                    <th md-column>{{'stateCurriculum.info.curriculumName' | translate}}</th>
+                    <th md-column>{{'stateCurriculum.info.curriculumHtmCode' | translate}}</th>
+                    <th md-column>{{'stateCurriculum.info.curriculumStatus' | translate}}</th>
+                  </tr>
+                  </thead>
+                  <tbody md-body>
+                  <tr md-row>
+                    <td md-cell>test</td>
+                    <td md-cell>test</td>
+                    <td md-cell>test</td>
+                    <td md-cell>test</td>
+                  </tr>
+                  </tbody>
+                </table>
+              </md-table-container>
+
+            </div>
+
+          </div>
+        </form>
+        <!--TODO: add suboccupationsValid-->
+        <!--TODO:  || !areOccupationsValid-->
+            <md-button ng-click="validate()"
+                 class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+            <md-button ng-click="delete()"
+               ng-if="stateCurriculum.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+            <md-button ng-click="abort()"
+                 class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

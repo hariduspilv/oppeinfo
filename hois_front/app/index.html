@@ -1,0 +1,210 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
+    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+    <!-- build:css(.) styles/vendor.css -->
+    <!-- bower:css -->
+    <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
+    <link rel="stylesheet" href="bower_components/angular-material-data-table/dist/md-data-table.css" />
+    <link rel="stylesheet" href="bower_components/lf-ng-md-file-input/dist/lf-ng-md-file-input.css" />
+    <!-- endbower -->
+    <!-- endbuild -->
+    <!-- build:css(.tmp) styles/main.css -->
+    <link rel="stylesheet" href="styles/main.css">
+    <link rel="stylesheet" href="styles/material-icons.css">
+    <!-- endbuild -->
+  </head>
+  <body ng-app="hitsaOis" layout="row" ng-controller="MainController" ng-cloak>
+    <md-sidenav md-colors="{background: 'primary-800'}" class="site-sidenav md-sidenav-left md-whiteframe-z2"
+                md-component-id="left" md-is-locked-open="$mdMedia('gt-xs')" md-whiteframe="1">
+
+      <header class="nav-header" layout="column">
+        <div layout="row" layout-padding>
+          <div layout="column" layout-align="none">
+            <img class="logo" ng-src="{{auth.school.id > 0 ? auth.school.img : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/>
+          </div>
+		  <div layout="column" layout-align="end">
+			<div layout="row" layout-align="end">
+				<a ng-href="/" class="md-subhead">{{ 'main.applicationTitle' | translate }}</a>
+			</div>
+			<div layout="row" layout-align="space-around end">
+				<md-button ng-class="{'md-accent': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="language et">{{ 'main.language.et' | translate }}</md-button>
+				<md-button ng-class="{'md-accent': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="language en">{{ 'main.language.en' | translate }}</md-button>
+			</div>
+		  </div>
+        </div>
+      </header>
+
+      <md-content role="navigation" flex>
+        <ul class="docs-menu">
+          <li ng-repeat="section in Menu.sections" class="parent-list-item {{section.className || ''}}" ng-class="{'parentActive' : isSectionSelected(section)}">
+            <h2 class="menu-heading md-subhead" ng-if="section.type === 'heading'" id="heading_{{ section.name | nospace }}">
+              {{section.name}}
+            </h2>
+            <menu-link section="section" ng-if="section.type === 'link' && !section.hidden"></menu-link>
+            <menu-toggle section="section" ng-if="section.type === 'toggle' && !section.hidden"></menu-toggle>
+            <ul ng-if="section.children" class="menu-nested-list">
+              <li ng-repeat="child in section.children" ng-class="{'childActive' : isSectionSelected(child)}">
+                <menu-link section="child" ng-if="child.type === 'link'"></menu-link>
+                <menu-toggle section="child" ng-if="child.type === 'toggle'"></menu-toggle>
+              </li>
+            </ul>
+          </li>
+        </ul>
+      </md-content>
+    </md-sidenav>
+
+    <div layout="column" tabIndex="-1" role="main" flex>
+      <md-toolbar class="md-whiteframe-glow-z1 site-content-toolbar" layout="row" layout-align="start center" style="background-color: rgb(252, 252,252); color: #202020">
+        <div class="docs-toolbar-tools" tabIndex="-1">
+          <div hide-gt-xs>
+            <md-button ng-click="leftSideNavToggle()" class="md-icon-button" aria-label="Toggle Menu">
+              <md-icon md-font-set="material-icons md-dark">menu</md-icon>
+            </md-button>
+          </div>
+          <div class="md-toolbar-tools" layout="row" flex class="fill-height">
+            <h2 class="md-toolbar-item md-breadcrumb md-headline">
+              <span ng-if="Menu.currentPage.name !== Menu.currentSection.name">
+                <span hide-sm hide-md>{{Menu.currentSection.name | translate}}</span>
+                <span class="docs-menu-separator-icon" hide-sm hide-md style="transform: translate3d(0, 1px, 0)">
+                  <span class="md-visually-hidden">-</span>
+                  <md-icon md-font-set="material-icons md-dark" style="margin-top: -2px">chevron_right</md-icon>
+                </span>
+              </span>
+              <span class="md-breadcrumb-page">{{Menu.currentPage.name | translate}}</span>
+            </h2>
+          </div>
+        </div>
+
+        <div ng-controller="LoginController" md-is-locked-open="$mdMedia('gt-xs')" layout="row" flex>
+          <div layout-align="end" flex>
+            <div layout="row" layout-align="end center" flex>
+              <span ng-show="auth" >{{ auth.fullname }}</span>
+              <md-button ng-show="!authenticated" ng-click="showLogin()">{{ 'main.logIn' | translate }}</md-button>
+              <md-button class="md-icon-button" ng-show="authenticated" ng-click="logout()" aria-label="log out">
+                <md-tooltip>
+                  {{ 'main.logOut' | translate }}
+                </md-tooltip>
+                <md-icon class="material-icons md-dark">lock</md-icon>
+              </md-button>
+
+            </div>
+            <div layout="row" layout-align="end" flex>
+              <md-select ng-show="auth" ng-model="userWork" ng-change="changeUser();" aria-label="change user">
+                <md-option ng-repeat="user in auth.users" value="{{user.id}}" style="font-size: medium;">
+                  {{user.roleEt}}
+                </md-option>
+              </md-select>
+            </div>
+          </div>
+          </div>
+
+      </md-toolbar>
+
+      <div layout="row" flex>
+
+        <md-content md-scroll-y flex>
+          <div ng-view=""></div>
+        </md-content>
+      </div>
+    </div>
+
+
+
+
+
+
+
+
+
+
+    <!-- build:js(.) scripts/vendor.js -->
+    <!-- bower:js -->
+    <script src="bower_components/angular/angular.js"></script>
+    <script src="bower_components/angular-animate/angular-animate.js"></script>
+    <script src="bower_components/angular-aria/angular-aria.js"></script>
+    <script src="bower_components/angular-messages/angular-messages.js"></script>
+    <script src="bower_components/angular-resource/angular-resource.js"></script>
+    <script src="bower_components/angular-route/angular-route.js"></script>
+    <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+    <script src="bower_components/angular-material/angular-material.js"></script>
+    <script src="bower_components/angular-translate/angular-translate.js"></script>
+    <script src="bower_components/angular-translate-loader-static-files/angular-translate-loader-static-files.js"></script>
+    <script src="bower_components/angular-material-data-table/dist/md-data-table.js"></script>
+    <script src="bower_components/angular-ui-router/release/angular-ui-router.js"></script>
+    <script src="bower_components/lf-ng-md-file-input/dist/lf-ng-md-file-input.js"></script>
+    <script src="bower_components/moment/moment.js"></script>
+    <script src="bower_components/ng-storage/ngStorage.js"></script>
+    <!-- endbower -->
+    <!-- endbuild -->
+
+        <!-- build:js({.tmp,app}) scripts/scripts.js -->
+        <script src="scripts/app.js"></script>
+
+        <script src="scripts/services/message.js"></script>
+        <script src="scripts/services/error.js"></script>
+
+        <script src="scripts/controllers/home.js"></script>
+        <script src="scripts/controllers/login.js"></script>
+        <script src="scripts/directives/hois.menu.js"></script>
+        <script src="scripts/directives/error.source.attr.js"></script>
+        <script src="scripts/services/menu.js"></script>
+        <script src="scripts/controllers/main.js"></script>
+        <script src="scripts/controllers/building.js"></script>
+        <script src="scripts/controllers/room.search.js"></script>
+        <script src="scripts/controllers/school.department.js"></script>
+        <script src="scripts/controllers/school.study.levels.js"></script>
+        <script src="scripts/controllers/subject.list.js"></script>
+        <script src="scripts/controllers/subject.edit.js"></script>
+        <script src="scripts/controllers/teacher.occupation.js"></script>
+
+        <script src="scripts/controllers/school.list.js"></script>
+        <script src="scripts/controllers/school.edit.js"></script>
+        <script src="scripts/services/school.js"></script>
+
+        <script src="scripts/controllers/classifier.list.js"></script>
+        <script src="scripts/controllers/classifier.content.list.js"></script>
+        <script src="scripts/controllers/classifier.content.edit.js"></script>
+        <script src="scripts/services/classifier.js"></script>
+        <script src="scripts/services/classifier.autocomplete.js"></script>
+
+        <script src="scripts/controllers/state.curriculum.js"></script>
+        <script src="scripts/services/state.curriculum.js"></script>
+        <script src="scripts/controllers/state.curriculum.module.js"></script>
+        <script src="scripts/directives/unique.attr.js"></script>
+        <script src="scripts/services/state.curriculum.occupation.validator.js"></script>
+
+        <script src="scripts/controllers/state.curriculum.list.js"></script>
+
+
+        <script src="scripts/controllers/vocational.curriculum.js"></script>
+        <script src="scripts/services/query.utils.js"></script>
+        <script src="scripts/controllers/state.curriculum.list.js"></script>
+        <script src="scripts/services/curriculum.js"></script>
+        <script src="scripts/services/dialog.service.js"></script>
+        <script src="scripts/services/classifier.connect.js"></script>
+        <script src="scripts/services/array.utils.js"></script>
+
+        <script src="scripts/directives/hois.created.modified.js"></script>
+        <script src="scripts/directives/hois.classifier.radio.js"></script>
+        <script src="scripts/directives/hois.classifier.select.js"></script>
+        <script src="scripts/directives/hois.classifier.value.js"></script>
+        <script src="scripts/directives/hois.multi.text.js"></script>
+        <script src="scripts/services/data.utils.js"></script>
+        <script src="scripts/directives/hois.input.file.js"></script>
+
+        <script src="scripts/controllers/curriculum.list.js"></script>
+        <script src="scripts/controllers/higher.education.curriculum.js"></script>
+        <script src="scripts/services/ois.file.service.js"></script>
+
+        <!-- endbuild -->
+        <script src="config.js"></script>
+</body>
+</html>
+
+

@@ -1,0 +1,259 @@
+{
+	"validFrom": "2017-01-11T11:30:51.851Z",
+	"selectedOccupationsPartOccupations": [{
+			"occupation": {
+				"code": "KUTSE_10491530",
+				"nameEt": "Abiaednik, tase 2",
+				"nameEn": null
+			},
+			"partOccupations": [{
+					"version": 0,
+					"inserted": "2016-11-16T22:29:08.172364Z",
+					"insertedBy": null,
+					"changed": null,
+					"changedBy": null,
+					"code": "OSAKUTSE_10491569",
+					"value": "10491569",
+					"value2": null,
+					"nameEt": "Istutaja, tase 2",
+					"nameEn": null,
+					"nameRu": null,
+					"mainClassCode": "OSAKUTSE",
+					"children": [],
+					"description": null,
+					"validFrom": null,
+					"validThru": null,
+					"extraval1": null,
+					"extraval2": null,
+					"ehisValue": null,
+					"vocational": true,
+					"higher": true,
+					"valid": true
+				}, {
+					"version": 0,
+					"inserted": "2016-11-16T22:29:08.172364Z",
+					"insertedBy": null,
+					"changed": null,
+					"changedBy": null,
+					"code": "OSAKUTSE_10491571",
+					"value": "10491571",
+					"value2": null,
+					"nameEt": "Aiakultuuride hooldaja, tase 2",
+					"nameEn": null,
+					"nameRu": null,
+					"mainClassCode": "OSAKUTSE",
+					"children": [],
+					"description": null,
+					"validFrom": null,
+					"validThru": null,
+					"extraval1": null,
+					"extraval2": null,
+					"ehisValue": null,
+					"vocational": true,
+					"higher": true,
+					"valid": true
+				}
+			],
+			"specializations": []
+		}
+	],
+	"modules": [{
+			"studyOutcomes": [{
+					"nameEt": "test",
+					"nameEn": "test"
+				}
+			],
+			"outcomesEt": "test",
+			"outcomesEn": "test",
+			"occupations": [
+				{
+					"occupation": {"code": "OSAKUTSE_10491569"}
+				}, 
+				{
+					"occupation": {"code": "OSAKUTSE_10491571"}
+				}, 
+				
+				{
+					"occupation": {
+						"code": "KUTSE_10491530",
+						"nameEt": "Abiaednik, tase 2",
+						"nameEn": null
+					}
+				}
+			],
+			"occupationsSelected": {
+				"KUTSE_10491530": true
+			},
+			"partOccupationsSelected": {
+				"OSAKUTSE_10491569": true,
+				"OSAKUTSE_10491571": true
+			},
+			"specializationsSelected": {},
+			"module": {
+				"code": "KUTSEMOODUL_P",
+				"nameEt": "Põhiõpingud",
+				"nameEn": null
+			},
+			"nameEt": "test",
+			"nameEn": "test",
+			"credits": 1,
+			"objectivesEt": "test",
+			"objectivesEn": "test"
+		}
+	],
+	"status": "OPPEKAVA_STAATUS_S",
+	"files": [{
+	"file": [{
+			"key": "lfobj0d7e6e46",
+			"lfFile": {},
+			"lfFileName": "Koala_small.png",
+			"lfDataUrl": "blob:http://localhost:9000/ef3034d1-4a74-4182-86e4-85e020192546",
+			"element": {
+				"0": {
+					"ng339": 883
+				},
+				"length": 1
+			}
+		}
+	],
+	"ehisFile": {
+		"code": "EHIS_FAIL_15775",
+		"nameEt": "Kutseeksam",
+		"nameEn": null
+	},
+	"sendEhis": false,
+	"isEhis": false,
+	"oisFile": {
+		"fname": "Koala_small.png",
+		"ftype": "image/png",
+		"fdata": "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"
+	}
+}
+	],
+	"higher": false,
+	"optionalStudyCredits": 0,
+	"occupation": true,
+	"joint": true,
+	"draft": {
+		"code": "OPPEKAVA_LOOMISE_VIIS_PUUDUB",
+		"nameEt": "Puudub",
+		"nameEn": null
+	},
+	"nameEt": "test",
+	"nameEn": "test",
+	"nameRu": "test",
+	"origStudyLevel": {
+		"code": "OPPEASTE_410",
+		"nameEt": "410 kutseõpe põhihariduse baasil",
+		"nameEn": null
+	},
+	"ekrLevel": {
+		"code": "EKR_3",
+		"nameEt": "Eesti kvalifikatsiooniraamistiku 3. tase",
+		"nameEn": null
+	},
+	"consecution": {
+		"code": "OPPEKAVA_TYPE_E",
+		"nameEt": "Esmane õppekava",
+		"nameEn": null
+	},
+	"educationLevel": {
+		"code": "HARIDUSTASE_P",
+		"nameEt": "Põhiharidusel baseeruv kutseõpe",
+		"nameEn": null
+	},
+	"code": "test",
+	"merCode": "test",
+	"credits": 1,
+	"studyPeriodYears": 1,
+	"studyPeriod": 13,
+	"studyPeriodMonths": 1,
+	"studyFormClassifiers": [{
+			"code": "OPPEVORM_K",
+			"nameEt": "Kaugõpe",
+			"nameEn": null
+		}, {
+			"code": "OPPEVORM_MS",
+			"nameEt": "mittestatsionaarne õpe",
+			"nameEn": null
+		}, {
+			"code": "OPPEVORM_M",
+			"nameEt": "Määramata",
+			"nameEn": null
+		}
+	],
+	"approval": "2017-01-10T22:00:00.000Z",
+	"approvalDokNr": "test",
+	"areaOfStudy": {
+		"code": "ISCED_VALD_02",
+		"nameEt": "02 Humanitaaria ja kunstid",
+		"nameEn": null
+	},
+	"fieldOfStudy": {
+		"code": "ISCED_SUUN_021",
+		"nameEt": "Kunstid",
+		"nameEn": null,
+		"hide": false
+	},
+	"iscedClass": {
+		"code": "ISCED_RYHM_0211",
+		"nameEt": "Audiovisuaalsed tehnikad ja meedia tootmine ",
+		"nameEn": null,
+		"hide": false
+	},
+	"outcomeEt": "test",
+	"outcomeEn": "test",
+	"structure": "test",
+	"admissionRequirementsEt": "test",
+	"admissionRequirementsEn": "test",
+	"graduationRequirementsEt": "test",
+	"graduationRequirementsEn": "test",
+	"studyLanguageClassifiers": [{
+			"code": "OPPEKEEL_et_en",
+			"nameEt": "Eesti ja inglise keel (doktoriõpe)",
+			"nameEn": null
+		}, {
+			"code": "OPPEKEEL_et_ru",
+			"nameEt": "Eesti ja vene keel (doktoriõpe)",
+			"nameEn": null
+		}, {
+			"code": "OPPEKEEL_E",
+			"nameEt": "Eesti keel",
+			"nameEn": null
+		}
+	],
+	"schoolDepartments": [{
+			"id": 98,
+			"code": null,
+			"nameEt": "gqff",
+			"nameEn": "sdfg"
+		}
+	],
+	"draftText": "test",
+	"jointSchoolIsEstonian": true,
+	"jointPartners": [{
+			"ehisSchool": {
+				"code": "EHIS_KOOL_1",
+				"nameEt": "Ilus kool",
+				"nameEn": null
+			},
+			"abroad": false,
+			"contractEt": "test",
+			"contractEn": "test",
+			"supervisor": "test"
+		}
+	],
+	"jointMentor": {
+		"code": "EHIS_KOOL_1",
+		"nameEt": "Ilus kool",
+		"nameEn": null
+	},
+	"supervisor": "test",
+	"contractEt": "test",
+	"contractEn": "test",
+	"practiceDescription": "test",
+	"finalExamDescription": "test",
+	"optionalStudyDescription": "test",
+	"contactPerson": "test",
+	"validTo": "2020-06-01T21:00:00.000Z"
+}

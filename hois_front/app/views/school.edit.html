@@ -1,0 +1,75 @@
+<div layout="column" layout-padding>
+  <div>
+        <div class="indentForToast"></div>
+        <form name="schoolForm">
+          <p class="textInput">{{'school.name' | translate}}&nbsp;*</p>
+
+          <md-autocomplete required md-selected-item="school._ehisSchool" md-search-text="queryText"
+                md-items="item in querySearch(queryText)"
+                md-item-text="currentLanguage()==='en' ? (item.nameEn || item.nameEt) : item.nameEt"
+                md-min-length="0" md-no-cache
+                md-selected-item-change="setEhisSchool()">
+            <md-item-template>
+              <span md-highlight-text="queryText" md-highlight-flags="^i">{{currentLanguage()==='en' ?(item.nameEn || item.nameEt) : item.nameEt}}</span>
+            </md-item-template>
+            <md-not-found>
+              {{'main.messages.error.notFound' | translate}}
+            </md-not-found>
+          </md-autocomplete>
+
+          <md-input-container class="md-block">
+            <label class="textInput">{{'school.code' | translate}}</label>
+            <input ng-model="school.code" type="text" required>
+          </md-input-container>
+          <md-input-container class="md-block">
+            <label class="textInput">{{'school.regNr' | translate}}</label>
+            <input ng-model="school.regNr" type="text" readonly>
+          </md-input-container>
+          <md-input-container class="md-block">
+            <label class="textInput">{{'school.ehisId' | translate}}</label>
+            <input ng-model="school.ehisId" type="text" readonly>
+          </md-input-container>
+
+          <md-input-container class="md-block">
+            <label class="textInput">{{'school.nameEn' | translate}}</label>
+            <input ng-model="school.nameEn" type="text" required>
+          </md-input-container>
+          <md-input-container class="md-block">
+            <label class="textInput">{{'school.email' | translate}}</label>
+            <input ng-model="school.email" type="email" required>
+          </md-input-container>
+          <md-input-container class="md-block">
+            <label class="textInput">{{'school.phone' | translate}}</label>
+            <input ng-model="school.phone" type="text">
+          </md-input-container>
+          <md-input-container class="md-block">
+            <label class="textInput">{{'school.address' | translate}}</label>
+            <input ng-model="school.address" type="text">
+          </md-input-container>
+
+          <lf-ng-md-file-input name="logoFiles"
+            lf-files="logoFiles" lf-api="logoFileApi" lf-filesize="100KB"
+            accept=".png, .jpg, .jpeg" lf-mimetype="image/*" preview
+            lf-placeholder="{{'school.logo.notSelected' | translate}}"
+            lf-browse-label="{{'school.logo.selectLogo' | translate}}"
+            lf-remove-label="{{'main.button.clear' | translate}}"></lf-ng-md-file-input>
+
+          <div ng-messages="schoolForm.logoFiles.$error" style="color:red;">
+            <div ng-message="filesize">{{'main.messages.error.fileTooLarge' | translate}} 100KB!</div>
+            <div ng-message="mimetype">{{'main.messages.error.wrongExtension' | translate}} png, jpg, jpeg</div>
+          </div>
+        </form>
+
+        <h3 ng-if="school.id && !school.logo">{{'school.logo.noLogo' | translate}}</h3>
+        <h3 ng-if="school.logo">{{'school.logo.currentLogo' | translate}}</h3>
+        <img ng-if="school.logo" ng-src="{{school.imageUrl}}" id="currentLogoView">
+        <br>
+        <md-checkbox ng-model="school.deleteCurrentLogo" ng-if="school.id && school.logo">
+            {{'school.logo.delete' | translate}}
+        </md-checkbox>
+        <br>
+        <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-click="delete()" ng-if="school.id" class="md-raised md-primary">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-href="#/school" class="md-raised">{{'main.button.back' | translate}}</md-button>
+	</div>
+</div>

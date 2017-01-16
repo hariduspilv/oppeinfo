@@ -1,0 +1,61 @@
+buildscript {
+	ext {
+		springBootVersion = '1.4.3.RELEASE'
+	}
+	repositories {
+		mavenCentral()
+	}
+	dependencies {
+		classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+	}
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'findbugs'
+
+springBoot {
+	executable = true
+}
+
+jar {
+	baseName = 'hois_back'
+	version = '1.0'
+	manifest {
+		attributes 'Main-Class' : 'ee.hitsa.ois.Application'
+	}
+}
+
+sourceCompatibility = 1.8
+targetCompatibility = 1.8
+
+repositories {
+	mavenCentral()
+}
+
+
+dependencies {
+	compile('org.springframework.boot:spring-boot-starter-data-jpa')
+	compile('org.springframework.boot:spring-boot-starter-data-redis')
+	compile('org.springframework.boot:spring-boot-starter-cache')
+	compile('org.springframework.boot:spring-boot-devtools')
+	compile('org.liquibase:liquibase-core')
+	compile('org.springframework.boot:spring-boot-starter-security')
+	compile('org.springframework.session:spring-session')
+	compile('org.springframework.boot:spring-boot-starter-web')
+	compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.5')
+	runtime('org.postgresql:postgresql')
+	testCompile('org.springframework.boot:spring-boot-starter-test')
+	testCompile('com.h2database:h2')
+	testCompile('org.springframework.security:spring-security-test')
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+    ignoreFailures true
+}

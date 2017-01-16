@@ -1,0 +1,121 @@
+<div layout="column" layout-padding>
+  <div>
+        <form name="classifierForm">
+
+          <!--div class="indentForToast"></div-->
+          <!--h3 ng-bind="mainClass.nameEt"></h3-->
+		  <md-subheader class="md-primary">{{currentLanguage()==='en' ? mainClass.nameEn : mainClass.nameEt}}</md-subheader>
+
+          <md-input-container  class="md-block" ng-if="classifier.code">
+            <label>{{'classifier.code' | translate}}</label>
+            <input ng-model="classifier.code" type="text" disabled required>
+          </md-input-container>
+
+          <md-input-container  class="md-block">
+            <label class="textInput">{{'classifier.value' | translate}}</label>
+            <input ng-model="classifier.value" type="text" required ng-disabled="classifier.code" md-maxlength="50">
+          </md-input-container>
+          <md-input-container  class="md-block">
+            <label class="textInput" >{{'classifier.value2' | translate}}</label>
+            <input ng-model="classifier.value2" type="text" md-maxlength="50">
+          </md-input-container>
+
+          <md-input-container  class="md-block">
+            <label class="textInput">{{'classifier.nameEt' | translate}}</label>
+            <input ng-model="classifier.nameEt" type="text" required md-maxlength="1000">
+          </md-input-container>
+          <md-input-container  class="md-block">
+            <label class="textInput">{{'classifier.nameEn' | translate}}</label>
+            <input ng-model="classifier.nameEn" type="text" md-maxlength="1000">
+          </md-input-container>
+          <md-input-container  class="md-block">
+            <label class="textInput">{{'classifier.nameRu' | translate}}</label>
+            <input ng-model="classifier.nameRu" type="text" md-maxlength="1000">
+          </md-input-container>
+
+          <md-input-container  class="md-block">
+            <label class="textInput">{{'classifier.description' | translate}}</label>
+            <textarea ng-model="classifier.description" type="text" md-maxlength="1000" max-rows="2"></textarea>
+          </md-input-container>   
+          <md-input-container  class="md-block">
+            <label class="textInput">{{'classifier.ehisValue' | translate}}</label>
+            <input ng-model="classifier.ehisValue" type="text" md-maxlength="100">
+          </md-input-container>  
+
+           <md-input-container  class="md-block">
+            <label class="textInput">{{'classifier.extraval1' | translate}}</label>
+            <input ng-model="classifier.extraval1" type="text" md-maxlength="100">
+          </md-input-container>  
+          <md-input-container  class="md-block">
+            <label class="textInput">{{'classifier.extraval2' | translate}}</label>
+            <input ng-model="classifier.extraval2" type="text" md-maxlength="100">
+          </md-input-container>  
+          <br>
+
+          <md-checkbox 
+              ng-model="classifier.vocational" 
+              aria-label="Is vocational">
+            {{'classifier.isVocational' | translate}}
+          </md-checkbox>
+          <md-checkbox 
+              ng-model="classifier.higher" 
+              aria-label="Is higher">
+            {{'classifier.isHigher' | translate}}
+          </md-checkbox>
+
+            <br>
+            <md-input-container>
+                <label class="textInput">{{'stateCurriculum.enter.validFrom' | translate}}</label>
+                <md-datepicker ng-model="classifier.validFrom" md-open-on-focus>
+                </md-datepicker>
+            </md-input-container>
+            <md-input-container>
+                <label class="textInput">{{'stateCurriculum.enter.validThru' | translate}}</label>
+                <md-datepicker ng-model="classifier.validThru" md-min-date="classifier.validFrom" md-open-on-focus>
+                </md-datepicker>
+            </md-input-container>
+
+          <div ng-repeat="connection in possibleConnections">
+            <h3>{{'classifier.connection' | translate}}: <span ng-bind="connection.nameEt"></span></h3> 
+
+            <md-autocomplete
+              name="classifiersParentInput$index"
+              md-selected-item="classifiersParent$index"
+              md-search-text="queryName"
+              md-items="item in querySearch(queryName, connection.code)"
+              md-item-text="currentLanguage()=='en' ? item.nameEn : item.nameEt"
+              md-min-length="0"
+              placeholder="{{'classifier.connection.add' | translate}}"
+              ng-model="queryName"
+              md-no-cache
+              md-selected-item-change="addParent(classifiersParent$index)"
+              >
+
+            <md-item-template>
+              <span md-highlight-text="queryName" md-highlight-flags="^i">{{currentLanguage()=='en' ? item.nameEn : item.nameEt}}</span>
+            </md-item-template>
+
+            <md-not-found>
+              {{'main.messages.error.notFound' | translate}}
+            </md-not-found>
+
+          </md-autocomplete>
+
+          <p ng-repeat="parent in parents | filter:{ mainClassCode: connection.code}">
+            <a ng-bind="parent.nameEt" ng-href="#/classifier/{{parent.mainClassCode}}/{{parent.code}}/edit"></a>
+            <md-button class="remove" ng-click="removeParent(parent)">&times;</md-button>
+          </p>
+          <br>
+          </div>
+          <h3 ng-if="hasChildren">{{'classifier.connection.children.label' | translate}}: </h3>
+          <ul>
+            <li ng-repeat = "child in children | orderBy : 'nameEt'"><a ng-bind="child.nameEt" ng-href="#/classifier/{{child.mainClassCode}}/{{child.code}}/edit"></a></li>
+          </ul>
+        </form>
+        <md-button ng-click="save()" class="md-raised md-primary">
+                   {{'main.button.save' | translate}}</md-button>
+        <md-button ng-click="delete()"
+               ng-if="classifier.code" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-href="#/classifier/{{mainClassCode}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

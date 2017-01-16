@@ -1,0 +1,53 @@
+<div layout="column" layout-padding>
+  <div>
+    <form name="schoolDepartmentForm">
+
+      <div class="indentForToast"></div>
+
+      <md-input-container class="md-block">
+        <label>{{'school.department.code' | translate}}</label>
+        <input ng-model="schoolDepartment.code" type="text" md-maxlength="50">
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'school.department.nameEt' | translate}}</label>
+        <input ng-model="schoolDepartment.nameEt" type="text" required md-maxlength="255">
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'school.department.nameEn' | translate}}</label>
+        <input ng-model="schoolDepartment.nameEn" type="text" md-maxlength="255">
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label>{{'school.department.parent' | translate}}</label>
+        <md-select ng-model="schoolDepartment.parentSchoolDepartmentId">
+          <md-option ng-value=""></md-option>
+          <md-option ng-repeat="dept in departments.content" ng-value="dept.id">
+            {{currentLanguage()==='en' ? (dept.nameEn || dept.nameEt)  : dept.nameEt}}
+          </md-option>
+        </md-select>
+      </md-input-container>
+
+      <div layout="row">
+        <md-input-container flex="20">
+          <label>{{'main.validityPeriod' | translate}}</label>
+          <input type="hidden">
+        </md-input-container>
+        <div flex="33">
+          <md-input-container flex>
+            <md-datepicker ng-model="schoolDepartment.validFrom" md-placeholder="{{'school.department.validFrom' | translate}}" required></md-datepicker>
+          </md-input-container>
+          <md-input-container flex>
+            <md-datepicker ng-model="schoolDepartment.validThru" md-min-date="schoolDepartment.validFrom" md-placeholder="{{'school.department.validThru' | translate}}"></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+
+    </form>
+
+    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-if="schoolDepartment.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-href="#/school/departments" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

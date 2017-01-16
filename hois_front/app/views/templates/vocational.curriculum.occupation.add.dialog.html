@@ -1,0 +1,60 @@
+<md-dialog aria-label="occupation add dialog">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"occupation.addAquiredOccupation" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="row">
+          <md-input-container flex>
+            <label>{{'occupation.aquiredOccupation' | translate}}</label>
+            <hois-classifier-select ng-model="data.occupation" ng-change="occupationSelected()" main-classifier-code="KUTSE"
+             ng-required="true"></hois-classifier-select>
+          </md-input-container>
+        </div>
+
+        <div layout="row">
+          <span class="md-title" flex>{{'occupation.specializations' | translate}}</span>
+        </div>
+        <div layout="column">
+          <div ng-repeat="checkbox in data.specializations" flex>
+            <md-checkbox ng-change="selectSpecialization(specialization, checkbox)" ng-model="specialization" aria-label="{{checkbox[currentLanguageNameField()]}}">
+              {{checkbox[currentLanguageNameField()]}}
+            </md-checkbox>
+          </div>
+        </div>
+
+        <div layout="column">
+          <span class="md-title" flex>{{'occupation.partOccupations' | translate}}</span>
+          <md-list>
+            <md-list-item ng-repeat="partOccupation in data.partOccupations">
+              <p>{{partOccupation[currentLanguageNameField()]}}</p>
+            </md-list-item>
+          </md-list>
+        </div>
+
+        <div layout="row">
+          <md-input-container>
+            <span>{{'occupation.schoolHasRightToGiveOccupation' | translate}}</span>
+            <md-checkbox ng-model="data.schoolHasRightToGiveOccupation" aria-label="schoolHasRightToGiveOccupation">
+            </md-checkbox>
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

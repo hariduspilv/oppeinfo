@@ -1,0 +1,451 @@
+.invalid{
+	color: red;
+}
+
+/*.textInput {
+	color: navy;
+}*/
+
+.close {
+	color: #ddd;
+    font-size: 40px;
+    font-weight: bold;
+    transition: 0.3s;
+	width: 40px;
+}
+
+.close:hover,
+.close:focus {
+    color: #bbb;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+#currentLogoView {
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    padding: 5px;
+	max-height:150px;
+}
+
+/*input[type="text"]:disabled {
+	color: navy;
+}*/
+
+md-input-container textarea, md-input-container input[type="text"], md-input-container input[type="password"], md-input-container input[type="datetime"], md-input-container input[type="datetime-local"], md-input-container input[type="date"], md-input-container input[type="month"], md-input-container input[type="time"], md-input-container input[type="week"], md-input-container input[type="number"], md-input-container input[type="email"], md-input-container input[type="url"], md-input-container input[type="search"], md-input-container input[type="tel"], md-input-container input[type="color"]{
+font-size:13px;
+}
+
+md-input-container  .md-input{
+    border-bottom: 1px solid #ccc;
+}
+
+md-input-container.md-input-focused label:not(.md-no-float), md-input-container.md-input-has-placeholder label:not(.md-no-float), md-input-container.md-input-has-value label:not(.md-no-float) {
+    -webkit-transform: scale(1);
+            transform: scale(1);
+    color: #2196F3!important;
+}
+
+md-input-container.md-input-focused:not([md-no-float]) .md-select-placeholder span:first-child {
+    -webkit-transform: translateY(-22px) translateX(-2px) scale(1);
+    transform: translateY(-22px) translateX(-2px) scale(1);
+	color: #2196F3!important;
+}
+
+md-input-container label:not(.md-no-float):not(.md-container-ignore),
+  md-input-container .md-placeholder,
+.md-select-value > span:not(.md-select-icon)  {
+    font-size: 13px;
+	color: rgb(128,128,128);
+}
+
+.odd {
+}
+
+.even {
+  background-color: #f5f5f5;
+}
+
+
+md-input-container.md-input-has-value .md-select-value > span:not(.md-select-icon) {
+   color: #000;
+}
+
+
+
+.nav-header .md-button
+{
+	min-height: inherit; 
+    min-width: inherit; 
+	line-height: inherit; 
+	text-transform: inherit;
+}
+
+.nav-header .md-subhead
+{
+	text-decoration: none;
+    color: white;
+}
+
+.nav-header .md-accent
+{
+	text-decoration: underline;
+	font-weight: 700;
+    font-size: 16px;
+}
+
+.addNew {
+    max-width: 100px;
+}
+
+md-toolbar, header {
+	min-height: 64px;
+}
+
+.remove {
+	color: #ff4d4d;
+    font-size: 25px;
+    font-weight: bold;
+    transition: 0.3s;
+	width: 40px;
+}
+
+.remove:hover,
+.remove:focus {
+    color: #ff8080;
+    text-decoration: none;
+    cursor: pointer;
+}
+.occupationTitle{
+	font-size: 18px;
+}
+
+.ois-form-layout md-input-container {
+  padding: 0px;
+  margin: 0px;
+  padding-right: 1em;
+  height: 3em;
+}
+
+/*.ois-form-layout label, .ois-form-layout md-input-container:not(.md-input-invalid) md-select-value.md-select-placeholder.md-select-value > span, .ois-form-layout span.label, .ois-form-layout md-input-container:not(.md-input-invalid).md-input-has-value label {
+  color: navy;
+}*/
+
+md-toolbar {
+  background-color: rgb(252, 252, 252);
+  color: #151515;
+  font-size: small;
+}
+
+md-toolbar md-select {
+  margin: 0px;
+}
+
+md-content {
+  background-color: rgb(253, 253, 253);
+}
+
+.ois-form-layout span.label {
+  margin-left: 2px;
+  padding-right: 20px;
+}
+
+/*for md-datepicker to aligning with other input fields*/
+md-input-container._md-datepicker-floating-label._md-datepicker-has-calendar-icon {
+  left: -12px;
+}
+
+.inline{
+	display: inline-block;
+}
+.shiftDown1{
+    margin-top:10px !important;
+}
+
+.shiftDown2{
+    margin-top:20px !important;
+}
+
+.indentForToast {
+    margin-top: 70px;
+}
+
+md-toast.toastInfo .md-toast-content {
+    background-color: green;
+}
+
+md-toast.toastWarn .md-toast-content {
+    background-color: darkorange;
+}
+
+md-toast.toastError .md-toast-content {
+    background-color: red;
+}
+
+.numberInput{
+    max-width: 80px;
+}
+
+.logo {
+  min-width: 40px;
+  max-width: 60px;
+  height: 40px;
+  padding: 0.2em;
+}
+
+.logo_txt {
+	font-size: 34px;
+    font-weight: 400;
+}
+
+.site-sidenav md-content {
+  background: transparent;
+}
+.site-sidenav,
+.site-sidenav.md-locked-open-add-active,
+.site-sidenav.md-locked-open {
+  width:     272px;
+  min-width: 272px;
+  max-width: 272px;
+}
+.site-sidenav > * {
+  min-width: 218px;
+}
+
+.docs-menu,
+.docs-menu ul {
+  list-style: none;
+  padding: 0;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+.docs-menu li {
+  margin: 0;
+}
+.docs-menu > li:nth-child(1) {
+  border-top: none;
+}
+.md-whiteframe-glow-z1 {
+  box-shadow: 0px 0px 1px 1px rgba(0, 0, 0, 0.14),
+  0px 0px 2px 2px rgba(0, 0, 0, 0.098),
+  0px 0px 5px 1px rgba(0, 0, 0, 0.084);
+}
+.docs-menu > li {
+  border-bottom: 1px solid #267ED5;
+}
+
+.docs-menu .md-button {
+  border-radius: 0;
+  color: white;
+  cursor: pointer;
+  display: block;
+  align-items: inherit;
+  line-height: 40px;
+  margin: 0;
+  max-height: 40px;
+  overflow: hidden;
+  padding: 0px 16px;
+  text-align: left;
+  text-decoration: none;
+  white-space: normal;
+  width: 100%;
+}
+
+html[dir=rtl] .docs-menu .md-button,
+body[dir=rtl] .docs-menu .md-button {
+  unicode-bidi: embed;
+  text-align: right;
+}
+
+
+.docs-menu .md-button:hover,
+.docs-menu .md-button:focus {
+  background: #267ED5 !important;
+}
+.docs-menu .md-button md-icon {
+  color: white;
+}
+.material-icons.md-dark {
+  color: #151515;
+}
+.docs-toolbar-tools {
+  /*margin-left: 24px;*/
+}
+.docs-menu md-select {
+
+  /* Override md-select margins.  With margins the menu will look incorrect and causes mobile list
+     to not be scrollable.
+   */
+  margin: 0;
+  width: 100%;
+}
+
+.docs-menu md-select md-select-label {
+  justify-content: flex-end;
+  padding-top: 10px;
+}
+
+.docs-menu md-select md-select-label span {
+  margin-right: auto;
+  padding-left: 13px;
+}
+
+.docs-menu md-select .md-select-icon {
+  margin-right: 28px;
+}
+
+.docs-menu button.md-button::-moz-focus-inner {
+  padding: 0;
+}
+.docs-menu .md-button.active {
+  background: #267ED5;
+}
+.menu-heading {
+  display: block;
+  line-height: 32px;
+  margin: 0;
+  padding: 8px 16px 0;
+  text-align: left;
+  width: 100%;
+  color: rgba(255, 255, 255, 0.54)
+}
+
+
+html[dir=rtl] .menu-heading,
+body[dir=rtl] .menu-heading {
+  unicode-bidi: embed;
+  text-align: right;
+}
+
+.menu-toggle-list {
+  overflow: hidden;
+  position: relative;
+  z-index: 1;
+  height: 0;
+}
+.docs-menu .menu-toggle-list a.md-button {
+  display: block;
+  padding: 0 16px 0 32px;
+  text-transform: none;
+  text-rendering: optimizeLegibility;
+  font-weight: 500;
+}
+
+.parent-list-item:last-child {
+  margin-bottom: 20px;
+}
+.md-button-toggle .md-toggle-icon {
+  display: block;
+  margin-left: auto;
+  speak: none;
+  vertical-align: middle;
+  transform: rotate(180deg);
+  transition: transform 0.3s ease-in-out;
+}
+.md-button-toggle .md-toggle-icon.toggled {
+  transform: rotate(0deg);
+}
+
+.md-button.md-icon-button {
+    margin: 0;
+}
+
+.md-icon-button + .md-datepicker-input-container {
+    margin-left: 0px;
+}
+
+.md-datepicker-input-container {
+    width: 130px;
+}
+
+._md-datepicker-floating-label._md-datepicker-has-calendar-icon > label:not(.md-no-float):not(.md-container-ignore) {
+     right: inherit; 
+}
+
+.common-label {
+	font-size: 13px;
+	color: #2196F3 ;
+}
+
+table.md-table thead.md-head > tr.md-row
+{
+	background-color:#1565C0;
+}
+table.md-table thead.md-head > tr.md-row > th
+{
+	color:#fff;
+}
+
+table.md-table thead.md-head > tr.md-row > th md-icon svg {
+  fill: white;
+}
+
+table.md-table tbody.md-body > tr.md-row, table.md-table tfoot.md-foot > tr.md-row {
+    height: 38px;
+}
+
+table.md-table thead.md-head > tr.md-row  {
+    height: 42px;
+}
+
+.change-button{
+	min-height: inherit;
+	line-height:inherit;
+}
+
+
+md-checkbox .md-label, md-option .md-text, md-radio-button .md-label
+{
+	font-size:13px;
+}
+
+md-select-menu[multiple] md-option.md-checkbox-enabled .md-icon {
+    box-sizing: border-box;
+    -webkit-transition: 240ms;
+    transition: 240ms;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 16px;
+    height: 16px;
+    border-width: 1px;
+    border-style: solid;
+    border-radius: 2px;
+}
+
+md-option{
+	height: 32px;
+}
+
+.ois-form-layout-padding
+{
+	padding: 18px 18px 8px 18px;
+}
+
+.md-subheader.md-default-theme, .md-subheader {
+     background-color: inherit;
+}
+
+.md-subheader .md-subheader-inner {
+    padding: 16px 16px 16px 0px ;
+}
+
+h3{
+	color: rgb(13,71,161);
+   font-size: 14px;
+    font-weight: 500;
+    line-height: 1em;
+    margin: 10px 0 5px 0;
+}
+
+p a{
+	font-size: 13px;
+}
+
+hois-created-modified table.md-table thead.md-head > tr.md-row {
+    height: 36px;
+}
+
+hois-created-modified {
+	padding-bottom: 20px;
+}

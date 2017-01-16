@@ -1,0 +1,33 @@
+<md-dialog aria-label="study outcome add dialog">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"studyOutcome.add" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="column">
+          <md-input-container flex>
+            <label>{{'studyOutcome.nameEt' | translate}}</label>
+            <textarea ng-model="data.nameEt" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="true"></textarea>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'studyOutcome.nameEn' | translate}}</label>
+            <textarea ng-model="data.nameEn" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

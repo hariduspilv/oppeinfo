@@ -1,0 +1,18 @@
+<div layout="column" layout-padding>
+  <div>
+    <form name="schoolStudyLevelsForm">
+      <!--div class="indentForToast"></div-->
+      <!--h3>{{currentLanguage()=='en' ? studyLevels.nameEn : studyLevels.nameEt}}</h3-->
+      <md-list>
+        <md-list-item ng-repeat="studyLevel in studyLevelDefs.content">
+          <span>
+            <md-checkbox ng-model="studyLevel.selected">
+              {{currentLanguage()=='en' ? (studyLevel.nameEn || studyLevel.nameEt) : studyLevel.nameEt}}
+            </md-checkbox>
+          </span>
+        </md-list-item>
+      </md-list>
+    </form>
+    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+  </div>
+</div>

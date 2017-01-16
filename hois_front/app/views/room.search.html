@@ -1,0 +1,70 @@
+<div layout-padding>
+  <div flex>
+    <form ng-submit="loadData()">
+      <div layout="row">
+        <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
+          <!--div class="indentForToast"></div-->
+          <md-input-container>
+            <label class="textInput">{{'building.name' | translate}}</label>
+            <input ng-model="criteria.buildingName" type="text">
+          </md-input-container>
+          <md-input-container>
+            <label class="textInput">{{'building.code' | translate}}</label>
+            <input ng-model="criteria.buildingCode" type="text" autofocus>
+          </md-input-container>
+          <md-input-container>
+            <label class="textInput">{{'room.name' | translate}}</label>
+            <input ng-model="criteria.name" type="text">
+          </md-input-container>
+          <md-input-container>
+            <label class="textInput">{{'room.code' | translate}}</label>
+            <input ng-model="criteria.code" type="text">
+          </md-input-container>
+
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          </div>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="building.name">{{'building.name' | translate}}</th>
+            <th md-column md-order-by="building.code">{{'building.code' | translate}}</th>
+            <th md-column>{{'building.address' | translate}}</th>
+            <th md-column md-order-by="name">{{'room.name' | translate}}</th>
+            <th md-column md-order-by="code">{{'room.code' | translate}}</th>
+            <th md-column md-numeric md-order-by="seats">{{'room.seats' | translate}}</th>
+            <th md-column>{{'room.equipment' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{row.buildingName}}</td>
+            <td md-cell>{{row.buildingCode}}</td>
+            <td md-cell>{{row.buildingAddress}}</td>
+            <td md-cell>{{row.name}}</td>
+            <td md-cell>{{row.code}}</td>
+            <td md-cell>{{row.seats}}</td>
+            <td md-cell></td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

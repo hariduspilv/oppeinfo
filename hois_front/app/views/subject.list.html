@@ -1,0 +1,134 @@
+<div  flex-xs="100" flex-gt-xs="100" flex-gt-sm="75"  ng-cloak>
+  <!--<div class="ois-form-layout" layout="column" layout-margin ng-cloak>-->
+  <form ng-submit="loadData()">
+    <div class="ois-form-layout" layout-padding layout="column">
+      <div layout="row">
+        <md-input-container flex>
+          <label class="textInput">{{'subject.name' | translate}}</label>
+          <input ng-model="criteria.name" type="text" autofocus>
+        </md-input-container>
+      </div>
+      <div layout="row">
+        <md-input-container flex>
+          <label class="textInput">{{'subject.code' | translate}}</label>
+          <input ng-model="criteria.code" type="text">
+        </md-input-container>
+        <div flex-xs="0" flex-gt-sm="10"></div>
+        <md-input-container flex>
+          <label>{{'subject.assessment' | translate}}</label>
+          <md-select ng-model="criteria.assessments" multiple>
+            <md-option ng-repeat="it in classifiers.HINDAMISVIIS" ng-value="it.code">
+              {{it[currentLanguageNameField()]}}
+            </md-option>
+          </md-select>
+        </md-input-container>
+      </div>
+      <div layout="row">
+        <md-input-container flex>
+          <label>{{'subject.curriculum' | translate}}</label>
+          <md-select ng-show="auth" ng-model="criteria.curricula" multiple>
+            <md-option ng-repeat="it in curricula" value="{{it.id}}" style="font-size: medium;">
+              {{currentLanguage()==='en' ? (it.nameEn || it.nameEt) : it.nameEt}}
+            </md-option>
+          </md-select>
+        </md-input-container>
+      </div>
+      <div layout="column">
+        <!--h5>{{'subject.creditsEap' | translate}}</h5-->
+		<label class="common-label" style="padding-bottom:12px;"> {{'subject.creditsEap' | translate}}</label>
+        <div layout="row">
+          <div layout="column" flex="45">
+            <div layout-gt-xs="row" flex="45" flex-xs="100">
+              <md-input-container>
+                <label>{{'main.from' | translate}}</label>
+                <input type="number" ng-model="criteria.from" min="0" step="0.1">
+              </md-input-container>
+              <md-input-container>
+                <label>{{'main.thru' | translate}}</label>
+                <input type="number" ng-model="criteria.thru" min="0" step="0.1">
+              </md-input-container>
+            </div>
+          </div>
+          <div flex-xs="0" flex-gt-sm="10"></div>
+          <div layout="column" flex="45">
+            <md-input-container flex>
+              <label>{{'school.department.department' | translate}}</label>
+              <md-select ng-model="criteria.departments" multiple>
+                <md-option ng-repeat="department in departments" ng-value="department.id">
+                  {{currentLanguage()==='en' ? (department.nameEn || department.nameEt) : department.nameEt}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+          </div>
+        </div>
+        <div layout="row" flex>
+          <div layout="column" flex="45">
+            <md-input-container>
+              <label>{{'subject.status' | translate}}</label>
+              <md-select ng-model="criteria.status" multiple>
+                <md-option ng-repeat="it in classifiers.AINESTAATUS" ng-value="it.code">
+                  {{it[currentLanguageNameField()]}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+          </div>
+          <div flex-xs="0" flex-gt-sm="10"></div>
+          <div layout="column" flex="45">
+            <md-input-container>
+              <label>{{'subject.language' | translate}}</label>
+              <md-select ng-model="criteria.languages" multiple>
+                <md-option ng-repeat="it in classifiers.OPPEKEEL" ng-value="it.code">
+                  {{it[currentLanguageNameField()]}}
+                </md-option>
+              </md-select>
+            </md-input-container>
+          </div>
+        </div>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/subject/new">{{'main.button.create' | translate}}</md-button>
+      </div>
+    </div>
+  </form>
+</div>
+
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+        <tr md-row>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'nameEn' : 'nameEt'}}"><span>{{'subject.name' | translate}}</span></th>
+          <th md-column md-order-by="code"><span>{{'subject.code' | translate}}</span></th>
+          <th md-column md-order-by="credits"><span>{{'subject.creditsEap' | translate}}</span></th>
+          <th md-column >{{'subject.assessment' | translate}}</th>
+          <th md-column >{{'subject.language' | translate}}</th>
+          <th md-column >{{'subject.status' | translate}}</th>
+          <th md-column >{{'school.department.department' | translate}}</th>
+          <th md-column></th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>{{currentLanguage()==='en' ? (row.nameEn || row.nameEt) : row.nameEt}}</td>
+          <td md-cell>{{row.code}}</td>
+          <td md-cell>{{row.credits}}</td>
+          <td md-cell>{{currentLanguage()==='en' ? (row.assessment.nameEn || row.assessment.nameEt) : row.assessment.nameEt}}</td>
+          <td md-cell>{{languages(currentLanguage(), row.languages)}}</td>
+          <td md-cell>{{row.status.nameEt}}</td>
+          <td md-cell>{{currentLanguage()==='en' ? (row.schoolDepartment.nameEn || row.schoolDepartment.nameEt) : row.schoolDepartment.nameEt}}</td>
+          <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/subject/{{row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
+        </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }" md-page-select></md-table-pagination>
+
+  </div>
+</div>

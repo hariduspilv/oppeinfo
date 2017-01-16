@@ -1,0 +1,118 @@
+<md-dialog aria-label="module add dialog" flex="30" flex-xs="100">
+  <form ng-cloak name="dialogForm">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"module.addToughtModule" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="column">
+          <md-input-container flex>
+            <label>{{'module.occupationPartOccupationSpecialize' | translate}}</label>
+          </md-input-container>
+          <md-input-container style="height: 100%;">
+            <div layout="column">
+              <div ng-repeat="item in occupationPartOccupationSpecializeSelected" flex>
+                <md-checkbox ng-change="selectAll(occupationsSelected[item.occupation.code], item)" ng-model="occupationsSelected[item.occupation.code]"
+                  aria-label="{{item.occupationAquired[currentLanguageNameField()]}}">
+                  {{item.occupation[currentLanguageNameField()]}}
+                </md-checkbox>
+                <div layout="column" layout-padding>
+                  <md-input-container style="height: 100%;">
+                    <div layout="column">
+                      <div ng-repeat="partOccupation in item.partOccupations" flex>
+                        <md-checkbox ng-model="partOccupationsSelected[partOccupation.code]" aria-label="{{partOccupation[currentLanguageNameField()]}}">
+                          {{partOccupation[currentLanguageNameField()]}}
+                        </md-checkbox>
+                      </div>
+                    </div>
+                  </md-input-container>
+                  <md-input-container style="height: 100%;">
+                    <div layout="column">
+                      <div ng-repeat="specialization in item.specializations" flex>
+                        <md-checkbox ng-model="specializationsSelected[specialization.code]" aria-label="{{specialization[currentLanguageNameField()]}}">
+                          {{specialization[currentLanguageNameField()]}}
+                        </md-checkbox>
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.type' | translate}}</label>
+            <hois-classifier-select ng-model="data.module" main-classifier-code="KUTSEMOODUL" ng-required="true"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'module.nameEt' | translate}}</label>
+            <input ng-model="data.nameEt" type="text" ng-required="true">
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'module.nameEn' | translate}}</label>
+            <input ng-model="data.nameEn" type="text">
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'module.credits' | translate}}</label>
+            <input ng-model="data.credits" type="number" ng-required="true">
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.objectivesEt' | translate}}</label>
+            <textarea ng-model="data.objectivesEt" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="true"></textarea>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.objectivesEn' | translate}}</label>
+            <textarea ng-model="data.objectivesEn" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+          </md-input-container>
+<!--          <div layout="column">
+            <span class="md-headline">{{'module.studyOutcome' | translate}}</span>
+            <div layout="row">
+              <div layout="row">
+                <md-button class="md-primary" ng-click="openAddModuleStudyOutcomeDialog()">{{'studyOutcome.add' | translate}}</md-button>
+              </div>
+            </div>
+          </div>
+          <div layout="row" layout-padding>
+            <md-list flex>
+              <md-list-item ng-repeat="item in data.studyOutcomes">
+                <span>{{item.nameEt}} {{item.nameEn}}</span>
+                <md-button class="md-icon-button" ng-click="removeFromArray(data.studyOutcomes, item)">
+                  <md-icon ng-class="'md-warn md-hue-2'" md-font-set="material-icons">close</md-icon>
+                </md-button>
+              </md-list-item>
+            </md-list>
+          </div>-->
+          <div layout="column">
+          <md-input-container flex>
+            <label>{{'studyOutcome.nameEt' | translate}}</label>
+            <textarea ng-model="data.outcomesEt" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="true"></textarea>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'studyOutcome.nameEn' | translate}}</label>
+            <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+          </md-input-container>
+        </div>
+          <md-input-container>
+            <label>{{'module.competencesAquired' | translate}}</label>
+            <hois-classifier-select multiple="true" ng-model="data.competencesAquired" ng-disabled="data.moduleType.code != 'KUTSEMOODUL_P'"
+              connect-classifier-codes="{{connectClassifierCodeValuesForCompetenceSelection.toString()}}"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container flex>
+            <md-checkbox ng-model="data.isPractice" ng-disabled="data.moduleType.code != 'KUTSEMOODUL_Y'">{{'module.practice' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

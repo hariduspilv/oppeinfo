@@ -1,0 +1,90 @@
+<div class="ois-form-layout" layout="column" layout-margin>
+  <div>
+
+        <form name="stateCurriculumModuleForm">
+
+          <div layout="column">
+          <h4 ng-if="occupations.length > 0">{{'stateCurriculum.enter.module.occupation' | translate}}&nbsp;*</h4>
+
+          <div ng-repeat="occupation in occupations">
+            <md-checkbox ng-model="occupation.selected"
+                         ng-change="checkOccupationsValidity()"
+                         aria-label="Select occupation for this module"> {{occupation.occupation.nameEt}} </md-checkbox>
+          </div>
+
+          <div ng-repeat="occupation in occupations">
+            <div ng-repeat="child in occupation.occupation.children | filter: filterChildren" >
+              <md-checkbox ng-model="child.selected" ng-change="checkOccupationsValidity()"
+                  aria-label="Select suboccupation for this module">{{child.nameEt}}</md-checkbox>
+            </div>
+          </div>
+
+            <md-input-container>
+            <label>{{'stateCurriculum.enter.module.type' | translate}}</label>
+            <md-select ng-model="module.moduleType" required ng-model-options="{ trackBy: '$value.code' }">
+              <md-option ng-repeat="classifier in listOfModuleTypes track by classifier.code" ng-value="classifier" >
+                {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+
+
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.nameEt' | translate}}</label>
+            <input ng-model="module.nameEt" type="text" required md-maxlength="255">
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.nameEn' | translate}}</label>
+            <input ng-model="module.nameEn" type="text" md-maxlength="255">
+          </md-input-container>
+
+
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.credits' | translate}}</label>
+            <input ng-model="module.credits" type="number" min="0" required name="credits">
+
+              <div ng-messages="stateCurriculumModuleForm.credits.$error" ng-show="stateCurriculumModuleForm.credits.$dirty">
+                  <div ng-message="min">
+                    {{'stateCurriculum.enter.credits.positive' | translate}}
+                  </div>
+              </div>
+          </md-input-container>
+
+
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.objectiveEt' | translate}}</label>
+            <textarea ng-model="module.objectivesEt" type="text" required md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.objectiveEn' | translate}}</label>
+            <textarea ng-model="module.objectivesEn" type="text" md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+
+
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.outcome.outcomeLabelEt' | translate}}</label>
+            <textarea ng-model="module.outcome.outcomesEt" type="text" required md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.outcome.outcomeLabelEn' | translate}}</label>
+            <textarea ng-model="module.outcome.outcomesEn" type="text" md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+
+
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>
+            <input ng-model="module.assessmentsEt" type="text" required md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.criteriaEn' | translate}}</label>
+            <textarea ng-model="module.assessmentsEn" type="text" md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+          </div>
+        </form>
+
+        <md-button ng-click="save()"
+                class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-click="goToMainForm()"
+                class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

@@ -1,0 +1,27 @@
+<div layout="column" layout-padding>
+  <div>
+    <form name="teacherOccupationForm">
+
+      <div class="indentForToast"></div>
+
+      <md-input-container class="md-block">
+        <label>{{'teacher.occupation.occupationEt' | translate}}</label>
+        <input ng-model="teacherOccupation.occupationEt" type="text" required md-maxlength="100">
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'teacher.occupation.occupationEn' | translate}}</label>
+        <input ng-model="teacherOccupation.occupationEn" type="text" required md-maxlength="100">
+      </md-input-container>
+
+      <md-checkbox ng-model="teacherOccupation.isValid">
+        {{'teacher.occupation.isValid' | translate}}
+      </md-checkbox>
+
+    </form>
+
+    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-if="teacherOccupation.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-href="#/school/teacheroccupations" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

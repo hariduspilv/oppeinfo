@@ -1,0 +1,13 @@
+<div layout-padding>
+  <div ng-if="authenticated">
+    <span>{{ 'home.greeting' | translate }}</span>
+  </div>
+  <div ng-if="!authenticated">
+    <span>{{ 'home.joinedSchools' | translate }}</span>
+    <md-list>
+      <md-list-item ng-repeat="school in schools">
+        <span>{{ currentLanguage()=='en' ? school.nameEn : school.nameEt }}</span>
+      </md-list-item>
+    </md-list>
+  </div>
+</div>

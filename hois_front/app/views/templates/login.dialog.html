@@ -1,0 +1,30 @@
+<md-dialog>
+  <form role="form">
+    <div role="dialog" layout="column" ng-controller="LoginController as lgn" layout-align="center center" layout-padding>
+      <div>
+        <div class="alert alert-danger" ng-show="controller.error">
+          There was a problem logging in. Please try again.
+        </div>
+
+        <div layout=row>
+          <div layout="column" style="padding-top:10px">
+            <md-button aria-label="id-card">
+              <img class="png-icon" src="images/logo_id.gif" style="width: 88px; height: 31px;">
+            </md-button>
+            <md-button aria-label="mobile-id">
+              <img class="png-icon" src="images/logo_m-id.gif" style="width: 88px; height: 31px;">
+            </md-button>
+          </div>
+          <md-divider></md-divider>
+          <div layout="column" style="padding-left:10px">
+            <md-input-container>
+              <label for="username" flex>Kasutajanimi</label>
+              <input type="text" flex class="form-control" id="username" name="username" ng-model="credentials.username"/>
+            </md-input-container>
+            <md-button class="md-raised md-primary" ng-click="login()">{{ 'main.logIn' | translate }}</md-button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+</md-dialog>
