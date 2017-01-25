@@ -1,7 +1,5 @@
 package ee.hitsa.ois.web;
 
-import com.fasterxml.jackson.annotation.JsonView;
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Subject;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.service.AutocompleteService;
@@ -17,6 +15,7 @@ import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
+import ee.hitsa.ois.web.dto.SubjectDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -26,6 +25,7 @@ import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/subject")
@@ -39,14 +39,14 @@ public class SubjectController {
     private ClassifierService classifierService;
 
     @PostMapping(value = "")
-    public Subject create(HoisUserDetails user, @Valid @RequestBody SubjectForm newSubject) {
+    public SubjectDto create(HoisUserDetails user, @Valid @RequestBody SubjectForm newSubject) {
         Subject subject = EntityUtil.bindToEntity(newSubject, new Subject());
         subject.setSchool(user.getSchool());
         return get(user, subjectService.save(subject, newSubject));
     }
 
     @PutMapping(value = "/{id}")
-    public Subject save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Subject subject, @Valid @RequestBody SubjectForm newSubject) {
+    public SubjectDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Subject subject, @Valid @RequestBody SubjectForm newSubject) {
         Long schoolId = user.getSchool().getId();
         if(schoolId == null || subject.getSchool() == null || !schoolId.equals(subject.getSchool().getId())) {
             throw new IllegalArgumentException();
@@ -55,21 +55,20 @@ public class SubjectController {
     }
 
     @GetMapping(value = "/{id}")
-    public Subject get(HoisUserDetails user, @WithEntity("id") Subject subject) {
+    public SubjectDto get(HoisUserDetails user, @WithEntity("id") Subject subject) {
         Long schoolId = user.getSchool().getId();
         if(schoolId == null || subject.getSchool() == null || !schoolId.equals(subject.getSchool().getId())) {
             throw new IllegalArgumentException();
         }
-        return subject;
+        return SubjectDto.of(subject);
     }
 
     @GetMapping(value = "")
-    public Page<Subject> search(SubjectSearchCommand subjectSearchCommand, HoisUserDetails user,Pageable pageable) {
-        return subjectService.search(subjectSearchCommand, user.getUserId(),pageable);
+    public Page<SubjectDto> search(SubjectSearchCommand subjectSearchCommand, HoisUserDetails user,Pageable pageable) {
+        return subjectService.search(subjectSearchCommand, user.getUserId(),pageable).map(SubjectDto::of);
     }
 
     @GetMapping(value = "/initSearchFormData")
-    @JsonView(JsonViews.Basic.class)
     public SubjectSearchFormData getSearchForm(HoisUserDetails user) {
         Long schoolId = user.getSchool().getId();
         SubjectSearchFormData searchFormData = new SubjectSearchFormData();
@@ -80,7 +79,10 @@ public class SubjectController {
         for (String classifier : classifiers) {
             ClassifierSearchCommand classifierSearchCommand = new ClassifierSearchCommand();
             classifierSearchCommand.setMainClassCode(classifier);
-            searchFormData.classifiers.put(classifier, classifierService.searchForDropdown(classifierSearchCommand));
+            searchFormData.classifiers.put(classifier, classifierService.searchForDropdown(classifierSearchCommand)
+                    .stream()
+                    .map(it -> new AutocompleteResult<>(it.getCode(), it.getNameEt(), it.getNameEn()))
+                    .collect(Collectors.toList()));
         }
         return searchFormData;
     }
@@ -89,7 +91,6 @@ public class SubjectController {
     public Map<String, List<AutocompleteResult<Long>>> getEditForm(HoisUserDetails user) {
         Map<String, List<AutocompleteResult<Long>>> result = new HashMap<>();
         Long schoolId = user.getSchool().getId();
-        result.put("subjects", autocompleteService.subjects(schoolId));
         result.put("departments", autocompleteService.schoolDepartments(schoolId, new SchoolDepartmentAutocompleteCommand()));
         return result;
     }
@@ -107,5 +108,5 @@ public class SubjectController {
 class SubjectSearchFormData {
     public List<AutocompleteResult<Long>> departments;
     public List<AutocompleteResult<Long>> curricula;
-    public Map<String, List<Classifier>> classifiers = new HashMap<>();
+    public Map<String, List<AutocompleteResult<String>>> classifiers = new HashMap<>();
 }

@@ -47,4 +47,10 @@ public class Person {
     public void setLastname(String lastname) {
         this.lastname = lastname;
     }
+
+    @Transient
+    public String getFullname() {
+        // FIXME is one of names (which one) optional ?
+        return firstname == null ? lastname : (firstname + " " + lastname);
+    }
 }

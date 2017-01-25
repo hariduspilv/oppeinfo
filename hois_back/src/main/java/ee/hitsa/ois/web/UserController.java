@@ -53,7 +53,7 @@ public class UserController {
 
             authenticatedUser.setSchool(school);
             authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());
-            authenticatedUser.setFullname(person.getFirstname(), person.getLastname());
+            authenticatedUser.setFullname(person.getFullname());
             authenticatedUser.setUsers(users);
 
             return authenticatedUser;

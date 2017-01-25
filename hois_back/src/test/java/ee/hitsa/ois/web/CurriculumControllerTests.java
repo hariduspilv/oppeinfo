@@ -28,7 +28,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.Curriculum;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.CurriculumService;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
@@ -38,7 +38,7 @@ import ee.hitsa.ois.web.commandobject.CurriculumForm;
 @Transactional
 public class CurriculumControllerTests {
 
-	private final static String CODE = "code";
+    private final static String CODE = "code";
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -54,6 +54,8 @@ public class CurriculumControllerTests {
 
     private JacksonTester<CurriculumForm> curriculumFormJson;
 
+    private Curriculum testCurriculum;
+
     @Before
     public void setup() {
         JacksonTester.initFields(this, objectMapper);
@@ -61,22 +63,19 @@ public class CurriculumControllerTests {
 
     @After
     public void cleanUp() {
-        if(testCurriculum != null && testCurriculum.getId() != null) {
-            curriculumService.delete(testCurriculum);
+        if (testCurriculum != null && testCurriculum.getId() != null) {
+            this.restTemplate.delete("/curriculum/{id}", testCurriculum.getId());
         }
     }
 
-    private Curriculum testCurriculum;
-
-
     @Test
     public void testIsUniqueTrue() {
-    	Assert.assertTrue(testIsUnique(CODE.concat(CODE)));
+        Assert.assertTrue(testIsUnique(CODE.concat(CODE)));
     }
 
     @Test
     public void testIsUniqueFalse() {
-    	Assert.assertFalse(testIsUnique(CODE));
+        Assert.assertFalse(testIsUnique(CODE));
     }
 
     @Test
@@ -106,15 +105,6 @@ public class CurriculumControllerTests {
         Assert.assertFalse(curriculumForm.getModules().isEmpty());
         Assert.assertNotNull(curriculumForm.getStudyFormClassifiers().stream().findFirst().get().getCode());
         Assert.assertNotNull(curriculumForm.getJointPartners().stream().findFirst().get().getEhisSchool().getCode());
-
-
-        ResponseEntity<Curriculum> responseEntity = this.restTemplate
-                .postForEntity("/curriculum", curriculumForm, Curriculum.class);
-
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-
-        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
-        Assert.assertNotNull(testCurriculum.getModules().stream().findFirst().get());
     }
 
     @Test
@@ -123,8 +113,8 @@ public class CurriculumControllerTests {
         LocalDate validFrom = LocalDate.now();
         CurriculumForm curriculumForm = getForm(classifier, validFrom);
 
-        ResponseEntity<Curriculum> responseEntity = this.restTemplate
-                .postForEntity("/curriculum", curriculumForm, Curriculum.class);
+        ResponseEntity<Curriculum> responseEntity = this.restTemplate.postForEntity("/curriculum", curriculumForm,
+                Curriculum.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity);
         testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
@@ -132,7 +122,7 @@ public class CurriculumControllerTests {
         Assert.assertNotNull(testCurriculum);
         Assert.assertEquals("testCode", testCurriculum.getCode());
         Assert.assertEquals(classifier, testCurriculum.getStatus());
-        Assert.assertTrue(testCurriculum.isHigher());
+        Assert.assertTrue(testCurriculum.isHigher().booleanValue());
         Assert.assertTrue(testCurriculum.getValidFrom().isEqual(validFrom));
         Assert.assertNotNull(testCurriculum.getStudyLanguages());
         Assert.assertNotNull(testCurriculum.getStudyLanguages().stream().findFirst().get().getId());
@@ -145,12 +135,12 @@ public class CurriculumControllerTests {
         LocalDate validFrom = LocalDate.now();
         CurriculumForm curriculumForm = getForm(classifier, validFrom);
 
-        ResponseEntity<Curriculum> responseEntity = this.restTemplate
-                .postForEntity("/curriculum", curriculumForm, Curriculum.class);
+        ResponseEntity<Curriculum> responseEntity = this.restTemplate.postForEntity("/curriculum", curriculumForm,
+                Curriculum.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity);
         testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
-        //TODO: change some fields
+        // TODO: change some fields
 
     }
 
@@ -162,9 +152,8 @@ public class CurriculumControllerTests {
         LocalDate validFrom = LocalDate.now();
         CurriculumForm curriculumForm = getForm(classifier, validFrom);
 
-
-        ResponseEntity<Curriculum> responseEntity = this.restTemplate
-                .postForEntity("/curriculum", curriculumForm, Curriculum.class);
+        ResponseEntity<Curriculum> responseEntity = this.restTemplate.postForEntity("/curriculum", curriculumForm,
+                Curriculum.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity);
         testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
@@ -173,11 +162,12 @@ public class CurriculumControllerTests {
         Assert.assertEquals("testCode", testCurriculum.getCode());
         Assert.assertEquals(classifier, testCurriculum.getStatus());
         Assert.assertNotEquals(classifier.getNameEt(), testCurriculum.getStatus().getNameEt());
-        Assert.assertTrue(testCurriculum.isHigher());
+        Assert.assertTrue(testCurriculum.isHigher().booleanValue());
         Assert.assertTrue(testCurriculum.getValidFrom().isEqual(validFrom));
         Assert.assertNotNull(testCurriculum.getStudyLanguages());
         Assert.assertNotNull(testCurriculum.getStudyLanguages().stream().findFirst().get().getId());
-        Assert.assertNotEquals(classifier.getNameEt(), testCurriculum.getStudyLanguages().stream().findFirst().get().getStudyLang().getNameEt());
+        Assert.assertNotEquals(classifier.getNameEt(),
+                testCurriculum.getStudyLanguages().stream().findFirst().get().getStudyLang().getNameEt());
 
     }
 
@@ -210,6 +200,5 @@ public class CurriculumControllerTests {
         curriculumForm.setStudyLanguageClassifiers(new HashSet<>(Arrays.asList(classifier)));
         return curriculumForm;
     }
-
 
 }

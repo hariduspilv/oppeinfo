@@ -6,8 +6,8 @@
       <md-list>
         <md-list-item ng-repeat="studyLevel in studyLevelDefs.content">
           <span>
-            <md-checkbox ng-model="studyLevel.selected">
-              {{currentLanguage()=='en' ? (studyLevel.nameEn || studyLevel.nameEt) : studyLevel.nameEt}}
+            <md-checkbox ng-model="studyLevel._selected">
+              {{currentLanguage()==='en' ? (studyLevel.nameEn || studyLevel.nameEt) : studyLevel.nameEt}}
             </md-checkbox>
           </span>
         </md-list-item>

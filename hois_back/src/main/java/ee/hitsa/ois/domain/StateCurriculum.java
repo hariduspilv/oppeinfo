@@ -46,7 +46,8 @@ public class StateCurriculum extends BaseEntityWithId {
 
 	private String description;
 	private String riigiteatajaUrl;
-	
+	private String finalExamDescription;
+
 	@Transient
 	private String ekrLevel;
 
@@ -62,8 +63,6 @@ public class StateCurriculum extends BaseEntityWithId {
 	@JoinColumn(name = "state_curr_class_code", referencedColumnName = "code")
 	private Classifier stateCurrClass;
 	
-	@Column(name = "final_exam_descriptioon") //TODO: typo in column name in database
-	private String finalExamDescription;
 	
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true)
 	@JoinColumn(name = "state_curriculum_id", nullable=false, updatable = false, insertable = true)

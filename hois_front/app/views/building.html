@@ -53,8 +53,9 @@
   </div>
 
   <div layout="row" ng-show="formState.state === 'browse'">
-    <md-button class="md-raised" ng-click="addBuilding()">{{'building.add' | translate}}</md-button>
-    <md-button class="md-raised" ng-show="currentBuilding.id" ng-click="addRoom()">{{'room.add' | translate}}</md-button>
+    <md-button ng-click="addBuilding()" class="md-raised">{{'building.add' | translate}}</md-button>
+    <md-button ng-show="currentBuilding.id" ng-click="addRoom()" class="md-raised">{{'room.add' | translate}}</md-button>
+    <md-button ng-if="initialBuildingId" ng-href="#/rooms/search" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 
   <div flex ng-show="formState.state === 'editRoom'">
@@ -123,7 +124,14 @@
             <td md-cell>{{row.name}}</td>
             <td md-cell>{{row.code}}</td>
             <td md-cell>{{row.seats}}</td>
-            <td md-cell>{{row.equipment}}</td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="device in row.equipment">
+                  <td>{{currentLanguage()==='en' ? (device.equipmentCode.nameEn || device.equipmentCode.nameEt) : device.equipmentCode.nameEt}}</td>
+                  <td>{{device.equipmentCount}}</td>
+                </tr>
+              </table>
+            </td>
             <td md-cell>
               <md-button md-no-ink class="md-primary" ng-show="formState.state === 'browse'" ng-click="editRoom(row.id)">{{'main.button.change' | translate}}</md-button>
             </td>

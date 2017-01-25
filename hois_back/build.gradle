@@ -22,7 +22,7 @@ springBoot {
 
 jar {
 	baseName = 'hois_back'
-	version = '1.0'
+	version = '0.0.1-SNAPSHOT'
 	manifest {
 		attributes 'Main-Class' : 'ee.hitsa.ois.Application'
 	}

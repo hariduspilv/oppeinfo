@@ -1,12 +1,17 @@
 package ee.hitsa.ois.service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
-import ee.hitsa.ois.repository.SubjectRepository;
+import ee.hitsa.ois.domain.Subject;
+import ee.hitsa.ois.enums.SubjectStatus;
+import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -25,7 +30,7 @@ public class AutocompleteService {
     @Autowired
     private CurriculumRepository curriculumRepository;
     @Autowired
-    private SubjectRepository subjectRepository;
+    private SubjectService subjectService;
     @Autowired
     private SchoolDepartmentRepository schoolDepartmentRepository;
 
@@ -48,11 +53,14 @@ public class AutocompleteService {
         return result;
     }
 
-    private static PageRequest sortAndLimit(String sortField) {
-        return new PageRequest(0, MAX_ITEM_COUNT, new Sort(sortField));
+    public Page<Subject> subjects(Long schoolId, SubjectAutocompleteCommand command) {
+        SubjectSearchCommand subjectSearchCommand = new SubjectSearchCommand();
+        subjectSearchCommand.setName(command.getName());
+        subjectSearchCommand.setStatus(Collections.singletonList(SubjectStatus.AINESTAATUS_K.name()));
+        return subjectService.search(subjectSearchCommand, schoolId, new PageRequest(0, MAX_ITEM_COUNT));
     }
 
-    public List<AutocompleteResult<Long>> subjects(Long schoolId) {
-        return subjectRepository.findAllBySchool_idAndStatus_code(schoolId, "AINESTAATUS_K");
+    private static PageRequest sortAndLimit(String sortField) {
+        return new PageRequest(0, MAX_ITEM_COUNT, new Sort(sortField));
     }
 }

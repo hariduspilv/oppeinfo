@@ -12,7 +12,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.web.dto.ClassifierWithCount;
 
 public interface ClassifierRepository extends JpaRepository<Classifier, String> {
 
@@ -61,9 +60,6 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 
 	@CacheEvict(cacheNames = "classifier", allEntries = true)
 	List<Classifier> removeByCode(String code);
-
-	Page<ClassifierWithCount> findAllByMainClassCodeIsNullAndNameEtContainingIgnoreCase(String nameEt, Pageable pageable);
-	Page<ClassifierWithCount> findAllByMainClassCodeIsNullAndNameEnContainingIgnoreCase(String nameEn, Pageable pageable);
 
 	@Query(value = "select * from classifier as c inner join classifier_connect as cc on c.code = cc.connect_classifier_code where cc.classifier_code = ?1", nativeQuery = true)
 	List<Classifier> findParents(String code);

@@ -7,6 +7,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.SchoolDepartment;
 import ee.hitsa.ois.domain.Subject;
 
+import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 import java.math.BigDecimal;
@@ -16,33 +17,55 @@ import java.util.Set;
 
 public class SubjectForm extends VersionedCommand {
 
+    @NotNull
     @Size(min = 1, max = 20)
-    @NotNull//???
     private String code;
-    @Size(min = 1, max = 200)
+    @NotNull
+    @Size(min = 1, max = 255)
     private String nameEt;
-    @Size(min = 1, max = 200)
+    @NotNull
+    @Size(min = 1, max = 255)
     private String nameEn;
     @Size(min = 1, max = 4000)
     private String description;
 
+    @NotNull
+    @DecimalMin("0.1")
     private BigDecimal credits;
 
+    @NotNull
     @JsonDeserialize(using = ClassifierJsonDeserializer.class)
     private Classifier assessment;
 
+    @Size(max = 10000)
     private String assessmentDescription;
+    @NotNull
+    @Size(min = 1, max = 10000)
     private String objectivesEt;
+    @NotNull
+    @Size(min = 1, max = 10000)
     private String objectivesEn;
+    @NotNull
+    @Size(min = 1, max = 10000)
     private String outcomesEt;
+    @NotNull
+    @Size(min = 1, max = 10000)
     private String outcomesEn;
+    @Size(max = 4000)
     private String descriptionEt;
+    @Size(max = 4000)
     private String descriptionEn;
+    @Size(max = 4000)
     private String studyLiterature;
+    @Size(max = 10000)
     private String evaluationEt;
+    @Size(max = 10000)
     private String evaluationEn;
+    @Size(max = 4000)
     private String independentStudyEt;
+    @Size(max = 4000)
     private String independentStudyEn;
+    @Size(max = 4000)
     private String additionalInfo;
 
     @JsonDeserialize(contentUsing = ClassifierJsonDeserializer.class)
@@ -51,6 +74,7 @@ public class SubjectForm extends VersionedCommand {
     @JsonDeserialize(using = EntityWithIdJsonDeserializer.class)
     private SchoolDepartment schoolDepartment;
 
+    @NotNull
     @JsonDeserialize(using = ClassifierJsonDeserializer.class)
     private Classifier status;
 

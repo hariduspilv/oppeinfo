@@ -4,7 +4,7 @@ angular.module('hitsaOis')
   .controller('MainController', function ($scope, $translate, $location, Menu, $mdSidenav, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout) {
 
     var self = this;
-    
+
     function closeMenu() {
       $timeout(function() { $mdSidenav('left').close(); });
     }
@@ -144,7 +144,7 @@ angular.module('hitsaOis')
     $rootScope.$on('$translateChangeSuccess', function (event, data) {
       if(data.language === 'et'){
         $mdDateLocale.months = ['jaanuar', 'veebruar', 'märts', 'aprill', 'mai', 'juuni', 'juuli', 'august', 'september', 'oktoober', 'november', 'detsember'];
-        $mdDateLocale.shortMonths = ['jan', 'veb', 'mär', 'apr', 'mai', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'det'];
+        $mdDateLocale.shortMonths = ['jaan', 'veebr', 'märts', 'apr', 'mai', 'juuni', 'juuli', 'aug', 'sept', 'okt', 'nov', 'dets'];
         $mdDateLocale.days = ['pühapäev', 'esmaspäev', 'teisipäev', 'kolmapäev', 'neljapäev', 'reede', 'laupäev'];
         $mdDateLocale.shortDays = ['P', 'E', 'T', 'K', 'N', 'R', 'L'];
         $mdDateLocale.firstDayOfWeek = 1;
@@ -154,6 +154,14 @@ angular.module('hitsaOis')
             return m.isValid() ? m.format('DD.MM.YYYY') : null;
           } else {
             return null;
+          }
+        };
+        $mdDateLocale.parseDate = function(dateString) {
+          if(angular.isDefined(dateString)) {
+            var m = moment(dateString, 'DD.MM.YYYY');
+            return m.isValid() ? m.toDate() : new Date(NaN);
+          } else {
+            return new Date(NaN);
           }
         };
       } else {
@@ -168,6 +176,14 @@ angular.module('hitsaOis')
             return m.isValid() ? m.format('M/D/YYYY') : null;
           } else {
             return null;
+          }
+        };
+        $mdDateLocale.parseDate = function(dateString) {
+          if(angular.isDefined(dateString)) {
+            var m = moment(dateString, 'M/D/YYYY');
+            return m.isValid() ? m.toDate() : new Date(NaN);
+          } else {
+            return new Date(NaN);
           }
         };
       }

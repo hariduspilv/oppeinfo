@@ -39,7 +39,7 @@
           <tr md-row>
             <th md-column md-order-by="building.name">{{'building.name' | translate}}</th>
             <th md-column md-order-by="building.code">{{'building.code' | translate}}</th>
-            <th md-column>{{'building.address' | translate}}</th>
+            <th md-column md-order-by="building.address">{{'building.address' | translate}}</th>
             <th md-column md-order-by="name">{{'room.name' | translate}}</th>
             <th md-column md-order-by="code">{{'room.code' | translate}}</th>
             <th md-column md-numeric md-order-by="seats">{{'room.seats' | translate}}</th>
@@ -49,15 +49,24 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{row.buildingName}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{row.buildingId}}">{{row.buildingName}}</md-button>
+            </td>
             <td md-cell>{{row.buildingCode}}</td>
             <td md-cell>{{row.buildingAddress}}</td>
             <td md-cell>{{row.name}}</td>
             <td md-cell>{{row.code}}</td>
             <td md-cell>{{row.seats}}</td>
-            <td md-cell></td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings">{{'main.button.change' | translate}}</md-button>
+              <table>
+                <tr ng-repeat="device in row.equipment">
+                  <td>{{currentLanguage()==='en' ? (device.equipmentCode.nameEn || device.equipmentCode.nameEt) : device.equipmentCode.nameEt}}</td>
+                  <td>{{device.equipmentCount}}</td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{row.buildingId}}/{{row.id}}">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

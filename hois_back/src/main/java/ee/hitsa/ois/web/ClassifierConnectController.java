@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.Valid;
@@ -39,7 +38,7 @@ public class ClassifierConnectController {
      * Or @Id for both variables of composite primary key is enough?
      */
     @PostMapping(value = "/changeParents/{code}")
-    public boolean changeListOfParents(@PathVariable("code") String code, @Valid @RequestBody ArrayList<Classifier> parents) {
+    public boolean changeListOfParents(@PathVariable("code") String code, @Valid @RequestBody List<Classifier> parents) {
         service.updateParents(code, parents);
         return true;
     }

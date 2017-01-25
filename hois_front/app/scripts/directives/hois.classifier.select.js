@@ -15,16 +15,25 @@ angular.module('hitsaOis')
       require: ['ngModel'],
       replace: true,
       scope: {
-        criteria: '='
+        value: "=ngModel",
+        mainClassifierCode: '@',
+        connectClassifierCodes: '=',
+        criteria: '=',
+        filterValues: '@', //model of array of classifiers (or other objects which contain classifier, then byProperty must be defined )
+        byProperty: '@',
+        showOnlyValues: '@', //model of array of classifiers
+        watchModel: '@',
+        searchFromConnect: '@',
+        selectFirstValue: '@'
       },
-      link: function postLink(scope, element, attrs, ngModelControllers) {
+      link: function postLink(scope) {
         var optionsByCode = {};
         var params = { order: scope.$root.currentLanguageNameField()};
 
-        if(typeof attrs.mainClassifierCode !== 'undefined') {
-          params.mainClassCode = attrs.mainClassifierCode;
-        } else if(typeof attrs.connectClassifierCodes !== 'undefined') {
-          params.connectClassifierCodes = attrs.connectClassifierCodes;
+        if(typeof scope.mainClassifierCode !== 'undefined') {
+          params.mainClassCode = scope.mainClassifierCode;
+        } else if(angular.isArray(scope.connectClassifierCodes)) {
+          params.connectClassifierCodes = scope.connectClassifierCodes.toString();
         } else {
           // do not make query if main classifier code is undefined
           return;
@@ -35,7 +44,7 @@ angular.module('hitsaOis')
         }
 
         if(params.connectClassifierCodes) {
-          ClassifierConnect.queryAll({connectClassifierCodes: attrs.connectClassifierCodes}, function(classifierConnectResult) {
+          ClassifierConnect.queryAll({connectClassifierCodes: params.connectClassifierCodes}, function(classifierConnectResult) {
               classifierConnectResult.forEach(function(result) {
                 var option = {code: result.classifier.code, nameEt: result.classifier.nameEt, nameEn: result.classifier.nameEn, labelRu: result.classifier.labelRu};
                 optionsByCode[option.code] = option;
@@ -44,6 +53,93 @@ angular.module('hitsaOis')
           });
         }
 
+        var postLoad = function() {
+          var deselectHiddenValue = function() {
+            if(angular.isDefined(scope.value) && angular.isDefined(scope.value.code) && scope.optionsByCode[scope.value.code].hide) {
+              scope.value = undefined;
+            }
+          };
+
+          var doOptionsFilering = function() {
+            if(angular.isDefined(scope.showOnlyValues)) {
+              scope.$parent.$watchCollection(scope.showOnlyValues, function(showOnlyValues) {
+                var showOptions = [];
+                showOnlyValues.forEach(function(it) {
+                  if (angular.isDefined(scope.byProperty)) {
+                    if (angular.isDefined(it[scope.byProperty].code)) {
+                      showOptions.push(it[scope.byProperty].code);
+                    }
+                  } else {
+                    if (angular.isDefined(it.code)) {
+                      showOptions.push(it.code);
+                    }
+                  }
+                });
+                if (showOptions.length > 0) {
+                  for(var key in scope.optionsByCode) {
+                    scope.optionsByCode[key].hide = (showOptions.indexOf(key) === -1);
+                  }
+                }
+              });
+            }
+
+            if(angular.isDefined(scope.filterValues)) {
+              scope.$parent.$watchCollection(scope.filterValues, function(filterValues) {
+                filterValues.forEach(function(it) {
+                  if (angular.isDefined(scope.byProperty)) {
+                    if (angular.isDefined(it[scope.byProperty].code)) {
+                      scope.optionsByCode[it[scope.byProperty].code].hide = true;
+                    }
+                  } else {
+                    if (angular.isDefined(it.code)) {
+                      scope.optionsByCode[it.code].hide = true;
+                    }
+                  }
+                });
+              });
+            }
+            deselectHiddenValue();
+          };
+          doOptionsFilering();
+
+          if(typeof scope.watchModel !== 'undefined') {
+            scope.$parent.$watch(scope.watchModel, function(newValue) {
+              if(!angular.isDefined(newValue) || newValue === null) {
+                scope.value = undefined;
+              } else if(!!newValue) {
+                  var params = {
+                    mainClassifierCode: scope.connectMainClassifierCode
+                  };
+
+                  if(typeof scope.searchFromConnect === 'undefined'){
+                    params.classifierCode = newValue.code;
+                  } else {
+                    params.connectClassifierCode = newValue.code;
+                  }
+
+                  ClassifierConnect.queryAll(params, function(result) {
+                    var showOptions = [];
+                    result.forEach(function(classifierConnect) {
+                      var code = (typeof scope.searchFromConnect === 'undefined') ? classifierConnect.connectClassifier.code : classifierConnect.classifier.code;
+                      showOptions.push(code);
+                    });
+
+                    if (showOptions.length > 0) {
+                      for(var key in scope.optionsByCode) {
+                        scope.optionsByCode[key].hide = (showOptions.indexOf(key) === -1);
+                      }
+                    }
+
+                    if(typeof scope.selectFirstValue !== 'undefined' && showOptions.length > 0) {
+                      scope.value = optionsByCode[showOptions[0]];
+                    }
+                    deselectHiddenValue();
+                  });
+              }
+            });
+          }
+        };
+
         if(params.mainClassCode) {
           Classifier.queryAll(params, function(arrayResult) {
             arrayResult.forEach(function(classifier) {
@@ -51,47 +147,8 @@ angular.module('hitsaOis')
               optionsByCode[option.code] = option;
             });
             scope.optionsByCode = optionsByCode;
+            postLoad();
           });
-
-          if(typeof attrs.watchModel !== 'undefined') {
-            scope.$parent.$watch(attrs.watchModel, function(newValue) {
-              if(!!newValue) {
-                  var params = {
-                    mainClassifierCode: attrs.connectMainClassifierCode
-                  };
-
-                  if(typeof attrs.searchFromConnect === 'undefined'){
-                    params.classifierCode = newValue.code;
-                  } else {
-                    params.connectClassifierCode = newValue.code;
-                  }
-
-
-                  ClassifierConnect.queryAll(params, function(result) {
-                    var showOptions = [];
-                    result.forEach(function(classifierConnect) {
-                      var code = (typeof attrs.searchFromConnect === 'undefined') ? classifierConnect.connectClassifier.code : classifierConnect.classifier.code;
-                      showOptions.push(code);
-                    });
-
-                    if(typeof attrs.filterValues !== 'undefined') {
-                      if(ngModelControllers[0].$modelValue && showOptions.indexOf(ngModelControllers[0].$modelValue.code) === -1){
-                        ngModelControllers[0].$setViewValue(null);
-                        ngModelControllers[0].$render();
-                      }
-                      for(var key in scope.optionsByCode) {
-                        scope.optionsByCode[key].hide = (showOptions.indexOf(key) === -1);
-                      }
-                    }
-
-                    if(typeof attrs.selectFirstValue !== 'undefined' && showOptions.length > 0){
-                      ngModelControllers[0].$setViewValue(optionsByCode[showOptions[0]]);
-                      ngModelControllers[0].$render();
-                    }
-                  });
-              }
-            });
-          }
         }
       }
     };

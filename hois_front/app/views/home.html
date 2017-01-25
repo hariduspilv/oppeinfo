@@ -1,6 +1,20 @@
 <div layout-padding>
   <div ng-if="authenticated">
     <span>{{ 'home.greeting' | translate }}</span>
+    <h3>{{'home.generalmessages' | translate}}</h3>
+    <md-table-container>
+      <table md-table md-progress="generalmessages.$promise">
+        <tbody md-body>
+          <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
+            <td md-cell>{{row.title}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{generalmessages.totalElements}}" md-on-paginate="loadGeneralMessages"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>
   <div ng-if="!authenticated">
     <span>{{ 'home.joinedSchools' | translate }}</span>

@@ -17,10 +17,12 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.domain.EntityScan;
 import org.springframework.boot.autoconfigure.jackson.Jackson2ObjectMapperBuilderCustomizer;
 import org.springframework.boot.autoconfigure.web.WebMvcRegistrationsAdapter;
+import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
+import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -36,10 +38,7 @@ import org.springframework.web.servlet.mvc.method.annotation.RequestMappingHandl
 import org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod;
 
 import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonParser;
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.DeserializationContext;
-import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.SerializerProvider;
 
@@ -61,7 +60,10 @@ public class Application {
 
     @PostConstruct
     public void postConstruct() {
-        cacheManager.getCache("classifier").clear();
+        Cache c = cacheManager.getCache("classifier");
+        if(c != null) {
+            c.clear();
+        }
     }
 
     @Bean
@@ -102,21 +104,6 @@ public class Application {
                     gen.writeString(value.toInstant(ZoneOffset.UTC).toString());
                 }
             });
-
-            jacksonObjectMapperBuilder.deserializerByType(LocalDate.class, new JsonDeserializer<LocalDate>() {
-                @Override
-                public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-                    LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneId.systemDefault());
-                    return localDateTime.toLocalDate();
-                }
-            });
-
-            jacksonObjectMapperBuilder.deserializerByType(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
-                @Override
-                public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-                    return LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneId.systemDefault());
-                }
-            });
         };
     }
 
@@ -135,6 +122,17 @@ public class Application {
         public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
             argumentResolvers.add(new WithEntityMethodArgumentResolver(conversionService));
             argumentResolvers.add(new HoisUserDetailsArgumentResolver(hoisUserDetailsService));
+
+            // ISO string to LocalDate
+            ((ConverterRegistry)conversionService).addConverter(String.class, LocalDate.class, s -> {
+                LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(s), ZoneId.systemDefault());
+                return localDateTime.toLocalDate();
+            });
+            // ISO string to LocalDateTime
+            ((ConverterRegistry)conversionService).addConverter(String.class, LocalDateTime.class, s -> {
+                LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(s), ZoneId.systemDefault());
+                return localDateTime;
+            });
         }
     }
 

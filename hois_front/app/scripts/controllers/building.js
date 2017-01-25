@@ -4,12 +4,20 @@ angular.module('hitsaOis').controller('BuildingController',
 
   function (message, Classifier, QueryUtils, $mdDialog, $q, $route, $scope) {
     $scope.equipmentDefs = Classifier.query({mainClassCode: 'SEADMED'});
-    $scope.formState = {state: 'browse'};
     $scope.buildings = [];
     $scope.currentBuilding = {};
+    $scope.initialBuildingId = $route.current.params.buildingId;
+    $scope.initialBuildingId = /^\d+$/.test($scope.initialBuildingId) ? parseInt($scope.initialBuildingId, 10) : undefined;
+    $scope.initialRoomId = $route.current.params.roomId;
+    $scope.initialRoomId = /^\d+$/.test($scope.initialRoomId) ? parseInt($scope.initialRoomId, 10) : undefined;
+    $scope.formState = {state: 'browse', roomId: $scope.initialRoomId};
 
     var Building = QueryUtils.endpoint('/buildings');
     var Room = QueryUtils.endpoint('/buildings/:buildingId/rooms');
+
+    var roomEquipmentMapper = function(room) {
+      return room.roomEquipment.map(function(e) { return {equipmentCode: $scope.equipmentDefs[e.equipmentCode], equipmentCount: e.equipmentCount}; });
+    };
 
     var selectCurrentBuilding = function(id) {
       if($scope.buildings.length > 0) {
@@ -115,7 +123,7 @@ angular.module('hitsaOis').controller('BuildingController',
     $scope.editRoom = function(id) {
       var room = angular.copy($scope.tabledata.content.find(function(element) { return element.id === id; }) || {});
       $scope.room = new Room(room);
-      $scope.formState = {state: 'editRoom', roomEquipment: room.roomEquipment.map(function(e) { return {equipmentCode: $scope.equipmentDefs[e.equipmentCode], equipmentCount: e.equipmentCount}; } )};
+      $scope.formState = {state: 'editRoom', roomEquipment: roomEquipmentMapper(room)};
     };
 
     $scope.updateRoom = function() {
@@ -170,9 +178,23 @@ angular.module('hitsaOis').controller('BuildingController',
 
     // room pager
     QueryUtils.createQueryForm($scope, '/buildings/:buildingId/rooms', {order: 'name'}, function() {
-      // TODO set up equipment column
-      $scope.tabledata.content.forEach(function(e) {
+      // set up equipment column
+      $scope.tabledata.content.forEach(function(room) {
+        room.equipment = roomEquipmentMapper(room);
       });
+      var roomId = $scope.formState.roomId;
+      if(roomId) {
+        var room = $scope.tabledata.content.find(function(element) { return element.id === roomId; });
+        if(room.id) {
+          $scope.editRoom(roomId);
+        } else {
+          // when requested room is not on the current page
+          Room.get({id: roomId}).$promise.then(function(room) {
+            $scope.room = new Room(room);
+            $scope.formState = {state: 'editRoom', roomEquipment: roomEquipmentMapper(room)};
+          });
+        }
+      }
     });
     $scope.getCriteria = function() {
       return QueryUtils.getQueryParams(angular.extend({}, $scope.criteria, {buildingId: $scope.currentBuilding.id}));
@@ -183,7 +205,7 @@ angular.module('hitsaOis').controller('BuildingController',
     $q.all([$scope.equipmentDefs.$promise, buildings.$promise]).then(function(result) {
       $scope.equipmentDefs = Classifier.toMap(result[0].content);
       $scope.buildings = buildings.content;
-      selectCurrentBuilding();
+      selectCurrentBuilding($scope.initialBuildingId);
     });
   }
 );

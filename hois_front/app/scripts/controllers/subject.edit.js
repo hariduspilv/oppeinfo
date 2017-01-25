@@ -1,6 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectEditController', function ($scope, $route, $resource, $location, config, message, QueryUtils) {
+angular.module('hitsaOis').controller('SubjectEditController',
+  function ($scope, $route, $resource, $location, $translate, $q, config, message, QueryUtils) {
     var id = $route.current.params.id;
 
     $resource(config.apiUrl+'/subject/initEditFormData').get().$promise.then(function(result) {
@@ -34,5 +35,20 @@ angular.module('hitsaOis').controller('SubjectEditController', function ($scope,
       $scope.subject.$delete().then(function() {
         $location.path( '/subject');
       });
+    };
+
+    var subjectAutocomplete = QueryUtils.endpoint('/autocomplete/subjects');
+
+    $scope.querySearch = function(queryText) {
+
+      var deferred = $q.defer();
+      subjectAutocomplete.search({
+        excludedId: 3,
+        lang: $translate.use().toUpperCase(),
+        name: queryText
+      }, function (data) {
+        deferred.$$resolve(data.content);
+      });
+      return deferred.promise;
     };
   });

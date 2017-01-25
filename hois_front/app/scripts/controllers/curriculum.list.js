@@ -15,11 +15,19 @@ angular.module('hitsaOis')
       $scope.query.school = [$rootScope.auth.school.id];
     }
 
+    $rootScope.$watch('auth', function(){
+        if($rootScope.auth) {
+            $scope.disableSchoolSelection = $rootScope.auth.roleCode === 'ROLL_A';
+            if($scope.disableSchoolSelection) {
+                $scope.query.school = $rootScope.auth.school.id;
+            }
+            $scope.getCurriculums();
+        }
+    });
+
   function success(response) {
     $scope.curriculums = response.content;
     $scope.curriculums.count = response.totalElements;
-    //console.log("curriculums:");
-    //console.log(response.content);
   }
 
     $scope.clearInputs = function() {
@@ -31,11 +39,8 @@ angular.module('hitsaOis')
       $scope.query.validFromMillis = $scope.query.validFrom ? $scope.query.validFrom.getTime() : null;
       $scope.query.validThruMillis = $scope.query.validThru ? $scope.query.validThru.getTime() : null;
       $scope.query.lang = $translate.use().toUpperCase();
-      //console.log("query");
-      //console.log($scope.query);
       $scope.promise = Curriculum.query($scope.query, success).$promise;
     };
-    $scope.getCurriculums();
 
     $scope.getClassifierValds = function() {
       var query = {
@@ -69,7 +74,6 @@ angular.module('hitsaOis')
       }
     };
 
-
     function getListOfStatuses() {
       Classifier.get('OPPEKAVA_STAATUS').$promise.then(function(response) {
         $scope.listOfStatuses = response.children;
@@ -99,9 +103,13 @@ angular.module('hitsaOis')
     getListOfEkrLevels();
 
     function getListOfStudyLevels() {
-      Classifier.get('OPPEASTE').$promise.then(function(response) {
-        $scope.listOfStudyLevels = response.children;
-      });
+        QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
+            var studyLevelCodes = response.studyLevels;
+            $scope.listOfStudyLevels = [];
+            studyLevelCodes.forEach(function(it) {
+                    $scope.listOfStudyLevels.push({code: it});
+            });
+        });
     }
     getListOfStudyLevels();
 
@@ -124,6 +132,15 @@ angular.module('hitsaOis')
       if(curriculum.higher) {
         $location.path('/higherEducationCurriculum/' + curriculum.id + '/edit');
       } else {
+        $location.path('/vocational/curriculum/' + curriculum.id + '/edit');
+      }
+    };
+
+    $scope.view = function(curriculum) {
+      if(curriculum.higher) {
+        $location.path('/higherEducationCurriculum/' + curriculum.id + '/view');
+      } else {
+        //   TODO: view mode not yet implemented
         $location.path('/vocational/curriculum/' + curriculum.id + '/edit');
       }
     };

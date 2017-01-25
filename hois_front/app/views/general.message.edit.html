@@ -1,0 +1,45 @@
+<div layout="column" layout-padding>
+  <div>
+    <form name="generalMessageForm">
+      <md-input-container class="md-block">
+        <label class="textInput">{{'generalmessage.title' | translate}}</label>
+        <input ng-model="record.title" type="text" required autofocus>
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'generalmessage.content' | translate}}</label>
+        <textarea ng-model="record.content" md-maxlength="4000" required></textarea>
+      </md-input-container>
+
+      <div layout="row">
+        <md-input-container flex="20">
+          <label>{{'main.validityPeriod' | translate}}</label>
+          <input type="hidden">
+        </md-input-container>
+        <div flex="33">
+          <md-input-container flex>
+            <md-datepicker ng-model="record.validFrom" md-placeholder="{{'generalmessage.validFrom' | translate}}" required></md-datepicker>
+          </md-input-container>
+          <md-input-container flex>
+            <md-datepicker ng-model="record.validThru" md-min-date="record.validFrom" md-placeholder="{{'generalmessage.validThru' | translate}}"></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+
+      <md-list>
+        <md-subheader>{{'generalmessage.targets' | translate}}&nbsp;*</md-subheader>
+        <md-list-item ng-repeat="role in roleDefs.content">
+          <span>
+            <md-checkbox ng-model="role._selected">
+              {{currentLanguage()==='en' ? (role.nameEn || role.nameEt) : role.nameEt}}
+            </md-checkbox>
+          </span>
+        </md-list-item>
+      </md-list>
+    </form>
+
+    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-if="record.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-href="#/generalmessages" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

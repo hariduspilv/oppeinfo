@@ -43,7 +43,7 @@ public class School extends BaseEntityWithId {
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SchoolStudyLevel> studyLevels;
     @JsonIgnore
-    @OneToMany(mappedBy = "school", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @OneToMany(mappedBy = "school", orphanRemoval = true)
     private List<SchoolDepartment> schoolDepartments;
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

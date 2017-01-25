@@ -82,7 +82,7 @@
     <table md-table md-row-select="isTableSelect" ng-model="tableSelected" md-progress="promise">
     <thead md-head md-order="query.order" md-on-reorder="getStateCurriculums">
     <tr md-row>
-        <th md-column md-order-by="name{{currentLanguage()=='en' ? 'En' : 'Et'}}">{{'curriculum.name' | translate}}</th>
+        <th md-column md-order-by="{{currentLanguage()=='en' ? 'nameEn' : 'nameEt'}}">{{'curriculum.name' | translate}}</th>
         <th md-column md-order-by="ekrLevel">{{'stateCurriculum.EKR' | translate}}</th>
         <th md-column md-order-by="credits">{{'stateCurriculum.credits' | translate}}</th>
         <th md-column md-order-by="validFrom">{{'stateCurriculum.validFrom' | translate}}</th>

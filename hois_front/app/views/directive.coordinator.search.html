@@ -1,0 +1,31 @@
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="name">{{'directive.coordinator.name' | translate}}</th>
+            <th md-column md-order-by="idCode">{{'directive.coordinator.idCode' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{row.name}}</td>
+            <td md-cell>{{row.idCode}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/coordinators/{{row.id}}">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+
+  <div layout="row">
+    <md-button class="md-raised" ng-href="#/directives/coordinators/new">{{'main.button.create' | translate}}</md-button>
+  </div>
+</div>

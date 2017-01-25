@@ -9,7 +9,7 @@
 angular.module('hitsaOis')
   .directive('hoisClassifierRadio', function (Classifier, ClassifierConnect) {
     return {
-      template: '<md-radio-group ng-model-options="{ trackBy: \'$value.code\' }"><md-radio-button ng-repeat="option in options track by option.code" ng-value="option"   ' +
+      template: '<md-radio-group ng-model-options="{ trackBy: \'$value.code\' }"><md-radio-button ng-repeat="(code, option) in optionsByCode" ng-value="option"   ' +
       'aria-label="{{option[$root.currentLanguageNameField()]}}">{{option[$root.currentLanguageNameField()]}}</md-radio-button></md-radio-group>',
       restrict: 'E',
       require: ['ngModel'],
@@ -18,15 +18,20 @@ angular.module('hitsaOis')
       link: function postLink(scope, element, attrs, ngModelControllers) {
         var optionsByCode = {};
         Classifier.queryAll({mainClassCode: attrs.mainClassifierCode}, function(result) {
-          var options = [];
           result.forEach(function(classifier) {
             var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
-            options.push(option);
             optionsByCode[option.code] = option;
           });
-          scope.options = options;
+          scope.optionsByCode = optionsByCode;
         });
 
+        //FIX for object selection
+        scope.$parent.$watch(attrs.ngModel, function(newValue) {
+          if (angular.isObject(newValue)) {
+            ngModelControllers[0].$setViewValue(optionsByCode[newValue.code]);
+            ngModelControllers[0].$render();
+          }
+        });
 
         if(attrs.watchModel !== null) {
           scope.$parent.$watch(attrs.watchModel, function(newValue) {

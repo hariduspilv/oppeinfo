@@ -7,11 +7,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.CurriculumForSearch;
+import ee.hitsa.ois.domain.SchoolWithoutLogo;
+import ee.hitsa.ois.domain.curriculum.CurriculumForSearch;
 /**
  * TODO: try sorting in sql query
  * " order by ?1 " where "?1" is "id ASC" did not work!
- * 
  */
 public class CurriculumSorter {
 	public static Page<CurriculumForSearch> sort(List<CurriculumForSearch> list, Pageable p) {
@@ -19,6 +19,8 @@ public class CurriculumSorter {
 			switch(order.getProperty()) {
 			case "id":
 				return Comparator.comparing(CurriculumForSearch::getId);
+	        case "schoolName":
+	            return Comparator.comparing(CurriculumForSearch::getSchool, Comparator.nullsFirst(Comparator.comparing(SchoolWithoutLogo::getNameEt, Comparator.naturalOrder())));
 			case "nameEt":
 				return Comparator.comparing(CurriculumForSearch::getNameEt, Comparator.nullsFirst(Comparator.naturalOrder()));
 			case "nameEn":

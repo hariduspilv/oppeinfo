@@ -1,11 +1,13 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 
+import ee.hitsa.ois.validation.ValidationFailedException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -13,6 +15,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.validation.BindException;
 import org.springframework.validation.Errors;
 import org.springframework.validation.FieldError;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
@@ -21,6 +24,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+
+import ee.hitsa.ois.util.EntityRemoveException;
 
 @ControllerAdvice
 public class ControllerErrorHandler {
@@ -35,8 +40,19 @@ public class ControllerErrorHandler {
             status = HttpStatus.NOT_FOUND;
         }else if(e instanceof IllegalArgumentException) {
             status = HttpStatus.BAD_REQUEST;
+        }else if(e instanceof BindException) {
+            info = ErrorInfo.fromErrors(((BindException) e).getBindingResult());
+            status = HttpStatus.PRECONDITION_FAILED;
         }else if(e instanceof MethodArgumentNotValidException) {
             info = ErrorInfo.fromErrors(((MethodArgumentNotValidException) e).getBindingResult());
+            status = HttpStatus.PRECONDITION_FAILED;
+        }else if(e instanceof ValidationFailedException) {
+            info = ErrorInfo.of(e.getMessage(), ((ValidationFailedException) e).getField());
+            status = HttpStatus.PRECONDITION_FAILED;
+        }else if(e instanceof EntityRemoveException) {
+            String errorCode = e.getMessage();
+            info = ErrorInfo.of(errorCode != null ? errorCode: "main.messages.record.referenced", null);
+            // FIXME better status code?
             status = HttpStatus.PRECONDITION_FAILED;
         }else if(e instanceof DataIntegrityViolationException) {
             // TODO check real cause
@@ -82,6 +98,10 @@ public class ControllerErrorHandler {
         static ErrorInfo fromErrors(Errors errors) {
             List<Error> err = errors.getAllErrors().stream().map(e -> new Error(e.getCode(), e instanceof FieldError ? ((FieldError)e).getField() : null)).collect(Collectors.toList());
             return new ErrorInfo(err);
+        }
+
+        static ErrorInfo of(String code, String field) {
+            return new ErrorInfo(Collections.singletonList(new Error(code, field)));
         }
 
         static class Error {

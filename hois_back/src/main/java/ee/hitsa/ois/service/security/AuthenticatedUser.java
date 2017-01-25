@@ -15,6 +15,8 @@ public class AuthenticatedUser implements Serializable {
     private final String name;
 
     private final Long user;
+    
+    private String roleCode;
 
     // todo: replace with id
     private SchoolWithoutLogo school;
@@ -25,13 +27,14 @@ public class AuthenticatedUser implements Serializable {
 
     private List<UserProjection> users;
 
-    public AuthenticatedUser(String name, Long user) {
+    public AuthenticatedUser(String name, Long user, String roleCode) {
         this.name = name;
         this.user = user;
+        this.roleCode = roleCode;
     }
 
     public AuthenticatedUser(User user) {
-        this(user.getPerson().getIdcode(), user.getId());
+        this(user.getPerson().getIdcode(), user.getId(), user.getRole().getCode());
     }
 
     public Long getUser() {
@@ -70,7 +73,15 @@ public class AuthenticatedUser implements Serializable {
         return fullname;
     }
 
-    public void setFullname(String firstName, String lastName) {
-        fullname = "" + firstName + " " + lastName;
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+
+    public String getRoleCode() {
+        return roleCode;
+    }
+
+    public void setRoleCode(String roleCode) {
+        this.roleCode = roleCode;
     }
 }

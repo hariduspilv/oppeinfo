@@ -24,4 +24,11 @@ public class BuildingControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+
+    @Test
+    public void searchRooms() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/buildings/searchrooms", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

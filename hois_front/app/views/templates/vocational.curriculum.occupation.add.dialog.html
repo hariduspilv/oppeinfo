@@ -16,18 +16,18 @@
         <div layout="row">
           <md-input-container flex>
             <label>{{'occupation.aquiredOccupation' | translate}}</label>
-            <hois-classifier-select ng-model="data.occupation" ng-change="occupationSelected()" main-classifier-code="KUTSE"
+            <hois-classifier-select ng-model="data.occupation" main-classifier-code="KUTSE"
              ng-required="true"></hois-classifier-select>
           </md-input-container>
         </div>
 
         <div layout="row">
-          <span class="md-title" flex>{{'occupation.specializations' | translate}}</span>
+          <span class="md-title" flex>{{'occupation.specialities' | translate}}</span>
         </div>
         <div layout="column">
-          <div ng-repeat="checkbox in data.specializations" flex>
-            <md-checkbox ng-change="selectSpecialization(specialization, checkbox)" ng-model="specialization" aria-label="{{checkbox[currentLanguageNameField()]}}">
-              {{checkbox[currentLanguageNameField()]}}
+          <div ng-repeat="occupationSpeciality in data.specialities" flex>
+            <md-checkbox ng-model="data.selectedSpecialities[occupationSpeciality.speciality.code]" aria-label="{{occupationSpeciality.speciality[currentLanguageNameField()]}}">
+              {{occupationSpeciality.speciality[currentLanguageNameField()]}}
             </md-checkbox>
           </div>
         </div>
@@ -43,8 +43,8 @@
 
         <div layout="row">
           <md-input-container>
-            <span>{{'occupation.schoolHasRightToGiveOccupation' | translate}}</span>
-            <md-checkbox ng-model="data.schoolHasRightToGiveOccupation" aria-label="schoolHasRightToGiveOccupation">
+            <span>{{'occupation.schoolHasOccupationGrant' | translate}}</span>
+            <md-checkbox ng-model="data.occupationGrant" aria-label="occupationGrant">
             </md-checkbox>
           </md-input-container>
         </div>

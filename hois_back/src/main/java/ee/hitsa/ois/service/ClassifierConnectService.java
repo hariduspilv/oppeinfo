@@ -25,11 +25,8 @@ import ee.hitsa.ois.web.commandobject.ClassifierConnectSearchCommand;
 @Service
 public class ClassifierConnectService {
 
+    @Autowired
 	private ClassifierConnectRepository repository;
-
-    public ClassifierConnectService(@Autowired ClassifierConnectRepository repository) {
-    	this.repository = repository;
-    }
 
     public Page<ClassifierConnect> search(ClassifierConnectSearchCommand searchCommand, Pageable pageable) {
         return repository.findAll(new ClassifierConnectSpecification(searchCommand), pageable);

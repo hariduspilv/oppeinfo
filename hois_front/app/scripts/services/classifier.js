@@ -92,5 +92,24 @@ angular.module('hitsaOis')
       return array.reduce(function(acc, item) { acc[item.code] = item; return acc; }, {});
     };
 
+    Classifier.getSelectedCodes = function(defs) {
+      // create list of selected codes based on model.selected values
+      var selected = [];
+      for(var rowNo = 0, rowCnt = defs.length;rowNo < rowCnt;rowNo++) {
+        var item = defs[rowNo];
+        if(item._selected) {
+          selected.push(item.code);
+        }
+      }
+      return selected;
+    };
+
+    Classifier.setSelectedCodes = function(defs, selected) {
+      for(var rowNo = 0, rowCnt = defs.length;rowNo < rowCnt;rowNo++) {
+        var item = defs[rowNo];
+        item._selected = selected.indexOf(item.code) !== -1;
+      }
+    };
+
     return Classifier;
   });

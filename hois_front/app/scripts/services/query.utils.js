@@ -58,9 +58,12 @@ angular.module('hitsaOis')
         clearQueryParams(scope.criteria);
       };
 
-      scope.fromStorage = function(key) {
-        return JSON.parse($sessionStorage[key] || '{}');
-      };
+      if(scope.fromStorage === undefined) {
+        // if caller has not already provided it's own version, define one
+        scope.fromStorage = function(key) {
+          return JSON.parse($sessionStorage[key] || '{}');
+        };
+      }
 
       scope.toStorage = function(key, criteria) {
         $sessionStorage[key] = JSON.stringify(criteria);

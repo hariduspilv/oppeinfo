@@ -40,6 +40,7 @@ public class Classifier extends BaseEntity {
     private String nameEn;
     @JsonView(JsonViews.Basic.class)
     private String nameRu;
+    @JsonView(JsonViews.Basic.class)
     private String mainClassCode;
 
     //@Cacheable can't serialize lazily fetched list

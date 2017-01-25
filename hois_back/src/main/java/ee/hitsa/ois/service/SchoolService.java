@@ -68,8 +68,8 @@ public class SchoolService {
         return schoolRepository.save(school);
     }
 
-    public School findOne(Long id) {
-        return schoolRepository.findOne(id);
+    public School getOne(Long id) {
+        return schoolRepository.getOne(id);
     }
 
     public Page<School> search(SchoolSearchCommand searchCommand, Pageable pageable) {
@@ -84,7 +84,7 @@ public class SchoolService {
     }
 
     public void delete(School school) {
-        schoolRepository.delete(school);
+        EntityUtil.deleteEntity(schoolRepository, school);
     }
 
     public List<SchoolWithoutLogo> findAll() {
@@ -94,7 +94,7 @@ public class SchoolService {
     public School updateStudyLevels(School school, List<String> studyLevels) {
         if(studyLevels != null) {
             List<SchoolStudyLevel> storedStudyLevels = school.getStudyLevels();
-            Set<String> studyLevelCodes = storedStudyLevels.stream().map(SchoolStudyLevel::getStudyLevel).map(Classifier::getCode).collect(Collectors.toSet());
+            Set<String> studyLevelCodes = storedStudyLevels.stream().map(sl -> sl.getStudyLevel().getCode()).collect(Collectors.toSet());
 
             for(String studyLevel : studyLevels) {
                 if(!studyLevelCodes.remove(studyLevel)) {

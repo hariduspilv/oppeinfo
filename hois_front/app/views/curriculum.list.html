@@ -1,7 +1,7 @@
 
 <div ng-if="!isSelectDialog">
   <form layout="column" ng-cloak  ng-submit="getCurriculums()" class="ois-form-layout-padding">
-      <div layout="row" layout-sm="column" layout-xs="column">
+      <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!disableSchoolSelection">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'school.label' | translate}}</label>
               <md-select ng-model="query.school" multiple>
@@ -11,12 +11,22 @@
               </md-select>
           </md-input-container>
           <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-              <label>{{'curriculum.studyLevel' | translate}}</label>
-              <md-select ng-model="query.studyLevel" multiple>
-                  <md-option ng-repeat="classifier in listOfStudyLevels | orderBy:'nameEt'" ng-value="classifier.code">
-                      {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
-                  </md-option>
-              </md-select>
+            <label>{{'curriculum.studyLevel' | translate}}</label>
+            <md-select ng-model="query.studyLevel" ng-model-options="{trackBy: '$value.code'}">
+                <md-option ng-repeat="classifier in listOfStudyLevels track by classifier.code" ng-value="classifier">
+                    <hois-classifier-value ng-model="classifier" main-classifier-code="OPPEASTE"></hois-classifier-value>
+                </md-option>
+            </md-select>
+          </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column"  ng-if="disableSchoolSelection">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'curriculum.studyLevel' | translate}}</label>
+            <md-select ng-model="query.studyLevel" ng-model-options="{trackBy: '$value.code'}">
+                <md-option ng-repeat="classifier in listOfStudyLevels track by classifier.code" ng-value="classifier">
+                    <hois-classifier-value ng-model="classifier" main-classifier-code="OPPEASTE"></hois-classifier-value>
+                </md-option>
+            </md-select>
           </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
@@ -182,7 +192,7 @@
     </thead>
     <tbody md-body>
     <tr md-row md-select="curriculum" md-select-id="curriculum.id" ng-repeat="curriculum in curriculums" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell>{{curriculum.school.nameEt}}</td>
+        <td md-cell><a href="" ng-click="view(curriculum)">{{curriculum.school.nameEt}}</a></td>
         <td md-cell>{{curriculum.nameEt}}</td>
         <td md-cell>{{curriculum.origStudyLevel.nameEt}}</td>
         <td md-cell>{{curriculum.credits}}</td>

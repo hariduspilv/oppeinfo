@@ -16,8 +16,8 @@
         <div flex-xs="0" flex-gt-sm="10"></div>
         <md-input-container flex>
           <label>{{'subject.assessment' | translate}}</label>
-          <md-select ng-model="criteria.assessments" multiple>
-            <md-option ng-repeat="it in classifiers.HINDAMISVIIS" ng-value="it.code">
+          <md-select ng-model="criteria.assessments" ng-model-options="{trackBy: '$value'}" multiple>
+            <md-option ng-repeat="it in classifiers.HINDAMISVIIS" ng-value="it.id">
               {{it[currentLanguageNameField()]}}
             </md-option>
           </md-select>
@@ -65,8 +65,8 @@
           <div layout="column" flex="45">
             <md-input-container>
               <label>{{'subject.status' | translate}}</label>
-              <md-select ng-model="criteria.status" multiple>
-                <md-option ng-repeat="it in classifiers.AINESTAATUS" ng-value="it.code">
+              <md-select ng-model="criteria.status" ng-model-options="{trackBy: '$value'}" multiple>
+                <md-option ng-repeat="it in classifiers.AINESTAATUS" ng-value="it.id">
                   {{it[currentLanguageNameField()]}}
                 </md-option>
               </md-select>
@@ -76,8 +76,8 @@
           <div layout="column" flex="45">
             <md-input-container>
               <label>{{'subject.language' | translate}}</label>
-              <md-select ng-model="criteria.languages" multiple>
-                <md-option ng-repeat="it in classifiers.OPPEKEEL" ng-value="it.code">
+              <md-select ng-model="criteria.languages" ng-model-options="{trackBy: '$value'}" multiple>
+                <md-option ng-repeat="it in classifiers.OPPEKEEL" ng-value="it.id">
                   {{it[currentLanguageNameField()]}}
                 </md-option>
               </md-select>

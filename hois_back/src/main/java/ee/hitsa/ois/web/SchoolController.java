@@ -10,7 +10,6 @@ import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,11 +20,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.School;
 import ee.hitsa.ois.domain.SchoolDepartment;
-import ee.hitsa.ois.domain.SchoolStudyLevel;
 import ee.hitsa.ois.domain.TeacherOccupation;
 import ee.hitsa.ois.service.SchoolDepartmentService;
 import ee.hitsa.ois.service.SchoolService;
@@ -42,7 +39,6 @@ import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyLevelsCommand;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
 import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
-import ee.hitsa.ois.web.dto.SchoolDepartmentTree;
 import ee.hitsa.ois.web.dto.SchoolDto;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.TeacherOccupationDto;
@@ -61,8 +57,7 @@ public class SchoolController {
 
     @GetMapping(value = "")
     public Page<SchoolDto> search(SchoolSearchCommand schoolSearchCommand, Pageable pageable) {
-        Page<School> schools = schoolService.search(schoolSearchCommand, pageable);
-        return new PageImpl<>(schools.getContent().stream().map(SchoolDto::of).collect(Collectors.toList()), pageable, schools.getTotalElements());
+        return schoolService.search(schoolSearchCommand, pageable).map(SchoolDto::of);
     }
 
     @GetMapping(value = "/{id}")
@@ -103,26 +98,26 @@ public class SchoolController {
 
     @GetMapping(value = "/studyLevels")
     public Map<String, ?> studyLevels(HoisUserDetails user) {
-        School school = schoolService.findOne(user.getSchool().getId());
+        School school = schoolService.getOne(user.getSchool().getId());
         Map<String, Object> response = new HashMap<>();
         response.put("id", school.getId());
         response.put("version", school.getVersion());
         response.put("nameEt", school.getNameEt());
         response.put("nameEn", school.getNameEn());
-        response.put("studyLevels", school.getStudyLevels().stream().map(SchoolStudyLevel::getStudyLevel).map(Classifier::getCode).collect(Collectors.toList()));
+        response.put("studyLevels", school.getStudyLevels().stream().map(sl -> sl.getStudyLevel().getCode()).collect(Collectors.toList()));
         return response;
     }
 
     @PutMapping(value = "/studyLevels")
     public Map<String, ?> updateStudyLevels(HoisUserDetails user, @Valid @RequestBody SchoolUpdateStudyLevelsCommand studyLevelsCmd) {
-        School school = schoolService.findOne(user.getSchool().getId());
+        School school = schoolService.getOne(user.getSchool().getId());
         EntityUtil.assertEntityVersion(school, studyLevelsCmd.getVersion());
         schoolService.updateStudyLevels(school, studyLevelsCmd.getStudyLevels());
         return studyLevels(user);
     }
 
     @GetMapping(value = "/departments")
-    public Page<SchoolDepartmentTree> searchSchoolDepartment(HoisUserDetails user, SchoolDepartmentSearchCommand criteria, Pageable pageable) {
+    public Page<SchoolDepartmentDto> searchSchoolDepartment(HoisUserDetails user, SchoolDepartmentSearchCommand criteria, Pageable pageable) {
         return schoolDepartmentService.findAll(user.getSchool().getId(), criteria, pageable);
     }
 
@@ -154,8 +149,7 @@ public class SchoolController {
 
     @GetMapping(value = "/teacheroccupations")
     public Page<TeacherOccupationDto> searchTeacherOccupation(HoisUserDetails user, TeacherOccupationSearchCommand criteria, Pageable pageable) {
-        Page<TeacherOccupation> occupations = teacherOccupationService.findAll(user.getSchool().getId(), criteria, pageable);
-        return new PageImpl<>(occupations.getContent().stream().map(TeacherOccupationDto::of).collect(Collectors.toList()), pageable, occupations.getTotalElements());
+        return teacherOccupationService.findAll(user.getSchool().getId(), criteria, pageable).map(TeacherOccupationDto::of);
     }
 
     @GetMapping(value = "/teacheroccupations/{id}")

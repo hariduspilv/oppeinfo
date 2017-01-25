@@ -18,6 +18,8 @@ import javax.persistence.OptimisticLockException;
 
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.FatalBeanException;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.StringUtils;
 
@@ -64,16 +66,16 @@ public abstract class EntityUtil {
                         //(this is here because error occurred (orphans are not referenced...) when persistent set was replaced with null)
                         if(Collection.class.isAssignableFrom(tpd.getPropertyType())) {
                             Collection entityValue = (Collection) tpd.getReadMethod().invoke(entity);
-                            if(entityValue != null  && value != null && value instanceof Collection) {
+                            if(entityValue != null) {
                                 //if objects inside persistent set are changed then we should add updated ones
                                 entityValue.clear();
-                                entityValue.addAll((Collection) value);
+                                if(value instanceof Collection) {
+                                    entityValue.addAll((Collection) value);
+                                }
+                                continue;
                             }
-                        } else {
-                            writeMethod.invoke(entity, value);
                         }
-
-
+                        writeMethod.invoke(entity, value);
                     } catch (Throwable e) {
                         throw new FatalBeanException("Could not copy property '" + propertyName + "' from command to entity", e);
                     }
@@ -150,6 +152,29 @@ public abstract class EntityUtil {
             throw new EntityNotFoundException();
         }
         consumer.accept(entity);
+    }
+
+    /**
+     * try to delete entity, catching data integrity violation exception.
+     * As there is no easy way to know from exception which of delete or update operation was tried,
+     * we are using simple helper for delete to map data integrity violation to another exception.
+     * Usually we get exception only when data is flushed to database, so here we flush it manually.
+     *
+     * @param remover
+     * @param entity
+     * @param errorCode
+     */
+    public static <E> void deleteEntity(JpaRepository<E, ?> repository, E entity, String errorCode) {
+        try {
+            repository.delete(entity);
+            repository.flush();
+        } catch(DataIntegrityViolationException e) {
+            throw new EntityRemoveException(errorCode, e.getCause());
+        }
+    }
+
+    public static <E> void deleteEntity(JpaRepository<E, ?> repository, E entity) {
+        deleteEntity(repository, entity, null);
     }
 
     /**

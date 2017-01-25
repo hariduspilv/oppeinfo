@@ -35,7 +35,7 @@ angular.module('hitsaOis')
         },
         {
           name: 'main.menu.fixData.searchrooms',
-          url: "/buildings/searchrooms?_menu"
+          url: "/rooms/search?_menu"
         },
         {
           name: 'main.menu.fixData.departments',
@@ -44,6 +44,14 @@ angular.module('hitsaOis')
 		{
           name: 'main.menu.fixData.teacheroccupations',
           url: "/school/teacheroccupations?_menu"
+        },
+		{
+            name: 'main.menu.fixData.directivecoordinators',
+            url: "/directives/coordinators?_menu"
+        },
+		{
+            name: 'main.menu.fixData.generalmessages',
+            url: "/generalmessages?_menu"
         },
 		{
           name: 'main.menu.fixData.studyLevels',

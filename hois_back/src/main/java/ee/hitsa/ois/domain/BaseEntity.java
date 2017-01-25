@@ -48,16 +48,32 @@ public abstract class BaseEntity implements Serializable, Versioned {
         return inserted;
     }
 
+    public void setInserted(LocalDateTime inserted) {
+        this.inserted = inserted;
+    }
+
     public String getInsertedBy() {
         return insertedBy;
+    }
+
+    public void setInsertedBy(String insertedBy) {
+        this.insertedBy = insertedBy;
     }
 
     public LocalDateTime getChanged() {
         return changed;
     }
 
+    public void setChanged(LocalDateTime changed) {
+        this.changed = changed;
+    }
+
     public String getChangedBy() {
-        return insertedBy;
+        return changedBy;
+    }
+
+    public void setChangedBy(String changedBy) {
+        this.changedBy = changedBy;
     }
 
     @Override
@@ -67,21 +83,5 @@ public abstract class BaseEntity implements Serializable, Versioned {
 
     public void setVersion(Long version) {
         this.version = version;
-    }
-
-    public void setInserted(LocalDateTime inserted) {
-        this.inserted = inserted;
-    }
-
-    public void setInsertedBy(String insertedBy) {
-        this.insertedBy = insertedBy;
-    }
-
-    public void setChanged(LocalDateTime changed) {
-        this.changed = changed;
-    }
-
-    public void setChangedBy(String changedBy) {
-        this.changedBy = changedBy;
     }
 }

@@ -1,6 +1,5 @@
 package ee.hitsa.ois.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -8,14 +7,13 @@ import org.springframework.format.annotation.NumberFormat;
 
 import javax.persistence.*;
 import java.math.BigDecimal;
-import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
 public class Subject extends BaseEntityWithId {
 
-    @JsonIgnore
     @ManyToOne(optional = false)
     private School school;
     private String code;
@@ -28,7 +26,6 @@ public class Subject extends BaseEntityWithId {
     @ManyToOne
     private Classifier assessment;
 
-    @Column(name = "assessment_descr")
     private String assessmentDescription;
     private String objectivesEt;
     private String objectivesEn;
@@ -49,15 +46,12 @@ public class Subject extends BaseEntityWithId {
     @ManyToOne(optional = false)
     private Classifier status;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "subject",cascade = CascadeType.ALL, orphanRemoval=true)
     private Set<SubjectLanguage> subjectLanguages;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "primarySubject", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SubjectConnect> subjectConnecions;
+    private Set<SubjectConnect> subjectConnections;
 
-    @JsonIgnore
     @OneToMany(mappedBy = "connectSubject")
     private Set<SubjectConnect> parentConnections;
 
@@ -238,7 +232,7 @@ public class Subject extends BaseEntityWithId {
     }
 
     public Set<SubjectLanguage> getSubjectLanguages() {
-        return subjectLanguages != null ? subjectLanguages : Collections.emptySet();
+        return subjectLanguages != null ? subjectLanguages : (subjectLanguages = new HashSet<>());
     }
 
     public void setSubjectLanguages(Set<SubjectLanguage> subjectLanguages) {
@@ -251,18 +245,18 @@ public class Subject extends BaseEntityWithId {
         return getSubjectLanguages().stream().map(SubjectLanguage::getLanguage).collect(Collectors.toSet());
     }
 
-    public Set<SubjectConnect> getSubjectConnecions() {
-        return subjectConnecions != null ? subjectConnecions : Collections.emptySet();
+    public Set<SubjectConnect> getSubjectConnections() {
+        return subjectConnections != null ? subjectConnections : (subjectConnections = new HashSet<>());
     }
 
-    public void setSubjectConnecions(Set<SubjectConnect> subjectConnecions) {
-        Set<SubjectConnect> connections = getSubjectConnecions();
+    public void setSubjectConnections(Set<SubjectConnect> subjectConnections) {
+        Set<SubjectConnect> connections = getSubjectConnections();
         connections.clear();
-        connections.addAll(subjectConnecions);
+        connections.addAll(subjectConnections);
     }
 
     public Set<SubjectConnect> getParentConnections() {
-        return parentConnections != null ? parentConnections : Collections.emptySet();
+        return parentConnections != null ? parentConnections : (parentConnections = new HashSet<>());
     }
 
     public void setParentConnections(Set<SubjectConnect> parentConnections) {
@@ -289,7 +283,7 @@ public class Subject extends BaseEntityWithId {
     }
 
     private Set<AutocompleteResult<Long>> subjectConnections(SubjectConnection type) {
-        return getSubjectConnecions().stream()
+        return getSubjectConnections().stream()
                 .filter(it -> type.name().equals(it.getConnection().getCode()))
                 .map(it -> AutocompleteResult.of(it.getConnectSubject()))
                 .collect(Collectors.toSet());

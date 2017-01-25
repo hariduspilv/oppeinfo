@@ -7,5 +7,6 @@ public enum MainClassCode {
     HINDAMISVIIS,
     OPPEASTE,
     OPPEKEEL,
+    ROLL,
     SEADMED
 }

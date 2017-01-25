@@ -1,0 +1,21 @@
+<div layout="column" layout-padding>
+  <div>
+    <div class="indentForToast"></div>
+
+    <form name="directiveCoordinatorForm">
+      <md-input-container class="md-block">
+        <label>{{'directive.coordinator.name' | translate}}</label>
+        <input ng-model="directiveCoordinator.name" type="text" required md-maxlength="100">
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'directive.coordinator.idCode' | translate}}</label>
+        <input ng-model="directiveCoordinator.idCode" type="text" required md-minlength="11" md-maxlength="11">
+      </md-input-container>
+    </form>
+
+    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-if="directiveCoordinator.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-href="#/directives/coordinators" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

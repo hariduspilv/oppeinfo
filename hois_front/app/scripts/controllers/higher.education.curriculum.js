@@ -1,9 +1,10 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('HigherEducationCurriculumController', function ($scope, Classifier, StateCurriculum, Curriculum, dialogService, ClassifierConnect, ArrayUtils, $resource, config, message, $route, $location, $rootScope, QueryUtils, oisFileService, $translate, DataUtils) {
+  .controller('HigherEducationCurriculumController', function ($scope, Classifier, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, $translate, DataUtils, $rootScope) {
 
-    $scope.readOnly = false;
+    //   TODO: finish readonly
+
     $scope.removeFromArray = ArrayUtils.remove;
 
     var baseUrl = '/curriculum';
@@ -26,14 +27,34 @@ angular.module('hitsaOis')
 
     // --- Get and Set Data
 
+    function getAllowedStudyLevels() {
+        QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
+            var studyLevelCodes = response.studyLevels;
+            $scope.studyLevels = [];
+            studyLevelCodes.forEach(function(it) {
+                if(isHigherStudyLevel(it)) {
+                    $scope.studyLevels.push({code: it});
+                }
+            });
+        });
+    }
+    getAllowedStudyLevels();
+
+    function isHigherStudyLevel(studyLevelCode) {
+        return parseInt(studyLevelCode.substring(studyLevelCode.length - 3)) >= 500;
+    }
+
     $scope.getAreasOfStudy = function(listOfGroupsChanged) {
         if(listOfGroupsChanged) {
-            $scope.curriculum.iscedClass = undefined;
             $scope.curriculum.areaOfStudy = undefined;
         }
         if($scope.curriculum.group) {
             Curriculum.getAreasOfStudyByGroupOfStudy($scope.curriculum.group.code, setValds);
         }
+    };
+
+    $scope.clearIscedClass = function() {
+        $scope.curriculum.iscedClass = undefined;
     };
 
     function setValds(response) {
@@ -55,10 +76,17 @@ angular.module('hitsaOis')
     function setVariablesForExistingCurriculum() {
         $scope.curriculum.studyLanguageClassifiers = getFromWrapper($scope.curriculum.studyLanguages, "studyLang");
         $scope.curriculum.schoolDepartments = getFromWrapper($scope.curriculum.departments, "schoolDepartment");
-        DataUtils.convertStringToDates($scope.curriculum, ["validFrom", "validThru", "approval", "ehisChanged", "accreditationDate", "accreditationValidDate"]);
+        DataUtils.convertStringToDates($scope.curriculum, ["validFrom", "validThru", "approval", "ehisChanged", "accreditationDate", "accreditationValidDate", "merRegDate"]);
         setStudyPeriod();
         setAreaOfStudy();
         $scope.getAreasOfStudy();
+        getJointPartners();
+        setReadOnly();
+    }
+
+    function setReadOnly() {
+        $scope.readOnly = $scope.curriculum.status.code === "OPPEKAVA_STAATUS_K" || $scope.curriculum.status.code === "OPPEKAVA_STAATUS_C" ||
+        $route.current.$$route.originalPath.indexOf("view") !== -1;
     }
 
     function getFromWrapper(initialList, propertyName) {
@@ -78,9 +106,11 @@ angular.module('hitsaOis')
     }
 
     function setAreaOfStudy() {
-      Classifier.getParentsWithMainClass('ISCED_VALD', $scope.curriculum.iscedClass.code).$promise.then(function (response) {
-        $scope.curriculum.areaOfStudy = response[0];
-      });
+        if($scope.curriculum.iscedClass) {
+            Classifier.getParentsWithMainClass('ISCED_VALD', $scope.curriculum.iscedClass.code).$promise.then(function (response) {
+                $scope.curriculum.areaOfStudy = response[0];
+            });
+        }
     }
 
     function getDepartments() {
@@ -91,6 +121,17 @@ angular.module('hitsaOis')
     }
     getDepartments();
 
+    function getMyEhisSchool() {
+        $rootScope.$watch('auth', function(){
+            if($rootScope.auth) {
+                QueryUtils.endpoint("/school").get({id: $rootScope.auth.school.id}).$promise.then(function(response){
+                    $scope.myEhisSchool = {code: response.ehisSchool};
+                });
+            }
+        });
+    }
+    getMyEhisSchool();
+    
     // --- Validation
 
     $scope.gradeRequired = function() {
@@ -117,7 +158,13 @@ angular.module('hitsaOis')
     // --- Save and Delete
 
     $scope.save = function () {
+        if($scope.readOnly) {
+            return;
+        }
       $scope.higherEducationCurriculumForm.$setSubmitted();
+
+      setJointPartners();
+
       if (!formIsValid()) {
         message.error('main.messages.form-has-errors');
         return;
@@ -128,6 +175,61 @@ angular.module('hitsaOis')
          setVariablesForExistingCurriculum();
          message.info('main.messages.create.success');
       }).catch(function () { message.error('main.messages.create.failure'); });
+    };
+
+    function setJointPartners() {
+        if(!$scope.curriculum.joint) {
+            $scope.curriculum.jointPartners = [];
+            $scope.curriculum.jointMentor = null;
+            return;
+        }
+
+        var commonFields = {
+            'abroad': $scope.curriculum.abroad,
+            'contractEt': $scope.curriculum.contractEt,
+            'contractEn': $scope.curriculum.contractEn,
+            'supervisor': $scope.curriculum.supervisor
+        };
+        $scope.curriculum.jointPartners = [];
+        if($scope.curriculum.abroad !== undefined && $scope.curriculum.abroad === false) {
+            $scope.curriculum.jointPartnersEhisSchools.forEach(function(it){
+                var newPartner = angular.extend({}, commonFields);
+                newPartner.ehisSchool = it;
+                $scope.curriculum.jointPartners.push(newPartner);
+            });
+        } else if ($scope.curriculum.abroad) {
+            $scope.curriculum.jointPartnersForeign.forEach(function(it){
+                var newPartner = angular.extend({}, commonFields);
+                newPartner.nameEt = it;
+                $scope.curriculum.jointPartners.push(newPartner);
+            });
+        }
+    }
+
+    function getJointPartners() {
+        if($scope.curriculum.jointPartners && $scope.curriculum.jointPartners.length > 0) {
+            $scope.curriculum.abroad = $scope.curriculum.jointPartners[0].abroad;
+            $scope.curriculum.contractEt = $scope.curriculum.jointPartners[0].contractEt;
+            $scope.curriculum.contractEn = $scope.curriculum.jointPartners[0].contractEn;
+            $scope.curriculum.supervisor = $scope.curriculum.jointPartners[0].supervisor;
+            if($scope.curriculum.abroad) {
+                $scope.curriculum.jointPartnersForeign = [];
+                 $scope.curriculum.jointPartners.forEach(function(it){
+                     $scope.curriculum.jointPartnersForeign.push(it.nameEt);
+                 });
+            } else {
+                $scope.curriculum.jointPartnersEhisSchools = [];
+                 $scope.curriculum.jointPartners.forEach(function(it){
+                     $scope.curriculum.jointPartnersEhisSchools.push(it.ehisSchool);
+                 });
+            }
+        }
+    }
+    
+    $scope.changeJointMentors = function() {
+        if($scope.curriculum.abroad) {
+            $scope.curriculum.jointPartnersEhisSchools = [];
+        }
     };
 
     function createOrUpdate() {
@@ -184,14 +286,15 @@ angular.module('hitsaOis')
         data.sendEhis = false;
         data.ehis = false;
         data.ehisFile = data.ehisFile;
-        data.oisFile = oisFileService.getFromLfFile(data.file[0]);
-        $scope.curriculum.files.push(data);
+        data.oisFile = oisFileService.getFromLfFile(data.file[0], function(file) {
+            data.oisFile = file;
+            $scope.curriculum.files.push(data);
+        });
       });
     };
 
-    // TODO: not used yet
-    $scope.getUrl = function(file) {
-      return oisFileService.getFileUrl(file);
+    $scope.getUrl = function(oisFile) {
+      return oisFileService.getFileUrl(oisFile);
     };
 
     // --- Statuses
@@ -200,33 +303,12 @@ angular.module('hitsaOis')
       $scope.curriculum.status = status;
     };
 
-    function getStatuses() {
-      Classifier.get('OPPEKAVA_STAATUS').$promise.then(function(response){
-        $scope.statuses = response.children;
-        setStatusButtonLabels();
-        setStatusOrders();
-      });
-    }
-    getStatuses();
-
-    function setStatusButtonLabels() {
-        var buttonLabels = {
-            'OPPEKAVA_STAATUS_S': "main.button.status.edit",
-            'OPPEKAVA_STAATUS_M': "main.button.status.approving",
-            'OPPEKAVA_STAATUS_K': "main.button.status.confirm",
-            'OPPEKAVA_STAATUS_C': "main.button.status.close"
-        };
-        $scope.statuses.forEach(function(it){
-            it.button = buttonLabels[it.code];
-        });
-    }
-
-    function setStatusOrders() {
-        var statusCodes = ['OPPEKAVA_STAATUS_S', 'OPPEKAVA_STAATUS_M', 'OPPEKAVA_STAATUS_K', 'OPPEKAVA_STAATUS_C'];
-        $scope.statuses.forEach(function(it){
-            it.order = statusCodes.indexOf(it.code);
-        });
-    }
+    $scope.statuses = [
+        {code: 'OPPEKAVA_STAATUS_S', button: 'main.button.status.edit'},
+        {code: 'OPPEKAVA_STAATUS_M', button: 'main.button.status.approving'},
+        {code: 'OPPEKAVA_STAATUS_K', button: 'main.button.status.confirm'},
+        {code: 'OPPEKAVA_STAATUS_C', button: 'main.button.status.close'}
+    ];
 
     $scope.filterStatusChangeOptions = function(status) {
         if(!$scope.curriculum || !$scope.curriculum.status || !status) {

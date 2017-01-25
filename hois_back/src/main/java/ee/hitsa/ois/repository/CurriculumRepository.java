@@ -9,8 +9,8 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
-import ee.hitsa.ois.domain.Curriculum;
-import ee.hitsa.ois.domain.CurriculumForSearch;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumForSearch;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public interface CurriculumRepository extends JpaRepository<Curriculum, Long> {

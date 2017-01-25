@@ -13,6 +13,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.SubjectConnect;
 import ee.hitsa.ois.domain.SubjectLanguage;
 import ee.hitsa.ois.enums.SubjectConnection;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -42,14 +43,25 @@ public class SubjectService {
     }
 
     private void bindConnections(Subject target, SubjectForm source) {
-        Set<SubjectConnect> connections = target.getSubjectConnecions();
+        Set<SubjectConnect> connections = target.getSubjectConnections();
         Set<SubjectConnect> newConnections = new HashSet<>();
 
         bindSubjectConnect(target, classifierService.findOne(SubjectConnection.AINESEOS_EK.name()), connections, newConnections, source.getMandatoryPrerequisiteSubjects());
         bindSubjectConnect(target, classifierService.findOne(SubjectConnection.AINESEOS_EV.name()), connections, newConnections, source.getRecommendedPrerequisiteSubjects());
         bindSubjectConnect(target, classifierService.findOne(SubjectConnection.AINESEOS_A.name()), connections, newConnections, source.getSubstituteSubjects());
 
-        target.setSubjectConnecions(newConnections);
+
+        List<Long> ids = new ArrayList<>();
+        ids.add(target.getId());
+        for (SubjectConnect subjectConnect : newConnections) {
+            Long id = subjectConnect.getConnectSubject().getId();
+            if (ids.contains(id)) {
+                throw new ValidationFailedException("subjectConnections", "same-subject-multipile");
+            }
+            ids.add(id);
+        }
+
+        target.setSubjectConnections(newConnections);
     }
 
     private void bindSubjectConnect(Subject primarySubject, Classifier connectionType, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Set<Subject> connectSubjects) {
@@ -114,7 +126,7 @@ public class SubjectService {
             }
 
             if (subjectSearchCommand.getThru() != null && !Objects.equals(subjectSearchCommand.getThru(), BigDecimal.ZERO)) {
-                filters.add(cb.ge(root.get("credits"), subjectSearchCommand.getThru()));
+                filters.add(cb.le(root.get("credits"), subjectSearchCommand.getThru()));
             }
 
             if (StringUtils.hasText(subjectSearchCommand.getCode())) {

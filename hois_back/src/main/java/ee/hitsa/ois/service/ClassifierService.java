@@ -1,5 +1,7 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -7,6 +9,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,6 +26,7 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.repository.ClassifierConnectRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.specification.ClassifierSpecification;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.ClassifierWithCount;
 
@@ -28,6 +34,8 @@ import ee.hitsa.ois.web.dto.ClassifierWithCount;
 @Service
 public class ClassifierService {
 
+    @Autowired
+    private EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
@@ -49,19 +57,19 @@ public class ClassifierService {
         return classifierRepository.findOne(code);
     }
 
-    public Page<ClassifierWithCount> searchTables(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
-        String name = classifierSearchCommand.getName();
-        if(name == null) {
-            name = "";
-        }
+    @SuppressWarnings("unchecked")
+    public Page<ClassifierWithCount> searchTables(ClassifierSearchCommand criteria, Pageable pageable) {
+        return JpaQueryUtil.query(ClassifierWithCount.class, Classifier.class, (root, query, cb) -> {
+            ((CriteriaQuery<ClassifierWithCount>)query).select(cb.construct(ClassifierWithCount.class, root.get("code"), root.get("nameEt"), root.get("nameEn"), cb.count(root.join("children").get("code"))));
+            query.groupBy(root.get("code"), root.get("nameEt"), root.get("nameEn"));
 
-        Page<ClassifierWithCount> result = null;
-        if(Language.EN.equals(classifierSearchCommand.getLang())) {
-            result = classifierRepository.findAllByMainClassCodeIsNullAndNameEnContainingIgnoreCase(name, pageable);
-        } else {
-            result = classifierRepository.findAllByMainClassCodeIsNullAndNameEtContainingIgnoreCase(name, pageable);
-        }
-        return result;
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.isNull(root.get("mainClassCode")));
+            String nameField = Language.EN.equals(criteria.getLang()) ? "nameEn" : "nameEt";
+            propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
+
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }, pageable, em);
     }
 
     public Page<Classifier> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {

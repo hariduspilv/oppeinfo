@@ -70,38 +70,39 @@
             <label>{{'module.objectivesEn' | translate}}</label>
             <textarea ng-model="data.objectivesEn" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
           </md-input-container>
-<!--          <div layout="column">
+
+
+          <div layout="column">
             <span class="md-headline">{{'module.studyOutcome' | translate}}</span>
             <div layout="row">
-              <div layout="row">
-                <md-button class="md-primary" ng-click="openAddModuleStudyOutcomeDialog()">{{'studyOutcome.add' | translate}}</md-button>
-              </div>
+              <md-input-container flex>
+                <label>{{'studyOutcome.nameEt' | translate}}</label>
+                <textarea ng-model="data.outcomeEt" md-maxlength="20000" max-rows="2" md-select-on-focus ></textarea>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'studyOutcome.nameEn' | translate}}</label>
+                <textarea ng-model="data.outcomeEn" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+              </md-input-container>
+              <md-button class="md-primary" ng-click="addModuleStudyOutcome()">{{'main.button.add' | translate}}</md-button>
             </div>
           </div>
+
+
           <div layout="row" layout-padding>
             <md-list flex>
-              <md-list-item ng-repeat="item in data.studyOutcomes">
-                <span>{{item.nameEt}} {{item.nameEn}}</span>
-                <md-button class="md-icon-button" ng-click="removeFromArray(data.studyOutcomes, item)">
+              <md-list-item ng-repeat="item in data.outcomes">
+                <span>{{item.outcomeEt}} {{item.outcomeEn}}</span>
+                <md-button class="md-icon-button" ng-click="removeFromArray(data.outcomes, item)">
                   <md-icon ng-class="'md-warn md-hue-2'" md-font-set="material-icons">close</md-icon>
                 </md-button>
               </md-list-item>
             </md-list>
-          </div>-->
-          <div layout="column">
-          <md-input-container flex>
-            <label>{{'studyOutcome.nameEt' | translate}}</label>
-            <textarea ng-model="data.outcomesEt" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="true"></textarea>
-          </md-input-container>
-          <md-input-container flex>
-            <label>{{'studyOutcome.nameEn' | translate}}</label>
-            <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
-          </md-input-container>
-        </div>
+          </div>
+
           <md-input-container>
             <label>{{'module.competencesAquired' | translate}}</label>
             <hois-classifier-select multiple="true" ng-model="data.competencesAquired" ng-disabled="data.moduleType.code != 'KUTSEMOODUL_P'"
-              connect-classifier-codes="{{connectClassifierCodeValuesForCompetenceSelection.toString()}}"></hois-classifier-select>
+              connect-classifier-codes="connectClassifierCodeValuesForCompetenceSelection"></hois-classifier-select>
           </md-input-container>
           <md-input-container flex>
             <md-checkbox ng-model="data.isPractice" ng-disabled="data.moduleType.code != 'KUTSEMOODUL_Y'">{{'module.practice' | translate}}</md-checkbox>

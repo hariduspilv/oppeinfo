@@ -10,7 +10,7 @@
 angular.module('hitsaOis')
   .service('dialogService', function ($mdDialog, ArrayUtils) {
 
-    this.showSelectDialog = function(templateUrl, DomainClass, selectCallback) {
+    this.showSelectDialog = function(templateUrl, selectCallback, cancelCallback) {
       $mdDialog.show({
         controller: function($scope, $mdDialog) {
           $scope.cancel = function() {
@@ -19,16 +19,21 @@ angular.module('hitsaOis')
 
           $scope.isTableSelect = true;
           $scope.select = function() {
-              $mdDialog.hide();
-              if(angular.isDefined(selectCallback)) {
+            $mdDialog.hide();
+            if(angular.isFunction(selectCallback)) {
         		  selectCallback($scope.tableSelected);
         	  }
-            };
+          };
           $scope.tableSelected = [];
         },
         templateUrl: templateUrl,
         parent: angular.element(document.body),
-        clickOutsideToClose: true
+        clickOutsideToClose: true,
+        onRemoving: function() {
+          if(angular.isFunction(cancelCallback)) {
+        		  cancelCallback();
+        	}
+        }
       });
     };
 

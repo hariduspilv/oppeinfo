@@ -18,9 +18,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.Curriculum;
-import ee.hitsa.ois.domain.CurriculumDepartment;
-import ee.hitsa.ois.domain.CurriculumForSearch;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
+import ee.hitsa.ois.domain.curriculum.CurriculumForSearch;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.CurriculumService;
 import ee.hitsa.ois.service.SchoolService;

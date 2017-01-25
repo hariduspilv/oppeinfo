@@ -8,19 +8,19 @@ import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 
 import ee.hitsa.ois.ClassifierJsonDeserializer;
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.CurriculumFile;
-import ee.hitsa.ois.domain.CurriculumGrade;
-import ee.hitsa.ois.domain.CurriculumJointPartner;
-import ee.hitsa.ois.domain.CurriculumModule;
-import ee.hitsa.ois.domain.CurriculumSpeciality;
 import ee.hitsa.ois.domain.SchoolDepartment;
 import ee.hitsa.ois.domain.StateCurriculum;
-import ee.hitsa.ois.util.Versioned;
+import ee.hitsa.ois.domain.curriculum.CurriculumFile;
+import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
+import ee.hitsa.ois.domain.curriculum.CurriculumJointPartner;
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumOccupation;
+import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 
-public class CurriculumForm implements Versioned {
+public class CurriculumForm extends VersionedCommand {
 
     private Long id;
-    private Long version;
     private LocalDateTime inserted;
     private String insertedBy;
     private LocalDateTime changed;
@@ -82,8 +82,6 @@ public class CurriculumForm implements Versioned {
     private Classifier iscedClass;
     @JsonDeserialize(using = ClassifierJsonDeserializer.class)
     private Classifier status;
-//    @JsonDeserialize(using = EntityWithIdJsonDeserializer.class)
-//    private School school;
     @JsonDeserialize(using = ClassifierJsonDeserializer.class)
     private Classifier draft;
 
@@ -96,12 +94,27 @@ public class CurriculumForm implements Versioned {
     private Set<CurriculumJointPartner> jointPartners;
     private Set<CurriculumSpeciality> specialities;
     private Set<CurriculumModule> modules;
+    private Set<CurriculumOccupation> occupations;
+    private Set<CurriculumVersion> versions;
 
     private String contractEt;
     private String contractEn;
     private String supervisor;
-
-
+    
+    public Set<CurriculumVersion> getVersions() {
+        return versions;
+    }
+    public void setVersions(Set<CurriculumVersion> versions) {
+        if(versions != null) {
+            if(this.getVersions() == null) {
+                this.versions = versions;
+            } else {
+                this.getVersions().clear();
+            }
+            this.getVersions().addAll(versions);
+        }
+        this.versions = versions;
+    }
     public Set<SchoolDepartment> getSchoolDepartments() {
 		return schoolDepartments;
 	}
@@ -119,9 +132,6 @@ public class CurriculumForm implements Versioned {
     }
     public void setId(Long id) {
         this.id = id;
-    }
-    public void setVersion(Long version) {
-        this.version = version;
     }
     public LocalDateTime getInserted() {
         return inserted;
@@ -447,12 +457,6 @@ public class CurriculumForm implements Versioned {
     public void setStatus(Classifier status) {
         this.status = status;
     }
-//    public School getSchool() {
-//        return school;
-//    }
-//    public void setSchool(School school) {
-//        this.school = school;
-//    }
     public Classifier getDraft() {
         return draft;
     }
@@ -513,9 +517,11 @@ public class CurriculumForm implements Versioned {
     public void setModules(Set<CurriculumModule> modules) {
         this.modules = modules;
     }
-    @Override
-    public Long getVersion() {
-        return this.version;
+    public Set<CurriculumOccupation> getOccupations() {
+        return occupations;
+    }
+    public void setOccupations(Set<CurriculumOccupation> occupations) {
+        this.occupations = occupations;
     }
 
 }

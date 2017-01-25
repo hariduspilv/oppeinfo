@@ -11,7 +11,11 @@ angular.module('hitsaOis')
       reader.onloadend = function () {
         oisFile.fname = lfFile.lfFileName;
         oisFile.ftype =  lfFile.lfFile.type;
-        oisFile.fdata = reader.result.replace('data:' + oisFile.ftype + ';base64,', '');
+        if(lfFile.lfFile.size > 0) {
+          oisFile.fdata = reader.result.replace('data:' + oisFile.ftype + ';base64,', '');
+        } else {
+          oisFile.fdata = '';
+        }
         if(angular.isFunction(loadedCallback)) {
           loadedCallback(oisFile);
         }

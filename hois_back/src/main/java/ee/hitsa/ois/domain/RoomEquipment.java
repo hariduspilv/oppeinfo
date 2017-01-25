@@ -8,9 +8,10 @@ import javax.persistence.ManyToOne;
 public class RoomEquipment extends BaseEntityWithId {
 
     @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
     private Room room;
     @ManyToOne(optional = false)
-    @JoinColumn(name = "equipment_code")
+    @JoinColumn(name = "equipment_code", nullable = false, updatable = false)
     private Classifier equipmentCode;
     private Long equipmentCount;
 

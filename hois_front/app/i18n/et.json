@@ -50,9 +50,13 @@
         "notFound": "Otsingutingimustele vastavaid kirjeid ei leitud",
         "selectFile": "Valige fail",
         "inputFieldIsRequired": "Valik väli on kohustuslik",
-        "mustBeUnique": "Peab olema unikaalne!"
+        "mustBeUnique": "Peab olema unikaalne!",
+        "positive": "Peab olema positiivne!"
       },
       "form-has-errors" : "Vormil on vigu",
+      "record": {
+        "referenced": "Kirjega on seotud teisi kirjeid"
+      },
       "system": {
         "failure": "Süsteemi viga"
       }
@@ -72,7 +76,7 @@
     "validTo": "Kehtiv kuni",
     "from": "Alates",
     "thru": "Kuni",
-    "notes": "Märkmed",
+    "notes": "Märkused",
     "status": "Staatus",
     "relatedFiles": "Seotud failid",
     "version": "Versioon",
@@ -95,6 +99,8 @@
         "schools": "Õppeasutused",
         "departments": "Struktuuriüksused",
 		"teacheroccupations": "Õpetaja ametid",
+		"directivecoordinators": "Käskkirjade kooskõlastajad",
+		"generalmessages": "Üldteadete haldamine",
 		"studyLevels": "Õppeasutuse õppeastmed",
         "classifiers": "Klassifikaatorid"
       },
@@ -104,6 +110,7 @@
     }
   },
   "home":{
+    "generalmessages": "Üldteated",
     "greeting": "Tere tulemast ÕISi",
     "joinedSchools": "ÕISi liitunud õppeasutused:"
   },
@@ -199,6 +206,19 @@
     "isVocational": "Kutseõpe",
     "isHigher": "Kõrgharidusõpe",
     "studyLevels": "Õppeastmed"
+  },
+  "directive": {
+    "coordinator": {
+      "name": "Kooskõlastaja nimi",
+      "idCode": "Isikukood"
+    }
+  },
+  "generalmessage": {
+    "content": "Sisu",
+    "targets": "Sihtgrupp",
+    "title": "Pealkiri",
+    "validFrom": "Üldteate kuvamise alguskuupäev",
+    "validThru": "Üldteate kuvamise lõppkuupäev"
   },
   "stateCurriculum": {
     "name": "Riiklik õppekava",
@@ -327,9 +347,9 @@
     "structuralUnitResponsible": "Vastutav struktuuriüksus",
     "basesOfDraft":"Õppekava koostamise alus",
     "occupationIsAcquired": "Õppekaval omandatakse kutse",
-    "occupationsPartOccupationsAcquired": "Omandavad kutsed (osakutsed)",
+    "occupationsPartOccupationsAcquired": "Omandatavad kutsed (osakutsed)",
     "addOccupationPartOccupations":"Lisa kutse (osakutse)",
-    "specializationOpportunities": "spetsialiseerumise võimalused",
+    "specialityOpportunities": "Spetsialiseerumise võimalused",
     "isJoint": "Ühisõppekava",
     "isJointYesNo": "Ühisõppekava (jah/ei)",
     "jointSchool": "Ühisõppekava partnerkool",
@@ -354,10 +374,6 @@
     "moduleImplementationPlans": "Õppekava moodulite rakenduskavad",
     "informativeSection": "Informatiivne sektsioon",
     "selectSchoolCurriculum": "Vali kooli õppekava",
-    "mainSpecialty": "Peaerialad / spetsialiseerumised *",
-    "addMainSpecialty": "Lisa peaeriala / spetsialiseerumine",
-    "givenGrade": "Antavad kraadid *",
-    "addGivenGrade": "Lisa kraad",
     "htmRegisterDate": "Õppekava registreerimine HTMis",
     "accreditationDate": "Akrediteerimise kuupäev",
     "accreditationValidityDate": "Akrediteerimise kehtivuskuupäev",
@@ -373,7 +389,9 @@
     },
     "specialty": {
       "specialty": "Peaeriala",
+      "label": "Peaerialad / spetsialiseerumised *",
       "dialogLabel": "Peaeriala / spetsialiseerumise lisamine",
+      "add": "Lisa peaeriala / spetsialiseerumine",
       "nameEt": "Peaeriala nimetus eesti keeles",
       "nameEn": "Peaeriala nimetus inglise keeles",
       "credits": "Peaeriala maht EAP",
@@ -382,9 +400,11 @@
     },
     "grade": {
       "grade": "Kraad",
+      "label": "Antavad kraadid *",
+      "add": "Lisa kraad",
       "dialogLabel": "Kraadi lisamine",
       "nameEt": "Kraadi nimetus eesti keeles",
-      "nameEn": "Kraadi nimetus eesti keeles",
+      "nameEn": "Kraadi nimetus inglise keeles",
       "nameEtGenitive": "Kraadi nimetus omastavas",
       "ehisGrade": "Vastavus EHISe klassifikaatorile"
     },
@@ -413,10 +433,10 @@
     "givenOccupation": "Antav kutse",
     "aquiredPartOccupation": "Omandatav osakutse",
     "occupationStandard": "Kutsestandard",
-    "specializations": "Spetsialiseerumised",
+    "specialities": "Spetsialiseerumised",
     "partOccupations": "Osakutsed",
-    "schoolHasRightToGiveOccupation": "Õppeasutusel on kutse andmise õigus",
-    "hasRightToGiveOccupation": "On kutse andmise õigus"
+    "schoolHasOccupationGrant": "Õppeasutusel on kutse andmise õigus",
+    "hasOccupationGrant": "On kutse andmise õigus"
   },
   "module": {
     "addToughtModule":"Õpetatava mooduli lisamine",

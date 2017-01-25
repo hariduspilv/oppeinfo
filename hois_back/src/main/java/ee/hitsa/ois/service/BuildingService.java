@@ -24,8 +24,10 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.BuildingRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.RoomRepository;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.RoomForm;
 import ee.hitsa.ois.web.commandobject.RoomSearchCommand;
+import ee.hitsa.ois.web.dto.BuildingDto;
 
 @Transactional
 @Service
@@ -38,14 +40,8 @@ public class BuildingService {
     @Autowired
     RoomRepository roomRepository;
 
-    public Page<Building> findAllBuildings(Long schoolId, Pageable pageable) {
-        return buildingRepository.findAll((root, query, cb) -> {
-            return cb.equal(root.get("school").get("id"), schoolId);
-        }, pageable);
-    }
-
-    public Building findBuilding(Long id) {
-        return buildingRepository.findOne(id);
+    public Page<BuildingDto> findAllBuildings(Long schoolId, Pageable pageable) {
+        return buildingRepository.findAllBySchool_id(schoolId, pageable);
     }
 
     public Building save(Building building) {
@@ -53,13 +49,11 @@ public class BuildingService {
     }
 
     public void delete(Building building) {
-        buildingRepository.delete(building);
+        EntityUtil.deleteEntity(buildingRepository, building);
     }
 
     public Page<Room> getAllRooms(Long buildingId, Pageable pageable) {
-        return roomRepository.findAll((root, query, cb) -> {
-            return cb.equal(root.get("building").get("id"), buildingId);
-        }, pageable);
+        return roomRepository.findAllByBuilding_id(buildingId, pageable);
     }
 
     public Page<Room> findAllRooms(Long schoolId, RoomSearchCommand criteria, Pageable pageable) {
@@ -74,10 +68,6 @@ public class BuildingService {
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable);
-    }
-
-    public Room findRoom(Long id) {
-        return roomRepository.findOne(id);
     }
 
     public Room save(Room room, RoomForm form) {

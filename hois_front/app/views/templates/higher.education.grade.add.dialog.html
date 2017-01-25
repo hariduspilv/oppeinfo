@@ -2,7 +2,7 @@
   <form name="dialogForm" ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{"curriculum.specialty.dialogLabel" | translate}}</h2>
+        <h2>{{"curriculum.grade.dialogLabel" | translate}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -26,7 +26,7 @@
         </md-input-container>
         <md-input-container flex>
             <label>{{'curriculum.grade.ehisGrade' | translate}}</label>
-            <hois-classifier-select ng-model="data.ehisGrade" main-classifier-code="EKR"></hois-classifier-select>
+            <hois-classifier-select ng-model="data.ehisGrade" main-classifier-code="EKR" required></hois-classifier-select>
         </md-input-container>
 
       </div>

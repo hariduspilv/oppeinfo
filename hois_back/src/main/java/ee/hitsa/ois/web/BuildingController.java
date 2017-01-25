@@ -1,12 +1,9 @@
 package ee.hitsa.ois.web;
 
-import java.util.stream.Collectors;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,8 +40,7 @@ public class BuildingController {
     @GetMapping(value = "")
     public Page<BuildingDto> searchBuildings(HoisUserDetails user, Pageable pageable) {
         Long schoolId = user.getSchool().getId();
-        Page<Building> buildings = buildingService.findAllBuildings(schoolId, pageable);
-        return new PageImpl<>(buildings.getContent().stream().map(BuildingDto::of).collect(Collectors.toList()), pageable, buildings.getTotalElements());
+        return buildingService.findAllBuildings(schoolId, pageable);
     }
 
     @GetMapping(value = "/{id}")
@@ -76,14 +72,12 @@ public class BuildingController {
     @GetMapping(value = "/{id}/rooms")
     public Page<RoomDto> getBuildingRooms(HoisUserDetails user, @WithEntity("id") Building building, Pageable pageable) {
         assertSameSchool(user, building);
-        Page<Room> rooms = buildingService.getAllRooms(building.getId(), pageable);
-        return new PageImpl<>(rooms.getContent().stream().map(RoomDto::of).collect(Collectors.toList()), pageable, rooms.getTotalElements());
+        return buildingService.getAllRooms(building.getId(), pageable).map(RoomDto::of);
     }
 
     @GetMapping(value = "/searchrooms")
     public Page<RoomSearchDto> searchRooms(HoisUserDetails user, RoomSearchCommand searchCommand, Pageable pageable) {
-        Page<Room> rooms = buildingService.findAllRooms(user.getSchool().getId(), searchCommand, pageable);
-        return new PageImpl<>(rooms.getContent().stream().map(RoomSearchDto::of).collect(Collectors.toList()), pageable, rooms.getTotalElements()); 
+        return buildingService.findAllRooms(user.getSchool().getId(), searchCommand, pageable).map(RoomSearchDto::of);
     }
 
     @GetMapping(value = "/{buildingId}/rooms/{id}")

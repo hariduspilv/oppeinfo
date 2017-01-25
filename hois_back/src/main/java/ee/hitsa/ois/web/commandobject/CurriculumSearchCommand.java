@@ -3,31 +3,30 @@ package ee.hitsa.ois.web.commandobject;
 import java.util.ArrayList;
 
 public class CurriculumSearchCommand extends SearchCommand {
-	ArrayList<Long> school;
-	ArrayList<String> studyLevel;
-	ArrayList<String> ekrLevel;
-	String htmCode;
-	ArrayList<String> iscedClassCode;
-	ArrayList<String> studyLanguage;
-	Double creditsMin;
-	Double creditsMax;
-	Long validFromMillis;
-	Long validThruMillis;
-	ArrayList<String> status;
-	ArrayList<String> ehisStatus;
-	Boolean isJoint;
-	ArrayList<Long> department;
+	private ArrayList<Long> school;
+	private ArrayList<String> studyLevel;
+	private ArrayList<String> ekrLevel;
+	private String merCode;
+	private ArrayList<String> iscedClassCode;
+	private ArrayList<String> studyLanguage;
+	private Double creditsMin;
+	private Double creditsMax;
+	private Long validFromMillis;
+	private Long validThruMillis;
+	private ArrayList<String> status;
+	private ArrayList<String> ehisStatus;
+	private Boolean isJoint;
+	private ArrayList<Long> department;
 	
-	@Override
-	public String toString() {
-		return "CurriculumSearchCommand [school=" + school + ", studyLevel=" + studyLevel + ", ekrLevel=" + ekrLevel
-				+ ", htmCode=" + htmCode + ", iscedClassCode=" + iscedClassCode 
-				+ ", studyLanguage=" + studyLanguage + ", creditsMin=" + creditsMin + ", creditsMax=" + creditsMax
-				+ ", validFromMillis=" + validFromMillis + ", validThruMillis=" + validThruMillis + ", status=" + status
-				+ ", ehisStatus=" + ehisStatus + ", isJoint=" + isJoint + ", department=" + department + "]";
-	}
+	public String getMerCode() {
+        return merCode;
+    }
 
-	public Double getCreditsMin() {
+    public void setMerCode(String merCode) {
+        this.merCode = merCode;
+    }
+
+    public Double getCreditsMin() {
 		return creditsMin;
 	}
 
@@ -53,10 +52,6 @@ public class CurriculumSearchCommand extends SearchCommand {
 
 	public ArrayList<String> getEkrLevel() {
 		return ekrLevel;
-	}
-
-	public String getHtmCode() {
-		return htmCode;
 	}
 
 	public ArrayList<String> getIscedClassCode() {
@@ -101,10 +96,6 @@ public class CurriculumSearchCommand extends SearchCommand {
 
 	public void setEkrLevel(ArrayList<String> ekrLevel) {
 		this.ekrLevel = ekrLevel;
-	}
-
-	public void setHtmCode(String htmCode) {
-		this.htmCode = htmCode;
 	}
 
 	public void setIscedClassCode(ArrayList<String> iscedClassCode) {

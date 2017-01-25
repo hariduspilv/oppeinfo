@@ -1,12 +1,14 @@
 package ee.hitsa.ois.domain;
 
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
 public class TeacherOccupation extends BaseEntityWithId {
 
     @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
     private School school;
     private String occupationEt;
     private String occupationEn;

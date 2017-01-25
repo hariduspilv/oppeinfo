@@ -3,6 +3,7 @@ package ee.hitsa.ois.domain;
 import java.time.LocalDate;
 
 import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
@@ -12,6 +13,7 @@ public class SchoolDepartment extends BaseEntityWithId {
     private String nameEn;
     private String code;
     @ManyToOne(optional = false)
+    @JoinColumn(nullable = false, updatable = false)
     private School school;
     @ManyToOne
     private SchoolDepartment parentSchoolDepartment;

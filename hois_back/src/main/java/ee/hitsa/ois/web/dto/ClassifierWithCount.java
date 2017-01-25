@@ -1,12 +1,31 @@
 package ee.hitsa.ois.web.dto;
 
-import org.springframework.beans.factory.annotation.Value;
+public class ClassifierWithCount {
+    private final String code;
+    private final String nameEt;
+    private final String nameEn;
+    private final Long count;
 
-public interface ClassifierWithCount {
-    String getCode();
-    String getNameEt();
-    String getNameEn();
+    public ClassifierWithCount(String code, String nameEt, String nameEn, Long count) {
+        this.code = code;
+        this.nameEt = nameEt;
+        this.nameEn = nameEn;
+        this.count = count;
+    }
 
-    @Value("#{ target.children.size() }")
-    long getCount();
+    public String getCode() {
+        return code;
+    }
+
+    public String getNameEt() {
+        return nameEt;
+    }
+
+    public String getNameEn() {
+        return nameEn;
+    }
+
+    public Long getCount() {
+        return count;
+    }
 }

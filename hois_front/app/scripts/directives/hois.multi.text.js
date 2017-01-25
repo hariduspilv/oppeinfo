@@ -32,6 +32,12 @@ angular.module('hitsaOis')
       link: function postLink(scope, element, attrs, ngModelControllers) {
         scope.items = [];
 
+        scope.$parent.$watch(attrs.initialValues, function(val){
+            if(angular.isArray(val)) {
+                scope.items = val;
+            }
+        });
+
         scope.add = function() {
           if(!!scope.itemValue && scope.items.indexOf(scope.itemValue) === -1) {
             scope.items.push(scope.itemValue);
