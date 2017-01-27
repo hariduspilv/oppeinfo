@@ -12,7 +12,7 @@ public class DirectiveCoordinatorForm extends VersionedCommand {
     private String name;
     @NotNull
     @EstonianIdCode
-    private String idCode;
+    private String idcode;
 
     public String getName() {
         return name;
@@ -22,11 +22,11 @@ public class DirectiveCoordinatorForm extends VersionedCommand {
         this.name = name;
     }
 
-    public String getIdCode() {
-        return idCode;
+    public String getIdcode() {
+        return idcode;
     }
 
-    public void setIdCode(String idCode) {
-        this.idCode = idCode;
+    public void setIdcode(String idcode) {
+        this.idcode = idcode;
     }
 }

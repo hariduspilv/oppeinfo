@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
@@ -119,6 +120,19 @@ public abstract class EntityUtil {
         }
 
         return dto;
+    }
+
+    public static <SV, ID> void bindClassifierCollection(Collection<SV> storedValues, Function<SV, ID> idExtractor, Collection<ID> newIds, Function<ID, SV> newValueFactory) {
+        Set<ID> storedIds = storedValues.stream().map(idExtractor).collect(Collectors.toSet());
+
+        for(ID id : newIds) {
+            if(!storedIds.remove(id)) {
+                storedValues.add(newValueFactory.apply(id));
+            }
+        }
+
+        // remove possible letfovers
+        storedValues.removeIf(t -> !newIds.contains(idExtractor.apply(t)));
     }
 
     /**

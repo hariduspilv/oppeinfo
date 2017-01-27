@@ -7,8 +7,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -29,6 +27,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.GeneralMessageRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.GeneralMessageSearchCommand;
 import ee.hitsa.ois.web.dto.GeneralMessageDto;
@@ -96,25 +95,18 @@ public class GeneralMessageService {
             if(storedTargets == null) {
                 generalMessage.setTargets(storedTargets = new ArrayList<>());
             }
-            Set<String> storedTargetCodes = storedTargets.stream().map(t -> t.getRole().getCode()).collect(Collectors.toSet());
-
-            for(String targetCode : targetCodes) {
-                if(!storedTargetCodes.remove(targetCode)) {
-                    // add new link
-                    Classifier c = classifierRepository.getOne(targetCode);
-                    // verify that domain code is from ROLL and raise IllegalArgumentException if wrong
-                    if(!MainClassCode.ROLL.name().equals(c.getMainClassCode())) {
-                        throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                    }
-                    GeneralMessageTarget sl = new GeneralMessageTarget();
-                    sl.setGeneralMessage(generalMessage);
-                    sl.setRole(c);
-                    storedTargets.add(sl);
+            EntityUtil.bindClassifierCollection(storedTargets, gmt -> gmt.getRole().getCode(),targetCodes, roleCode -> {
+                // add new link
+                Classifier c = classifierRepository.getOne(roleCode);
+                // verify that domain code is from ROLL and raise IllegalArgumentException if wrong
+                if(!MainClassCode.ROLL.name().equals(c.getMainClassCode())) {
+                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
                 }
-            }
-
-            // remove possible letfovers
-            storedTargets.removeIf(t -> !targetCodes.contains(t.getRole().getCode()));
+                GeneralMessageTarget sl = new GeneralMessageTarget();
+                sl.setGeneralMessage(generalMessage);
+                sl.setRole(c);
+                return sl;
+            });
         }
         return generalMessageRepository.save(generalMessage);
     }

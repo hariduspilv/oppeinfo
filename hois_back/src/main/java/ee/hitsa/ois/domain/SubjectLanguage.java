@@ -16,11 +16,12 @@ public class SubjectLanguage extends BaseEntityWithId {
     @ManyToOne(optional = false)
     private Subject subject;
 
-    public SubjectLanguage() { }
+    public SubjectLanguage() {
+    }
 
     public SubjectLanguage(Classifier language, Subject subject) {
-        setLanguage(language);
-        setSubject(subject);
+        this.language = language;
+        this.subject = subject;
     }
 
     public Classifier getLanguage() {

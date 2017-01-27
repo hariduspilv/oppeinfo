@@ -16,11 +16,7 @@
         <div flex-xs="0" flex-gt-sm="10"></div>
         <md-input-container flex>
           <label>{{'subject.assessment' | translate}}</label>
-          <md-select ng-model="criteria.assessments" ng-model-options="{trackBy: '$value'}" multiple>
-            <md-option ng-repeat="it in classifiers.HINDAMISVIIS" ng-value="it.id">
-              {{it[currentLanguageNameField()]}}
-            </md-option>
-          </md-select>
+          <hois-classifier-select ng-model="criteria.assessments" model-value-attr="code" main-classifier-code="HINDAMISVIIS" multiple></hois-classifier-select>
         </md-input-container>
       </div>
       <div layout="row">
@@ -65,22 +61,14 @@
           <div layout="column" flex="45">
             <md-input-container>
               <label>{{'subject.status' | translate}}</label>
-              <md-select ng-model="criteria.status" ng-model-options="{trackBy: '$value'}" multiple>
-                <md-option ng-repeat="it in classifiers.AINESTAATUS" ng-value="it.id">
-                  {{it[currentLanguageNameField()]}}
-                </md-option>
-              </md-select>
+              <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="AINESTAATUS" multiple></hois-classifier-select>
             </md-input-container>
           </div>
           <div flex-xs="0" flex-gt-sm="10"></div>
           <div layout="column" flex="45">
             <md-input-container>
               <label>{{'subject.language' | translate}}</label>
-              <md-select ng-model="criteria.languages" ng-model-options="{trackBy: '$value'}" multiple>
-                <md-option ng-repeat="it in classifiers.OPPEKEEL" ng-value="it.id">
-                  {{it[currentLanguageNameField()]}}
-                </md-option>
-              </md-select>
+              <hois-classifier-select ng-model="criteria.languages" model-value-attr="code" main-classifier-code="OPPEKEEL" multiple></hois-classifier-select>
             </md-input-container>
           </div>
         </div>

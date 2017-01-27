@@ -15,8 +15,9 @@ public class SchoolDepartmentDto extends SchoolDepartmentForm {
     public SchoolDepartmentDto() {
     }
 
-    public SchoolDepartmentDto(Long id, String code, String nameEt, String nameEn, LocalDate validFrom, LocalDate validThru, Long parentSchoolDepartmentId) {
+    public SchoolDepartmentDto(Long id, Long version, String code, String nameEt, String nameEn, LocalDate validFrom, LocalDate validThru, Long parentSchoolDepartmentId) {
         this.id = id;
+        setVersion(version);
         setCode(code);
         setNameEt(nameEt);
         setNameEn(nameEn);

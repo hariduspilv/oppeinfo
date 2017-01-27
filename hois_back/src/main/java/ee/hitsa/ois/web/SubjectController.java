@@ -1,15 +1,12 @@
 package ee.hitsa.ois.web;
 
 import ee.hitsa.ois.domain.Subject;
-import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.service.AutocompleteService;
-import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
@@ -25,7 +22,6 @@ import javax.validation.Valid;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/subject")
@@ -35,8 +31,6 @@ public class SubjectController {
     private AutocompleteService autocompleteService;
     @Autowired
     private SubjectService subjectService;
-    @Autowired
-    private ClassifierService classifierService;
 
     @PostMapping(value = "")
     public SubjectDto create(HoisUserDetails user, @Valid @RequestBody SubjectForm newSubject) {
@@ -65,7 +59,7 @@ public class SubjectController {
 
     @GetMapping(value = "")
     public Page<SubjectDto> search(SubjectSearchCommand subjectSearchCommand, HoisUserDetails user,Pageable pageable) {
-        return subjectService.search(subjectSearchCommand, user.getUserId(),pageable).map(SubjectDto::of);
+        return subjectService.search(user.getSchool().getId(), subjectSearchCommand, pageable).map(SubjectDto::of);
     }
 
     @GetMapping(value = "/initSearchFormData")
@@ -74,16 +68,6 @@ public class SubjectController {
         SubjectSearchFormData searchFormData = new SubjectSearchFormData();
         searchFormData.departments = autocompleteService.schoolDepartments(schoolId, new SchoolDepartmentAutocompleteCommand());
         searchFormData.curricula = autocompleteService.curriculums(schoolId);
-
-        String[] classifiers = {MainClassCode.OPPEKEEL.name(), MainClassCode.HINDAMISVIIS.name(), MainClassCode.AINESTAATUS.name()};
-        for (String classifier : classifiers) {
-            ClassifierSearchCommand classifierSearchCommand = new ClassifierSearchCommand();
-            classifierSearchCommand.setMainClassCode(classifier);
-            searchFormData.classifiers.put(classifier, classifierService.searchForDropdown(classifierSearchCommand)
-                    .stream()
-                    .map(it -> new AutocompleteResult<>(it.getCode(), it.getNameEt(), it.getNameEn()))
-                    .collect(Collectors.toList()));
-        }
         return searchFormData;
     }
 
@@ -108,5 +92,4 @@ public class SubjectController {
 class SubjectSearchFormData {
     public List<AutocompleteResult<Long>> departments;
     public List<AutocompleteResult<Long>> curricula;
-    public Map<String, List<AutocompleteResult<String>>> classifiers = new HashMap<>();
 }

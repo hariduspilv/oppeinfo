@@ -3,9 +3,7 @@
 angular.module('hitsaOis')
   .controller('VocationalCurriculumController', function ($scope, Classifier, dialogService, ClassifierConnect, ArrayUtils,
     $resource, config, message, oisFileService, QueryUtils, $route, DataUtils, $location) {
-
     var Curriculum = QueryUtils.endpoint('/curriculum');
-
     var mapResponseToModel = function(response, scope) {
 
         var curriculum = angular.extend({}, response);
@@ -77,22 +75,24 @@ angular.module('hitsaOis')
         curriculum.studyPeriodMonths = response.studyPeriod % 12;
         curriculum.studyPeriodYears = response.studyPeriod - (response.studyPeriod % 12) * 12;
 
-        ClassifierConnect.queryAll({classifierCode: response.iscedClass.code}, function(result) {
-          result.forEach(function(it) {
-            if(it.mainClassifierCode === "ISCED_SUUN") {
-              curriculum.fieldOfStudy = it.connectClassifier;
-            }
-          });
-
-          ClassifierConnect.queryAll({classifierCode: curriculum.fieldOfStudy.code}, function(result) {
+        if (angular.isObject(response.iscedClass)) {
+          ClassifierConnect.queryAll({classifierCode: response.iscedClass.code}, function(result) {
             result.forEach(function(it) {
-              if(it.mainClassifierCode === "ISCED_VALD") {
-                curriculum.areaOfStudy = it.connectClassifier;
+              if(it.mainClassifierCode === "ISCED_SUUN") {
+                curriculum.fieldOfStudy = it.connectClassifier;
               }
             });
-            angular.extend(scope.curriculum, curriculum);
+
+            ClassifierConnect.queryAll({classifierCode: curriculum.fieldOfStudy.code}, function(result) {
+              result.forEach(function(it) {
+                if(it.mainClassifierCode === "ISCED_VALD") {
+                  curriculum.areaOfStudy = it.connectClassifier;
+                }
+              });
+              angular.extend(scope.curriculum, curriculum);
+            });
           });
-        });
+      }
     };
 
 
@@ -127,9 +127,7 @@ angular.module('hitsaOis')
     //edit
     var id = $route.current.params.id;
     if (angular.isDefined(id)) {
-        Curriculum.get({id: id}).$promise.then(function(response) {
-        mapResponseToModel(response, $scope);
-      });
+      mapResponseToModel($route.current.locals.entity, $scope);
     }
 
     $resource(config.apiUrl+'/school/departments').get()
@@ -501,7 +499,7 @@ angular.module('hitsaOis')
         } else {
           curriculum.$save().then(function() {
             message.info('main.messages.create.success');
-            $location.path('/vocational/curriculum/'+curriculum.id+'/edit');
+            $location.path('/vocationalCurriculum/'+curriculum.id+'/edit');
           });
         }
       } else {

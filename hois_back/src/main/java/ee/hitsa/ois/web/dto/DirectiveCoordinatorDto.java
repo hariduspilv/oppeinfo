@@ -19,10 +19,10 @@ public class DirectiveCoordinatorDto extends DirectiveCoordinatorForm {
     public DirectiveCoordinatorDto() {
     }
 
-    public DirectiveCoordinatorDto(Long id, String name, String idCode, Long version) {
+    public DirectiveCoordinatorDto(Long id, String name, String idcode, Long version) {
         this.id = id;
         setName(name);
-        setIdCode(idCode);
+        setIdcode(idcode);
         setVersion(version);
     }
 

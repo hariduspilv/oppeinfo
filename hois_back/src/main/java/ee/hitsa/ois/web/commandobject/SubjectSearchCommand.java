@@ -12,7 +12,6 @@ public class SubjectSearchCommand extends SearchCommand {
     private Collection<String> status;
     private BigDecimal from;
     private BigDecimal thru;
-    private Long schoolId;
 
     public Collection<String> getLanguages() {
         return languages;

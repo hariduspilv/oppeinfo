@@ -20,6 +20,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
@@ -140,7 +142,16 @@ public class CurriculumControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity);
         testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
-        // TODO: change some fields
+        Assert.assertEquals(1, testCurriculum.getStudyLanguages().size());
+
+        curriculumForm.getStudyLanguageClassifiers().clear();
+        curriculumForm.setStudyLanguageClassifiers(new HashSet<>(Arrays.asList(classifier)));
+
+        responseEntity = restTemplate.exchange("/curriculum/{id}", HttpMethod.PUT, new HttpEntity<>(curriculumForm), Curriculum.class, testCurriculum.getId());
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertNotNull(responseEntity);
+        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
+        Assert.assertEquals(1, testCurriculum.getStudyLanguages().size());
 
     }
 

@@ -7,6 +7,7 @@
       "en": "Eng"
     },
     "formattedDate": "{{date|date:'dd.MM.yyyy'}}",
+    "formattedDateTime": "{{date|date:'dd.MM.yyyy HH:mm:ss'}}",
     "button": {
       "search": "Otsi",
       "create": "Lisa uus",
@@ -27,6 +28,7 @@
       "updateFromEhis": "Uuenda staatust EHISest",
       "close": "Sulge",
       "choose": "Vali",
+      "copy": "Kopeeri",
       "status": {
           "edit": "Sisesta",
           "approving": "Menetle",
@@ -210,7 +212,7 @@
   "directive": {
     "coordinator": {
       "name": "Kooskõlastaja nimi",
-      "idCode": "Isikukood"
+      "idcode": "Isikukood"
     }
   },
   "generalmessage": {
@@ -449,7 +451,17 @@
     "objectivesEn":"Mooduli eesmärk inglise keeles",
     "competencesAquired":"Saavutatavad kompetentsid",
     "practice":"Praktika moodul",
-    "studyOutcome":"Mooduli õpiväljundid"
+    "studyOutcome":"Mooduli õpiväljundid",
+    "implementationPlan": {
+      "codeOrName": "Rakenduskava kood või nimetus",
+      "targetGroup": "Sihtrühm",
+      "teachers": "Õpetajad",
+      "teachingDepartment": "Õpetav struktuuriüksus",
+      "studyForm": "Õppevorm",
+      "individualCurriculum": "Individuaalne õppekava",
+      "yearOfAcceptance": "Vastuvõtu aasta",
+      "type": "Rakenduskava liik"
+    }
   },
   "studyOutcome": {
     "add": "Lisa õpiväljund",

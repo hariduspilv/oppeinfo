@@ -9,14 +9,16 @@
 angular.module('hitsaOis')
   .directive('hoisClassifierSelect', function (Classifier, ClassifierConnect) {
     return {
-      template: '<md-select ng-model-options="{ trackBy: \'$value.code\' }"><md-option ng-repeat="(code, option) in optionsByCode" ng-value="option" ng-hide="option.hide" ' +
+      template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }"><md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
       'aria-label="{{option[$root.currentLanguageNameField()]}}">{{option[$root.currentLanguageNameField()]}}</md-option></md-select>',
       restrict: 'E',
       require: ['ngModel'],
       replace: true,
       scope: {
         value: "=ngModel",
+        modelValueAttr: '@',
         mainClassifierCode: '@',
+        connectMainClassifierCode: '@',
         connectClassifierCodes: '=',
         criteria: '=',
         filterValues: '@', //model of array of classifiers (or other objects which contain classifier, then byProperty must be defined )
@@ -30,7 +32,7 @@ angular.module('hitsaOis')
         var optionsByCode = {};
         var params = { order: scope.$root.currentLanguageNameField()};
 
-        if(typeof scope.mainClassifierCode !== 'undefined') {
+        if(angular.isDefined(scope.mainClassifierCode)) {
           params.mainClassCode = scope.mainClassifierCode;
         } else if(angular.isArray(scope.connectClassifierCodes)) {
           params.connectClassifierCodes = scope.connectClassifierCodes.toString();
@@ -55,7 +57,9 @@ angular.module('hitsaOis')
 
         var postLoad = function() {
           var deselectHiddenValue = function() {
-            if(angular.isDefined(scope.value) && angular.isDefined(scope.value.code) && scope.optionsByCode[scope.value.code].hide) {
+            if(angular.isObject(scope.value) && angular.isString(scope.value.code) && scope.optionsByCode[scope.value.code].hide) {
+              scope.value = undefined;
+            } else if(scope.modelValueAttr === 'code' && angular.isString(scope.value) && scope.optionsByCode[scope.value].hide) {
               scope.value = undefined;
             }
           };
@@ -66,11 +70,11 @@ angular.module('hitsaOis')
                 var showOptions = [];
                 showOnlyValues.forEach(function(it) {
                   if (angular.isDefined(scope.byProperty)) {
-                    if (angular.isDefined(it[scope.byProperty].code)) {
+                    if (angular.isString(it[scope.byProperty].code)) {
                       showOptions.push(it[scope.byProperty].code);
                     }
                   } else {
-                    if (angular.isDefined(it.code)) {
+                    if (angular.isString(it.code)) {
                       showOptions.push(it.code);
                     }
                   }
@@ -85,24 +89,26 @@ angular.module('hitsaOis')
 
             if(angular.isDefined(scope.filterValues)) {
               scope.$parent.$watchCollection(scope.filterValues, function(filterValues) {
-                filterValues.forEach(function(it) {
-                  if (angular.isDefined(scope.byProperty)) {
-                    if (angular.isDefined(it[scope.byProperty].code)) {
-                      scope.optionsByCode[it[scope.byProperty].code].hide = true;
+                if (angular.isArray(filterValues)) {
+                  filterValues.forEach(function(it) {
+                    if (angular.isDefined(scope.byProperty)) {
+                      if (angular.isString(it[scope.byProperty].code)) {
+                        scope.optionsByCode[it[scope.byProperty].code].hide = true;
+                      }
+                    } else {
+                      if (angular.isString(it.code)) {
+                        scope.optionsByCode[it.code].hide = true;
+                      }
                     }
-                  } else {
-                    if (angular.isDefined(it.code)) {
-                      scope.optionsByCode[it.code].hide = true;
-                    }
-                  }
-                });
+                  });
+                }
               });
             }
             deselectHiddenValue();
           };
           doOptionsFilering();
 
-          if(typeof scope.watchModel !== 'undefined') {
+          if(angular.isDefined(scope.watchModel)) {
             scope.$parent.$watch(scope.watchModel, function(newValue) {
               if(!angular.isDefined(newValue) || newValue === null) {
                 scope.value = undefined;
@@ -111,16 +117,16 @@ angular.module('hitsaOis')
                     mainClassifierCode: scope.connectMainClassifierCode
                   };
 
-                  if(typeof scope.searchFromConnect === 'undefined'){
-                    params.classifierCode = newValue.code;
-                  } else {
+                  if(angular.isDefined(scope.searchFromConnect)){
                     params.connectClassifierCode = newValue.code;
+                  } else {
+                    params.classifierCode = newValue.code;
                   }
 
                   ClassifierConnect.queryAll(params, function(result) {
                     var showOptions = [];
                     result.forEach(function(classifierConnect) {
-                      var code = (typeof scope.searchFromConnect === 'undefined') ? classifierConnect.connectClassifier.code : classifierConnect.classifier.code;
+                      var code = !angular.isDefined(scope.searchFromConnect) ? classifierConnect.connectClassifier.code : classifierConnect.classifier.code;
                       showOptions.push(code);
                     });
 
@@ -130,8 +136,12 @@ angular.module('hitsaOis')
                       }
                     }
 
-                    if(typeof scope.selectFirstValue !== 'undefined' && showOptions.length > 0) {
-                      scope.value = optionsByCode[showOptions[0]];
+                    if(angular.isDefined(scope.selectFirstValue) && showOptions.length > 0) {
+                      if (angular.isDefined(scope.modelValueAttr)) {
+                        scope.value = optionsByCode[showOptions[0]][scope.modelValueAttr];
+                      } else {
+                        scope.value = optionsByCode[showOptions[0]];
+                      }
                     }
                     deselectHiddenValue();
                   });

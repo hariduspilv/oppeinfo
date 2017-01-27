@@ -4,8 +4,6 @@ import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -94,25 +92,21 @@ public class SchoolService {
     public School updateStudyLevels(School school, List<String> studyLevels) {
         if(studyLevels != null) {
             List<SchoolStudyLevel> storedStudyLevels = school.getStudyLevels();
-            Set<String> studyLevelCodes = storedStudyLevels.stream().map(sl -> sl.getStudyLevel().getCode()).collect(Collectors.toSet());
-
-            for(String studyLevel : studyLevels) {
-                if(!studyLevelCodes.remove(studyLevel)) {
-                    // add new link
-                    Classifier c = classifierRepository.getOne(studyLevel);
-                    // verify that domain code is from OPPEASTE and raise IllegalArgumentException if wrong
-                    if(!MainClassCode.OPPEASTE.name().equals(c.getMainClassCode())) {
-                        throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                    }
-                    SchoolStudyLevel sl = new SchoolStudyLevel();
-                    sl.setSchool(school);
-                    sl.setStudyLevel(c);
-                    storedStudyLevels.add(sl);
-                }
+            if(storedStudyLevels == null) {
+                school.setStudyLevels(storedStudyLevels = new ArrayList<>());
             }
-
-            // remove possible letfovers
-            storedStudyLevels.removeIf(sl -> !studyLevels.contains(sl.getStudyLevel().getCode()));
+            EntityUtil.bindClassifierCollection(storedStudyLevels, sl -> sl.getStudyLevel().getCode(), studyLevels, studyLevel -> {
+                // add new link
+                Classifier c = classifierRepository.getOne(studyLevel);
+                // verify that domain code is from OPPEASTE and raise IllegalArgumentException if wrong
+                if(!MainClassCode.OPPEASTE.name().equals(c.getMainClassCode())) {
+                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
+                }
+                SchoolStudyLevel sl = new SchoolStudyLevel();
+                sl.setSchool(school);
+                sl.setStudyLevel(c);
+                return sl;
+            });
         }
 
         return schoolRepository.save(school);

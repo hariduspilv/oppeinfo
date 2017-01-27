@@ -21,11 +21,10 @@ angular.module('hitsaOis')
         }, obj || {} );
       },
       convertStringToDates : function(object, dateProperties) {
-        for(var property in object) {
-          if(object.hasOwnProperty(property)) {
-            if(object[property] !== null && typeof object[property] === "string" && dateProperties !== null && dateProperties.indexOf(property) !== -1) {
-              object[property] = moment(object[property], "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'").toDate();
-            }
+        for(var i = 0, cnt = dateProperties.length; i < cnt; i++) {
+          var property = dateProperties[i];
+          if(object.hasOwnProperty(property) && typeof object[property] === 'string') {
+            object[property] = moment(object[property], "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'").toDate();
           }
         }
       }

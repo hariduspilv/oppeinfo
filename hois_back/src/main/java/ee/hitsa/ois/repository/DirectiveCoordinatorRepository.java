@@ -10,6 +10,6 @@ import ee.hitsa.ois.web.dto.DirectiveCoordinatorDto;
 
 public interface DirectiveCoordinatorRepository extends JpaRepository<DirectiveCoordinator, Long> {
 
-    @Query("select new ee.hitsa.ois.web.dto.DirectiveCoordinatorDto(dc.id, dc.name, dc.idCode, dc.version) from DirectiveCoordinator dc where dc.school.id=?1")
+    @Query("select new ee.hitsa.ois.web.dto.DirectiveCoordinatorDto(dc.id, dc.name, dc.idcode, dc.version) from DirectiveCoordinator dc where dc.school.id=?1")
     Page<DirectiveCoordinatorDto> findAllBySchool_id(Long schoolId, Pageable pageable);
 }

@@ -164,17 +164,33 @@ angular
         controllerAs: 'controller',
         resolve: { translationLoaded: function($translate) { return $translate.onReady(); } }
       })
-      .when('/vocational/curriculum/new', {
+      .when('/vocationalCurriculum/new', {
         templateUrl: 'views/vocational.curriculum.html',
         controller: 'VocationalCurriculumController',
         controllerAs: 'controller',
         resolve: { translationLoaded: function($translate) { return $translate.onReady(); } }
       })
-      .when('/vocational/curriculum/:id/edit', {
+      .when('/vocationalCurriculum/:id/edit', {
         templateUrl: 'views/vocational.curriculum.html',
         controller: 'VocationalCurriculumController',
         controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } }
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          entity: function(QueryUtils, $route) {
+            return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
+          }
+        }
+      })
+      .when('/vocationalCurriculum/:id/moduleImplementationPlan/new', {
+        templateUrl: 'views/vocational.curriculum.module.implementation.plan.html',
+        controller: 'VocationalCurriculumModuleImplementationPlanController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          entity: function(QueryUtils, $route) {
+            return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
+          }
+        }
       })
       .when('/curriculum', {
         templateUrl: 'views/curriculum.list.html',

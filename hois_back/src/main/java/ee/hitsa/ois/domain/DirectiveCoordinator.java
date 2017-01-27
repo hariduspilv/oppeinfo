@@ -11,7 +11,7 @@ public class DirectiveCoordinator extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private School school;
     private String name;
-    private String idCode;
+    private String idcode;
 
     public School getSchool() {
         return school;
@@ -29,11 +29,11 @@ public class DirectiveCoordinator extends BaseEntityWithId {
         this.name = name;
     }
 
-    public String getIdCode() {
-        return idCode;
+    public String getIdcode() {
+        return idcode;
     }
 
-    public void setIdCode(String idCode) {
-        this.idCode = idCode;
+    public void setIdcode(String idcode) {
+        this.idcode = idcode;
     }
 }

@@ -70,6 +70,7 @@ angular.module('hitsaOis').controller('BuildingController',
     };
 
     $scope.updateBuilding = function() {
+      $scope.buildingForm.$setSubmitted();
       if(!$scope.buildingForm.$valid) {
         message.error('main.messages.form-has-errors');
         return;

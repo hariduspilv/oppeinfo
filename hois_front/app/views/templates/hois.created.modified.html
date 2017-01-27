@@ -13,12 +13,12 @@
         <tbody md-body>
         <tr md-row ng-if="object.inserted">
           <td md-cell>{{'main.inserted' | translate}}</td>
-          <td md-cell>{{'main.formattedDate' | translate: {date: object.inserted} }}</td>
+          <td md-cell>{{'main.formattedDateTime' | translate: {date: object.inserted} }}</td>
           <td md-cell>{{object.insertedBy}}</td>
         </tr>
         <tr md-row ng-if="object.changed">
           <td md-cell>{{'main.changed' | translate}}</td>
-          <td md-cell>{{'main.formattedDate' | translate: {date: object.changed} }}</td>
+          <td md-cell>{{'main.formattedDateTime' | translate: {date: object.changed} }}</td>
           <td md-cell>{{object.changedBy}}</td>
         </tr>
         </tbody>

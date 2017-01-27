@@ -2,16 +2,10 @@
 
 angular.module('hitsaOis').controller('SchoolDepartmentEditController',
 
-  function ($location, message, $route, $scope, $translate, QueryUtils) {
+  function ($location, message, $route, $scope, $translate, DataUtils, QueryUtils) {
     var id = $route.current.params.id;
-    var postload = function() {
-      // TODO utility function: convertDates($scope.schoolDepartment, ['validFrom', 'validThru'])
-      if($scope.schoolDepartment.validFrom) {
-        $scope.schoolDepartment.validFrom = new Date(Date.parse($scope.schoolDepartment.validFrom));
-      }
-      if($scope.schoolDepartment.validThru) {
-        $scope.schoolDepartment.validThru = new Date(Date.parse($scope.schoolDepartment.validThru));
-      }
+    var afterLoad = function() {
+      DataUtils.convertStringToDates($scope.schoolDepartment, ['validFrom', 'validThru']);
       if($scope.schoolDepartment.parentSchoolDepartment) {
         $scope.schoolDepartment.parentSchoolDepartmentId = $scope.schoolDepartment.parentSchoolDepartment.id || '';
       }
@@ -20,26 +14,27 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController',
     var Endpoint = QueryUtils.endpoint('/school/departments');
     if(id) {
       $scope.schoolDepartment = Endpoint.get({id: id});
-      $scope.schoolDepartment.$promise.then(postload);
+      $scope.schoolDepartment.$promise.then(afterLoad);
     } else {
       // new department
       var now = new Date();
-      now.setUTCHours(0, 0, 0, 0);
+      now.setHours(0, 0, 0, 0);
       $scope.schoolDepartment = new Endpoint({validFrom: now, validThru: null});
     }
 
     $scope.update = function() {
+      $scope.schoolDepartmentForm.$setSubmitted();
       if(!$scope.schoolDepartmentForm.$valid) {
         message.error('main.messages.form-has-errors');
         return;
       }
       if($scope.schoolDepartment.id) {
-        $scope.schoolDepartment.$update().then(postload).then(function() {
+        $scope.schoolDepartment.$update().then(afterLoad).then(function() {
           message.info('main.messages.update.success');
           $location.path('/school/departments');
         });
       } else {
-        $scope.schoolDepartment.$save().then(postload).then(function() {
+        $scope.schoolDepartment.$save().then(afterLoad).then(function() {
           message.info('main.messages.create.success');
           $location.path('/school/departments');
         });
@@ -55,7 +50,7 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController',
   }
 );
 
-angular.module('hitsaOis').controller('SchoolDepartmentListController', function ($scope, QueryUtils) {
+angular.module('hitsaOis').controller('SchoolDepartmentListController', function ($scope, DataUtils, QueryUtils) {
   var postLoad = function() {
     var addChildren = function(rows, indent, children) {
       for(var row_no = 0, row_cnt = children.length;row_no < row_cnt;row_no++) {
@@ -75,8 +70,7 @@ angular.module('hitsaOis').controller('SchoolDepartmentListController', function
     now.setUTCHours(0, 0, 0, 0);
     for(var row_no = 0, row_cnt = rows.length;row_no < row_cnt;row_no++) {
       var row = rows[row_no];
-      row.validFrom = new Date(Date.parse(row.validFrom));
-      row.validThru = row.validThru ? new Date(Date.parse(row.validThru)) : null;
+      DataUtils.convertStringToDates(row, ['validFrom', 'validThru']);
       row.isValid = row.validFrom <= now && (!row.validThru || row.validThru >= now);
     }
   };

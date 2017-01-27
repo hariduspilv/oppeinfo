@@ -50,7 +50,7 @@ public class DirectiveControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
 
-        form.setIdCode("Wrong idcode");
+        form.setIdcode("Wrong idcode");
         responseEntity = restTemplate.postForEntity(uri, form, DirectiveCoordinatorDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());

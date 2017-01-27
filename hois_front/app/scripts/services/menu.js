@@ -16,7 +16,7 @@ angular.module('hitsaOis')
         {name: 'Riiklikud õppekavad', url: "/stateCurriculum"},
         //{name: 'Riikliku õppekava lisamine', url: "/stateCurriculum/new"},
         //{name: 'Õppekavade otsing', url: "/curriculum"},
-        {name: 'Kutseõppe õppekava sisestamine', url: "/vocational/curriculum/new"},
+        {name: 'Kutseõppe õppekava sisestamine', url: "/vocationalCurriculum/new"},
         {name: 'Kõrgharidusõppe õppekava sisestamine', url: "/higherEducationCurriculum/new"}
       ]
     });
@@ -41,19 +41,19 @@ angular.module('hitsaOis')
           name: 'main.menu.fixData.departments',
           url: "/school/departments?_menu"
         },
-		{
+		    {
           name: 'main.menu.fixData.teacheroccupations',
           url: "/school/teacheroccupations?_menu"
         },
-		{
+		    {
             name: 'main.menu.fixData.directivecoordinators',
             url: "/directives/coordinators?_menu"
         },
-		{
+		    {
             name: 'main.menu.fixData.generalmessages',
             url: "/generalmessages?_menu"
         },
-		{
+		    {
           name: 'main.menu.fixData.studyLevels',
           url: "/school/studyLevels"
         },

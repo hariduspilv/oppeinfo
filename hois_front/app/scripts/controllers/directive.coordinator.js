@@ -33,6 +33,7 @@ angular.module('hitsaOis').config(function ($routeProvider) {
   }
 
   $scope.update = function() {
+    $scope.directiveCoordinatorForm.$setSubmitted();
     if(!$scope.directiveCoordinatorForm.$valid) {
       message.error('main.messages.form-has-errors');
       return;

@@ -16,13 +16,13 @@
         <div layout="column">
           <md-input-container flex>
             <label>{{'occupation.occupationStandard' | translate}}</label>
-            <hois-classifier-select ng-model="data.occupation" main-classifier-code="KUTSE" ng-required="true"></hois-classifier-select>
+            <hois-classifier-select ng-model="data.occupation" main-classifier-code="KUTSE" required></hois-classifier-select>
           </md-input-container>
 
           <md-input-container flex>
             <label>{{'occupation.aquiredPartOccupation' | translate}}</label>
             <hois-classifier-select ng-model="data.partOccupationAquired" main-classifier-code="OSAKUTSE" watch-model="data.occupation"
-                        connect-main-classifier-code="KUTSE" search-from-connect filter-values ng-required="true"></hois-classifier-select>
+                        connect-main-classifier-code="KUTSE" search-from-connect filter-values required></hois-classifier-select>
           </md-input-container>
         </div>
       </div>

@@ -132,7 +132,7 @@ angular.module('hitsaOis')
       if(curriculum.higher) {
         $location.path('/higherEducationCurriculum/' + curriculum.id + '/edit');
       } else {
-        $location.path('/vocational/curriculum/' + curriculum.id + '/edit');
+        $location.path('/vocationalCurriculum/' + curriculum.id + '/edit');
       }
     };
 
@@ -140,8 +140,7 @@ angular.module('hitsaOis')
       if(curriculum.higher) {
         $location.path('/higherEducationCurriculum/' + curriculum.id + '/view');
       } else {
-        //   TODO: view mode not yet implemented
-        $location.path('/vocational/curriculum/' + curriculum.id + '/edit');
+        $location.path('/vocationalCurriculum/' + curriculum.id + '/edit');
       }
     };
   });

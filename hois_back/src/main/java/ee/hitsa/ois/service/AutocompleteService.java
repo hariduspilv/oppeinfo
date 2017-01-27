@@ -57,7 +57,7 @@ public class AutocompleteService {
         SubjectSearchCommand subjectSearchCommand = new SubjectSearchCommand();
         subjectSearchCommand.setName(command.getName());
         subjectSearchCommand.setStatus(Collections.singletonList(SubjectStatus.AINESTAATUS_K.name()));
-        return subjectService.search(subjectSearchCommand, schoolId, new PageRequest(0, MAX_ITEM_COUNT));
+        return subjectService.search(schoolId, subjectSearchCommand, new PageRequest(0, MAX_ITEM_COUNT));
     }
 
     private static PageRequest sortAndLimit(String sortField) {

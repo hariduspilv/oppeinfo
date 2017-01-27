@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.Classifier;
@@ -19,11 +21,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Subject;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.repository.SubjectRepository;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 
 @Transactional
@@ -31,7 +35,7 @@ import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 public class SubjectService {
 
     @Autowired
-    private SubjectRepository repository;
+    private SubjectRepository subjectRepository;
 
     @Autowired
     private ClassifierService classifierService;
@@ -39,7 +43,7 @@ public class SubjectService {
     public Subject save(Subject subject, SubjectForm newSubject) {
         bindLanguages(subject, newSubject.getLanguages());
         bindConnections(subject, newSubject);
-        return repository.save(subject);
+        return subjectRepository.save(subject);
     }
 
     private void bindConnections(Subject target, SubjectForm source) {
@@ -49,7 +53,6 @@ public class SubjectService {
         bindSubjectConnect(target, classifierService.findOne(SubjectConnection.AINESEOS_EK.name()), connections, newConnections, source.getMandatoryPrerequisiteSubjects());
         bindSubjectConnect(target, classifierService.findOne(SubjectConnection.AINESEOS_EV.name()), connections, newConnections, source.getRecommendedPrerequisiteSubjects());
         bindSubjectConnect(target, classifierService.findOne(SubjectConnection.AINESEOS_A.name()), connections, newConnections, source.getSubstituteSubjects());
-
 
         List<Long> ids = new ArrayList<>();
         ids.add(target.getId());
@@ -92,32 +95,32 @@ public class SubjectService {
         target.setSubjectLanguages(newSet);
     }
 
-    public Subject findOne(Long id) {
-        return repository.findOne(id);
-    }
-
     // todo private Collection<Long> curricula;
-    public Page<Subject> search(SubjectSearchCommand subjectSearchCommand, Long schoolId, Pageable pageable) {
-        return repository.findAll((root, query, cb) -> {
+    public Page<Subject> search(Long schoolId, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
+        return subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
             if (schoolId != null) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }
 
-            if (subjectSearchCommand.getDepartments() != null) {
+            if (!CollectionUtils.isEmpty(subjectSearchCommand.getDepartments())) {
                 filters.add(root.get("schoolDepartment").get("id").in(subjectSearchCommand.getDepartments()));
             }
 
-            if (subjectSearchCommand.getLanguages() != null) {
-                filters.add(root.join("subjectLanguages").get("language").get("code").in(subjectSearchCommand.getLanguages()));
+            Collection<String> languages = subjectSearchCommand.getLanguages();
+            if (!CollectionUtils.isEmpty(languages)) {
+                Subquery<Long> languageQuery = query.subquery(Long.class);
+                Root<SubjectLanguage> languageRoot = languageQuery.from(SubjectLanguage.class);
+                languageQuery = languageQuery.select(languageRoot.get("subject").get("id")).where(languageRoot.get("language").get("code").in(languages));
+                filters.add(root.get("id").in(languageQuery));
             }
 
-            if (subjectSearchCommand.getAssessments() != null) {
+            if (!CollectionUtils.isEmpty(subjectSearchCommand.getAssessments())) {
                 filters.add(root.get("assessment").get("code").in(subjectSearchCommand.getAssessments()));
             }
 
-            if (subjectSearchCommand.getStatus() != null) {
+            if (!CollectionUtils.isEmpty(subjectSearchCommand.getStatus())) {
                 filters.add(root.get("status").get("code").in(subjectSearchCommand.getStatus()));
             }
 
@@ -141,6 +144,6 @@ public class SubjectService {
     }
 
     public void delete(Subject subject) {
-        repository.delete(subject);
+        EntityUtil.deleteEntity(subjectRepository, subject);
     }
 }

@@ -17,7 +17,7 @@
 
           <md-input-container>
             <label>{{'generalmessage.targets' | translate}}</label>
-            <hois-classifier-select multiple ng-model="criteria._targets" main-classifier-code="ROLL"></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.targets" model-value-attr="code" main-classifier-code="ROLL" multiple></hois-classifier-select>
           </md-input-container>
 
           <div layout="row">
