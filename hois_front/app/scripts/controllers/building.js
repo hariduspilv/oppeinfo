@@ -1,9 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('BuildingController',
+angular.module('hitsaOis').controller('BuildingController', ['$mdDialog', '$q', '$route', '$scope', 'message', 'Classifier', 'QueryUtils',
 
-  function (message, Classifier, QueryUtils, $mdDialog, $q, $route, $scope) {
-    $scope.equipmentDefs = Classifier.query({mainClassCode: 'SEADMED'});
+  function ($mdDialog, $q, $route, $scope, message, Classifier, QueryUtils) {
+    $scope.equipmentDefs = Classifier.queryForDropdown({mainClassCode: 'SEADMED'});
     $scope.buildings = [];
     $scope.currentBuilding = {};
     $scope.initialBuildingId = $route.current.params.buildingId;
@@ -16,7 +16,7 @@ angular.module('hitsaOis').controller('BuildingController',
     var Room = QueryUtils.endpoint('/buildings/:buildingId/rooms');
 
     var roomEquipmentMapper = function(room) {
-      return room.roomEquipment.map(function(e) { return {equipmentCode: $scope.equipmentDefs[e.equipmentCode], equipmentCount: e.equipmentCount}; });
+      return room.roomEquipment.map(function(e) { return {equipment: $scope.equipmentDefs[e.equipment], equipmentCount: e.equipmentCount}; });
     };
 
     var selectCurrentBuilding = function(id) {
@@ -139,7 +139,7 @@ angular.module('hitsaOis').controller('BuildingController',
         $scope.loadData();
       };
       var params = {buildingId: $scope.currentBuilding.id};
-      $scope.room.roomEquipment = $scope.formState.roomEquipment.map(function(e) { return {equipmentCode: e.equipmentCode.code, equipmentCount: e.equipmentCount}; });
+      $scope.room.roomEquipment = $scope.formState.roomEquipment.map(function(e) { return {equipment: e.equipment.code, equipmentCount: e.equipmentCount}; });
       if($scope.room.id) {
         $scope.room.$update(params).then(postsave);
       } else {
@@ -159,18 +159,18 @@ angular.module('hitsaOis').controller('BuildingController',
     };
 
     $scope.addEquipment = function() {
-      if($scope.formState.roomEquipment.some(function(e) { return e.equipmentCode.code === $scope.formState.newEquipmentCode.code; })) {
+      if($scope.formState.roomEquipment.some(function(e) { return e.equipment.code === $scope.formState.newEquipment.code; })) {
         message.error('room.duplicateequipment');
         return;
       }
-      $scope.formState.roomEquipment.push({equipmentCode: $scope.formState.newEquipmentCode, equipmentCount: 1});
-      $scope.formState.newEquipmentCode = null;
+      $scope.formState.roomEquipment.push({equipment: $scope.formState.newEquipment, equipmentCount: 1});
+      $scope.formState.newEquipment = null;
     };
 
     $scope.deleteEquipment = function(code) {
       var rows = $scope.formState.roomEquipment;
       for(var row_no = 0, row_cnt = rows.length;row_no < row_cnt;row_no++) {
-        if(rows[row_no].equipmentCode.code === code) {
+        if(rows[row_no].equipment.code === code) {
           rows.splice(row_no, 1);
           break;
         }
@@ -204,9 +204,8 @@ angular.module('hitsaOis').controller('BuildingController',
     // load buildings
     var buildings = QueryUtils.endpoint('/buildings').search({order: 'nameEt'});
     $q.all([$scope.equipmentDefs.$promise, buildings.$promise]).then(function(result) {
-      $scope.equipmentDefs = Classifier.toMap(result[0].content);
+      $scope.equipmentDefs = Classifier.toMap(result[0]);
       $scope.buildings = buildings.content;
       selectCurrentBuilding($scope.initialBuildingId);
     });
-  }
-);
+}]);

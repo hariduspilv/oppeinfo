@@ -2,7 +2,7 @@
 
 
 angular.module('hitsaOis')
-  .controller('CurriculumListController', function (QueryUtils, Curriculum, $scope, $translate, $route, Classifier, School, $location, $rootScope) {
+  .controller('CurriculumListController', function (QueryUtils, Curriculum, $scope, $translate, $route, Classifier, School, $location, $rootScope, AuthService) {
 
     $scope.query = {
       order: 'id',
@@ -15,42 +15,22 @@ angular.module('hitsaOis')
       $scope.query.school = [$rootScope.auth.school.id];
     }
 
-    $rootScope.$watch('auth', function(){
-        if($rootScope.auth) {
-            $scope.disableSchoolSelection = $rootScope.auth.roleCode === 'ROLL_A';
-            if($scope.disableSchoolSelection) {
-                $scope.query.school = $rootScope.auth.school.id;
-            }
-            $scope.getCurriculums();
-        }
-    });
-
-  function success(response) {
-    $scope.curriculums = response.content;
-    $scope.curriculums.count = response.totalElements;
-  }
+    // TODO add more table classifier fields
+    var clMapper = Classifier.valuemapper({status: 'OPPEKAVA_STAATUS'});
+    function success(response) {
+      $scope.curriculums = clMapper.objectmapper(response.content);
+      $scope.curriculums.count = response.totalElements;
+    }
 
     $scope.clearInputs = function() {
       QueryUtils.clearQueryParams($scope.query);
     };
 
     $scope.getCurriculums = function () {
-      // passing them as date objects causes error (described in back end StateCurriculumSearchCommand class)
-      $scope.query.validFromMillis = $scope.query.validFrom ? $scope.query.validFrom.getTime() : null;
-      $scope.query.validThruMillis = $scope.query.validThru ? $scope.query.validThru.getTime() : null;
-      $scope.query.lang = $translate.use().toUpperCase();
       $scope.promise = Curriculum.query($scope.query, success).$promise;
     };
 
-    $scope.getClassifierValds = function() {
-      var query = {
-        mainClassCode: 'ISCED_VALD'
-      };
-      Classifier.queryForDropdown(query).$promise.then(function(response) {
-        $scope.listOfClassifierValds = response;
-      });
-    };
-    $scope.getClassifierValds();
+    $scope.listOfClassifierValds = Classifier.queryForDropdown({mainClassCode: 'ISCED_VALD'});
 
     $scope.resetAndGetClassifierSuuns = function() {
       $scope.query.iscedClassCode = undefined;
@@ -73,6 +53,16 @@ angular.module('hitsaOis')
         });
       }
     };
+
+    // TODO/FIXME methods?
+    if(AuthService.isAuthenticated()) {
+      // TODO: remove rolecode based filtration and use isAuthorized when roles/rights are fixed
+      $scope.disableSchoolSelection = $rootScope.currentUser.roleCode === 'ROLL_A';
+      if($scope.disableSchoolSelection) {
+        $scope.query.school = $rootScope.currentUser.school.id;
+      }
+      $scope.getCurriculums();
+    }
 
     function getListOfStatuses() {
       Classifier.get('OPPEKAVA_STAATUS').$promise.then(function(response) {

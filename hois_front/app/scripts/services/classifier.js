@@ -1,8 +1,7 @@
 'use strict';
 
 
-angular.module('hitsaOis')
-  .factory('Classifier', function ($resource, config, QueryUtils) {
+angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', 'QueryUtils', function ($q, $resource, config, QueryUtils) {
 
     function Classifier(args) {
 
@@ -64,9 +63,8 @@ angular.module('hitsaOis')
     };
 
     Classifier.queryForDropdown = function(params, successCallback) {
-      var resource = $resource(config.apiUrl+'/classifier/dropdown');
-      var queryParams = QueryUtils.getQueryParams(params);
-      return resource.query(queryParams, successCallback);
+      var resource = $resource(config.apiUrl+'/autocomplete/classifiers');
+      return resource.query(params, successCallback);
     };
 
     Classifier.getChildren = function(code) {
@@ -111,5 +109,42 @@ angular.module('hitsaOis')
       }
     };
 
+    Classifier.valuemapper = function(propertyDefs) {
+      var defs = {};
+      var promises = [];
+
+      // load definitions
+      for (var key in propertyDefs) {
+        var mainClassCode = propertyDefs[key];
+        defs[mainClassCode] = Classifier.queryForDropdown({mainClassCode: mainClassCode});
+        promises.push(defs[mainClassCode].$promise);
+      }
+
+      $q.all(promises).then(function() {
+        for(var key in defs) {
+          defs[key] = Classifier.toMap(defs[key]);
+        }
+      });
+
+      var valuegetter = function(mainClassCode, code) {
+        var map = defs[mainClassCode];
+        return map[code];
+      };
+
+      var objectmapper = function(object) {
+        // if object is array, iterate over its elements
+        if(Array.isArray(object)) {
+          return object.map(objectmapper);
+        }
+        for (var key in propertyDefs) {
+          if (object.hasOwnProperty(key)) {
+            object[key] = valuegetter(propertyDefs[key], object[key]);
+          }
+        }
+        return object;
+      };
+      return {promises: promises, objectmapper: objectmapper};
+    };
+
     return Classifier;
-  });
+}]);

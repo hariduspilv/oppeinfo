@@ -1,7 +1,6 @@
 'use strict';
 
-
-angular.module('hitsaOis').controller('SchoolEditController', function ($scope, $route, School, $location, message, QueryUtils, oisFileService, Classifier, classifierAutocomplete) {
+angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route', 'School', '$location', 'message', 'QueryUtils', 'oisFileService', 'Classifier', 'classifierAutocomplete', function ($scope, $route, School, $location, message, QueryUtils, oisFileService, Classifier, classifierAutocomplete) {
 
   var id = $route.current.params.id;
 
@@ -89,4 +88,4 @@ angular.module('hitsaOis').controller('SchoolEditController', function ($scope, 
 	  $scope.school.regNr = undefined;
 	}
   };
-});
+}]);

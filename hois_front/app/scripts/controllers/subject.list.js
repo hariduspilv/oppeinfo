@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectListController', function ($resource, $scope, QueryUtils) {
+angular.module('hitsaOis').controller('SubjectListController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
   QueryUtils.createQueryForm($scope, '/subject', {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'});
 
   // initialize selections on form
@@ -15,4 +15,4 @@ angular.module('hitsaOis').controller('SubjectListController', function ($resour
       return lang==='en' ? (it.nameEn || it.nameEt) : it.nameEt;
     }).join(', ');
   };
-});
+}]);

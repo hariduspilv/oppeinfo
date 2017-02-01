@@ -7,8 +7,9 @@
  * # QueryUtils
  * Factory in the hitsaOis.
  */
-angular.module('hitsaOis')
-  .factory('QueryUtils', function (config, $resource, $route, $translate, resourceErrorHandler, $sessionStorage) {
+angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route', '$translate', 'resourceErrorHandler', '$sessionStorage',
+
+  function (config, $resource, $route, $translate, resourceErrorHandler, $sessionStorage) {
 
     var defaultPagingParams = {size: 5, page: 1};
 
@@ -88,7 +89,7 @@ angular.module('hitsaOis')
         scope.tabledata.content = resultData.content;
         scope.tabledata.totalElements = resultData.totalElements;
         if(angular.isFunction(postLoad)) {
-          postLoad(resultData);
+          postLoad(resultData.content);
         }
       };
 
@@ -117,4 +118,4 @@ angular.module('hitsaOis')
     };
 
     return {getQueryParams: getQueryParams, clearQueryParams: clearQueryParams, createQueryForm: createQueryForm, endpoint: endpoint};
-  });
+}]);

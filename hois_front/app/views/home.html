@@ -1,5 +1,5 @@
 <div layout-padding>
-  <div ng-if="authenticated">
+  <div ng-if="currentUser">
     <span>{{ 'home.greeting' | translate }}</span>
     <h3>{{'home.generalmessages' | translate}}</h3>
     <md-table-container>
@@ -16,7 +16,7 @@
                          md-page="criteria.page" md-total="{{generalmessages.totalElements}}" md-on-paginate="loadGeneralMessages"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>
-  <div ng-if="!authenticated">
+  <div ng-if="!currentUser">
     <span>{{ 'home.joinedSchools' | translate }}</span>
     <md-list>
       <md-list-item ng-repeat="school in schools">

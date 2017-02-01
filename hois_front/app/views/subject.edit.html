@@ -90,8 +90,10 @@
     </md-input-container>
     <md-input-container>
       <label>{{'subject.status' | translate}}</label>
-      <hois-classifier-select ng-model="subject.status" main-classifier-code="AINESTAATUS" ng-required="true"></hois-classifier-select>
+      <hois-classifier-value ng-model="subject.status" main-classifier-code="AINESTAATUS"></hois-classifier-value>
     </md-input-container>
+    <md-button ng-if="subject.id && (subject.status.code != 'AINESTAATUS_K')" ng-click="subject.status = {code:'AINESTAATUS_K'}"
+               class="md-raised" style="max-width: 25em">Muuda kehtivaks(TEMP)</md-button>
     <!-- info tund -->
     <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
     <div ng-repeat="it in subject.primarySubjects">
@@ -104,7 +106,7 @@
     <hois-created-modified object="subject"></hois-created-modified>
     <div layout="row">
       <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-      <md-button ng-if="subject.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+      <md-button ng-if="subject.id && (subject.status.code != 'AINESTAATUS_K')" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
       <md-button ng-href="#/subject" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>

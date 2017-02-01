@@ -13,6 +13,7 @@ angular.module('hitsaOis').controller('SubjectEditController',
       $scope.subject = Endpoint.get({id: id});
     } else {
       $scope.subject = new Endpoint();
+      $scope.subject.status = {code: 'AINESTAATUS_S'};
     }
 
     $scope.update = function() {

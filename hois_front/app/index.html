@@ -26,7 +26,7 @@
       <header class="nav-header" layout="column">
         <div layout="row" layout-padding>
           <div layout="column" layout-align="none">
-            <img class="logo" ng-src="{{auth.school.id > 0 ? auth.school.img : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/>
+            <img class="logo" ng-src="{{logo ? logo : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/>
           </div>
 		  <div layout="column" layout-align="end">
 			<div layout="row" layout-align="end">
@@ -84,9 +84,9 @@
         <div ng-controller="LoginController" md-is-locked-open="$mdMedia('gt-xs')" layout="row" flex>
           <div layout-align="end" flex>
             <div layout="row" layout-align="end center" flex>
-              <span ng-show="auth" >{{ auth.fullname }}</span>
-              <md-button ng-show="!authenticated" ng-click="showLogin()">{{ 'main.logIn' | translate }}</md-button>
-              <md-button class="md-icon-button" ng-show="authenticated" ng-click="logout()" aria-label="log out">
+              <span ng-show="currentUser" >{{ currentUser.fullname }}</span>
+              <md-button ng-show="!currentUser" ng-click="showLogin()">{{ 'main.logIn' | translate }}</md-button>
+              <md-button class="md-icon-button" ng-show="currentUser" ng-click="logout()" aria-label="log out">
                 <md-tooltip>
                   {{ 'main.logOut' | translate }}
                 </md-tooltip>
@@ -95,8 +95,8 @@
 
             </div>
             <div layout="row" layout-align="end" flex>
-              <md-select ng-show="auth" ng-model="userWork" ng-change="changeUser();" aria-label="change user">
-                <md-option ng-repeat="user in auth.users" value="{{user.id}}" style="font-size: medium;">
+              <md-select ng-show="currentUser" ng-model="userWork" ng-change="changeUser();" aria-label="change user">
+                <md-option ng-repeat="user in currentUser.users" value="{{user.id}}" style="font-size: medium;">
                   {{user.roleEt}}
                 </md-option>
               </md-select>
@@ -146,66 +146,67 @@
         <!-- build:js({.tmp,app}) scripts/scripts.js -->
         <script src="scripts/app.js"></script>
 
-        <script src="scripts/services/message.js"></script>
+        <script src="scripts/services/array.utils.js"></script>
+        <script src="scripts/services/auth.js"></script>
+        <script src="scripts/services/classifier.js"></script>
+        <script src="scripts/services/classifier.autocomplete.js"></script>
+        <script src="scripts/services/classifier.connect.js"></script>
+        <script src="scripts/services/curriculum.js"></script>
+        <script src="scripts/services/data.utils.js"></script>
+        <script src="scripts/services/dialog.service.js"></script>
         <script src="scripts/services/error.js"></script>
-
-        <script src="scripts/controllers/home.js"></script>
-        <script src="scripts/controllers/login.js"></script>
-        <script src="scripts/directives/hois.menu.js"></script>
-        <script src="scripts/directives/error.source.attr.js"></script>
         <script src="scripts/services/menu.js"></script>
-        <script src="scripts/controllers/main.js"></script>
+        <script src="scripts/services/message.js"></script
+        <script src="scripts/services/ois.file.service.js"></script>
+        <script src="scripts/services/query.utils.js"></script>
+        <script src="scripts/services/school.js"></script>
+        <script src="scripts/services/state.curriculum.js"></script>
+        <script src="scripts/services/state.curriculum.occupation.validator.js"></script>
+
+
         <script src="scripts/controllers/building.js"></script>
+        <script src="scripts/controllers/classifier.content.edit.js"></script>
+        <script src="scripts/controllers/classifier.content.list.js"></script>
+        <script src="scripts/controllers/classifier.list.js"></script>
+        <script src="scripts/controllers/curriculum.list.js"></script>
         <script src="scripts/controllers/directive.coordinator.js"></script>
         <script src="scripts/controllers/general.message.js"></script>
+        <script src="scripts/controllers/higher.education.curriculum.js"></script>
+        <script src="scripts/controllers/home.js"></script>
+        <script src="scripts/controllers/login.js"></script>
+        <script src="scripts/controllers/main.js"></script>
         <script src="scripts/controllers/room.search.js"></script>
         <script src="scripts/controllers/school.department.js"></script>
+        <script src="scripts/controllers/school.edit.js"></script>
+        <script src="scripts/controllers/school.list.js"></script>
         <script src="scripts/controllers/school.study.levels.js"></script>
+        <script src="scripts/controllers/state.curriculum.js"></script>
+        <script src="scripts/controllers/state.curriculum.module.js"></script>
+        <script src="scripts/controllers/state.curriculum.list.js"></script>
         <script src="scripts/controllers/student.list.js"></script>
+        <script src="scripts/controllers/student.representative.application.js"></script>
+        <script src="scripts/controllers/student.view.js"></script>
         <script src="scripts/controllers/subject.list.js"></script>
         <script src="scripts/controllers/subject.edit.js"></script>
         <script src="scripts/controllers/teacher.occupation.js"></script>
-
-        <script src="scripts/controllers/school.list.js"></script>
-        <script src="scripts/controllers/school.edit.js"></script>
-        <script src="scripts/services/school.js"></script>
-
-        <script src="scripts/controllers/classifier.list.js"></script>
-        <script src="scripts/controllers/classifier.content.list.js"></script>
-        <script src="scripts/controllers/classifier.content.edit.js"></script>
-        <script src="scripts/services/classifier.js"></script>
-        <script src="scripts/services/classifier.autocomplete.js"></script>
-
-        <script src="scripts/controllers/state.curriculum.js"></script>
-        <script src="scripts/services/state.curriculum.js"></script>
-        <script src="scripts/controllers/state.curriculum.module.js"></script>
-        <script src="scripts/directives/unique.attr.js"></script>
-        <script src="scripts/services/state.curriculum.occupation.validator.js"></script>
-
-        <script src="scripts/controllers/state.curriculum.list.js"></script>
-
-
         <script src="scripts/controllers/vocational.curriculum.js"></script>
         <script src="scripts/controllers/vocational.curriculum.module.implementation.plan.js"></script>
-        <script src="scripts/services/query.utils.js"></script>
-        <script src="scripts/controllers/state.curriculum.list.js"></script>
-        <script src="scripts/services/curriculum.js"></script>
-        <script src="scripts/services/dialog.service.js"></script>
-        <script src="scripts/services/classifier.connect.js"></script>
-        <script src="scripts/services/array.utils.js"></script>
 
+
+        <script src="scripts/directives/unique.attr.js"></script>
+        <script src="scripts/directives/hois.menu.js"></script>
+        <script src="scripts/directives/error.source.attr.js"></script>
         <script src="scripts/directives/hois.created.modified.js"></script>
         <script src="scripts/directives/hois.classifier.radio.js"></script>
         <script src="scripts/directives/hois.classifier.select.js"></script>
         <script src="scripts/directives/hois.classifier.value.js"></script>
+        <script src="scripts/directives/hois.value.js"></script>
         <script src="scripts/directives/hois.multi.text.js"></script>
-        <script src="scripts/services/data.utils.js"></script>
         <script src="scripts/directives/hois.input.file.js"></script>
         <script src="scripts/directives/hois.autocomplete.js"></script>
+        <script src="scripts/directives/hois.curriculum.version.select.js"></script>
+        <script src="scripts/directives/hois.collapsable.js"></script>
 
-        <script src="scripts/controllers/curriculum.list.js"></script>
-        <script src="scripts/controllers/higher.education.curriculum.js"></script>
-        <script src="scripts/services/ois.file.service.js"></script>
 
         <!-- endbuild -->
         <script src="config.js"></script>

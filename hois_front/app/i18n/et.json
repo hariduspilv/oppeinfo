@@ -9,32 +9,33 @@
     "formattedDate": "{{date|date:'dd.MM.yyyy'}}",
     "formattedDateTime": "{{date|date:'dd.MM.yyyy HH:mm:ss'}}",
     "button": {
-      "search": "Otsi",
-      "create": "Lisa uus",
       "add": "Lisa",
-      "change": "Muuda",
-      "cancel": "Katkesta",
-      "ok": "Ok",
-      "finish": "Lõpeta",
-      "update": "Uuenda",
-      "delete": "Kustuta",
-      "view": "Vaata",
       "back": "Tagasi",
-      "clear": "Tühjenda väljad",
-      "confirm": "Kinnita",
-      "save": "Salvesta",
-      "uploadFile": "Lae fail",
-      "sendToEhis": "Saada EHISesse",
-      "updateFromEhis": "Uuenda staatust EHISest",
-      "close": "Sulge",
+      "cancel": "Katkesta",
+      "change": "Muuda",
       "choose": "Vali",
+      "clear": "Tühjenda väljad",
+      "close": "Sulge",
+      "confirm": "Kinnita",
       "copy": "Kopeeri",
+      "create": "Lisa uus",
+      "decline": "Lükka tagasi",
+      "delete": "Kustuta",
+      "finish": "Lõpeta",
+      "ok": "Ok",
+      "view": "Vaata",
+      "save": "Salvesta",
+      "search": "Otsi",
+      "sendToEhis": "Saada EHISesse",
+      "update": "Uuenda",
+      "uploadFile": "Lae fail",
+      "updateFromEhis": "Uuenda staatust EHISest",
       "status": {
-          "edit": "Sisesta",
-          "approving": "Menetle",
-          "confirm": "Kinnita",
-          "close": "Sulge"
-        }
+        "approving": "Menetle",
+        "close": "Sulge",
+        "confirm": "Kinnita",
+        "edit": "Sisesta"
+      }
     },
     "messages": {
       "update": {
@@ -100,14 +101,18 @@
         "searchrooms": "Ruumide otsing",
         "schools": "Õppeasutused",
         "departments": "Struktuuriüksused",
-		"teacheroccupations": "Õpetaja ametid",
-		"directivecoordinators": "Käskkirjade kooskõlastajad",
-		"generalmessages": "Üldteadete haldamine",
-		"studyLevels": "Õppeasutuse õppeastmed",
+        "teacheroccupations": "Õpetaja ametikohad",
+        "directivecoordinators": "Käskkirjade kooskõlastajad",
+        "generalmessages": "Üldteadete haldamine",
+        "studyLevels": "Õppeasutuse õppeastmed",
         "classifiers": "Klassifikaatorid"
       },
       "more": {
         "label": "VEEL MIDAGI"
+      },
+      "student": {
+        "label": "Õppurid",
+        "search": "Õppurite otsing"
       }
     }
   },
@@ -115,6 +120,67 @@
     "generalmessages": "Üldteated",
     "greeting": "Tere tulemast ÕISi",
     "joinedSchools": "ÕISi liitunud õppeasutused:"
+  },
+  "student": {
+    "address": "Postiaadress",
+    "bankaccount": "Arveldusarve",
+    "citizenship": "Kodakondsus",
+    "contact": "Kontaktandmed",
+    "course": "Kursus/õppeaasta",
+    "curriculum": "Õppekava",
+    "curriculumSpeciality": "Peaeriala",
+    "documents": "Dokumendid",
+    "fin": "Finantseerimise allikas",
+    "finSpecific": "Finantseerimise allika täpsustus",
+    "firstname": "Eesnimi",
+    "foreignStudy": "Välisõppes viibimine",
+    "idcode": "Isikukood",
+    "isRepresentativeMandatory": "Õppuril peab olema esindaja",
+    "isSpecialNeed": "Õppuril on erivajadus",
+    "language": "Suhtluskeel",
+    "lastname": "Perekonnanimi",
+    "main": "Põhiandmed",
+    "name": "Õppuri nimi",
+    "nominalStudyEnd": "Eeldatav nominaalaja lõpp",
+    "phone": "Kontakttelefon",
+    "postcode": "Sihtnumber",
+    "previousStudyLevel": "Eelnev haridus",
+    "representatives": "Esindajad",
+    "residenceCountry": "Elukohariik",
+    "schoolEmail": "Õppeasutuse e-posti aadress",
+    "sex": "Sugu",
+    "specialNeed": "Erivajaduse täpsustus",
+    "specialNeeds": "Erivajadus",
+    "status": "Õppuri staatus",
+    "studentCard": "Õpilaspileti number",
+    "studentGroup": "Õpperühm",
+    "study": "Õppimine",
+    "studyForm": "Õppevorm",
+    "studyLanguage": "Õppekeel",
+    "studyLoad": "Õppekoormus",
+    "studyStart": "Õpingute algus",
+    "directive": {
+      "title": "Pealkiri",
+      "kind": "Dokumendi liik",
+      "number": "Dokumendi number",
+      "creator": "Koostaja"
+    },
+    "representative": {
+      "add": "Lisa uus esindaja",
+      "email": "E-posti aadress",
+      "firstname": "Eesnimi",
+      "idcode": "Isikukood",
+      "lastname": "Perekonnanimi",
+      "name": "Nimi",
+      "relation": "Seos õppuriga",
+      "phone": "Kontakttelefon",
+      "studentVisible": "Õppuri andmed on esindajale nähtavad",
+      "application": {
+        "content": "Kas kinnitada avaldus?",
+        "rejectReason": "Põhjendus",
+        "title": "Avalduse kinnitamine"
+      }
+    }
   },
   "subject": {
     "label": "Aine",
@@ -177,7 +243,7 @@
       "nameEt": "Nimetus",
       "nameEn": "Nimetus i.k.",
       "parent": "Ülemüksus",
-      "valid": "Kehtiv",
+      "status": "Staatus",
       "validTrue": "Kehtiv",
       "validFalse": "Kehtetu",
       "validFrom": "Kehtivuse algus",
@@ -424,6 +490,7 @@
       "occupationEt": "Ametikoht eesti keeles",
       "occupationEn": "Ametikoht inglise keeles",
       "isValid": "Kehtiv",
+      "status": "Staatus",
       "validTrue": "Kehtiv",
       "validFalse": "Kehtetu"
     }

@@ -86,7 +86,7 @@
       "nameEt": "Name et",
       "nameEn": "Name",
       "parent": "Parent department",
-      "valid": "Valid",
+      "status": "Status",
       "validTrue": "Valid",
       "validFalse": "Invalid",
       "validFrom": "Valid from",
@@ -123,6 +123,7 @@
       "occupationEt": "Occupation in estonian",
       "occupationEn": "Occupation in english",
       "isValid": "Valid",
+      "status": "Status",
       "validTrue": "Valid",
       "validFalse": "Invalid"
     }

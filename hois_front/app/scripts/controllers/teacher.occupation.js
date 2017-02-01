@@ -1,8 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TeacherOccupationEditController',
+angular.module('hitsaOis').controller('TeacherOccupationEditController', ['$location', '$route', '$scope', 'message', 'QueryUtils',
 
-  function ($location, message, QueryUtils, $route, $scope) {
+  function ($location, $route, $scope, message, QueryUtils) {
     var id = $route.current.params.id;
 
     var baseUrl = '/school/teacheroccupations';
@@ -38,11 +38,8 @@ angular.module('hitsaOis').controller('TeacherOccupationEditController',
         $location.path(baseUrl);
       });
     };
-  }
-);
-
-angular.module('hitsaOis').controller('TeacherOccupationListController', function ($scope, QueryUtils) {
+}]).controller('TeacherOccupationListController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
   QueryUtils.createQueryForm($scope, '/school/teacheroccupations', {order: 'occupationEt'});
 
   $scope.loadData();
-});
+}]);

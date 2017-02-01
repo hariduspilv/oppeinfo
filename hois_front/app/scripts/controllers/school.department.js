@@ -1,8 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SchoolDepartmentEditController',
+angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$location', '$route', '$scope', '$translate', 'message', 'DataUtils', 'QueryUtils',
 
-  function ($location, message, $route, $scope, $translate, DataUtils, QueryUtils) {
+  function ($location, $route, $scope, $translate, message, DataUtils, QueryUtils) {
     var id = $route.current.params.id;
     var afterLoad = function() {
       DataUtils.convertStringToDates($scope.schoolDepartment, ['validFrom', 'validThru']);
@@ -47,10 +47,7 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController',
         $location.path('/school/departments');
       });
     };
-  }
-);
-
-angular.module('hitsaOis').controller('SchoolDepartmentListController', function ($scope, DataUtils, QueryUtils) {
+}]).controller('SchoolDepartmentListController', ['$scope', 'DataUtils', 'QueryUtils', function ($scope, DataUtils, QueryUtils) {
   var postLoad = function() {
     var addChildren = function(rows, indent, children) {
       for(var row_no = 0, row_cnt = children.length;row_no < row_cnt;row_no++) {
@@ -77,4 +74,4 @@ angular.module('hitsaOis').controller('SchoolDepartmentListController', function
 
   QueryUtils.createQueryForm($scope, '/school/departments', {order: $scope.currentLanguage()==='en' ? 'nameEn' : 'nameEt'}, postLoad);
   $scope.loadData();
-});
+}]);

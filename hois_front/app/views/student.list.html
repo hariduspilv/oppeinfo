@@ -14,13 +14,18 @@
           </md-input-container>
 
           <md-input-container>
+            <label>{{'student.curriculum' | translate}}</label>
+            <hois-curriculum-version-select ng-model="criteria.curriculumVersionId" multiple></hois-curriculum-version-select>
+          </md-input-container>
+
+          <md-input-container>
             <label>{{'student.studyForm' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyForm" main-classifier-code="STUDY_FORM"></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
           </md-input-container>
 
           <md-input-container>
             <label>{{'student.status' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.status" main-classifier-code="STATUS"></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="OPPURSTAATUS" multiple></hois-classifier-select>
           </md-input-container>
 
           <div layout="row">
@@ -41,18 +46,20 @@
           <tr md-row>
             <th md-column md-order-by="person.lastname,person.firstname">{{'student.name' | translate}}</th>
             <th md-column md-order-by="person.idcode">{{'student.idcode' | translate}}</th>
-            <th md-column md-order-by="curriculumVersion.code">{{'student.validFrom' | translate}}</th>
-            <th md-column md-order-by="studentGroup.code">{{'generalmessage.validThru' | translate}}</th>
+            <th md-column md-order-by="curriculumVersion.code">{{'student.curriculum' | translate}}</th>
+            <th md-column md-order-by="studentGroup.code">{{'student.studentGroup' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'student.studyForm' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'student.status' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{row.name}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{row.id}}/main">{{row.fullname}}</md-button>
+            </td>
             <td md-cell>{{row.idcode}}</td>
-            <td md-cell>{{row.curriculum}}</td>
-            <td md-cell>{{row.group}}</td>
+            <td md-cell>{{currentLanguage()==='en' ? (row.curriculum.nameEn || row.curriculum.nameEt) : row.curriculum.nameEt}}</td>
+            <td md-cell>{{row.studentGroup}}</td>
             <td md-cell>{{currentLanguage()==='en' ? (row.studyForm.nameEn || row.studyForm.nameEt) : row.studyForm.nameEt}}</td>
             <td md-cell>{{currentLanguage()==='en' ? (row.status.nameEn || row.status.nameEt) : row.status.nameEt}}</td>
           </tr>

@@ -17,7 +17,7 @@ angular.module('hitsaOis')
       scope: {},
       link: function postLink(scope, element, attrs, ngModelControllers) {
         var optionsByCode = {};
-        Classifier.queryAll({mainClassCode: attrs.mainClassifierCode}, function(result) {
+        Classifier.queryForDropdown({mainClassCode: attrs.mainClassifierCode}, function(result) {
           result.forEach(function(classifier) {
             var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
             optionsByCode[option.code] = option;

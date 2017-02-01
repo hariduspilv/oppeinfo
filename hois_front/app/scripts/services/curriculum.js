@@ -24,5 +24,9 @@ angular.module('hitsaOis')
         return resource.query(successCallback);
     };
 
+    Curriculum.queryVersions = function() {
+      return QueryUtils.endpoint('/autocomplete/curriculumversions').get();
+    };
+
     return Curriculum;
   });

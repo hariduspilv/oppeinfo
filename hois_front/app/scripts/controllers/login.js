@@ -1,93 +1,89 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('LoginController', function ($rootScope, $scope, $http, Menu, $location, config, $mdDialog) {
+  .controller('LoginController', function (message, $rootScope, $scope, $http, AuthService, AUTH_EVENTS, $location, config, $mdDialog) {
 
-    var authenticate = function(credentials, callback) {
-
+    var authenticate = function(credentials) {
       var headers = credentials ? {authorization : "Basic " +
-        btoa(credentials.username + ":" + "undefined"/*"benspassword"credentials.password*/)
-      } : {};
-
-      $http.get(config.apiUrl + '/user', {headers : headers}).then(function(response) {
-        if (response.data.name) {
-          loggedIn(response.data);
-        } else {
-          loggedOut();
+        btoa(credentials.username + ":" + "undefined")
+        } : {};
+      AuthService.login(headers).then(function (auth) {
+        if (auth) {
+          $rootScope.$broadcast(AUTH_EVENTS.loginSuccess);
+          $rootScope.setCurrentUser(auth);
+          setLoggedInVisuals(auth);
+          $scope.error = false;
+          $mdDialog.hide();
         }
-        if (callback) {
-          callback();
-        }
-      }, function() {
-        loggedOut();
-        if (callback) {
-          callback();
-        }
+      }, function () {
+        console.log('udonth happen right?');
+        $scope.error = true;
+        $rootScope.$broadcast(AUTH_EVENTS.loginFailed);
       });
+    };
 
+    var showAlert = function () {
+      authenticate();
+      if (!AuthService.isAuthorized) {
+        message.error('no-auth');
+      }
     };
 
     authenticate();
     $scope.credentials = {};
 
-    $scope.login = function() {
-      authenticate($scope.credentials, function() {
-        if ($rootScope.authenticated) {
-          $location.path("/");
-          $scope.error = false;
-          $mdDialog.hide();
-        } else {
-          $location.path("/login");
-          $scope.error = true;
-        }
-      });
+    $rootScope.$on(AUTH_EVENTS.notAuthenticated, showAlert);
+    $rootScope.$on(AUTH_EVENTS.notAuthorized, showAlert);
+    $rootScope.$on(AUTH_EVENTS.reAuthenticate, authenticate);
+
+    $scope.login = function () {
+      authenticate($scope.credentials);
+      if (AuthService.isAuthenticated()) {
+        $location.path("/");
+      }
     };
 
     $scope.logout = function() {
-      $http.post(config.apiUrl + '/logout', {}).finally(function() {
+      AuthService.logout().finally(function() {
         loggedOut();
         $location.path("/");
       });
     };
 
-    $scope.showLogin = function () {
-      $mdDialog.show({
-        //controller: DialogController,
-        templateUrl: 'views/templates/login.dialog.html',
-        parent: angular.element(document.body),
-        //targetEvent: ev,
-        clickOutsideToClose:true
-        //fullscreen: $scope.customFullscreen
-      });
-    };
-
     $scope.changeUser = function () {
-      $http.post(config.apiUrl + '/changeUser', {id:$scope.userWork}).then(
-        function (response) {
-          //console.log('login:changeUser:success');
-          loggedIn(response.data); // selected value messes up
+      AuthService.changeUser($scope.userWork).then(function (auth) {
+        if (auth) {
+          setLoggedInVisuals(auth);
           $location.path("/");
-        }, function () {
+        } else {
           //console.log('login:changeUser:fail');
           loggedOut();
           $location.path("/");
         }
-      );
+      });
     };
 
-    var loggedIn = function (auth) {
-      $rootScope.authenticated = true;
-      $rootScope.auth = auth;
-      if ($rootScope.auth.school) {
-        $rootScope.auth.school.img = config.apiUrl + '/school/' + $rootScope.auth.school.id + '/logo';
+    $scope.showLogin = function () {
+      $scope.error = false;
+      $mdDialog.show({
+        controller: function () { this.parent = $scope; },
+        controllerAs: 'ctrl',
+        templateUrl: 'views/templates/login.dialog.html',
+        parent: angular.element(document.body),
+        clickOutsideToClose: true
+      });
+    };
+
+    var setLoggedInVisuals = function (auth) {
+      if (auth.school) {
+        $rootScope.logo = config.apiUrl + '/school/' + auth.school.id + '/logo';
+      } else {
+        $rootScope.logo = '';
       }
       $rootScope.userWork = auth.user;
-      Menu.setMenu(auth);
     };
 
     var loggedOut = function () {
-      $rootScope.authenticated = false;
-      $rootScope.auth = null;
-      Menu.setMenu({});
+      $rootScope.currentUser = null;
     };
   });

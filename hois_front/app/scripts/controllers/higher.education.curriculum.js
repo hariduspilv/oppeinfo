@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('HigherEducationCurriculumController', function ($scope, Classifier, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, $translate, DataUtils, $rootScope) {
+  .controller('HigherEducationCurriculumController', function ($scope, Classifier, Curriculum, Session, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, $translate, DataUtils, $rootScope) {
 
     //   TODO: finish readonly
 
@@ -122,16 +122,14 @@ angular.module('hitsaOis')
     getDepartments();
 
     function getMyEhisSchool() {
-        $rootScope.$watch('auth', function(){
-            if($rootScope.auth) {
-                QueryUtils.endpoint("/school").get({id: $rootScope.auth.school.id}).$promise.then(function(response){
-                    $scope.myEhisSchool = {code: response.ehisSchool};
-                });
-            }
+      if($rootScope.currentUser && Session.school.id) {
+        QueryUtils.endpoint("/school").get({id: Session.school.id}).$promise.then(function(response) {
+          $scope.myEhisSchool = {code: response.ehisSchool};
         });
+      }
     }
     getMyEhisSchool();
-    
+
     // --- Validation
 
     $scope.gradeRequired = function() {
@@ -139,7 +137,7 @@ angular.module('hitsaOis')
     };
 
     function formIsValid() {
-        return $scope.higherEducationCurriculumForm.$valid && $scope.curriculum.specialities.length > 0 && 
+        return $scope.higherEducationCurriculumForm.$valid && $scope.curriculum.specialities.length > 0 &&
         (!$scope.gradeRequired() || $scope.curriculum.grades.length > 0);
     }
 
@@ -225,7 +223,7 @@ angular.module('hitsaOis')
             }
         }
     }
-    
+
     $scope.changeJointMentors = function() {
         if($scope.curriculum.abroad) {
             $scope.curriculum.jointPartnersEhisSchools = [];

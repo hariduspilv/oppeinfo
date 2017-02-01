@@ -1,26 +1,35 @@
 'use strict';
 
-angular.module('hitsaOis').config(function ($routeProvider) {
+angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
     .when('/directives/coordinators', {
       templateUrl: 'views/directive.coordinator.search.html',
       controller: 'DirectiveCoordinatorSearchController',
-      controllerAs: 'controller'
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
     })
     .when('/directives/coordinators/new', {
-        templateUrl: 'views/directive.coordinator.edit.html',
-        controller: 'DirectiveCoordinatorEditController',
-        controllerAs: 'controller'
+      templateUrl: 'views/directive.coordinator.edit.html',
+      controller: 'DirectiveCoordinatorEditController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
     })
     .when('/directives/coordinators/:id', {
-        templateUrl: 'views/directive.coordinator.edit.html',
-        controller: 'DirectiveCoordinatorEditController',
-        controllerAs: 'controller'
+      templateUrl: 'views/directive.coordinator.edit.html',
+      controller: 'DirectiveCoordinatorEditController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
     });
-}).controller('DirectiveCoordinatorSearchController', function ($scope, QueryUtils) {
-  QueryUtils.createQueryForm($scope, '/directives/coordinators');
+}]).controller('DirectiveCoordinatorSearchController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
+  QueryUtils.createQueryForm($scope, '/directives/coordinators', {order: 'name'});
   $scope.loadData();
-}).controller('DirectiveCoordinatorEditController', function ($location, $route, $scope, message, QueryUtils) {
+}]).controller('DirectiveCoordinatorEditController', ['$location', '$route', '$scope', 'message', 'QueryUtils', function ($location, $route, $scope, message, QueryUtils) {
   var id = $route.current.params.id;
 
   var baseUrl = '/directives/coordinators';
@@ -38,16 +47,15 @@ angular.module('hitsaOis').config(function ($routeProvider) {
       message.error('main.messages.form-has-errors');
       return;
     }
+    var msg = $scope.directiveCoordinator.id ? 'main.messages.update.success' : 'main.messages.create.success';
+    var aftersave = function() {
+      message.info(msg);
+      $location.path(baseUrl);
+    };
     if($scope.directiveCoordinator.id) {
-      $scope.directiveCoordinator.$update().then(function() {
-        message.info('main.messages.update.success');
-        $location.path(baseUrl);
-      });
+      $scope.directiveCoordinator.$update().then(aftersave);
     }else{
-      $scope.directiveCoordinator.$save().then(function() {
-        message.info('main.messages.create.success');
-        $location.path(baseUrl);
-      });
+      $scope.directiveCoordinator.$save().then(aftersave);
     }
   };
 
@@ -57,4 +65,4 @@ angular.module('hitsaOis').config(function ($routeProvider) {
       $location.path(baseUrl);
     });
   };
-});
+}]);

@@ -9,13 +9,14 @@
 angular.module('hitsaOis')
   .directive('hoisClassifierSelect', function (Classifier, ClassifierConnect) {
     return {
-      template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }"><md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
+      template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }" required="{{angular.isDefined(scope.required)}}"><md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
       'aria-label="{{option[$root.currentLanguageNameField()]}}">{{option[$root.currentLanguageNameField()]}}</md-option></md-select>',
       restrict: 'E',
       require: ['ngModel'],
       replace: true,
       scope: {
         value: "=ngModel",
+        required:'@',
         modelValueAttr: '@',
         mainClassifierCode: '@',
         connectMainClassifierCode: '@',

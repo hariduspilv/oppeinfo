@@ -60,7 +60,7 @@
             <td md-cell>
               <table>
                 <tr ng-repeat="device in row.equipment">
-                  <td>{{currentLanguage()==='en' ? (device.equipmentCode.nameEn || device.equipmentCode.nameEt) : device.equipmentCode.nameEt}}</td>
+                  <td>{{currentLanguage()==='en' ? (device.equipment.nameEn || device.equipment.nameEt) : device.equipment.nameEt}}</td>
                   <td>{{device.equipmentCount}}</td>
                 </tr>
               </table>

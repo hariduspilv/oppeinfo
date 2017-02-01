@@ -1,30 +1,57 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('Menu', function(config, $location, $rootScope) {
+  .factory('Menu', function(config, $location, $rootScope, USER_ROLES, $route) {
 
     var sections = [];
     sections.push({
       name: 'main.menu.curriculum.label', // todo curricula-vs-curriculums
       type: 'toggle',
       pages: [
-        {name: 'main.menu.curriculum.label', url: "/curriculum", access: ['']},
+        {
+          name: 'main.menu.curriculum.label',
+          url: "/curriculum"
+        },
         //{name: 'Õppejõud'},
-        {name: 'Õppeained', url: "/subject?_menu"},
+        {
+          name: 'Õppeained',
+          url: "/subject?_menu"
+        },
         //{name: 'Tunniplaan', access: ['']},
         //{name: 'Vilistlased'},
-        {name: 'Riiklikud õppekavad', url: "/stateCurriculum"},
+        {
+          name: 'Riiklikud õppekavad',
+          url: "/stateCurriculum"
+        },
         //{name: 'Riikliku õppekava lisamine', url: "/stateCurriculum/new"},
         //{name: 'Õppekavade otsing', url: "/curriculum"},
-        {name: 'Kutseõppe õppekava sisestamine', url: "/vocationalCurriculum/new"},
-        {name: 'Kõrgharidusõppe õppekava sisestamine', url: "/higherEducationCurriculum/new"}
+        {
+          name: 'Kutseõppe õppekava sisestamine',
+          url: "/vocationalCurriculum/new"
+        },
+        {
+          name: 'Kõrgharidusõppe õppekava sisestamine',
+          url: "/higherEducationCurriculum/new"
+        }
       ]
     });
 
     sections.push({
+        name: 'main.menu.student.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.student.search',
+            url: "/students?_menu"
+          }
+        ]
+      });
+
+    sections.push({
       name: 'main.menu.fixData.label', // todo rename fixData
       type: 'toggle',
-      pages: [{
+      pages: [
+        {
           name: 'main.menu.fixData.schools',
           id: 'schools',
           url: "/school?_menu"
@@ -41,19 +68,19 @@ angular.module('hitsaOis')
           name: 'main.menu.fixData.departments',
           url: "/school/departments?_menu"
         },
-		    {
+        {
           name: 'main.menu.fixData.teacheroccupations',
           url: "/school/teacheroccupations?_menu"
         },
-		    {
-            name: 'main.menu.fixData.directivecoordinators',
-            url: "/directives/coordinators?_menu"
+        {
+          name: 'main.menu.fixData.directivecoordinators',
+          url: "/directives/coordinators?_menu"
         },
-		    {
-            name: 'main.menu.fixData.generalmessages',
-            url: "/generalmessages?_menu"
+        {
+          name: 'main.menu.fixData.generalmessages',
+          url: "/generalmessages?_menu"
         },
-		    {
+        {
           name: 'main.menu.fixData.studyLevels',
           url: "/school/studyLevels"
         },
@@ -71,16 +98,6 @@ angular.module('hitsaOis')
       pages: [
       ]
     });
-
-    var _specialMenuPoints = {
-      ':{school.id}': function (url, auth) {
-        if (auth.hasOwnProperty('school') && auth.school !== null) {
-          return url.replace(':{school.id}', auth.school.id);
-        } else {
-          return null;
-        }
-      }
-    };
 
     var self;
     var menu = [];
@@ -154,50 +171,46 @@ angular.module('hitsaOis')
 
     function _canAccess(section, roles) {
       var hasAccess = false;
-      if (section.hasOwnProperty('access')) {
-        if (section.access.lastIndexOf('') !== -1) {
+      var uri = section.url.replace(/(\?_menu)$/, '');
+      var routes = $route.routes;
+      var rights = null;
+      for (var key in routes) {
+        if (routes.hasOwnProperty(key) && routes[key].regexp) {
+          if (routes[key].regexp.test(uri)) {
+            rights = routes[key];
+            break;
+          }
+        }
+      }
+      if (rights && rights.hasOwnProperty('data')) {
+        rights = rights.data.authorizedRoles;
+        if (rights.lastIndexOf('') !== -1) {
           hasAccess = true;
         } else {
-          for (var i = 0; i < section.access.length; i++) {
-            if (roles.indexOf(section.access[i]) !== -1) {
+          for (var i = 0; i < rights.length; i++) {
+            if (roles.indexOf(rights[i]) !== -1) {
               hasAccess = true;
               break;
             }
           }
         }
       } else {
-        // todo this is currently broken if and should be fixed during general roles set
-        if (roles.length === 1 && roles.indexOf('') === -1) {
-          hasAccess = true;
-        }
+        // all can see if no right
+        hasAccess = true;
       }
       return hasAccess;
     }
 
 
-    function addSubmenuItem(pages, section, roles, auth) {
-      if (!_canAccess(section, roles)) {
+    function addSubmenuItem(pages, section, roles) {
+      if (!_canAccess(section, roles) || !section.url) {
         return;
-      }
-
-      // can we display the menu aka url does not contain special syntax
-      var keys = Object.keys(_specialMenuPoints);
-      var url = section.url;
-      if (url) { // todo remove
-        for (var i = 0; (i < keys.length && url !== null); i++) {
-          if (url.includes(keys[i])) {
-            url = _specialMenuPoints[keys[i]](url, auth);
-          }
-        }
-        if (url === null) {
-          return;
-        }
       }
 
       pages.push({
         name: section.name,
         id: section.id,
-        url: url
+        url: section.url
       });
     }
 
@@ -209,7 +222,7 @@ angular.module('hitsaOis')
         var pages = [];
         if (sections[i].pages.length > 0) {
           for (var j = 0; j < sections[i].pages.length; j++) {
-            addSubmenuItem(pages, sections[i].pages[j], roles, auth);
+            addSubmenuItem(pages, sections[i].pages[j], roles);
           }
         }
         if (pages.length > 0) {
@@ -223,6 +236,4 @@ angular.module('hitsaOis')
       self.sections = menu;
       onLocationChange();
     }
-
-
   });

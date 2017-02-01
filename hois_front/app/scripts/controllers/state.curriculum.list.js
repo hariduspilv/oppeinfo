@@ -22,9 +22,6 @@ angular.module('hitsaOis')
     }
 
     $scope.getStateCurriculums = function () {
-      // passing them as date objects causes error (described in back end StateCurriculumSearchCommand class)
-      $scope.query.validFromMillis = $scope.query.validFrom ? $scope.query.validFrom.getTime() : null;
-      $scope.query.validThruMillis = $scope.query.validThru ? $scope.query.validThru.getTime() : null;
       //console.log("query");
       //console.log($scope.query);
       $scope.promise = StateCurriculum.query($scope.query, success).$promise;

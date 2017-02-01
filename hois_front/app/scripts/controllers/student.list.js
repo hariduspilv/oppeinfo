@@ -1,28 +1,20 @@
 'use strict';
 
-angular.module('hitsaOis').config(function ($routeProvider) {
+angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
     .when('/students', {
       templateUrl: 'views/student.list.html',
       controller: 'StudentSearchController',
-      controllerAs: 'controller'
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
     });
-}).controller('StudentSearchController', function ($q, $scope, Classifier, QueryUtils) {
-  $scope.studyFormDefs = Classifier.query({mainClassCode: 'OPPEVORM'});
-  $scope.statusDefs = Classifier.query({mainClassCode: 'STATUS'});
+}]).controller('StudentSearchController', ['$q', '$scope', 'Classifier', 'QueryUtils', function ($q, $scope, Classifier, QueryUtils) {
+  var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', status: 'OPPURSTAATUS'});
+  QueryUtils.createQueryForm($scope, '/students', {order: 'person.lastname,person.firstname'}, clMapper.objectmapper);
 
-  QueryUtils.createQueryForm($scope, '/students', {}, function() {
-    var rows = $scope.tabledata.content;
-    for(var rowNo = 0; rowNo < rows.length; rowNo++) {
-      var row = rows[rowNo];
-      row.studyForm = $scope.studyFormDefs[row.studyForm];
-      row.status = $scope.statusDefs[row.status];
-    }
-  });
-
-  $q.all([$scope.studyFormDefs.$promise, $scope.statusDef.$promise]).then(function() {
-    $scope.studyFormDefs = Classifier.toMap($scope.studyFormDefs.content);
-    $scope.statusDefs = Classifier.toMap($scope.statusDefs.content);
+  $q.all(clMapper.promises).then(function() {
     $scope.loadData();
   });
-});
+}]);

@@ -4,7 +4,7 @@
       <!--div class="indentForToast"></div-->
       <!--h3>{{currentLanguage()=='en' ? studyLevels.nameEn : studyLevels.nameEt}}</h3-->
       <md-list>
-        <md-list-item ng-repeat="studyLevel in studyLevelDefs.content">
+        <md-list-item ng-repeat="studyLevel in studyLevelDefs">
           <span>
             <md-checkbox ng-model="studyLevel._selected">
               {{currentLanguage()==='en' ? (studyLevel.nameEn || studyLevel.nameEt) : studyLevel.nameEt}}

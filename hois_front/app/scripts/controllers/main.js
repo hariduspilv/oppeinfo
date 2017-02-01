@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('MainController', function ($scope, $translate, $location, Menu, $mdSidenav, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout) {
+  .controller('MainController', function ($scope, $translate, $location, Menu, AuthService, $mdSidenav, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES) {
 
     var self = this;
 
@@ -139,6 +139,15 @@ angular.module('hitsaOis')
     this.isSelected = isSelected;
     this.toggleOpen = toggleOpen;
     this.autoFocusContent = false;
+
+
+    //$rootScope.currentUser = null;
+    $rootScope.userRoles = USER_ROLES;
+    $rootScope.isAuthorized = AuthService.isAuthorized;
+
+    $rootScope.setCurrentUser = function (user) {
+      $rootScope.currentUser = user;
+    };
 
     //Date picker date formats
     $rootScope.$on('$translateChangeSuccess', function (event, data) {

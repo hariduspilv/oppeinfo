@@ -1,8 +1,8 @@
 <md-dialog>
   <form role="form">
-    <div role="dialog" layout="column" ng-controller="LoginController as lgn" layout-align="center center" layout-padding>
+    <div role="dialog" layout="column" layout-align="center center" layout-padding>
       <div>
-        <div class="alert alert-danger" ng-show="controller.error">
+        <div class="alert alert-danger" ng-show="ctrl.parent.error">
           There was a problem logging in. Please try again.
         </div>
 
@@ -19,9 +19,9 @@
           <div layout="column" style="padding-left:10px">
             <md-input-container>
               <label for="username" flex>Kasutajanimi</label>
-              <input type="text" flex class="form-control" id="username" name="username" ng-model="credentials.username"/>
+              <input type="text" flex class="form-control" id="username" name="username" ng-model="ctrl.parent.credentials.username"/>
             </md-input-container>
-            <md-button class="md-raised md-primary" ng-click="login()">{{ 'main.logIn' | translate }}</md-button>
+            <md-button class="md-raised md-primary" ng-click="ctrl.parent.login()">{{ 'main.logIn' | translate }}</md-button>
           </div>
         </div>
       </div>
