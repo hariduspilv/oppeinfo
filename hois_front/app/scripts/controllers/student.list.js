@@ -3,7 +3,7 @@
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
     .when('/students', {
-      templateUrl: 'views/student.list.html',
+      templateUrl: 'views/student/list.html',
       controller: 'StudentSearchController',
       controllerAs: 'controller',
       data: {
@@ -14,7 +14,5 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', status: 'OPPURSTAATUS'});
   QueryUtils.createQueryForm($scope, '/students', {order: 'person.lastname,person.firstname'}, clMapper.objectmapper);
 
-  $q.all(clMapper.promises).then(function() {
-    $scope.loadData();
-  });
+  $q.all(clMapper.promises).then($scope.loadData);
 }]);

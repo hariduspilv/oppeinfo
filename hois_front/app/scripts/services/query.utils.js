@@ -7,9 +7,9 @@
  * # QueryUtils
  * Factory in the hitsaOis.
  */
-angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route', '$translate', 'resourceErrorHandler', '$sessionStorage',
+angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route', '$translate', 'message', 'resourceErrorHandler', '$sessionStorage',
 
-  function (config, $resource, $route, $translate, resourceErrorHandler, $sessionStorage) {
+  function (config, $resource, $route, $translate, message, resourceErrorHandler, $sessionStorage) {
 
     var defaultPagingParams = {size: 5, page: 1};
 
@@ -88,6 +88,9 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       scope.afterLoadData = function(resultData) {
         scope.tabledata.content = resultData.content;
         scope.tabledata.totalElements = resultData.totalElements;
+        if(resultData.content.length === 0) {
+          message.info('main.messages.error.notFound');
+        }
         if(angular.isFunction(postLoad)) {
           postLoad(resultData.content);
         }

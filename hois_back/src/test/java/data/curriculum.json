@@ -1,104 +1,9 @@
 {
 	"validFrom": "2017-01-11T11:30:51.851Z",
 	"selectedOccupationsPartOccupations": [{
-			"occupation": {
-				"code": "KUTSE_10491530",
-				"nameEt": "Abiaednik, tase 2",
-				"nameEn": null
-			},
-			"partOccupations": [{
-					"version": 0,
-					"inserted": "2016-11-16T22:29:08.172364Z",
-					"insertedBy": null,
-					"changed": null,
-					"changedBy": null,
-					"code": "OSAKUTSE_10491569",
-					"value": "10491569",
-					"value2": null,
-					"nameEt": "Istutaja, tase 2",
-					"nameEn": null,
-					"nameRu": null,
-					"mainClassCode": "OSAKUTSE",
-					"children": [],
-					"description": null,
-					"validFrom": null,
-					"validThru": null,
-					"extraval1": null,
-					"extraval2": null,
-					"ehisValue": null,
-					"vocational": true,
-					"higher": true,
-					"valid": true
-				}, {
-					"version": 0,
-					"inserted": "2016-11-16T22:29:08.172364Z",
-					"insertedBy": null,
-					"changed": null,
-					"changedBy": null,
-					"code": "OSAKUTSE_10491571",
-					"value": "10491571",
-					"value2": null,
-					"nameEt": "Aiakultuuride hooldaja, tase 2",
-					"nameEn": null,
-					"nameRu": null,
-					"mainClassCode": "OSAKUTSE",
-					"children": [],
-					"description": null,
-					"validFrom": null,
-					"validThru": null,
-					"extraval1": null,
-					"extraval2": null,
-					"ehisValue": null,
-					"vocational": true,
-					"higher": true,
-					"valid": true
-				}
-			],
+			"occupation": "KUTSE_10491530",
+			"partOccupations": ["OSAKUTSE_10491569", "OSAKUTSE_10491571"],
 			"specializations": []
-		}
-	],
-	"modules": [{
-			"studyOutcomes": [{
-					"nameEt": "test",
-					"nameEn": "test"
-				}
-			],
-			"outcomesEt": "test",
-			"outcomesEn": "test",
-			"occupations": [
-				{
-					"occupation": {"code": "OSAKUTSE_10491569"}
-				}, 
-				{
-					"occupation": {"code": "OSAKUTSE_10491571"}
-				}, 
-				
-				{
-					"occupation": {
-						"code": "KUTSE_10491530",
-						"nameEt": "Abiaednik, tase 2",
-						"nameEn": null
-					}
-				}
-			],
-			"occupationsSelected": {
-				"KUTSE_10491530": true
-			},
-			"partOccupationsSelected": {
-				"OSAKUTSE_10491569": true,
-				"OSAKUTSE_10491571": true
-			},
-			"specializationsSelected": {},
-			"module": {
-				"code": "KUTSEMOODUL_P",
-				"nameEt": "Põhiõpingud",
-				"nameEn": null
-			},
-			"nameEt": "test",
-			"nameEn": "test",
-			"credits": 1,
-			"objectivesEt": "test",
-			"objectivesEn": "test"
 		}
 	],
 	"status": "OPPEKAVA_STAATUS_S",
@@ -116,11 +21,7 @@
 			}
 		}
 	],
-	"ehisFile": {
-		"code": "EHIS_FAIL_15775",
-		"nameEt": "Kutseeksam",
-		"nameEn": null
-	},
+	"ehisFile": "EHIS_FAIL_15775",
 	"sendEhis": false,
 	"isEhis": false,
 	"oisFile": {
@@ -134,73 +35,26 @@
 	"optionalStudyCredits": 0,
 	"occupation": true,
 	"joint": true,
-	"draft": {
-		"code": "OPPEKAVA_LOOMISE_VIIS_PUUDUB",
-		"nameEt": "Puudub",
-		"nameEn": null
-	},
+	"draft": "OPPEKAVA_LOOMISE_VIIS_PUUDUB",
 	"nameEt": "test",
 	"nameEn": "test",
 	"nameRu": "test",
-	"origStudyLevel": {
-		"code": "OPPEASTE_410",
-		"nameEt": "410 kutseõpe põhihariduse baasil",
-		"nameEn": null
-	},
-	"ekrLevel": {
-		"code": "EKR_3",
-		"nameEt": "Eesti kvalifikatsiooniraamistiku 3. tase",
-		"nameEn": null
-	},
-	"consecution": {
-		"code": "OPPEKAVA_TYPE_E",
-		"nameEt": "Esmane õppekava",
-		"nameEn": null
-	},
-	"educationLevel": {
-		"code": "HARIDUSTASE_P",
-		"nameEt": "Põhiharidusel baseeruv kutseõpe",
-		"nameEn": null
-	},
+	"origStudyLevel": "OPPEASTE_410",
+	"ekrLevel": "EKR_3",
+	"consecution": "OPPEKAVA_TYPE_E",
+	"educationLevel": "HARIDUSTASE_P",
 	"code": "test",
 	"merCode": "test",
 	"credits": 1,
 	"studyPeriodYears": 1,
 	"studyPeriod": 13,
 	"studyPeriodMonths": 1,
-	"studyFormClassifiers": [{
-			"code": "OPPEVORM_K",
-			"nameEt": "Kaugõpe",
-			"nameEn": null
-		}, {
-			"code": "OPPEVORM_MS",
-			"nameEt": "mittestatsionaarne õpe",
-			"nameEn": null
-		}, {
-			"code": "OPPEVORM_M",
-			"nameEt": "Määramata",
-			"nameEn": null
-		}
-	],
+	"studyForms": ["OPPEVORM_K", "OPPEVORM_MS", "OPPEVORM_M"],
 	"approval": "2017-01-10T22:00:00.000Z",
 	"approvalDokNr": "test",
-	"areaOfStudy": {
-		"code": "ISCED_VALD_02",
-		"nameEt": "02 Humanitaaria ja kunstid",
-		"nameEn": null
-	},
-	"fieldOfStudy": {
-		"code": "ISCED_SUUN_021",
-		"nameEt": "Kunstid",
-		"nameEn": null,
-		"hide": false
-	},
-	"iscedClass": {
-		"code": "ISCED_RYHM_0211",
-		"nameEt": "Audiovisuaalsed tehnikad ja meedia tootmine ",
-		"nameEn": null,
-		"hide": false
-	},
+	"areaOfStudy": "ISCED_VALD_02",
+	"fieldOfStudy": "ISCED_SUUN_021",
+	"iscedClass": "ISCED_RYHM_0211",
 	"outcomeEt": "test",
 	"outcomeEn": "test",
 	"structure": "test",
@@ -208,46 +62,37 @@
 	"admissionRequirementsEn": "test",
 	"graduationRequirementsEt": "test",
 	"graduationRequirementsEn": "test",
-	"studyLanguageClassifiers": [{
-			"code": "OPPEKEEL_et_en",
-			"nameEt": "Eesti ja inglise keel (doktoriõpe)",
-			"nameEn": null
-		}, {
-			"code": "OPPEKEEL_et_ru",
-			"nameEt": "Eesti ja vene keel (doktoriõpe)",
-			"nameEn": null
-		}, {
-			"code": "OPPEKEEL_E",
-			"nameEt": "Eesti keel",
-			"nameEn": null
-		}
-	],
-	"schoolDepartments": [{
-			"id": 98,
-			"code": null,
-			"nameEt": "gqff",
-			"nameEn": "sdfg"
-		}
-	],
+	"studyLanguages": ["OPPEKEEL_et_en", "OPPEKEEL_et_ru", "OPPEKEEL_E"],
+	"schoolDepartments": [98],
 	"draftText": "test",
 	"jointSchoolIsEstonian": true,
 	"jointPartners": [{
-			"ehisSchool": {
-				"code": "EHIS_KOOL_1",
-				"nameEt": "Ilus kool",
-				"nameEn": null
-			},
+			"ehisSchool": "EHIS_KOOL_1",
 			"abroad": false,
 			"contractEt": "test",
 			"contractEn": "test",
 			"supervisor": "test"
 		}
 	],
-	"jointMentor": {
-		"code": "EHIS_KOOL_1",
-		"nameEt": "Ilus kool",
-		"nameEn": null
-	},
+	"modules": [{
+		"outcomes": [{
+				"nameEt": "test",
+				"nameEn": "test"
+			}
+		],
+		"outcomesEt": "test",
+		"outcomesEn": "test",
+		"occupations": [ "OSAKUTSE_10491569", "OSAKUTSE_10491571", "KUTSE_10491530"],
+		"module": "KUTSEMOODUL_P",
+		"nameEt": "test",
+		"nameEn": "test",
+		"credits": 1,
+		"objectivesEt": "test",
+		"objectivesEn": "test",
+		"practice": false
+		}
+	],
+	"jointMentor": "EHIS_KOOL_1",
 	"supervisor": "test",
 	"contractEt": "test",
 	"contractEn": "test",

@@ -7,81 +7,77 @@
  * # dialogService
  * Service in the hitsaOis.
  */
-angular.module('hitsaOis')
-  .service('dialogService', function ($mdDialog, ArrayUtils) {
+angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils',
 
-    this.showSelectDialog = function(templateUrl, selectCallback, cancelCallback) {
-      $mdDialog.show({
-        controller: function($scope, $mdDialog) {
-          $scope.cancel = function() {
-            $mdDialog.hide();
-          };
+  function ($mdDialog, ArrayUtils) {
 
-          $scope.isTableSelect = true;
-          $scope.select = function() {
-            $mdDialog.hide();
-            if(angular.isFunction(selectCallback)) {
-        		  selectCallback($scope.tableSelected);
-        	  }
-          };
-          $scope.tableSelected = [];
-        },
-        templateUrl: templateUrl,
-        parent: angular.element(document.body),
-        clickOutsideToClose: true,
-        onRemoving: function() {
-          if(angular.isFunction(cancelCallback)) {
-        		  cancelCallback();
-        	}
-        }
-      });
-    };
+    var defaultConfirmDialogOptions = {accept: 'main.yes', cancel: 'main.no'};
 
     /**
-     * In dialog template inputs ng-model must use pattern data.*in order to dataCallback to work.
-     * dataCallback function argument will then be dialog model data
-     *
      * For form validation to work dialog form name must be dialogForm
      */
-    this.showDialog = function(templateUrl, dialogController, dataCallback) {
+    this.showDialog = function(templateUrl, dialogController, submitCallback, cancelCallback) {
       $mdDialog.show({
         controller: function($scope, $rootScope, $mdDialog) {
           $scope.removeFromArray = ArrayUtils.remove;
-          $scope.data = {};
           $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
-
 
           $scope.cancel = function() {
             $mdDialog.hide();
           };
 
-
           $scope.submit = function() {
             var valid = true;
-            if($scope.dialogForm) {
+            if ($scope.dialogForm) {
               $scope.dialogForm.$setSubmitted();
               valid = $scope.dialogForm.$valid;
             }
 
-            if(valid) {
-              if(dataCallback !== null) {
-                dataCallback($scope.data, $scope);
+            if (valid) {
+              if (angular.isFunction(submitCallback)) {
+                submitCallback($scope);
               }
+              $scope.submitted = true;
               $mdDialog.hide();
             }
           };
 
-          if(dialogController !== null) {
+          if (angular.isFunction(dialogController)) {
             dialogController($scope);
           }
         },
         templateUrl: templateUrl,
-        skipHide: true,
-        clickOutsideToClose: true
+/*        skipHide: true,*/
+        clickOutsideToClose: true,
+        onRemoving: function(dialog) {
+          if (angular.isFunction(cancelCallback)) {
+              var scope = dialog.data().$scope;
+              if (scope.submitted !== true) {
+        		    cancelCallback();
+              }
+        	}
+        }
       });
     };
 
     this.hide = function() {
       $mdDialog.hide();
     };
-  });
+
+    this.confirmDialog = function(options, callback) {
+      $mdDialog.show({
+        controller: function($scope) {
+          $scope.messages = angular.extend({}, defaultConfirmDialogOptions, options);
+          $scope.accept = function() {
+            $mdDialog.hide();
+            callback();
+          };
+          $scope.cancel = $mdDialog.hide;
+        },
+        templateUrl: 'views/templates/confirm.dialog.html',
+        clickOutsideToClose: true,
+        skipHide: true
+      });
+    };
+  }
+]);

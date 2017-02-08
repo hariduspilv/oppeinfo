@@ -33,17 +33,17 @@
     <form name="buildingForm">
       <md-input-container class="md-block">
         <label>{{'building.name' | translate}}</label>
-        <input ng-model="building.name" type="text" required md-maxlength="255" required>
+        <input ng-model="building.name" name="name" type="text" required md-maxlength="255" required>
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'building.code' | translate}}</label>
-        <input ng-model="building.code" type="text" required md-maxlength="20">
+        <input ng-model="building.code" name="code" type="text" required md-maxlength="20">
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'building.address' | translate}}</label>
-        <input ng-model="building.address" type="text" md-maxlength="255">
+        <input ng-model="building.address" name="address" type="text" md-maxlength="255">
       </md-input-container>
     </form>
 
@@ -62,21 +62,21 @@
     <form name="roomForm">
       <md-input-container class="md-block">
         <label>{{'room.name' | translate}}</label>
-        <input ng-model="room.name" type="text" required md-maxlength="100">
+        <input ng-model="room.name" name="name" type="text" required md-maxlength="100">
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'room.code' | translate}}</label>
-        <input ng-model="room.code" type="text" required md-maxlength="100">
+        <input ng-model="room.code" name="code" type="text" required md-maxlength="100">
       </md-input-container>
 
-      <md-checkbox ng-model="room.isStudy">
+      <md-checkbox ng-model="room.isStudy" name="isStudy">
         {{'room.isStudy' | translate}}
       </md-checkbox>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'room.seats' | translate}}</label>
-        <input ng-model="room.seats" type="number" min="0">
+        <input ng-model="room.seats" name="seats" type="number" min="0">
       </md-input-container>
 
       <div layout="row">
@@ -92,7 +92,7 @@
       <md-list>
         <md-list-item ng-repeat="equipment in formState.roomEquipment">
           <md-input-container flex>
-            <label class="textInput">{{currentLanguage()==='en' ? (equipment.equipment.nameEn || equipment.equipment.nameEt) : equipment.equipment.nameEt}}</label>
+            <label class="textInput">{{currentLanguageNameField(equipment.equipment)}}</label>
             <input ng-model="equipment.equipmentCount" type="number" min="0">
           </md-input-container>
           <md-input-container flex>
@@ -121,14 +121,14 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content">
-            <td md-cell>{{row.name}}</td>
-            <td md-cell>{{row.code}}</td>
-            <td md-cell>{{row.seats}}</td>
+            <td md-cell>{{::row.name}}</td>
+            <td md-cell>{{::row.code}}</td>
+            <td md-cell>{{::row.seats}}</td>
             <td md-cell>
               <table>
                 <tr ng-repeat="device in row.equipment">
-                  <td>{{currentLanguage()==='en' ? (device.equipment.nameEn || device.equipment.nameEt) : device.equipment.nameEt}}</td>
-                  <td>{{device.equipmentCount}}</td>
+                  <td>{{currentLanguageNameField(device.equipment)}}</td>
+                  <td>{{::device.equipmentCount}}</td>
                 </tr>
               </table>
             </td>

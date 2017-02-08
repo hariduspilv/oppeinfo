@@ -81,17 +81,25 @@ angular.module('hitsaOis')
       return $translate.use();
     };
 
-    $scope.currentLanguageNameField = function() {
+    $scope.currentLanguageNameField = function(item) {
+      var nameField;
       switch($scope.currentLanguage()) {
         case 'en':
-          return 'nameEn';
+          nameField = 'nameEn';
+          break;
         case 'et':
-          return 'nameEt';
+          nameField = 'nameEt';
+          break;
         case 'ru':
-          return 'nameRu';
+          nameField = 'nameRu';
+          break;
         default:
-          return 'nameEt';
+          nameField = 'nameEt';
       }
+      if(arguments.length === 0) {
+        return nameField;
+      }
+      return angular.isObject(item) ? (item[nameField] || item.nameEt) : undefined;
     };
     //make this function available in root scope as well
     $rootScope.currentLanguageNameField = $scope.currentLanguageNameField;

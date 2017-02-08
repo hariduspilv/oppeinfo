@@ -256,13 +256,27 @@ angular
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       })
-      .when('/vocationalCurriculum/:id/moduleImplementationPlan/new', {
+      .when('/vocationalCurriculum/:id/edit/moduleImplementationPlan/new', {
         templateUrl: 'views/vocational.curriculum.module.implementation.plan.html',
         controller: 'VocationalCurriculumModuleImplementationPlanController',
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
-          entity: function(QueryUtils, $route) {
+          curriculum: function(QueryUtils, $route) {
+            return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
+          }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        }
+      })
+      .when('/vocationalCurriculum/:id/edit/moduleImplementationPlan/:versionId/edit', {
+        templateUrl: 'views/vocational.curriculum.module.implementation.plan.html',
+        controller: 'VocationalCurriculumModuleImplementationPlanController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          curriculum: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
           }
         },

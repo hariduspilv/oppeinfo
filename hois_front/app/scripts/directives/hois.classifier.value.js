@@ -20,6 +20,7 @@ angular.module('hitsaOis')
       },
       link: function postLink(scope, element) {
         element[0].parentElement.classList.add("md-input-has-value");
+        var classifiervalues;
         scope.$watch('ngModel', function(newVal) {
           var params = null;
           if(angular.isObject(newVal)) {
@@ -35,12 +36,21 @@ angular.module('hitsaOis')
           }
 
           if(params !== null) {
-            Classifier.queryForDropdown({mainClassCode: scope.mainClassifierCode}, function(result) {
-              var items = result.filter(function(i) { return i.code === params.code});
-              if(items.length > 0) {
-                scope.value = items[0][scope.$root.currentLanguageNameField()];
+            var setter = function(values) {
+              var selected = values.filter(function(i) { return i.code === params.code; });
+              if(selected.length > 0) {
+                scope.value = selected[0][scope.$root.currentLanguageNameField()];
               }
-            });
+            };
+
+            if(classifiervalues === undefined) {
+              Classifier.queryForDropdown({mainClassCode: scope.mainClassifierCode}, function(result) {
+                classifiervalues = result;
+                setter(result);
+              });
+            } else {
+              setter(classifiervalues);
+            }
           }
         });
       }

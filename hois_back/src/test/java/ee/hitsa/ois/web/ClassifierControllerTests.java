@@ -112,14 +112,6 @@ public class ClassifierControllerTests {
 	}
 	
 	@Test
-	public void testSearchList() {
-    	String uri = UriComponentsBuilder.fromUriString("/classifier/dropdown").build().toUriString();
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-	}
-	
-	@Test
 	public void testSearchTables() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier/heads").build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);

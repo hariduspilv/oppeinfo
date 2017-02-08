@@ -1,4 +1,4 @@
-  <div layout="column" ng-if="!isSelectDialog">
+  <div layout="column">
      <form ng-submit="getStateCurriculums()" class="ois-form-layout-padding">
         <div layout="row" layout-sm="column" layout-xs="column" >
             <md-input-container flex="65" flex-sm="100" flex-xs="100">
@@ -79,7 +79,7 @@
 <div layout="row" layout-align="center center"><h2 ng-if="stateCurriculums.count === 0">{{'main.messages.error.notFound' | translate}}</h2></div>
 
 <md-table-container flex ng-cloak layout-padding>
-    <table md-table md-row-select="isTableSelect" ng-model="tableSelected" md-progress="promise">
+    <table md-table md-progress="promise">
     <thead md-head md-order="query.order" md-on-reorder="getStateCurriculums">
     <tr md-row>
         <th md-column md-order-by="{{currentLanguage()=='en' ? 'nameEn' : 'nameEt'}}">{{'curriculum.name' | translate}}</th>
@@ -92,7 +92,7 @@
     </tr>
     </thead>
     <tbody md-body>
-    <tr md-row md-select="stateCurriculum" md-select-id="stateCurriculum.id" ng-repeat="stateCurriculum in stateCurriculums" ng-class-odd="'odd'" ng-class-even="'even'">
+    <tr md-row ng-repeat="stateCurriculum in stateCurriculums" ng-class-odd="'odd'" ng-class-even="'even'">
         <!--td md-cell>{{stateCurriculum.id}}</td-->
         <td md-cell><a ng-href="#/stateCurriculum/{{stateCurriculum.id}}/edit">{{currentLanguage()=='en' ? stateCurriculum.nameEn : stateCurriculum.nameEt}}</a></td>
         <td md-cell>{{stateCurriculum.ekrLevel}}</td>

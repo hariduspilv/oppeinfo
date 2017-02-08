@@ -13,7 +13,7 @@
     "angular-translate": "2.13.1",
     "angular-translate-loader-static-files": "2.13.1",
     "angular-material-data-table": "0.10.9",
-    "angular-ui-router": "0.3.1",
+    "angular-ui-router": "0.4.2",
     "lf-ng-md-file-input": "1.4.8",
     "moment": "2.16.0",
     "ng-storage": "0.4.2"

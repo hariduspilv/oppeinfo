@@ -1,16 +1,12 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$location', '$route', '$scope', '$translate', 'message', 'DataUtils', 'QueryUtils',
+angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
 
-  function ($location, $route, $scope, $translate, message, DataUtils, QueryUtils) {
+  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
     var id = $route.current.params.id;
-    var afterLoad = function() {
+    function afterLoad() {
       DataUtils.convertStringToDates($scope.schoolDepartment, ['validFrom', 'validThru']);
-      if($scope.schoolDepartment.parentSchoolDepartment) {
-        $scope.schoolDepartment.parentSchoolDepartmentId = $scope.schoolDepartment.parentSchoolDepartment.id || '';
-      }
-    };
-    $scope.departments = QueryUtils.endpoint('/autocomplete/schooldepartments').get({excludedId: id, lang: $translate.use().toUpperCase()});
+    }
     var Endpoint = QueryUtils.endpoint('/school/departments');
     if(id) {
       $scope.schoolDepartment = Endpoint.get({id: id});
@@ -28,23 +24,24 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$locat
         message.error('main.messages.form-has-errors');
         return;
       }
+      var msg = $scope.schoolDepartment.id ? 'main.messages.update.success' : 'main.messages.create.success';
+      function afterSave() {
+        message.info(msg);
+        afterLoad();
+      }
       if($scope.schoolDepartment.id) {
-        $scope.schoolDepartment.$update().then(afterLoad).then(function() {
-          message.info('main.messages.update.success');
-          $location.path('/school/departments');
-        });
+        $scope.schoolDepartment.$update().then(afterSave);
       } else {
-        $scope.schoolDepartment.$save().then(afterLoad).then(function() {
-          message.info('main.messages.create.success');
-          $location.path('/school/departments');
-        });
+        $scope.schoolDepartment.$save().then(afterSave);
       }
     };
 
     $scope.delete = function() {
-      $scope.schoolDepartment.$delete().then(function() {
-        message.info('main.messages.delete.success');
-        $location.path('/school/departments');
+      dialogService.confirmDialog({prompt: 'school.department.deleteconfirm'}, function() {
+        $scope.schoolDepartment.$delete().then(function() {
+          message.info('main.messages.delete.success');
+          $location.path('/school/departments');
+        });
       });
     };
 }]).controller('SchoolDepartmentListController', ['$scope', 'DataUtils', 'QueryUtils', function ($scope, DataUtils, QueryUtils) {

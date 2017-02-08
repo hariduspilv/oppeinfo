@@ -1,26 +1,27 @@
-<div layout-padding>
+<div  class="ois-form-layout-padding">
   <div flex>
-    <form ng-submit="loadData()">
-      <div layout="row">
-        <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
+    <form ng-submit="loadData()" novalidate layout="column" class="nomargin">
+      <div layout="row" layout-sm="column" layout-xs="column"  >
           <!--div class="indentForToast"></div-->
-          <md-input-container>
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'building.name' | translate}}</label>
-            <input ng-model="criteria.buildingName" type="text">
+            <input ng-model="criteria.buildingName" name="buildingName" type="text">
           </md-input-container>
-          <md-input-container>
+          <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'building.code' | translate}}</label>
-            <input ng-model="criteria.buildingCode" type="text" autofocus>
+            <input ng-model="criteria.buildingCode" name="buildingCode" type="text" autofocus>
           </md-input-container>
-          <md-input-container>
+		</div>
+		<div layout="row" layout-sm="column" layout-xs="column"  >	
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'room.name' | translate}}</label>
-            <input ng-model="criteria.name" type="text">
+            <input ng-model="criteria.name" name="name" type="text">
           </md-input-container>
-          <md-input-container>
+          <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'room.code' | translate}}</label>
-            <input ng-model="criteria.code" type="text">
+            <input ng-model="criteria.code" name="code" type="text">
           </md-input-container>
-
+		</div>
           <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
@@ -50,23 +51,23 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{row.buildingId}}">{{row.buildingName}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{::row.buildingId}}">{{::row.buildingName}}</md-button>
             </td>
-            <td md-cell>{{row.buildingCode}}</td>
-            <td md-cell>{{row.buildingAddress}}</td>
-            <td md-cell>{{row.name}}</td>
-            <td md-cell>{{row.code}}</td>
-            <td md-cell>{{row.seats}}</td>
+            <td md-cell>{{::row.buildingCode}}</td>
+            <td md-cell>{{::row.buildingAddress}}</td>
+            <td md-cell>{{::row.name}}</td>
+            <td md-cell>{{::row.code}}</td>
+            <td md-cell>{{::row.seats}}</td>
             <td md-cell>
               <table>
                 <tr ng-repeat="device in row.equipment">
-                  <td>{{currentLanguage()==='en' ? (device.equipment.nameEn || device.equipment.nameEt) : device.equipment.nameEt}}</td>
-                  <td>{{device.equipmentCount}}</td>
+                  <td>{{currentLanguageNameField(device.equipment)}}</td>
+                  <td>{{::device.equipmentCount}}</td>
                 </tr>
               </table>
             </td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{row.buildingId}}/{{row.id}}">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{::row.buildingId}}/{{row.id}}">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

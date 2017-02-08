@@ -83,6 +83,9 @@ public class SchoolDepartmentControllerTests {
         schoolDepartmentForm.setValidFrom(LocalDate.now());
         ResponseEntity<SchoolDepartment> responseEntity = restTemplate.postForEntity(uri, schoolDepartmentForm, SchoolDepartment.class);
         Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
+        schoolDepartmentForm.setCode("Kood");
+        responseEntity = restTemplate.postForEntity(uri, schoolDepartmentForm, SchoolDepartment.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         Long schoolDepartmentId = responseEntity.getBody().getId();
@@ -111,7 +114,7 @@ public class SchoolDepartmentControllerTests {
         Assert.assertNotNull(version);
 
         // try to update with wrong version
-        schoolDepartmentForm.setParentSchoolDepartmentId(schoolDepartmentId);
+        schoolDepartmentForm.setParentSchoolDepartment(schoolDepartmentId);
         responseEntity = restTemplate.exchange(uri, HttpMethod.PUT, new HttpEntity<>(schoolDepartmentForm), SchoolDepartment.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());

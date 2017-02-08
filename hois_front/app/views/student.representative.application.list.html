@@ -1,0 +1,70 @@
+<div layout-padding>
+  <div flex>
+    <form ng-submit="loadData()">
+      <div layout="row">
+        <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
+          <md-input-container>
+            <label class="textInput">{{'student.name' | translate}}</label>
+            <input ng-model="criteria.name" type="text" autofocus>
+          </md-input-container>
+
+          <md-input-container>
+            <label class="textInput">{{'student.idcode' | translate}}</label>
+            <input ng-model="criteria.idcode" type="text">
+          </md-input-container>
+
+          <md-input-container>
+            <label>{{'student.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="OPPURESINDAJA"></hois-classifier-select>
+          </md-input-container>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="person.lastname,person.firstname">{{'student.representative.name' | translate}}</th>
+            <th md-column md-order-by="person.idcode">{{'student.representative.idcode' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'relation.nameEn' : 'relation.nameEt'}}">{{'student.representative.relation' | translate}}</th>
+            <th md-column md-order-by="person.phone">{{'student.representative.phone' | translate}}</th>
+            <th md-column md-order-by="person.email">{{'student.representative.email' | translate}}</th>
+            <th md-column>{{'student.representative.appliction.inserted' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'student.representative.appliction.status' | translate}}</th>
+            <th md-column md-order-by="student.person.lastname,student.person.firstname">{{'student.name' | translate}}</th>
+            <th md-column md-order-by="student.person.idcode">{{'student.idcode' | translate}}</th>
+            <th</th>
+            <th</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{row.fullname}}</td>
+            <td md-cell>{{row.idcode}}</td>
+            <td md-cell>{{currentLanguage()==='en' ? (row.relation.nameEn || row.relation.nameEt) : row.relation.nameEt}}</td>
+            <td md-cell>{{row.phone}}</td>
+            <td md-cell>{{row.email}}</td>
+            <td md-cell>{{row.inserted}}</td>
+            <td md-cell>{{currentLanguage()==='en' ? (row.status.nameEn || row.status.nameEt) : row.status.nameEt}}</td>
+            <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{row.studentId}}/main">{{row.studentFullname}}</md-button></td>
+            <td md-cell>{{row.studentIdcode}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-click="confirm(row.id)">{{'main.button.confirm' | translate}}</md-button>
+            </td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="decline(row.id)">{{'main.button.decline' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

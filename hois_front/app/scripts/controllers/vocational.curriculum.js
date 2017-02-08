@@ -2,30 +2,13 @@
 
 angular.module('hitsaOis')
   .controller('VocationalCurriculumController', function ($scope, Classifier, dialogService, ClassifierConnect, ArrayUtils,
-    $resource, config, message, oisFileService, QueryUtils, $route, DataUtils, $location) {
-    var Curriculum = QueryUtils.endpoint('/curriculum');
-    var mapResponseToModel = function(response, scope) {
+    message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q) {
+      var CurriculumEndpoint = QueryUtils.endpoint('/curriculum');
+      var mapDtoToModel = function(response, scope) {
 
+        var promises = [];
         var curriculum = angular.extend({}, response);
         DataUtils.convertStringToDates(curriculum, ["validFrom", "validThru", "approval"]);
-
-        var studyLanguageClassifiers = [];
-        response.studyLanguages.forEach(function(it) {
-          studyLanguageClassifiers.push(it.studyLang);
-        });
-        curriculum.studyLanguageClassifiers = studyLanguageClassifiers;
-
-        var studyFormClassifiers = [];
-        response.studyForms.forEach(function(it) {
-          studyFormClassifiers.push(it.studyForm);
-        });
-        curriculum.studyFormClassifiers = studyFormClassifiers;
-
-        var schoolDepartments = [];
-        response.departments.forEach(function(it) {
-          schoolDepartments.push(it.schoolDepartment);
-        });
-        curriculum.schoolDepartments = schoolDepartments;
 
         if (angular.isArray(response.jointPartners) && response.jointPartners.length > 0) {
           $scope.curriculum.supervisor = response.jointPartners[0].supervisor;
@@ -35,66 +18,108 @@ angular.module('hitsaOis')
 
 
         if (angular.isArray(response.occupations)) {
-            var selectedOccupationsPartOccupations = [];
             response.occupations.forEach(function(it) {
-              var element = {id: it.id, version: it.version, occupation: it.occupation,
-                  specialities: it.specialities, occupationGrant: it.occupationGrant};
+              var promise = Classifier.get(it.occupation).$promise.then(function(classifier) {
+                it.occupation = classifier;
+              });
+              promises.push(promise);
 
-              if(response.occupation) {
-                if(it.occupation.mainClassCode === 'KUTSE') {
-                  ClassifierConnect.queryAll({connectClassifierCode: it.occupation.code}, function(result) {
-                      var partOccupations = [];
-                      result.forEach(function(it) {
-                        if(it.classifier.mainClassCode === 'OSAKUTSE') {
-                          partOccupations.push(it.classifier);
-                        }
-                      });
-                      element.partOccupations = partOccupations;
-                      selectedOccupationsPartOccupations.push(element);
-                    });
-                }
-              } else {
-                ClassifierConnect.queryAll({classifierCode: it.occupation.code}, function(result) {
-                  result.forEach(function(it) {
-                    element.partOccupations = [element.occupation];
-                    element.occupation = it.connectClassifier;
-                    selectedOccupationsPartOccupations.push(element);
-                  });
+              if (angular.isArray(it.specialities)) {
+                var specialityPromises = [];
+                it.specialities.forEach(function(specialityCode){
+                  specialityPromises.push(Classifier.get(specialityCode).$promise);
                 });
+                var specialitiesPromise = $q.all(specialityPromises).then(function(specialities){
+                  it.specialities = specialities;
+                });
+
+                promises.push($q.all(specialityPromises));
               }
-
-
             });
-
-            curriculum.selectedOccupationsPartOccupations = selectedOccupationsPartOccupations;
-
-
         }
 
 
         curriculum.studyPeriodMonths = response.studyPeriod % 12;
-        curriculum.studyPeriodYears = response.studyPeriod - (response.studyPeriod % 12) * 12;
+        curriculum.studyPeriodYears = Math.floor(response.studyPeriod / 12);
 
-        if (angular.isObject(response.iscedClass)) {
-          ClassifierConnect.queryAll({classifierCode: response.iscedClass.code}, function(result) {
+        if (angular.isDefined(response.iscedClass)) {
+          var deferred = $q.defer();
+
+          ClassifierConnect.queryAll({classifierCode: response.iscedClass}, function(result) {
             result.forEach(function(it) {
               if(it.mainClassifierCode === "ISCED_SUUN") {
-                curriculum.fieldOfStudy = it.connectClassifier;
+                curriculum.fieldOfStudy = it.connectClassifier.code;
               }
-            });
+            })
 
-            ClassifierConnect.queryAll({classifierCode: curriculum.fieldOfStudy.code}, function(result) {
+            var innerPromise = ClassifierConnect.queryAll({classifierCode: curriculum.fieldOfStudy}, function(result) {
               result.forEach(function(it) {
                 if(it.mainClassifierCode === "ISCED_VALD") {
-                  curriculum.areaOfStudy = it.connectClassifier;
+                  curriculum.areaOfStudy = it.connectClassifier.code;
+                  deferred.resolve();
+                } else {
+                  deferred.reject();
                 }
               });
-              angular.extend(scope.curriculum, curriculum);
             });
-          });
-      }
-    };
 
+          });
+          promises.push(deferred.promise);
+      }
+
+      if (angular.isArray(response.modules)) {
+        response.modules.forEach(function(it) {
+          var promise = Classifier.get(it.module).$promise.then(function(classifier) {
+            it.module = classifier;
+          });
+          promises.push(promise);
+
+          if (angular.isArray(it.occupations)) {
+              var occupationPromises = [];
+              it.occupations.forEach(function(occupationCode){
+                occupationPromises.push(Classifier.get(occupationCode).$promise);
+              });
+              var occupationsPromise = $q.all(occupationPromises).then(function(occupations){
+                it.occupations = occupations;
+              });
+
+              promises.push($q.all(occupationsPromise));
+          }
+
+        });
+      }
+
+      $q.all(promises).then(function() {
+        angular.extend(scope.curriculum, curriculum);
+      });
+
+    };/*mapDtoToModel*/
+
+    var mapModelToDto = function(curriculumModel) {
+      var dto = angular.extend({}, curriculumModel);
+      if (angular.isArray(curriculumModel.occupations)) {
+        curriculumModel.occupations.forEach(function(it) {
+          it.occupation = it.occupation.code;
+          if (angular.isArray(it.specialities)) {
+            it.specialities = it.specialities.map(function(speciality){
+              return speciality.code;
+            });
+          }
+        });
+      }
+
+      if (angular.isArray(curriculumModel.modules)) {
+        curriculumModel.modules.forEach(function(it){
+          it.module = it.module.code;
+          if(angular.isArray(it.occupations)) {
+            it.occupations = it.occupations.map(function(occupation){
+              return occupation.code;
+            });
+          }
+        });
+      }
+      return dto;
+    }
 
     $scope.removeFromArray = ArrayUtils.remove;
 
@@ -103,7 +128,8 @@ angular.module('hitsaOis')
       selectedOccupationsPartOccupations: [],
       modules: [],
       occupations: [],
-      status: {code: 'OPPEKAVA_STAATUS_S'},
+      status: "OPPEKAVA_STAATUS_S",
+      consecution: "OPPEKAVA_TYPE_E",
       files: [],
       jointPartners: [],
       studyLanguageClassifiers: [],
@@ -115,6 +141,7 @@ angular.module('hitsaOis')
     };
     $scope.curriculum = angular.extend({}, initialCurriculumScope);
 
+
     $scope.schoolOrigStudyLevel = [];
     QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
         response.studyLevels.forEach(function(it) {
@@ -125,294 +152,298 @@ angular.module('hitsaOis')
     });
 
     //edit
-    var id = $route.current.params.id;
-    if (angular.isDefined(id)) {
-      mapResponseToModel($route.current.locals.entity, $scope);
+    if (angular.isDefined($route.current.locals.entity)) {
+      mapDtoToModel($route.current.locals.entity, $scope);
     }
 
-    $resource(config.apiUrl+'/school/departments').get()
-      .$promise.then(function(result) {
-          $scope.schoolDepartments = [];
-          result.content.forEach(function(it) {
-            if(angular.isArray(it.children)) {
-              it.children.forEach(function(it) {
-                $scope.schoolDepartments.push({id: it.id, code: it.code, nameEt: it.nameEt, nameEn: it.nameEn});
+    $scope.schoolDepartmentOptions = Curriculum.getSchoolDepartments();
+    $scope.draftOptions = {};
+    QueryUtils.endpoint('/autocomplete/classifiers').query({mainClassCode: 'OPPEKAVA_LOOMISE_VIIS'}).$promise.then(function(response) {
+      response.forEach(function(it) {
+        $scope.draftOptions[it.code] = it;
+      });
+    });
+
+    var sanitizeDraftEntity = function(draftEntity) {
+          delete draftEntity.id;
+          delete draftEntity.changed;
+          delete draftEntity.changedBy;
+          delete draftEntity.inserted;
+          delete draftEntity.insertedBy;
+          delete draftEntity.status;
+          delete draftEntity.origStudyLevel;
+          delete draftEntity.files;
+          if (angular.isObject(draftEntity.stateCurrClass)) {
+            draftEntity.stateCurrClass = draftEntity.stateCurrClass.code;
+          }
+
+    };
+
+    $scope.draftSelected = function() {
+      if($scope.curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK') {
+        dialogService.showDialog('views/templates/vocational.curriculum.state.curriculum.selection.dialog.html',
+        function(dialogScope) {
+          dialogScope.selectedStateCurriculumOccupation = {};
+          QueryUtils.endpoint('/stateCurriculum/all').query({sort: $scope.currentLanguageNameField()+',asc'}).$promise
+            .then(function(response) {
+              dialogScope.stateCurriculums = response;
+            });
+          dialogScope.stateCurriculumSelected = function(stateCurriculumId) {
+            if (angular.isNumber(stateCurriculumId)) {
+              QueryUtils.endpoint('/stateCurriculum').get({id: stateCurriculumId}).$promise
+              .then(function(response) {
+                dialogScope.stateCurriculumOccupations = response.occupations;
+                dialogScope.stateCurriculum = response;
               });
             }
-          });
-      });
-
-    var formScope = $scope;
-    $scope.draftSelected = function() {
-      if($scope.curriculum.draft.code === 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK') {
-        dialogService.showSelectDialog('views/templates/vocational.curriculum.state.curriculum.selection.dialog.html', function(selected) {
-          var data = selected[0];
-          data.stateCurrClass = data.stateCurrClass.code;
-          $scope.stateCurriculumId = data.id;
-          delete data.id;
-          formScope.curriculum = angular.extend({draft: formScope.curriculum.draft}, initialCurriculumScope);
-          angular.extend(formScope.curriculum, data);
+          };
+        },
+        function(dialogScope) {
+          var occupations = [];
+          if (angular.isArray(dialogScope.stateCurriculum.occupations)) {
+            $scope.curriculum.occupation = true;
+            dialogScope.stateCurriculum.occupations.forEach(function(it) {
+              if(dialogScope.selectedStateCurriculumOccupation[it.id] === true) {
+                occupations.push({occupation: it.occupation.code});
+              }
+            });
+          }
+          dialogScope.stateCurriculum.occupations = occupations;
+          sanitizeDraftEntity(dialogScope.stateCurriculum);
+          dialogScope.stateCurriculum.draft = $scope.curriculum.draft;
+          mapDtoToModel(dialogScope.stateCurriculum, $scope);
         }, function() {
-          $scope.curriculum.draft = {code: 'OPPEKAVA_LOOMISE_VIIS_PUUDUB'};
+          $scope.curriculum.draft = 'OPPEKAVA_LOOMISE_VIIS_PUUDUB';
         });
 
-      } else if($scope.curriculum.draft.code === 'OPPEKAVA_LOOMISE_VIIS_KOOL') {
-        dialogService.showSelectDialog('views/templates/vocational.curriculum.school.curriculum.selection.dialog.html', function(selected) {
-          var data = selected[0];
-          delete data.id;
-          formScope.curriculum = angular.extend({draft: formScope.curriculum.draft}, initialCurriculumScope);
-          angular.extend(formScope.curriculum, data);
+      } else if($scope.curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_KOOL') {
+        dialogService.showDialog('views/templates/vocational.curriculum.school.curriculum.selection.dialog.html',
+        function(dialogScope) {
+          dialogScope.curriculumSelected = [];
+
+          QueryUtils.createQueryForm(dialogScope, '/curriculum', {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt',
+            school: $scope.currentUser.school.id, isVocational: false});
+          dialogScope.loadData();
+        },
+        function(dialogScope) {
+          QueryUtils.endpoint('/curriculum').get({id: dialogScope.curriculumSelected[0].id}).$promise
+              .then(function(response) {
+                sanitizeDraftEntity(response);
+                response.draft = $scope.curriculum.draft;
+                mapDtoToModel(response, $scope);
+              });
         }, function() {
-          $scope.curriculum.draft = {code: 'OPPEKAVA_LOOMISE_VIIS_PUUDUB'};
+          $scope.curriculum.draft = 'OPPEKAVA_LOOMISE_VIIS_PUUDUB';
         });
       }
 
-      $scope.isDraftEmployerSupportLetter = ($scope.curriculum.draft.code === 'OPPEKAVA_LOOMISE_VIIS_TOOANDJA');
+      $scope.isDraftEmployerSupportLetter = ($scope.curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_TOOANDJA');
       if($scope.isDraftEmployerSupportLetter) {
         $scope.curriculum.occupation = false;
       }
     };
 
-    $scope.isOccupationChanged = function() {
-      $scope.curriculum.selectedOccupationsPartOccupations = [];
-    };
-
-    $scope.openAddOccupationPartOccupationsDialog = function(editValues) {
-      if($scope.curriculum.occupation) {
-        var DialogController = function(scope) {
-
-          var occupationSelected = function() {
-              scope.data.selectedSpecialities = {};
-
-              if (angular.isDefined(editValues)) {
-                editValues.specialities.forEach(function(it){
-                  scope.data.selectedSpecialities[it.speciality.code] = true;
-                });
-              }
-
-              if(angular.isDefined(scope.data.occupation)) {
-                ClassifierConnect.queryAll({connectClassifierCode: scope.data.occupation.code}, function(result) {
-                  var specialities = [];
-                  var partOccupations = [];
-                  result.forEach(function(it) {
-                    if(it.classifier.mainClassCode === 'SPETSKUTSE') {
-                      specialities.push({speciality: it.classifier});
-                    }
-                    if(it.classifier.mainClassCode === 'OSAKUTSE') {
-                      partOccupations.push(it.classifier);
-                    }
-                  });
-                  scope.data.specialities = specialities;
-                  scope.data.partOccupations = partOccupations;
-                });
-            }
-          };
-          scope.$watch('data.occupation', function () {
-              occupationSelected();
-          });
-
-          if (angular.isDefined(editValues)) {
-              scope.data.occupation = editValues.occupation;
-              scope.data.occupationGrant = editValues.occupationGrant;
-              scope.data.id = editValues.id;
-              scope.data.version = editValues.version;
-            }
-        };
-
-
-
-        dialogService.showDialog('views/templates/vocational.curriculum.occupation.add.dialog.html', DialogController, function(data) {
-          var selectedSpecialities = [];
-          data.specialities.forEach(function(occupationSpeciality) {
-            if(data.selectedSpecialities[occupationSpeciality.speciality.code]) {
-              selectedSpecialities.push(occupationSpeciality);
-            }
-          });
-          if (angular.isDefined(data.id)) {
-            $scope.curriculum.selectedOccupationsPartOccupations.forEach(function(it){
-              if(it.id === data.id) {
-                angular.extend(it, data);
-                it.specialities = selectedSpecialities;
-              }
+    var updateModules = function() {
+      var occupationCodes = {};
+      if (angular.isArray($scope.curriculum.occupations)) {
+        $scope.curriculum.occupations.forEach(function(curriculumOccupation) {
+          occupationCodes[curriculumOccupation.occupation.code] = true;
+          if (angular.isArray(curriculumOccupation.partOccupations)) {
+            curriculumOccupation.partOccupations.forEach(function(it) {
+              occupationCodes[it.code] = true;
             });
-          } else {
-            var newOccupation = true;
-            $scope.curriculum.selectedOccupationsPartOccupations.forEach(function(it){
-              if(it.occupation.code === data.occupation.code){
-                newOccupation = false;
-              }
-            });
-            if(newOccupation) {
-              var element = {occupation: data.occupation, partOccupations: data.partOccupations,
-                  specialities: selectedSpecialities, occupationGrant: data.occupationGrant};
-                $scope.curriculum.selectedOccupationsPartOccupations.push(element);
-            }
           }
-        });
-      } else {
-        var PartOccupationDialogController = function(scope) {
-          if (angular.isDefined(editValues)) {
-              scope.data.occupation = editValues.occupation;
-              scope.data.partOccupationAquired = editValues.partOccupations[0];
-              scope.data.id = editValues.id;
-              scope.data.version = editValues.version;
-            }
-        };
-        dialogService.showDialog('views/templates/vocational.curriculum.partOccupation.add.dialog.html', PartOccupationDialogController, function(data) {
-          if(angular.isDefined(data.id)){
-            $scope.curriculum.selectedOccupationsPartOccupations.forEach(function(it){
-              if (it.id === data.id) {
-                it.occupation = data.occupation;
-                it.partOccupations = [data.partOccupationAquired];
-              }
+          if (angular.isArray(curriculumOccupation.specialities)) {
+            curriculumOccupation.specialities.forEach(function(it) {
+              occupationCodes[it.code] = true;
             });
-          } else {
-            var element = {occupation: data.occupation, partOccupations: [data.partOccupationAquired]};
-            var newOccupation = true;
-            $scope.curriculum.selectedOccupationsPartOccupations.forEach(function(it){
-              if (it.partOccupations[0].code === data.partOccupationAquired.code) {
-                newOccupation = false;
-              }
-            });
-
-            if(newOccupation){
-              $scope.curriculum.selectedOccupationsPartOccupations.push(element);
-            }
           }
         });
       }
 
+      if (angular.isArray($scope.curriculum.modules)) {
+        var modulesToRemove = [];
+        $scope.curriculum.modules.forEach(function(it) {
+          if (angular.isArray(it.occupations) && it.occupations.length > 0){
+            for(var i = 0; i < it.occupations.length; i++) {
+              if (occupationCodes[it.occupations[i].code] !== true) {
+                modulesToRemove.push(it)
+                break;
+              }
+            }
+          }
+        });
 
+        modulesToRemove.forEach(function(it) {
+          $scope.curriculum.modules.splice($scope.curriculum.modules.indexOf(it), 1);
+        });
+
+      }
+    }
+
+    $scope.isOccupationChanged = function() {
+      $scope.curriculum.occupations = [];
+      updateModules();
     };
 
 
-    $scope.openAddModuleDialog = function(editValues) {
-      var DialogController = function(scope) {
-
-        scope.data.outcomes = [];
-        scope.data.occupations = [];
-        scope.occupationsSelected = {};
-        scope.partOccupationsSelected = {};
-        scope.specialitiesSelected = {};
-
-        if (angular.isDefined(editValues)) {
-          scope.data = angular.extend({}, editValues);
-          if (angular.isArray(editValues.occupations)) {
-            editValues.occupations.forEach(function(it) {
-              if(it.occupation.mainClassCode === 'OSAKUTSE') {
-                scope.partOccupationsSelected[it.occupation.code] = true;
-              } else if(it.occupation.mainClassCode === 'KUTSE') {
-                scope.occupationsSelected[it.occupation.code] = true;
-              } else if(it.occupation.mainClassCode === 'SPETSKUTSE') {
-                scope.specialitiesSelected[it.occupation.code] = true;
+    var occupationDialogOccupationSelected = function(dialogScope) {
+        if(angular.isDefined(dialogScope.occupation)) {
+          ClassifierConnect.queryAll({connectClassifierCode: dialogScope.occupation.code}, function(result) {
+            var specialities = [];
+            var partOccupations = [];
+            result.forEach(function(it) {
+              if(it.classifier.mainClassCode === 'SPETSKUTSE') {
+                specialities.push(it.classifier);
+              }
+              if(it.classifier.mainClassCode === 'OSAKUTSE') {
+                partOccupations.push(it.classifier);
               }
             });
-          }
-        }
 
-        scope.selectAll = function(isSelected, occupationPartOccupationSpecializeSelected) {
-          var occupation = occupationPartOccupationSpecializeSelected.occupation;
-          if(angular.isArray(occupationPartOccupationSpecializeSelected.partOccupations)) {
-            occupationPartOccupationSpecializeSelected.partOccupations.forEach(function(it) {
-              scope.partOccupationsSelected[it.code] = isSelected;
-            });
-          }
-          if(angular.isArray(occupationPartOccupationSpecializeSelected.specialities)) {
-            occupationPartOccupationSpecializeSelected.specialities.forEach(function(it) {
-              scope.specialitiesSelected[it.code] = isSelected;
-            });
-          }
-          scope.occupationsSelected[occupation.code] = isSelected;
-        };
+            dialogScope.specialities = specialities;
+            dialogScope.partOccupations = partOccupations;
+          });
+      }
+    };
 
-        //populate competence select with data
-        scope.connectClassifierCodeValuesForCompetenceSelection = [];
-        if(angular.isArray($scope.curriculum.selectedOccupationsPartOccupations)) {
-          scope.occupationPartOccupationSpecializeSelected = $scope.curriculum.selectedOccupationsPartOccupations;
-          scope.occupationPartOccupationSpecializeSelected.forEach(function(it) {
-            scope.connectClassifierCodeValuesForCompetenceSelection.push(it.occupation.code);
-            if(it.partOccupations) {
-              it.partOccupations.forEach(function(it) {
-                scope.connectClassifierCodeValuesForCompetenceSelection.push(it.code);
+    $scope.openOccupationDialog = function(curriculumOccupation) {
+      dialogService.showDialog('views/templates/vocational.curriculum.occupation.add.dialog.html',
+        function(dialogScope) {
+          dialogScope.$watch('occupation', function (oldValue, newValue) {
+            if (angular.isDefined(curriculumOccupation) && oldValue.code != newValue.code) {
+              dialogScope.selectedSpecialities = {};
+            }
+            occupationDialogOccupationSelected(dialogScope);
+          });
+          dialogScope.selectedSpecialities = {};
+
+          if (angular.isDefined(curriculumOccupation)) {
+            dialogScope.occupation = curriculumOccupation.occupation;//{code: curriculumOccupation.occupation.code};
+            dialogScope.occupationGrant = curriculumOccupation.occupationGrant;
+            if (angular.isArray(curriculumOccupation.specialities)) {
+              curriculumOccupation.specialities.forEach(function(it) {
+                dialogScope.selectedSpecialities[it.code] = true;
               });
             }
-            if(it.specialities) {
-              it.specialities.forEach(function(it) {
-                scope.connectClassifierCodeValuesForCompetenceSelection.push(it.code);
-              });
-            }
-          });
-        }
-
-        scope.addModuleStudyOutcome = function() {
-          scope.data.outcomes.push({outcomeEt: scope.data.outcomeEt, outcomeEn: scope.data.outcomeEn});
-          scope.data.outcomeEt = undefined;
-          scope.data.outcomeEn = undefined;
-        };
-      };
-
-      dialogService.showDialog('views/templates/vocational.curriculum.module.add.dialog.html', DialogController, function(data, scope) {
-        var occupations = [];
-        scope.occupationPartOccupationSpecializeSelected.forEach(function(it) {
-          if(scope.occupationsSelected[it.occupation.code]) {
-            occupations.push({occupation: it.occupation});
           }
-          it.partOccupations.forEach(function(partOccupation){
-            if(scope.partOccupationsSelected[partOccupation.code]) {
-              occupations.push({occupation: partOccupation});
+        },
+        function(submittedDialogScope) {
+          if (!angular.isDefined(curriculumOccupation)) {
+            curriculumOccupation = {};
+            $scope.curriculum.occupations.push(curriculumOccupation);
+          }
+          curriculumOccupation.occupation = submittedDialogScope.occupation;
+          curriculumOccupation.occupationGrant = submittedDialogScope.occupationGrant;
+          curriculumOccupation.partOccupations = submittedDialogScope.partOccupations;
+
+          curriculumOccupation.specialities = [];
+          submittedDialogScope.specialities.forEach(function(it){
+            if(submittedDialogScope.selectedSpecialities[it.code] === true) {
+              curriculumOccupation.specialities.push(it);
             }
           });
-          it.specialities.forEach(function(speciality){
-            if(scope.specialitiesSelected[speciality.code]) {
-              occupations.push({occupation: speciality});
-            }
-          });
+          updateModules();
         });
+    };
 
-        if(angular.isDefined(data.id)) {
-          $scope.curriculum.modules.forEach(function(it) {
-            if (it.id === data.id) {
-              angular.extend(it, data);
-              var savedOccupations = {};
-              data.occupations.forEach(function(it) {
-                  savedOccupations[it.occupation.code] = it;
+
+    $scope.openPartOccupationsDialog = function(curriculumPartOccupation) {
+        dialogService.showDialog('views/templates/vocational.curriculum.partOccupation.add.dialog.html',
+          function(dialogScope) {
+            if (angular.isDefined(curriculumPartOccupation)) {
+              dialogScope.partOccupationAquired = curriculumPartOccupation.occupation;
+              ClassifierConnect.queryAll({classifierCode: dialogScope.partOccupationAquired.code}, function(result) {
+                result.forEach(function(it) {
+                  if(it.mainClassifierCode === 'KUTSE') {
+                    dialogScope.occupation = it.connectClassifier;
+                  }
+                });
               });
-              var removedOccupations = [];
-              occupations.forEach(function(it) {
-                if(angular.isObject(savedOccupations[it.occupation.code])) {
-                  removedOccupations.push(it);
-                  occupations.push(savedOccupations[it.occupation.code]);
+            }
+          },
+          function(submittedDialogScope) {
+            if (!angular.isDefined(curriculumPartOccupation)) {
+              curriculumPartOccupation = {};
+              $scope.curriculum.occupations.push(curriculumPartOccupation);
+            }
+            curriculumPartOccupation.occupation = submittedDialogScope.partOccupationAquired;
+            updateModules();
+          });
+    };
+
+    $scope.openAddModuleDialog = function(curriculumModule) {
+      dialogService.showDialog('views/templates/vocational.curriculum.module.add.dialog.html',
+      function(dialogScope) {
+          dialogScope.occupations = $scope.curriculum.occupations;
+          dialogScope.occupationsSelected = {};
+          dialogScope.partOccupationsSelected = {};
+          dialogScope.specialitiesSelected = {};
+          dialogScope.module = {
+            outcomes: [],
+            occupations: []
+          };
+
+          if (angular.isDefined(curriculumModule)) {
+            angular.extend(dialogScope.module, curriculumModule);
+            if (angular.isArray(curriculumModule.occupations)) {
+              curriculumModule.occupations.forEach(function(occupation){
+                if(occupation.code.indexOf('KUTSE') === 0 || occupation.code.indexOf('OSAKUTSE') === 0) {
+                  dialogScope.occupationsSelected[occupation.code] = true;
+                } else if(occupation.code.indexOf('SPETSKUTSE') === 0) {
+                  dialogScope.specialitiesSelected[occupation.code] = true;
                 }
               });
-              removedOccupations.forEach(function(it) {
-                ArrayUtils.remove(occupations, it);
-              });
-              it.occupations = occupations;
-              renderModules();
+            }
+          }
 
+          dialogScope.addOutcome = function() {
+            dialogScope.module.outcomes.push({outcomeEt: dialogScope.outcomeEt, outcomeEn: dialogScope.outcomeEn});
+            dialogScope.outcomeEt = undefined;
+            dialogScope.outcomeEn = undefined;
+          };
+      },
+      function(submittedDialogScope) {
+          if (!angular.isDefined(curriculumModule)) {
+            curriculumModule = {};
+            $scope.curriculum.modules.push(curriculumModule);
+          }
+          angular.extend(curriculumModule, submittedDialogScope.module);
+          curriculumModule.occupations = [];
+          $scope.curriculum.occupations.forEach(function(it) {
+            if (submittedDialogScope.occupationsSelected[it.occupation.code] === true) {
+              curriculumModule.occupations.push(it.occupation);
+            }
+            if (angular.isArray(it.specialities)) {
+              it.specialities.forEach(function(speciality) {
+                if (submittedDialogScope.specialitiesSelected[speciality.code] === true) {
+                  curriculumModule.occupations.push(speciality);
+                }
+              });
             }
           });
-        } else {
-          data.occupations = occupations;
-          $scope.curriculum.modules.push(data);
-        }
+          renderModules();
       });
-    };
+    }
+
     var renderModules = function() {
-        $scope.occupationModuleTypesModules = {};
-        $scope.curriculum.modules.forEach(function(curriculumModule) {
-          curriculumModule.occupations.forEach(function(curriculumModuleOccupation) {
-            var occupation = curriculumModuleOccupation.occupation;
-            if(!angular.isObject($scope.occupationModuleTypesModules[occupation.code])){
-              $scope.occupationModuleTypesModules[occupation.code] = {occupation: occupation, moduleTypes: {}};
-            }
-            if(!angular.isObject($scope.occupationModuleTypesModules[occupation.code].moduleTypes[curriculumModule.module.code])){
-              $scope.occupationModuleTypesModules[occupation.code].moduleTypes[curriculumModule.module.code] = {moduleType: curriculumModule.module, modules: []};
-            }
-            $scope.occupationModuleTypesModules[occupation.code].moduleTypes[curriculumModule.module.code].modules
-              .push(curriculumModule);
-          });
+      if (angular.isArray($scope.curriculum.modules)) {
+        var modulesView = Curriculum.modulesViewData($scope.curriculum.modules);
+        $scope.occupationModuleTypesModules = modulesView.occupationModuleTypesModules;
+        $scope.modulesWithOutOccupation = modulesView.modulesWithOutOccupation;
+
+        //for validation
+        $scope.mainModuleCount = 0;
+        $scope.voluntaryModuleCount = 0;
+        $scope.curriculum.modules.forEach(function(it) {
+          if (it.module.code === "KUTSEMOODUL_P") {
+            $scope.mainModuleCount++;
+          } else if (it.module.code === "KUTSEMOODUL_V") {
+            $scope.voluntaryModuleCount++;
+          }
         });
+
+      }
     };
     $scope.$watchCollection('curriculum.modules', renderModules);
 
@@ -466,7 +497,7 @@ angular.module('hitsaOis')
       });
     };
 
-    var addOccupations = function() {
+/*    var addOccupations = function() {
       $scope.curriculum.occupations = [];
       if(angular.isArray($scope.curriculum.selectedOccupationsPartOccupations)) {
         $scope.curriculum.selectedOccupationsPartOccupations.forEach(function(it) {
@@ -481,20 +512,20 @@ angular.module('hitsaOis')
 
         });
       }
-    };
+    };*/
 
     $scope.save = function() {
       $scope.vocationalCurriculumForm.$setSubmitted();
       if($scope.vocationalCurriculumForm.$valid) {
         //before save collect some data;
-        addOccupations();
+        //addOccupations();
         addSharedInformationToJointPartners();
 
-        var curriculum = new Curriculum($scope.curriculum);
+        var curriculum = new CurriculumEndpoint(mapModelToDto($scope.curriculum));
         if (angular.isDefined($scope.curriculum.id)) {
           curriculum.$update().then(function() {
             message.info('main.messages.create.success');
-            mapResponseToModel(curriculum, $scope);
+            mapDtoToModel(curriculum, $scope);
           });
         } else {
           curriculum.$save().then(function() {

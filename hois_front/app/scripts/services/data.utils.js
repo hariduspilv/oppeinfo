@@ -27,6 +27,26 @@ angular.module('hitsaOis')
             object[property] = moment(object[property], "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'").toDate();
           }
         }
+      },
+
+      sexFromIdcode : function (idcode) {
+        if (idcode.length !== 11  || isNaN(idcode)) {
+          return null;
+        }
+        if (Number(idcode.charAt(0)) % 2 === 1) {
+          return 'SUGU_M';
+        } else if (idcode.length === 11 && Number(idcode.charAt(0)) % 2 === 0) {
+          return 'SUGU_N';
+        }
+      },
+
+      birthdayFromIdcode : function (idcode) {
+        if (idcode.length !== 11 || isNaN(idcode)) {
+          return null;
+        }
+        var centuries = {"1": "18", "2": "18", "3": "19", "4": "19", "5": "20", "6": "20", "7": "21", "8": "21"};
+        var date = centuries[idcode.charAt(0)] + idcode.substring(1,7);
+        return moment(date).toDate();
       }
     };
   });

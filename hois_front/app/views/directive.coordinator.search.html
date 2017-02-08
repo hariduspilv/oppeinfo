@@ -11,10 +11,10 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{row.name}}</td>
-            <td md-cell>{{row.idcode}}</td>
+            <td md-cell>{{::row.name}}</td>
+            <td md-cell>{{::row.idcode}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/coordinators/{{row.id}}">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/coordinators/{{::row.id}}">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

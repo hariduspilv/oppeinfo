@@ -1,5 +1,5 @@
 <md-dialog aria-label="state curriculum selection dialog">
-  <form ng-cloak>
+  <form name="dialogForm" ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
         <h2>{{"stateCurriculum.select" | translate}}</h2>
@@ -9,11 +9,29 @@
         </md-button>
       </div>
     </md-toolbar>
-    <md-dialog-content ng-init="isSelectDialog=true;isTableSelect=true">
-        <div ng-controller="StateCurriculumListController" data-ng-include="'views/state.curriculum.list.html'"></div>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <md-input-container flex>
+          <label>{{'stateCurriculum.name' | translate}}</label>
+          <md-select ng-model="stateCurriculumSelect" aria-label="state curriculum selection" ng-change="stateCurriculumSelected(stateCurriculumSelect)" required>
+            <md-option ng-repeat="option in stateCurriculums" ng-value="option.id">
+              {{option[$root.currentLanguageNameField()]}}
+            </md-option>
+          </md-select>
+        </md-input-container>
+
+        <div ng-repeat="stateCurriculumOccupation in stateCurriculumOccupations" flex>
+          <md-checkbox ng-model="selectedStateCurriculumOccupation[stateCurriculumOccupation.id]"
+            aria-label="{{stateCurriculumOccupation.occupation[$root.currentLanguageNameField()]}}">
+            {{stateCurriculumOccupation.occupation[$root.currentLanguageNameField()]}}
+          </md-checkbox>
+        </div>
+
+      </div>
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-primary md-raised" ng-click="select()">{{"main.button.confirm" | translate}}</md-button>
+      <md-button class="md-primary md-raised" ng-click="submit()">{{"main.button.confirm" | translate}}</md-button>
     </md-dialog-actions>
   </form>
 </md-dialog>

@@ -1,6 +1,6 @@
 <div  flex-xs="100" flex-gt-xs="100" flex-gt-sm="75"  ng-cloak>
   <!--<div class="ois-form-layout" layout="column" layout-margin ng-cloak>-->
-  <form ng-submit="loadData()">
+  <form ng-submit="loadData()" novalidate>
     <div class="ois-form-layout" layout-padding layout="column">
       <div layout="row">
         <md-input-container flex>
@@ -24,7 +24,7 @@
           <label>{{'subject.curriculum' | translate}}</label>
           <md-select ng-model="criteria.curricula" multiple>
             <md-option ng-repeat="it in curricula" value="{{it.id}}" style="font-size: medium;">
-              {{currentLanguage()==='en' ? (it.nameEn || it.nameEt) : it.nameEt}}
+              {{currentLanguageNameField(it)}}
             </md-option>
           </md-select>
         </md-input-container>
@@ -51,7 +51,7 @@
               <label>{{'school.department.department' | translate}}</label>
               <md-select ng-model="criteria.departments" multiple>
                 <md-option ng-repeat="department in departments" ng-value="department.id">
-                  {{currentLanguage()==='en' ? (department.nameEn || department.nameEt) : department.nameEt}}
+                  {{currentLanguageNameField(department)}}
                 </md-option>
               </md-select>
             </md-input-container>
@@ -102,14 +102,14 @@
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>{{currentLanguage()==='en' ? (row.nameEn || row.nameEt) : row.nameEt}}</td>
-          <td md-cell>{{row.code}}</td>
-          <td md-cell>{{row.credits}}</td>
-          <td md-cell>{{currentLanguage()==='en' ? (row.assessment.nameEn || row.assessment.nameEt) : row.assessment.nameEt}}</td>
-          <td md-cell>{{languages(currentLanguage(), row.languages)}}</td>
-          <td md-cell>{{row.status.nameEt}}</td>
-          <td md-cell>{{currentLanguage()==='en' ? (row.schoolDepartment.nameEn || row.schoolDepartment.nameEt) : row.schoolDepartment.nameEt}}</td>
-          <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/subject/{{row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
+          <td md-cell>{{currentLanguageNameField(row)}}</td>
+          <td md-cell>{{::row.code}}</td>
+          <td md-cell>{{::row.credits}}</td>
+          <td md-cell>{{currentLanguageNameField(row.assessment)}}</td>
+          <td md-cell>{{subjectLanguages(row.languages)}}</td>
+          <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+          <td md-cell>{{currentLanguageNameField(row.schoolDepartment)}}</td>
+          <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/subject/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
         </tr>
         </tbody>
       </table>

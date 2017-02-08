@@ -96,8 +96,13 @@ public class CurriculumServiceTest {
             }
         }
         // add new one
-        c.getStudyLanguages().add(getValidCurriculumStudyLang(classifierService.findOne(LANGUAGES.get(2))));
-
+        studyLanguages = new HashSet<>();
+        studyLanguages.add(c.getStudyLanguages().iterator().next());
+        studyLanguages.add(c.getStudyLanguages().iterator().next());
+        studyLanguages.add(getValidCurriculumStudyLang(classifierService.findOne(LANGUAGES.get(2))));
+        c.setStudyLanguages(studyLanguages);
+        
+        
         // check
         c = curriculumService.save(c);
         Assert.assertEquals(2, c.getStudyLanguages().size());
@@ -121,14 +126,14 @@ public class CurriculumServiceTest {
 
     public static Curriculum getValidCurriculum(String name, Integer number, School school, Classifier classifier) {
         Curriculum curriculum = new Curriculum();
-        curriculum.setHigher(true);
+        curriculum.setHigher(Boolean.TRUE);
         curriculum.setNameEt(name);
         curriculum.setNameEn(name);
         curriculum.setCode(name);
         curriculum.setStudyPeriod(number);
-        curriculum.setJoint(true);
+        curriculum.setJoint(Boolean.TRUE);
         curriculum.setOptionalStudyCredits(number);
-        curriculum.setOccupation(true);
+        curriculum.setOccupation(Boolean.TRUE);
         curriculum.setValidFrom(LocalDate.now());
         curriculum.setConsecution(classifier);
         curriculum.setDraft(classifier);

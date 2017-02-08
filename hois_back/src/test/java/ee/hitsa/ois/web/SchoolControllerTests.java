@@ -28,10 +28,9 @@ import ee.hitsa.ois.domain.SchoolStudyLevel;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
-import ee.hitsa.ois.repository.specification.ClassifierSpecification;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
-import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyLevelsCommand;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -56,7 +55,7 @@ public class SchoolControllerTests {
 
     @Before
     public void setUp() {
-        school = hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchool();
+        school = schoolRepository.getOne(hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId());
     }
 
     @Test
@@ -87,6 +86,12 @@ public class SchoolControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         uri = UriComponentsBuilder.fromUriString("/school").queryParam("name", "Nimetus").queryParam("lang", "ET")
+                .build().toUriString();
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = UriComponentsBuilder.fromUriString("/school").queryParam("name", "Nimetus").queryParam("lang", "EN")
                 .build().toUriString();
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
@@ -129,9 +134,7 @@ public class SchoolControllerTests {
     }
 
     private List<String> getStudyLevels() {
-        ClassifierSearchCommand cmd = new ClassifierSearchCommand();
-        cmd.setMainClassCode(MainClassCode.OPPEASTE.name());
-        return classifierRepository.findAll(new ClassifierSpecification(cmd)).stream().map(Classifier::getCode)
+        return classifierRepository.findAllByMainClassCode(MainClassCode.OPPEASTE.name()).stream().map(ClassifierSelection::getCode)
                 .collect(Collectors.toList());
     }
 }

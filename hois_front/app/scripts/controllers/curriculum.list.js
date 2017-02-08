@@ -2,7 +2,7 @@
 
 
 angular.module('hitsaOis')
-  .controller('CurriculumListController', function (QueryUtils, Curriculum, $scope, $translate, $route, Classifier, School, $location, $rootScope, AuthService) {
+  .controller('CurriculumListController', function (QueryUtils, Curriculum, $scope, $translate, $route, Classifier, $location, $rootScope, AuthService) {
 
     $scope.query = {
       order: 'id',
@@ -11,12 +11,8 @@ angular.module('hitsaOis')
       isJoint: false
     };
 
-    if($scope.isSelectDialog) {
-      $scope.query.school = [$rootScope.auth.school.id];
-    }
-
     // TODO add more table classifier fields
-    var clMapper = Classifier.valuemapper({status: 'OPPEKAVA_STAATUS'});
+    var clMapper = Classifier.valuemapper({origStudyLevel: 'OPPEASTE', status: 'OPPEKAVA_STAATUS'});
     function success(response) {
       $scope.curriculums = clMapper.objectmapper(response.content);
       $scope.curriculums.count = response.totalElements;
@@ -102,21 +98,6 @@ angular.module('hitsaOis')
         });
     }
     getListOfStudyLevels();
-
-    function getListOfSchools() {
-      School.getAll().$promise.then(function(response){
-        $scope.listOfSchools = response;
-      });
-    }
-    getListOfSchools();
-
-    function getDepartments() {
-      QueryUtils.endpoint('/autocomplete/schooldepartments')
-      .get({lang: $translate.use().toUpperCase()}).$promise.then(function(result){
-        $scope.listOfDepartments = result.content;
-      });
-    }
-    getDepartments();
 
     $scope.edit = function(curriculum) {
       if(curriculum.higher) {

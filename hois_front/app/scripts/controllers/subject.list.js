@@ -1,18 +1,19 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectListController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
-  QueryUtils.createQueryForm($scope, '/subject', {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'});
+angular.module('hitsaOis').controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils', function ($q, $scope, Classifier, QueryUtils) {
+  var clMapper = Classifier.valuemapper({status: 'AINESTAATUS', assessment: 'HINDAMISVIIS', languages: 'OPPEKEEL'});
+  QueryUtils.createQueryForm($scope, '/subject', {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'}, clMapper.objectmapper);
 
   // initialize selections on form
   QueryUtils.endpoint('/subject/initSearchFormData').get(function(result) {
     angular.extend($scope, result.toJSON());
   });
 
-  $scope.loadData();
+  $q.all(clMapper.promises).then($scope.loadData);
 
-  $scope.languages = function(lang, row) {
+  $scope.subjectLanguages = function(row) {
     return row.map(function (it) {
-      return lang==='en' ? (it.nameEn || it.nameEt) : it.nameEt;
+      return $scope.currentLanguageNameField(it);
     }).join(', ');
   };
 }]);

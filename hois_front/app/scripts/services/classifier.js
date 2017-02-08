@@ -1,7 +1,7 @@
 'use strict';
 
 
-angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', 'QueryUtils', function ($q, $resource, config, QueryUtils) {
+angular.module('hitsaOis').factory('Classifier', ['$resource', 'config', 'QueryUtils', function ($resource, config, QueryUtils) {
 
     function Classifier(args) {
 
@@ -63,8 +63,23 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
     };
 
     Classifier.queryForDropdown = function(params, successCallback) {
+      // TODO caching
       var resource = $resource(config.apiUrl+'/autocomplete/classifiers');
-      return resource.query(params, successCallback);
+      return resource.query({mainClassCode: params.mainClassCode}, function(result) {
+        var order = params.order;
+        if(order) {
+          result.sort(function(a, b) {
+            var aProp = a[order], bProp = b[order];
+            if (aProp < bProp) {
+              return -1;
+            }
+            return aProp > bProp ? 1 : 0;
+          });
+        }
+        if(angular.isFunction(successCallback)) {
+          successCallback(result);
+        }
+      });
     };
 
     Classifier.getChildren = function(code) {
@@ -113,23 +128,26 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
       var defs = {};
       var promises = [];
 
+      function mappingfactory(mainClassCode) {
+        return function(result) {
+          defs[mainClassCode] = Classifier.toMap(result);
+        };
+      }
+
       // load definitions
       for (var key in propertyDefs) {
         var mainClassCode = propertyDefs[key];
         defs[mainClassCode] = Classifier.queryForDropdown({mainClassCode: mainClassCode});
-        promises.push(defs[mainClassCode].$promise);
+        promises.push(defs[mainClassCode].$promise.then(mappingfactory(mainClassCode)));
       }
 
-      $q.all(promises).then(function() {
-        for(var key in defs) {
-          defs[key] = Classifier.toMap(defs[key]);
-        }
-      });
-
-      var valuegetter = function(mainClassCode, code) {
+      function valuegetter(mainClassCode, code) {
         var map = defs[mainClassCode];
+        if (angular.isArray(code)) {
+          return code.map(function (it) { return map[it]; });
+        }
         return map[code];
-      };
+      }
 
       var objectmapper = function(object) {
         // if object is array, iterate over its elements

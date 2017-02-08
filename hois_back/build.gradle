@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		springBootVersion = '1.4.3.RELEASE'
+		springBootVersion = '1.4.4.RELEASE'
 	}
 	repositories {
 		mavenCentral()
@@ -46,7 +46,7 @@ dependencies {
 	compile('org.springframework.session:spring-session')
 	compile('org.springframework.boot:spring-boot-starter-web')
 	compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.5')
-	runtime('org.postgresql:postgresql')
+	compile('org.postgresql:postgresql')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile('com.h2database:h2')
 	testCompile('org.springframework.security:spring-security-test')

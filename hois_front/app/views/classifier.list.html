@@ -25,14 +25,14 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="{{currentLanguage()==='en' ? 'nameEn' : 'nameEt'}}">{{'classifier.name' | translate}}</th>
-            <th md-column >{{'classifier.count' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'nameEn' : 'nameEt'}}">{{'classifier.mainname' | translate}}</th>
+            <th md-column md-numeric>{{'classifier.count' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="classifier in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a ng-href="#/classifier/{{classifier.code}}"> {{currentLanguage()==='en' ? classifier.nameEn : classifier.nameEt}}</a></td>
-            <td md-cell>{{classifier.count}}</td>
+            <td md-cell><a ng-href="#/classifier/{{::classifier.code}}">{{currentLanguageNameField(classifier)}}</a></td>
+            <td md-cell>{{::classifier.count}}</td>
           </tr>
         </tbody>
       </table>

@@ -1,35 +1,6 @@
 'use strict';
 
-/**
- * @ngdoc directive
- * @name hitsaOis.directive:hoisClassifierSelect
- * @description
- * # hoisClassifierSelect
- */
-angular.module('hitsaOis')
-  .directive('hoisClassifierSelect', function (Classifier, ClassifierConnect) {
-    return {
-      template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }" required="{{angular.isDefined(scope.required)}}"><md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
-      'aria-label="{{option[$root.currentLanguageNameField()]}}">{{option[$root.currentLanguageNameField()]}}</md-option></md-select>',
-      restrict: 'E',
-      require: ['ngModel'],
-      replace: true,
-      scope: {
-        value: "=ngModel",
-        required:'@',
-        modelValueAttr: '@',
-        mainClassifierCode: '@',
-        connectMainClassifierCode: '@',
-        connectClassifierCodes: '=',
-        criteria: '=',
-        filterValues: '@', //model of array of classifiers (or other objects which contain classifier, then byProperty must be defined )
-        byProperty: '@',
-        showOnlyValues: '@', //model of array of classifiers
-        watchModel: '@',
-        searchFromConnect: '@',
-        selectFirstValue: '@'
-      },
-      link: function postLink(scope) {
+function classifierPostLink(scope, Classifier, ClassifierConnect, QueryUtils, $filter) {
         var optionsByCode = {};
         var params = { order: scope.$root.currentLanguageNameField()};
 
@@ -58,9 +29,11 @@ angular.module('hitsaOis')
 
         var postLoad = function() {
           var deselectHiddenValue = function() {
-            if(angular.isObject(scope.value) && angular.isString(scope.value.code) && scope.optionsByCode[scope.value.code].hide) {
+            if(angular.isObject(scope.value) && angular.isString(scope.value.code) &&
+              (!angular.isDefined(scope.optionsByCode[scope.value.code]) || scope.optionsByCode[scope.value.code].hide)) {
               scope.value = undefined;
-            } else if(scope.modelValueAttr === 'code' && angular.isString(scope.value) && scope.optionsByCode[scope.value].hide) {
+            } else if(scope.modelValueAttr === 'code' && angular.isString(scope.value) &&
+              (!angular.isDefined(scope.optionsByCode[scope.value]) || scope.optionsByCode[scope.value].hide)) {
               scope.value = undefined;
             }
           };
@@ -75,8 +48,10 @@ angular.module('hitsaOis')
                       showOptions.push(it[scope.byProperty].code);
                     }
                   } else {
-                    if (angular.isString(it.code)) {
+                    if (angular.isObject(it) && angular.isString(it.code)) {
                       showOptions.push(it.code);
+                    } else if (angular.isString(it)) {
+                      showOptions.push(it);
                     }
                   }
                 });
@@ -118,10 +93,11 @@ angular.module('hitsaOis')
                     mainClassifierCode: scope.connectMainClassifierCode
                   };
 
+                  var code = angular.isString(newValue) ? newValue : newValue.code;
                   if(angular.isDefined(scope.searchFromConnect)){
-                    params.connectClassifierCode = newValue.code;
+                    params.connectClassifierCode = code;
                   } else {
-                    params.classifierCode = newValue.code;
+                    params.classifierCode = code;
                   }
 
                   ClassifierConnect.queryAll(params, function(result) {
@@ -152,7 +128,9 @@ angular.module('hitsaOis')
         };
 
         if(params.mainClassCode) {
-          Classifier.queryAll(params, function(arrayResult) {
+          var paramsCount = Object.keys(params).length;
+          var query = paramsCount === 1 || (paramsCount === 2 && params.order) ? Classifier.queryForDropdown : Classifier.queryAll;
+          query(params, function(arrayResult) {
             arrayResult.forEach(function(classifier) {
               var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
               optionsByCode[option.code] = option;
@@ -160,7 +138,92 @@ angular.module('hitsaOis')
             scope.optionsByCode = optionsByCode;
             postLoad();
           });
+/*          QueryUtils.endpoint('/autocomplete/classifiers').query({mainClassCode: params.mainClassCode}).$promise
+            .then(function(response) {
+              var sortedResponse = $filter('orderBy')(response, params.order);
+              sortedResponse.forEach(function(classifier) {
+                var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
+                optionsByCode[option.code] = option;
+              });
+              scope.optionsByCode = optionsByCode;
+              postLoad();
+            });*/
         }
+      }
+
+/**
+ * @ngdoc directive
+ * @name hitsaOis.directive:hoisClassifierSelect
+ * @description
+ * # hoisClassifierSelect
+ */
+angular.module('hitsaOis')
+  .directive('hoisClassifierSelect', function (Classifier, ClassifierConnect, QueryUtils, $filter) {
+    return {
+      template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }">'+
+      '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>'+
+      '<md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
+      'aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-option></md-select>',
+      restrict: 'E',
+      require: ['ngModel'],
+      replace: true,
+      scope: {
+        value: "=ngModel",
+        required:'@',
+        ngRequired:'=',
+        multiple:'@',
+        modelValueAttr: '@',
+        mainClassifierCode: '@',
+        connectMainClassifierCode: '@',
+        connectClassifierCodes: '=',
+        criteria: '=',
+        filterValues: '@', //model of array of classifiers (or other objects which contain classifier, then byProperty must be defined )
+        byProperty: '@',
+        showOnlyValues: '@', //model of array of classifiers
+        watchModel: '@',
+        searchFromConnect: '@',
+        selectFirstValue: '@'
+      },
+      link: function postLink(scope, element) {
+        scope.isMultiple = angular.isDefined(scope.multiple);
+        scope.isRequired = angular.isDefined(scope.required);
+        //fix select not showing required visuals if <hois-classifier-select required> is used
+        element.attr('required', scope.isRequired);
+
+        classifierPostLink(scope, Classifier, ClassifierConnect, QueryUtils, $filter);
+      }
+    };
+  })
+
+/**
+ * @ngdoc directive
+ * @name hitsaOis.directive:hoisClassifierRadio
+ * @description
+ * # hoisClassifierRadio
+ */
+  .directive('hoisClassifierRadio', function (Classifier, ClassifierConnect, QueryUtils, $filter) {
+    return {
+      template: '<md-radio-group ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }"><md-radio-button ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
+      'aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-radio-button></md-radio-group>',
+      restrict: 'E',
+      require: ['ngModel'],
+      replace: true,
+      scope: {
+        value: "=ngModel",
+        required:'@',
+        disabled:'@',
+        modelValueAttr: '@',
+        mainClassifierCode: '@',
+        connectMainClassifierCode: '@',
+      },
+      link: function postLink(scope, element) {
+        scope.isRequired = angular.isDefined(scope.required);
+        element.attr('required', scope.isRequired);
+
+        scope.isDisabled = angular.isDefined(scope.disabled);
+        element.attr('disabled', scope.isDisabled);
+
+        classifierPostLink(scope, Classifier, ClassifierConnect, QueryUtils, $filter);
       }
     };
   });

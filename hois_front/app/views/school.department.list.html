@@ -1,31 +1,30 @@
-<div layout-padding>
+<div class="ois-form-layout-padding">
   <div flex>
-    <form ng-submit="loadData()">
-      <div layout="row">
-        <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
+    <form ng-submit="loadData()" novalidate class="nomargin" layout="column">
+      <div layout="row" layout-sm="column" layout-xs="column"  >
           <!--div class="indentForToast"></div-->
-          <md-input-container>
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'school.department.code' | translate}}</label>
-            <input ng-model="criteria.code" type="text" autofocus>
+            <input ng-model="criteria.code" name="code" type="text" autofocus>
           </md-input-container>
-          <md-input-container>
+          <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'school.department.name' | translate}}</label>
-            <input ng-model="criteria.name" type="text">
+            <input ng-model="criteria.name" name="name" type="text">
           </md-input-container>
+	 </div>	  
+	  <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container>
-            <md-checkbox ng-model="criteria.valid">
+            <md-checkbox ng-model="criteria.valid" name="valid">
               {{'school.department.validTrue' | translate}}
             </md-checkbox>
           </md-input-container>
-
+	 </div>
           <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
             <md-button class="md-raised" ng-href="#/school/departments/new">{{'main.button.create' | translate}}</md-button>
           </div>
-        </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-      </div>
     </form>
   </div>
 </div>
@@ -45,13 +44,13 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{row.code}}</td>
-            <td md-cell style="padding-left:{{15*row.indent}}px">{{currentLanguage()==='en' ? (row.nameEn || row.nameEt) : row.nameEt}}</td>
+            <td md-cell>{{::row.code}}</td>
+            <td md-cell style="padding-left:{{15*row.indent}}px">{{currentLanguageNameField(row)}}</td>
             <td md-cell>{{row.isValid ? 'school.department.validTrue' : 'school.department.validFalse' | translate}}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.validFrom} }}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/school/departments/{{row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/school/departments/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

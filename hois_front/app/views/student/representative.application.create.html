@@ -1,0 +1,39 @@
+<div layout="column" layout-padding>
+  <div>
+    <div class="indentForToast"></div>
+
+    <form name="studentRepresentativeApplicationCreateForm" novalidate>
+        <md-input-container class="md-block">
+          <label>{{'student.representative.studentIdcode' | translate}}</label>
+          <hois-idcode-lookup ng-model="record.studentIdcode" name="idcode" role="student" after-lookup="lookupPerson(response)" required></hois-idcode-lookup>
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.firstname' | translate}}</label>
+          <input ng-model="record.firstname" name="firstname" type="text" readonly>
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.lastname' | translate}}</label>
+          <input ng-model="record.lastname" name="lastname" type="text" readonly>
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.relation' | translate}}</label>
+          <hois-classifier-select ng-model="record.relation" name="relation" main-classifier-code="OPPURESINDAJA" required model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.phone' | translate}}</label>
+          <input ng-model="record.phone" name="phone" type="text" required md-maxlength="100">
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.email' | translate}}</label>
+          <input ng-model="record.email" name="email" type="text" required md-maxlength="255">
+        </md-input-container>
+    </form>
+
+    <md-button ng-click="apply()" class="md-raised md-primary">{{'student.representative.application.apply' | translate}}</md-button>
+  </div>
+</div>

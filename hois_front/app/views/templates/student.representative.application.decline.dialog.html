@@ -1,0 +1,17 @@
+<md-dialog aria-label="grade add dialog" flex="30" flex-xs="100">
+  <md-dialog-content>
+    <form name="studentRepresentativeApplicationDeclineForm" ng-cloak>
+
+      <md-input-container class="md-block">
+        <label>{{'student.representative.application.rejectReason' | translate}}</label>
+        <textarea ng-model="record.rejectReason" required></textarea>
+      </md-input-container>
+
+   </form>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button ng-click="decline()" class="md-raised md-primary">{{'main.button.decline' | translate}}</md-button>
+    <md-button ng-click="cancel()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

@@ -19,7 +19,7 @@
 
           <md-input-container class="md-block">
             <label class="textInput">{{'school.code' | translate}}</label>
-            <input ng-model="school.code" type="text" required>
+            <input ng-model="school.code" name="code" type="text" required>
           </md-input-container>
           <md-input-container class="md-block">
             <label class="textInput">{{'school.regNr' | translate}}</label>
@@ -32,19 +32,19 @@
 
           <md-input-container class="md-block">
             <label class="textInput">{{'school.nameEn' | translate}}</label>
-            <input ng-model="school.nameEn" type="text" required>
+            <input ng-model="school.nameEn" name="nameEn" type="text" required>
           </md-input-container>
           <md-input-container class="md-block">
             <label class="textInput">{{'school.email' | translate}}</label>
-            <input ng-model="school.email" type="email" required>
+            <input ng-model="school.email" name="email" type="email" required>
           </md-input-container>
           <md-input-container class="md-block">
             <label class="textInput">{{'school.phone' | translate}}</label>
-            <input ng-model="school.phone" type="text">
+            <input ng-model="school.phone" name="phone" type="text">
           </md-input-container>
           <md-input-container class="md-block">
             <label class="textInput">{{'school.address' | translate}}</label>
-            <input ng-model="school.address" type="text">
+            <input ng-model="school.address" name="address" type="text">
           </md-input-container>
 
           <lf-ng-md-file-input name="logoFiles"
@@ -69,7 +69,7 @@
         </md-checkbox>
         <br>
         <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-        <md-button ng-click="delete()" ng-if="school.id" class="md-raised md-primary">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-click="delete()" ng-if="school.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
         <md-button ng-href="#/school" class="md-raised">{{'main.button.back' | translate}}</md-button>
 	</div>
 </div>

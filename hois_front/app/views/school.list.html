@@ -1,12 +1,12 @@
 <div layout-padding>
   <div flex>
-    <form ng-submit="loadData()">
+    <form ng-submit="loadData()" novalidate>
       <div layout="row">
         <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
           <!--div class="indentForToast"></div-->
           <md-input-container>
             <label class="textInput">{{'school.name' | translate}}</label>
-            <input ng-model="criteria.name" type="text" autofocus>
+            <input ng-model="criteria.name" name="name" type="text" autofocus>
           </md-input-container>
           <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
@@ -34,11 +34,11 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{row.code}}</td>
-            <td md-cell>{{currentLanguage()==='en' ? row.nameEn : row.nameEt}}</td>
-            <td md-cell>{{row.email}}</td>
+            <td md-cell>{{::row.code}}</td>
+            <td md-cell>{{currentLanguageNameField(row)}}</td>
+            <td md-cell>{{::row.email}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/school/{{row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/school/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

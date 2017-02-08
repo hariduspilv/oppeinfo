@@ -3,12 +3,12 @@
     <form name="generalMessageForm">
       <md-input-container class="md-block">
         <label class="textInput">{{'generalmessage.title' | translate}}</label>
-        <input ng-model="record.title" type="text" required autofocus>
+        <input ng-model="record.title" name="title" type="text" required autofocus>
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'generalmessage.content' | translate}}</label>
-        <textarea ng-model="record.content" md-maxlength="4000" required></textarea>
+        <textarea ng-model="record.content" name="content" md-maxlength="4000" required></textarea>
       </md-input-container>
 
       <div layout="row">
@@ -31,7 +31,7 @@
         <md-list-item ng-repeat="role in roleDefs">
           <span>
             <md-checkbox ng-model="role._selected">
-              {{currentLanguage()==='en' ? (role.nameEn || role.nameEt) : role.nameEt}}
+              {{currentLanguageNameField(role)}}
             </md-checkbox>
           </span>
         </md-list-item>

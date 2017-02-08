@@ -1,14 +1,10 @@
 
-<div ng-if="!isSelectDialog">
+<div>
   <form layout="column" ng-cloak  ng-submit="getCurriculums()" class="ois-form-layout-padding">
       <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!disableSchoolSelection">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'school.label' | translate}}</label>
-              <md-select ng-model="query.school" multiple>
-                  <md-option ng-repeat="school in listOfSchools | orderBy:'nameEt'" ng-value="school.id">
-                      {{currentLanguage()=='en' ? school.nameEn : school.nameEt}}
-                  </md-option>
-              </md-select>
+              <hois-school-select ng-model="query.school" multiple></hois-school-select>
           </md-input-container>
           <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'curriculum.studyLevel' | translate}}</label>
@@ -102,7 +98,7 @@
 				  <input ng-model="query.creditsMax" type="number">
 			  </md-input-container>
 		  </div>
-		</div>  
+		</div>
 		<div layout="column" flex="50" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="common-label">{{'main.validityPeriod' | translate}}</label>
 		  <div layout="row" layout-sm="column" layout-xs="column" >
@@ -116,7 +112,7 @@
 			  </md-input-container>
 		   </div>
 		</div>
-		
+
       </div>
       <div layout="row" layout-sm="column" layout-xs="column" >
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
@@ -153,11 +149,7 @@
       <div layout="row" layout-sm="column" layout-xs="column" >
           <md-input-container flex="100" flex-sm="100" flex-xs="100">
               <label>{{'school.department.department' | translate}}</label>
-              <md-select ng-model="query.department"  multiple>
-                  <md-option ng-repeat="dept in listOfDepartments" ng-value="dept.id">
-                      {{currentLanguage()=='en' ? dept.nameEn : dept.nameEt}}
-                  </md-option>
-              </md-select>
+              <hois-school-department-select ng-model="query.department" multiple></hois-school-department-select>
           </md-input-container>
       </div>
 	  <div layout="row" layout-sm="column" layout-xs="column" >
@@ -177,7 +169,7 @@
 <div layout="row" layout-align="center center"><h2 ng-if="curriculums.count === 0">{{'main.messages.error.notFound' | translate}}</h2></div>
 
 <md-table-container flex ng-cloak layout-padding>
-    <table md-table md-row-select="isTableSelect" ng-model="tableSelected" md-progress="promise">
+    <table md-table md-progress="promise">
     <thead md-head md-order="query.order" md-on-reorder="getCurriculums">
     <tr md-row>
         <th md-column md-order-by="schoolName">{{'school.label' | translate}}</th>
@@ -191,14 +183,14 @@
     </tr>
     </thead>
     <tbody md-body>
-    <tr md-row md-select="curriculum" md-select-id="curriculum.id" ng-repeat="curriculum in curriculums" ng-class-odd="'odd'" ng-class-even="'even'">
+    <tr md-row ng-repeat="curriculum in curriculums" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell><a href="" ng-click="view(curriculum)">{{curriculum.school.nameEt}}</a></td>
-        <td md-cell>{{curriculum.nameEt}}</td>
-        <td md-cell>{{curriculum.origStudyLevel.nameEt}}</td>
-        <td md-cell>{{curriculum.credits}}</td>
+        <td md-cell>{{currentLanguageNameField(curriculum)}}</td>
+        <td md-cell>{{currentLanguageNameField(curriculum.origStudyLevel)}}</td>
+        <td md-cell>{{::curriculum.credits}}</td>
         <td md-cell>{{'main.formattedDate' | translate: {date: curriculum.validFrom} }}</td>
         <td md-cell>{{'main.formattedDate' | translate: {date: curriculum.validThru} }}</td>
-        <td md-cell>{{curriculum.status.nameEt}}</td>
+        <td md-cell>{{currentLanguageNameField(curriculum.status)}}</td>
         <td md-cell>
             <md-button md-no-ink class="md-primary change-button" ng-click="edit(curriculum)">{{'main.button.change' | translate}}</md-button>
         </td>

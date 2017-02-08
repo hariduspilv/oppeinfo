@@ -55,6 +55,7 @@ angular.module('hitsaOis')
         if (auth) {
           setLoggedInVisuals(auth);
           $location.path("/");
+          $rootScope.$broadcast(AUTH_EVENTS.userChanged);
         } else {
           //console.log('login:changeUser:fail');
           loggedOut();
