@@ -3,7 +3,7 @@
     <form name="generalMessageForm">
       <md-input-container class="md-block">
         <label class="textInput">{{'generalmessage.title' | translate}}</label>
-        <input ng-model="record.title" name="title" type="text" required autofocus>
+        <input ng-model="record.title" name="title" type="text" md-maxlength="1000" required autofocus>
       </md-input-container>
 
       <md-input-container class="md-block">

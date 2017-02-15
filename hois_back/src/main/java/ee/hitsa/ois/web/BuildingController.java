@@ -10,7 +10,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -30,7 +29,6 @@ import ee.hitsa.ois.web.dto.RoomDto;
 import ee.hitsa.ois.web.dto.RoomSearchDto;
 
 @RestController
-@RequestMapping("/buildings")
 public class BuildingController {
 
     @Autowired
@@ -38,91 +36,72 @@ public class BuildingController {
     @Autowired
     private SchoolRepository schoolRepository;
 
-    // building: search/get/save/update/delete
-    @GetMapping(value = "")
-    public Page<BuildingDto> searchBuildings(HoisUserDetails user, Pageable pageable) {
-        Long schoolId = user.getSchoolId();
-        return buildingService.findAllBuildings(schoolId, pageable);
-    }
-
-    @GetMapping(value = "/{id}")
+    // building: get/save/update/delete
+    @GetMapping("/buildings/{id}")
     public BuildingDto getBuilding(HoisUserDetails user, @WithEntity("id") Building building) {
         assertSameSchool(user, building);
         return BuildingDto.of(building);
     }
 
-    @PostMapping(value = "")
+    @PostMapping("/buildings")
     public BuildingDto createBuilding(HoisUserDetails user, @Valid @RequestBody BuildingForm form) {
         Building building = EntityUtil.bindToEntity(form, new Building());
         building.setSchool(schoolRepository.getOne(user.getSchoolId()));
         return getBuilding(user, buildingService.save(building));
     }
 
-    @PutMapping(value = "/{id}")
+    @PutMapping("/buildings/{id}")
     public BuildingDto updateBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Building building, @Valid @RequestBody BuildingForm form) {
         assertSameSchool(user, building);
         EntityUtil.bindToEntity(form, building);
         return getBuilding(user, buildingService.save(building));
     }
 
-    @DeleteMapping(value = "/{id}")
+    @DeleteMapping("/buildings/{id}")
     public void deleteBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Building building, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         assertSameSchool(user, building);
         buildingService.delete(building);
     }
 
     // room: search/get/save/update/delete
-    @GetMapping(value = "/{id}/rooms")
-    public Page<RoomDto> getBuildingRooms(HoisUserDetails user, @WithEntity("id") Building building, Pageable pageable) {
-        assertSameSchool(user, building);
-        return buildingService.getAllRooms(EntityUtil.getId(building), pageable);
-    }
-
-    @GetMapping(value = "/searchrooms")
+    @GetMapping("/rooms")
     public Page<RoomSearchDto> searchRooms(HoisUserDetails user, @Valid RoomSearchCommand searchCommand, Pageable pageable) {
         return buildingService.findAllRooms(user.getSchoolId(), searchCommand, pageable);
     }
 
-    @GetMapping(value = "/{buildingId}/rooms/{id}")
-    public RoomDto getRoom(HoisUserDetails user, @WithEntity("buildingId") Building building, @WithEntity("id") Room room) {
-        assertSameSchool(user, building);
-        assertSameBuilding(building, room);
+    @GetMapping("/rooms/{id}")
+    public RoomDto getRoom(HoisUserDetails user, @WithEntity("id") Room room) {
+        assertSameSchool(user, room);
         return RoomDto.of(room);
     }
 
-    @PostMapping(value = "/{id}/rooms")
-    public RoomDto createRoom(HoisUserDetails user, @WithEntity("id") Building building, @Valid @RequestBody RoomForm form) {
-        assertSameSchool(user, building);
-        Room room = EntityUtil.bindToEntity(form, new Room(), "roomEquipment");
-        room.setBuilding(building);
-        return getRoom(user, building, buildingService.save(room, form));
+    @PostMapping("/rooms")
+    public RoomDto createRoom(HoisUserDetails user, @Valid @RequestBody RoomForm form) {
+        return getRoom(user, buildingService.save(new Room(), form));
     }
 
-    @PutMapping(value = "/{buildingId}/rooms/{id}")
-    public RoomDto updateRoom(HoisUserDetails user,  @WithEntity("buildingId") Building building, @WithVersionedEntity(value = "id", versionRequestBody = true) Room room, @Valid @RequestBody RoomForm form) {
-        assertSameSchool(user, building);
-        assertSameBuilding(building, room);
-        EntityUtil.bindToEntity(form, room, "roomEquipment");
-        return getRoom(user, building, buildingService.save(room, form));
+    @PutMapping("/rooms/{id}")
+    public RoomDto updateRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Room room, @Valid @RequestBody RoomForm form) {
+        assertSameSchool(user, room);
+        return getRoom(user, buildingService.save(room, form));
     }
 
-    @DeleteMapping(value = "/{buildingId}/rooms/{id}")
-    public void deleteRoom(HoisUserDetails user,  @WithEntity("buildingId") Building building, @WithVersionedEntity(value = "id", versionRequestParam = "version") Room room, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertSameSchool(user, building);
-        assertSameBuilding(building, room);
+    @DeleteMapping("/rooms/{id}")
+    public void deleteRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Room room, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        assertSameSchool(user, room);
         buildingService.delete(room);
-    }
-
-    private static void assertSameBuilding(Building building, Room room) {
-        Long buildingId = EntityUtil.getId(building);
-        if(buildingId == null || !buildingId.equals(EntityUtil.getNullableId(room.getBuilding()))) {
-            throw new IllegalArgumentException();
-        }
     }
 
     private static void assertSameSchool(HoisUserDetails user, Building building) {
         Long schoolId = user.getSchoolId();
         if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(building.getSchool()))) {
+            throw new IllegalArgumentException();
+        }
+    }
+
+    private static void assertSameSchool(HoisUserDetails user, Room room) {
+        Long schoolId = user.getSchoolId();
+        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(room.getBuilding().getSchool()))) {
             throw new IllegalArgumentException();
         }
     }

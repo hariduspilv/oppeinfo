@@ -45,6 +45,10 @@ public class CurriculumModule extends BaseEntityWithId {
     @JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false, insertable = true)
     private Set<CurriculumModuleOutcome> outcomes = new HashSet<>();
 
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false, insertable = false)
+    private Set<CurriculumVersionOccupationModule> curriculumVersionOccupationModules = new HashSet<>();
+
     public Classifier getModule() {
         return module;
     }
@@ -127,4 +131,14 @@ public class CurriculumModule extends BaseEntityWithId {
         getOutcomes().clear();
         getOutcomes().addAll(outcomes);
     }
+
+    public Set<CurriculumVersionOccupationModule> getCurriculumVersionOccupationModules() {
+        return curriculumVersionOccupationModules;
+    }
+
+    public void setCurriculumVersionOccupationModules(
+            Set<CurriculumVersionOccupationModule> curriculumVersionOccupationModules) {
+        this.curriculumVersionOccupationModules = curriculumVersionOccupationModules;
+    }
+
 }

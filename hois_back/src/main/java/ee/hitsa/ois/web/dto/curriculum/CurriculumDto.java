@@ -16,9 +16,6 @@ public class CurriculumDto extends CurriculumForm {
     private LocalDateTime changed;
     private String changedBy;
     
-    /**
-     * TODO: finish it
-     */
     public static CurriculumDto of(Curriculum curriculum) {
         CurriculumDto dto = EntityUtil.bindToDto
                 (curriculum, new CurriculumDto(), 
@@ -47,7 +44,7 @@ public class CurriculumDto extends CurriculumForm {
         }
         if(curriculum.getVersions() != null) {
             Set<CurriculumVersionDto> versions = curriculum.getVersions().stream().map
-                    (v -> CurriculumVersionDto.of(v)).collect(Collectors.toSet()); //TODO
+                    (v -> CurriculumVersionDto.of(v)).collect(Collectors.toSet());
             dto.setVersions(versions);
         }
         if(curriculum.getJointPartners() != null) {

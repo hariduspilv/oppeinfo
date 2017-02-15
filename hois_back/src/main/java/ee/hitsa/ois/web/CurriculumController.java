@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.service.CurriculumService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.WithEntity;
@@ -29,6 +30,7 @@ import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 
 @RestController
 @RequestMapping("curriculum")
@@ -53,7 +55,7 @@ public class CurriculumController {
         return curriculumService.findAllDepartments();
     }
 
-    @PostMapping(value = "")    
+    @PostMapping(value = "")
     public CurriculumDto create(HoisUserDetails user, @RequestBody CurriculumForm curriculumForm) {
         Curriculum curriculum = new Curriculum();
         curriculum.setSchool(user.getSchool());
@@ -69,7 +71,7 @@ public class CurriculumController {
     public boolean isUnique(HoisUserDetails user, UniqueCommand command) {
 		return curriculumService.isUnique(user.getSchoolId(), command);
     }
-    
+
     /**
      * TODO: test not added yet!
      */
@@ -87,6 +89,18 @@ public class CurriculumController {
     @GetMapping(value = "/areasOfStudyByGroupOfStudy/{code}")
     public List<ClassifierSelection> getAreasOfStudyByGroupOfStudy(@NotNull @PathVariable("code") String code) {
         return curriculumService.getAreasOfStudyByGroupOfStudy(code).stream().
-                map(c -> ClassifierSelection.of(c)).collect(Collectors.toList()); 
+                map(c -> ClassifierSelection.of(c)).collect(Collectors.toList());
+    }
+
+    @PostMapping(value = "/{curriculumId}/versions")
+    public CurriculumVersionDto createVersion(@WithEntity(value = "curriculumId") Curriculum curriculum,
+            @Valid @RequestBody CurriculumVersionDto dto) {
+        return curriculumService.save(curriculum, dto);
+    }
+
+    @PutMapping("/{curriculumId}/versions/{id}")
+    public CurriculumVersionDto updateVersion(@WithEntity(value = "id") CurriculumVersion curriculumVersion,
+            @Valid @RequestBody CurriculumVersionDto curriculumVersionDto) {
+        return curriculumService.save(curriculumVersion, curriculumVersionDto);
     }
 }

@@ -1,6 +1,7 @@
-  <div layout="column">
-     <form ng-submit="getStateCurriculums()" class="ois-form-layout-padding">
-        <div layout="row" layout-sm="column" layout-xs="column" >
+<div class="ois-form-layout-padding">
+  <div flex>
+     <form ng-submit="getStateCurriculums()" layout="column" class="nomargin" >
+        <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="65" flex-sm="100" flex-xs="100">
                 <label>{{'curriculum.name' | translate}}</label>
                 <input ng-model="query.name" type="text">
@@ -14,58 +15,40 @@
                 </md-select>
             </md-input-container>
         </div>
-        <div layout="row" layout-sm="column" layout-xs="column" >
+        <div layout="row" layout-sm="column" layout-xs="column">
+
             <md-input-container flex="30" flex-sm="100" flex-xs="100">
                 <label>{{'curriculum.areaOfStudy' | translate}}</label>
-                <md-select ng-model="query.iscedVald" ng-change="resetAndGetClassifierSuuns()">
-                    <md-option ng-value="null"> None </md-option>
-                    <md-option ng-repeat="classifier in listOfClassifierValds" ng-value="classifier.code">
-                        {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
-                    </md-option>
-                </md-select>
+                <hois-classifier-select ng-model="query.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD" criteria="{vocational: true}"></hois-classifier-select>
             </md-input-container>
-            <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" >
+
+            <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.fieldOfStudy' | translate}}</label>
-                <md-select ng-model="query.iscedSuun"  ng-disabled="!query.iscedVald" ng-change="getClassifierGroups()">
-                    <md-option ng-value="null"> None </md-option>
-                    <md-option ng-repeat="classifier in listOfClassifierSuuns" ng-value="classifier.code">
-                        {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
-                    </md-option>
-                </md-select>
+                <hois-classifier-select ng-model="query.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" criteria="{vocational: true}" watch-model="query.iscedVald"
+                                    search-from-connect connect-main-classifier-code="ISCED_VALD"></hois-classifier-select>
             </md-input-container>
+
             <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.group' | translate}}</label>
-                <md-select ng-model="query.iscedClassCode"  ng-disabled="!query.iscedSuun" multiple>
-                    <md-option ng-repeat="classifier in listOfClassifierGroups" ng-value="classifier.code">
-                        {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
-                    </md-option>
-                </md-select>
+                <hois-classifier-select ng-model="query.iscedClassCode" model-value-attr="code" main-classifier-code="ISCED_RYHM" criteria="{vocational: true}" watch-model="query.iscedSuun"
+                                    search-from-connect connect-main-classifier-code="ISCED_SUUN"></hois-classifier-select>
             </md-input-container>
         </div>
-        <div layout="row" layout-sm="column" layout-xs="column" >
-            <label flex="30" flex-sm="100" flex-xs="100" class="common-label">{{'stateCurriculum.enter.validPeriod' | translate}}</label>
-        </div>
-        <div layout="row" layout-sm="column" layout-xs="column" >
-            <md-input-container flex="15" flex-sm="100" flex-xs="100">
+        <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
+		  <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset-sm="0" class="top-margin">
+                <label>{{'stateCurriculum.status' | translate}}</label>
+                <hois-classifier-select ng-model="query.statusCode" model-value-attr="code" main-classifier-code="OPPEKAVA_STAATUS" multiple filter-values="filteredOutStatuses"></hois-classifier-select>
+            </md-input-container>
+            <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" flex-sm="100" flex-xs="100">
                 <label>{{'stateCurriculum.enter.validFrom' | translate}}</label>
                 <md-datepicker ng-model="query.validFrom" md-open-on-focus>
                 </md-datepicker>
             </md-input-container>
-            <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex-sm="100" flex-xs="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'stateCurriculum.enter.validThru' | translate}}</label>
                 <md-datepicker ng-model="query.validThru" md-open-on-focus>
                 </md-datepicker>
-            </md-input-container>
-        </div>
-        <div layout="column" >
-            <md-input-container flex>
-                <label>{{'stateCurriculum.status' | translate}}</label>
-                <md-select ng-model="query.statusCode" multiple>
-                    <md-option ng-repeat="status in statuses | filter: {code: '!OPPEKAVA_STAATUS_M'}" ng-value="status.code">
-                        {{status.nameEt}}
-                    </md-option>
-                </md-select>
-            </md-input-container>
+            </md-input-container>            
         </div>
         <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
@@ -74,7 +57,7 @@
         </div>
      </form>
 </div>
-
+</div>
 
 <div layout="row" layout-align="center center"><h2 ng-if="stateCurriculums.count === 0">{{'main.messages.error.notFound' | translate}}</h2></div>
 
@@ -93,7 +76,6 @@
     </thead>
     <tbody md-body>
     <tr md-row ng-repeat="stateCurriculum in stateCurriculums" ng-class-odd="'odd'" ng-class-even="'even'">
-        <!--td md-cell>{{stateCurriculum.id}}</td-->
         <td md-cell><a ng-href="#/stateCurriculum/{{stateCurriculum.id}}/edit">{{currentLanguage()=='en' ? stateCurriculum.nameEn : stateCurriculum.nameEt}}</a></td>
         <td md-cell>{{stateCurriculum.ekrLevel}}</td>
         <td md-cell>{{stateCurriculum.credits}}</td>

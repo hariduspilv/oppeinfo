@@ -31,13 +31,14 @@
       "uploadFile": "Lae fail",
       "updateFromEhis": "Uuenda staatust EHISest",
       "status": {
-        "approving": "Menetle",
-        "close": "Sulge",
+        "approving": "Menetle õk",
+        "close": "Sulge õk",
         "confirm": "Kinnita",
-        "edit": "Sisesta"
+        "edit": "Sisesta õk"
       }
     },
     "messages": {
+      "confirm": "Kas oled kindel?",
       "update": {
        "success": "Salvestamine õnnestus"
       },
@@ -95,6 +96,8 @@
     "addFile": "Lisa fail",
     "files": "Seotud failid",
     "required": "Kohustuslik",
+    "inOrder":"Korras",
+    "hour": "tund",
     "menu":{
       "curriculum": {
         "label": "Õppekavad"
@@ -106,7 +109,6 @@
       "fixData":{
         "label": "Püsiandmed",
         "buildings": "Hooned ja ruumid",
-        "searchrooms": "Ruumide otsing",
         "schools": "Õppeasutused",
         "departments": "Struktuuriüksused",
         "teacheroccupations": "Õpetaja ametikohad",
@@ -121,6 +123,10 @@
       "student": {
         "label": "Õppurid",
         "search": "Õppurite otsing"
+      },
+      "studentGroup":{
+        "label": "Õpperühmad",
+        "search": "Õpperühmade otsing"
       }
     }
   },
@@ -158,7 +164,7 @@
     "previousStudyLevel": "Eelnev haridus",
     "representatives": "Esindajad",
     "residenceCountry": "Elukohariik",
-    "schoolEmail": "Õppeasutuse e-posti aadress",
+    "schoolEmail": "E-posti aadress õppeasutuses",
     "sex": "Sugu",
     "specialNeed": "Erivajaduse täpsustus",
     "specialNeeds": "Erivajadus",
@@ -174,7 +180,7 @@
     "absence": {
       "cause": "Puudumise põhjus",
       "deleteconfirm": "Kas oled kindel, et soovid puudumistõendi kustutada?",
-      "isAccepted": "Aksepteeritud",
+      "isAccepted": "Aktsepteeritud",
       "validFrom": "Puudumine alates",
       "validThru": "Puudumine kuni"
     },
@@ -221,12 +227,13 @@
     "name": "Õppeaine nimetus",
     "status": "Staatus",
     "description": "Kirjeldus",
+    "activate": "Muuda kehtivaks",
     "additionalInfo": "Lisainfo",
     "assessment": "Õppeaine hindamisviis",
     "assessmentDescription": "Hindamisviisi selgitus",
     "belongsCurriculum": "Aine kuulub õppekavaversiooni",
     "curriculum": "Õppekava",
-    "creditsEap": "Õppeaine maht (EAP)",
+    "creditsEap": "Õppeaine maht EAP",
     "descriptionEt": "Õppeaine sisu lühikirjeldus eesti keeles",
     "descriptionEn": "Õppeaine sisu lühikirjeldus inglise keeles",
     "evaluationEt": "Hindamiskriteeriumid eesti keeles",
@@ -234,7 +241,6 @@
     "independentStudyEt": "Iseseisev töö eesti keeles",
     "independentStudyEn": "Iseseisev töö inglise keeles",
     "language": "Õppetöö keel",
-    "languages": "Õppetöö keeled",
     "linkDepartment": "Seos struktuuriüksusega",
     "nameEn": "Õppeaine nimetus inglise keeles",
     "nameEt": "Õppeaine nimetus eesti keeles",
@@ -244,10 +250,14 @@
     "outcomesEn": "Õppeaine õpiväljundid inglise keeles",
     "studyLiterature": "Kirjandus",
     "subjectIsPrerequisite": "Aine on eelduseks",
-
     "mandatoryPrerequisiteSubjects": "Kohustuslikud eeldusained",
     "recommendedPrerequisiteSubjects": "Soovituslikud eeldusained",
-    "substituteSubjects": "Asendusained"
+    "substituteSubjects": "Asendusained",
+    "edit": {
+      "code": "Kood",
+      "nameEn": "Nimetus inglise keeles",
+      "nameEt": "Nimetus eesti keeles"
+    }
   },
   "school": {
     "address": "Aadress",
@@ -543,6 +553,7 @@
   },
   "teacher": {
     "data": "Põhiandmed",
+    "deleteConfirm": "Kas olete kindel et soovite õpetajat kustutada?",
     "email": "E-posti aadress",
     "phone": "Kontakttelefon",
     "person": {
@@ -590,6 +601,26 @@
       "position": "Ametikoht",
       "positionSpecificationEn": "Ametikoha täpsustus (inglise keeles)",
       "positionSpecificationEt": "Täpsustus"
+    },
+    "qualification": {
+      "add": "lisa Kvalifikatsioon",
+      "exSchool": "Õppeasutuse endine nimetus",
+      "qualification": "Kvalifikatsioon",
+      "qualificationName": "Kvalifikatsiooni nimetus",
+      "qualificationOther": "Täpsustus",
+      "school": "Õppeasutus",
+      "schoolOther": "Muu õppeasutus",
+      "state": "Riik",
+      "year": "Aasta"
+    },
+    "mobility": {
+      "add": "Lisa Lühiajaline eemalolek",
+      "end": "Eemaloleku lõppkuupäev",
+      "mobility": "Lühiajaline eemalolek",
+      "school": "Õppeasutus",
+      "start": "Eemaloleku alguskuupäev",
+      "state": "Sihtriik",
+      "target": "Eesmärk"
     }
   },
   "occupation": {
@@ -609,6 +640,7 @@
     "add": "Lisa moodul",
     "overallAtLeast": "KOKKU vähemalt",
     "addToughtModule":"Õpetatava mooduli lisamine",
+    "viewToughtModule": "Õpetatava mooduli vaatamine",
     "occupationPartOccupationSpecialize":"Kutse/spetsialiseerumine/osakutse",
     "type":"Mooduli liik",
     "typeNameEt":"Mooduli liigi nimetue eesti keeles",
@@ -635,6 +667,35 @@
     "mandatoryEap": "Kohustuslike ainete EAP",
     "overallEap": "Kokku EAP",
     "optionalModulesNumber": "Valikmoodulite arv õppekava täitmiseks",
+    "dataInsertion": "Mooduli andmete sisestamine",
+    "capacityDistribution": "Mooduli mahu jaotus",
+    "capacity": "Maht",
+    "contactStudy": "Kontaktõpe",
+    "requirements": "Nõuded mooduli alustamiseks",
+    "assessments": "Mooduli hindamiskriteeriumid",
+    "learningMethods": "Mooduli õppemeetodid",
+    "assessmentMethodsAndTasks": "Mooduli hindamismeetodid ja ülesanded",
+    "assessmentType": "Mooduli hindamisviis",
+    "totalGradeDescription": "Kokkuvõtva hinde kujunemine",
+    "gradeAssessments": "Hindamiskriteeriumid",
+    "grade3Description": "\"3\" saamise tingimus",
+    "grade4Description": "\"4\" saamise tingimus",
+    "grade5Description": "\"5\" saamise tingimus",
+    "gradeADescription": "\"A\" saamise tingimus",
+    "independentStudyDescription":"Iseseisva töö kirjeldus",
+    "studyMaterials":"Õppematerjalid",
+    "themes":"Teemad",
+    "addTheme":"Lisa teema",
+    "addingTheme":"Teema lisamine",
+    "themeName":"Teema nimetus",
+    "capacityEkapPerHour":"Maht (EKAP/tund)",
+    "subthemes":"Alamteemad",
+    "studyYear":"Õppeaasta",
+    "proportionPerStudyYear":"Mooduli mahtude jaotus õppeaastate lõikes (EKAP)",
+    "firstStudyYear": "1. õppeaasta",
+    "secondStudyYear": "2. õppeaasta",
+    "thirdStudyYear": "3. õppeaasta",
+    "supervisor":"Mooduli eest vastutav isik",
     "implementationPlan": {
       "codeOrName": "Rakenduskava kood või nimetus",
       "targetGroup": "Sihtrühm",
@@ -643,7 +704,9 @@
       "studyForm": "Õppevorm",
       "individualCurriculum": "Individuaalne õppekava",
       "admissionYear": "Vastuvõtu aasta",
-      "type": "Rakenduskava liik"
+      "type": "Rakenduskava liik",
+      "insertModuleData": "Sisesta mooduli andmed",
+      "viewUpdateModuleData": "Vaata/Muuda mooduli andmeid"
     },
     "messages": {
       "error": {
@@ -662,19 +725,45 @@
     "fileType": "Ehise faili liik"
   },
   "building": {
-    "name": "Hoone nimetus",
-    "code": "Hoone tähis",
+    "add": "Lisa hoone",
     "address": "Aadress",
-    "add": "Lisa uus hoone"
+    "alreadyexist": "Sellise tähisega hoone on juba olemas",
+    "change": "Muuda hoone",
+    "code": "Hoone tähis",
+    "deleteconfirm": "Kas oled kindel, et soovid hoonet kustutada?",
+    "name": "Hoone nimetus"
   },
   "room": {
-    "name": "Ruumi nimetus",
+    "add": "Lisa ruum",
+    "alreadyexist": "Sellise tähisega ruum on juba olemas",
+    "building": "Hoone",
+    "change": "Muuda ruum",
     "code": "Ruumi tähis",
-    "isStudy": "Kasutatakse õppetöös",
-    "seats": "Kohtade arv",
-    "equipmentAndAmount": "Seadmed ja kogus",
+    "deleteconfirm": "Kas oled kindel, et soovid ruumi kustutada?",
+    "duplicateequipment": "Selline seade on juba olemas",
     "equipment": "Seadmed",
+    "equipmentAndAmount": "Seadmed ja kogus",
+    "isStudy": "Kasutatakse õppetöös",
+    "isStudyInTable": "Õppetöö",
+    "name": "Ruumi nimetus",
+    "seats": "Kohtade arv"
+  },
+  "studentGroup": {
+    "code": "Tähis",
+    "course": "Õppeaasta (kursus)",
+    "curriculum": "Õppekava",
+    "deleteconfirm": "Kas oled kindel, et soovid õpperühma kustutada?",
+    "studentCount": "Õppurite arv",
+    "studyForm": "Õppevorm",
     "add": "Lisa uus ruum",
     "duplicateequipment": "Selline seade on juba olemas"
+  },
+  "theme": {
+    "name": "Teema nimetus",
+    "capacityAndUnit": "Teema maht ja ühik",
+    "proportionInModule": "Teema osakaal moodulis",
+    "capacityDistribution": "Teema mahu jaotus",
+    "connectionToStudyOutcome": "Seos mooduli õppeväljundiga",
+    "assessmentType": "Teema hindamisviis"
   }
 }

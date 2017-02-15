@@ -168,10 +168,10 @@
     <div>
       <hois-collapsable label="('student.representatives' | translate)">
 
-        <md-button ng-if="student.userCanAddRepresentative" ng-click="editRepresentative()" class="md-primary md-raised">{{'student.representative.add' | translate}}</md-button>
+        <md-button ng-if="student.userCanAddRepresentative" ng-click="editRepresentative()" class="md-raised">{{'student.representative.add' | translate}}</md-button>
 
         <md-table-container>
-          <table md-table md-progress="representatives.$promise">
+          <table md-table md-progress="representatives.$promise" class="secondary-table">
             <thead md-head md-order="representativesCriteria.order" md-on-reorder="loadRepresentatives">
               <tr md-row>
                 <th md-column md-order-by="person.lastname">{{'student.representative.name' | translate}}</th>
@@ -205,7 +205,7 @@
       </hois-collapsable>
     </div>
 
-    <div>
+    <div class="top-margin">
       <hois-collapsable label="('student.specialNeeds' | translate)">
 
         <div layout="row" layout-sm="column" layout-xs="column">

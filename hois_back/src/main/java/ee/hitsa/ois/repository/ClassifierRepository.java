@@ -45,7 +45,7 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 	List<Classifier> findTop20ByNameEtStartingWithIgnoreCaseAndMainClassCodeOrderByNameEtAsc(String nameEt, String mainClassCode);
 	List<Classifier> findTop20ByNameEnStartingWithIgnoreCaseAndMainClassCodeOrderByNameEnAsc(String nameEn, String mainClassCode);
 
-    @Query("select new ee.hitsa.ois.web.dto.ClassifierSelection(c.code, c.nameEt, c.nameEn, c.nameRu, c.valid) from Classifier c where c.mainClassCode=?1")
+    @Query("select new ee.hitsa.ois.web.dto.ClassifierSelection(c.code, c.nameEt, c.nameEn, c.nameRu, c.valid, c.mainClassCode) from Classifier c where c.mainClassCode=?1")
     List<ClassifierSelection> findAllByMainClassCode(String mainClassCode);
 
 	@CacheEvict(cacheNames = "classifier", allEntries = true)
@@ -59,8 +59,8 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 
 	@Query(value = "select * from classifier where code in(select classifier_code from classifier_connect where connect_classifier_code = ?1) order by name_et", nativeQuery = true)
 	List<Classifier> findChildren(String code);
-	
-	@Query(value = 
+
+	@Query(value =
 	        "select * from classifier as a where a.code in "
 	        + "(select connect_classifier_code from classifier_connect where classifier_code in "
 	            + "(select connect_classifier_code from classifier_connect where classifier_code in "
@@ -68,4 +68,5 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 	        + " and a.main_class_code = 'ISCED_VALD'", nativeQuery = true)
 	List<Classifier> findAreasOfStudyByGroupOfStudy(String code);
 
+    Classifier findOneByCodeAndMainClassCode(String code, String mainClassCode);
 }

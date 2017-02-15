@@ -53,7 +53,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
     };
 
     var createQueryForm = function(scope, url, defaultParams, postLoad) {
-      scope.criteria = angular.extend({}, defaultPagingParams, defaultParams);
+      scope.criteria = angular.extend({}, defaultPagingParams);
 
       scope.clearCriteria = function() {
         clearQueryParams(scope.criteria);
@@ -77,6 +77,9 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
         }
 
         angular.extend(scope.criteria, storedCriteria);
+      } else {
+        // apply default parameters only when we are not restoring previously used query parameters
+        angular.extend(scope.criteria, defaultParams);
       }
 
       scope.getCriteria = function() {

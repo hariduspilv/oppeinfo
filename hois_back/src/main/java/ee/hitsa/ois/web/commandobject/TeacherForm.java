@@ -21,6 +21,10 @@ public class TeacherForm extends VersionedCommand {
 
     private Set<TeacherPositionEhisForm> teacherPositionEhis;
 
+    private Set<TeacherQualificationFrom> teacherQualifications;
+
+    private Set<TeacherMobilityForm> teacherMobility;
+
     private Boolean isVocational = Boolean.FALSE;
     private Boolean isHigher = Boolean.FALSE;
 
@@ -170,17 +174,17 @@ public class TeacherForm extends VersionedCommand {
         @DecimalMin("0.1")
         private BigDecimal load;
 
-        // TODO: VALIDATION
+        // TODO: VALIDATION(this or opetaja keel req)
         @ClassifierRestriction(MainClassCode.EHIS_TOOSUHE)
         private String employmentType;
         private String employmentTypeSpecification;
 
-        // TODO: @ClassifierRestriction(MainClassCode.??) ??
         private String employmentCode;
 
-        // TODO: VALIDATION
+        // TODO: VALIDATION(this or toosuhe req)
         @ClassifierRestriction(MainClassCode.EHIS_OPETAJA_KEEL)
         private String language;
+        private Long schoolDepartment;
 
         public Boolean getIsVocational() {
             return isVocational;
@@ -325,6 +329,169 @@ public class TeacherForm extends VersionedCommand {
         public void setEmploymentCode(String employmentCode) {
             this.employmentCode = employmentCode;
         }
+
+        public Long getSchoolDepartment() {
+            return schoolDepartment;
+        }
+
+        public void setSchoolDepartment(Long schoolDepartment) {
+            this.schoolDepartment = schoolDepartment;
+        }
+    }
+
+    public static class TeacherQualificationFrom {
+        private Long id;
+
+        @ClassifierRestriction(MainClassCode.EHIS_KVALIFIKATSIOON)
+        private String qualification;
+        @ClassifierRestriction(MainClassCode.EHIS_KVALIFIKATSIOON_NIMI)
+        private String qualificationName;
+        @ClassifierRestriction(MainClassCode.RIIK)
+        private String state;
+        @ClassifierRestriction(MainClassCode.EHIS_EESTI_OPPEASUTUS)
+        private String school;
+        @ClassifierRestriction(MainClassCode.EHIS_EESTI_OPPEASUTUS_ENDINE)
+        private String exSchool;
+        private String qualificationOther;
+        private Short year;
+        private String schoolOther;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public String getQualification() {
+            return qualification;
+        }
+
+        public void setQualification(String qualification) {
+            this.qualification = qualification;
+        }
+
+        public String getQualificationName() {
+            return qualificationName;
+        }
+
+        public void setQualificationName(String qualificationName) {
+            this.qualificationName = qualificationName;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        public void setState(String state) {
+            this.state = state;
+        }
+
+        public String getSchool() {
+            return school;
+        }
+
+        public void setSchool(String school) {
+            this.school = school;
+        }
+
+        public String getExSchool() {
+            return exSchool;
+        }
+
+        public void setExSchool(String exSchool) {
+            this.exSchool = exSchool;
+        }
+
+        public String getQualificationOther() {
+            return qualificationOther;
+        }
+
+        public void setQualificationOther(String qualificationOther) {
+            this.qualificationOther = qualificationOther;
+        }
+
+        public Short getYear() {
+            return year;
+        }
+
+        public void setYear(Short year) {
+            this.year = year;
+        }
+
+        public String getSchoolOther() {
+            return schoolOther;
+        }
+
+        public void setSchoolOther(String schoolOther) {
+            this.schoolOther = schoolOther;
+        }
+    }
+
+    public static class TeacherMobilityForm {
+        Long id;
+        @NotNull
+        private LocalDate start;
+        @NotNull
+        private LocalDate end;
+        @NotEmpty
+        @ClassifierRestriction(MainClassCode.EHIS_MOBIILSUS)
+        private String target;
+        @NotNull
+        @Size(min = 1, max = 255)
+        private String school;
+        @NotEmpty
+        @ClassifierRestriction(MainClassCode.RIIK)
+        private String state;
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
+        }
+
+        public LocalDate getStart() {
+            return start;
+        }
+
+        public void setStart(LocalDate start) {
+            this.start = start;
+        }
+
+        public LocalDate getEnd() {
+            return end;
+        }
+
+        public void setEnd(LocalDate end) {
+            this.end = end;
+        }
+
+        public String getTarget() {
+            return target;
+        }
+
+        public void setTarget(String target) {
+            this.target = target;
+        }
+
+        public String getSchool() {
+            return school;
+        }
+
+        public void setSchool(String school) {
+            this.school = school;
+        }
+
+        public String getState() {
+            return state;
+        }
+
+        public void setState(String state) {
+            this.state = state;
+        }
     }
 
     public TeacherPersonForm getPerson() {
@@ -367,6 +534,14 @@ public class TeacherForm extends VersionedCommand {
         this.teacherPositionEhis = teacherPositionEhis;
     }
 
+    public Set<TeacherQualificationFrom> getTeacherQualifications() {
+        return teacherQualifications;
+    }
+
+    public void setTeacherQualifications(Set<TeacherQualificationFrom> teacherQualifications) {
+        this.teacherQualifications = teacherQualifications;
+    }
+
     public Short getScheduleLoad() {
         return scheduleLoad;
     }
@@ -389,5 +564,13 @@ public class TeacherForm extends VersionedCommand {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Set<TeacherMobilityForm> getTeacherMobility() {
+        return teacherMobility;
+    }
+
+    public void setTeacherMobility(Set<TeacherMobilityForm> teacherMobility) {
+        this.teacherMobility = teacherMobility;
     }
 }

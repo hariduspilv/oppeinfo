@@ -10,8 +10,17 @@ public class SubjectSearchCommand extends SearchCommand {
     private Collection<String> assessments;
     private Collection<Long> curricula;
     private Collection<String> status;
+    private Collection<String> ehisSchools;
     private BigDecimal from;
     private BigDecimal thru;
+
+    public Collection<String> getEhisSchools() {
+        return ehisSchools;
+    }
+
+    public void setEhisSchools(Collection<String> ehisSchools) {
+        this.ehisSchools = ehisSchools;
+    }
 
     public Collection<String> getLanguages() {
         return languages;

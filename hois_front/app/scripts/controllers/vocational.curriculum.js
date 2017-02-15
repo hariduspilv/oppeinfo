@@ -33,7 +33,7 @@ angular.module('hitsaOis')
                   it.specialities = specialities;
                 });
 
-                promises.push($q.all(specialityPromises));
+                promises.push(specialitiesPromise);
               }
             });
         }
@@ -42,7 +42,7 @@ angular.module('hitsaOis')
         curriculum.studyPeriodMonths = response.studyPeriod % 12;
         curriculum.studyPeriodYears = Math.floor(response.studyPeriod / 12);
 
-        if (angular.isDefined(response.iscedClass)) {
+        if (angular.isString(response.iscedClass)) {
           var deferred = $q.defer();
 
           ClassifierConnect.queryAll({classifierCode: response.iscedClass}, function(result) {
@@ -50,9 +50,9 @@ angular.module('hitsaOis')
               if(it.mainClassifierCode === "ISCED_SUUN") {
                 curriculum.fieldOfStudy = it.connectClassifier.code;
               }
-            })
+            });
 
-            var innerPromise = ClassifierConnect.queryAll({classifierCode: curriculum.fieldOfStudy}, function(result) {
+            ClassifierConnect.queryAll({classifierCode: curriculum.fieldOfStudy}, function(result) {
               result.forEach(function(it) {
                 if(it.mainClassifierCode === "ISCED_VALD") {
                   curriculum.areaOfStudy = it.connectClassifier.code;
@@ -119,7 +119,7 @@ angular.module('hitsaOis')
         });
       }
       return dto;
-    }
+    };
 
     $scope.removeFromArray = ArrayUtils.remove;
 
@@ -156,7 +156,6 @@ angular.module('hitsaOis')
       mapDtoToModel($route.current.locals.entity, $scope);
     }
 
-    $scope.schoolDepartmentOptions = Curriculum.getSchoolDepartments();
     $scope.draftOptions = {};
     QueryUtils.endpoint('/autocomplete/classifiers').query({mainClassCode: 'OPPEKAVA_LOOMISE_VIIS'}).$promise.then(function(response) {
       response.forEach(function(it) {
@@ -164,24 +163,21 @@ angular.module('hitsaOis')
       });
     });
 
-    var sanitizeDraftEntity = function(draftEntity) {
-          delete draftEntity.id;
-          delete draftEntity.changed;
-          delete draftEntity.changedBy;
-          delete draftEntity.inserted;
-          delete draftEntity.insertedBy;
-          delete draftEntity.status;
-          delete draftEntity.origStudyLevel;
-          delete draftEntity.files;
-          if (angular.isObject(draftEntity.stateCurrClass)) {
-            draftEntity.stateCurrClass = draftEntity.stateCurrClass.code;
-          }
 
+    var sanitizeDraftEntity = function(draftEntity) {
+      ['id', 'changed', 'changedBy', 'inserted', 'insertedBy', 'status', 'ehisStatus', 'ehisChanged', 'files', 'modules',
+      'joint', 'jointMentor', 'jointPartners', 'specialities', 'higher', 'versions', 'merCode', 'code', 'occupation',
+      'approvalDokNr', 'approval', 'validFrom', 'validThru'].forEach(function(property) {
+        delete draftEntity[property];
+      });
+      if (angular.isObject(draftEntity.stateCurrClass)) {
+        draftEntity.stateCurrClass = draftEntity.stateCurrClass.code;
+      }
     };
 
     $scope.draftSelected = function() {
       if($scope.curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK') {
-        dialogService.showDialog('views/templates/vocational.curriculum.state.curriculum.selection.dialog.html',
+        dialogService.showDialog('views/vocational_curriculum/state.curriculum.selection.dialog.html',
         function(dialogScope) {
           dialogScope.selectedStateCurriculumOccupation = {};
           QueryUtils.endpoint('/stateCurriculum/all').query({sort: $scope.currentLanguageNameField()+',asc'}).$promise
@@ -217,13 +213,17 @@ angular.module('hitsaOis')
         });
 
       } else if($scope.curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_KOOL') {
-        dialogService.showDialog('views/templates/vocational.curriculum.school.curriculum.selection.dialog.html',
+        dialogService.showDialog('views/vocational_curriculum/school.curriculum.selection.dialog.html',
         function(dialogScope) {
           dialogScope.curriculumSelected = [];
 
-          QueryUtils.createQueryForm(dialogScope, '/curriculum', {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt',
-            school: $scope.currentUser.school.id, isVocational: false});
-          dialogScope.loadData();
+        var query = {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt', school: $scope.currentUser.school.id, isVocational: true};
+
+        dialogScope.loadData = function() {
+          dialogScope.tabledata = Curriculum.query(angular.extend(query, dialogScope.criteria), null);
+        };
+        dialogScope.loadData();
+
         },
         function(dialogScope) {
           QueryUtils.endpoint('/curriculum').get({id: dialogScope.curriculumSelected[0].id}).$promise
@@ -279,7 +279,7 @@ angular.module('hitsaOis')
         });
 
       }
-    }
+    };
 
     $scope.isOccupationChanged = function() {
       $scope.curriculum.occupations = [];
@@ -308,7 +308,7 @@ angular.module('hitsaOis')
     };
 
     $scope.openOccupationDialog = function(curriculumOccupation) {
-      dialogService.showDialog('views/templates/vocational.curriculum.occupation.add.dialog.html',
+      dialogService.showDialog('views/vocational_curriculum/occupation.add.dialog.html',
         function(dialogScope) {
           dialogScope.$watch('occupation', function (oldValue, newValue) {
             if (angular.isDefined(curriculumOccupation) && oldValue.code != newValue.code) {
@@ -349,7 +349,7 @@ angular.module('hitsaOis')
 
 
     $scope.openPartOccupationsDialog = function(curriculumPartOccupation) {
-        dialogService.showDialog('views/templates/vocational.curriculum.partOccupation.add.dialog.html',
+        dialogService.showDialog('views/vocational_curriculum/partOccupation.add.dialog.html',
           function(dialogScope) {
             if (angular.isDefined(curriculumPartOccupation)) {
               dialogScope.partOccupationAquired = curriculumPartOccupation.occupation;
@@ -373,12 +373,13 @@ angular.module('hitsaOis')
     };
 
     $scope.openAddModuleDialog = function(curriculumModule) {
-      dialogService.showDialog('views/templates/vocational.curriculum.module.add.dialog.html',
+      dialogService.showDialog('views/vocational_curriculum/module.add.dialog.html',
       function(dialogScope) {
           dialogScope.occupations = $scope.curriculum.occupations;
           dialogScope.occupationsSelected = {};
           dialogScope.partOccupationsSelected = {};
           dialogScope.specialitiesSelected = {};
+          dialogScope.competences = [];
           dialogScope.module = {
             outcomes: [],
             occupations: []
@@ -398,10 +399,27 @@ angular.module('hitsaOis')
           }
 
           dialogScope.addOutcome = function() {
-            dialogScope.module.outcomes.push({outcomeEt: dialogScope.outcomeEt, outcomeEn: dialogScope.outcomeEn});
-            dialogScope.outcomeEt = undefined;
-            dialogScope.outcomeEn = undefined;
+            if (angular.isString(dialogScope.outcomeEt) && dialogScope.outcomeEt !== '') {
+                dialogScope.module.outcomes.push({outcomeEt: dialogScope.outcomeEt, outcomeEn: dialogScope.outcomeEn});
+                dialogScope.outcomeEt = undefined;
+                dialogScope.outcomeEn = undefined;
+              }
           };
+
+          var occupationsSelected =  dialogScope.occupations.map(function(it){return it.occupation.code;});
+          if (angular.isArray(occupationsSelected) && occupationsSelected.length > 0) {
+            var loadedCompetences = {};
+            ClassifierConnect.queryAll({connectClassifierCodes: dialogScope.occupations.map(function(it){return it.occupation.code;})}, function(result) {
+              result.forEach(function(it) {
+                loadedCompetences[it.classifier.code] = it.classifier;
+              });
+              for(var p in loadedCompetences) {
+                if (loadedCompetences.hasOwnProperty(p)) {
+                  dialogScope.competences.push(loadedCompetences[p]);
+                }
+              }
+            });
+          }
       },
       function(submittedDialogScope) {
           if (!angular.isDefined(curriculumModule)) {
@@ -448,9 +466,10 @@ angular.module('hitsaOis')
     $scope.$watchCollection('curriculum.modules', renderModules);
 
     $scope.openAddFileDialog = function() {
-      dialogService.showDialog('views/templates/vocational.curriculum.file.add.dialog.html', null, function(data) {
+      dialogService.showDialog('views/vocational_curriculum/file.add.dialog.html', null, function(submittedDialogScope) {
+        var data = submittedDialogScope.data;
         data.sendEhis = false;
-        data.isEhis = false;
+        data.ehis = false;
         oisFileService.getFromLfFile(data.file[0], function(file) {
           data.oisFile = file;
           $scope.curriculum.files.push(data);

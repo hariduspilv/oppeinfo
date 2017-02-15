@@ -1,9 +1,14 @@
 package ee.hitsa.ois.domain.curriculum;
 
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 
@@ -18,9 +23,18 @@ public class CurriculumVersionSpeciality extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false, insertable = true)
     private CurriculumVersion curriculumVersion;
     
-    public CurriculumVersionSpeciality() {
-    }
+    @OneToMany(mappedBy = "speciality", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CurriculumVersionHigherModuleSpeciality> moduleSpecialities;
     
+    public Set<CurriculumVersionHigherModuleSpeciality> getModuleSpecialities() {
+        return moduleSpecialities != null ? moduleSpecialities : (moduleSpecialities = new HashSet<>());
+    }
+
+    public void setModuleSpecialities(Set<CurriculumVersionHigherModuleSpeciality> moduleSpecialities) {
+        getModuleSpecialities().clear();
+        getModuleSpecialities().addAll(moduleSpecialities);
+    }
+
     public CurriculumVersion getCurriculumVersion() {
         return curriculumVersion;
     }

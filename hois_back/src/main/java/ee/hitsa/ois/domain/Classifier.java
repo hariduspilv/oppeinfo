@@ -15,10 +15,7 @@ import org.hibernate.Hibernate;
 import org.hibernate.annotations.Fetch;
 import org.hibernate.annotations.FetchMode;
 
-import com.fasterxml.jackson.annotation.JsonView;
-
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.JsonViews;
 
 @Entity
 public class Classifier extends BaseEntity {
@@ -27,7 +24,6 @@ public class Classifier extends BaseEntity {
     @Id
     @Size(min = 1, max = 200)
     @NotNull
-    @JsonView(JsonViews.Basic.class)
     // https://hibernate.atlassian.net/browse/HHH-3718
     private String code;
 
@@ -36,13 +32,9 @@ public class Classifier extends BaseEntity {
     private String value2;
 
     @NotNull
-    @JsonView(JsonViews.Basic.class)
     private String nameEt;
-    @JsonView(JsonViews.Basic.class)
     private String nameEn;
-    @JsonView(JsonViews.Basic.class)
     private String nameRu;
-    @JsonView(JsonViews.Basic.class)
     private String mainClassCode;
 
     //@Cacheable can't serialize lazily fetched list

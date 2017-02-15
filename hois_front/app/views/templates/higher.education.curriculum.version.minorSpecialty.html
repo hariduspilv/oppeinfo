@@ -44,18 +44,18 @@
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex>
                 <label>{{'module.optionalNameEt' | translate}}</label>
-                <input ng-model="data.optionalNameEt" type="text" md-maxlength="255">
+                <input ng-model="optionalNameEt" type="text" md-maxlength="255">
             </md-input-container>
             <md-input-container flex>
                 <label>{{'module.optionalNameEn' | translate}}</label>
-                <input ng-model="data.optionalNameEn" type="text" md-maxlength="255">
+                <input ng-model="optionalNameEn" type="text" md-maxlength="255">
             </md-input-container>
             <md-button class="md-icon-button" ng-click="addElectiveModule()" ng-if="!editingElectiveModule" 
-            ng-disabled="!data.optionalNameEt || !data.optionalNameEn">
+            ng-disabled="!optionalNameEt || !optionalNameEn">
                 <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">add</md-icon>
             </md-button>
             <md-button class="md-icon-button" ng-click="finishEditElectiveModule()" ng-if="editingElectiveModule"
-            ng-disabled="!data.optionalNameEt || !data.optionalNameEn">
+            ng-disabled="!optionalNameEt || !optionalNameEn">
                 <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">done</md-icon>
             </md-button>
         </div>
@@ -98,7 +98,7 @@
                     <td md-cell>{{subject.credits}}</td>
                     <td md-cell>
                         <md-checkbox ng-model="subject.optional" aria-label="subject is mandatory" 
-                        ng-change="setCompulsoryStudyCredits()"></md-checkbox>
+                        ng-change="setCompulsoryStudyCredits(subject)"></md-checkbox>
                     </td>
                     <td md-cell>
                         <div ng-if="subject.optional && data.electiveModules.length > 0" layout="row">

@@ -25,6 +25,8 @@
           <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="#/rooms/new">{{'room.add' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="#/buildings/new">{{'building.add' | translate}}</md-button>
           </div>
         </div>
         <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
@@ -38,26 +40,27 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="building.name">{{'building.name' | translate}}</th>
-            <th md-column md-order-by="building.code">{{'building.code' | translate}}</th>
-            <th md-column md-order-by="building.address">{{'building.address' | translate}}</th>
-            <th md-column md-order-by="name">{{'room.name' | translate}}</th>
-            <th md-column md-order-by="code">{{'room.code' | translate}}</th>
-            <th md-column md-numeric md-order-by="seats">{{'room.seats' | translate}}</th>
+            <th md-column md-order-by="name">{{'building.name' | translate}}</th>
+            <th md-column md-order-by="code">{{'building.code' | translate}}</th>
+            <th md-column md-order-by="address">{{'building.address' | translate}}</th>
+            <th md-column md-order-by="rooms.name">{{'room.name' | translate}}</th>
+            <th md-column md-order-by="rooms.code">{{'room.code' | translate}}</th>
+            <th md-column md-numeric md-order-by="rooms.seats">{{'room.seats' | translate}}</th>
+            <th md-column>{{'room.isStudyInTable' | translate}}</th>
             <th md-column>{{'room.equipment' | translate}}</th>
+            <th md-column></th>
             <th md-column></th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{::row.buildingId}}">{{::row.buildingName}}</md-button>
-            </td>
+            <td md-cell>{{::row.buildingName}}</td>
             <td md-cell>{{::row.buildingCode}}</td>
             <td md-cell>{{::row.buildingAddress}}</td>
             <td md-cell>{{::row.name}}</td>
             <td md-cell>{{::row.code}}</td>
             <td md-cell>{{::row.seats}}</td>
+            <td md-cell>{{row.isStudy ? 'main.yes' : 'main.no' | translate}}</td>
             <td md-cell>
               <table>
                 <tr ng-repeat="device in row.equipment">
@@ -67,7 +70,10 @@
               </table>
             </td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{::row.buildingId}}/{{row.id}}">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-if="row.id" ng-href="#/rooms/{{::row.id}}">{{'room.change' | translate}}</md-button>
+            </td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{::row.building}}">{{'building.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

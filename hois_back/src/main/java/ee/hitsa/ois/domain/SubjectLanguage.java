@@ -2,7 +2,10 @@ package ee.hitsa.ois.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import javax.persistence.*;
+import javax.persistence.Entity;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "subject_lang")
@@ -15,14 +18,6 @@ public class SubjectLanguage extends BaseEntityWithId {
     @JsonIgnore
     @ManyToOne(optional = false)
     private Subject subject;
-
-    public SubjectLanguage() {
-    }
-
-    public SubjectLanguage(Classifier language, Subject subject) {
-        this.language = language;
-        this.subject = subject;
-    }
 
     public Classifier getLanguage() {
         return language;

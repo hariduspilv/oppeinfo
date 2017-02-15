@@ -2,6 +2,7 @@ package ee.hitsa.ois.service.security;
 
 import ee.hitsa.ois.domain.School;
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.util.EntityUtil;
 
 import org.springframework.security.core.Authentication;
@@ -55,7 +56,7 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     }
 
     public boolean isSchoolAdmin() {
-        return school != null && "ROLL_A".equals(role);
+        return school != null && Role.ROLL_A.name().equals(role);
     }
 
     public static HoisUserDetails fromPrincipal(Principal principal) {

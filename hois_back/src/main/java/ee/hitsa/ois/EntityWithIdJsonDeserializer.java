@@ -14,7 +14,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.deser.ContextualDeserializer;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
-import com.fasterxml.jackson.databind.node.IntNode;
+import com.fasterxml.jackson.databind.node.NumericNode;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 
@@ -23,18 +23,16 @@ public class EntityWithIdJsonDeserializer extends StdDeserializer<BaseEntityWith
     @Autowired
     private EntityManager entityManager;
 
-    @SuppressWarnings("rawtypes")
-    private Class domainClass;
+    private Class<?> domainClass;
 
     public EntityWithIdJsonDeserializer() {
         super(BaseEntityWithId.class);
     }
 
-    @SuppressWarnings("unchecked")
     @Override
     public BaseEntityWithId deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-        long id = ((IntNode) p.readValueAsTree().get("id")).asLong();
-        return (BaseEntityWithId) entityManager.find(domainClass, new Long(id));
+        long id = ((NumericNode) p.readValueAsTree().get("id")).asLong();
+        return (BaseEntityWithId) entityManager.find(domainClass, Long.valueOf(id));
     }
 
     @Override

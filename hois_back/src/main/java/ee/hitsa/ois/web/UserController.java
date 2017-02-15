@@ -7,12 +7,12 @@ import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.service.security.AuthenticatedUser;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.UserProjection;
 
 import java.security.Principal;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -71,7 +71,7 @@ public class UserController {
             User user = userRepository.findOne(oldUserDetails.getUserId());
             Person person = user.getPerson();
             // todo proper exceptions
-            User u = person.getUsers().stream().filter(it -> Objects.equals(it.getId(), id)).findFirst()
+            User u = person.getUsers().stream().filter(it -> id.equals(EntityUtil.getId(it))).findFirst()
                     .orElseThrow(() -> new RuntimeException("Person has no user with id : " + id));
 
             HoisUserDetails userDetails = userDetailsService.getHoisUserDetails(u);

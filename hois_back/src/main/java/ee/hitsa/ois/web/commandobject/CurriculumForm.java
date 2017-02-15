@@ -75,9 +75,7 @@ public class CurriculumForm extends VersionedCommand {
     private String consecution;
     @ClassifierRestriction({MainClassCode.EKR, MainClassCode.OPPEASTE})
     private String origStudyLevel;
-    // Classifiers with different mainClassCode can be stored here
-    // handled in CurriculumService
-    @ClassifierRestriction({MainClassCode.ISCED_RYHM, MainClassCode.ISCED_VALD, MainClassCode.ISCED_SUUND})
+    @ClassifierRestriction({MainClassCode.ISCED_RYHM, MainClassCode.ISCED_VALD, MainClassCode.ISCED_SUUN})
     private String iscedClass;
     @ClassifierRestriction(MainClassCode.OPPEKAVA_STAATUS)
     private String status;

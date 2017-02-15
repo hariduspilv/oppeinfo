@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain;
 
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -13,11 +14,12 @@ public class TeacherMobility extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private Teacher teacher;
     private LocalDate start;
+    @Column(name = "\"end\"")
     private LocalDate end;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier target;
     private String school;
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier state;
 
     public Teacher getTeacher() {

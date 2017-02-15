@@ -14,6 +14,9 @@ angular.module('hitsaOis')
           setLoggedInVisuals(auth);
           $scope.error = false;
           $mdDialog.hide();
+        } else {
+          $rootScope.setCurrentUser(null);
+          setLoggedInVisuals({});
         }
       }, function () {
         console.log('udonth happen right?');
@@ -54,6 +57,7 @@ angular.module('hitsaOis')
       AuthService.changeUser($scope.userWork).then(function (auth) {
         if (auth) {
           setLoggedInVisuals(auth);
+          $rootScope.setCurrentUser(auth);
           $location.path("/");
           $rootScope.$broadcast(AUTH_EVENTS.userChanged);
         } else {

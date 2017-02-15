@@ -9,6 +9,8 @@ angular.module('hitsaOis')
       if (response.data && response.data.user) {
         Session.create(response.data.user, response.data.authorizedRoles, response.data.school);
         return response.data;
+      } else {
+        Session.destroy();
       }
       return null;
     };
@@ -87,6 +89,8 @@ angular.module('hitsaOis')
     };
   })
   .run(function ($rootScope, AUTH_EVENTS, AuthService) {
+    // TODO: change the event to block site
+    // $rootScope.$on('$routeChangeStart', function (event, next) {
     $rootScope.$on('$locationChangeStart', function (event, next) {
       if (angular.isDefined(next.data)) {
         var authorizedRoles = next.data.authorizedRoles;

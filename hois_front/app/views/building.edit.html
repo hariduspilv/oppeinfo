@@ -1,0 +1,24 @@
+<div layout="column" layout-padding>
+  <div flex>
+    <form name="buildingForm">
+      <md-input-container class="md-block">
+        <label>{{'building.name' | translate}}</label>
+        <input ng-model="record.name" name="name" type="text" required md-maxlength="255" required>
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'building.code' | translate}}</label>
+        <input ng-model="record.code" name="code" type="text" required md-maxlength="20">
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'building.address' | translate}}</label>
+        <input ng-model="record.address" name="address" type="text" md-maxlength="255">
+      </md-input-container>
+    </form>
+
+    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-show="record.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-href="#/rooms/search" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

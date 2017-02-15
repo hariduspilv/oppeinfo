@@ -34,6 +34,11 @@ public class AutocompleteController {
     @Autowired
     private AutocompleteService autocompleteService;
 
+    @GetMapping("/buildings")
+    public List<AutocompleteResult<Long>> buildings(HoisUserDetails user) {
+        return autocompleteService.buildings(user.getSchoolId());
+    }
+
     @GetMapping("/classifiers")
     public List<ClassifierSelection> classifiers(@NotNull @RequestParam("mainClassCode") String mainClassCode) {
         return autocompleteService.classifiers(mainClassCode);
@@ -57,7 +62,7 @@ public class AutocompleteController {
 
     @GetMapping("/subjects")
     public Page<AutocompleteResult<Long>> subjects(HoisUserDetails user, SubjectAutocompleteCommand command) {
-        return asAutocompleteResult(autocompleteService.subjects(user.getSchoolId(), command), s -> new AutocompleteResult<>(s.getId(), s.getNameEt(), s.getNameEn()));
+        return asAutocompleteResult(autocompleteService.subjects(user.getSchoolId(), command), AutocompleteResult::of);
     }
 
     private static <V, R> Page<R> asAutocompleteResult(Page<V> data, Function<V, R> mapper) {

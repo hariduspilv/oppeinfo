@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -17,13 +18,12 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.annotation.JsonView;
-
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.ClassifierWithCount;
 
 @RestController
@@ -72,9 +72,9 @@ public class ClassifierController {
     }
 
     @GetMapping(value = "/all")
-    @JsonView(JsonViews.Basic.class)
-    public List<Classifier> searchAll(ClassifierSearchCommand classifierSearchCommand, Sort sort) {
-        return classifierService.searchAll(classifierSearchCommand, sort);
+    public List<ClassifierSelection> searchAll(ClassifierSearchCommand classifierSearchCommand, Sort sort) {
+        return classifierService.searchAll(classifierSearchCommand, sort)
+                .stream().map(ClassifierSelection::of).collect(Collectors.toList());
     }
 
     @GetMapping(value = "/heads")

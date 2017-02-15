@@ -68,7 +68,7 @@
           <div layout="column" flex="45">
             <md-input-container>
               <label>{{'subject.language' | translate}}</label>
-              <hois-classifier-select ng-model="criteria.languages" model-value-attr="code" main-classifier-code="OPPEKEEL" multiple></hois-classifier-select>
+              <hois-classifier-select ng-model="criteria.languages" model-value-attr="code" main-classifier-code="OPPEKEEL" criteria="{higher: true}" multiple></hois-classifier-select>
             </md-input-container>
           </div>
         </div>
@@ -93,10 +93,10 @@
           <th md-column md-order-by="{{currentLanguage()==='en' ? 'nameEn' : 'nameEt'}}"><span>{{'subject.name' | translate}}</span></th>
           <th md-column md-order-by="code"><span>{{'subject.code' | translate}}</span></th>
           <th md-column md-order-by="credits"><span>{{'subject.creditsEap' | translate}}</span></th>
-          <th md-column >{{'subject.assessment' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'assessment.nameEn' : 'assessment.nameEt'}}">{{'subject.assessment' | translate}}</th>
           <th md-column >{{'subject.language' | translate}}</th>
-          <th md-column >{{'subject.status' | translate}}</th>
-          <th md-column >{{'school.department.department' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'subject.status' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'schoolDepartment.nameEn' : 'schoolDepartment.nameEt'}}">{{'school.department.department' | translate}}</th>
           <th md-column></th>
         </tr>
         </thead>

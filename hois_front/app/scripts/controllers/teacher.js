@@ -25,7 +25,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: authorizedRoles
     });
-}).controller('TeacherEditController', ['$scope', '$route', '$location','message','DataUtils','QueryUtils', function ($scope, $route, $location, message, DataUtils, QueryUtils) {
+}).controller('TeacherEditController', ['$scope', '$route', '$location','message', 'DataUtils', 'dialogService', 'QueryUtils', function ($scope, $route, $location, message, DataUtils, dialogService,QueryUtils) {
   var id = $route.current.params.id;
   var Endpoint = QueryUtils.endpoint('/teachers');
 
@@ -34,9 +34,18 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
   });
 
   function afterLoad() {
+    if (!$scope.teacher.person.sex && ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11)) {
+      $scope.teacher.person.sex = DataUtils.sexFromIdcode($scope.teacher.person.idcode);
+    }
+    if (!$scope.teacher.person.birthdate && ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11)) {
+      $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
+    }
     DataUtils.convertStringToDates($scope.teacher.person, ['birthdate']);
     $scope.teacher.teacherPositionEhis.forEach(function (it) {
       DataUtils.convertStringToDates(it, ['contractStart', 'contractEnd']);
+    });
+    $scope.teacher.teacherMobility.forEach(function (it) {
+      DataUtils.convertStringToDates(it, ['start', 'end']);
     });
     $scope.formState = {person: true};
   }
@@ -48,6 +57,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     if (!$scope.teacher.person.birthdate) {
       $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
     }
+    $scope.formState = {person: false};
   };
 
   if(id) {
@@ -61,6 +71,14 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     $scope.teacher.teacherPositionEhis = [];
   }
 
+  if (!angular.isArray($scope.teacher.teacherQualifications)) {
+    $scope.teacher.teacherQualifications = [];
+  }
+
+  if (!angular.isArray($scope.teacher.teacherMobility)) {
+    $scope.teacher.teacherMobility = [];
+  }
+
   $scope.newTeacherPositionEhis = function () {
     $scope.teacher.teacherPositionEhis.push({
       isVocational: true,
@@ -68,16 +86,36 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     });
   };
 
+  $scope.newTeacherQualification = function () {
+    $scope.teacher.teacherQualifications.push({});
+  };
+
+  $scope.newTeacherMobility = function () {
+    $scope.teacher.teacherMobility.push({});
+  };
+
   $scope.maxDate = new Date();
 
-  $scope.remove = function(position) {
-    $scope.teacher.teacherPositionEhis = $scope.teacher.teacherPositionEhis.filter(function (item) {
-      return item !== position;
+  $scope.removeFromCollection = function (collection, item) {
+    $scope.teacher[collection] = $scope.teacher[collection].filter(function (it) {
+      return it !== item;
     });
   };
 
+  $scope.cleanReadOnly = function () {
+    var idcode = $scope.teacher.person.idcode;
+    if ($scope.formState.person && !(idcode && idcode.length === 11)) {
+      $scope.formState = {person: false};
+      $scope.teacher.person.citizenship = null;
+      $scope.teacher.person.firstname = '';
+      $scope.teacher.person.lastname = '';
+      $scope.teacher.person.nativeLanguage = '';
+      $scope.teacher.person.birthdate = null;
+      $scope.teacher.person.sex = null;
+    }
+  };
+
   $scope.lookupPerson = function (response) {
-    console.log(response);
 
     $scope.teacher.person.citizenship = response.citizenship;
     $scope.teacher.person.firstname = response.firstname;
@@ -87,6 +125,15 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     $scope.teacher.person.sex = response.sex;
 
     afterLoad();
+  };
+
+  $scope.delete = function () {
+    dialogService.confirmDialog({prompt: 'teacher.deleteConfirm'}, function() {
+      $scope.teacher.$delete().then(function () {
+        message.info('main.messages.delete.success');
+        $location.path('/teachers');
+      });
+    });
   };
 
   $scope.update = function() {

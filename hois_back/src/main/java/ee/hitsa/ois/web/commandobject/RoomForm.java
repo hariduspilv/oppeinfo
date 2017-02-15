@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.List;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -10,6 +11,8 @@ import ee.hitsa.ois.validation.NotEmpty;
 
 public class RoomForm extends VersionedCommand {
 
+    @NotNull
+    private Long building;
     @NotEmpty
     @Size(max = 20)
     private String code;
@@ -18,7 +21,16 @@ public class RoomForm extends VersionedCommand {
     @Min(0)
     private Long seats;
     private Boolean isStudy;
+    @Valid
     private List<RoomEquipmentCommand> roomEquipment;
+
+    public Long getBuilding() {
+        return building;
+    }
+
+    public void setBuilding(Long building) {
+        this.building = building;
+    }
 
     public String getCode() {
         return code;

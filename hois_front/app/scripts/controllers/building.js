@@ -1,162 +1,126 @@
 'use strict';
 
-angular.module('hitsaOis').controller('BuildingController', ['$mdDialog', '$q', '$route', '$scope', 'message', 'Classifier', 'QueryUtils',
-
-  function ($mdDialog, $q, $route, $scope, message, Classifier, QueryUtils) {
-    $scope.equipmentDefs = Classifier.queryForDropdown({mainClassCode: 'SEADMED'});
-    $scope.buildings = [];
-    $scope.currentBuilding = {};
-    $scope.initialBuildingId = $route.current.params.buildingId;
-    $scope.initialBuildingId = /^\d+$/.test($scope.initialBuildingId) ? parseInt($scope.initialBuildingId, 10) : undefined;
-    $scope.initialRoomId = $route.current.params.roomId;
-    $scope.initialRoomId = /^\d+$/.test($scope.initialRoomId) ? parseInt($scope.initialRoomId, 10) : undefined;
-    $scope.formState = {state: 'browse', roomId: $scope.initialRoomId};
-
-    var Building = QueryUtils.endpoint('/buildings');
-    var Room = QueryUtils.endpoint('/buildings/:buildingId/rooms');
-
-    var roomEquipmentMapper = function(room) {
-      return room.roomEquipment.map(function(e) { return {equipment: $scope.equipmentDefs[e.equipment], equipmentCount: e.equipmentCount}; });
-    };
-
-    var selectCurrentBuilding = function(id) {
-      if($scope.buildings.length > 0) {
-        var index = 0;
-        if(id !== undefined) {
-          var rows = $scope.buildings;
-          for(var row_no = 0, row_cnt = rows.length;row_no < row_cnt;row_no++) {
-            if(rows[row_no].id === id) {
-              index = row_no;
-              break;
-            }
-          }
-        }
-        $scope.currentBuilding = $scope.buildings[index];
-        // refresh room list
-        $scope.loadData();
-      }else{
-        $scope.currentBuilding = {};
+angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
+  $routeProvider
+    .when('/buildings/new', {
+      templateUrl: 'views/building.edit.html',
+      controller: 'BuildingEditController',
+      controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
-    };
+    })
+    .when('/buildings/:id', {
+      templateUrl: 'views/building.edit.html',
+      controller: 'BuildingEditController',
+      controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/rooms/new', {
+      templateUrl: 'views/room.edit.html',
+      controller: 'RoomEditController',
+      controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/rooms/search', {
+      templateUrl: 'views/room.search.html',
+      controller: 'RoomSearchController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/rooms/:id', {
+      templateUrl: 'views/room.edit.html',
+      controller: 'RoomEditController',
+      controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    });
+}]).controller('RoomSearchController', ['$scope', 'Classifier', 'QueryUtils',
+  function ($scope, Classifier, QueryUtils) {
+    $scope.equipmentDefs = Classifier.queryForDropdown({mainClassCode: 'SEADMED'});
 
-    $scope.openBuildingSelection = function() {
-      $mdDialog.show({
-        controller: function($scope) {
-          QueryUtils.createQueryForm($scope, '/buildings', {order: 'name'});
-
-          $scope.cancel = $mdDialog.hide;
-
-          $scope.select = function(id) {
-            $mdDialog.hide();
-            selectCurrentBuilding(id);
-          };
-
-          $scope.loadData();
-        },
-        templateUrl: 'views/templates/building.select.dialog.html',
-        clickOutsideToClose: true
+    QueryUtils.createQueryForm($scope, '/rooms', {order: 'name'}, function(rows) {
+      // set up equipment column
+      rows.forEach(function(room) {
+        room.equipment = (room.roomEquipment || []).map(function(e) { return {equipment: $scope.equipmentDefs[e.equipment], equipmentCount: e.equipmentCount}; });
       });
-    };
+    });
 
-    // building crud
-    $scope.addBuilding = function() {
-      $scope.building = new Building();
-      $scope.formState = {state: 'editBuilding'};
-    };
+    $scope.equipmentDefs.$promise.then(function() {
+      $scope.equipmentDefs = Classifier.toMap($scope.equipmentDefs);
+      $scope.loadData();
+    });
+  }
+]).controller('BuildingEditController', ['dialogService', 'message', '$location', '$route', '$scope', 'QueryUtils',
+  function (dialogService, message, $location, $route, $scope, QueryUtils) {
+    var Endpoint = QueryUtils.endpoint('/buildings');
+    var id = $route.current.params.id;
+    if(id) {
+      $scope.record = Endpoint.get({id: id});
+    } else {
+      // new building
+      $scope.record = new Endpoint({});
+    }
 
-    $scope.editBuilding = function() {
-      $scope.building = new Building(angular.copy($scope.currentBuilding));
-      $scope.formState = {state: 'editBuilding'};
-    };
-
-    $scope.updateBuilding = function() {
+    $scope.update = function() {
       $scope.buildingForm.$setSubmitted();
       if(!$scope.buildingForm.$valid) {
         message.error('main.messages.form-has-errors');
         return;
       }
-      var successMsg = $scope.building.id ? 'main.messages.update.success' : 'main.messages.create.success';
-      var postsave = function() {
-        message.info(successMsg);
-        // add/update values in buildings list
-        var building = $scope.building.toJSON();
-        var found = false;
-        $scope.buildings.forEach(function(element, index) {
-          if(element.id === building.id) {
-            $scope.buildings[index] = building;
-            found = true;
-          }
+      var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
+      var afterSave = function() {
+        message.info(msg);
+      };
+      if($scope.record.id) {
+        $scope.record.$update().then(afterSave);
+      } else {
+        $scope.record.$save().then(afterSave);
+      }
+    };
+
+    $scope.delete = function() {
+      dialogService.confirmDialog({prompt: 'building.deleteconfirm'}, function() {
+        $scope.record.$delete().then(function() {
+          message.info('main.messages.delete.success');
+          $location.path('/rooms/search');
         });
-        if(!found) {
-          $scope.buildings.push(building);
-        }
-        if(!$scope.currentBuilding || !$scope.currentBuilding.id || $scope.currentBuilding.id === building.id) {
-          $scope.currentBuilding = building;
-        }
-        $scope.formState = {state: 'browse'};
-      };
-      if($scope.building.id) {
-        $scope.building.$update().then(postsave);
-      } else {
-        $scope.building.$save().then(postsave);
-      }
-    };
-
-    $scope.deleteBuilding = function() {
-      $scope.building.$delete().then(function() {
-        // remove current building from list and select first one from remaining
-        $scope.buildings = $scope.buildings.filter(function(element) { return element.id !== $scope.building.id; });
-        selectCurrentBuilding();
-        $scope.formState = {state: 'browse'};
       });
     };
+  }
+]).controller('RoomEditController', ['dialogService', 'message', '$location', '$route', '$scope', 'Classifier', 'QueryUtils',
+  function (dialogService, message, $location, $route, $scope, Classifier, QueryUtils) {
+    var Endpoint = QueryUtils.endpoint('/rooms');
+    var id = $route.current.params.id;
 
-    $scope.cancelBuildingEdit = function() {
-      $scope.formState = {state: 'browse'};
-    };
+    $scope.equipmentDefs = Classifier.queryForDropdown({mainClassCode: 'SEADMED'});
+    $scope.formState = {};
 
-    // room crud
-    $scope.addRoom = function() {
-      $scope.room = new Room();
-      $scope.formState = {state: 'editRoom', roomEquipment: []};
-    };
+    function afterLoad(record) {
+      $scope.formState.roomEquipment = (record.roomEquipment || []).map(function(e) { return {equipment: $scope.equipmentDefs[e.equipment], equipmentCount: e.equipmentCount}; });
+    }
 
-    $scope.editRoom = function(id) {
-      var room = angular.copy($scope.tabledata.content.find(function(element) { return element.id === id; }) || {});
-      $scope.room = new Room(room);
-      $scope.formState = {state: 'editRoom', roomEquipment: roomEquipmentMapper(room)};
-    };
-
-    $scope.updateRoom = function() {
-      if(!$scope.roomForm.$valid) {
-        message.error('main.messages.form-has-errors');
-        return;
-      }
-      var successMsg = $scope.room.id ? 'main.messages.update.success' : 'main.messages.create.success';
-      var postsave = function() {
-        message.info(successMsg);
-        $scope.formState = {state: 'browse'};
-        $scope.loadData();
-      };
-      var params = {buildingId: $scope.currentBuilding.id};
-      $scope.room.roomEquipment = $scope.formState.roomEquipment.map(function(e) { return {equipment: e.equipment.code, equipmentCount: e.equipmentCount}; });
-      if($scope.room.id) {
-        $scope.room.$update(params).then(postsave);
+    $scope.equipmentDefs.$promise.then(function() {
+      $scope.equipmentDefs = Classifier.toMap($scope.equipmentDefs);
+      if(id) {
+        $scope.record = Endpoint.get({id: id}, afterLoad);
       } else {
-        $scope.room.$save(params).then(postsave);
+        // new room
+        $scope.record = new Endpoint({roomEquipment: []});
+        afterLoad($scope.record);
       }
-    };
-
-    $scope.deleteRoom = function() {
-      $scope.room.$delete({buildingId: $scope.currentBuilding.id}).then(function() {
-        $scope.loadData();
-        $scope.formState = {state: 'browse'};
-      });
-    };
-
-    $scope.cancelRoomEdit = function() {
-      $scope.formState = {state: 'browse'};
-    };
+    });
 
     $scope.addEquipment = function() {
       if($scope.formState.roomEquipment.some(function(e) { return e.equipment.code === $scope.formState.newEquipment.code; })) {
@@ -177,35 +141,31 @@ angular.module('hitsaOis').controller('BuildingController', ['$mdDialog', '$q', 
       }
     };
 
-    // room pager
-    QueryUtils.createQueryForm($scope, '/buildings/:buildingId/rooms', {order: 'name'}, function() {
-      // set up equipment column
-      $scope.tabledata.content.forEach(function(room) {
-        room.equipment = roomEquipmentMapper(room);
-      });
-      var roomId = $scope.formState.roomId;
-      if(roomId) {
-        var room = $scope.tabledata.content.find(function(element) { return element.id === roomId; });
-        if(room.id) {
-          $scope.editRoom(roomId);
-        } else {
-          // when requested room is not on the current page
-          Room.get({id: roomId}).$promise.then(function(room) {
-            $scope.room = new Room(room);
-            $scope.formState = {state: 'editRoom', roomEquipment: roomEquipmentMapper(room)};
-          });
-        }
+    $scope.update = function() {
+      $scope.roomForm.$setSubmitted();
+      if(!$scope.roomForm.$valid) {
+        message.error('main.messages.form-has-errors');
+        return;
       }
-    });
-    $scope.getCriteria = function() {
-      return QueryUtils.getQueryParams(angular.extend({}, $scope.criteria, {buildingId: $scope.currentBuilding.id}));
+      var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
+      var afterSave = function() {
+        message.info(msg);
+      };
+      $scope.record.roomEquipment = $scope.formState.roomEquipment.map(function(e) { return {equipment: e.equipment.code, equipmentCount: e.equipmentCount}; });
+      if($scope.record.id) {
+        $scope.record.$update().then(afterLoad).then(afterSave);
+      } else {
+        $scope.record.$save().then(afterLoad).then(afterSave);
+      }
     };
 
-    // load buildings
-    var buildings = QueryUtils.endpoint('/buildings').search({order: 'nameEt'});
-    $q.all([$scope.equipmentDefs.$promise, buildings.$promise]).then(function(result) {
-      $scope.equipmentDefs = Classifier.toMap(result[0]);
-      $scope.buildings = buildings.content;
-      selectCurrentBuilding($scope.initialBuildingId);
-    });
-}]);
+    $scope.delete = function() {
+      dialogService.confirmDialog({prompt: 'room.deleteconfirm'}, function() {
+        $scope.record.$delete().then(function() {
+          message.info('main.messages.delete.success');
+          $location.path('/rooms/search');
+        });
+      });
+    };
+  }
+]);

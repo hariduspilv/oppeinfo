@@ -1,9 +1,7 @@
 package ee.hitsa.ois.web.commandobject;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ee.hitsa.ois.ClassifierJsonDeserializer;
 import ee.hitsa.ois.EntityWithIdJsonDeserializer;
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Subject;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
@@ -70,8 +68,8 @@ public class SubjectForm extends VersionedCommand {
     @Size(max = 4000)
     private String additionalInfo;
 
-    @JsonDeserialize(contentUsing = ClassifierJsonDeserializer.class)
-    private Set<Classifier> languages = new HashSet<>();
+    @ClassifierRestriction(MainClassCode.OPPEKEEL)
+    private Set<String> languages = new HashSet<>();
 
     private Long schoolDepartment;
 
@@ -249,11 +247,11 @@ public class SubjectForm extends VersionedCommand {
         this.status = status;
     }
 
-    public Set<Classifier> getLanguages() {
+    public Set<String> getLanguages() {
         return languages != null ? languages : Collections.emptySet();
     }
 
-    public void setLanguages(Set<Classifier> languages) {
+    public void setLanguages(Set<String> languages) {
         this.languages = languages;
     }
 

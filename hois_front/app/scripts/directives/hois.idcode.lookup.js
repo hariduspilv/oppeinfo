@@ -8,6 +8,7 @@ angular.module('hitsaOis').directive('hoisIdcodeLookup', function ($q, QueryUtil
     scope: {
       afterFailedLookup: '&',
       afterLookup: '&',
+      noLookup: '&',
       ngModel: '=',
       ngReadonly: '=',
       role: '@'
@@ -29,6 +30,8 @@ angular.module('hitsaOis').directive('hoisIdcodeLookup', function ($q, QueryUtil
             }
             return $q.reject(response);
           });
+        } else if (angular.isDefined(scope.noLookup)) {
+          scope.noLookup();
         }
       };
     }

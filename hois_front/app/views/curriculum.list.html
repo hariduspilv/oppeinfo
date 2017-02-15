@@ -1,6 +1,6 @@
-
-<div>
-  <form layout="column" ng-cloak  ng-submit="getCurriculums()" class="ois-form-layout-padding">
+<div class="ois-form-layout-padding">
+  <div flex>
+  <form layout="column" ng-cloak  ng-submit="getCurriculums()" 	class="nomargin" >
       <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!disableSchoolSelection">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'school.label' | translate}}</label>
@@ -18,25 +18,17 @@
       <div layout="row" layout-sm="column" layout-xs="column"  ng-if="disableSchoolSelection">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'curriculum.studyLevel' | translate}}</label>
-            <md-select ng-model="query.studyLevel" ng-model-options="{trackBy: '$value.code'}">
-                <md-option ng-repeat="classifier in listOfStudyLevels track by classifier.code" ng-value="classifier">
-                    <hois-classifier-value ng-model="classifier" main-classifier-code="OPPEASTE"></hois-classifier-value>
-                </md-option>
-            </md-select>
+            <hois-classifier-select ng-model="query.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code" show-only-values="studyLevelCodes" ></hois-classifier-select>
           </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column">
+      <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'curriculum.name' | translate}}</label>
               <input ng-model="query.name" type="text">
           </md-input-container>
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'curriculum.ekrLevel' | translate}}</label>
-              <md-select ng-model="query.ekrLevel" multiple>
-                  <md-option ng-repeat="classifier in listOfEkrLevels | orderBy:'nameEt'" ng-value="classifier.code">
-                      {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
-                  </md-option>
-              </md-select>
+                <hois-classifier-select ng-model="query.ekrLevel" multiple main-classifier-code="EKR" model-value-attr="code"></hois-classifier-select>
           </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
@@ -44,7 +36,7 @@
               <label>{{'curriculum.code' | translate}}</label>
               <input ng-model="query.code" type="text">
           </md-input-container>
-          <md-input-container flex="50" flex-sm="100" flex-xs="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'curriculum.merCode' | translate}}</label>
               <input ng-model="query.merCode" type="text">
           </md-input-container>
@@ -75,14 +67,11 @@
               </md-select>
           </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column">
+      <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
           <md-input-container flex="100" flex-sm="100" flex-xs="100">
               <label>{{'curriculum.studyLanguage2' | translate}}</label>
-              <md-select ng-model="query.studyLanguage"  multiple>
-                  <md-option ng-repeat="classifier in listOfStudyLanguages | orderBy:'nameEt'" ng-value="classifier.code">
-                      {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
-                  </md-option>
-              </md-select>
+                <hois-classifier-select ng-model="query.studyLanguage" multiple main-classifier-code="OPPEKEEL" model-value-attr="code"></hois-classifier-select>
+                </md-input-container>
           </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column" >
@@ -117,19 +106,12 @@
       <div layout="row" layout-sm="column" layout-xs="column" >
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'main.status' | translate}}</label>
-              <md-select ng-model="query.status"  multiple>
-                  <md-option ng-repeat="classifier in listOfStatuses | orderBy:'nameEt'" ng-value="classifier.code">
-                      {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
-                  </md-option>
-              </md-select>
-          </md-input-container>
+               <hois-classifier-select ng-model="query.status" multiple main-classifier-code="OPPEKAVA_STAATUS" model-value-attr="code"></hois-classifier-select>
+                </md-input-container>
           <md-input-container flex="50" flex-sm="100" flex-xs="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'curriculum.ehisStatus' | translate}}</label>
-              <md-select ng-model="query.ehisStatus"  multiple>
-                  <md-option ng-repeat="classifier in listOfEhisStatuses | orderBy:'nameEt'" ng-value="classifier.code">
-                      {{currentLanguage()=='en' ? classifier.nameEn : classifier.nameEt}}
-                  </md-option>
-              </md-select>
+                <hois-classifier-select ng-model="query.ehisStatus" multiple main-classifier-code="OPPEKAVA_EHIS_STAATUS" model-value-attr="code"></hois-classifier-select>
+                </md-input-container>
           </md-input-container>
           <!--div  flex="50" flex-sm="100" flex-xs="100" flex-offset="10"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"-->
               <!--md-checkbox
@@ -146,13 +128,13 @@
               </md-checkbox>
 		  </div-->
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column" >
+      <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin">
           <md-input-container flex="100" flex-sm="100" flex-xs="100">
               <label>{{'school.department.department' | translate}}</label>
               <hois-school-department-select ng-model="query.department" multiple></hois-school-department-select>
           </md-input-container>
       </div>
-	  <div layout="row" layout-sm="column" layout-xs="column" >
+	  <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin">
             <md-checkbox
                   ng-model="query.isJoint"
                   aria-label="Is vocational">
@@ -165,16 +147,16 @@
       </div>
   </form>
 </div>
-
+</div>
 <div layout="row" layout-align="center center"><h2 ng-if="curriculums.count === 0">{{'main.messages.error.notFound' | translate}}</h2></div>
 
 <md-table-container flex ng-cloak layout-padding>
     <table md-table md-progress="promise">
     <thead md-head md-order="query.order" md-on-reorder="getCurriculums">
     <tr md-row>
-        <th md-column md-order-by="schoolName">{{'school.label' | translate}}</th>
+        <th md-column md-order-by="schoolName" ng-if="!disableSchoolSelection">{{'school.label' | translate}}</th>
         <th md-column md-order-by="name{{currentLanguage()=='en' ? 'En' : 'Et'}}">{{'curriculum.name' | translate}}</th>
-        <th md-column md-order-by="studyLevel">{{'curriculum.studyLevel' | translate}}</th>
+        <th md-column md-order-by="origStudyLevel">{{'curriculum.studyLevel' | translate}}</th>
         <th md-column md-order-by="credits">{{'curriculum.creditsEapEkap' | translate}}</th>
         <th md-column md-order-by="validFrom">{{'stateCurriculum.validFrom' | translate}}</th>
         <th md-column md-order-by="validThru">{{'stateCurriculum.validThru' | translate}}</th>
@@ -184,8 +166,8 @@
     </thead>
     <tbody md-body>
     <tr md-row ng-repeat="curriculum in curriculums" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell><a href="" ng-click="view(curriculum)">{{curriculum.school.nameEt}}</a></td>
-        <td md-cell>{{currentLanguageNameField(curriculum)}}</td>
+        <td md-cell ng-if="!disableSchoolSelection">{{curriculum.school.nameEt}}</td>
+        <td md-cell><a href="" ng-click="view(curriculum)">{{currentLanguageNameField(curriculum)}}</a></td>
         <td md-cell>{{currentLanguageNameField(curriculum.origStudyLevel)}}</td>
         <td md-cell>{{::curriculum.credits}}</td>
         <td md-cell>{{'main.formattedDate' | translate: {date: curriculum.validFrom} }}</td>

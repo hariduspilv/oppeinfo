@@ -1,6 +1,7 @@
 package ee.hitsa.ois.util;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -11,7 +12,10 @@ import javax.persistence.TypedQuery;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.From;
+import javax.persistence.criteria.Join;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 
@@ -20,11 +24,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.util.StringUtils;
 
 public abstract class JpaQueryUtil {
 
-    public static <T, E> Page<T> query(Class<T> resultClass, Class<E> entityClass, Specification<E> specification, Pageable pageable, EntityManager em) {
-        CriteriaBuilder cb = em.getCriteriaBuilder();
+    public static <T, E> Page<T> query(Class<T> resultClass, Class<E> entityClass, Specification<E> specification, Pageable pageable, EntityManager entityManager) {
+        CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         CriteriaQuery<T> dq = cb.createQuery(resultClass);
         Root<E> root = dq.from(entityClass);
         Predicate filter = specification.toPredicate(root, dq, cb);
@@ -32,9 +37,24 @@ public abstract class JpaQueryUtil {
             dq = dq.where(filter);
         }
 
-        List<Order> order = toOrderBy(cb, pageable.getSort(), s -> root.get(s));
-        TypedQuery<T> tq = em.createQuery(dq.orderBy(order));
-        return pagingResult(tq, pageable, () -> countQuery(entityClass, em, filter));
+        List<Order> order = toOrderBy(cb, pageable.getSort(), s -> {
+            Path<?> p = root;
+            for(String property : StringUtils.delimitedListToStringArray(s, ".")) {
+                Path<?> maybe = null;
+                if(p instanceof From) {
+                    for(Join<?, ?> j : ((From<?, ?>)p).getJoins()) {
+                        if(property.equals(j.getAttribute().getName())) {
+                            maybe = j;
+                            break;
+                        }
+                    }
+                }
+                p = maybe != null ? maybe :  p.get(property);
+            }
+            return p;
+        });
+        TypedQuery<T> tq = entityManager.createQuery(dq.orderBy(order));
+        return pagingResult(tq, pageable, () -> countQuery(entityClass, entityManager, filter));
     }
 
     public static <T> Page<T> pagingResult(Query query, Pageable pageable, Supplier<Number> countSupplier) {
@@ -75,5 +95,17 @@ public abstract class JpaQueryUtil {
             }
         }
         return jpaOrders;
+    }
+
+    public static <ID, T> List<T> loadRelationChilds(Class<T> resultClass, List<ID> data, EntityManager entityManager, String... relationPath) {
+        if(data.isEmpty()) {
+            return Collections.emptyList();
+        }
+        CriteriaQuery<T> dq = entityManager.getCriteriaBuilder().createQuery(resultClass);
+        Path<T> path = dq.from(resultClass);
+        for(String property : relationPath) {
+            path = path.get(property);
+        }
+        return entityManager.createQuery(dq.where(path.in(data))).getResultList();
     }
 }

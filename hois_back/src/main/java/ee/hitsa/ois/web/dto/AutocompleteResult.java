@@ -3,7 +3,6 @@ package ee.hitsa.ois.web.dto;
 import ee.hitsa.ois.domain.School;
 import ee.hitsa.ois.domain.StateCurriculum;
 import ee.hitsa.ois.domain.StudentGroup;
-import ee.hitsa.ois.domain.Subject;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -32,6 +31,10 @@ public class AutocompleteResult<ID> {
         return nameEn;
     }
 
+    public static AutocompleteResult<Long> of(Curriculum curriculum) {
+        return new AutocompleteResult<>(curriculum.getId(), curriculum.getNameEt(), curriculum.getNameEn());
+    }
+
     public static AutocompleteResult<Long> of(CurriculumVersion curriculumVersion) {
         Curriculum curriculum = curriculumVersion.getCurriculum();
         return new AutocompleteResult<>(curriculumVersion.getId(), curriculum.getNameEt(), curriculum.getNameEn());
@@ -49,8 +52,8 @@ public class AutocompleteResult<ID> {
         return new AutocompleteResult<>(studentGroup.getId(), studentGroup.getCode(), studentGroup.getCode());
     }
 
-    public static AutocompleteResult<Long> of(Subject subject) {
-        return new AutocompleteResult<>(subject.getId(), subject.getNameEt(), subject.getNameEn());
+    public static AutocompleteResult<Long> of(SubjectAutocompleteResult subject) {
+        return new AutocompleteResult<>(subject.getId(), String.format("%1$s - %2$s", subject.getCode(), subject.getNameEt()), String.format("%1$s - %2$s", subject.getCode(), subject.getNameEn()));
     }
 
     public static AutocompleteResult<Long> of(StateCurriculum stateCurriculum) {

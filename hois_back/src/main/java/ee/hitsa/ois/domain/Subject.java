@@ -4,10 +4,13 @@ import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
+import ee.hitsa.ois.web.dto.SubjectAutocompleteResult;
 import org.springframework.format.annotation.NumberFormat;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
@@ -17,9 +20,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Entity
-public class Subject extends BaseEntityWithId {
+public class Subject extends BaseEntityWithId implements SubjectAutocompleteResult {
 
     @ManyToOne(optional = false)
+    @JoinColumn(updatable = false, nullable = false)
     private School school;
     private String code;
     private String nameEt;
@@ -28,7 +32,7 @@ public class Subject extends BaseEntityWithId {
     @NumberFormat
     private BigDecimal credits;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private Classifier assessment;
 
     private String assessmentDescription;
@@ -45,10 +49,10 @@ public class Subject extends BaseEntityWithId {
     private String independentStudyEn;
     private String additionalInfo;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private SchoolDepartment schoolDepartment;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
 
     @OneToMany(mappedBy = "subject",cascade = CascadeType.ALL, orphanRemoval=true)
@@ -241,13 +245,7 @@ public class Subject extends BaseEntityWithId {
     }
 
     public void setSubjectLanguages(Set<SubjectLanguage> subjectLanguages) {
-        Set<SubjectLanguage> languages = getSubjectLanguages();
-        languages.clear();
-        languages.addAll(subjectLanguages);
-    }
-
-    public Set<Classifier> getLanguages() {
-        return getSubjectLanguages().stream().map(SubjectLanguage::getLanguage).collect(Collectors.toSet());
+        this.subjectLanguages = subjectLanguages;
     }
 
     public Set<SubjectConnect> getSubjectConnections() {

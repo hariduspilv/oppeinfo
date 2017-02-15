@@ -8,11 +8,9 @@ angular.module('hitsaOis')
         version: "version"
     };
 
-    $scope.displayedForm = $scope.formView.curriculum;
-
+    $scope.showMainForm = true;
 
     // TODO: finish readonly
-    // TODO: saving area and field of study
 
     $scope.removeFromArray = ArrayUtils.remove;
 
@@ -41,11 +39,11 @@ angular.module('hitsaOis')
     };
 
     // --- Get and Set Data
-
+    $scope.studyLevels = [];
     function getAllowedStudyLevels() {
         QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
             var studyLevelCodes = response.studyLevels;
-            $scope.studyLevels = [];
+            
             studyLevelCodes.forEach(function(it) {
                 if(isHigherStudyLevel(it)) {
                     $scope.studyLevels.push({code: it});
@@ -59,19 +57,6 @@ angular.module('hitsaOis')
         return parseInt(studyLevelCode.substring(studyLevelCode.length - 3)) >= 500;
     }
 
-    // var previouAreaOfStudyCode = null;
-
-    // $scope.getAreasOfStudy = function() {
-    //     if(!previouAreaOfStudyCode || $scope.curriculum.areaOfStudy.code !== previouAreaOfStudyCode) {
-    //         $scope.curriculum.areaOfStudy = undefined;
-    //         $scope.curriculum.fieldOfStudy = undefined;
-    //         previouAreaOfStudyCode = $scope.curriculum.areaOfStudy.code;
-    //     }
-    //     if($scope.curriculum.group) {
-    //         Curriculum.getAreasOfStudyByGroupOfStudy($scope.curriculum.group.code, setValds);
-    //     }
-    // };
-
     $scope.getAreasOfStudy = function(listOfGroupsChanged) {
         if(listOfGroupsChanged) {
             $scope.curriculum.areaOfStudy = undefined;
@@ -82,11 +67,12 @@ angular.module('hitsaOis')
     };
 
     $scope.clearIscedClass = function() {
-        $scope.curriculum.iscedClass = undefined;
+        $scope.curriculum.fieldOfStudy = undefined;
     };
 
+    $scope.areasOfStudy = [];
     function setValds(response) {
-        $scope.areasOfStudy = response;
+        $scope.areasOfStudy = response.map(function(a){return a.code;});
     }
 
     function getCurriculum() {
@@ -126,49 +112,36 @@ angular.module('hitsaOis')
 
     function setAreaOfStudy() {
 
-        // if($scope.curriculum.iscedClass) {
-        //     //TODO: does not work
-        //     if($scope.curriculum.iscedClass.mainClassCode === "ISCED_VALD") {
-        //         $scope.curriculum.areaOfStudy = $scope.curriculum.iscedClass;
-        //         // $scope.curriculum.fieldOfStudy = null;
-        //     } else {
-        //         $scope.curriculum.fieldOfStudy = $scope.curriculum.iscedClass;
-        //         Classifier.getParentsWithMainClass('ISCED_VALD', $scope.curriculum.iscedClass.code).$promise.then(function (response) {
-        //             $scope.curriculum.areaOfStudy = response[0];
-        //         });
-        //     }
-        // }
         if($scope.curriculum.iscedClass) {
-            Classifier.getParentsWithMainClass('ISCED_VALD', $scope.curriculum.iscedClass).$promise.then(function (response) {
-                $scope.curriculum.areaOfStudy = response[0];
-            });
+            //TODO: does not work
+            if($scope.curriculum.iscedClass.indexOf("ISCED_VALD") !== -1) {
+                $scope.curriculum.areaOfStudy = $scope.curriculum.iscedClass;
+                // $scope.curriculum.fieldOfStudy = null;
+            } else {
+
+                Classifier.getParentsWithMainClass('ISCED_VALD', $scope.curriculum.iscedClass).$promise.then(function (response) {
+                    $scope.curriculum.areaOfStudy = response[0].code;
+                    $scope.curriculum.fieldOfStudy = $scope.curriculum.iscedClass;
+                });
+            }
         }
     }
 
-
     //TODO: method currently not used
-    function getDepartments() {
-      QueryUtils.endpoint('/autocomplete/schooldepartments')
-        .get({ lang: $translate.use().toUpperCase() }).$promise.then(function (result) {
-          $scope.schoolDepartments = result.content;
-        });
-    }
-    getDepartments();
-
-    function getMyEhisSchool() {
-      if($rootScope.currentUser && Session.school.id) {
-        QueryUtils.endpoint("/school").get({id: Session.school.id}).$promise.then(function(response) {
-          $scope.myEhisSchool = {code: response.ehisSchool};
-        });
-      }
-    }
-    getMyEhisSchool();
+    // function getMyEhisSchool() {
+    //   if($rootScope.currentUser && Session.school.id) {
+    //     QueryUtils.endpoint("/school").get({id: Session.school.id}).$promise.then(function(response) {
+    //       $scope.myEhisSchool = response.ehisSchool;
+    //     });
+    //   }
+    // }
+    // getMyEhisSchool();
 
 
     $scope.removejointPartner = function(deletedPartner) {
         $scope.removeFromArray($scope.curriculum.jointPartners, deletedPartner);
         if(!deletedPartner.abroad) {
-            $scope.removeFromArray($scope.curriculum.jointPartnersEhisSchools, deletedPartner.ehisSchool);
+            $scope.removeFromArray($scope.jointPartnersEhisSchools, deletedPartner.ehisSchool);
             if($scope.curriculum.jointMentor === deletedPartner.ehisSchool) {
                 $scope.curriculum.jointMentor = undefined;
             }
@@ -222,11 +195,8 @@ angular.module('hitsaOis')
         return;
       }
       clearGradesIfNecessary();
-      // Saving works, but presentation do not
-    //   if($scope.curriculum.areaOfStudy && !$scope.curriculum.iscedClass) {
-    //       $scope.curriculum.iscedClass = $scope.curriculum.areaOfStudy;
-    //   }
-    // $scope.curriculum.iscedClass = $scope.curriculum.fieldOfStudy ? $scope.curriculum.fieldOfStudy : $scope.curriculum.areaOfStudy;
+        $scope.curriculum.iscedClass = $scope.curriculum.fieldOfStudy ? 
+        $scope.curriculum.fieldOfStudy : $scope.curriculum.areaOfStudy;
       createOrUpdate().then(function() {
          setVariablesForExistingCurriculum();
          message.info('main.messages.create.success');
@@ -235,7 +205,7 @@ angular.module('hitsaOis')
 
     $scope.changeJointMentors = function() {
         if($scope.curriculum.abroad) {
-            $scope.curriculum.jointPartnersEhisSchools = [];
+            $scope.jointPartnersEhisSchools = [];
         }
     };
 
@@ -250,31 +220,20 @@ angular.module('hitsaOis')
     }
 
     $scope.delete = function () {
-      $scope.curriculum.$delete().then(function () {
-        message.info('main.messages.delete.success');
-        $location.path(baseUrl);
-      });
+        dialogService.confirmDialog({prompt: 'main.messages.confirm'}, function() {
+            $scope.curriculum.$delete().then(function () {
+                message.info('main.messages.delete.success');
+                $location.path(baseUrl);
+            });
+        });
     };
 
-    //  Joint Partners
-    //TODO: fix exception
     function getEhisSchoolsSelection() {
-        $scope.curriculum.jointPartnersEhisSchools = [];
-        $rootScope.$watch('auth', function(){
-            if($rootScope.auth) {
-                QueryUtils.endpoint("/school").get({id: $rootScope.auth.school.id}).$promise.then(function(response){
-                    $scope.myEhisSchool = {code: response.ehisSchool};
-                    $scope.curriculum.jointPartnersEhisSchools.push($scope.myEhisSchool);
-                    return;
-                }).then(function(){
-                    if($scope.curriculum.id && $scope.curriculum.joint) {
-                        $scope.curriculum.jointPartners.forEach(function(it){
-                            if(!it.abroad) {
-                                $scope.curriculum.jointPartnersEhisSchools.push(it.ehisSchool);
-                            }
-                        });
-                    }
-                });
+        $scope.jointPartnersEhisSchools = [];
+        $scope.jointPartnersEhisSchools.push($rootScope.currentUser.school.ehisSchool);
+        $scope.curriculum.jointPartners.forEach(function(e){
+            if(e.ehisSchool) {
+                $scope.jointPartnersEhisSchools.push(e.ehisSchool);
             }
         });
     }
@@ -285,11 +244,16 @@ angular.module('hitsaOis')
             jointPartner.nameEt = $scope.curriculum.jointPartnerForeignNameEt;
             jointPartner.nameEn = $scope.curriculum.jointPartnerForeignNameEn;
         } else {
+            for(var i = 0; i < $scope.jointPartnersEhisSchools.length; i++) {
+                if( $scope.jointPartnersEhisSchools.indexOf($scope.curriculum.jointPartnerEhisSchool) !== -1) {
+                    $scope.clearJointPartnersFields();
+                    return;
+                }
+            }
             jointPartner.ehisSchool = $scope.curriculum.jointPartnerEhisSchool;
-            $scope.curriculum.jointPartnersEhisSchools.push(jointPartner.ehisSchool);
+            $scope.jointPartnersEhisSchools.push(jointPartner.ehisSchool);
         }
         $scope.curriculum.jointPartners.push(jointPartner);
-        $scope.clearJointPartnersFields();
     };
 
     var addSharedInformationToJointPartners = function () {
@@ -317,20 +281,22 @@ angular.module('hitsaOis')
 
     // --- Dialog Windows
 
-    $scope.openAddSpecialtyDialog = function (newSpecialty) {
+    $scope.openAddSpecialtyDialog = function (editedSpecialty) {
       var DialogController = null;
-      if (newSpecialty) {
+      if (editedSpecialty) {
         DialogController = function (scope) {
-          scope.data = newSpecialty;
+          scope.data =  angular.extend({}, editedSpecialty);
         };
       }
       dialogService.showDialog('views/templates/higher.education.curriculum.specialty.add.dialog.html', DialogController,
         function (submitScope) {
-          var data = submitScope.data;
-          if (!ArrayUtils.includes($scope.curriculum.specialities, data)) {
-              data.referenceNumber = getReferenceNumber($scope.curriculum.specialities);
-            $scope.curriculum.specialities.push(data);
-          }
+            var data = submitScope.data;
+            if(editedSpecialty) {
+                angular.extend(editedSpecialty, data);
+            } else {
+                data.referenceNumber = getReferenceNumber($scope.curriculum.specialities);
+                $scope.curriculum.specialities.push(data);
+            }
         });
     };
 
@@ -344,24 +310,26 @@ angular.module('hitsaOis')
         $scope.removeFromArray($scope.curriculum.specialities, speciality);
     };
 
-    $scope.openAddGradeDialog = function (newGrade) {
+    $scope.openAddGradeDialog = function (editingGrade) {
       var DialogController = null;
-      if (newGrade) {
+      if (editingGrade) {
         DialogController = function (scope) {
-          scope.data = newGrade;
+          scope.data = angular.extend({}, editingGrade);
         };
       }
       dialogService.showDialog('views/templates/higher.education.curriculum.grade.add.dialog.html', DialogController,
         function (submitScope) {
           var data = submitScope.data;
-          if (!ArrayUtils.includes($scope.curriculum.grades, data)) {
-            $scope.curriculum.grades.push(data);
-          }
+            if(editingGrade) {
+                angular.extend(editingGrade, data);
+            } else {
+                $scope.curriculum.grades.push(data);
+            }
         });
     };
 
     $scope.openAddFileDialog = function () {
-      dialogService.showDialog('views/templates/vocational.curriculum.file.add.dialog.html', null, function (submitScope) {
+      dialogService.showDialog('views/vocational_curriculum/file.add.dialog.html', null, function (submitScope) {
         var data = submitScope.data;
         data.sendEhis = false;
         data.ehis = false;
@@ -412,7 +380,6 @@ angular.module('hitsaOis')
 
 
     //      curriculum version controller
-// TODO: version (?) can be edited only once
 
     function getReferenceNumber(list) {
         var existingReferenceNumbers = list.map(function(el){
@@ -428,13 +395,24 @@ angular.module('hitsaOis')
         return rand;
     }
 
+    $scope.removeSpecsFromModules = function() {
+        $scope.version.modules.forEach(function(m){
+            if(!m.minorSpeciality) {
+                m.specialitiesReferenceNumbers.filter(function(n){
+                    return $scope.version.specialitiesReferenceNumbers && 
+                    $scope.version.specialitiesReferenceNumbers.indexOf(n) !== -1;
+                });
+            }
+        });
+    };
+
     $scope.goToVersionForm = function(version) {
         if(version) {
             $scope.version = version;
         } else {
             $scope.version = {
                 modules: [],
-                specialities: [],
+                specialitiesReferenceNumbers: [],
                 code: $scope.curriculum && $scope.curriculum.code ? $scope.curriculum.code + "/" + new Date().getFullYear() : null
             };
         }
@@ -443,11 +421,11 @@ angular.module('hitsaOis')
             paramName: 'code',
             url: baseUrl + '/version/unique'
         };
-        $scope.displayedForm = $scope.formView.version;
+        $scope.showMainForm = false;
     };
 
     $scope.goToCurriculumForm = function() {
-        $scope.displayedForm = $scope.formView.curriculum;
+        $scope.showMainForm = true;
     };
 
     $scope.saveVersion = function() {
@@ -459,7 +437,7 @@ angular.module('hitsaOis')
         if (!ArrayUtils.includes($scope.curriculum.versions, $scope.version)) {
             $scope.curriculum.versions.push($scope.version);
         }
-        $scope.displayedForm = $scope.formView.curriculum;
+        $scope.showMainForm = true;
     };
 
     function versionFormIsValid() {
@@ -472,6 +450,9 @@ angular.module('hitsaOis')
 
     $scope.deleteSubject = function(module1, subject) {
         $scope.removeFromArray(module1.subjects, subject);
+        module1.electiveModules.forEach(function(em){
+            $scope.removeFromArray(em.subjects, subject.subjectId);
+        });
         $scope.setCompulsoryAndTotalStudyCredits(module1);
     };
 
@@ -485,25 +466,43 @@ angular.module('hitsaOis')
         module1.totalCredits = module1.compulsoryStudyCredits + module1.optionalStudyCredits;
     };
 
-    //TODO: when editing and pressing back still saves all changes
-    //TODO: when removing elective module, remove its subjects as well;
-    $scope.openAddModuleDialog = function (newModule) {
+    $scope.filterOutSubjectsAddedToOtherModules = function(subject, excludedModule) {
+        var otherModules = getAllVersionModulesExcept(excludedModule);
+        var subjectsFromOtherModules = getAllSubjectIdsFromModules(otherModules);
+        return subjectsFromOtherModules.indexOf(subject.id) === -1;
+    };
+
+    function getAllVersionModulesExcept(excludedModule) {
+        return $scope.version.modules.filter(function(m){return m !== excludedModule;});
+    }
+
+    function getAllSubjectIdsFromModules(modules) {
+        var subjects = [];
+        for(var i = 0; i < modules.length; i++) {
+            for(var j = 0; j < modules[i].subjects.length; j++) {
+                subjects.push(modules[i].subjects[j].subjectId);
+            }
+        }
+        return subjects;
+    }
+
+    $scope.openAddModuleDialog = function (editingModule) {
       var DialogController = function (scope) {
 
             scope.specialities = $scope.curriculum.specialities.filter(function(s){
-                return $scope.version.specialitiesReferenceNumbers.indexOf(s.referenceNumber) !== -1;
+                return $scope.version.specialitiesReferenceNumbers && $scope.version.specialitiesReferenceNumbers.indexOf(s.referenceNumber) !== -1;
             });
 
             scope.addElectiveModule = function() {
                 var newElectiveModule = {
-                    nameEt: scope.data.optionalNameEt,
-                    nameEn: scope.data.optionalNameEn,
+                    nameEt: scope.optionalNameEt,
+                    nameEn: scope.optionalNameEn,
                     referenceNumber: getReferenceNumber(scope.data.electiveModules),
                     subjects: []
                 };
                 scope.data.electiveModules.push(newElectiveModule);
-                scope.data.optionalNameEt = undefined;
-                scope.data.optionalNameEn = undefined;
+                scope.optionalNameEt = undefined;
+                scope.optionalNameEn = undefined;
             };
             scope.editingElectiveModule = false;
             var editedElectiveModule = null;
@@ -511,16 +510,16 @@ angular.module('hitsaOis')
             scope.editElectiveModule = function (electiveModule) {
                 editedElectiveModule = electiveModule;
                 scope.editingElectiveModule = true;
-                scope.data.optionalNameEt = electiveModule.nameEt;
-                scope.data.optionalNameEn = electiveModule.nameEn;
+                scope.optionalNameEt = electiveModule.nameEt;
+                scope.optionalNameEn = electiveModule.nameEn;
             };
 
             scope.finishEditElectiveModule = function() {
                 scope.editingElectiveModule = false;
-                editedElectiveModule.nameEt = scope.data.optionalNameEt;
-                editedElectiveModule.nameEn = scope.data.optionalNameEn;
-                scope.data.optionalNameEt = undefined;
-                scope.data.optionalNameEn = undefined;
+                editedElectiveModule.nameEt = scope.optionalNameEt;
+                editedElectiveModule.nameEn = scope.optionalNameEn;
+                scope.optionalNameEt = undefined;
+                scope.optionalNameEn = undefined;
             };
 
             scope.addSubjectToElectiveModule = function(subject) {
@@ -533,12 +532,27 @@ angular.module('hitsaOis')
 
             function getSubjects() {
                 // TODO: enable adding subjects from partner schools
-                QueryUtils.endpoint('/subject')
-                    .get({ lang: $translate.use().toUpperCase() }).$promise.then(function (result) {
-                    scope.subjects = result.content;
+                var ehisSchools = $scope.jointPartnersEhisSchools;
+                QueryUtils.endpoint('/subject')                    
+                    .get({ lang: $translate.use().toUpperCase(), ehisSchools: ehisSchools}).$promise.then(function (result) {
+                    scope.subjectsUnfiltered = result.content.filter(function(s){
+                        return $scope.filterOutSubjectsAddedToOtherModules(s, editingModule);
+                    });
+                    filterSubjects();
                 });
             }
             getSubjects();
+
+            function filterSubjects() {
+                scope.subjects = scope.subjectsUnfiltered.filter(function(s){
+                    for(var i = 0; i < scope.data.subjects.length; i++) {
+                        if(scope.data.subjects[i].subjectId === s.id) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+            }
 
             scope.deleteElectiveModule = function(electiveModule) {
                 scope.data.subjects.forEach(function(e){
@@ -562,23 +576,28 @@ angular.module('hitsaOis')
                 scope.data.subjects.push(newSubject);
                 scope.data.selectedSubject = undefined;
                 scope.setCompulsoryStudyCredits();
+                filterSubjects();
             };
 
-            scope.setCompulsoryStudyCredits = function() {
+            scope.setCompulsoryStudyCredits = function(subject) {
                 $scope.setCompulsoryAndTotalStudyCredits(scope.data);
+                if(subject && !subject.optional) {
+                    subject.electiveModule = undefined;
+                }
             };
 
             scope.removeSubject = function(subject) {
                 $scope.removeFromArray(scope.data.subjects, subject);
                 scope.setCompulsoryStudyCredits();
+                filterSubjects();
             };
 
-            if (newModule) {
-                scope.data = newModule;
+            if (editingModule) {
+                scope.data = angular.copy(editingModule);
             } else {
                 scope.data = {
                     electiveModules: [],
-                    specialities: [],
+                    specialitiesReferenceNumbers: [],
                     subjects: [],
                     minorSpeciality: false,
                     optionalStudyCredits: 0,
@@ -594,28 +613,29 @@ angular.module('hitsaOis')
                 data.typeNameEt = null;
                 data.typeNameEn = null;
             }
-            if (!ArrayUtils.includes($scope.version.modules, data)) {
-                $scope.version.modules.push(data);
+            if(editingModule) {
+                $scope.version.modules.splice($scope.version.modules.indexOf(editingModule), 1);
             }
+            $scope.version.modules.push(data);
         });
     };
 
 
     //TODO: code duplication
-    $scope.openAddMinorSpecialtyDialog = function (newMinorSpecialty) {
+    $scope.openAddMinorSpecialtyDialog = function (editingModule) {
 
       var DialogController = function (scope) {
 
             scope.addElectiveModule = function() {
                 var newElectiveModule = {
-                    nameEt: scope.data.optionalNameEt,
-                    nameEn: scope.data.optionalNameEn,
+                    nameEt: scope.optionalNameEt,
+                    nameEn: scope.optionalNameEn,
                     referenceNumber: getReferenceNumber(scope.data.electiveModules),
                     subjects: []
                 };
                 scope.data.electiveModules.push(newElectiveModule);
-                scope.data.optionalNameEt = undefined;
-                scope.data.optionalNameEn = undefined;
+                scope.optionalNameEt = undefined;
+                scope.optionalNameEn = undefined;
             };
             scope.editingElectiveModule = false;
             var editedElectiveModule = null;
@@ -623,16 +643,16 @@ angular.module('hitsaOis')
             scope.editElectiveModule = function (electiveModule) {
                 editedElectiveModule = electiveModule;
                 scope.editingElectiveModule = true;
-                scope.data.optionalNameEt = electiveModule.nameEt;
-                scope.data.optionalNameEn = electiveModule.nameEn;
+                scope.optionalNameEt = electiveModule.nameEt;
+                scope.optionalNameEn = electiveModule.nameEn;
             };
 
             scope.finishEditElectiveModule = function() {
                 scope.editingElectiveModule = false;
-                editedElectiveModule.nameEt = scope.data.optionalNameEt;
-                editedElectiveModule.nameEn = scope.data.optionalNameEn;
-                scope.data.optionalNameEt = undefined;
-                scope.data.optionalNameEn = undefined;
+                editedElectiveModule.nameEt = scope.optionalNameEt;
+                editedElectiveModule.nameEn = scope.optionalNameEn;
+                scope.optionalNameEt = undefined;
+                scope.optionalNameEn = undefined;
             };
             scope.addSubjectToElectiveModule = function(subject) {
                 console.log(subject);
@@ -646,10 +666,24 @@ angular.module('hitsaOis')
                 // TODO: enable adding subjects from partner schools
                 QueryUtils.endpoint('/subject')
                     .get({ lang: $translate.use().toUpperCase() }).$promise.then(function (result) {
-                    scope.subjects = result.content;
+                    scope.subjectsUnfiltered = result.content.filter(function(s){
+                        return $scope.filterOutSubjectsAddedToOtherModules(s, scope.data);
+                    });
+                    filterSubjects();
                 });
             }
             getSubjects();
+
+            function filterSubjects() {
+                scope.subjects = scope.subjectsUnfiltered.filter(function(s){
+                    for(var i = 0; i < scope.data.subjects.length; i++) {
+                        if(scope.data.subjects[i].subjectId === s.id) {
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+            }
 
             scope.deleteElectiveModule = function(electiveModule) {
                 scope.data.subjects.forEach(function(e){
@@ -673,19 +707,24 @@ angular.module('hitsaOis')
                 scope.data.subjects.push(newSubject);
                 scope.data.selectedSubject = undefined;
                 scope.setCompulsoryStudyCredits();
+                filterSubjects();
             };
 
-            scope.setCompulsoryStudyCredits = function() {
+            scope.setCompulsoryStudyCredits = function(subject) {
                 $scope.setCompulsoryAndTotalStudyCredits(scope.data);
+                if(subject && !subject.optional) {
+                    subject.electiveModule = undefined;
+                }
             };
 
             scope.removeSubject = function(subject) {
                 $scope.removeFromArray(scope.data.subjects, subject);
                 scope.setCompulsoryStudyCredits();
+                filterSubjects();
             };
 
-            if (newMinorSpecialty) {
-                scope.data = newMinorSpecialty;
+            if (editingModule) {
+                scope.data = angular.copy(editingModule);
             } else {
                 scope.data = {
                     electiveModules: [],
@@ -702,9 +741,10 @@ angular.module('hitsaOis')
       dialogService.showDialog('views/templates/higher.education.curriculum.version.minorSpecialty.html', DialogController,
         function (submitScope) {
           var data = submitScope.data;
-          if (!ArrayUtils.includes($scope.version.modules, data)) {
+            if(editingModule) {
+                $scope.version.modules.splice($scope.version.modules.indexOf(editingModule), 1);
+            }
             $scope.version.modules.push(data);
-          }
         });
     };
   });

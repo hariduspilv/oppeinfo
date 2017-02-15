@@ -12,12 +12,15 @@ import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.SchoolDepartment;
 import ee.hitsa.ois.domain.Subject;
 import ee.hitsa.ois.domain.SubjectConnect;
 import ee.hitsa.ois.domain.SubjectLanguage;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -29,7 +32,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
-import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.util.EntityUtil;
 
@@ -43,11 +45,28 @@ public class SubjectService {
     @Autowired
     private ClassifierRepository classifierRepository;
 
+    @Autowired
+    private SchoolDepartmentRepository schoolDepartmentRepository;
+
     public Subject save(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
         // TODO remove comment when status change logic is resolved
         EntityUtil.bindToEntity(newSubject, subject, classifierRepository /*, "status"*/);
         subject.setSchool(user.getSchool());
-        bindLanguages(subject, newSubject.getLanguages());
+        SchoolDepartment schoolDepartment = null;
+        if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment() > 0) {
+            schoolDepartment = schoolDepartmentRepository.findOne(newSubject.getSchoolDepartment());
+        }
+        subject.setSchoolDepartment(schoolDepartment);
+        EntityUtil.bindClassifierCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {
+            Classifier language = classifierRepository.getOne(code);
+            if (!MainClassCode.OPPEKEEL.name().equals(language.getMainClassCode())) {
+                throw new IllegalArgumentException("Wrong classifier code: " + language.getMainClassCode());
+            }
+            SubjectLanguage subjectLanguage = new SubjectLanguage();
+            subjectLanguage.setSubject(subject);
+            subjectLanguage.setLanguage(language);
+            return subjectLanguage;
+        });
         bindConnections(subject, newSubject);
         return subjectRepository.save(subject);
     }
@@ -86,28 +105,17 @@ public class SubjectService {
         }
     }
 
-    private static void bindLanguages(Subject target, Set<Classifier> languages) {
-        Map<String, SubjectLanguage> codes = target.getSubjectLanguages().stream().collect(Collectors.toMap(
-                e -> e.getLanguage().getCode(), e -> e
-        ));
-        Set<SubjectLanguage> newSet = new HashSet<>();
-        for (Classifier language : languages) {
-            if (codes.keySet().contains(language.getCode())) {
-                newSet.add(codes.get(language.getCode()));
-            } else {
-                newSet.add(new SubjectLanguage(language, target));
-            }
-        }
-        target.setSubjectLanguages(newSet);
-    }
-
     // todo private Collection<Long> curricula;
     public Page<SubjectSearchDto> search(Long schoolId, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
         return subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
+            
+            Collection<String> ehisSchools = subjectSearchCommand.getEhisSchools();
 
-            if (schoolId != null) {
+            if (schoolId != null && CollectionUtils.isEmpty(ehisSchools)) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
+            } else if(!CollectionUtils.isEmpty(ehisSchools)) {
+                filters.add(root.get("school").get("ehisSchool").get("code").in(ehisSchools));
             }
 
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getDepartments())) {
@@ -138,9 +146,7 @@ public class SubjectService {
                 filters.add(cb.le(root.get("credits"), subjectSearchCommand.getThru()));
             }
 
-            if (StringUtils.hasText(subjectSearchCommand.getCode())) {
-                filters.add(cb.equal(root.get("code"), subjectSearchCommand.getCode()));
-            }
+            propertyContains(() -> root.get("code"), cb, subjectSearchCommand.getCode(), filters::add);
 
             String nameField = Language.EN.equals(subjectSearchCommand.getLang()) ? "nameEn" : "nameEt";
             propertyContains(() -> root.get(nameField), cb, subjectSearchCommand.getName(), filters::add);

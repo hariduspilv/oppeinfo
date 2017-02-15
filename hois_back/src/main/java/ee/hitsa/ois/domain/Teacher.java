@@ -1,6 +1,11 @@
 package ee.hitsa.ois.domain;
 
-import javax.persistence.*;
+import javax.persistence.CascadeType;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -102,12 +107,11 @@ public class Teacher extends BaseEntityWithId {
     }
 
     public void setTeacherPositionEhis(Set<TeacherPositionEhis> teacherPositionEhis) {
-        getTeacherPositionEhis().clear();
-        getTeacherPositionEhis().addAll(teacherPositionEhis);
+        this.teacherPositionEhis = teacherPositionEhis;
     }
 
     public Set<TeacherMobility> getTeacherMobility() {
-        return teacherMobility;
+        return teacherMobility != null ? teacherMobility : (teacherMobility = new HashSet<>());
     }
 
     public void setTeacherMobility(Set<TeacherMobility> teacherMobility) {
@@ -115,7 +119,7 @@ public class Teacher extends BaseEntityWithId {
     }
 
     public Set<TeacherQualification> getTeacherQualification() {
-        return teacherQualification;
+        return teacherQualification != null ? teacherQualification : (teacherQualification = new HashSet<>());
     }
 
     public void setTeacherQualification(Set<TeacherQualification> teacherQualification) {

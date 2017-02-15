@@ -1,8 +1,8 @@
 <div layout="column">
-  <h3>{{'main.insertedOrChanged' | translate}}</h3>
+  <h2>{{'main.insertedOrChanged' | translate}}</h2>
   <!--md-card-->
     <md-table-container>
-      <table md-table md-progress="promise">
+      <table md-table md-progress="promise" class="secondary-table">
         <thead md-head md-order="query.order" md-on-reorder="getInformationSection">
         <tr md-row>
           <th md-column><span>{{'main.status' | translate}}</span></th>
@@ -11,12 +11,12 @@
         </tr>
         </thead>
         <tbody md-body>
-        <tr md-row ng-if="object.inserted">
+        <tr md-row ng-if="object.inserted" class="odd">
           <td md-cell>{{'main.inserted' | translate}}</td>
           <td md-cell>{{'main.formattedDateTime' | translate: {date: object.inserted} }}</td>
           <td md-cell>{{object.insertedBy}}</td>
         </tr>
-        <tr md-row ng-if="object.changed">
+        <tr md-row ng-if="object.changed" class="even">
           <td md-cell>{{'main.changed' | translate}}</td>
           <td md-cell>{{'main.formattedDateTime' | translate: {date: object.changed} }}</td>
           <td md-cell>{{object.changedBy}}</td>

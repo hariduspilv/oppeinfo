@@ -1,14 +1,16 @@
 package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.SchoolDepartment;
 import ee.hitsa.ois.domain.Subject;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.SubjectUtil;
 
 import java.math.BigDecimal;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class SubjectSearchDto {
+public class SubjectSearchDto implements SubjectAutocompleteResult {
     private Long id;
     private String code;
     private String nameEt;
@@ -29,8 +31,11 @@ public class SubjectSearchDto {
 
     public static SubjectSearchDto of(Subject subject) {
         SubjectSearchDto dto = EntityUtil.bindToDto(subject, new SubjectSearchDto(), "schoolDepartment", "languages");
-        dto.schoolDepartment = new AutocompleteResult<>(dto.getId(), dto.getNameEt(), dto.getNameEn());
-        dto.languages = subject.getLanguages().stream().map(Classifier::getCode).collect(Collectors.toSet());
+        SchoolDepartment department = subject.getSchoolDepartment();
+        if (department != null) {
+            dto.schoolDepartment = new AutocompleteResult<>(department.getId(), department.getNameEt(), department.getNameEn());
+        }
+        dto.languages = SubjectUtil.getLanguages(subject).stream().map(Classifier::getCode).collect(Collectors.toSet());
         return dto;
     }
 

@@ -145,8 +145,10 @@ public class ControllerErrorHandler {
 
     private static Map<String, String> UNIQUE_VIOLATION_MESSAGES = new HashMap<>();
     static {
+        UNIQUE_VIOLATION_MESSAGES.put("building", "building.alreadyexist");
+        UNIQUE_VIOLATION_MESSAGES.put("directive_coordinator", "directive.coordinator.alreadyexist");
+        UNIQUE_VIOLATION_MESSAGES.put("room", "room.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative", "student.representative.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative_application", "student.representative.application.alreadyexist");
-        UNIQUE_VIOLATION_MESSAGES.put("directive_coordinator", "directive.coordinator.alreadyexist");
     }
 }

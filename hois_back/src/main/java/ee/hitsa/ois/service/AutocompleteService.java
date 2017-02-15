@@ -16,6 +16,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.repository.BuildingRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
@@ -34,6 +35,8 @@ public class AutocompleteService {
     private static final int MAX_ITEM_COUNT = 20;
 
     @Autowired
+    private BuildingRepository buildingRepository;
+    @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private CurriculumRepository curriculumRepository;
@@ -45,6 +48,10 @@ public class AutocompleteService {
     private SchoolDepartmentRepository schoolDepartmentRepository;
     @Autowired
     private SubjectService subjectService;
+
+    public List<AutocompleteResult<Long>> buildings(Long schoolId) {
+        return buildingRepository.findAllBySchool_id(schoolId);
+    }
 
     public List<ClassifierSelection> classifiers(String mainClassCode) {
         return classifierRepository.findAllByMainClassCode(mainClassCode);

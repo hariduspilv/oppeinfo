@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 
@@ -45,16 +46,21 @@ public class CurriculumVersionDto extends InsertedChangedVersionCommand {
     @ClassifierRestriction(MainClassCode.OPPEKAVA_VERSIOON_STAATUS)
     private String status;
     private Long schoolDepartment;
+
+    @ClassifierRestriction(MainClassCode.OPPEVORM)
     private String curriculumStudyForm;
     private LocalDate validFrom;
     private LocalDate validThru;
     private Set<CurriculumVersionHigherModuleDto> modules;
+
+    @Valid
+    private Set<CurriculumVersionOccupationModuleDto> occupationModules;
     private Set<Long> specialitiesReferenceNumbers;
 
 
     public static CurriculumVersionDto of(CurriculumVersion version) {
         CurriculumVersionDto dto = EntityUtil.bindToDto(version, new CurriculumVersionDto(),
-                "schoolDepartment", "curriculumStudyForm", "modules", "specialities");
+                "schoolDepartment", "curriculumStudyForm", "modules", "specialities", "occupationModules");
 
         dto.setSchoolDepartment(version.getSchoolDepartment() != null ? EntityUtil.getNullableId(version.getSchoolDepartment()) : null);
         dto.setCurriculumStudyForm(version.getCurriculumStudyForm() != null ? version.getCurriculumStudyForm().getStudyForm().getCode() : null);
@@ -63,6 +69,12 @@ public class CurriculumVersionDto extends InsertedChangedVersionCommand {
             Set<CurriculumVersionHigherModuleDto> modules = version.getModules().stream().
                     map(m -> CurriculumVersionHigherModuleDto.of(m)).collect(Collectors.toSet());
             dto.setModules(modules);
+        }
+
+        if (version.getOccupationModules() != null) {
+            Set<CurriculumVersionOccupationModuleDto> occupationModules = version.getOccupationModules().stream().
+                    map(m -> CurriculumVersionOccupationModuleDto.of(m)).collect(Collectors.toSet());
+            dto.setOccupationModules(occupationModules);
         }
         Set<Long> specialities = version.getSpecialities().stream().map(s -> s.getCurriculumSpeciality().getId()).collect(Collectors.toSet());
         dto.setSpecialitiesReferenceNumbers(specialities);
@@ -187,5 +199,13 @@ public class CurriculumVersionDto extends InsertedChangedVersionCommand {
 
     public void setValidThru(LocalDate validThru) {
         this.validThru = validThru;
+    }
+
+    public Set<CurriculumVersionOccupationModuleDto> getOccupationModules() {
+        return occupationModules != null ? occupationModules : (occupationModules = new HashSet<>());
+    }
+
+    public void setOccupationModules(Set<CurriculumVersionOccupationModuleDto> occupationModules) {
+        this.occupationModules = occupationModules;
     }
 }

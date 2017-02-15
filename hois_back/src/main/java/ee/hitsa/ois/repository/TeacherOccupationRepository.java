@@ -1,11 +1,11 @@
 package ee.hitsa.ois.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.CrudRepository;
 
 import ee.hitsa.ois.domain.TeacherOccupation;
 
-public interface TeacherOccupationRepository extends CrudRepository<TeacherOccupation, Long>, JpaSpecificationExecutor<TeacherOccupation> {
+public interface TeacherOccupationRepository extends JpaRepository<TeacherOccupation, Long>, JpaSpecificationExecutor<TeacherOccupation> {
 
-    public TeacherOccupation getOneByIdAndSchool_Id(Long id, Long schoolId);
+    TeacherOccupation getOneByIdAndSchool_Id(Long id, Long schoolId);
 }

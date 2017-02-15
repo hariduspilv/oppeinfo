@@ -12,7 +12,7 @@ public class SubjectConnect extends BaseEntityWithId {
     @ManyToOne(optional = false)
     private Subject connectSubject;
 
-    @ManyToOne
+    @ManyToOne(optional = false)
     private Classifier connection;
 
     public SubjectConnect() { }

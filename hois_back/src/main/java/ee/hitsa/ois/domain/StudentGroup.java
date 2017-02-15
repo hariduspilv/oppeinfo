@@ -1,9 +1,12 @@
 package ee.hitsa.ois.domain;
 
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -31,6 +34,8 @@ public class StudentGroup extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "speciality_code")
     private Classifier speciality;
+    @OneToMany(mappedBy = "studentGroup")
+    private List<Student> students;
 
     public String getCode() {
         return code;
@@ -102,5 +107,13 @@ public class StudentGroup extends BaseEntityWithId {
 
     public void setSpeciality(Classifier speciality) {
         this.speciality = speciality;
+    }
+
+    public List<Student> getStudents() {
+        return students;
+    }
+
+    public void setStudents(List<Student> students) {
+        this.students = students;
     }
 }

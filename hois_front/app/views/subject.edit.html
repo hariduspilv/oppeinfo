@@ -1,16 +1,16 @@
 <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
   <form name="subjectForm" layout="column">
     <md-input-container flex>
-      <label>{{'subject.code' | translate}}</label>
-      <input ng-model="subject.code" type="text" ng-required="true">
+      <label>{{'subject.edit.code' | translate}}</label>
+      <input ng-model="subject.code" type="text" md-maxlength="20" ng-required="true">
     </md-input-container>
     <md-input-container flex>
-      <label>{{'subject.nameEt' | translate}}</label>
-      <input ng-model="subject.nameEt" type="text" ng-required="true">
+      <label>{{'subject.edit.nameEt' | translate}}</label>
+      <input ng-model="subject.nameEt" type="text" md-maxlength="255" ng-required="true">
     </md-input-container>
     <md-input-container flex>
-      <label>{{'subject.nameEn' | translate}}</label>
-      <input ng-model="subject.nameEn" type="text" ng-required="true">
+      <label>{{'subject.edit.nameEn' | translate}}</label>
+      <input ng-model="subject.nameEn" type="text" md-maxlength="255" ng-required="true">
     </md-input-container>
     <md-input-container flex>
       <label>{{'subject.creditsEap' | translate}}</label>
@@ -25,8 +25,8 @@
       <textarea ng-model="subject.assessmentDescription" md-maxlength="10000" max-rows="2" md-select-on-focus></textarea>
     </md-input-container>
     <md-input-container flex>
-      <label>{{'subject.languages' | translate}}</label>
-      <hois-classifier-select ng-model="subject.languages" model-value-attr="code" main-classifier-code="OPPEKEEL" multiple></hois-classifier-select>
+      <label>{{'subject.language' | translate}}</label>
+      <hois-classifier-select ng-model="subject.languages" model-value-attr="code" main-classifier-code="OPPEKEEL" criteria="{higher: true}" multiple></hois-classifier-select>
     </md-input-container>
     <md-input-container flex>
       <label>{{'subject.objectivesEt' | translate}}</label>
@@ -89,7 +89,7 @@
       <hois-classifier-value ng-model="subject.status" main-classifier-code="AINESTAATUS"></hois-classifier-value>
     </md-input-container>
     <md-button ng-if="subject.id && (subject.status != 'AINESTAATUS_K')" ng-click="subject.status = 'AINESTAATUS_K'"
-               class="md-raised" style="max-width: 25em">Muuda kehtivaks(TEMP)</md-button>
+               class="md-primary" style="max-width: 25em">{{'subject.activate' | translate}}</md-button>
     <!-- info tund -->
     <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
     <div ng-repeat="it in subject.primarySubjects">
@@ -102,7 +102,7 @@
     <hois-created-modified object="subject"></hois-created-modified>
     <div layout="row">
       <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-      <md-button ng-if="subject.id && (subject.status != 'AINESTAATUS_K')" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+      <md-button ng-if="subject.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
       <md-button ng-href="#/subject" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>

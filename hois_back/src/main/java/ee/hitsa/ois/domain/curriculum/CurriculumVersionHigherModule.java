@@ -61,8 +61,9 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
     @JoinColumn(name = "curriculum_version_hmodule_id", nullable = false, updatable = false, insertable = true)
     private Set<CurriculumVersionElectiveModule> electiveModules = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_hmodule_id", nullable = false, updatable = false, insertable = true)
+//    mappedBy = "speciality", 
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JoinColumn(name = "curriculum_version_hmodule_id", nullable = false, updatable = false, insertable = true)
     private Set<CurriculumVersionHigherModuleSpeciality> specialities = new HashSet<>();
 
     public Integer getElectiveModulesNumber() {

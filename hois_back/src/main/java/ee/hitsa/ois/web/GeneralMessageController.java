@@ -51,7 +51,7 @@ public class GeneralMessageController {
     }
 
     @PostMapping
-    public GeneralMessageDto getGeneralMessage(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
+    public GeneralMessageDto createGeneralMessage(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
         GeneralMessage generalMessage = EntityUtil.bindToEntity(form, new GeneralMessage(), "targets");
         generalMessage.setSchool(schoolRepository.getOne(user.getSchoolId()));
         return getGeneralMessage(user, generalMessageService.save(generalMessage, form.getTargets()));

@@ -46,6 +46,12 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionElectiveModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleCapacity;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleOutcome;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleThemeCapacity;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -72,6 +78,13 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionElectiveModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleCapacityDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleOutcomeDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeCapacityDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleYearCapacityDto;
+
 
 @Transactional
 @Service
@@ -163,7 +176,7 @@ public class CurriculumService {
                 filters.add(root.get("iscedClass").get("code").in(criteria.getIscedClassCode()));
             }
             if(!CollectionUtils.isEmpty(criteria.getStudyLevel())) {
-                filters.add(root.get("origStudyLevel").get("code").in(criteria.getIscedClassCode()));
+                filters.add(root.get("origStudyLevel").get("code").in(criteria.getStudyLevel()));
             }
             if(!CollectionUtils.isEmpty(criteria.getEkrLevel())) {
                 Subquery<String> targetQuery = query.subquery(String.class);
@@ -250,20 +263,24 @@ public class CurriculumService {
             versions.forEach(dto -> {
                 CurriculumVersion version = dto.getId() == null ? new CurriculumVersion() :
                     curriculum.getVersions().stream().filter(v -> v.getId().equals(dto.getId())).findFirst().get();
-                version = EntityUtil.bindToEntity(dto, version, classifierRepository, "curriculumStudyForm", "modules",
-                        "specialities", "schoolDepartment");
-
-                //TODO: save specialties
-//                updateCurriculumVersionSpecialities(curriculum.getSpecialities(), version, dto.getSpecialitiesReferenceNumbers());
-                updateCurriculumVersionSpecialities(curriculum, version, dto.getSpecialitiesReferenceNumbers());
-                updateCurriculumVersionModules(version, dto.getModules());
-                updateVersionStudyForm(curriculum, version, dto);
-                updateSchoolDepartment(version, dto);
-
-                newVersions.add(version);
+                CurriculumVersion updatedVersion = updateVersion(curriculum, version, dto);
+                newVersions.add(updatedVersion);
             });
         }
         curriculum.setVersions(newVersions);
+    }
+
+    private CurriculumVersion updateVersion(Curriculum curriculum, CurriculumVersion version, CurriculumVersionDto dto) {
+        CurriculumVersion updatedVersion = EntityUtil.bindToEntity(dto, version, classifierRepository, "curriculumStudyForm", "modules",
+                "specialities", "schoolDepartment", "occupationModules");
+        //TODO: save specialties
+//                updateCurriculumVersionSpecialities(curriculum.getSpecialities(), updatedVersion, dto.getSpecialitiesReferenceNumbers());
+        updateCurriculumVersionSpecialities(curriculum, updatedVersion, dto.getSpecialitiesReferenceNumbers());
+        updateCurriculumVersionModules(updatedVersion, dto.getModules());
+        updateCurriculumVersionOccupationalModules(updatedVersion, dto.getOccupationModules());
+        updateVersionStudyForm(curriculum, updatedVersion, dto);
+        updateSchoolDepartment(updatedVersion, dto);
+        return updatedVersion;
     }
 
     private void updateSchoolDepartment(CurriculumVersion version, CurriculumVersionDto dto) {
@@ -309,7 +326,7 @@ public class CurriculumService {
 //        }
 //        version.setSpecialities(newSpecialities);
 //    }
-//    
+//
 //    private Set<CurriculumSpeciality> getSpecialitiesByReferenceNumbers(Set<CurriculumSpeciality> specialities,
 //            Set<Long> referenceNumbers) {
 //        Set<CurriculumSpeciality> newSpecialities = new HashSet<>();
@@ -320,7 +337,7 @@ public class CurriculumService {
 //        });
 //        return newSpecialities;
 //    }
-    
+
     /**
      * TODO: update but not rewrite set!
      */
@@ -360,24 +377,127 @@ public class CurriculumService {
         }
         version.setModules(newModules);
     }
-    /**
-     * When deleting speciality:
-     * ERROR: null value in column "curriculum_version_speciality_id" violates not-null constraint
-     */
+
+    private void updateCurriculumVersionOccupationalModules(CurriculumVersion updatedVersion,
+            Set<CurriculumVersionOccupationModuleDto> occupationModules) {
+        Set<CurriculumVersionOccupationModule> newOccupationModules = new HashSet<>();
+        if(occupationModules != null) {
+            occupationModules.forEach(dto -> {
+                CurriculumVersionOccupationModule occupationModule = dto.getId() == null ? new CurriculumVersionOccupationModule() :
+                    updatedVersion.getOccupationModules().stream().filter(m -> m.getId().equals(dto.getId())).findFirst().get();
+                CurriculumVersionOccupationModule updatedOccupationModule = EntityUtil.bindToEntity(dto, occupationModule,
+                        classifierRepository, "curriculumModule", "capacities", "themes", "yearCapacities");
+
+                Optional<CurriculumModule> curriculumModule = updatedVersion.getCurriculum().getModules().stream()
+                        .filter(it -> it.getId().equals(dto.getCurriculumModule())).findFirst();
+                if (curriculumModule.isPresent()) {
+                    updatedOccupationModule.setCurriculumModule(curriculumModule.get());
+                }
+
+                Set<CurriculumVersionOccupationModuleCapacity> newOccupationModuleCapacities = new HashSet<>();
+                dto.getCapacities().forEach(it -> {
+                    newOccupationModuleCapacities.add(updateCapacities(it, updatedOccupationModule));
+                });
+                updatedOccupationModule.setCapacities(newOccupationModuleCapacities);
+
+                Set<CurriculumVersionOccupationModuleYearCapacity> newOccupationModuleYearCapacities = new HashSet<>();
+                dto.getYearCapacities().forEach(it -> {
+                    newOccupationModuleYearCapacities.add(updateYearCapacities(it, updatedOccupationModule));
+                });
+                updatedOccupationModule.setYearCapacities(newOccupationModuleYearCapacities);
+
+                Set<CurriculumVersionOccupationModuleTheme> newOccupationModuleThemes = new HashSet<>();
+                dto.getThemes().forEach(it -> {
+                    newOccupationModuleThemes.add(updateThemes(it, updatedOccupationModule));
+                });
+                updatedOccupationModule.setThemes(newOccupationModuleThemes);
+
+
+                newOccupationModules.add(updatedOccupationModule);
+            });
+        }
+        updatedVersion.setOccupationModules(newOccupationModules);
+    }
+
+    private CurriculumVersionOccupationModuleTheme updateThemes(CurriculumVersionOccupationModuleThemeDto dto,
+            CurriculumVersionOccupationModule updatedOccupationModule) {
+        CurriculumVersionOccupationModuleTheme theme = dto.getId() == null ? new CurriculumVersionOccupationModuleTheme() :
+            updatedOccupationModule.getThemes().stream().filter(c -> c.getId().equals(dto.getId())).findFirst().get();
+
+        CurriculumVersionOccupationModuleTheme updatedTheme =
+                EntityUtil.bindToEntity(dto, theme, classifierRepository, "capacities", "outcomes");
+
+        Set<CurriculumVersionOccupationModuleThemeCapacity> newOccupationModuleThemeCapacities = new HashSet<>();
+        dto.getCapacities().forEach(it -> {
+            newOccupationModuleThemeCapacities.add(updateThemeCapacities(it, updatedTheme));
+        });
+        updatedTheme.setCapacities(newOccupationModuleThemeCapacities);
+
+        Set<CurriculumVersionOccupationModuleOutcome> newOccupationModuleThemeOutcome = new HashSet<>();
+        dto.getOutcomes().forEach(it -> {
+            newOccupationModuleThemeOutcome.add(updateThemeOutcomes(it, updatedTheme, updatedOccupationModule.getCurriculumModule().getOutcomes()));
+        });
+        updatedTheme.setOutcomes(newOccupationModuleThemeOutcome);
+
+        return updatedTheme;
+    }
+
+    private CurriculumVersionOccupationModuleCapacity updateCapacities(CurriculumVersionOccupationModuleCapacityDto dto,
+            CurriculumVersionOccupationModule updatedOccupationModule) {
+        CurriculumVersionOccupationModuleCapacity capacity = dto.getId() == null ? new CurriculumVersionOccupationModuleCapacity() :
+            updatedOccupationModule.getCapacities().stream().filter(c -> c.getId().equals(dto.getId())).findFirst().get();
+        return EntityUtil.bindToEntity(dto, capacity, classifierRepository);
+    }
+
+    private CurriculumVersionOccupationModuleYearCapacity updateYearCapacities(
+            CurriculumVersionOccupationModuleYearCapacityDto dto,
+            CurriculumVersionOccupationModule updatedOccupationModule) {
+        CurriculumVersionOccupationModuleYearCapacity capacity = dto.getId() == null ? new CurriculumVersionOccupationModuleYearCapacity() :
+            updatedOccupationModule.getYearCapacities().stream().filter(c -> c.getId().equals(dto.getId())).findFirst().get();
+        return EntityUtil.bindToEntity(dto, capacity, classifierRepository);
+    }
+
+    private CurriculumVersionOccupationModuleThemeCapacity updateThemeCapacities(
+            CurriculumVersionOccupationModuleThemeCapacityDto dto, CurriculumVersionOccupationModuleTheme updatedTheme) {
+        CurriculumVersionOccupationModuleThemeCapacity capacity = dto.getId() == null ? new CurriculumVersionOccupationModuleThemeCapacity() :
+            updatedTheme.getCapacities().stream().filter(c -> c.getId().equals(dto.getId())).findFirst().get();
+        return EntityUtil.bindToEntity(dto, capacity, classifierRepository);
+    }
+
+
+    private CurriculumVersionOccupationModuleOutcome updateThemeOutcomes(CurriculumVersionOccupationModuleOutcomeDto dto,
+            CurriculumVersionOccupationModuleTheme updatedTheme, Set<CurriculumModuleOutcome> outcomes) {
+        CurriculumVersionOccupationModuleOutcome outcome = dto.getId() == null ? new CurriculumVersionOccupationModuleOutcome() :
+            updatedTheme.getOutcomes().stream().filter(c -> c.getId().equals(dto.getId())).findFirst().get();
+
+        CurriculumVersionOccupationModuleOutcome updatedThemeOutcome = EntityUtil.bindToEntity(dto, outcome, classifierRepository);
+
+        Optional<CurriculumModuleOutcome> curriculumOutcome = outcomes.stream().filter(it -> it.getId().equals(dto.getOutcome())).findFirst();
+        if (curriculumOutcome.isPresent()) {
+            updatedThemeOutcome.setOutcome(curriculumOutcome.get());
+        }
+
+        return updatedThemeOutcome;
+    }
+
     private void updateVersionModuleSpecialities(CurriculumVersion version,
             CurriculumVersionHigherModule module, Set<Long> specsRefNums) {
-        
+
         Set<CurriculumVersionSpeciality> curriculumVersionSpecialities = version.getSpecialities();
-        
+
         Set<CurriculumVersionHigherModuleSpeciality> newModuleSpecialities = new HashSet<>();
-        
+
         if(specsRefNums != null && !specsRefNums.isEmpty()) {
             Map<Long, CurriculumVersionSpeciality> versionSpecialities = curriculumVersionSpecialities.stream().collect(Collectors
                     .toMap(s -> s.getCurriculumSpeciality().getReferenceNumber(), s -> s));
-            
+
             specsRefNums.forEach(s -> {
+                CurriculumVersionSpeciality versionSpeciality = versionSpecialities.get(s);
                 CurriculumVersionHigherModuleSpeciality newSpec = new CurriculumVersionHigherModuleSpeciality();
-                newSpec.setSpeciality(versionSpecialities.get(s));
+                newSpec.setSpeciality(versionSpeciality);
+                newSpec.setModule(module);
+//                module.getSpecialities().add(newSpec);
+                versionSpeciality.getModuleSpecialities().add(newSpec);
                 newModuleSpecialities.add(newSpec);
             });
         }
@@ -643,4 +763,17 @@ public class CurriculumService {
         }
         return originalSet;
     }
+
+    public CurriculumVersionDto save(CurriculumVersion curriculumVersion, CurriculumVersionDto curriculumVersionDto) {
+        CurriculumVersion updatedCurriculumVersion = updateVersion(curriculumVersion.getCurriculum(), curriculumVersion, curriculumVersionDto);
+        return CurriculumVersionDto.of(curriculumVersionRepository.save(updatedCurriculumVersion));
+    }
+
+    public CurriculumVersionDto save(Curriculum curriculum, CurriculumVersionDto dto) {
+        CurriculumVersion curriculumVersion = new CurriculumVersion();
+        curriculumVersion.setCurriculum(curriculum);
+        CurriculumVersion updatedCurriculumVersion = updateVersion(curriculumVersion.getCurriculum(), curriculumVersion, dto);
+        return CurriculumVersionDto.of(curriculumVersionRepository.save(updatedCurriculumVersion));
+    }
+
 }

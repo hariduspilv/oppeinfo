@@ -26,6 +26,10 @@ public class TeacherDto extends TeacherForm {
         dto.setPerson(EntityUtil.bindToDto(teacher.getPerson(), new TeacherPersonForm()));
         dto.setTeacherPositionEhis(teacher.getTeacherPositionEhis().stream()
                 .map(it -> EntityUtil.bindToDto(it, new TeacherDto.TeacherPositionEhisForm())).collect(Collectors.toSet()));
+        dto.setTeacherQualifications(teacher.getTeacherQualification().stream()
+                .map(it -> EntityUtil.bindToDto(it, new TeacherQualificationFrom())).collect(Collectors.toSet()));
+        dto.setTeacherMobility(teacher.getTeacherMobility().stream()
+                .map(it -> EntityUtil.bindToDto(it, new TeacherMobilityForm())).collect(Collectors.toSet()));
         dto.fullname = teacher.getPerson().getFullname();
         return dto;
     }

@@ -7,22 +7,17 @@ import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 
-
-/*
- * Caused by: org.hibernate.MappingException: 
- * Repeated column in mapping for entity: 
- * ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSpeciality 
- * column: curriculum_version_hmodule_id (should be mapped with insert="false" update="false")
-
- */
-
 @Entity
 @Table(name="curriculum_version_hmodule_speciality")
 public class CurriculumVersionHigherModuleSpeciality extends BaseEntityWithId {
     
-    @ManyToOne
-    @JoinColumn(name = "curriculum_version_speciality_id", referencedColumnName = "id")
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "curriculum_version_speciality_id", referencedColumnName = "id", nullable = false, updatable = false, insertable = true)
     private CurriculumVersionSpeciality speciality;
+    
+    @ManyToOne(optional = false)
+    @JoinColumn(name = "curriculum_version_hmodule_id", referencedColumnName = "id", nullable = false, updatable = false, insertable = true)
+    private CurriculumVersionHigherModule module;
 
     public CurriculumVersionSpeciality getSpeciality() {
         return speciality;
@@ -30,5 +25,13 @@ public class CurriculumVersionHigherModuleSpeciality extends BaseEntityWithId {
 
     public void setSpeciality(CurriculumVersionSpeciality speciality) {
         this.speciality = speciality;
+    }
+
+    public CurriculumVersionHigherModule getModule() {
+        return module;
+    }
+
+    public void setModule(CurriculumVersionHigherModule module) {
+        this.module = module;
     }
 }

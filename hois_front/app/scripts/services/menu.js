@@ -37,6 +37,17 @@ angular.module('hitsaOis')
     });
 
     sections.push({
+        name: 'main.menu.studentGroup.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.studentGroup.search',
+            url: "/studentgroups?_menu"
+          }
+        ]
+      });
+
+    sections.push({
         name: 'main.menu.student.label',
         type: 'toggle',
         pages: [
@@ -76,10 +87,6 @@ angular.module('hitsaOis')
         },
         {
           name: 'main.menu.fixData.buildings',
-          url: "/buildings?_menu"
-        },
-        {
-          name: 'main.menu.fixData.searchrooms',
           url: "/rooms/search?_menu"
         },
         {

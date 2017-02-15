@@ -7,10 +7,6 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.ManyToOne;
 
-import com.fasterxml.jackson.annotation.JsonView;
-
-import ee.hitsa.ois.web.JsonViews;
-
 @Entity
 @IdClass(ClassifierConnectPk.class)
 public class ClassifierConnect extends BaseEntity {
@@ -19,15 +15,12 @@ public class ClassifierConnect extends BaseEntity {
 
     @Id
     @ManyToOne(optional = false)
-    @JsonView(JsonViews.Basic.class)
     private Classifier classifier;
 
     @Id
     @ManyToOne(optional = false)
-    @JsonView(JsonViews.Basic.class)
     private Classifier connectClassifier;
 
-    @JsonView(JsonViews.Basic.class)
     private String mainClassifierCode;
 
     public String getMainClassifierCode() {

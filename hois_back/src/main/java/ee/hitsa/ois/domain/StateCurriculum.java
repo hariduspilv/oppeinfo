@@ -11,6 +11,10 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import ee.hitsa.ois.ClassifierJsonDeserializer;
+
 /*
  * XXX: when changing list of StateCurriculumModuleOccupations
  * (may be caused by equals() and hashCode() in BaseEntityWithId):
@@ -52,14 +56,17 @@ public class StateCurriculum extends BaseEntityWithId {
 
 	@ManyToOne
 	@JoinColumn(name = "status_code", referencedColumnName = "code")
+	@JsonDeserialize(using = ClassifierJsonDeserializer.class)
 	private Classifier status;
 
 	@ManyToOne
 	@JoinColumn(name = "isced_class_code", referencedColumnName = "code")
+	@JsonDeserialize(using = ClassifierJsonDeserializer.class)
 	private Classifier iscedClass;
 	
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "state_curr_class_code", referencedColumnName = "code")
+	@JsonDeserialize(using = ClassifierJsonDeserializer.class)
 	private Classifier stateCurrClass;
 	
 	
@@ -248,7 +255,7 @@ public class StateCurriculum extends BaseEntityWithId {
 	}
 
 	public Set<StateCurriculumModule> getModules() {
-		return modules;
+		return modules != null ? modules : (modules = new HashSet<>());
 	}
 
 	public void setModules(Set<StateCurriculumModule> modules) {
@@ -257,7 +264,7 @@ public class StateCurriculum extends BaseEntityWithId {
 	}
 
 	public Set<StateCurriculumOccupation> getOccupations() {
-		return occupations;
+		return occupations != null ? occupations : (occupations = new HashSet<>());
 	}
 	
 	public void setOccupations(Set<StateCurriculumOccupation> occupations) {

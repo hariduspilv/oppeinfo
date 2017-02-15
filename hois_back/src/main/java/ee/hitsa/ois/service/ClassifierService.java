@@ -60,8 +60,8 @@ public class ClassifierService {
     @SuppressWarnings("unchecked")
     public Page<ClassifierWithCount> searchTables(ClassifierSearchCommand criteria, Pageable pageable) {
         return JpaQueryUtil.query(ClassifierWithCount.class, Classifier.class, (root, query, cb) -> {
-            ((CriteriaQuery<ClassifierWithCount>)query).select(cb.construct(ClassifierWithCount.class, root.get("code"), root.get("nameEt"), root.get("nameEn"), root.get("nameRu"), cb.count(root.join("children").get("code"))));
-            query.groupBy(root.get("code"), root.get("nameEt"), root.get("nameEn"), root.get("nameRu"));
+            ((CriteriaQuery<ClassifierWithCount>)query).select(cb.construct(ClassifierWithCount.class, root.get("code"), root.get("nameEt"), root.get("nameEn"), root.get("mainClassCode"), root.get("nameRu"), cb.count(root.join("children").get("code"))));
+            query.groupBy(root.get("code"), root.get("nameEt"), root.get("nameEn"), root.get("nameRu"), root.get("mainClassCode"));
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.isNull(root.get("mainClassCode")));

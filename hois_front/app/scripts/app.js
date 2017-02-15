@@ -31,15 +31,6 @@ angular
         controllerAs: 'controller',
         resolve: { translationLoaded: function($translate) { return $translate.onReady(); } }
       })
-      .when('/buildings/:buildingId?/:roomId?', {
-        templateUrl: 'views/building.html',
-        controller: 'BuildingController',
-        controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      })
       .when('/subject', {
         templateUrl: 'views/subject.list.html',
         controller: 'SubjectListController',
@@ -234,7 +225,7 @@ angular
         }
       })
       .when('/vocationalCurriculum/new', {
-        templateUrl: 'views/vocational.curriculum.html',
+        templateUrl: 'views/vocational_curriculum/vocational.curriculum.html',
         controller: 'VocationalCurriculumController',
         controllerAs: 'controller',
         resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
@@ -243,7 +234,7 @@ angular
         }
       })
       .when('/vocationalCurriculum/:id/edit', {
-        templateUrl: 'views/vocational.curriculum.html',
+        templateUrl: 'views/vocational_curriculum/vocational.curriculum.html',
         controller: 'VocationalCurriculumController',
         controllerAs: 'controller',
         resolve: {
@@ -257,7 +248,7 @@ angular
         }
       })
       .when('/vocationalCurriculum/:id/edit/moduleImplementationPlan/new', {
-        templateUrl: 'views/vocational.curriculum.module.implementation.plan.html',
+        templateUrl: 'views/vocational_curriculum/module.implementation.plan.html',
         controller: 'VocationalCurriculumModuleImplementationPlanController',
         controllerAs: 'controller',
         resolve: {
@@ -271,7 +262,7 @@ angular
         }
       })
       .when('/vocationalCurriculum/:id/edit/moduleImplementationPlan/:versionId/edit', {
-        templateUrl: 'views/vocational.curriculum.module.implementation.plan.html',
+        templateUrl: 'views/vocational_curriculum/module.implementation.plan.html',
         controller: 'VocationalCurriculumModuleImplementationPlanController',
         controllerAs: 'controller',
         resolve: {

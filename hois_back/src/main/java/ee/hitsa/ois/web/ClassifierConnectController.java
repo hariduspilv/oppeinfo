@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -15,12 +16,11 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.fasterxml.jackson.annotation.JsonView;
-
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.service.ClassifierConnectService;
 import ee.hitsa.ois.web.commandobject.ClassifierConnectSearchCommand;
+import ee.hitsa.ois.web.dto.ClassifierConnectSelection;
 
 @RestController
 @RequestMapping("classifierConnect")
@@ -44,8 +44,8 @@ public class ClassifierConnectController {
     }
 
     @GetMapping(value = "/all")
-    @JsonView(JsonViews.Basic.class)
-    public List<ClassifierConnect> searchAll(ClassifierConnectSearchCommand classifierConnectSearchCommand, Sort sort) {
-        return service.searchAll(classifierConnectSearchCommand, sort);
+    public List<ClassifierConnectSelection> searchAll(ClassifierConnectSearchCommand classifierConnectSearchCommand, Sort sort) {
+        return service.searchAll(classifierConnectSearchCommand, sort).stream()
+                .map(ClassifierConnectSelection::of).collect(Collectors.toList());
     }
 }

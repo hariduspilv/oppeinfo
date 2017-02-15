@@ -7,7 +7,7 @@
  * TODO: consider suboccupations in validation!
  */
 angular.module('hitsaOis')
-  .controller('StateCurriculumModuleController', function ($scope, Classifier, StateCurriculum, $location) {
+  .controller('StateCurriculumModuleController', function ($scope, Classifier, StateCurriculum, $location, message) {
 
     if(!StateCurriculum.current) {
         $location.path('/stateCurriculum/new');
@@ -126,18 +126,15 @@ angular.module('hitsaOis')
 
     $scope.save = function() {
       $scope.stateCurriculumModuleForm.$setSubmitted();
-      //console.log('form is valid: '+ $scope.stateCurriculumModuleForm.$valid);
-      if($scope.stateCurriculumModuleForm.$valid) {
         addOccupations();
         addSubOccupations();
+      if($scope.stateCurriculumModuleForm.$valid && $scope.module.moduleOccupations && $scope.module.moduleOccupations.length > 0) {
         if(!StateCurriculum.editableModule) {
           StateCurriculum.current.modules.push($scope.module);
         }
-        //console.log("new module: ");
-        //console.log($scope.module);
         $scope.goToMainForm();
       } else {
-        //console.log("form invalid!");
+        message.error('main.messages.form-has-errors');
       }
     };
 

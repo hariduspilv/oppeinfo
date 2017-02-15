@@ -77,9 +77,6 @@ public class SubjectController {
     @DeleteMapping(value = "/{id}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Subject subject, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         assertSameSchool(user, subject);
-        if (SubjectStatus.AINESTAATUS_K.name().equals(subject.getStatus().getCode())) {
-            throw new IllegalArgumentException();
-        }
         subjectService.delete(subject);
     }
 

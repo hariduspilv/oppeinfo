@@ -11,12 +11,16 @@ import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import ee.hitsa.ois.ClassifierJsonDeserializer;
 
 @Entity
 public class StateCurriculumModule extends BaseEntityWithId {
 	
 	@ManyToOne(optional = false)
 	@JoinColumn(name = "module_code", referencedColumnName = "code")
+	@JsonDeserialize(using = ClassifierJsonDeserializer.class)
 	private Classifier moduleType;	
 	private String nameEt;
 	private String nameEn;
@@ -38,7 +42,7 @@ public class StateCurriculumModule extends BaseEntityWithId {
 	}
 
 	public Set<StateCurriculumModuleOccupation> getModuleOccupations() {
-		return moduleOccupations;
+		return moduleOccupations != null ? moduleOccupations : (moduleOccupations = new HashSet<>());
 	}
 
 	public void setModuleOccupations(Set<StateCurriculumModuleOccupation> moduleOccupations) {
@@ -47,7 +51,7 @@ public class StateCurriculumModule extends BaseEntityWithId {
 	}
 	
 	public StateCurriculumModuleOutcome getOutcome() {
-		return outcome;
+		return outcome != null ? outcome : (outcome = new StateCurriculumModuleOutcome());
 	}
 
 	public void setOutcome(StateCurriculumModuleOutcome outcome) {

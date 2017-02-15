@@ -2,6 +2,7 @@ package ee.hitsa.ois.domain;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -10,6 +11,7 @@ import java.time.LocalDate;
 public class TeacherPositionEhis extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private Teacher teacher;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier position;
@@ -35,8 +37,9 @@ public class TeacherPositionEhis extends BaseEntityWithId {
     private Classifier employmentType;
     private String employmentTypeSpecification;
     private Boolean isTeacher;
+    private String employmentCode;
     @ManyToOne(fetch = FetchType.LAZY)
-    private Classifier employment;
+    private SchoolDepartment schoolDepartment;
 
     public Teacher getTeacher() {
         return teacher;
@@ -44,14 +47,6 @@ public class TeacherPositionEhis extends BaseEntityWithId {
 
     public void setTeacher(Teacher teacher) {
         this.teacher = teacher;
-    }
-
-    public Classifier getEmployment() {
-        return employment;
-    }
-
-    public void setEmployment(Classifier employment) {
-        this.employment = employment;
     }
 
     public Boolean getVocational() {
@@ -188,5 +183,21 @@ public class TeacherPositionEhis extends BaseEntityWithId {
 
     public void setContractEnd(LocalDate contractEnd) {
         this.contractEnd = contractEnd;
+    }
+
+    public String getEmploymentCode() {
+        return employmentCode;
+    }
+
+    public void setEmploymentCode(String employmentCode) {
+        this.employmentCode = employmentCode;
+    }
+
+    public SchoolDepartment getSchoolDepartment() {
+        return schoolDepartment;
+    }
+
+    public void setSchoolDepartment(SchoolDepartment schoolDepartment) {
+        this.schoolDepartment = schoolDepartment;
     }
 }

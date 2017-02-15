@@ -6,7 +6,7 @@
  * TODO: Suboccupations validation
  */
 angular.module('hitsaOis')
-  .controller('StateCurriculumController', function ($http, $route, $scope, StateCurriculum, message, Classifier, $location, classifierAutocomplete, stateCurriculumOccupationValidator) {
+  .controller('StateCurriculumController', function ($http, $route, $scope, StateCurriculum, message, Classifier, $location, classifierAutocomplete, stateCurriculumOccupationValidator, dialogService) {
 
     StateCurriculum.editableModule = undefined;
 
@@ -17,8 +17,13 @@ angular.module('hitsaOis')
         if(StateCurriculum.cameFromModuleForm && reallyCameFrommodulesForm()) {
           $scope.stateCurriculum = StateCurriculum.current;
           $scope.areOccupationsValid = stateCurriculumOccupationValidator.validate($scope.stateCurriculum.occupations);
+
+          $scope.iscedVald = StateCurriculum.iscedVald;
+          $scope.iscedSuun = StateCurriculum.iscedSuun;
         } else {
           StateCurriculum.current = undefined;
+          $scope.iscedVald = undefined;
+          $scope.iscedSuun = undefined;
           getStateCurriculum();
         }
       } else if($route.current.params.id) {
@@ -50,6 +55,7 @@ angular.module('hitsaOis')
         StateCurriculum.current = $scope.stateCurriculum;
         $scope.areOccupationsValid = stateCurriculumOccupationValidator.validate($scope.stateCurriculum.occupations);
         fillCascadeDropdowns();
+        getOsakutsedAndSpetsialiseerumised();
         //console.log("State Curriculum from DB");
         //console.log($scope.stateCurriculum);
       });
@@ -66,14 +72,14 @@ angular.module('hitsaOis')
 
     function fillCascadeDropdowns() {
       Classifier.getParentsWithMainClass('ISCED_SUUN', $scope.stateCurriculum.iscedClass.code).$promise.then(function(response) {
-        $scope.stateCurriculum.iscedSuun = response[0].code;
-        getOsakutsedAndSpetsialiseerumised();
+        $scope.iscedSuun = response[0].code;
+        // getOsakutsedAndSpetsialiseerumised();
         return response[0];
       }).then(function(result){
           Classifier.getParentsWithMainClass('ISCED_VALD', result.code).$promise.then(function(response) {
-          $scope.stateCurriculum.iscedVald = response[0].code;
-          $scope.getClassifierSuuns();
-          $scope.getClassifierGroups();
+          $scope.iscedVald = response[0].code;
+        //   $scope.getClassifierSuuns();
+        //   $scope.getClassifierGroups();
         });
       });
     }
@@ -159,21 +165,16 @@ angular.module('hitsaOis')
 
     $scope.saveForm = function(){
       StateCurriculum.current = $scope.stateCurriculum;
+      StateCurriculum.iscedVald = $scope.iscedVald;
+      StateCurriculum.iscedSuun = $scope.iscedSuun;
+      $location.path('/stateCurriculum/module');
     };
 
     // -----------saving to db
 
     function create() {
-
-      $scope.stateCurriculumForm.$setSubmitted();
-
-      //console.log("state curriculum to create...");
-      //console.log($scope.stateCurriculum);
-
       StateCurriculum.create($scope.stateCurriculum).then(function(response) {
         message.info('main.messages.create.success');
-        //console.log("Created!");
-        //console.log(response);
         $scope.stateCurriculum = response.data;
         setDates();
         createListsOfModulesAndOccupations();
@@ -182,82 +183,60 @@ angular.module('hitsaOis')
     }
 
     function update() {
-      //console.log("updating...");
-      //console.log($scope.stateCurriculum);
-      StateCurriculum.update($scope.stateCurriculum).then(function() {
+      StateCurriculum.update($scope.stateCurriculum).then(function(response) {
         message.info('main.messages.update.success');
-        //console.log("Updated!");
-        //console.log(response);
+        $scope.stateCurriculum = response.data;
+        setDates();
+        createListsOfModulesAndOccupations();
+        fillCascadeDropdowns();
       });
     }
 
     $scope.validate = function() {
       $scope.stateCurriculumForm.$setSubmitted();
-      //console.log('form is valid: '+ $scope.stateCurriculumForm.$valid);
       if($scope.stateCurriculumForm.$valid) {
         if($scope.stateCurriculum.id) {
           update();
         } else {
           create();
         }
+        removeModulesWithNoOccupation();
       } else {
-        //console.log("form invalid!");
+        message.error('main.messages.form-has-errors');
       }
     };
 
+    function removeModulesWithNoOccupation() {
+        $scope.stateCurriculum.modules.forEach(function(m){
+            if(!m.moduleOccupations || m.moduleOccupations.length === 0) {
+                $scope.stateCurriculum.modules.splice($scope.stateCurriculum.modules.indexOf(m), 1);
+            }
+        });
+    }
 
 
     $scope.delete = function() {
-      StateCurriculum.current = undefined;
-      StateCurriculum.delete($scope.stateCurriculum.id).then(function() {
-        $location.path('/stateCurriculum');
-      });
+        dialogService.confirmDialog({prompt: 'main.messages.confirm'}, function() {
+            StateCurriculum.current = undefined;
+            $scope.iscedVald = undefined;
+            $scope.iscedSuun = undefined;
+            StateCurriculum.delete($scope.stateCurriculum.id).then(function() {
+                message.info('main.messages.delete.success');
+                $location.path('/stateCurriculum');
+            });
+        });
     };
 
     $scope.abort = function() {
       StateCurriculum.current = undefined;
+      $scope.iscedVald = undefined;
+      $scope.iscedSuun = undefined;
       $location.path('/stateCurriculum');
     };
 
 
 
 // ------------dropdowns and autocomplete
-// TODO: when 2nd select (õppekava, or oppesuund) is changed, 3rd one sets to null but not shown as incorrect!
-
-    $scope.getClassifierValds = function() {
-      var query = {
-        mainClassCode: 'ISCED_VALD'
-      };
-      Classifier.queryForDropdown(query).$promise.then(function(response) {
-        $scope.listOfClassifierValds = response;
-      });
-    };
-    $scope.getClassifierValds();
-
-    $scope.resetAndGetClassifierSuuns = function() {
-      $scope.stateCurriculum.iscedClassCode = undefined;
-      $scope.stateCurriculum.iscedClass = undefined;
-      $scope.stateCurriculum.iscedSuun = undefined;
-      $scope.getClassifierSuuns();
-    };
-
-    $scope.getClassifierSuuns = function() {
-      if($scope.stateCurriculum && $scope.stateCurriculum.iscedVald) {
-        Classifier.getChildren($scope.stateCurriculum.iscedVald).$promise.then(function(response) {
-          $scope.listOfClassifierSuuns = response;
-        });
-      }
-    };
-    $scope.getClassifierSuuns();
-
-    $scope.getClassifierGroups = function() {
-      if($scope.stateCurriculum && $scope.stateCurriculum.iscedSuun) {
-        Classifier.getChildren($scope.stateCurriculum.iscedSuun).$promise.then(function(response) {
-          $scope.listOfClassifierGroups = response;
-        });
-      }
-    };
-    $scope.getClassifierGroups();
 
     $scope.querySearch = function(queryText) {
       return classifierAutocomplete.searchByName(queryText, 'KUTSE');
@@ -392,7 +371,11 @@ angular.module('hitsaOis')
     }
 
     $scope.editModule = function(editableModule) {
+      StateCurriculum.current = $scope.stateCurriculum;
       StateCurriculum.editableModule = editableModule;
+      StateCurriculum.iscedVald = $scope.iscedVald;
+      StateCurriculum.iscedSuun = $scope.iscedSuun;
+      $location.path('/stateCurriculum/module');
     };
 
 

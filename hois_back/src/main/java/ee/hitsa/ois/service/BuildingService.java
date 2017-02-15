@@ -5,9 +5,14 @@ import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -25,10 +30,9 @@ import ee.hitsa.ois.repository.BuildingRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.RoomRepository;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.RoomForm;
 import ee.hitsa.ois.web.commandobject.RoomSearchCommand;
-import ee.hitsa.ois.web.dto.BuildingDto;
-import ee.hitsa.ois.web.dto.RoomDto;
 import ee.hitsa.ois.web.dto.RoomSearchDto;
 
 @Transactional
@@ -36,15 +40,13 @@ import ee.hitsa.ois.web.dto.RoomSearchDto;
 public class BuildingService {
 
     @Autowired
-    BuildingRepository buildingRepository;
+    private BuildingRepository buildingRepository;
     @Autowired
-    ClassifierRepository classifierRepository;
+    private ClassifierRepository classifierRepository;
     @Autowired
-    RoomRepository roomRepository;
-
-    public Page<BuildingDto> findAllBuildings(Long schoolId, Pageable pageable) {
-        return buildingRepository.findAllBySchool_id(schoolId, pageable);
-    }
+    private EntityManager entityManager;
+    @Autowired
+    private RoomRepository roomRepository;
 
     public Building save(Building building) {
         return buildingRepository.save(building);
@@ -54,27 +56,37 @@ public class BuildingService {
         EntityUtil.deleteEntity(buildingRepository, building);
     }
 
-    public Page<RoomDto> getAllRooms(Long buildingId, Pageable pageable) {
-        return roomRepository.findAllByBuilding_id(buildingId, pageable).map(RoomDto::of);
-    }
-
+    @SuppressWarnings("unchecked")
     public Page<RoomSearchDto> findAllRooms(Long schoolId, RoomSearchCommand criteria, Pageable pageable) {
-        return roomRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("building").get("school").get("id"), schoolId));
+        Page<Object[]> data = JpaQueryUtil.query(Object[].class, Building.class, (root, query, cb) -> {
+            Join<Object, Object> rooms = root.join("rooms", JoinType.LEFT);
+            ((CriteriaQuery<Object[]>)query).select(cb.array(root, rooms));
 
-            propertyContains(() -> root.get("name"), cb, criteria.getName(), filters::add);
-            propertyContains(() -> root.get("code"), cb, criteria.getCode(), filters::add);
-            propertyContains(() -> root.get("building").get("name"), cb, criteria.getBuildingName(), filters::add);
-            propertyContains(() -> root.get("building").get("code"), cb, criteria.getBuildingCode(), filters::add);
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+
+            propertyContains(() -> rooms.get("name"), cb, criteria.getName(), filters::add);
+            propertyContains(() -> rooms.get("code"), cb, criteria.getCode(), filters::add);
+            propertyContains(() -> root.get("name"), cb, criteria.getBuildingName(), filters::add);
+            propertyContains(() -> root.get("code"), cb, criteria.getBuildingCode(), filters::add);
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(RoomSearchDto::of);
+        }, pageable, entityManager);
+
+        // load room equipment with single query
+        List<Long> roomIds = data.getContent().stream().filter(r -> r[1] != null).map(r -> ((Room)r[1]).getId()).collect(Collectors.toList());
+        Map<Long, List<RoomEquipment>> equipment = JpaQueryUtil.loadRelationChilds(RoomEquipment.class, roomIds, entityManager, "room", "id").stream().collect(Collectors.groupingBy(re -> EntityUtil.getId(re.getRoom())));
+
+        return data.map(r -> RoomSearchDto.of((Building)r[0], (Room)r[1], equipment.get(EntityUtil.getNullableId((Room)r[1]))));
     }
 
     public Room save(Room room, RoomForm form) {
-        List<RoomForm.RoomEquipmentCommand> newRoomEquipment = form.getRoomEquipment();
+        EntityUtil.bindToEntity(form, room, "roomEquipment");
+        if(!Objects.equals(form.getBuilding(), EntityUtil.getNullableId(room.getBuilding()))) {
+            room.setBuilding(buildingRepository.getOne(form.getBuilding()));
+        }
 
+        List<RoomForm.RoomEquipmentCommand> newRoomEquipment = form.getRoomEquipment();
         if(newRoomEquipment != null) {
             // check for duplicate rows
             if(newRoomEquipment.stream().map(RoomForm.RoomEquipmentCommand::getEquipment).collect(Collectors.toSet()).size() != newRoomEquipment.size()) {

@@ -23,6 +23,9 @@ angular.module('hitsaOis')
     };
 
     $scope.getCurriculums = function () {
+        if($rootScope.currentUser.school && $scope.disableSchoolSelection) {
+            $scope.query.school = $rootScope.currentUser.school.id;
+        }
       $scope.promise = Curriculum.query($scope.query, success).$promise;
     };
 
@@ -60,41 +63,9 @@ angular.module('hitsaOis')
       $scope.getCurriculums();
     }
 
-    function getListOfStatuses() {
-      Classifier.get('OPPEKAVA_STAATUS').$promise.then(function(response) {
-        $scope.listOfStatuses = response.children;
-      });
-    }
-    getListOfStatuses();
-
-    function getListOfEhisStatuses() {
-      Classifier.get('OPPEKAVA_EHIS_STAATUS').$promise.then(function(response) {
-        $scope.listOfEhisStatuses = response.children;
-      });
-    }
-    getListOfEhisStatuses();
-
-    function getListOfStudyLanguages() {
-      Classifier.get('OPPEKEEL').$promise.then(function(response) {
-        $scope.listOfStudyLanguages = response.children;
-      });
-    }
-    getListOfStudyLanguages();
-
-    function getListOfEkrLevels() {
-      Classifier.get('EKR').$promise.then(function(response){
-        $scope.listOfEkrLevels = response.children;
-      });
-    }
-    getListOfEkrLevels();
-
     function getListOfStudyLevels() {
         QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
-            var studyLevelCodes = response.studyLevels;
-            $scope.listOfStudyLevels = [];
-            studyLevelCodes.forEach(function(it) {
-                    $scope.listOfStudyLevels.push({code: it});
-            });
+            $scope.studyLevelCodes = response.studyLevels;
         });
     }
     getListOfStudyLevels();

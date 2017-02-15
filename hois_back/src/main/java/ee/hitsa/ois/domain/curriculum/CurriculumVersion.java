@@ -69,11 +69,13 @@ public class CurriculumVersion extends BaseEntityWithId {
     @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false, insertable = true)
     private Set<CurriculumVersionHigherModule> modules = new HashSet<>();
 
-//    mappedBy = "curriculumVersion", 
     @OneToMany(mappedBy = "curriculumVersion", cascade = CascadeType.ALL, orphanRemoval = true)
-//    @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false, insertable = true)
     private Set<CurriculumVersionSpeciality> specialities = new HashSet<>();
-    
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false, insertable = true)
+    private Set<CurriculumVersionOccupationModule> occupationModules = new HashSet<>();
+
     @Transient
     private Set<Long> specialitiesReferenceNumbers;
 
@@ -109,9 +111,6 @@ public class CurriculumVersion extends BaseEntityWithId {
     public void setSpecialities(Set<CurriculumVersionSpeciality> specialities) {
         getSpecialities().clear();
         getSpecialities().addAll(specialities);
-//        getSpecialities().forEach(s -> {
-//            s.getCurriculumSpeciality().getCurriculumVersionSpecialities().
-//        });
     }
 
     public Curriculum getCurriculum() {
@@ -209,4 +208,14 @@ public class CurriculumVersion extends BaseEntityWithId {
     public void setValidThru(LocalDate validThru) {
         this.validThru = validThru;
     }
+
+    public Set<CurriculumVersionOccupationModule> getOccupationModules() {
+        return occupationModules;
+    }
+
+    public void setOccupationModules(Set<CurriculumVersionOccupationModule> occupationModules) {
+        getOccupationModules().clear();
+        getOccupationModules().addAll(occupationModules);
+    }
+
 }

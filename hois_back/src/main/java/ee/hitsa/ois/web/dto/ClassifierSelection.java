@@ -9,17 +9,19 @@ public class ClassifierSelection {
     private final String nameEn;
     private final String nameRu;
     private final Boolean valid;
+    private final String mainClassCode;
 
-    public ClassifierSelection(String code, String nameEt, String nameEn, String nameRu, Boolean valid) {
+    public ClassifierSelection(String code, String nameEt, String nameEn, String nameRu, Boolean valid, String mainClassCode) {
         this.code = code;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
         this.nameRu = nameRu;
         this.valid = valid;
+        this.mainClassCode = mainClassCode;
     }
-    
+
     public static ClassifierSelection of(Classifier c) {
-        return new ClassifierSelection(c.getCode(), c.getNameEt(), c.getNameEn(), c.getNameRu(), Boolean.valueOf(c.isValid()));
+        return new ClassifierSelection(c.getCode(), c.getNameEt(), c.getNameEn(), c.getNameRu(), Boolean.valueOf(c.isValid()), c.getMainClassCode());
     }
 
     public String getCode() {
@@ -41,4 +43,10 @@ public class ClassifierSelection {
     public Boolean getValid() {
         return valid;
     }
+
+    public String getMainClassCode() {
+        return mainClassCode;
+    }
+
+
 }

@@ -338,8 +338,10 @@ public abstract class EntityUtil {
      * @throws OptimisticLockException if version is not same
      */
     public static void assertEntityVersion(Versioned e, Long version) {
-        if(version == null || !version.equals(e.getVersion())) {
-            throw new OptimisticLockException();
+        if(version == null) {
+            throw new OptimisticLockException(String.format("no version for entity %s", e.getClass()));
+        } else if (!version.equals(e.getVersion())) {
+            throw new OptimisticLockException(String.format("version mismatch for entity %s (is %d, but request has %d)", e.getClass(), e.getVersion(), version));
         }
     }
 

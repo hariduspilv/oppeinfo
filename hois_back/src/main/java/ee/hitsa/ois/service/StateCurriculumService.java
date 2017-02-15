@@ -20,6 +20,10 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StateCurriculum;
+import ee.hitsa.ois.domain.StateCurriculumModule;
+import ee.hitsa.ois.domain.StateCurriculumModuleOccupation;
+import ee.hitsa.ois.domain.StateCurriculumModuleOutcome;
+import ee.hitsa.ois.domain.StateCurriculumOccupation;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.repository.specification.StateCurriculumSpecification;
@@ -128,14 +132,87 @@ public class StateCurriculumService {
 	}
 
 	public StateCurriculum update(StateCurriculum newStateCurriculum, StateCurriculum stateCurriculum) {
-	   EntityUtil.bindToEntity(newStateCurriculum, stateCurriculum);
+	   EntityUtil.bindToEntity(newStateCurriculum, stateCurriculum, "occupations", "modules");
+	   updateOccupations(stateCurriculum, newStateCurriculum.getOccupations());
+	   updateModules(stateCurriculum, newStateCurriculum.getModules());
        return repository.save(stateCurriculum);
 	}
+
+    private void updateOccupations(StateCurriculum stateCurriculum, Set<StateCurriculumOccupation> occupations) {
+        Set<StateCurriculumOccupation> newOccupations = new HashSet<>(); 
+        if(occupations != null) {
+            Set<Long> existingOccupations = stateCurriculum.getOccupations().stream().map(o -> o.getId()).collect(Collectors.toSet());
+            occupations.forEach(o ->{
+                if(o.getId() != null && existingOccupations.contains(o.getId())) {
+                    newOccupations.add(stateCurriculum.getOccupations().stream()
+                            .filter(o2 -> o2.getId().equals(o.getId())).findFirst().get());
+                } else if(o.getId() == null) {
+                    newOccupations.add(o);
+                }
+            });
+
+            }
+        stateCurriculum.setOccupations(newOccupations);
+    }
+    
+    private void updateModules(StateCurriculum stateCurriculum, Set<StateCurriculumModule> modules) {
+        Set<StateCurriculumModule> newModules = new HashSet<>();
+        
+        if(modules != null) {
+            Set <Long> existingModulesIds =  stateCurriculum.getModules().stream().map(m -> m.getId()).collect(Collectors.toSet());
+            modules.forEach(m -> {
+                Long id = m.getId();
+                if(id == null) {
+                    newModules.add(m);
+                } else if (existingModulesIds.contains(id)){
+                    StateCurriculumModule editedModule = getModuleById(id, stateCurriculum.getModules());
+                    EntityUtil.bindToEntity(m, editedModule, "version", "moduleOccupations", "outcome");
+                    updateModuleOutcome(editedModule.getOutcome(), m.getOutcome());
+                    updateModuleOccupations(editedModule, m.getModuleOccupations());
+                    newModules.add(editedModule);
+                }
+            });
+        }
+        stateCurriculum.setModules(newModules);
+    }
+
+    private void updateModuleOccupations(StateCurriculumModule editedModule,
+            Set<StateCurriculumModuleOccupation> moduleOccupations) {
+        Set<StateCurriculumModuleOccupation> newOccupations = new HashSet<>();
+        Set<Long> existingIds = editedModule.getModuleOccupations().stream()
+                .map(StateCurriculumModuleOccupation::getId).collect(Collectors.toSet());
+
+        if(moduleOccupations != null) {
+            moduleOccupations.forEach(mo -> {
+                Long id = mo.getId();
+                if(id == null) {
+                    newOccupations.add(mo);
+                } else if(existingIds.contains(id)) {
+                    StateCurriculumModuleOccupation moduleOccupation = getModuleOccupationById(id, editedModule.getModuleOccupations());
+                    newOccupations.add(moduleOccupation);
+                }
+            });
+        }
+        editedModule.setModuleOccupations(newOccupations);
+    }
+
+    private StateCurriculumModuleOccupation getModuleOccupationById(Long id,
+            Set<StateCurriculumModuleOccupation> moduleOccupations) {
+        return moduleOccupations.stream().filter(mo -> mo.getId().equals(id)).findFirst().get();
+    }
+
+    private void updateModuleOutcome(StateCurriculumModuleOutcome oldOutcome, StateCurriculumModuleOutcome newOutCome) {
+        oldOutcome.setOutcomesEt(newOutCome.getOutcomesEt());
+        oldOutcome.setOutcomesEn(newOutCome.getOutcomesEn());
+    }
+
+    private StateCurriculumModule getModuleById(Long id, Set<StateCurriculumModule> modules) {
+        return modules.stream().filter(m -> m.getId().equals(id)).findFirst().get();
+    }
 
     public List<StateCurriculum> searchAll(StateCurriculumSearchCommand stateCurriculumSearchCommand, Sort sort) {
         return repository.findAll((root, query, cb) -> {
             return null;
         }, sort);
     }
-
 }

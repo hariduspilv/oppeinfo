@@ -29,21 +29,26 @@ public class TeacherController {
     }
 
     @GetMapping("")
-    public Page<TeacherDto> search(TeacherSearchCommand command, Pageable pageable) {
+    public Page<TeacherDto> search(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
+        command.setSchool(user.getSchoolId());
         return teacherService.search(command, pageable);
     }
 
     @PostMapping("")
     public TeacherDto create(@Valid @RequestBody TeacherForm teacherForm, HoisUserDetails user) {
         return teacherService.save(user , new Teacher(), teacherForm);
-        //throw new RuntimeException();
-        //return null;
     }
 
     @PutMapping("/{id}")
     public TeacherDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Teacher teacher, @Valid @RequestBody TeacherForm teacherForm) {
         assertSameSchool(user, teacher);
         return teacherService.save(user, teacher, teacherForm);
+    }
+
+    @DeleteMapping("/{id}")
+    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Teacher teacher,  @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        assertSameSchool(user, teacher);
+        teacherService.delete(teacher);
     }
 
     private static void assertSameSchool(HoisUserDetails user, Teacher teacher) {

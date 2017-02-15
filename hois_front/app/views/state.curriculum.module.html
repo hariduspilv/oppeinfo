@@ -4,7 +4,7 @@
         <form name="stateCurriculumModuleForm">
 
           <div layout="column">
-          <h4 ng-if="occupations.length > 0">{{'stateCurriculum.enter.module.occupation' | translate}}&nbsp;*</h4>
+          <h4 ng-if="occupations.length > 0" ng-class="{'invalid': stateCurriculumModuleForm.$submitted && (!module.moduleOccupations || module.moduleOccupations.length === 0)}">{{'stateCurriculum.enter.module.occupation' | translate}}&nbsp;*</h4>
 
           <div ng-repeat="occupation in occupations">
             <md-checkbox ng-model="occupation.selected"

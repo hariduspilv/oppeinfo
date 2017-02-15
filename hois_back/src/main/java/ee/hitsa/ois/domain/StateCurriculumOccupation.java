@@ -4,6 +4,10 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+
+import ee.hitsa.ois.ClassifierJsonDeserializer;
+
 /**
  * TODO:
  * Make bidirectional mapping in order to add stateCurriculumId to equals() and hashCode().
@@ -26,6 +30,7 @@ public class StateCurriculumOccupation extends BaseEntityWithId{
 
 	@ManyToOne
 	@JoinColumn(name = "occupation_code", referencedColumnName = "code")
+	@JsonDeserialize(using = ClassifierJsonDeserializer.class)
 	private Classifier occupation;
 
 	public StateCurriculumOccupation() {

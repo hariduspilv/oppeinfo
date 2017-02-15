@@ -1,11 +1,14 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Subject;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class SubjectDto extends SubjectForm {
 
@@ -31,6 +34,8 @@ public class SubjectDto extends SubjectForm {
 
     public static SubjectDto of(Subject subject) {
         SubjectDto dto = EntityUtil.bindToDto(subject, new SubjectDto());
+        dto.setLanguages(SubjectUtil.getLanguages(subject).stream().map(Classifier::getCode).collect(Collectors.toSet()));
+        dto.setSchoolDepartment(EntityUtil.getNullableId(subject.getSchoolDepartment()));
         return dto;
     }
 

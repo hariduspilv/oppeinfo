@@ -21,6 +21,7 @@ import ee.hitsa.ois.domain.School;
 import ee.hitsa.ois.domain.Student;
 import ee.hitsa.ois.domain.StudentRepresentative;
 import ee.hitsa.ois.domain.StudentRepresentativeApplication;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.StudentRepository;
@@ -43,8 +44,6 @@ public class StudentRepresentativeService {
     private static final String ACCEPTED = "AVALDUS_ESINDAJA_STAATUS_K";
     private static final String DECLINED = "AVALDUS_ESINDAJA_STAATUS_T";
     private static final String REQUESTED = "AVALDUS_ESINDAJA_STAATUS_E";
-
-    private static final String ROLE_PARENT_OR_REPRESENTATIVE = "ROLL_L";
 
     @Autowired
     private ClassifierRepository classifierRepository;
@@ -92,6 +91,7 @@ public class StudentRepresentativeService {
     }
 
     public void delete(StudentRepresentative representative) {
+        // TODO if there is StudentRepresentativeApplication, change it's status too?
         studentRepresentativeRepository.delete(representative);
     }
 
@@ -127,9 +127,9 @@ public class StudentRepresentativeService {
         Person person = representative.getPerson();
         School school = representative.getStudent().getSchool();
         Long schoolId = EntityUtil.getId(school);
-        // if there is no user for given person with role ROLL_L (parent/representative) for school of student, create it
-        if(!person.getUsers().stream().anyMatch(u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && ROLE_PARENT_OR_REPRESENTATIVE.equals(EntityUtil.getCode(u.getRole())))) {
-            userService.createUser(person, ROLE_PARENT_OR_REPRESENTATIVE, school);
+        // if there is no user for given person with role of parent/representative for school of student, create it
+        if(!person.getUsers().stream().anyMatch(u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && Role.ROLL_L.name().equals(EntityUtil.getCode(u.getRole())))) {
+            userService.createUser(person, Role.ROLL_L, school);
         }
         application.setStatus(classifierRepository.getOne(ACCEPTED));
         studentRepresentativeApplicationRepository.save(application);

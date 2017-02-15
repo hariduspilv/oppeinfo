@@ -165,7 +165,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     var backUrl = $route.current.params.backUrl;
     $scope.formState = {backRef: backUrl ? '?backUrl='+backUrl : '', backUrl: backUrl === 'applications' ? '#/studentrepresentatives/applications' : '#/students'};
 
-    QueryUtils.createQueryForm($scope, '/students/:studentId/absences', {order: 'validFrom', studentId: $scope.studentId}, function(rows) {
+    QueryUtils.createQueryForm($scope, '/students/' + $scope.studentId + '/absences', {order: 'validFrom'}, function(rows) {
       for(var rowNo = 0; rowNo < rows.length; rowNo++) {
         var row = rows[rowNo];
         DataUtils.convertStringToDates(row, ['validFrom', 'validThru']);
