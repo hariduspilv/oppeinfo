@@ -1,6 +1,6 @@
 STRUKTUUR:
 ------------------------------------------------------
-README.txt - tarne ja installeerimise kirjeldus
+README.md - tarne ja installeerimise kirjeldus
 /db - andmebaasi skriptide kaust
 /hois_back - rakenduse backendi kood
 /hois_front - rakenduse frontendi kood
