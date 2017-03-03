@@ -15,7 +15,6 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 
 /*
- * TODO: apply Classifier validation by mainClassCode
  * TODO: apply @Valid validation to child classes
  */
 @DateRange

@@ -1,7 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.OisFile;
-import ee.hitsa.ois.domain.School;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.SchoolForm;

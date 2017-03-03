@@ -11,6 +11,8 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -47,7 +49,6 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 
 import ee.hitsa.ois.domain.BaseEntity;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.service.security.HoisUserDetailsService;
 
 @EntityScan(basePackageClasses = { BaseEntity.class, Jsr310JpaConverters.class })
 @EnableCaching
@@ -105,7 +106,7 @@ public class Application {
                 @Override
                 public void serialize(LocalDateTime value, JsonGenerator gen, SerializerProvider serializers)
                         throws IOException, JsonProcessingException {
-                    gen.writeString(value.toInstant(ZoneOffset.UTC).toString());
+                    gen.writeString(value.atZone(ZoneId.systemDefault()).toInstant().toString());
                 }
             });
 
@@ -135,12 +136,12 @@ public class Application {
         @Autowired
         private ConversionService conversionService;
         @Autowired
-        private HoisUserDetailsService hoisUserDetailsService;
+        private ObjectMapper objectMapper;
 
         @Override
         public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
             argumentResolvers.add(new WithEntityMethodArgumentResolver(conversionService));
-            argumentResolvers.add(new HoisUserDetailsArgumentResolver(hoisUserDetailsService));
+            argumentResolvers.add(new HoisUserDetailsArgumentResolver());
 
             // ISO string to LocalDate
             ((ConverterRegistry)conversionService).addConverter(String.class, LocalDate.class, s -> {
@@ -151,6 +152,13 @@ public class Application {
             ((ConverterRegistry)conversionService).addConverter(String.class, LocalDateTime.class, s -> {
                 LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(s), ZoneId.systemDefault());
                 return localDateTime;
+            });
+            ((ConverterRegistry)conversionService).addConverter(String.class, EntityConnectionCommand.class, s -> {
+                try {
+                    return objectMapper.readValue(s, EntityConnectionCommand.class);
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
             });
         }
     }

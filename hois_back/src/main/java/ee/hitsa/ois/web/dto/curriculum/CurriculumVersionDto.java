@@ -63,7 +63,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionCommand {
                 "schoolDepartment", "curriculumStudyForm", "modules", "specialities", "occupationModules");
 
         dto.setSchoolDepartment(version.getSchoolDepartment() != null ? EntityUtil.getNullableId(version.getSchoolDepartment()) : null);
-        dto.setCurriculumStudyForm(version.getCurriculumStudyForm() != null ? version.getCurriculumStudyForm().getStudyForm().getCode() : null);
+        dto.setCurriculumStudyForm(version.getCurriculumStudyForm() != null ? EntityUtil.getCode(version.getCurriculumStudyForm().getStudyForm()) : null);
 
         if(version.getModules() != null) {
             Set<CurriculumVersionHigherModuleDto> modules = version.getModules().stream().
@@ -76,7 +76,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionCommand {
                     map(m -> CurriculumVersionOccupationModuleDto.of(m)).collect(Collectors.toSet());
             dto.setOccupationModules(occupationModules);
         }
-        Set<Long> specialities = version.getSpecialities().stream().map(s -> s.getCurriculumSpeciality().getId()).collect(Collectors.toSet());
+        Set<Long> specialities = version.getSpecialities().stream().map(s -> EntityUtil.getId(s.getCurriculumSpeciality())).collect(Collectors.toSet());
         dto.setSpecialitiesReferenceNumbers(specialities);
         return dto;
     }

@@ -44,7 +44,7 @@ public class GeneralMessageController {
         return generalMessageService.search(user.getSchoolId(), criteria, pageable);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public GeneralMessageDto getGeneralMessage(HoisUserDetails user, @WithEntity("id") GeneralMessage generalMessage) {
         assertSameSchool(user, generalMessage);
         return GeneralMessageDto.of(generalMessage);
@@ -57,14 +57,14 @@ public class GeneralMessageController {
         return getGeneralMessage(user, generalMessageService.save(generalMessage, form.getTargets()));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public GeneralMessageDto updateGeneralMessage(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) GeneralMessage generalMessage, @Valid @RequestBody GeneralMessageForm form) {
         assertSameSchool(user, generalMessage);
         EntityUtil.bindToEntity(form, generalMessage, "targets");
         return getGeneralMessage(user, generalMessageService.save(generalMessage, form.getTargets()));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public void deleteGeneralMessage(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") GeneralMessage generalMessage, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         assertSameSchool(user, generalMessage);
         generalMessageService.delete(generalMessage);

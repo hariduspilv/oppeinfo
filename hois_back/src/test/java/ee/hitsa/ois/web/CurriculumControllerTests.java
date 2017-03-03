@@ -74,7 +74,7 @@ public class CurriculumControllerTests {
 
     private Curriculum testCurriculum;
 
-    private Long referenceNumber = Long.valueOf(1);
+    private Long referenceNumber = Long.valueOf(-1);
 
     @Before
     public void setup() {
@@ -469,8 +469,90 @@ public class CurriculumControllerTests {
         Assert.assertNotNull(updatedCurriculum);
         Assert.assertTrue(updatedCurriculum.getStudyLanguages().size() == 3);
         Assert.assertTrue(updatedCurriculum.getSpecialities().size() == 3);
+    }
+    
+    /**
+     * 
+     * This test was created to fix an error, which occurred 
+     * when deleting CurriculumVersion, which have module with the same CurriculumSpeciality,
+     * as some module in another CurriculumVersion 
+     * 
+     * Caused by: org.postgresql.util.PSQLException: 
+     * ERROR: update or delete on table "curriculum_version_hmodule" 
+     * violates foreign key constraint "FK_curriculum_version_hmodule_speciality_curriculum_version_hmo" 
+     * on table "curriculum_version_hmodule_speciality"
+     * Detail: Key (id)=(668) is still referenced from table "curriculum_version_hmodule_speciality".
+     */
+    @Test
+    public void updateVersions() {
+        CurriculumForm curriculumForm = getForm(LocalDate.now());
 
+        curriculumForm.setSpecialities(new HashSet<>());
+        CurriculumSpecialityDto spec1 = getCurriculumSpecialityDto();
+        curriculumForm.getSpecialities().add(spec1);
 
+        CurriculumVersionDto version1 = getCurriculumVersionDto();
+        version1.setSpecialitiesReferenceNumbers(new HashSet<>());
+        version1.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        CurriculumVersionHigherModuleDto module1 = getCurriculumVersionHigherModuleDto();
+        module1.setSpecialitiesReferenceNumbers(new HashSet<>());
+        module1.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        CurriculumVersionHigherModuleDto module2 = getCurriculumVersionHigherModuleDto();
+        module2.setSpecialitiesReferenceNumbers(new HashSet<>());
+        module2.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        version1.setModules(new HashSet<>());
+        version1.getModules().add(module1);
+        version1.getModules().add(module2);
+        
+        CurriculumVersionDto version2 = getCurriculumVersionDto();
+        version2.setSpecialitiesReferenceNumbers(new HashSet<>());
+        version2.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        CurriculumVersionHigherModuleDto module3 = getCurriculumVersionHigherModuleDto();
+        module3.setSpecialitiesReferenceNumbers(new HashSet<>());
+        module3.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        CurriculumVersionHigherModuleDto module4 = getCurriculumVersionHigherModuleDto();
+        module4.setSpecialitiesReferenceNumbers(new HashSet<>());
+        module4.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        version2.setModules(new HashSet<>());
+        version2.getModules().add(module3);
+        version2.getModules().add(module4);
+        
+        curriculumForm.setVersions(new HashSet<>());
+        curriculumForm.getVersions().add(version1);
+        curriculumForm.getVersions().add(version2);
+        
+        ResponseEntity<CurriculumDto> responseEntity = this.restTemplate.postForEntity("/curriculum", curriculumForm,
+                CurriculumDto.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        CurriculumDto dto = responseEntity.getBody();
+        testCurriculum = curriculumService.getOne(dto.getId());
+        
+        Assert.assertNotNull(dto);
+        Assert.assertTrue(dto.getVersions().size() == 2);
+        Assert.assertTrue(dto.getSpecialities().size() == 1);
+        
+        dto.getVersions().forEach(v -> {
+            Assert.assertTrue(v.getModules().size() == 2);
+            Assert.assertTrue(v.getSpecialitiesReferenceNumbers().size() == 1);
+        });
+        
+        // remove version. it caused an exception in front end
+        
+        CurriculumVersionDto versionDto = dto.getVersions().stream().findFirst().get();
+        dto.getVersions().remove(versionDto);
+        System.out.println(dto);
+        
+        responseEntity = restTemplate.exchange("/curriculum/{id}", HttpMethod.PUT, new HttpEntity<>(dto), CurriculumDto.class, dto.getId());
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        dto = responseEntity.getBody();
+        Assert.assertNotNull(dto);
+        Assert.assertTrue(dto.getVersions().size() == 1);
     }
 
     @Test
@@ -665,7 +747,7 @@ public class CurriculumControllerTests {
         dto.setNameEn("CurriculumControllerTest");
         dto.setCredits(Double.valueOf(1));
         dto.setOccupation("KUTSE_10491530");
-        dto.setReferenceNumber(referenceNumber++);
+        dto.setReferenceNumber(referenceNumber--);
         return dto;
     }
 

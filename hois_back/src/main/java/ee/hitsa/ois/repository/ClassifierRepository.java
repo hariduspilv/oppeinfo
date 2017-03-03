@@ -45,7 +45,7 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 	List<Classifier> findTop20ByNameEtStartingWithIgnoreCaseAndMainClassCodeOrderByNameEtAsc(String nameEt, String mainClassCode);
 	List<Classifier> findTop20ByNameEnStartingWithIgnoreCaseAndMainClassCodeOrderByNameEnAsc(String nameEn, String mainClassCode);
 
-    @Query("select new ee.hitsa.ois.web.dto.ClassifierSelection(c.code, c.nameEt, c.nameEn, c.nameRu, c.valid, c.mainClassCode) from Classifier c where c.mainClassCode=?1")
+    @Query("select new ee.hitsa.ois.web.dto.ClassifierSelection(c.code, c.nameEt, c.nameEn, c.nameRu, c.valid, c.higher, c.vocational, c.mainClassCode) from Classifier c where c.mainClassCode=?1")
     List<ClassifierSelection> findAllByMainClassCode(String mainClassCode);
 
 	@CacheEvict(cacheNames = "classifier", allEntries = true)

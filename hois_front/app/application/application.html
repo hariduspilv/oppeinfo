@@ -1,0 +1,24 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="loadData()" layout="column">
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+            <h2>{{school[currentLanguageNameField()]}}</h2>
+          </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column"  >
+          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'application.type' | translate}}</label>
+            <hois-classifier-select ng-model="application.type" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
+          </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'application.addStudent' | translate}}</md-button>
+        <md-button ng-href="#/application" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+
+</div>

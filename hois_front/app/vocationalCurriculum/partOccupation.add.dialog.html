@@ -1,0 +1,37 @@
+<md-dialog aria-label="occupation add dialog">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"occupation.addAquiredPartOccupation" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="column">
+          <md-input-container flex>
+            <label>{{'occupation.occupationStandard' | translate}}</label>
+            <hois-classifier-select ng-model="occupation" main-classifier-code="KUTSE" required></hois-classifier-select>
+          </md-input-container>
+
+          <md-input-container flex>
+            <label>{{'occupation.aquiredPartOccupation' | translate}}</label>
+            <hois-classifier-select ng-model="partOccupationAquired" main-classifier-code="OSAKUTSE" watch-model="occupation"
+                        connect-main-classifier-code="KUTSE" search-from-connect required></hois-classifier-select>
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

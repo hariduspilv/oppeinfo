@@ -21,10 +21,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
-import ee.hitsa.ois.domain.School;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
+import ee.hitsa.ois.domain.school.School;
 
 /**
  * Created in order to test Curriculum mapping with dependent objects 

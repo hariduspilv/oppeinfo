@@ -3,7 +3,14 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.math.BigDecimal;
-import java.util.*;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
@@ -12,18 +19,21 @@ import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.SchoolDepartment;
-import ee.hitsa.ois.domain.Subject;
-import ee.hitsa.ois.domain.SubjectConnect;
-import ee.hitsa.ois.domain.SubjectLanguage;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.SubjectConnect;
+import ee.hitsa.ois.domain.subject.SubjectLanguage;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
@@ -40,6 +50,9 @@ import ee.hitsa.ois.util.EntityUtil;
 public class SubjectService {
 
     @Autowired
+    private SchoolRepository schoolRepository;
+
+    @Autowired
     private SubjectRepository subjectRepository;
 
     @Autowired
@@ -51,7 +64,7 @@ public class SubjectService {
     public Subject save(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
         // TODO remove comment when status change logic is resolved
         EntityUtil.bindToEntity(newSubject, subject, classifierRepository /*, "status"*/);
-        subject.setSchool(user.getSchool());
+        subject.setSchool(schoolRepository.getOne(user.getSchoolId()));
         SchoolDepartment schoolDepartment = null;
         if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment() > 0) {
             schoolDepartment = schoolDepartmentRepository.findOne(newSubject.getSchoolDepartment());
@@ -72,19 +85,29 @@ public class SubjectService {
     }
 
     private void bindConnections(Subject target, SubjectForm source) {
+        Set<Long> subjectIds = new HashSet<>();
+        Collection<Long> mandatory = source.getMandatoryPrerequisiteSubjects().stream().map(EntityConnectionCommand::getId).collect(Collectors.toSet());
+        Collection<Long> recommended = source.getRecommendedPrerequisiteSubjects().stream().map(EntityConnectionCommand::getId).collect(Collectors.toSet());
+        Collection<Long> substitute = source.getSubstituteSubjects().stream().map(EntityConnectionCommand::getId).collect(Collectors.toSet());
+
+        subjectIds.addAll(mandatory);
+        subjectIds.addAll(recommended);
+        subjectIds.addAll(substitute);
+        List<Subject> subjects = subjectRepository.findAll(subjectIds);
+
         Set<SubjectConnect> connections = target.getSubjectConnections();
         Set<SubjectConnect> newConnections = new HashSet<>();
 
-        bindSubjectConnect(target, classifierRepository.getOne(SubjectConnection.AINESEOS_EK.name()), connections, newConnections, source.getMandatoryPrerequisiteSubjects());
-        bindSubjectConnect(target, classifierRepository.getOne(SubjectConnection.AINESEOS_EV.name()), connections, newConnections, source.getRecommendedPrerequisiteSubjects());
-        bindSubjectConnect(target, classifierRepository.getOne(SubjectConnection.AINESEOS_A.name()), connections, newConnections, source.getSubstituteSubjects());
+        bindSubjectConnect(target, classifierRepository.getOne(SubjectConnection.AINESEOS_EK.name()), connections, newConnections, subjects.stream().filter(it -> mandatory.contains(it.getId())).collect(Collectors.toSet()));
+        bindSubjectConnect(target, classifierRepository.getOne(SubjectConnection.AINESEOS_EV.name()), connections, newConnections, subjects.stream().filter(it -> recommended.contains(it.getId())).collect(Collectors.toSet()));
+        bindSubjectConnect(target, classifierRepository.getOne(SubjectConnection.AINESEOS_A.name()), connections, newConnections, subjects.stream().filter(it -> substitute.contains(it.getId())).collect(Collectors.toSet()));
 
         List<Long> ids = new ArrayList<>();
         ids.add(target.getId());
         for (SubjectConnect subjectConnect : newConnections) {
-            Long id = subjectConnect.getConnectSubject().getId();
+            Long id = EntityUtil.getId(subjectConnect.getConnectSubject());
             if (ids.contains(id)) {
-                throw new ValidationFailedException(subjectConnect.getConnection().getCode(), "same-subject-multipile");
+                throw new ValidationFailedException(EntityUtil.getCode(subjectConnect.getConnection()), "same-subject-multipile");
             }
             ids.add(id);
         }
@@ -92,9 +115,9 @@ public class SubjectService {
         target.setSubjectConnections(newConnections);
     }
 
-    private static void bindSubjectConnect(Subject primarySubject, Classifier connectionType, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Set<Subject> connectSubjects) {
+    private static void bindSubjectConnect(Subject primarySubject, Classifier connectionType, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Collection<Subject> connectSubjects) {
         Map<Long, SubjectConnect> m = connections.stream()
-                .filter(it -> Objects.equals(it.getConnection().getCode(), connectionType.getCode()))
+                .filter(it -> Objects.equals(EntityUtil.getCode(it.getConnection()), EntityUtil.getCode(connectionType)))
                 .collect(Collectors.toMap(k -> k.getConnectSubject().getId(), v -> v));
         for (Subject connected : connectSubjects) {
             if (m.keySet().contains(connected.getId())) {
@@ -105,17 +128,12 @@ public class SubjectService {
         }
     }
 
-    // todo private Collection<Long> curricula;
     public Page<SubjectSearchDto> search(Long schoolId, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
         return subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             
-            Collection<String> ehisSchools = subjectSearchCommand.getEhisSchools();
-
-            if (schoolId != null && CollectionUtils.isEmpty(ehisSchools)) {
+            if (schoolId != null) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            } else if(!CollectionUtils.isEmpty(ehisSchools)) {
-                filters.add(root.get("school").get("ehisSchool").get("code").in(ehisSchools));
             }
 
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getDepartments())) {
@@ -128,6 +146,16 @@ public class SubjectService {
                 Root<SubjectLanguage> languageRoot = languageQuery.from(SubjectLanguage.class);
                 languageQuery = languageQuery.select(languageRoot.get("subject").get("id")).where(languageRoot.get("language").get("code").in(languages));
                 filters.add(root.get("id").in(languageQuery));
+            }
+
+            Collection<Long> curricula = subjectSearchCommand.getCurricula();
+            if (!CollectionUtils.isEmpty(curricula)) {
+                Subquery<Long> curriculaQuery = query.subquery(Long.class);
+                Root<CurriculumVersion> curriculumVersionRoot = curriculaQuery.from(CurriculumVersion.class);
+                curriculaQuery = curriculaQuery
+                        .select(curriculumVersionRoot.join("modules").join("subjects").get("subject").get("id"))
+                        .where(curriculumVersionRoot.get("id").in(curricula));
+                filters.add(root.get("id").in(curriculaQuery));
             }
 
             if (!CollectionUtils.isEmpty(subjectSearchCommand.getAssessments())) {

@@ -1,0 +1,75 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <form ng-submit="loadData()" layout="column" novalidate>
+        <h1 class="md-title">{{currentLanguageNameField(school)}}</h1>
+        <h1 class="md-title">{{'messageTemplate.messageTemplates' | translate}}</h1>
+        <md-input-container>
+            <label>{{'messageTemplate.type' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.type" model-value-attr="code" main-classifier-code="TEATE_LIIK" multiple></hois-classifier-select>
+        </md-input-container>
+        <md-input-container>
+            <label class="textInput">{{'generalmessage.title' | translate}}</label>
+            <input ng-model="criteria.headline" type="text">
+        </md-input-container>
+        <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="20" flex-sm="100" flex-xs="100">
+                <label>{{'messageTemplate.validDate' | translate}}</label>
+                <input type="hidden">
+            </md-input-container>
+            <div flex="33">
+                <md-input-container flex>
+                    <label>{{'main.from' | translate}}</label>
+                    <md-datepicker ng-model="criteria.validFrom"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex>
+                    <label>{{'main.thru' | translate}}</label>
+                    <md-datepicker ng-model="criteria.validThru"></md-datepicker>
+                </md-input-container>
+            </div>
+        </div>
+        <md-checkbox
+            ng-model="criteria.valid"
+            aria-label="{{'main.valid' | translate}}">
+            {{'main.valid' | translate}}
+        </md-checkbox>
+
+        <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="#/messageTemplate/new">{{'main.button.create' | translate}}</md-button>
+        </div>
+    </form>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="type.{{currentLanguageNameField()}}">{{'messageTemplate.type' | translate}}</th>
+            <th md-column md-order-by="headline">{{'generalmessage.title' | translate}}</th>
+            <th md-column md-order-by="validFrom">{{'messageTemplate.validFrom' | translate}}</th>
+            <th md-column md-order-by="validThru">{{'messageTemplate.validThru' | translate}}</th>
+            <th md-column md-order-by="">{{'main.status' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+            <td md-cell>{{::row.headline}}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.validFrom} }}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
+            <td md-cell>{{isValid(row) ? 'main.valid' : 'main.invalid' | translate}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/messageTemplate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

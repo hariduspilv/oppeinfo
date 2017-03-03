@@ -2,6 +2,7 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,9 +17,12 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.Student;
-import ee.hitsa.ois.domain.StudentAbsence;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.domain.student.StudentHistory;
+import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.StudentAbsenceRepository;
 import ee.hitsa.ois.repository.StudentRepository;
@@ -28,6 +32,8 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.StudentForm;
 import ee.hitsa.ois.web.commandobject.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
+import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
+import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 @Transactional
@@ -35,7 +41,11 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 public class StudentService {
 
     @Autowired
+    private ApplicationRepository applicationRepository;
+    @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private DirectiveRepository directiveRepository;
     @Autowired
     private PersonRepository personRepository;
     @Autowired
@@ -84,6 +94,21 @@ public class StudentService {
 
         EntityUtil.bindToEntity(form, student, classifierRepository, "person");
         student.setEmail(form.getSchoolEmail());
+        return saveWithHistory(student);
+    }
+
+    public Student saveWithHistory(Student student) {
+        // student version handling: update current version validity end
+        StudentHistory old = student.getStudentHistory();
+        LocalDateTime now = LocalDateTime.now();
+        if(old != null) {
+            old.setValidThru(now);
+        }
+        // and create new version
+        StudentHistory current = EntityUtil.bindToEntity(student, new StudentHistory());
+        current.setStudent(student);
+        current.setValidFrom(now);
+        student.setStudentHistory(current);
         return studentRepository.save(student);
     }
 
@@ -97,5 +122,13 @@ public class StudentService {
 
     public void delete(StudentAbsence absence) {
         studentAbsenceRepository.delete(absence);
+    }
+
+    public Page<StudentApplicationDto> applications(Long studentId, Pageable pageable) {
+        return applicationRepository.findAllByStudent_id(studentId, pageable).map(StudentApplicationDto::of);
+    }
+
+    public Page<StudentDirectiveDto> directives(Long studentId, Pageable pageable) {
+        return directiveRepository.findAllByStudent_id(studentId, pageable).map(StudentDirectiveDto::of);
     }
 }

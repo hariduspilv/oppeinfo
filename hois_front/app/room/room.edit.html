@@ -1,0 +1,55 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="roomForm">
+      <md-input-container class="md-block">
+        <label>{{'room.building' | translate}}</label>
+        <hois-building-select ng-model="record.building" name="building" required></hois-building-select>
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label>{{'room.name' | translate}}</label>
+        <input ng-model="record.name" name="name" type="text" required md-maxlength="100">
+      </md-input-container>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'room.code' | translate}}</label>
+        <input ng-model="record.code" name="code" type="text" required md-maxlength="100">
+      </md-input-container>
+
+      <md-checkbox ng-model="record.isStudy" name="isStudy">
+        {{'room.isStudy' | translate}}
+      </md-checkbox>
+
+      <md-input-container class="md-block">
+        <label class="textInput">{{'room.seats' | translate}}</label>
+        <input ng-model="record.seats" name="seats" type="number" min="0">
+      </md-input-container>
+
+      <div layout="row">
+        <md-input-container flex>
+          <label>{{'room.equipment' | translate}}</label>
+          <hois-classifier-select ng-model="formState.newEquipment" main-classifier-code="SEADMED"></hois-classifier-select>
+        </md-input-container>
+        <md-input-container flex>
+          <md-button ng-show="formState.newEquipment" ng-click="addEquipment()" class="md-raised md-primary">{{'main.button.add' | translate}}</md-button>
+        </md-input-container>
+      </div>
+
+      <md-list>
+        <md-list-item ng-repeat="equipment in formState.roomEquipment">
+          <md-input-container flex>
+            <label class="textInput">{{currentLanguageNameField(equipment.equipment)}}</label>
+            <input ng-model="equipment.equipmentCount" type="number" min="0">
+          </md-input-container>
+          <md-input-container flex>
+            <md-button ng-click="deleteEquipment(equipment.equipment.code)" class="md-raised md-primary">{{'main.button.delete' | translate}}</md-button>
+          </md-input-container>
+        </md-list-item>
+      </md-list>
+    </form>
+
+    <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-show="record.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-href="#/rooms/search" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

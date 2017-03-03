@@ -30,6 +30,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
@@ -38,6 +39,7 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public abstract class EntityUtil {
 
@@ -163,13 +165,22 @@ public abstract class EntityUtil {
                             Object value = readMethod.invoke(entity);
                             writeMethod.invoke(dto, value);
                         } else {
-                            // special handling for Classifier -> String and BaseEntityWithId -> Long
+                            // special handling for Classifier -> String and BaseEntityWithId -> Long and BaseEntityWithId -> AutocompleteResult
                             if(Classifier.class.isAssignableFrom(sourcePropertyType) && String.class.isAssignableFrom(targetPropertyType)) {
                                 Object value = readMethod.invoke(entity);
                                 writeMethod.invoke(dto, getNullableCode((Classifier)value));
                             }else if(BaseEntityWithId.class.isAssignableFrom(sourcePropertyType) && Long.class.isAssignableFrom(targetPropertyType)) {
                                 Object value = readMethod.invoke(entity);
                                 writeMethod.invoke(dto, getNullableId((BaseEntityWithId)value));
+                            }else if(BaseEntityWithId.class.isAssignableFrom(sourcePropertyType) && AutocompleteResult.class.isAssignableFrom(targetPropertyType)) {
+                                Method m = ReflectionUtils.findMethod(AutocompleteResult.class, "of", sourcePropertyType);
+                                if(m != null && Modifier.isStatic(m.getModifiers()) && Modifier.isPublic(m.getModifiers())) {
+                                    Object value = readMethod.invoke(entity);
+                                    if(value != null) {
+                                        value = m.invoke(null, value);
+                                    }
+                                    writeMethod.invoke(dto, value);
+                                }
                             }
                         }
                      } catch (Throwable e) {

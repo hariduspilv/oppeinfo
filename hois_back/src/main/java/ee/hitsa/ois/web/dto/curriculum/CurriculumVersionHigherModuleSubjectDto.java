@@ -8,9 +8,9 @@ import java.util.stream.Collectors;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
-import ee.hitsa.ois.web.dto.SchoolDto;
 
 public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     
@@ -20,18 +20,27 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     @NotNull
     private Boolean optional;
     
-    /*
-     * SubjectDto is not used as it has Classifier object fields(not classifier codes),
-     * which can not be serialized
-     */
     @NotNull
     private Long subjectId;
     private String nameEt;
     private String nameEn;
-    private SchoolDto school;
+    private String schoolCode;
+    private String ehisSchoolCode;
     private BigDecimal credits;
     private String code;
     
+    public static CurriculumVersionHigherModuleSubjectDto of (Subject subject) {
+        CurriculumVersionHigherModuleSubjectDto dto = new CurriculumVersionHigherModuleSubjectDto();
+        dto.setNameEt(subject.getNameEt());
+        dto.setNameEn(subject.getNameEn());
+        dto.setCredits(subject.getCredits());
+        dto.setCode(subject.getCode());
+        dto.setSubjectId(subject.getId());
+        dto.setSchoolCode(subject.getSchool().getCode());
+        dto.setEhisSchoolCode(EntityUtil.getCode(subject.getSchool().getEhisSchool()));
+
+        return dto;
+    }
     
     public static CurriculumVersionHigherModuleSubjectDto of(CurriculumVersionHigherModuleSubject subject, Set<CurriculumVersionElectiveModuleDto> electiveModules) {
         CurriculumVersionHigherModuleSubjectDto dto = 
@@ -41,7 +50,8 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
         dto.setNameEn(subject.getSubject().getNameEn());
         dto.setCredits(subject.getSubject().getCredits());
         dto.setCode(subject.getSubject().getCode());
-        dto.setSchool(SchoolDto.of(subject.getSubject().getSchool()));
+        dto.setSchoolCode(subject.getSubject().getSchool().getCode());
+        dto.setEhisSchoolCode(EntityUtil.getCode(subject.getSubject().getSchool().getEhisSchool()));
         
         List<CurriculumVersionElectiveModuleDto> list = electiveModules.stream().filter(em -> em.getSubjects().contains(dto.getSubjectId())).collect(Collectors.toList());  
         if(list.size() == 1) {
@@ -49,7 +59,23 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
         }
         return dto;
     }
-    
+
+    public String getSchoolCode() {
+        return schoolCode;
+    }
+
+    public void setSchoolCode(String schoolCode) {
+        this.schoolCode = schoolCode;
+    }
+
+    public String getEhisSchoolCode() {
+        return ehisSchoolCode;
+    }
+
+    public void setEhisSchoolCode(String ehisSchoolCode) {
+        this.ehisSchoolCode = ehisSchoolCode;
+    }
+
     public Long getElectiveModule() {
         return electiveModule;
     }
@@ -104,14 +130,6 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
 
     public void setNameEn(String nameEn) {
         this.nameEn = nameEn;
-    }
-
-    public SchoolDto getSchool() {
-        return school;
-    }
-
-    public void setSchool(SchoolDto school) {
-        this.school = school;
     }
 
     public BigDecimal getCredits() {

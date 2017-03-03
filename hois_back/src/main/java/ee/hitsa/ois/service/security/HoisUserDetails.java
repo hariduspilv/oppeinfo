@@ -1,6 +1,5 @@
 package ee.hitsa.ois.service.security;
 
-import ee.hitsa.ois.domain.School;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.util.EntityUtil;
@@ -23,16 +22,16 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     private static final long serialVersionUID = -7947997673955215575L;
 
     private Long userId;
-    private transient Long personId;
-    private transient String role;
-    private transient School school;
+    private Long personId;
+    private String role;
+    private Long schoolId;
 
     HoisUserDetails(User user, List<String> roles) {
         super(user.getPerson().getIdcode(), "undefined", getAuthorities(roles));
         this.userId = user.getId();
         this.personId = user.getPerson().getId();
         this.role = EntityUtil.getCode(user.getRole());
-        this.school = user.getSchool();
+        this.schoolId = EntityUtil.getNullableId(user.getSchool());
     }
 
     private static Collection<? extends GrantedAuthority> getAuthorities(List<String> roles) {
@@ -47,16 +46,12 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
         return personId;
     }
 
-    public School getSchool() {
-        return school;
-    }
-
     public Long getSchoolId() {
-        return EntityUtil.getNullableId(school);
+        return schoolId;
     }
 
     public boolean isSchoolAdmin() {
-        return school != null && Role.ROLL_A.name().equals(role);
+        return schoolId != null && Role.ROLL_A.name().equals(role);
     }
 
     public static HoisUserDetails fromPrincipal(Principal principal) {

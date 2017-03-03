@@ -18,7 +18,7 @@ public class CurriculumVersionOccupationModuleCapacity  extends BaseEntityWithId
     @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false, insertable = false)
     private CurriculumVersionOccupationModule module;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier capacityType;
 
     @Column(nullable = false)

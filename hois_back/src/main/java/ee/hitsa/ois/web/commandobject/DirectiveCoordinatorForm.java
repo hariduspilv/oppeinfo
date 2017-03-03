@@ -13,6 +13,33 @@ public class DirectiveCoordinatorForm extends VersionedCommand {
     @NotEmpty
     @EstonianIdCode
     private String idcode;
+    private Boolean isDirective;
+    private Boolean isCertificate;
+    private Boolean isCertificateDefault;
+    
+    public Boolean getIsDirective() {
+        return isDirective;
+    }
+
+    public void setIsDirective(Boolean isDirective) {
+        this.isDirective = isDirective;
+    }
+
+    public Boolean getIsCertificate() {
+        return isCertificate;
+    }
+
+    public void setIsCertificate(Boolean isCertificate) {
+        this.isCertificate = isCertificate;
+    }
+
+    public Boolean getIsCertificateDefault() {
+        return isCertificateDefault;
+    }
+
+    public void setIsCertificateDefault(Boolean isCertificateDefault) {
+        this.isCertificateDefault = isCertificateDefault;
+    }
 
     public String getName() {
         return name;

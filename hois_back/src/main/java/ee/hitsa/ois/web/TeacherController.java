@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web;
 
-import ee.hitsa.ois.domain.Teacher;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.service.TeacherService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -23,7 +23,7 @@ public class TeacherController {
     @Autowired
     private TeacherService teacherService;
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public TeacherDto get(@WithEntity("id") Teacher teacher) {
         return TeacherDto.of(teacher);
     }
@@ -39,13 +39,13 @@ public class TeacherController {
         return teacherService.save(user , new Teacher(), teacherForm);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public TeacherDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Teacher teacher, @Valid @RequestBody TeacherForm teacherForm) {
         assertSameSchool(user, teacher);
         return teacherService.save(user, teacher, teacherForm);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Teacher teacher,  @SuppressWarnings("unused") @RequestParam("version") Long version) {
         assertSameSchool(user, teacher);
         teacherService.delete(teacher);

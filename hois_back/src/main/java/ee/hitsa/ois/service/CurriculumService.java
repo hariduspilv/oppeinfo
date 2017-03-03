@@ -2,8 +2,10 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -55,6 +57,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapac
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumDepartmentRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
@@ -65,6 +68,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
+import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
@@ -84,7 +88,6 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleOutcomeD
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeCapacityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleYearCapacityDto;
-
 
 @Transactional
 @Service
@@ -107,7 +110,7 @@ public class CurriculumService {
 	@Autowired
 	private SubjectRepository subjectRepository;
 
-	public Iterable<CurriculumDepartment> findAllDepartments() {
+	public List<CurriculumDepartment> findAllDepartments() {
 		return curriculumDepartmentRepository.findAll();
 	}
 
@@ -210,6 +213,9 @@ public class CurriculumService {
             if(command.getParamName().equals("code")) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }
+            if(Boolean.TRUE.equals(command.getCountOnlyValid())) {
+                filters.add(cb.greaterThanOrEqualTo(root.get("validThru"), LocalDate.now()));
+            }
             final Set<String> ALLOWED_PROPERTIES = new HashSet<>(Arrays.asList("code", "merCode"));
             if(ALLOWED_PROPERTIES.contains(command.getParamName())) {
                 filters.add(cb.equal(root.get(command.getParamName()), command.getParamValue()));
@@ -273,8 +279,6 @@ public class CurriculumService {
     private CurriculumVersion updateVersion(Curriculum curriculum, CurriculumVersion version, CurriculumVersionDto dto) {
         CurriculumVersion updatedVersion = EntityUtil.bindToEntity(dto, version, classifierRepository, "curriculumStudyForm", "modules",
                 "specialities", "schoolDepartment", "occupationModules");
-        //TODO: save specialties
-//                updateCurriculumVersionSpecialities(curriculum.getSpecialities(), updatedVersion, dto.getSpecialitiesReferenceNumbers());
         updateCurriculumVersionSpecialities(curriculum, updatedVersion, dto.getSpecialitiesReferenceNumbers());
         updateCurriculumVersionModules(updatedVersion, dto.getModules());
         updateCurriculumVersionOccupationalModules(updatedVersion, dto.getOccupationModules());
@@ -293,13 +297,13 @@ public class CurriculumService {
      * TODO: not yet tested
      * Unlike other methods here, this requires curriculum to be saved
      */
-    private void updateVersionStudyForm(Curriculum curriculum, CurriculumVersion version, CurriculumVersionDto dto) {
+    private static void updateVersionStudyForm(Curriculum curriculum, CurriculumVersion version, CurriculumVersionDto dto) {
         if(curriculum.getId() == null) {
             return;
         }
         String code = dto.getCurriculumStudyForm();
         Optional<CurriculumStudyForm> studyForm = curriculum.getStudyForms().stream()
-                .filter(s -> s.getStudyForm().getCode().equals(code)).findFirst();
+                .filter(s -> EntityUtil.getCode(s.getStudyForm()).equals(code)).findFirst();
         if(studyForm.isPresent()) {
             version.setCurriculumStudyForm(studyForm.get());
         } else {
@@ -307,57 +311,28 @@ public class CurriculumService {
         }
     }
 
-//    private void updateCurriculumVersionSpecialities(Set<CurriculumSpeciality> specialities, CurriculumVersion version, Set<Long> referenceNumbers) {
-//        Set<CurriculumSpeciality> newSpecs = getSpecialitiesByReferenceNumbers(specialities, referenceNumbers);
-//        Set<CurriculumVersionSpeciality> newSpecialities = new HashSet<>();
-//
-//        Map<Long, CurriculumVersionSpeciality> oldSpecs = version.getSpecialities().stream()
-//                .collect(Collectors.toMap(s -> s.getCurriculumSpeciality().getId(), s -> s));
-//
-//        for(CurriculumSpeciality spec : newSpecs) {
-//            if(spec.getId() != null && oldSpecs.containsKey(spec.getId())) {
-//                newSpecialities.add(oldSpecs.get(spec.getId()));
-//            } else {
-//                CurriculumVersionSpeciality scv = new CurriculumVersionSpeciality();
-//                scv.setCurriculumSpeciality(spec);
-//                version.getSpecialities().add(scv);
-////                newSpecialities.add(new CurriculumVersionSpeciality(version, spec));
-//            }
-//        }
-//        version.setSpecialities(newSpecialities);
-//    }
-//
-//    private Set<CurriculumSpeciality> getSpecialitiesByReferenceNumbers(Set<CurriculumSpeciality> specialities,
-//            Set<Long> referenceNumbers) {
-//        Set<CurriculumSpeciality> newSpecialities = new HashSet<>();
-//        specialities.forEach(s -> {
-//            if(referenceNumbers.contains(s.getReferenceNumber())) {
-//                newSpecialities.add(s);
-//            }
-//        });
-//        return newSpecialities;
-//    }
-
-    /**
-     * TODO: update but not rewrite set!
-     */
-    private void updateCurriculumVersionSpecialities(Curriculum curriculum, CurriculumVersion version, Set<Long> specialities) {
-        Set<CurriculumVersionSpeciality> newSpecialities = new HashSet<>();
-
-        Map<Long, CurriculumSpeciality> map = curriculum.getSpecialities().stream().collect(Collectors.toMap(s -> s.getReferenceNumber(), s -> s));
-
-        if(specialities != null) {
-            specialities.forEach(s -> {
+    private static void updateCurriculumVersionSpecialities(Curriculum curriculum, CurriculumVersion version, Set<Long> specialities) {
+      Set<CurriculumVersionSpeciality> newSpecialities = new HashSet<>();
+      if(specialities != null) {
+        Map<Long, CurriculumVersionSpeciality> oldSpecs = version.getSpecialities().stream()
+                  .collect(Collectors.toMap(s -> EntityUtil.getId(s.getCurriculumSpeciality()), s -> s));
+        Map<Long, CurriculumSpeciality> selectedSpecs = curriculum.getSpecialities().stream()
+                .collect(Collectors.toMap(s -> s.getReferenceNumber(), s -> s));
+        specialities.forEach(s -> {
+            if(s.longValue() > 0 && oldSpecs.keySet().contains(s)) {
+                newSpecialities.add(oldSpecs.get(s));
+            } else {
               CurriculumVersionSpeciality newSpec = new CurriculumVersionSpeciality();
-              CurriculumSpeciality curriculumSpeciality = map.get(s);
+              CurriculumSpeciality curriculumSpeciality = selectedSpecs.get(s);
               newSpec.setCurriculumSpeciality(curriculumSpeciality);
               newSpec.setCurriculumVersion(version);
               version.getSpecialities().add(newSpec);
               curriculumSpeciality.getCurriculumVersionSpecialities().add(newSpec);
               newSpecialities.add(newSpec);
-            });
-        }
-        version.setSpecialities(newSpecialities);
+            }
+        });
+      }
+      version.setSpecialities(newSpecialities);
     }
 
     private void updateCurriculumVersionModules(CurriculumVersion version,
@@ -370,7 +345,6 @@ public class CurriculumService {
                 module = EntityUtil.bindToEntity(dto, module, classifierRepository, "subjects", "electiveModules", "specialities");
                 updateCurriculumVersionModuleSubjects(module, dto.getSubjects());
                 updateCurriculumVersionModuleElectiveModules(module, dto.getElectiveModules());
-                //TODO: save specialities
                 updateVersionModuleSpecialities(version, module, dto.getSpecialitiesReferenceNumbers());
                 newModules.add(module);
             });
@@ -480,28 +454,32 @@ public class CurriculumService {
         return updatedThemeOutcome;
     }
 
-    private void updateVersionModuleSpecialities(CurriculumVersion version,
+    private static void updateVersionModuleSpecialities(CurriculumVersion version,
             CurriculumVersionHigherModule module, Set<Long> specsRefNums) {
-
-        Set<CurriculumVersionSpeciality> curriculumVersionSpecialities = version.getSpecialities();
-
-        Set<CurriculumVersionHigherModuleSpeciality> newModuleSpecialities = new HashSet<>();
-
+        Set<CurriculumVersionHigherModuleSpeciality> newSpecs = new HashSet<>();
+        
         if(specsRefNums != null && !specsRefNums.isEmpty()) {
-            Map<Long, CurriculumVersionSpeciality> versionSpecialities = curriculumVersionSpecialities.stream().collect(Collectors
+            
+            Map<Long, CurriculumVersionHigherModuleSpeciality> oldSpecs = module.getSpecialities().stream()
+                    .collect(Collectors.toMap(s -> EntityUtil.getId(s.getSpeciality().getCurriculumSpeciality()), s -> s));
+            
+            Map<Long, CurriculumVersionSpeciality> selectedSpecs = version.getSpecialities().stream().collect(Collectors
                     .toMap(s -> s.getCurriculumSpeciality().getReferenceNumber(), s -> s));
-
+          
             specsRefNums.forEach(s -> {
-                CurriculumVersionSpeciality versionSpeciality = versionSpecialities.get(s);
-                CurriculumVersionHigherModuleSpeciality newSpec = new CurriculumVersionHigherModuleSpeciality();
-                newSpec.setSpeciality(versionSpeciality);
-                newSpec.setModule(module);
-//                module.getSpecialities().add(newSpec);
-                versionSpeciality.getModuleSpecialities().add(newSpec);
-                newModuleSpecialities.add(newSpec);
+                if(s.longValue() > 0 && oldSpecs.keySet().contains(s)) {
+                    newSpecs.add(oldSpecs.get(s));
+                } else {
+                  CurriculumVersionSpeciality versionSpeciality = selectedSpecs.get(s);
+                  CurriculumVersionHigherModuleSpeciality newSpec = new CurriculumVersionHigherModuleSpeciality();
+                  newSpec.setSpeciality(versionSpeciality);
+                  newSpec.setModule(module);
+                  versionSpeciality.getModuleSpecialities().add(newSpec);
+                  newSpecs.add(newSpec);
+                }
             });
         }
-        module.setSpecialities(newModuleSpecialities);
+        module.setSpecialities(newSpecs);
     }
 
     private void updateCurriculumVersionModuleSubjects(CurriculumVersionHigherModule module,
@@ -519,7 +497,7 @@ public class CurriculumService {
         module.setSubjects(newSubjects);
     }
 
-    private void updateCurriculumVersionModuleElectiveModules(CurriculumVersionHigherModule module,
+    private static void updateCurriculumVersionModuleElectiveModules(CurriculumVersionHigherModule module,
             Set<CurriculumVersionElectiveModuleDto> electiveModules) {
         Set<CurriculumVersionElectiveModule> newSet = new HashSet<>();
         if(electiveModules != null) {
@@ -534,7 +512,7 @@ public class CurriculumService {
         module.setElectiveModules(newSet);
     }
 
-    private void updateCurriculumVersionEleciveModulesSubjects(Set<CurriculumVersionHigherModuleSubject> moduleSubjects,
+    private static void updateCurriculumVersionEleciveModulesSubjects(Set<CurriculumVersionHigherModuleSubject> moduleSubjects,
             CurriculumVersionElectiveModule newElectiveModule, Set<Long> electiveModuleSubjects) {
         if(moduleSubjects != null && electiveModuleSubjects != null) {
             Set<CurriculumVersionHigherModuleSubject> newSubjects = moduleSubjects.stream()
@@ -564,7 +542,7 @@ public class CurriculumService {
     }
 
 
-    private void updateCurriculumModuleOutcomes(CurriculumModule module, Set<CurriculumModuleOutcomeDto> outcomes) {
+    private static void updateCurriculumModuleOutcomes(CurriculumModule module, Set<CurriculumModuleOutcomeDto> outcomes) {
         Set<CurriculumModuleOutcome> newOutComes = new HashSet<>();
         if(outcomes != null) {
             outcomes.forEach(dto -> {
@@ -733,12 +711,10 @@ public class CurriculumService {
         }
     }
 
-
-
     private void updateLanguages(Curriculum target, Set<String> languageCodes) {
         if(languageCodes != null && !languageCodes.isEmpty()) {
           Map<String, CurriculumStudyLanguage> langs = target.getStudyLanguages().stream()
-                  .collect(Collectors.toMap(e -> e.getStudyLang().getCode(), e -> e));
+                  .collect(Collectors.toMap(e -> EntityUtil.getCode(e.getStudyLang()), e -> e));
           Set<CurriculumStudyLanguage> newSet = new HashSet<>();
           for(String lang : languageCodes) {
               if(langs.keySet().contains(lang)) {
@@ -776,4 +752,18 @@ public class CurriculumService {
         return CurriculumVersionDto.of(curriculumVersionRepository.save(updatedCurriculumVersion));
     }
 
+    public Page<CurriculumVersionHigherModuleSubjectDto> getSubjects(SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
+        return subjectRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+
+            Collection<String> ehisSchools = subjectSearchCommand.getEhisSchools();
+            if(!CollectionUtils.isEmpty(ehisSchools)) {
+                filters.add(root.get("school").get("ehisSchool").get("code").in(ehisSchools));
+            }
+
+            filters.add(cb.equal(root.get("status").get("code"), SubjectStatus.AINESTAATUS_K.name()));
+
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }, pageable).map(CurriculumVersionHigherModuleSubjectDto::of);
+    }
 }

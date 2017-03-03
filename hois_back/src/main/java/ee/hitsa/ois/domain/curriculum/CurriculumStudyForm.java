@@ -1,6 +1,7 @@
 package ee.hitsa.ois.domain.curriculum;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
@@ -11,7 +12,7 @@ public class CurriculumStudyForm extends BaseEntityWithId {
 
 	private static final long serialVersionUID = 6613489310489701663L;
 
-	@ManyToOne(optional = false)
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier studyForm;
 
     public CurriculumStudyForm() {

@@ -78,7 +78,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
                     }).collect(Collectors.toSet());
             dto.setSubjects(subjects);
         }
-        Set<Long> specialitiesReferenceNumbers = module.getSpecialities().stream().map(m -> m.getSpeciality().getCurriculumSpeciality().getId()).collect(Collectors.toSet());
+        Set<Long> specialitiesReferenceNumbers = module.getSpecialities().stream().map(m -> EntityUtil.getId(m.getSpeciality().getCurriculumSpeciality())).collect(Collectors.toSet());
         dto.setSpecialitiesReferenceNumbers(specialitiesReferenceNumbers);
         return dto;
     }

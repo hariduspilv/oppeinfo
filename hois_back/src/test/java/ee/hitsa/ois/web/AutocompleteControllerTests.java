@@ -17,8 +17,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfiguration;
-import ee.hitsa.ois.domain.School;
-import ee.hitsa.ois.domain.SchoolDepartment;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.SchoolDepartmentService;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
@@ -110,6 +110,13 @@ public class AutocompleteControllerTests {
     }
 
     @Test
+    public void schools() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/autocomplete/schools", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void schoolDepartments() {
         String uri = "/autocomplete/schooldepartments?lang=EN&excludedId=1";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
@@ -120,6 +127,14 @@ public class AutocompleteControllerTests {
     @Test
     public void subjects() {
         String uri = "/autocomplete/subjects";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void teachers() {
+        String uri = "/autocomplete/teachers";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

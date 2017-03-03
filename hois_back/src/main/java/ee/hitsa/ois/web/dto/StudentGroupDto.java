@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
-import ee.hitsa.ois.domain.StudentGroup;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.StudentGroupForm;
 

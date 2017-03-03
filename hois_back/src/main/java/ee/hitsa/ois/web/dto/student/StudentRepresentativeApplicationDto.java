@@ -1,9 +1,10 @@
 package ee.hitsa.ois.web.dto.student;
 
+import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.*;
 import java.time.LocalDateTime;
 
-import ee.hitsa.ois.domain.Student;
-import ee.hitsa.ois.domain.StudentRepresentativeApplication;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentRepresentativeApplication;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationForm;
 
@@ -15,7 +16,10 @@ public class StudentRepresentativeApplicationDto extends StudentRepresentativeAp
     private String fullname;
     private String idcode;
     private LocalDateTime inserted;
+    private LocalDateTime confirmDate;
+    private LocalDateTime declineDate;
     private String status;
+    private String rejectReason;
     private Long version;
 
     public Long getId() {
@@ -66,12 +70,36 @@ public class StudentRepresentativeApplicationDto extends StudentRepresentativeAp
         this.inserted = inserted;
     }
 
+    public LocalDateTime getConfirmDate() {
+        return confirmDate;
+    }
+
+    public void setConfirmDate(LocalDateTime confirmDate) {
+        this.confirmDate = confirmDate;
+    }
+
+    public LocalDateTime getDeclineDate() {
+        return declineDate;
+    }
+
+    public void setDeclineDate(LocalDateTime declineDate) {
+        this.declineDate = declineDate;
+    }
+
     public String getStatus() {
         return status;
     }
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 
     public Long getVersion() {
@@ -89,6 +117,11 @@ public class StudentRepresentativeApplicationDto extends StudentRepresentativeAp
         dto.setStudentId(student.getId());
         dto.setStudentFullname(student.getPerson().getFullname());
         dto.setStudentIdcode(student.getPerson().getIdcode());
+        if(AVALDUS_ESINDAJA_STAATUS_K.name().equals(dto.getStatus())) {
+            dto.setConfirmDate(application.getChanged());
+        } else if(AVALDUS_ESINDAJA_STAATUS_T.name().equals(dto.getStatus())) {
+            dto.setDeclineDate(application.getChanged());
+        }
         return dto;
     }
 }

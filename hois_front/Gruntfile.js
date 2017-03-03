@@ -39,7 +39,7 @@ module.exports = function (grunt) {
         tasks: ['wiredep']
       },
       js: {
-        files: ['<%= yeoman.app %>/scripts/{,*/}*.js'],
+        files: ['<%= yeoman.app %>/*/{,*/}*.js'],
         tasks: ['newer:jshint:all', 'newer:jscs:all'],
         options: {
           livereload: '<%= connect.options.livereload %>'
@@ -145,7 +145,7 @@ module.exports = function (grunt) {
       all: {
         src: [
           'Gruntfile.js',
-          '<%= yeoman.app %>/scripts/{,*/}*.js'
+          '<%= yeoman.app %>/{,*/}*.js'
         ]
       },
       test: {
@@ -165,7 +165,7 @@ module.exports = function (grunt) {
       all: {
         src: [
           'Gruntfile.js',
-          '<%= yeoman.app %>/scripts/{,*/}*.js'
+          '<%= yeoman.app %>/{,*/}*.js'
         ]
       },
       test: {
@@ -368,7 +368,7 @@ module.exports = function (grunt) {
           usemin: 'scripts/scripts.js'
         },
         cwd: '<%= yeoman.app %>',
-        src: 'views/{,*/}*.html',
+        src: ['*/*.html', '!test/*.html'],
         dest: '.tmp/templateCache.js'
       }
     },
@@ -432,6 +432,13 @@ module.exports = function (grunt) {
         'svgmin'
       ]
     },
+    processhtml: {
+      dist: {
+        files: {
+          '<%= yeoman.dist %>/index.html': ['<%= yeoman.dist %>/index.html']
+        }
+      }
+    },
 
     // Test settings
     karma: {
@@ -488,6 +495,7 @@ module.exports = function (grunt) {
     'json-minify',
     'filerev',
     'usemin',
+    'processhtml:dist',
     'htmlmin'
   ]);
 

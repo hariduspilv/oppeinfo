@@ -1,12 +1,13 @@
 package ee.hitsa.ois.web.commandobject;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+import ee.hitsa.ois.validation.NotEmpty;
 
 public class StudentRepresentativeApplicationDeclineForm extends VersionedCommand {
 
-    @NotNull
-    @Size(min = 1, max = 4000)
+    @NotEmpty
+    @Size(max = 4000)
     private String rejectReason;
 
     public String getRejectReason() {

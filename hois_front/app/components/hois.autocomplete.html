@@ -1,0 +1,13 @@
+<md-autocomplete flex
+                 md-input-minlength="2"
+                 md-no-cache="true"
+                 md-selected-item="ngModel"
+                 md-search-text="searchText"
+                 md-items="item in search(searchText)"
+                 md-item-text="getChipText(item)"
+                 md-require-match
+                 md-floating-label="{{label | translate}}">
+  <md-item-template>
+    <span md-highlight-text="searchText">{{currentLanguage()==='en' ? (item.nameEn || item.nameEt) : item.nameEt}}</span>
+  </md-item-template>
+</md-autocomplete>

@@ -28,7 +28,7 @@ public class ClassifierConnectController {
 
     @Autowired ClassifierConnectService service;
 
-    @GetMapping(value = "")
+    @GetMapping("")
     public Page<ClassifierConnect> search(ClassifierConnectSearchCommand classifierConnectSearchCommand, Pageable pageable) {
         return service.search(classifierConnectSearchCommand, pageable);
     }
@@ -37,13 +37,13 @@ public class ClassifierConnectController {
      * TODO: change ArrayList to Set and implement equals and hashCode at ClassifierConnect (or ClassifierConnectPK?)
      * Or @Id for both variables of composite primary key is enough?
      */
-    @PostMapping(value = "/changeParents/{code}")
+    @PostMapping("/changeParents/{code}")
     public boolean changeListOfParents(@PathVariable("code") String code, @Valid @RequestBody List<Classifier> parents) {
         service.updateParents(code, parents);
         return true;
     }
 
-    @GetMapping(value = "/all")
+    @GetMapping("/all")
     public List<ClassifierConnectSelection> searchAll(ClassifierConnectSearchCommand classifierConnectSearchCommand, Sort sort) {
         return service.searchAll(classifierConnectSearchCommand, sort).stream()
                 .map(ClassifierConnectSelection::of).collect(Collectors.toList());

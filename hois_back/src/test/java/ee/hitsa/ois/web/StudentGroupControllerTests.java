@@ -28,9 +28,9 @@ public class StudentGroupControllerTests {
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/studentgroups");
         uriBuilder.queryParam("code", "3211212");
-        uriBuilder.queryParam("curriculum", "1", "2", "3");
+        uriBuilder.queryParam("curriculumVersion", "1", "2", "3");
         uriBuilder.queryParam("studyForm", "OPPEVORM_P", "OPPEVORM_K");
-        uriBuilder.queryParam("teacher", "1");
+        uriBuilder.queryParam("teacher.id", "1");
         url = uriBuilder.build().toUriString();
         responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertNotNull(responseEntity);

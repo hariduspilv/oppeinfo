@@ -10,7 +10,7 @@ import javax.persistence.criteria.Root;
 
 import org.springframework.data.jpa.domain.Specification;
 
-import ee.hitsa.ois.domain.StateCurriculum;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
@@ -30,11 +30,11 @@ public class StateCurriculumSpecification implements Specification<StateCurricul
 		String nameField = searchCommand.getLang() == Language.EN ? "nameEn" : "nameEt";
 		SearchUtil.propertyContains(() -> root.get(nameField), cb, searchCommand.getName(), filters::add);
 
-		if(searchCommand.getStatusCode() != null) {
-			filters.add(root.get("status").get("code").in(searchCommand.getStatusCode()));
+		if(searchCommand.getStatus() != null) {
+			filters.add(root.get("status").get("code").in(searchCommand.getStatus()));
 		}
-		if(searchCommand.getIscedClassCode() != null) {
-			filters.add(root.get("iscedClass").get("code").in(searchCommand.getIscedClassCode()));
+		if(searchCommand.getIscedClass() != null) {
+			filters.add(root.get("iscedClass").get("code").in(searchCommand.getIscedClass()));
 		}
 		if(searchCommand.getValidFrom() != null) {
 			filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), searchCommand.getValidFrom()));

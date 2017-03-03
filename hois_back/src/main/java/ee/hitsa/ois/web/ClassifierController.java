@@ -36,7 +36,7 @@ public class ClassifierController {
     /**
      * For creating new classifier
      */
-    @PostMapping(value = "")
+    @PostMapping("")
     public Classifier create(@Valid @RequestBody Classifier classifier) {
         return classifierService.save(classifier);
     }
@@ -49,7 +49,7 @@ public class ClassifierController {
     /**
      * For updating existing classifier
      */
-    @PutMapping(value = "/{code}")
+    @PutMapping("/{code}")
     public Classifier update(@WithEntity("code") Classifier classifier, @Valid @RequestBody Classifier newClassifier) {
         EntityUtil.bindToEntity(newClassifier, classifier);
         return classifierService.save(classifier);
@@ -58,7 +58,7 @@ public class ClassifierController {
     /**
      * Getting single classifier by code
      */
-    @GetMapping(value = "/{code}")
+    @GetMapping("/{code}")
     public Classifier get(@WithEntity("code") Classifier classifier) {
         return classifier;
     }
@@ -66,23 +66,23 @@ public class ClassifierController {
     /**
      * Getting classifiers as paginated results
      */
-    @GetMapping(value = "")
+    @GetMapping("")
     public Page<Classifier> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
         return classifierService.search(classifierSearchCommand, pageable);
     }
 
-    @GetMapping(value = "/all")
+    @GetMapping("/all")
     public List<ClassifierSelection> searchAll(ClassifierSearchCommand classifierSearchCommand, Sort sort) {
         return classifierService.searchAll(classifierSearchCommand, sort)
                 .stream().map(ClassifierSelection::of).collect(Collectors.toList());
     }
 
-    @GetMapping(value = "/heads")
+    @GetMapping("/heads")
     public Page<ClassifierWithCount> searchTables(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
         return classifierService.searchTables(classifierSearchCommand, pageable);
     }
 
-    @GetMapping(value = "/getPossibleParentClassifiers")
+    @GetMapping("/getPossibleParentClassifiers")
     public List<Classifier> searchForAuto(ClassifierSearchCommand classifierSearchCommand) {
         return classifierService.searchForAutocomplete(classifierSearchCommand);
     }
@@ -90,28 +90,28 @@ public class ClassifierController {
     /**
      * For deleting classifier
      */
-    @DeleteMapping(value = "/{code}")
+    @DeleteMapping("/{code}")
     public boolean delete(@PathVariable("code") String code) {
         classifierService.delete(code);
         return true;
     }
 
-    @GetMapping(value = "/connections/{code}")
+    @GetMapping("/connections/{code}")
     public List<Classifier> getPossibleConnections(@PathVariable("code") String code){
         return classifierService.getPossibleConnections(code);
     }
 
-    @GetMapping(value = "/parents/{code}")
+    @GetMapping("/parents/{code}")
     public List<Classifier> getParents(@PathVariable("code") String code) {
         return classifierService.getParents(code);
     }
 
-    @GetMapping(value = "/parents/{parentsMainClassifierCode}/{code}")
+    @GetMapping("/parents/{parentsMainClassifierCode}/{code}")
     public List<Classifier> getParentsByMainClassifier(@PathVariable("parentsMainClassifierCode") String parentsMainClassifierCode, @PathVariable("code") String code) {
         return classifierService.getParentsByMainClassifier(code, parentsMainClassifierCode);
     }
 
-    @GetMapping(value = "/children/{code}")
+    @GetMapping("/children/{code}")
     public List<Classifier> getChildren(@PathVariable("code") String code) {
         return classifierService.findChildren(code);
     }

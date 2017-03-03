@@ -1,7 +1,8 @@
 package ee.hitsa.ois.web;
 
-import ee.hitsa.ois.domain.Subject;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.SubjectStatus;
+import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -33,31 +34,33 @@ public class SubjectController {
     private AutocompleteService autocompleteService;
     @Autowired
     private SubjectService subjectService;
+    @Autowired
+    private CurriculumVersionRepository curriculumVersionRepository;
 
-    @PostMapping(value = "")
+    @PostMapping("")
     public SubjectDto create(HoisUserDetails user, @Valid @RequestBody SubjectForm newSubject) {
         newSubject.setStatus(SubjectStatus.AINESTAATUS_S.name());
         return get(user, subjectService.save(user, new Subject(), newSubject));
     }
 
-    @PutMapping(value = "/{id}")
+    @PutMapping("/{id:\\d+}")
     public SubjectDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Subject subject, @Valid @RequestBody SubjectForm newSubject) {
         assertSameSchool(user, subject);
         return get(user, subjectService.save(user, subject, newSubject));
     }
 
-    @GetMapping(value = "/{id}")
+    @GetMapping("/{id:\\d+}")
     public SubjectDto get(HoisUserDetails user, @WithEntity("id") Subject subject) {
         assertSameSchool(user, subject);
-        return SubjectDto.of(subject);
+        return SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
     }
 
-    @GetMapping(value = "")
+    @GetMapping("")
     public Page<SubjectSearchDto> search(@Valid SubjectSearchCommand subjectSearchCommand, HoisUserDetails user, Pageable pageable) {
         return subjectService.search(user.getSchoolId(), subjectSearchCommand, pageable);
     }
 
-    @GetMapping(value = "/initSearchFormData")
+    @GetMapping("/initSearchFormData")
     public SubjectSearchFormData getSearchForm(HoisUserDetails user) {
         Long schoolId = user.getSchoolId();
         SubjectSearchFormData searchFormData = new SubjectSearchFormData();
@@ -66,7 +69,7 @@ public class SubjectController {
         return searchFormData;
     }
 
-    @GetMapping(value = "/initEditFormData")
+    @GetMapping("/initEditFormData")
     public Map<String, List<AutocompleteResult<Long>>> getEditForm(HoisUserDetails user) {
         Map<String, List<AutocompleteResult<Long>>> result = new HashMap<>();
         Long schoolId = user.getSchoolId();
@@ -74,7 +77,7 @@ public class SubjectController {
         return result;
     }
 
-    @DeleteMapping(value = "/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Subject subject, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         assertSameSchool(user, subject);
         subjectService.delete(subject);

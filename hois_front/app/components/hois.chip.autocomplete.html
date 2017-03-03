@@ -1,0 +1,22 @@
+<md-chips ng-model="ngModel" md-autocomplete-snap
+          md-transform-chip="transformChip($chip)"
+          md-require-match="true"
+          md-max-chips="{{maxChips}}">
+  <md-autocomplete
+    md-selected-item="selectedItem"
+    md-search-text="searchText"
+    md-min-length="2"
+    md-no-cache="true"
+    md-items="item in search(searchText)"
+    md-item-text="item.nameEt"
+    placeholder="{{label | translate}}"
+    ng-hide="ngModel.length > maxChips" flex>
+    <span md-highlight-text="searchText">{{currentLanguage()==='en' ? (item.nameEn || item.nameEt) : item.nameEt}}</span>
+  </md-autocomplete>
+  <md-chip-template>
+        <span>
+          <strong>{{getChipText($chip)}}</strong>
+        </span>
+  </md-chip-template>
+</md-chips>
+

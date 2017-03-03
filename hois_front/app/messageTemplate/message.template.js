@@ -1,0 +1,70 @@
+'use strict';
+
+angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$rootScope', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, $rootScope) {
+
+    var clMapper = Classifier.valuemapper({type: 'TEATE_LIIK'});
+    QueryUtils.createQueryForm($scope, '/messageTemplate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
+    $q.all(clMapper.promises).then($scope.loadData);
+
+    $scope.isValid = function(record) {
+        return (!record.validFrom || new Date(record.validFrom) <= new Date()) && (!record.validThru || new Date(record.validThru) >= new Date());
+    };
+
+    $scope.school = QueryUtils.endpoint("/school").get({id: $rootScope.currentUser.school.id});
+
+}]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$rootScope',
+  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils, $rootScope) {
+
+    function afterLoad() {
+      DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
+    }
+
+    var baseUrl = '/messageTemplate';
+    var Endpoint = QueryUtils.endpoint(baseUrl);
+    var id = $route.current.params.id;
+
+    if(id) {
+        $scope.record = Endpoint.get({id: id}, afterLoad);
+    } else {
+        $scope.record = new Endpoint();
+        afterLoad();
+    }
+
+    $scope.school = QueryUtils.endpoint("/school").get({id: $rootScope.currentUser.school.id});
+
+    $scope.$watch('record.validFrom', function() {
+            if($scope.record.validThru && $scope.record.validThru < $scope.record.validFrom) {
+                $scope.record.validThru = null;
+            }
+        }
+    );
+
+    $scope.save = function() {
+        $scope.messageTemplateForm.$setSubmitted();
+        if(!$scope.messageTemplateForm.$valid) {
+            message.error('main.messages.form-has-errors');
+            return;
+        }
+        var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
+        function afterSave() {
+            message.info(msg);
+        }
+        if($scope.record.id) {
+            $scope.record.$update(afterLoad).then(afterSave);
+        }else{
+            $scope.record.$save(afterSave).then(function(){
+                $location.path(baseUrl + "/" + $scope.record.id + "/edit");
+            });
+        }
+    };
+
+    $scope.delete = function() {
+      dialogService.confirmDialog({prompt: 'main.messages.confirm'}, function() {
+        $scope.record.$delete().then(function() {
+          message.info('main.messages.delete.success');
+          $location.path(baseUrl);
+        });
+      });
+    };
+  }
+]);

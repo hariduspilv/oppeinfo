@@ -19,7 +19,7 @@ public class CurriculumVersionSpeciality extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false, insertable = true)
     private CurriculumSpeciality curriculumSpeciality;
     
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false, insertable = true)
     private CurriculumVersion curriculumVersion;
     

@@ -8,7 +8,7 @@ import javax.persistence.ManyToOne;
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
-import ee.hitsa.ois.domain.SchoolDepartment;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
 
 @Entity
 public class CurriculumDepartment extends BaseEntityWithId {
@@ -16,12 +16,12 @@ public class CurriculumDepartment extends BaseEntityWithId {
     private static final long serialVersionUID = 3605519101805076842L;
 
     @JsonBackReference
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, insertable = false, updatable = false)
     private Curriculum curriculum;
 
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private SchoolDepartment schoolDepartment;
 
     public CurriculumDepartment() {

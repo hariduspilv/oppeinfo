@@ -2,7 +2,7 @@ package ee.hitsa.ois.service.security;
 
 import java.io.Serializable;
 
-import ee.hitsa.ois.domain.School;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SchoolUtil;
 

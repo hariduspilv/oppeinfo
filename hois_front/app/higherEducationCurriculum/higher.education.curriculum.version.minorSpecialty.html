@@ -1,0 +1,156 @@
+<md-dialog aria-label="grade add dialog" flex="70" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"curriculum.minorSpecialty.adding" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+
+        <md-input-container flex>
+            <label>{{'curriculum.minorSpecialty.nameEt' | translate}}</label>
+            <input ng-model="data.nameEt" type="text" required md-maxlength="255">
+        </md-input-container>
+        <md-input-container flex>
+            <label>{{'curriculum.minorSpecialty.nameEn' | translate}}</label>
+            <input ng-model="data.nameEn" type="text" required md-maxlength="255">
+        </md-input-container>
+        <md-input-container>
+            <label>{{'curriculum.minorSpecialty.objectivesEt' | translate}}</label>
+            <textarea ng-model="data.objectivesEt" md-maxlength="20000" max-rows="2"></textarea>
+        </md-input-container>
+        <md-input-container>
+            <label>{{'curriculum.minorSpecialty.objectivesEn' | translate}}</label>
+            <textarea ng-model="data.objectivesEn" md-maxlength="20000" max-rows="2"></textarea>
+        </md-input-container>
+        <md-input-container>
+            <label>{{'curriculum.minorSpecialty.outcomesEt' | translate}}</label>
+            <textarea ng-model="data.outcomesEt" md-maxlength="20000" max-rows="2"></textarea>
+        </md-input-container>
+        <md-input-container>
+            <label>{{'curriculum.minorSpecialty.outcomesEn' | translate}}</label>
+            <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="2"></textarea>
+        </md-input-container>
+        <h1 class="md-headline">{{'module.optionals' | translate}}</h1>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex>
+                <label>{{'module.optionalNameEt' | translate}}</label>
+                <input ng-model="optionalNameEt" type="text" md-maxlength="255">
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'module.optionalNameEn' | translate}}</label>
+                <input ng-model="optionalNameEn" type="text" md-maxlength="255">
+            </md-input-container>
+            <md-button class="md-icon-button" ng-click="addElectiveModule()" ng-if="!editingElectiveModule" 
+            ng-disabled="!optionalNameEt || !optionalNameEn">
+                <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">add</md-icon>
+            </md-button>
+            <md-button class="md-icon-button" ng-click="finishEditElectiveModule()" ng-if="editingElectiveModule"
+            ng-disabled="!optionalNameEt || !optionalNameEn">
+                <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">done</md-icon>
+            </md-button>
+        </div>
+        <div ng-repeat="electiveModule in data.electiveModules | orderBy: currentLanguageNameField()">
+            <a href="" ng-click="editElectiveModule(electiveModule)">{{electiveModule[currentLanguageNameField()]}}</a>
+            <md-button flex="20" class="remove nomargin" ng-click="deleteElectiveModule(electiveModule)">&times;</md-button>
+        </div>
+
+        <h1 class="md-headline" ng-class="{invalid: dialogForm.$submitted && data.subjects.length == 0}">{{'subject.subjects' | translate}}&nbsp;*</h1>
+        <md-input-container hide>
+            <input ng-model="data.subjectAdded" type="text" required md-maxlength="255">
+        </md-input-container>
+
+
+        <div layout="row">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+                <label>{{'subject.nameCode' | translate}}</label>
+                <!--TODO: required, multiple-->
+                <md-select ng-model="data.selectedSubject" ng-change="addSubject()">
+                    <md-option ng-repeat="option in subjects | orderBy: currentLanguageNameField()" ng-value="option">
+                         {{option[currentLanguageNameField()]}} ({{option.code}}) 
+                         <span ng-if="myEhisSchool !== option.ehisSchoolCode">{{option.schoolCode}}</span>
+                    </md-option>
+                </md-select>
+            </md-input-container>
+        </div>
+        <table md-table class="secondary-table" ng-show="data.subjects.length > 0">
+            <thead md-head>
+                <tr md-row>
+                    <th md-column>{{'subject.nameCode' | translate}}</th>
+                    <th md-column>EAP</th>
+                    <th md-column>{{'module.optionalSubject' | translate}}</th>
+                    <th md-column>{{'module.linkOptional' | translate}}</th>
+                    <th md-column></th>
+                </tr>
+            </thead>
+            <tbody md-body>
+            <tr md-row ng-repeat="subject in data.subjects | orderBy: currentLanguageNameField()">
+                <td md-cell>{{subject[currentLanguageNameField()]}} ({{subject.code}})</td>
+                <td md-cell>{{subject.credits}}</td>
+                <td md-cell>
+                    <md-checkbox ng-model="subject.optional" aria-label="subject is mandatory" 
+                    ng-change="setCompulsoryStudyCredits(subject)"></md-checkbox>
+                </td>
+                <td md-cell>
+                    <div ng-if="subject.optional && data.electiveModules.length > 0" layout="row">
+                        <span>{{'module.optional' | translate}}</span>
+                        <md-select ng-model="subject.electiveModule" ng-change="addSubjectToElectiveModule(subject)">
+                            <md-option ng-repeat="option in data.electiveModules | orderBy: currentLanguageNameField()" ng-value="option.referenceNumber">
+                                {{option[currentLanguageNameField()]}}
+                            </md-option>
+                        </md-select>
+                    </div>
+                </td>
+                <td md-cell>
+                    <md-button flex="20" class="remove nomargin" ng-click="removeSubject(subject)">&times;</md-button>
+                </td>
+            </tr>
+            </tbody>
+        </table>
+        <md-input-container flex>
+            <label>{{'module.optionalEap' | translate}}</label>
+            <input name="optionalStudyCredits" ng-model="data.optionalStudyCredits" type="number" required ng-change="data.totalCredits = data.optionalStudyCredits + data.compulsoryStudyCredits" min="0">
+            <div ng-messages="dialogForm.optionalStudyCredits.$error" ng-show="dialogForm.optionalStudyCredits.$dirty">
+                <div ng-message="min">
+                    {{'main.messages.error.positive' | translate}}
+                </div>
+            </div>
+        </md-input-container>
+        <md-input-container flex>
+            <label>{{'module.mandatoryEap' | translate}}</label>
+            <input ng-model="data.compulsoryStudyCredits" type="number" readonly>
+        </md-input-container>
+        <md-input-container flex>
+            <label>{{'module.overallEap' | translate}}</label>
+            <input ng-model="data.totalCredits" type="number" readonly>
+        </md-input-container>
+        <md-input-container flex>
+            <label>{{'module.optionalModulesNumber' | translate}}</label>
+            <input name="electiveModulesNumber" ng-model="data.electiveModulesNumber" type="number" required min="0" 
+            max="{{data.electiveModules.length}}">
+            <div ng-messages="dialogForm.electiveModulesNumber.$error" ng-show="dialogForm.electiveModulesNumber.$dirty">
+                <div ng-message="min">
+                    {{'main.messages.error.positive' | translate}}
+                </div>
+                <div ng-message="max">
+                    {{'curriculum.error.numberOfElectiveModules' | translate}}
+                </div>
+            </div>
+        </md-input-container>
+        <span flex></span>
+
+      </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

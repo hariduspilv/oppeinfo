@@ -8,7 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import ee.hitsa.ois.domain.StateCurriculum;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 
 public interface StateCurriculumRepository extends JpaRepository<StateCurriculum, Long> {
 

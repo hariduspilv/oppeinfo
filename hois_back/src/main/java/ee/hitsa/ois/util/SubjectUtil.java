@@ -1,8 +1,8 @@
 package ee.hitsa.ois.util;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.Subject;
-import ee.hitsa.ois.domain.SubjectLanguage;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.subject.SubjectLanguage;
 
 import java.util.Set;
 import java.util.stream.Collectors;

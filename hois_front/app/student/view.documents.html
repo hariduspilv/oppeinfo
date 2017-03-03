@@ -1,0 +1,61 @@
+<md-nav-bar md-selected-nav-item="currentNavItem">
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/main{{::formState.backRef}}" name="student.main">{{'student.main' | translate}}</md-nav-item>
+  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences{{::formState.backRef}}" name="student.main">{{'student.absences' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents{{::formState.backRef}}" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<div layout-padding>
+  <div flex>
+    <h2>{{'student.application.label' | translate}}</h2>
+    <md-table-container>
+      <table md-table md-progress="applications.$promise">
+        <thead md-head md-order="applicationsCriteria.order" md-on-reorder="loadApplications">
+          <tr md-row>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'student.application.type' | translate}}</th>
+            <th md-column md-order-by="inserted">{{'student.application.created' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'student.application.status' | translate}}</th>
+            <th md-column md-order-by="confirmDate">{{'student.application.confirmDate' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in applications.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination ng-if="applications.totalElements > applicationsCriteria.size" md-limit="applicationsCriteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="applicationsCriteria.page" md-total="{{applications.totalElements}}" md-on-paginate="loadApplications"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+
+    <h2>{{'student.directive.label' | translate}}</h2>
+    <md-table-container>
+      <table md-table md-progress="directives.$promise">
+        <thead md-head md-order="directivesCriteria.order" md-on-reorder="loadDirectives">
+          <tr md-row>
+            <th md-column md-order-by="headline">{{'student.directive.headline' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'student.directive.type' | translate}}</th>
+            <th md-column md-order-by="directiveNr">{{'student.directive.directiveNr' | translate}}</th>
+            <th md-column md-order-by="createdBy">{{'student.directive.createdBy' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in directives.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.headline}}</td>
+            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+            <td md-cell>{{::row.directiveNr}}</td>
+            <td md-cell>{{::row.createdBy}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination ng-if="directives.totalElements > directivesCriteria.size" md-limit="directivesCriteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="directivesCriteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadDirectives"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+
+    <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

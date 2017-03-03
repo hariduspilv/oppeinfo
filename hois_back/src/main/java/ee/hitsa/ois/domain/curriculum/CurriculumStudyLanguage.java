@@ -17,12 +17,12 @@ public class CurriculumStudyLanguage extends BaseEntityWithId {
     private static final long serialVersionUID = 6613489310489701663L;
 
     @JsonBackReference
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, insertable = false, updatable = false)
     private Curriculum curriculum;
 
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier studyLang;
 
     public CurriculumStudyLanguage() {

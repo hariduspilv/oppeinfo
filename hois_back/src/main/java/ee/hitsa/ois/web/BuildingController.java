@@ -37,7 +37,7 @@ public class BuildingController {
     private SchoolRepository schoolRepository;
 
     // building: get/save/update/delete
-    @GetMapping("/buildings/{id}")
+    @GetMapping("/buildings/{id:\\d+}")
     public BuildingDto getBuilding(HoisUserDetails user, @WithEntity("id") Building building) {
         assertSameSchool(user, building);
         return BuildingDto.of(building);
@@ -50,14 +50,14 @@ public class BuildingController {
         return getBuilding(user, buildingService.save(building));
     }
 
-    @PutMapping("/buildings/{id}")
+    @PutMapping("/buildings/{id:\\d+}")
     public BuildingDto updateBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Building building, @Valid @RequestBody BuildingForm form) {
         assertSameSchool(user, building);
         EntityUtil.bindToEntity(form, building);
         return getBuilding(user, buildingService.save(building));
     }
 
-    @DeleteMapping("/buildings/{id}")
+    @DeleteMapping("/buildings/{id:\\d+}")
     public void deleteBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Building building, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         assertSameSchool(user, building);
         buildingService.delete(building);
@@ -69,7 +69,7 @@ public class BuildingController {
         return buildingService.findAllRooms(user.getSchoolId(), searchCommand, pageable);
     }
 
-    @GetMapping("/rooms/{id}")
+    @GetMapping("/rooms/{id:\\d+}")
     public RoomDto getRoom(HoisUserDetails user, @WithEntity("id") Room room) {
         assertSameSchool(user, room);
         return RoomDto.of(room);
@@ -80,13 +80,13 @@ public class BuildingController {
         return getRoom(user, buildingService.save(new Room(), form));
     }
 
-    @PutMapping("/rooms/{id}")
+    @PutMapping("/rooms/{id:\\d+}")
     public RoomDto updateRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Room room, @Valid @RequestBody RoomForm form) {
         assertSameSchool(user, room);
         return getRoom(user, buildingService.save(room, form));
     }
 
-    @DeleteMapping("/rooms/{id}")
+    @DeleteMapping("/rooms/{id:\\d+}")
     public void deleteRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Room room, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         assertSameSchool(user, room);
         buildingService.delete(room);

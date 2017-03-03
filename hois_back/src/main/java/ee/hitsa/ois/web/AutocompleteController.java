@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -26,6 +26,7 @@ import ee.hitsa.ois.web.commandobject.SchoolDepartmentAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.PersonDto;
+import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 
 @RestController
 @RequestMapping("/autocomplete")
@@ -49,10 +50,20 @@ public class AutocompleteController {
         return asAutocompleteResult(autocompleteService.curriculumVersions(user.getSchoolId()), r -> r);
     }
 
+    @GetMapping("/directivecoordinators")
+    public Page<AutocompleteResult<Long>> directiveCoordinators(HoisUserDetails user) {
+        return asAutocompleteResult(autocompleteService.directiveCoordinators(user.getSchoolId()), r -> r);
+    }
+
     @GetMapping("/persons")
     public ResponseEntity<PersonDto> person(@Valid PersonLookupCommand lookup) {
         Person person = autocompleteService.person(lookup);
         return person != null ? new ResponseEntity<>(PersonDto.of(person), HttpStatus.OK) : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/schools")
+    public List<SchoolWithoutLogo> schools() {
+        return autocompleteService.schools();
     }
 
     @GetMapping("/schooldepartments")
@@ -61,8 +72,13 @@ public class AutocompleteController {
     }
 
     @GetMapping("/subjects")
-    public Page<AutocompleteResult<Long>> subjects(HoisUserDetails user, SubjectAutocompleteCommand command) {
+    public Page<AutocompleteResult<Long>> subjects(HoisUserDetails user, AutocompleteCommand command) {
         return asAutocompleteResult(autocompleteService.subjects(user.getSchoolId(), command), AutocompleteResult::of);
+    }
+
+    @GetMapping("/teachers")
+    public Page<AutocompleteResult<Long>> teachers(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+        return autocompleteService.teachers(user.getSchoolId(), lookup);
     }
 
     private static <V, R> Page<R> asAutocompleteResult(Page<V> data, Function<V, R> mapper) {

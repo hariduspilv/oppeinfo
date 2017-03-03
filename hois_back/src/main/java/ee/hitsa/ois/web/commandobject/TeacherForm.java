@@ -19,6 +19,7 @@ public class TeacherForm extends VersionedCommand {
     @NotNull
     private TeacherPersonForm person;
 
+    @NotEmpty
     private Set<TeacherPositionEhisForm> teacherPositionEhis;
 
     private Set<TeacherQualificationFrom> teacherQualifications;
@@ -30,17 +31,18 @@ public class TeacherForm extends VersionedCommand {
 
     private Long teacherOccupation;
 
-    @NotNull
-    @Size(min = 1, max = 100)
+    @NotEmpty
+    @Size(max = 100)
     private String email;
 
-    @NotNull
-    @Size(min = 1, max = 100)
+    @NotEmpty
+    @Size(max = 100)
     private String phone;
 
     @NotNull
     private Short scheduleLoad;
 
+    @EstonianIdCode
     public static class TeacherPersonForm {
 
         private Long id;
@@ -48,11 +50,11 @@ public class TeacherForm extends VersionedCommand {
         @EstonianIdCode
         private String idcode;
 
-        @NotNull
-        @Size(min = 1, max = 100)
+        @NotEmpty
+        @Size(max = 100)
         private String firstname;
-        @NotNull
-        @Size(min = 1, max = 100)
+        @NotEmpty
+        @Size(max = 100)
         private String lastname;
         @NotEmpty
         @ClassifierRestriction(MainClassCode.RIIK)
@@ -234,11 +236,11 @@ public class TeacherForm extends VersionedCommand {
             this.contractEnd = contractEnd;
         }
 
-        public boolean isIsContractEnded() {
+        public Boolean getIsContractEnded() {
             return isContractEnded;
         }
 
-        public void setIsContractEnded(boolean contractEnded) {
+        public void setIsContractEnded(Boolean contractEnded) {
             isContractEnded = contractEnded;
         }
 
@@ -342,10 +344,13 @@ public class TeacherForm extends VersionedCommand {
     public static class TeacherQualificationFrom {
         private Long id;
 
+        @NotEmpty
         @ClassifierRestriction(MainClassCode.EHIS_KVALIFIKATSIOON)
         private String qualification;
+        @NotEmpty
         @ClassifierRestriction(MainClassCode.EHIS_KVALIFIKATSIOON_NIMI)
         private String qualificationName;
+        @NotEmpty
         @ClassifierRestriction(MainClassCode.RIIK)
         private String state;
         @ClassifierRestriction(MainClassCode.EHIS_EESTI_OPPEASUTUS)
@@ -353,6 +358,7 @@ public class TeacherForm extends VersionedCommand {
         @ClassifierRestriction(MainClassCode.EHIS_EESTI_OPPEASUTUS_ENDINE)
         private String exSchool;
         private String qualificationOther;
+        @NotNull
         private Short year;
         private String schoolOther;
 
@@ -430,7 +436,7 @@ public class TeacherForm extends VersionedCommand {
     }
 
     public static class TeacherMobilityForm {
-        Long id;
+        private Long id;
         @NotNull
         private LocalDate start;
         @NotNull
@@ -438,8 +444,8 @@ public class TeacherForm extends VersionedCommand {
         @NotEmpty
         @ClassifierRestriction(MainClassCode.EHIS_MOBIILSUS)
         private String target;
-        @NotNull
-        @Size(min = 1, max = 255)
+        @NotEmpty
+        @Size(max = 255)
         private String school;
         @NotEmpty
         @ClassifierRestriction(MainClassCode.RIIK)

@@ -3,7 +3,7 @@ package ee.hitsa.ois.web.dto.student;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.OisFile;
-import ee.hitsa.ois.domain.Student;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
@@ -217,11 +217,7 @@ public class StudentViewDto extends StudentForm {
         dto.setPerson(EntityUtil.bindToDto(student.getPerson(), new StudentViewPersonDto()));
 
         // study
-        dto.setSchool(AutocompleteResult.of(student.getSchool()));
-        dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
         dto.setStudyLanguage(EntityUtil.getNullableCode(student.getLanguage()));
-        dto.setCurriculumSpeciality(student.getCurriculumSpeciality() != null ? AutocompleteResult.of(student.getCurriculumSpeciality()) : null);
-        dto.setStudentGroup(student.getStudentGroup() != null ? AutocompleteResult.of(student.getStudentGroup()) : null);
         dto.setCourse(student.getStudentGroup() != null ? student.getStudentGroup().getCourse() : null);
         dto.setIsVocational(Boolean.valueOf(CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel())));
         if(!Boolean.TRUE.equals(dto.getIsVocational())) {

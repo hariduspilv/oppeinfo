@@ -8,8 +8,8 @@ import java.lang.annotation.Target;
 import javax.validation.Constraint;
 import javax.validation.Payload;
 
-@Constraint(validatedBy = EstonianIdCodeValidator.class)
-@Target({ElementType.FIELD, ElementType.PARAMETER})
+@Constraint(validatedBy = {EstonianIdCodeValidator.class, EstonianIdCodeValidator.PersonValidator.class})
+@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EstonianIdCode {
     String message() default "InvalidEstonianIdCode";

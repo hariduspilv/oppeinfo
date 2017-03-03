@@ -14,7 +14,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import ee.hitsa.ois.domain.TeacherOccupation;
+import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherOccupationDto;

@@ -19,16 +19,12 @@ public class DateRangeValidator implements ConstraintValidator<DateRange, Object
 
     @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {
-        LocalDate from = read(value, constraint.from());
+        PropertyAccessor reader = PropertyAccessorFactory.forBeanPropertyAccess(value);
+        LocalDate from = (LocalDate)reader.getPropertyValue(constraint.from());
         if(from == null) {
             return true;
         }
-        LocalDate thru = read(value, constraint.thru());
+        LocalDate thru = (LocalDate)reader.getPropertyValue(constraint.thru());
         return thru == null || !thru.isBefore(from);
-    }
-
-    private static LocalDate read(Object bean, String propertyName) {
-        PropertyAccessor reader = PropertyAccessorFactory.forBeanPropertyAccess(bean);
-        return (LocalDate)reader.getPropertyValue(propertyName);
     }
 }

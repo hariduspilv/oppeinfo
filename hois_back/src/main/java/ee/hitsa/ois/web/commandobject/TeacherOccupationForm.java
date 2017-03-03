@@ -1,15 +1,16 @@
 package ee.hitsa.ois.web.commandobject;
 
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+
+import ee.hitsa.ois.validation.NotEmpty;
 
 public class TeacherOccupationForm extends VersionedCommand {
 
-    @NotNull
-    @Size(min = 1, max = 100)
+    @NotEmpty
+    @Size(max = 100)
     private String occupationEt;
-    @NotNull
-    @Size(min = 1, max = 100)
+    @NotEmpty
+    @Size(max = 100)
     private String occupationEn;
     private Boolean isValid;
 

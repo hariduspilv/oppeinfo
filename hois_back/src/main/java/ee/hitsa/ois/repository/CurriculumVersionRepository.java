@@ -18,5 +18,7 @@ public interface CurriculumVersionRepository extends JpaRepository<CurriculumVer
             "select count(*) from curriculum_version "
             + "where curriculum_id in (select id from curriculum where school_id = ?1) "
             + "and code = ?2 and curriculum_id <> ?3")
-    public long countBySchoolAndOtherCurriculums(Long schoolId, String code, Long curriculumId);
+    long countBySchoolAndOtherCurriculums(Long schoolId, String code, Long curriculumId);
+
+    List<CurriculumVersion> findAllDistinctByModules_Subjects_Subject_id(Long subjectId);
 }

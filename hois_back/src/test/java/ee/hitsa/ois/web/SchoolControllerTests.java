@@ -23,8 +23,8 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.School;
-import ee.hitsa.ois.domain.SchoolStudyLevel;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.school.SchoolStudyLevel;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
@@ -67,13 +67,6 @@ public class SchoolControllerTests {
 
         Assert.assertNotNull(school);
         responseEntity = restTemplate.getForEntity(String.format("/school/%d", school.getId()), Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-
-    @Test
-    public void getAll() {
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/all", Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

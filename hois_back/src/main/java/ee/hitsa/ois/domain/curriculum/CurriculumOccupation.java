@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -16,7 +17,7 @@ import ee.hitsa.ois.domain.Classifier;
 @Entity
 public class CurriculumOccupation extends BaseEntityWithId {
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier occupation;
 
     @Column(name = "is_occupation_grant", nullable = false)

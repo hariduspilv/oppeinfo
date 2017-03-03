@@ -26,6 +26,29 @@ public class DirectiveControllerTests {
 
     @Test
     public void search() {
+        String url = "/directives";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/directives");
+        uriBuilder.queryParam("type", "TYPE1", "TYPE2");
+        uriBuilder.queryParam("headline", "headline");
+        uriBuilder.queryParam("directiveNr", "directiveNr");
+        uriBuilder.queryParam("confirmDateFrom", "2017-02-17T00:00:00.00Z");
+        uriBuilder.queryParam("confirmDateThru", "2017-02-17T00:00:00.00Z");
+        uriBuilder.queryParam("status", "OPPURSTATUS_AKAD", "OPPURSTATUS_OPIB");
+        uriBuilder.queryParam("insertedFrom", "2017-02-16T00:00:00.00Z");
+        uriBuilder.queryParam("insertedThru", "2017-02-16T00:00:00.00Z");
+        uriBuilder.queryParam("studentGroup", "studentGroup");
+        url = uriBuilder.build().toUriString();
+        responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void searchCoordinators() {
         String url = "/directives/coordinators";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertNotNull(responseEntity);
@@ -60,7 +83,7 @@ public class DirectiveControllerTests {
     }
 
     @Test
-    public void crud() {
+    public void crudCoordinator() {
         // create
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/directives/coordinators");
         String uri = uriBuilder.build().toUriString();

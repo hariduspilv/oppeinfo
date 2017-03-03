@@ -5,9 +5,9 @@ import java.util.List;
 public class StudentGroupSearchCommand {
 
     private String code;
-    private List<Long> curriculum;
+    private List<Long> curriculumVersion;
     private List<String> studyForm;
-    private Long teacher;
+    private EntityConnectionCommand<Long> teacher;
 
     public String getCode() {
         return code;
@@ -17,12 +17,12 @@ public class StudentGroupSearchCommand {
         this.code = code;
     }
 
-    public List<Long> getCurriculum() {
-        return curriculum;
+    public List<Long> getCurriculumVersion() {
+        return curriculumVersion;
     }
 
-    public void setCurriculum(List<Long> curriculum) {
-        this.curriculum = curriculum;
+    public void setCurriculumVersion(List<Long> curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 
     public List<String> getStudyForm() {
@@ -33,11 +33,11 @@ public class StudentGroupSearchCommand {
         this.studyForm = studyForm;
     }
 
-    public Long getTeacher() {
+    public EntityConnectionCommand<Long> getTeacher() {
         return teacher;
     }
 
-    public void setTeacher(Long teacher) {
+    public void setTeacher(EntityConnectionCommand<Long> teacher) {
         this.teacher = teacher;
     }
 }

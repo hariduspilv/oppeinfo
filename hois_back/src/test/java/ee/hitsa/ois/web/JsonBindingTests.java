@@ -4,7 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
-import java.time.ZoneOffset;
+import java.time.ZoneId;
 import java.util.Comparator;
 
 import org.junit.Before;
@@ -20,8 +20,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.School;
-import ee.hitsa.ois.domain.SchoolDepartment;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
 
 
 @RunWith(SpringRunner.class)
@@ -71,8 +71,8 @@ public class JsonBindingTests {
         assertThat(content).extractingJsonPathStringValue("@.email").isEqualTo(school.getEmail());
         assertThat(content).extractingJsonPathStringValue("@.code").isEqualTo(school.getCode());
         // verify that inserted and changed properties get serialized in iso format
-        assertThat(content).extractingJsonPathStringValue("@.inserted").isEqualTo(school.getInserted().toInstant(ZoneOffset.UTC).toString());
-        assertThat(content).extractingJsonPathStringValue("@.changed").isEqualTo(school.getChanged().toInstant(ZoneOffset.UTC).toString());
+        assertThat(content).extractingJsonPathStringValue("@.inserted").isEqualTo(school.getInserted().atZone(ZoneId.systemDefault()).toInstant().toString());
+        assertThat(content).extractingJsonPathStringValue("@.changed").isEqualTo(school.getChanged().atZone(ZoneId.systemDefault()).toInstant().toString());
         // verify that version property is serialized
         assertThat(content).extractingJsonPathNumberValue("@.version").usingComparator(longComparator).isEqualTo(school.getVersion());
     }

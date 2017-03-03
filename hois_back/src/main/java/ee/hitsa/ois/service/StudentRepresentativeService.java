@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.*;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.util.ArrayList;
@@ -17,10 +18,10 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.School;
-import ee.hitsa.ois.domain.Student;
-import ee.hitsa.ois.domain.StudentRepresentative;
-import ee.hitsa.ois.domain.StudentRepresentativeApplication;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.domain.student.StudentRepresentativeApplication;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
@@ -40,10 +41,6 @@ import ee.hitsa.ois.web.dto.student.StudentRepresentativeDto;
 @Transactional
 @Service
 public class StudentRepresentativeService {
-
-    private static final String ACCEPTED = "AVALDUS_ESINDAJA_STAATUS_K";
-    private static final String DECLINED = "AVALDUS_ESINDAJA_STAATUS_T";
-    private static final String REQUESTED = "AVALDUS_ESINDAJA_STAATUS_E";
 
     @Autowired
     private ClassifierRepository classifierRepository;
@@ -131,7 +128,7 @@ public class StudentRepresentativeService {
         if(!person.getUsers().stream().anyMatch(u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && Role.ROLL_L.name().equals(EntityUtil.getCode(u.getRole())))) {
             userService.createUser(person, Role.ROLL_L, school);
         }
-        application.setStatus(classifierRepository.getOne(ACCEPTED));
+        application.setStatus(classifierRepository.getOne(AVALDUS_ESINDAJA_STAATUS_K.name()));
         studentRepresentativeApplicationRepository.save(application);
     }
 
@@ -139,7 +136,7 @@ public class StudentRepresentativeService {
         assertApplicationIsRequested(application);
 
         EntityUtil.bindToEntity(form, application);
-        application.setStatus(classifierRepository.getOne(DECLINED));
+        application.setStatus(classifierRepository.getOne(AVALDUS_ESINDAJA_STAATUS_T.name()));
         studentRepresentativeApplicationRepository.save(application);
     }
 
@@ -174,7 +171,7 @@ public class StudentRepresentativeService {
     }
 
     private void applications(Person person, List<Student> students, StudentRepresentativeApplicationForm form) {
-        Classifier status = classifierRepository.getOne(REQUESTED);
+        Classifier status = classifierRepository.getOne(AVALDUS_ESINDAJA_STAATUS_E.name());
         Classifier relation = classifierRepository.getOne(form.getRelation());
 
         students.forEach(student -> {
@@ -188,7 +185,7 @@ public class StudentRepresentativeService {
     }
 
     private static void assertApplicationIsRequested(StudentRepresentativeApplication application) {
-        if(!REQUESTED.equals(EntityUtil.getCode(application.getStatus()))) {
+        if(!AVALDUS_ESINDAJA_STAATUS_E.name().equals(EntityUtil.getCode(application.getStatus()))) {
             throw new ValidationFailedException(null, "invalid-student-representative-application-status");
         }
     }

@@ -10,32 +10,32 @@ public class StateCurriculumSearchCommand extends SearchCommand {
 
 	private LocalDate validFrom;
 	private LocalDate validThru;
-	private List<String> statusCode;
-	private List<String> iscedClassCode;
-	private List<String> ekrLevels;
+	private List<String> status;
+	private List<String> iscedClass;
+	private List<String> ekrLevel;
 
-	public List<String> getEkrLevels() {
-		return ekrLevels;
+	public List<String> getEkrLevel() {
+		return ekrLevel;
 	}
 
-	public void setEkrLevels(List<String> ekrLevels) {
-		this.ekrLevels = ekrLevels;
+	public void setEkrLevel(List<String> ekrLevels) {
+		this.ekrLevel = ekrLevels;
 	}
 
-	public List<String> getStatusCode() {
-		return statusCode;
+	public List<String> getStatus() {
+		return status;
 	}
 
-	public void setStatusCode(List<String> statusCode) {
-		this.statusCode = statusCode;
+	public void setStatus(List<String> statusCode) {
+		this.status = statusCode;
 	}
 
-	public List<String> getIscedClassCode() {
-		return iscedClassCode;
+	public List<String> getIscedClass() {
+		return iscedClass;
 	}
 
-	public void setIscedClassCode(List<String> iscedClassCode) {
-		this.iscedClassCode = iscedClassCode;
+	public void setIscedClass(List<String> iscedClassCode) {
+		this.iscedClass = iscedClassCode;
 	}
 
 	public LocalDate getValidFrom() {

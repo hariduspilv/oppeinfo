@@ -40,7 +40,7 @@ public class HoisUserDetailsService implements UserDetailsService {
     }
 
     public HoisUserDetails getHoisUserDetails(Long userId) {
-        return getHoisUserDetails(userRepository.findOne(userId));
+        return getHoisUserDetails(userRepository.getOne(userId));
     }
 
     public HoisUserDetails getHoisUserDetails(User user) {

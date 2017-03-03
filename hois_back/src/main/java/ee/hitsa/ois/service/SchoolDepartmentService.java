@@ -18,7 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import ee.hitsa.ois.domain.SchoolDepartment;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.util.EntityUtil;

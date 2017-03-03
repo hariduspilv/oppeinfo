@@ -6,8 +6,8 @@
 background-color: #e8e8e8;
 margin-bottom:18px;
 padding-left:5px;
-//border-bottom: 2px solid #0000cc;
-//border-top: 1px solid #0000ff;
+/*border-bottom: 2px solid #0000cc;*/
+/*border-top: 1px solid #0000ff;*/
 }
 
 .nomargin  md-input-container,
@@ -71,7 +71,7 @@ padding-left:5px;
 }*/
 
 md-input-container textarea, md-input-container input[type="text"], md-input-container input[type="password"], md-input-container input[type="datetime"], md-input-container input[type="datetime-local"], md-input-container input[type="date"], md-input-container input[type="month"], md-input-container input[type="time"], md-input-container input[type="week"], md-input-container input[type="number"], md-input-container input[type="email"], md-input-container input[type="url"], md-input-container input[type="search"], md-input-container input[type="tel"], md-input-container input[type="color"],
-div[main-classifier-code] 
+div[main-classifier-code]
 {
 font-size:13px;
 }
@@ -115,7 +115,7 @@ md-input-container:not(.md-input-invalid) .md-select-value > span:not(.md-select
 }
 .common-label {
 	font-size: 13px;
-	font-weight:bold; 
+	font-weight:bold;
 	color: #424242;
 	padding-left:3px;
 }
@@ -169,7 +169,7 @@ md-dialog md-toolbar{
 }
 
 md-dialog md-toolbar  h2{
-	color:#fff; 
+	color:#fff;
 }
 
 .remove {
@@ -191,19 +191,42 @@ md-dialog md-toolbar  h2{
 }
 
 .ois-form-layout md-input-container {
-  padding: 0px;
-  margin: 0px;
-  /*padding-right: 1em;*/
+  margin-top: 0px;
+  margin-bottom: 0px;
+}
+
+.ois-form-layout md-input-container > md-select {
+  padding-bottom: 1.5em;
+}
+
+.horizontal-radio-group {
+  padding-bottom: 1.5em;
+  padding-top: 1em;
+  padding-left: 5px;
+}
+
+.horizontal-radio-group > md-input-container > label {
+  height: 100%;
+}
+
+.ois-form-layout md-input-container.label-only {
   height: 3em;
 }
 
-.ois-form-layout .flex-offset-5 {
+.ois-form-layout span.label {
+  margin-left: 2px;
+  padding-right: 20px;
+  font-size: 13px;
+}
+
+/* FIXME: these are bad because they are applied also when flex-offset-xx are present */
+/*.ois-form-layout .flex-offset-5 {
     margin-left: 5%;
 }
 
 .ois-form-layout .flex-offset-2 {
     margin-left: 2%;
-}
+}*/
 
 /*.ois-form-layout label, .ois-form-layout md-input-container:not(.md-input-invalid) md-select-value.md-select-placeholder.md-select-value > span, .ois-form-layout span.label, .ois-form-layout md-input-container:not(.md-input-invalid).md-input-has-value label {
   color: navy;
@@ -236,11 +259,6 @@ md-toolbar md-select {
 
 md-content {
   background-color: rgb(253, 253, 253);
-}
-
-.ois-form-layout span.label {
-  margin-left: 2px;
-  padding-right: 20px;
 }
 
 /*for md-datepicker to aligning with other input fields*/
@@ -473,7 +491,7 @@ table.md-table thead.md-head > tr.md-row
 {
 	color: rgba(0,0,0,0.87)!important;
 	font-weight:normal!important;
-} 
+}
 
 .occupation-header
 {
@@ -501,7 +519,7 @@ table.md-table thead.md-head > tr.md-row
 	color: rgba(0,0,0,0.87)!important;
 	font-weight:normal!important;
 	font-size:13px;
-	
+
 	padding-left:5px;
 	padding-right:5px;
 }
@@ -578,7 +596,7 @@ md-option{
 
 .ois-form-layout-padding
 {
-	padding: 28px 18px 8px 18px;
+	padding: 18px 18px 8px 18px;
 }
 
 .md-subheader.md-default-theme, .md-subheader {

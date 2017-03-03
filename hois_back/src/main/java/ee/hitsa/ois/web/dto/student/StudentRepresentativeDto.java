@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto.student;
 
-import ee.hitsa.ois.domain.StudentRepresentative;
+import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;

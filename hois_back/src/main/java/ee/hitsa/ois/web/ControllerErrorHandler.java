@@ -10,8 +10,6 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 
-import ee.hitsa.ois.validation.ValidationFailedException;
-
 import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +30,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ee.hitsa.ois.util.EntityRemoveException;
+import ee.hitsa.ois.validation.ValidationFailedException;
 
 @ControllerAdvice
 public class ControllerErrorHandler {
@@ -90,6 +89,7 @@ public class ControllerErrorHandler {
             log.error("Error occured during request handling:", e);
         }
 
+        e.printStackTrace();
         return new ResponseEntity<>(info, status);
     }
 

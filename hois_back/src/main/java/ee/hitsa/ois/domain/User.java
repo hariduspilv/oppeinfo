@@ -1,10 +1,13 @@
 package ee.hitsa.ois.domain;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+
+import ee.hitsa.ois.domain.school.School;
 
 import java.util.Set;
 
@@ -12,7 +15,7 @@ import java.util.Set;
 @Table(name = "user_")
 public class User extends BaseEntityWithId {
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier role;
 
     @OneToMany(mappedBy = "user")
@@ -22,7 +25,7 @@ public class User extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private Person person;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     private School school;
 
     public Classifier getRole() {

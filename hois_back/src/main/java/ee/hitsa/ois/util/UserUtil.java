@@ -1,9 +1,9 @@
 package ee.hitsa.ois.util;
 
-import ee.hitsa.ois.domain.School;
-import ee.hitsa.ois.domain.Student;
-import ee.hitsa.ois.domain.StudentAbsence;
-import ee.hitsa.ois.domain.StudentRepresentative;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class UserUtil {
