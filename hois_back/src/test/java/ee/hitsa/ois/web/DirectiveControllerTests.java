@@ -14,8 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorForm;
-import ee.hitsa.ois.web.dto.DirectiveCoordinatorDto;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
+import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

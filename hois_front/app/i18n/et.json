@@ -343,9 +343,14 @@
   },
   "directive": {
     "confirmDate": "Kinnitamise kuupäev",
+    "confirmDateFrom": "Kinnitamise kuupäev alates",
+    "confirmDateThru": "Kinnitamise kuupäev kuni",
+    "create": "Koosta käskkiri",
     "directiveNr": "Dokumendi number",
     "headline": "Pealkiri",
     "inserted": "Koostamise kuupäev",
+    "insertedFrom": "Koostamise kuupäev alates",
+    "insertedThru": "Koostamise kuupäev kuni",
     "status": "Staatus",
     "type": "Käskkirja liik",
     "coordinator": {
@@ -375,7 +380,8 @@
     "type": "Teate liik",
     "validFrom": "Kehtivuse alguskuupäev",
     "validThru": "Kehtivuse lõppkuupäev",
-    "validDate": "Kehtivuse kuupäev"
+    "validDate": "Kehtivuse kuupäev",
+    "deleteconfirm": "Kas oled kindel, et soovid malli kustutada?"
   },
   "certificate": {
       "type": "Tõendi liik",
@@ -809,12 +815,21 @@
     "seats": "Kohtade arv"
   },
   "studentGroup": {
+    "addStudents": "Lisa õppurid",
     "code": "Tähis",
     "course": "Õppeaasta (kursus)",
     "curriculum": "Õppekava",
+    "curriculumVersion": "Õppekava versioon",
     "deleteconfirm": "Kas oled kindel, et soovid õpperühma kustutada?",
+    "idcode": "Isikukood",
+    "language": "Õppekeel",
+    "nostudentsfound": "Tingimustele vastavaid õppureid ei leitud",
+    "origStudyLevel": "Õppetase",
+    "speciality": "Spetsialiseerumine",
     "studentCount": "Õppurite arv",
+    "studentname": "Õppuri nimi",
     "studyForm": "Õppevorm",
+    "studyLevel": "Õppetase",
     "teacher": "Rühmajuhataja"
   },
   "theme": {

@@ -19,6 +19,7 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.BuildingService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.BuildingForm;
@@ -39,7 +40,7 @@ public class BuildingController {
     // building: get/save/update/delete
     @GetMapping("/buildings/{id:\\d+}")
     public BuildingDto getBuilding(HoisUserDetails user, @WithEntity("id") Building building) {
-        assertSameSchool(user, building);
+        UserUtil.assertSameSchool(user, building.getSchool());
         return BuildingDto.of(building);
     }
 
@@ -52,14 +53,14 @@ public class BuildingController {
 
     @PutMapping("/buildings/{id:\\d+}")
     public BuildingDto updateBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Building building, @Valid @RequestBody BuildingForm form) {
-        assertSameSchool(user, building);
+        UserUtil.assertSameSchool(user, building.getSchool());
         EntityUtil.bindToEntity(form, building);
         return getBuilding(user, buildingService.save(building));
     }
 
     @DeleteMapping("/buildings/{id:\\d+}")
     public void deleteBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Building building, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertSameSchool(user, building);
+        UserUtil.assertSameSchool(user, building.getSchool());
         buildingService.delete(building);
     }
 
@@ -71,7 +72,7 @@ public class BuildingController {
 
     @GetMapping("/rooms/{id:\\d+}")
     public RoomDto getRoom(HoisUserDetails user, @WithEntity("id") Room room) {
-        assertSameSchool(user, room);
+        UserUtil.assertSameSchool(user, room.getBuilding().getSchool());
         return RoomDto.of(room);
     }
 
@@ -82,27 +83,13 @@ public class BuildingController {
 
     @PutMapping("/rooms/{id:\\d+}")
     public RoomDto updateRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Room room, @Valid @RequestBody RoomForm form) {
-        assertSameSchool(user, room);
+        UserUtil.assertSameSchool(user, room.getBuilding().getSchool());
         return getRoom(user, buildingService.save(room, form));
     }
 
     @DeleteMapping("/rooms/{id:\\d+}")
     public void deleteRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Room room, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertSameSchool(user, room);
+        UserUtil.assertSameSchool(user, room.getBuilding().getSchool());
         buildingService.delete(room);
-    }
-
-    private static void assertSameSchool(HoisUserDetails user, Building building) {
-        Long schoolId = user.getSchoolId();
-        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(building.getSchool()))) {
-            throw new IllegalArgumentException();
-        }
-    }
-
-    private static void assertSameSchool(HoisUserDetails user, Room room) {
-        Long schoolId = user.getSchoolId();
-        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(room.getBuilding().getSchool()))) {
-            throw new IllegalArgumentException();
-        }
     }
 }

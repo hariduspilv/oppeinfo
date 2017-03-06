@@ -15,7 +15,7 @@ public class CurriculumSearchDto {
     private Boolean higher;
     private String status;
     private String origStudyLevel;
-    private AutocompleteResult<Long> school;
+    private AutocompleteResult school;
 
     public CurriculumSearchDto() {
     }
@@ -33,7 +33,7 @@ public class CurriculumSearchDto {
         this.higher = higher;
         this.status = status;
         this.origStudyLevel = origStudyLevel;
-        this.school = new AutocompleteResult<>(schoolId, schoolNameEt, schoolNameEn);
+        this.school = new AutocompleteResult(schoolId, schoolNameEt, schoolNameEn);
     }
 
     public Long getId() {
@@ -108,11 +108,11 @@ public class CurriculumSearchDto {
         this.origStudyLevel = origStudyLevel;
     }
 
-    public AutocompleteResult<Long> getSchool() {
+    public AutocompleteResult getSchool() {
         return school;
     }
 
-    public void setSchool(AutocompleteResult<Long> school) {
+    public void setSchool(AutocompleteResult school) {
         this.school = school;
     }
 }

@@ -10,7 +10,7 @@
 
           <md-input-container>
             <label>{{'studentGroup.curriculum' | translate}}</label>
-            <hois-curriculum-version-select ng-model="criteria.curriculumVersion" name="curriculumVersion" multiple></hois-curriculum-version-select>
+            <hois-select type="curriculumversion" ng-model="criteria.curriculumVersion" name="curriculumVersion" multiple></hois-select>
           </md-input-container>
 
           <md-input-container>
@@ -53,7 +53,7 @@
             <td md-cell>{{::row.course}}</td>
             <td md-cell>{{::row.studentCount}}</td>
             <td md-cell>
-              <!-- <md-button md-no-ink class="md-primary change-button" ng-href="#/studentgroups/{{::row.id}}">{{'main.button.change' | translate}}</md-button> -->
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/studentgroups/{{::row.id}}">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

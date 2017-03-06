@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherOccupationDto;
 
@@ -51,6 +52,6 @@ public class TeacherOccupationService {
     }
 
     public void delete(TeacherOccupation teacherOccupation) {
-        teacherOccupationRepository.delete(teacherOccupation);
+        EntityUtil.deleteEntity(teacherOccupationRepository, teacherOccupation);
     }
 }

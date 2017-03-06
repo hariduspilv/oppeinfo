@@ -62,7 +62,7 @@ public class AutocompleteControllerTests {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uri);
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
 
         uriBuilder = UriComponentsBuilder.fromUriString(uri);
         uriBuilder.queryParam("mainClassCode", "OPPURSTAATUS");
@@ -106,7 +106,7 @@ public class AutocompleteControllerTests {
         uriBuilder.queryParam("idcode", "48908209998");
         uriBuilder.queryParam("role", "student");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
-        Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));        
+        Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));
     }
 
     @Test

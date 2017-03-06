@@ -56,6 +56,10 @@ public class ClassifierSpecification implements Specification<Classifier> {
         	filters.add(cb.equal(root.get("mainClassCode"), searchCommand.getMainClassCode()));
         }
 
+        if(searchCommand.getMainClassCodes() != null) {
+            filters.add(root.get("mainClassCode").in(searchCommand.getMainClassCodes()));
+        }
+
         propertyContains(() -> root.get(propertyName("name", searchCommand.getLang())), cb, searchCommand.getName(), filters::add);
 
         return cb.and(filters.toArray(new Predicate[filters.size()]));

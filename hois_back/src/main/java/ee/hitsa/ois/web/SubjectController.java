@@ -6,7 +6,7 @@ import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentAutocompleteCommand;
@@ -45,13 +45,13 @@ public class SubjectController {
 
     @PutMapping("/{id:\\d+}")
     public SubjectDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Subject subject, @Valid @RequestBody SubjectForm newSubject) {
-        assertSameSchool(user, subject);
+        UserUtil.assertSameSchool(user, subject.getSchool());
         return get(user, subjectService.save(user, subject, newSubject));
     }
 
     @GetMapping("/{id:\\d+}")
     public SubjectDto get(HoisUserDetails user, @WithEntity("id") Subject subject) {
-        assertSameSchool(user, subject);
+        UserUtil.assertSameSchool(user, subject.getSchool());
         return SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
     }
 
@@ -70,8 +70,8 @@ public class SubjectController {
     }
 
     @GetMapping("/initEditFormData")
-    public Map<String, List<AutocompleteResult<Long>>> getEditForm(HoisUserDetails user) {
-        Map<String, List<AutocompleteResult<Long>>> result = new HashMap<>();
+    public Map<String, List<AutocompleteResult>> getEditForm(HoisUserDetails user) {
+        Map<String, List<AutocompleteResult>> result = new HashMap<>();
         Long schoolId = user.getSchoolId();
         result.put("departments", autocompleteService.schoolDepartments(schoolId, new SchoolDepartmentAutocompleteCommand()));
         return result;
@@ -79,19 +79,12 @@ public class SubjectController {
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Subject subject, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertSameSchool(user, subject);
+        UserUtil.assertSameSchool(user, subject.getSchool());
         subjectService.delete(subject);
-    }
-
-    private static void assertSameSchool(HoisUserDetails user, Subject subject) {
-        Long schoolId = user.getSchoolId();
-        if (schoolId == null || !schoolId.equals(EntityUtil.getNullableId(subject.getSchool()))) {
-            throw new IllegalArgumentException();
-        }
     }
 }
 
 class SubjectSearchFormData {
-    public List<AutocompleteResult<Long>> departments;
-    public List<AutocompleteResult<Long>> curricula;
+    public List<AutocompleteResult> departments;
+    public List<AutocompleteResult> curricula;
 }

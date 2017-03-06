@@ -7,7 +7,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
-import ee.hitsa.ois.web.commandobject.StudentForm;
+import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentViewDto extends StudentForm {
@@ -18,12 +18,12 @@ public class StudentViewDto extends StudentForm {
     private OisFileCommand photo;
 
     // study
-    private AutocompleteResult<Long> school;
+    private AutocompleteResult school;
     private String status;
-    private AutocompleteResult<Long> curriculumVersion;
+    private AutocompleteResult curriculumVersion;
     private String studyLanguage;
-    private AutocompleteResult<Long> curriculumSpeciality;
-    private AutocompleteResult<Long> studentGroup;
+    private AutocompleteResult curriculumSpeciality;
+    private AutocompleteResult studentGroup;
     private Integer course;
     private LocalDate studyStart;
     private LocalDate nominalStudyEnd;
@@ -54,11 +54,11 @@ public class StudentViewDto extends StudentForm {
         this.photo = photo;
     }
 
-    public AutocompleteResult<Long> getSchool() {
+    public AutocompleteResult getSchool() {
         return school;
     }
 
-    public void setSchool(AutocompleteResult<Long> school) {
+    public void setSchool(AutocompleteResult school) {
         this.school = school;
     }
 
@@ -70,11 +70,11 @@ public class StudentViewDto extends StudentForm {
         this.status = status;
     }
 
-    public AutocompleteResult<Long> getCurriculumVersion() {
+    public AutocompleteResult getCurriculumVersion() {
         return curriculumVersion;
     }
 
-    public void setCurriculumVersion(AutocompleteResult<Long> curriculumVersion) {
+    public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
     }
 
@@ -86,19 +86,19 @@ public class StudentViewDto extends StudentForm {
         this.studyLanguage = studyLanguage;
     }
 
-    public AutocompleteResult<Long> getCurriculumSpeciality() {
+    public AutocompleteResult getCurriculumSpeciality() {
         return curriculumSpeciality;
     }
 
-    public void setCurriculumSpeciality(AutocompleteResult<Long> curriculumSpeciality) {
+    public void setCurriculumSpeciality(AutocompleteResult curriculumSpeciality) {
         this.curriculumSpeciality = curriculumSpeciality;
     }
 
-    public AutocompleteResult<Long> getStudentGroup() {
+    public AutocompleteResult getStudentGroup() {
         return studentGroup;
     }
 
-    public void setStudentGroup(AutocompleteResult<Long> studentGroup) {
+    public void setStudentGroup(AutocompleteResult studentGroup) {
         this.studentGroup = studentGroup;
     }
 

@@ -75,8 +75,8 @@ public class StateCurriculumController {
     }
 
     @GetMapping("/all")
-    public List<AutocompleteResult<Long>> searchAll(StateCurriculumSearchCommand stateCurriculumSearchCommand, Sort sort) {
+    public List<AutocompleteResult> searchAll(StateCurriculumSearchCommand stateCurriculumSearchCommand, Sort sort) {
         return stateCurriculumService.searchAll(stateCurriculumSearchCommand, sort)
-                .stream().map(it -> AutocompleteResult.of(it)).collect(Collectors.toList());
+                .stream().map(AutocompleteResult::of).collect(Collectors.toList());
     }
 }

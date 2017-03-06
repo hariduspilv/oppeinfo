@@ -1,26 +1,22 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import javax.persistence.criteria.Join;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Person;
@@ -32,16 +28,24 @@ import ee.hitsa.ois.repository.DirectiveCoordinatorRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.commandobject.DirectiveForm;
-import ee.hitsa.ois.web.commandobject.DirectiveForm.DirectiveFormStudent;
-import ee.hitsa.ois.web.commandobject.DirectiveSearchCommand;
-import ee.hitsa.ois.web.dto.DirectiveCoordinatorDto;
-import ee.hitsa.ois.web.dto.DirectiveSearchDto;
+import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveSearchCommand;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudent;
+import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
+import ee.hitsa.ois.web.dto.directive.DirectiveSearchDto;
+import ee.hitsa.ois.web.dto.directive.DirectiveStudentDto;
 
 @Transactional
 @Service
 public class DirectiveService {
+    private static final String DIRECTIVE_LIST_SELECT =
+            "d.id, d.headline, d.directive_nr, d.type_code, d.status_code, d.inserted, d.confirm_date";
+    private static final String DIRECTIVE_LIST_FROM =
+            "from directive d inner join classifier type on d.type_code=type.code inner join classifier status on d.status_code=status.code";
 
+    @Autowired
+    private EntityManager em;
     @Autowired
     private DirectiveRepository directiveRepository;
     @Autowired
@@ -50,44 +54,41 @@ public class DirectiveService {
     private PersonRepository personRepository;
 
     public Page<DirectiveSearchDto> search(Long schoolId, DirectiveSearchCommand criteria, Pageable pageable) {
-        return directiveRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(DIRECTIVE_LIST_FROM, pageable);
 
-            if(!CollectionUtils.isEmpty(criteria.getType())) {
-                filters.add(root.get("type").get("code").in(criteria.getType()));
-            }
-            propertyContains(() -> root.get("headline"), cb, criteria.getHeadline(), filters::add);
-            propertyContains(() -> root.get("directiveNr"), cb, criteria.getDirectiveNr(), filters::add);
-            if(criteria.getConfirmDateFrom() != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("confirmDate"), criteria.getConfirmDateFrom()));
-            }
-            if(criteria.getConfirmDateThru() != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("confirmDate"), criteria.getConfirmDateThru()));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getStatus())) {
-                filters.add(root.get("status").get("code").in(criteria.getStatus()));
-            }
-            if(criteria.getInsertedFrom() != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("inserted"), LocalDateTime.of(criteria.getInsertedFrom(), LocalTime.MIN)));
-            }
-            if(criteria.getInsertedThru() != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("inserted"), LocalDateTime.of(criteria.getInsertedThru(), LocalTime.MAX)));
-            }
-            if(StringUtils.hasText(criteria.getStudentGroup())) {
-                Subquery<Long> studentGroupQuery = query.subquery(Long.class);
-                Root<DirectiveStudent> studentGroupRoot = studentGroupQuery.from(DirectiveStudent.class);
-                Join<Object, Object> studentGroup = studentGroupRoot.join("studentGroup", JoinType.INNER);
-                studentGroupQuery = studentGroupQuery.select(studentGroupRoot.get("directive").get("id"));
-                propertyContains(() -> studentGroup.get("code"), cb, criteria.getStudentGroup(), studentGroupQuery::where);
-                filters.add(root.get("id").in(studentGroupQuery));
-            }
+        qb.requiredCriteria("d.school_id = :schoolId", "schoolId", schoolId);
 
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(DirectiveSearchDto::of);
+        qb.optionalCriteria("d.type_code in (:type)", "type", criteria.getType());
+        qb.optionalContains("d.headline", "headline", criteria.getHeadline());
+        qb.optionalContains("d.directive_nr", "directiveNr", criteria.getDirectiveNr());
+        qb.optionalCriteria("d.confirm_date >= :confirmDateFrom", "confirmDateFrom", criteria.getConfirmDateFrom());
+        qb.optionalCriteria("d.confirm_date <= :confirmDateThru", "confirmDateThru", criteria.getConfirmDateThru());
+        qb.optionalCriteria("d.status_code in (:status)", "status", criteria.getStatus());
+        if(criteria.getInsertedFrom() != null) {
+            qb.requiredCriteria("d.inserted >= :insertedFrom", "insertedFrom", LocalDateTime.of(criteria.getInsertedFrom(), LocalTime.MIN));
+        }
+        if(criteria.getInsertedThru() != null) {
+            qb.requiredCriteria("d.inserted <= :insertedThru", "insertedThru", LocalDateTime.of(criteria.getInsertedThru(), LocalTime.MAX));
+        }
+        if(StringUtils.hasText(criteria.getStudentGroup())) {
+            qb.requiredCriteria("d.id in (select ds.directive_id from directive_student ds inner join student_group sg on ds.student_group_id=sg.id where upper(sg.code) like :studentGroup)", "studentGroup", "%"+criteria.getStudentGroup().toUpperCase()+"%");
+        }
+
+        return JpaQueryUtil.pagingResult(qb.select(DIRECTIVE_LIST_SELECT, em), pageable, () -> qb.count(em)).map(r -> {
+            DirectiveSearchDto dto = new DirectiveSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setHeadline(resultAsString(r, 1));
+            dto.setDirectiveNr(resultAsString(r, 2));
+            dto.setType(resultAsString(r, 3));
+            dto.setStatus(resultAsString(r, 4));
+            dto.setCreated(resultAsLocalDate(r, 5));
+            dto.setConfirmDate(resultAsLocalDate(r, 6));
+            return dto;
+        });
     }
 
     public Directive save(Directive directive, DirectiveForm form) {
+        // TODO directive state 'KOOSTAMISEL'
         EntityUtil.bindToEntity(form, directive, "students");
         if(form.getStudents() != null) {
             List<DirectiveStudent> students = directive.getStudents();
@@ -120,6 +121,16 @@ public class DirectiveService {
             students.removeAll(studentMapping.values());
         }
         return directiveRepository.save(directive);
+    }
+
+    public void delete(Directive directive) {
+        // TODO directive state 'KOOSTAMISEL'
+        EntityUtil.deleteEntity(directiveRepository, directive);
+    }
+
+    public List<DirectiveStudentDto> searchStudents(Long schoolId) {
+        // TODO
+        return null;
     }
 
     public Page<DirectiveCoordinatorDto> search(Long schoolId, Pageable pageable) {

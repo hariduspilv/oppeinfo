@@ -10,6 +10,8 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
+import ee.hitsa.ois.util.PersonUtil;
+
 @Entity
 public class Person extends BaseEntityWithId {
 
@@ -169,7 +171,6 @@ public class Person extends BaseEntityWithId {
 
     @Transient
     public String getFullname() {
-        // firstname is optional
-        return firstname == null ? lastname : (firstname + " " + lastname);
+        return PersonUtil.fullname(firstname, lastname);
     }
 }

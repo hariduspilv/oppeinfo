@@ -10,16 +10,14 @@ import java.util.stream.Collectors;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
-import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.enums.SubjectStatus;
-import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
-import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.BuildingRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
@@ -29,8 +27,10 @@ import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
+import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
@@ -63,7 +63,7 @@ public class AutocompleteService {
     @Autowired
     private TeacherRepository teacherRepository;
 
-    public List<AutocompleteResult<Long>> buildings(Long schoolId) {
+    public List<AutocompleteResult> buildings(Long schoolId) {
         return buildingRepository.findAllBySchool_id(schoolId);
     }
 
@@ -71,15 +71,19 @@ public class AutocompleteService {
         return classifierRepository.findAllByMainClassCode(mainClassCode);
     }
 
-    public List<AutocompleteResult<Long>> curriculums(Long schoolId) {
+    public List<ClassifierSelection> classifiers(List<String> mainClassCodes) {
+        return classifierRepository.findAllByMainClassCodeIn(mainClassCodes);
+    }
+
+    public List<AutocompleteResult> curriculums(Long schoolId) {
         return curriculumRepository.findAllBySchool_id(schoolId);
     }
 
-    public List<AutocompleteResult<Long>> curriculumVersions(Long schoolId) {
+    public List<AutocompleteResult> curriculumVersions(Long schoolId) {
         return curriculumVersionRepository.findAllForSelect(schoolId);
     }
 
-    public List<AutocompleteResult<Long>> directiveCoordinators(Long schoolId) {
+    public List<AutocompleteResult> directiveCoordinators(Long schoolId) {
         return directiveCoordinatorRepository.findAllForSelect(schoolId);
     }
 
@@ -94,7 +98,7 @@ public class AutocompleteService {
         return schoolRepository.findAllSchools();
     }
 
-    public Page<AutocompleteResult<Long>> teachers(Long schoolId, AutocompleteCommand lookup) {
+    public Page<AutocompleteResult> teachers(Long schoolId, AutocompleteCommand lookup) {
         return teacherRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
@@ -116,8 +120,8 @@ public class AutocompleteService {
      * @param criteria
      * @return
      */
-    public List<AutocompleteResult<Long>> schoolDepartments(Long schoolId, SchoolDepartmentAutocompleteCommand criteria) {
-        List<AutocompleteResult<Long>> result = schoolDepartmentRepository.findAllBySchool_id(schoolId);
+    public List<AutocompleteResult> schoolDepartments(Long schoolId, SchoolDepartmentAutocompleteCommand criteria) {
+        List<AutocompleteResult> result = schoolDepartmentRepository.findAllBySchool_id(schoolId);
         Long excludedId = criteria.getExcludedId();
         if (excludedId != null) {
             result = result.stream().filter(r -> !excludedId.equals(r.getId())).collect(Collectors.toList());
@@ -135,4 +139,5 @@ public class AutocompleteService {
     private static PageRequest sortAndLimit(String... sortFields) {
         return new PageRequest(0, MAX_ITEM_COUNT, new Sort(sortFields));
     }
+
 }

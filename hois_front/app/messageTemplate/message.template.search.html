@@ -1,7 +1,5 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
     <form ng-submit="loadData()" layout="column" novalidate>
-        <h1 class="md-title">{{currentLanguageNameField(school)}}</h1>
-        <h1 class="md-title">{{'messageTemplate.messageTemplates' | translate}}</h1>
         <md-input-container>
             <label>{{'messageTemplate.type' | translate}}</label>
             <hois-classifier-select ng-model="criteria.type" model-value-attr="code" main-classifier-code="TEATE_LIIK" multiple></hois-classifier-select>

@@ -30,7 +30,7 @@ import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
 public class SchoolDepartmentService {
 
     @Autowired
-    SchoolDepartmentRepository schoolDepartmentRepository;
+    private SchoolDepartmentRepository schoolDepartmentRepository;
 
     public Page<SchoolDepartmentDto> findAll(Long schoolId, SchoolDepartmentSearchCommand criteria, Pageable pageable) {
         // load full structure for given school, already sorted
@@ -106,7 +106,7 @@ public class SchoolDepartmentService {
     }
 
     public void delete(SchoolDepartment schoolDepartment) {
-        schoolDepartmentRepository.delete(schoolDepartment);
+        EntityUtil.deleteEntity(schoolDepartmentRepository, schoolDepartment);
     }
 
     private static SchoolDepartmentDto createTreeItem(SchoolDepartmentDto sd, Map<Long, List<SchoolDepartmentDto>> children, Set<Long> filtered) {

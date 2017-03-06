@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -35,11 +34,10 @@ import ee.hitsa.ois.web.dto.GeneralMessageDto;
 @Transactional
 @Service
 public class GeneralMessageService {
-    private static final String SHOW_QUERY_COMMON = "from general_message g where g.school_id=? "+
+    private static final String SHOW_MESSAGES_FROM = "from general_message g where g.school_id=:schoolId "+
         "and (g.valid_from is null or g.valid_from <= now()) and (g.valid_thru is null or g.valid_thru >= cast(now() as date)) "+
-        "and g.id in (select gt.general_message_id from general_message_target gt where gt.role_code in (select u.role_code from user_ u where u.id=?))";
-    private static final String SHOW_QUERY = String.format("select g.id, g.title, g.inserted %s order by g.inserted, g.title", SHOW_QUERY_COMMON);
-    private static final String SHOW_COUNT_QUERY = "select count(*) " + SHOW_QUERY_COMMON;
+        "and g.id in (select gt.general_message_id from general_message_target gt where gt.role_code in (select u.role_code from user_ u where u.id=:userId))";
+    private static final String SHOW_MESSAGES_SELECT = "g.id, g.title, g.inserted";
 
     @Autowired
     private EntityManager em;
@@ -49,15 +47,10 @@ public class GeneralMessageService {
     private GeneralMessageRepository generalMessageRepository;
 
     public Page<GeneralMessageDto> show(HoisUserDetails user, Pageable pageable) {
-        Query q = em.createNativeQuery(SHOW_QUERY);
-        q.setParameter(1, user.getSchoolId());
-        q.setParameter(2, user.getUserId());
-        Page<Object[]> messages = JpaQueryUtil.pagingResult(q, pageable, () -> {
-            Query cq = em.createNativeQuery(SHOW_COUNT_QUERY);
-            cq.setParameter(1, user.getSchoolId());
-            cq.setParameter(2, user.getUserId());
-            return (Number)cq.getSingleResult();
-        });
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SHOW_MESSAGES_FROM, pageable);
+        qb.parameter("schoolId", user.getSchoolId());
+        qb.parameter("userId", user.getUserId());
+        Page<Object[]> messages = JpaQueryUtil.pagingResult(qb.select(SHOW_MESSAGES_SELECT, em), pageable, () -> qb.count(em));
         return messages.map(d -> new GeneralMessageDto(Long.valueOf(((Number)d[0]).longValue()), (String)d[1], LocalDateTime.ofInstant(((java.sql.Timestamp)d[2]).toInstant(), ZoneId.systemDefault())));
     }
 

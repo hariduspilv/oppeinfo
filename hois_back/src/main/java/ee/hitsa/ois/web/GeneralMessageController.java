@@ -19,6 +19,7 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.GeneralMessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.GeneralMessageForm;
@@ -46,7 +47,7 @@ public class GeneralMessageController {
 
     @GetMapping("/{id:\\d+}")
     public GeneralMessageDto getGeneralMessage(HoisUserDetails user, @WithEntity("id") GeneralMessage generalMessage) {
-        assertSameSchool(user, generalMessage);
+        UserUtil.assertSameSchool(user, generalMessage.getSchool());
         return GeneralMessageDto.of(generalMessage);
     }
 
@@ -59,21 +60,14 @@ public class GeneralMessageController {
 
     @PutMapping("/{id:\\d+}")
     public GeneralMessageDto updateGeneralMessage(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) GeneralMessage generalMessage, @Valid @RequestBody GeneralMessageForm form) {
-        assertSameSchool(user, generalMessage);
+        UserUtil.assertSameSchool(user, generalMessage.getSchool());
         EntityUtil.bindToEntity(form, generalMessage, "targets");
         return getGeneralMessage(user, generalMessageService.save(generalMessage, form.getTargets()));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void deleteGeneralMessage(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") GeneralMessage generalMessage, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertSameSchool(user, generalMessage);
+        UserUtil.assertSameSchool(user, generalMessage.getSchool());
         generalMessageService.delete(generalMessage);
-    }
-
-    private static void assertSameSchool(HoisUserDetails user, GeneralMessage generalMessage) {
-        Long schoolId = user.getSchoolId();
-        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(generalMessage.getSchool()))) {
-            throw new IllegalArgumentException();
-        }
     }
 }

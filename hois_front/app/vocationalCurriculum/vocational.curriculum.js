@@ -327,6 +327,9 @@ angular.module('hitsaOis')
 
 
           sanitizeDraftEntity(submittedDialogScope.stateCurriculum);
+          ['objectivesEt', 'objectivesEn'].forEach(function(property) {
+            delete submittedDialogScope.stateCurriculum[property];
+          });
           submittedDialogScope.stateCurriculum.draft = $scope.curriculum.draft;
           mapDtoToModel(submittedDialogScope.stateCurriculum, $scope);
         }, function() {

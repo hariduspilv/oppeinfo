@@ -31,10 +31,10 @@ import ee.hitsa.ois.repository.StudentRepresentativeRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationSearchCommand;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationDeclineForm;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationForm;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationDeclineForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeForm;
 import ee.hitsa.ois.web.dto.student.StudentRepresentativeApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentRepresentativeDto;
 

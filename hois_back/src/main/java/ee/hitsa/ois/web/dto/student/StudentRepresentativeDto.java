@@ -4,7 +4,7 @@ import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeForm;
 
 public class StudentRepresentativeDto extends StudentRepresentativeForm {
 

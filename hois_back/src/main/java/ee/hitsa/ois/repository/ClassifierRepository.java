@@ -48,6 +48,9 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
     @Query("select new ee.hitsa.ois.web.dto.ClassifierSelection(c.code, c.nameEt, c.nameEn, c.nameRu, c.valid, c.higher, c.vocational, c.mainClassCode) from Classifier c where c.mainClassCode=?1")
     List<ClassifierSelection> findAllByMainClassCode(String mainClassCode);
 
+    @Query("select new ee.hitsa.ois.web.dto.ClassifierSelection(c.code, c.nameEt, c.nameEn, c.nameRu, c.valid, c.higher, c.vocational, c.mainClassCode) from Classifier c where c.mainClassCode in ?1")
+    List<ClassifierSelection> findAllByMainClassCodeIn(List<String> mainClassCodes);
+
 	@CacheEvict(cacheNames = "classifier", allEntries = true)
 	List<Classifier> removeByCode(String code);
 
@@ -69,4 +72,5 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 	List<Classifier> findAreasOfStudyByGroupOfStudy(String code);
 
     Classifier findOneByCodeAndMainClassCode(String code, String mainClassCode);
+
 }

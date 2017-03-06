@@ -12,4 +12,8 @@ public class SubjectUtil {
     public static Set<Classifier> getLanguages(Subject subject) {
         return subject.getSubjectLanguages().stream().map(SubjectLanguage::getLanguage).collect(Collectors.toSet());
     }
+
+    public static String subjectName(String code, String name) {
+        return String.format("%1$s - %2$s", code, name);
+    }
 }

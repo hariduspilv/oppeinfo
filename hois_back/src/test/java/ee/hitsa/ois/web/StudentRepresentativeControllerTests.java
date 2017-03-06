@@ -14,8 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationDeclineForm;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationDeclineForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationForm;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)

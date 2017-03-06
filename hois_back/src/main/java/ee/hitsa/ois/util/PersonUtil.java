@@ -12,4 +12,9 @@ public abstract class PersonUtil {
     public static boolean isAdult(Person person) {
         return Period.between(person.getBirthdate(), LocalDate.now()).getYears() >= ADULT_YEARS;
     }
+
+    public static String fullname(String firstname, String lastname) {
+        // firstname is optional
+        return firstname == null ? lastname : (firstname + " " + lastname);
+    }
 }

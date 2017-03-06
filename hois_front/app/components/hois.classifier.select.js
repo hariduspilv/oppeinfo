@@ -24,6 +24,7 @@ angular.module('hitsaOis')
         multiple:'@',
         modelValueAttr: '@',
         mainClassifierCode: '@',
+        mainClassifierCodes: '@',
         connectMainClassifierCode: '@',
         criteria: '=',
         filterValues: '@', //model of array of classifiers (or other objects which contain classifier, then byProperty must be defined )
@@ -118,12 +119,15 @@ angular.module('hitsaOis')
   });
 
   function classifierPostLink(scope, Classifier, ClassifierConnect) {
+
     var optionsByCode = {};
     var params = { order: scope.$root.currentLanguageNameField()};
 
     if(angular.isDefined(scope.mainClassifierCode)) {
       params.mainClassCode = scope.mainClassifierCode;
-    }  else {
+    }  else if(angular.isString(scope.mainClassifierCodes)) {
+      params.mainClassCodes = scope.mainClassifierCodes.replace(/\s/g, '');
+    } else {
       // do not make query if main classifier code is undefined
       return;
     }
@@ -239,7 +243,7 @@ angular.module('hitsaOis')
       }
     };
 
-    if(params.mainClassCode) {
+    if(params.mainClassCode || params.mainClassCodes) {
       var paramsCount = Object.keys(params).length;
       var query = paramsCount === 1 || (paramsCount === 2 && params.order) ? Classifier.queryForDropdown : Classifier.queryAll;
       query(params, function(arrayResult) {
@@ -250,16 +254,6 @@ angular.module('hitsaOis')
         scope.optionsByCode = optionsByCode;
         postLoad();
       });
-/*          QueryUtils.endpoint('/autocomplete/classifiers').query({mainClassCode: params.mainClassCode}).$promise
-        .then(function(response) {
-          var sortedResponse = $filter('orderBy')(response, params.order);
-          sortedResponse.forEach(function(classifier) {
-            var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
-            optionsByCode[option.code] = option;
-          });
-          scope.optionsByCode = optionsByCode;
-          postLoad();
-        });*/
     }
 }
 })();

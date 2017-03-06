@@ -10,11 +10,42 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
 ]).controller('StudentGroupEditController', ['$location', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
   function ($location, $q, $route, $scope, dialogService, message, Classifier, QueryUtils) {
     var id = $route.current.params.id;
-
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
+    var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', studyLevel: 'OPPETASE'});
+
+    $scope.formState = {curriculumVersions: [], languages: [], studyForms: [], specialities: [], selectedStudents: []};
+    $scope.curriculumChanged = function() {
+      var curriculumId = $scope.record.curriculum ? $scope.record.curriculum.id : null;
+      if($scope.formState.curriculumId === curriculumId) {
+        return;
+      }
+      $scope.formState.curriculumId = curriculumId;
+      // store current values
+      $scope.formState.language = $scope.record.language;
+      $scope.formState.studyForm = $scope.record.studyForm;
+
+      var afterCurriculumChange = function(result) {
+        $scope.formState.curriculumVersions = result.curriculumVersions;
+        $scope.formState.languages = result.languages || [];
+        $scope.formState.studyForms = result.studyForms || [];
+        $scope.formState.origStudyLevel = result.origStudyLevel;
+        $scope.formState.specialities = result.specialities;
+
+        // try to restore values
+        $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) ? $scope.formState.language : null;
+        $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) ? $scope.formState.studyForm : null;
+      };
+      if(curriculumId) {
+        QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: curriculumId}, afterCurriculumChange);
+      } else {
+        // curriculum cleared
+        afterCurriculumChange({});
+      }
+    };
+
     if(id) {
-      $scope.record = Endpoint.get({id: id});
+      $scope.record = Endpoint.get({id: id}, $scope.curriculumChanged);
     } else {
       // new student group
       $scope.record = new Endpoint();
@@ -30,6 +61,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       function afterSave() {
         message.info(msg);
       }
+      $scope.record.students = $scope.formState.selectedStudents.map(function(item) { return item.id; });
       if($scope.record.id) {
         $scope.record.$update().then(afterSave);
       }else{
@@ -44,6 +76,23 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
           $location.path(baseUrl);
         });
       });
+    };
+
+    $scope.addStudents = function() {
+      $scope.studentGroupForm.$setSubmitted();
+      if($scope.studentGroupForm.$valid) {
+        var query = angular.extend({}, $scope.record);
+        QueryUtils.endpoint(baseUrl+'/findstudents').query(query, function(result) {
+          if(result.length === 0) {
+            $scope.formState.students = undefined;
+            message.info('studentGroup.nostudentsfound');
+            return;
+          }
+          $q.all(clMapper.promises).then(function() {
+            $scope.formState.students = clMapper.objectmapper(result);
+          });
+        });
+      }
     };
   }
 ]);

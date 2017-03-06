@@ -76,4 +76,11 @@ public abstract class UserUtil {
     public static boolean isStudentRepresentative(HoisUserDetails user, Student student) {
         return student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
     }
+
+    public static void assertSameSchool(HoisUserDetails user, School school) {
+        Long schoolId = user.getSchoolId();
+        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school))) {
+            throw new IllegalArgumentException();
+        }
+    }
 }

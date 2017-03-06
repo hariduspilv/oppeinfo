@@ -1,7 +1,8 @@
 package ee.hitsa.ois.web;
 
-import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -26,6 +27,7 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.CurriculumService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
@@ -46,11 +48,10 @@ public class CurriculumController {
 	@Autowired
 	private SchoolRepository schoolRepository;
 
-	@GetMapping("/{id}")
+	@GetMapping("/{id:\\d+}")
     public CurriculumDto get(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
-	    assertSameOrJoinSchool(user, curriculum);
-	    CurriculumDto dto = CurriculumDto.of(curriculum);
-        return dto;
+        assertSameOrJoinSchool(user, curriculum);
+        return CurriculumDto.of(curriculum);
     }
 
     @GetMapping("")
@@ -70,8 +71,7 @@ public class CurriculumController {
         return CurriculumDto.of(curriculumService.save(curriculum, curriculumForm));
     }
 
-
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public CurriculumDto update(HoisUserDetails user, @NotNull @Valid @RequestBody CurriculumForm curriculumForm, @WithEntity("id") Curriculum curriculum) {
         assertSameOrJoinSchool(user, curriculum);
         return CurriculumDto.of(curriculumService.save(curriculum, curriculumForm));
@@ -90,9 +90,9 @@ public class CurriculumController {
         return curriculumService.isVersionUnique(user.getSchoolId(), command);
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
-        assertSameSchool(user, curriculum);
+        UserUtil.assertSameSchool(user, curriculum.getSchool());
     	curriculumService.delete(curriculum);
     }
 
@@ -103,14 +103,14 @@ public class CurriculumController {
                 map(c -> ClassifierSelection.of(c)).collect(Collectors.toList());
     }
 
-    @PostMapping("/{curriculumId}/versions")
+    @PostMapping("/{curriculumId:\\d+}/versions")
     public CurriculumVersionDto createVersion(HoisUserDetails user, @WithEntity(value = "curriculumId") Curriculum curriculum,
             @Valid @RequestBody CurriculumVersionDto dto) {
         assertSameOrJoinSchool(user, curriculum);
         return curriculumService.save(curriculum, dto);
     }
 
-    @PutMapping("/{curriculumId}/versions/{id}")
+    @PutMapping("/{curriculumId:\\d+}/versions/{id:\\d+}")
     public CurriculumVersionDto updateVersion(HoisUserDetails user, @WithEntity(value = "id") CurriculumVersion curriculumVersion,
             @Valid @RequestBody CurriculumVersionDto curriculumVersionDto) {
         assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
@@ -129,7 +129,7 @@ public class CurriculumController {
      * All schools which are joint parters have right to see curriculum in case of joint curriculum.
      */
     private void assertSameOrJoinSchool(HoisUserDetails user, Curriculum curriculum) {
-        List<String> ehisSchools = new ArrayList<>();
+        Set<String> ehisSchools = new HashSet<>();
         ehisSchools.add(EntityUtil.getCode(curriculum.getSchool().getEhisSchool()));
         ehisSchools.addAll(curriculum.getJointPartners().stream().filter(it -> it.getEhisSchool() != null)
                 .map(it -> EntityUtil.getCode(it.getEhisSchool())).collect(Collectors.toList()));
@@ -138,12 +138,4 @@ public class CurriculumController {
             throw new IllegalArgumentException();
         }
     }
-
-    private static void assertSameSchool(HoisUserDetails user, Curriculum curriculum) {
-        Long schoolId = user.getSchoolId();
-        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(curriculum.getSchool()))) {
-            throw new IllegalArgumentException();
-        }
-    }
-
 }

@@ -167,35 +167,48 @@ angular.module('hitsaOis')
         return;
       }
       var matchPage = function(section, page) {
-        if (path.indexOf(page.url.replace(/(\?_menu)$/, '')) !== -1) {
+        if (path.indexOf(page.url.replace(/(\?_menu)$/, '')) === 0) {
           self.selectSection(section);
           self.selectPage(section, page);
+          return true;
         }
+        return false;
       };
 
       //sections.forEach(function(section) {
-      menu.forEach(function(section) {
+      for(var i = 0; i < menu.length; i++) {
+        var section = menu[i];
+        var match = false;
         if (section.children) {
           // matches nested section toggles, such as API or Customization
-          section.children.forEach(function(childSection){
-            if(childSection.pages){
-              childSection.pages.forEach(function(page){
-                matchPage(childSection, page);
-              });
+          for (var childIndex = 0; childIndex < section.children.length; childIndex++) {
+            var childSection = section.children[childIndex];
+            if(childSection.pages) {
+              for (var childSectionPageIndex = 0; childSectionPageIndex < childSection.pages.length; childSectionPageIndex++) {
+                match = matchPage(childSection, childSection.pages[childSectionPageIndex]);
+                if (match === true) { break; }
+              }
             }
-          });
+            if (match === true) { break; }
+          }
+
         }
         else if (section.pages) {
           // matches top-level section toggles, such as Demos
-          section.pages.forEach(function(page) {
-            matchPage(section, page);
-          });
+          for (var sectionPageIndex = 0; sectionPageIndex < section.pages.length; sectionPageIndex++) {
+            match = matchPage(section, section.pages[sectionPageIndex]);
+            if (match === true) { break; }
+          }
         }
         else if (section.type === 'link') {
           // matches top-level links, such as "Getting Started"
-          matchPage(section, section);
+          match = matchPage(section, section);
         }
-      });
+
+        if (match === true) { break; }
+      }
+
+
     }
     $rootScope.$on('$locationChangeSuccess', onLocationChange);
 

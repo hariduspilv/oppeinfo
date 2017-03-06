@@ -3,20 +3,21 @@ package ee.hitsa.ois.web.commandobject;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @JsonIgnoreProperties(ignoreUnknown = true)
-public class EntityConnectionCommand<ID> {
-    public ID id;
+public class EntityConnectionCommand {
+    public Long id;
 
-    public EntityConnectionCommand() {}
+    public EntityConnectionCommand() {
+    }
 
-    public EntityConnectionCommand(ID id) {
+    public EntityConnectionCommand(Long id) {
         this.id = id;
     }
 
-    public ID getId() {
+    public Long getId() {
         return id;
     }
 
-    public void setId(ID id) {
+    public void setId(Long id) {
         this.id = id;
     }
 }

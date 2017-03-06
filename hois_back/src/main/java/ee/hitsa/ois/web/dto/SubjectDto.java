@@ -27,7 +27,7 @@ public class SubjectDto extends SubjectForm {
         this.id = id;
     }
 
-    private Set<AutocompleteResult<Long>> primarySubjects;
+    private Set<AutocompleteResult> primarySubjects;
 
     private LocalDateTime inserted;
 
@@ -37,7 +37,7 @@ public class SubjectDto extends SubjectForm {
 
     private String changedBy;
 
-    private Set<AutocompleteResult<Long>> curriculumVersions;
+    private Set<AutocompleteResult> curriculumVersions;
 
     public static SubjectDto of(Subject subject, List<CurriculumVersion> curriculumVersions) {
         SubjectDto dto = EntityUtil.bindToDto(subject, new SubjectDto(), "languages", "schoolDepartment", "curriculumVersions");
@@ -51,14 +51,14 @@ public class SubjectDto extends SubjectForm {
                         .map(it -> AutocompleteResult.of(it.getPrimarySubject()))
                         .collect(Collectors.toSet()));
 
-        Set<EntityConnectionCommand<Long>> mandatoryPrerequisiteSubjects = new HashSet<>();
+        Set<EntityConnectionCommand> mandatoryPrerequisiteSubjects = new HashSet<>();
 
-        Set<EntityConnectionCommand<Long>> recommendedPrerequisiteSubjects = new HashSet<>();
+        Set<EntityConnectionCommand> recommendedPrerequisiteSubjects = new HashSet<>();
 
-        Set<EntityConnectionCommand<Long>> substituteSubjects = new HashSet<>();
+        Set<EntityConnectionCommand> substituteSubjects = new HashSet<>();
 
         for (SubjectConnect connetion: subject.getSubjectConnections()) {
-            AutocompleteResult<Long> s = AutocompleteResult.of(connetion.getConnectSubject());
+            AutocompleteResult s = AutocompleteResult.of(connetion.getConnectSubject());
             String connectionCode = EntityUtil.getCode(connetion.getConnection());
             if (SubjectConnection.AINESEOS_EK.name().equals(connectionCode)) {
                 mandatoryPrerequisiteSubjects.add(s);
@@ -77,11 +77,11 @@ public class SubjectDto extends SubjectForm {
         return dto;
     }
 
-    public Set<AutocompleteResult<Long>> getPrimarySubjects() {
+    public Set<AutocompleteResult> getPrimarySubjects() {
         return primarySubjects;
     }
 
-    public void setPrimarySubjects(Set<AutocompleteResult<Long>> primarySubjects) {
+    public void setPrimarySubjects(Set<AutocompleteResult> primarySubjects) {
         this.primarySubjects = primarySubjects;
     }
 
@@ -117,11 +117,11 @@ public class SubjectDto extends SubjectForm {
         this.changedBy = changedBy;
     }
 
-    public Set<AutocompleteResult<Long>> getCurriculumVersions() {
+    public Set<AutocompleteResult> getCurriculumVersions() {
         return curriculumVersions;
     }
 
-    public void setCurriculumVersions(Set<AutocompleteResult<Long>> curriculumVersions) {
+    public void setCurriculumVersions(Set<AutocompleteResult> curriculumVersions) {
         this.curriculumVersions = curriculumVersions;
     }
 }

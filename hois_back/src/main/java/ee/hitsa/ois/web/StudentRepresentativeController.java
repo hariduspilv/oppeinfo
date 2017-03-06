@@ -26,11 +26,11 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationSearchCommand;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationDeclineForm;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationForm;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeForm;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationDeclineForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeForm;
 import ee.hitsa.ois.web.dto.student.StudentRepresentativeApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentRepresentativeDto;
 

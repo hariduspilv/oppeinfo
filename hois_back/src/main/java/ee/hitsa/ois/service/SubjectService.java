@@ -66,7 +66,7 @@ public class SubjectService {
         EntityUtil.bindToEntity(newSubject, subject, classifierRepository /*, "status"*/);
         subject.setSchool(schoolRepository.getOne(user.getSchoolId()));
         SchoolDepartment schoolDepartment = null;
-        if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment() > 0) {
+        if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().longValue() > 0) {
             schoolDepartment = schoolDepartmentRepository.findOne(newSubject.getSchoolDepartment());
         }
         subject.setSchoolDepartment(schoolDepartment);

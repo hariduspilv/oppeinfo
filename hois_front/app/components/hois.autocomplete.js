@@ -18,7 +18,8 @@ angular.module('hitsaOis')
         ngModel: '=',
         label: '@',
         method: '@',
-        multiple: '@'
+        multiple: '@',
+        mdSelectedItemChange: '&?'
       },
       link: {
         post: function(scope, element, attrs) {
@@ -37,6 +38,12 @@ angular.module('hitsaOis')
 
           scope.getChipText = function (chip) {
             return $rootScope.currentLanguageNameField(chip);
+          };
+
+          scope.selectedItemChange = function() {
+            if(angular.isFunction(scope.mdSelectedItemChange)) {
+              scope.$$postDigest(scope.mdSelectedItemChange);
+            }
           };
 
           scope.search = function (text) {

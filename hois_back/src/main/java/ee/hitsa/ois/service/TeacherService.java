@@ -59,7 +59,7 @@ public class TeacherService {
     private TeacherRepository teacherRepository;
 
     public TeacherDto save(HoisUserDetails user, Teacher teacher, TeacherForm teacherForm) {
-        if (!teacherForm.getIsHigher() && !teacherForm.getIsVocational()) {
+        if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
             throw new ValidationFailedException(null, "teacher-vocational-higher");
         }
         EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification");
@@ -117,7 +117,7 @@ public class TeacherService {
     private void bindTeacherMobilityForm(Teacher teacher, TeacherForm teacherForm) {
         Set<TeacherMobility> teacherMobilities = teacher.getTeacherMobility();
         Set<TeacherMobility> result = new HashSet<>();
-        if (teacher.getIsHigher()) {
+        if (Boolean.TRUE.equals(teacher.getIsHigher())) {
             Map<Long, TeacherMobility> mobilityMap = teacherMobilities
                     .stream().collect(Collectors.toMap(BaseEntityWithId::getId, v -> v));
             for (TeacherForm.TeacherMobilityForm mobilityForm : teacherForm.getTeacherMobility()) {
@@ -150,7 +150,7 @@ public class TeacherService {
     private void bindTeacherQualificationForm(Teacher teacher, TeacherForm teacherForm) {
         Set<TeacherQualification> teacherQualifications = teacher.getTeacherQualification();
         Set<TeacherQualification> result = new HashSet<>();
-        if (teacher.getIsHigher()) {
+        if (Boolean.TRUE.equals(teacher.getIsHigher())) {
             Map<Long, TeacherQualification> qualifications = teacherQualifications
                     .stream().collect(Collectors.toMap(BaseEntityWithId::getId, v -> v));
             for (TeacherForm.TeacherQualificationFrom teacherQualificationFrom : teacherForm.getTeacherQualifications()) {
@@ -206,7 +206,7 @@ public class TeacherService {
         TeacherPositionEhis newTeacherPositionEhis = EntityUtil.bindToEntity(positionEhis, oldPositionEhis, classifierRepository);
         newTeacherPositionEhis.setTeacher(teacher);
         SchoolDepartment schoolDepartment = null;
-        if (positionEhis.getSchoolDepartment() != null && positionEhis.getSchoolDepartment() > 0) {
+        if (positionEhis.getSchoolDepartment() != null && positionEhis.getSchoolDepartment().longValue() > 0) {
             schoolDepartment = schoolDepartmentRepository.findOne(positionEhis.getSchoolDepartment());
         }
         newTeacherPositionEhis.setSchoolDepartment(schoolDepartment);
@@ -217,7 +217,7 @@ public class TeacherService {
         if (positionEhis.getContractStart() != null && positionEhis.getContractEnd() != null && !positionEhis.getContractEnd().isAfter(positionEhis.getContractStart())) {
             throw new ValidationFailedException("contractEnd", "early");
         }
-        if (positionEhis.getIsVocational()) {
+        if (Boolean.TRUE.equals(positionEhis.getIsVocational())) {
             positionEhis.setEmploymentCode(null);
             positionEhis.setEmploymentType(null);
             positionEhis.setEmploymentTypeSpecification(null);

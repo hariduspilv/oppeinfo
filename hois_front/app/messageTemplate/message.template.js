@@ -9,14 +9,12 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
     $scope.isValid = function(record) {
         return (!record.validFrom || new Date(record.validFrom) <= new Date()) && (!record.validThru || new Date(record.validThru) >= new Date());
     };
-
-    $scope.school = QueryUtils.endpoint("/school").get({id: $rootScope.currentUser.school.id});
-
 }]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$rootScope',
   function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils, $rootScope) {
 
     function afterLoad() {
       DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
+      getUsedTypes();
     }
 
     var baseUrl = '/messageTemplate';
@@ -30,14 +28,19 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
         afterLoad();
     }
 
-    $scope.school = QueryUtils.endpoint("/school").get({id: $rootScope.currentUser.school.id});
-
     $scope.$watch('record.validFrom', function() {
             if($scope.record.validThru && $scope.record.validThru < $scope.record.validFrom) {
                 $scope.record.validThru = null;
             }
         }
     );
+
+    $scope.usedTypes = [];
+    function getUsedTypes() {
+        $scope.allowedTypes = QueryUtils.endpoint("/messageTemplate/usedTypeCodes").query({code: $scope.record.type}).$promise.then(function(response){
+            $scope.allowedTypes = response;
+        });
+    }
 
     $scope.save = function() {
         $scope.messageTemplateForm.$setSubmitted();
@@ -59,7 +62,7 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
     };
 
     $scope.delete = function() {
-      dialogService.confirmDialog({prompt: 'main.messages.confirm'}, function() {
+      dialogService.confirmDialog({prompt: 'messageTemplate.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
           $location.path(baseUrl);

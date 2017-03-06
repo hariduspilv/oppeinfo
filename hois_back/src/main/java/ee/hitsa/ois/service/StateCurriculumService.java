@@ -179,7 +179,7 @@ public class StateCurriculumService {
     }
 
 	public void delete(StateCurriculum curriculum) {
-		stateCurriculumRepository.delete(curriculum);
+		EntityUtil.deleteEntity(stateCurriculumRepository, curriculum);
 	}
 
     public List<StateCurriculum> searchAll(StateCurriculumSearchCommand stateCurriculumSearchCommand, Sort sort) {

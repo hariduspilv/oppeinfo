@@ -10,5 +10,5 @@ import java.util.List;
 
 public interface SubjectRepository extends JpaRepository<Subject, Long>, JpaSpecificationExecutor<Subject> {
 
-    List<AutocompleteResult<Long>> findAllBySchool_idAndStatus_code(Long schoolId, String status);
+    List<AutocompleteResult> findAllBySchool_idAndStatus_code(Long schoolId, String status);
 }

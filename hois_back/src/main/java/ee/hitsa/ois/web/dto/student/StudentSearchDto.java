@@ -11,7 +11,7 @@ public class StudentSearchDto {
     private Long id;
     private String fullname;
     private String idcode;
-    private AutocompleteResult<Long> curriculumVersion;
+    private AutocompleteResult curriculumVersion;
     private String studentGroup;
     private String studyForm;
     private String status;
@@ -40,11 +40,11 @@ public class StudentSearchDto {
         this.idcode = idcode;
     }
 
-    public AutocompleteResult<Long>  getCurriculumVersion() {
+    public AutocompleteResult getCurriculumVersion() {
         return curriculumVersion;
     }
 
-    public void setCurriculumVersion(AutocompleteResult<Long> curriculumVersion) {
+    public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
     }
 

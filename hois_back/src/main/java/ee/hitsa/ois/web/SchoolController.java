@@ -31,6 +31,7 @@ import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.TeacherOccupationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
@@ -119,7 +120,7 @@ public class SchoolController {
 
     @GetMapping("/departments/{id:\\d+}")
     public SchoolDepartmentDto getSchoolDepartment(HoisUserDetails user, @WithEntity("id") SchoolDepartment schoolDepartment) {
-        assertSameSchool(user, schoolDepartment.getSchool());
+        UserUtil.assertSameSchool(user, schoolDepartment.getSchool());
         return SchoolDepartmentDto.of(schoolDepartment);
     }
 
@@ -132,14 +133,14 @@ public class SchoolController {
 
     @PutMapping("/departments/{id:\\d+}")
     public SchoolDepartmentDto updateSchoolDepartment(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) SchoolDepartment schoolDepartment, @Valid @RequestBody SchoolDepartmentForm request) {
-        assertSameSchool(user, schoolDepartment.getSchool());
+        UserUtil.assertSameSchool(user, schoolDepartment.getSchool());
         EntityUtil.bindToEntity(request, schoolDepartment);
         return getSchoolDepartment(user, schoolDepartmentService.save(schoolDepartment, request.getParentSchoolDepartment()));
     }
 
     @DeleteMapping("/departments/{id:\\d+}")
     public void deleteSchoolDepartment(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") SchoolDepartment schoolDepartment, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertSameSchool(user, schoolDepartment.getSchool());
+        UserUtil.assertSameSchool(user, schoolDepartment.getSchool());
         schoolDepartmentService.delete(schoolDepartment);
     }
 
@@ -150,7 +151,7 @@ public class SchoolController {
 
     @GetMapping("/teacheroccupations/{id:\\d+}")
     public TeacherOccupationDto getTeacherOccupation(HoisUserDetails user, @WithEntity("id") TeacherOccupation teacherOccupation) {
-        assertSameSchool(user, teacherOccupation.getSchool());
+        UserUtil.assertSameSchool(user, teacherOccupation.getSchool());
         return TeacherOccupationDto.of(teacherOccupation);
     }
 
@@ -168,24 +169,17 @@ public class SchoolController {
 
     @PutMapping("/teacheroccupations/{id:\\d+}")
     public TeacherOccupationDto updateTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) TeacherOccupation teacherOccupation, @Valid @RequestBody TeacherOccupationForm request) {
-        assertSameSchool(user, teacherOccupation.getSchool());
+        UserUtil.assertSameSchool(user, teacherOccupation.getSchool());
         return getTeacherOccupation(user, teacherOccupationService.save(EntityUtil.bindToEntity(request, teacherOccupation)));
     }
 
     @DeleteMapping("/teacheroccupations/{id:\\d+}")
     public void deleteTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") TeacherOccupation teacherOccupation, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertSameSchool(user, teacherOccupation.getSchool());
+        UserUtil.assertSameSchool(user, teacherOccupation.getSchool());
         teacherOccupationService.delete(teacherOccupation);
     }
 
     private School getSchool(HoisUserDetails user) {
         return schoolService.getOne(user.getSchoolId());
-    }
-
-    private static void assertSameSchool(HoisUserDetails user, School school) {
-        Long schoolId = user.getSchoolId();
-        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school))) {
-            throw new IllegalArgumentException();
-        }
     }
 }

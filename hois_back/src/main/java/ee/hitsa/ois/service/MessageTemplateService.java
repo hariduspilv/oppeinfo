@@ -5,6 +5,8 @@ import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -37,8 +39,8 @@ public class MessageTemplateService {
         return messageTemplateRepository.save(messageTemplate);
     }
 
-    public void delete(MessageTemplate building) {
-        EntityUtil.deleteEntity(messageTemplateRepository, building);
+    public void delete(MessageTemplate messageTemplate) {
+        EntityUtil.deleteEntity(messageTemplateRepository, messageTemplate);
     }
 
     public Page<MessageTemplateDto> search(Long schoolId, MessageTemplateSearchCommand criteria, Pageable pageable) {
@@ -56,9 +58,10 @@ public class MessageTemplateService {
             if(validThru != null) {
                 filters.add(cb.lessThanOrEqualTo(root.get("validThru"), validThru));
             }
-            if(criteria.getValid() != null && criteria.getValid().equals(Boolean.TRUE)) {
-                filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), LocalDate.now()), cb.isNull(root.get("validThru"))));
-                filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), LocalDate.now()), cb.isNull(root.get("validFrom"))));
+            if(Boolean.TRUE.equals(criteria.getValid())) {
+                LocalDate now = LocalDate.now();
+                filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
+                filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
             }
             if(!CollectionUtils.isEmpty(criteria.getType())) {
                 filters.add(root.get("type").get("code").in(criteria.getType()));
@@ -66,5 +69,13 @@ public class MessageTemplateService {
             propertyContains(() -> root.get("headline"), cb, criteria.getHeadline(), filters::add);
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(MessageTemplateDto::of);
+    }
+
+    public Set<String> getUsedTypeCodes(String code) {
+        Set<String> set = messageTemplateRepository.findAll().stream().map(mt -> EntityUtil.getCode(mt.getType())).collect(Collectors.toSet());
+        if(code != null && set.contains(code)) {
+            set.remove(code);
+        }
+        return set;
     }
 }

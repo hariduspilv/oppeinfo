@@ -17,7 +17,7 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
     private String assessment;
     private Set<String> languages;
     private String status;
-    private AutocompleteResult<Long> schoolDepartment;
+    private AutocompleteResult schoolDepartment;
 
     @Override
     public Long getId() {
@@ -93,11 +93,11 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
         this.status = status;
     }
 
-    public AutocompleteResult<Long> getSchoolDepartment() {
+    public AutocompleteResult getSchoolDepartment() {
         return schoolDepartment;
     }
 
-    public void setSchoolDepartment(AutocompleteResult<Long> schoolDepartment) {
+    public void setSchoolDepartment(AutocompleteResult schoolDepartment) {
         this.schoolDepartment = schoolDepartment;
     }
 }

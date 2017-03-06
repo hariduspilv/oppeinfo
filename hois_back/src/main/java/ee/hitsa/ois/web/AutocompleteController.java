@@ -5,22 +5,23 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
 
-import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -36,22 +37,41 @@ public class AutocompleteController {
     private AutocompleteService autocompleteService;
 
     @GetMapping("/buildings")
-    public List<AutocompleteResult<Long>> buildings(HoisUserDetails user) {
+    public List<AutocompleteResult> buildings(HoisUserDetails user) {
         return autocompleteService.buildings(user.getSchoolId());
     }
 
     @GetMapping("/classifiers")
-    public List<ClassifierSelection> classifiers(@NotNull @RequestParam("mainClassCode") String mainClassCode) {
+    public List<ClassifierSelection> classifiers(@RequestParam(name = "mainClassCode", required = false) String mainClassCode,
+            @RequestParam(name = "mainClassCodes", required = false) List<String> mainClassCodes) {
+        if (mainClassCode == null && mainClassCodes == null) {
+            throw new IllegalArgumentException("mainClassCode or mainClassCodes must be specified");
+        }
+        if(mainClassCodes != null) {
+            return autocompleteService.classifiers(mainClassCodes);
+        }
         return autocompleteService.classifiers(mainClassCode);
     }
 
+    @GetMapping("/curriculums")
+    public Page<AutocompleteResult> curriculums(HoisUserDetails user, AutocompleteCommand term) {
+        // TODO do filtering in query
+        List<AutocompleteResult> curriculums = autocompleteService.curriculums(user.getSchoolId());
+        if(StringUtils.hasText(term.getName())) {
+            String searchTerm = term.getName().toUpperCase();
+            Language lang = term.getLang();
+            curriculums = curriculums.stream().filter(r -> (Language.EN.equals(lang) ? r.getNameEn() : r.getNameEt()).toUpperCase().contains(searchTerm)).collect(Collectors.toList());
+        }
+        return asAutocompleteResult(curriculums, r -> r);
+    }
+
     @GetMapping("/curriculumversions")
-    public Page<AutocompleteResult<Long>> curriculumVersions(HoisUserDetails user) {
+    public Page<AutocompleteResult> curriculumVersions(HoisUserDetails user) {
         return asAutocompleteResult(autocompleteService.curriculumVersions(user.getSchoolId()), r -> r);
     }
 
     @GetMapping("/directivecoordinators")
-    public Page<AutocompleteResult<Long>> directiveCoordinators(HoisUserDetails user) {
+    public Page<AutocompleteResult> directiveCoordinators(HoisUserDetails user) {
         return asAutocompleteResult(autocompleteService.directiveCoordinators(user.getSchoolId()), r -> r);
     }
 
@@ -67,17 +87,17 @@ public class AutocompleteController {
     }
 
     @GetMapping("/schooldepartments")
-    public Page<AutocompleteResult<Long>> schoolDepartments(HoisUserDetails user, SchoolDepartmentAutocompleteCommand criteria) {
+    public Page<AutocompleteResult> schoolDepartments(HoisUserDetails user, SchoolDepartmentAutocompleteCommand criteria) {
         return asAutocompleteResult(autocompleteService.schoolDepartments(user.getSchoolId(), criteria), Function.identity());
     }
 
     @GetMapping("/subjects")
-    public Page<AutocompleteResult<Long>> subjects(HoisUserDetails user, AutocompleteCommand command) {
+    public Page<AutocompleteResult> subjects(HoisUserDetails user, AutocompleteCommand command) {
         return asAutocompleteResult(autocompleteService.subjects(user.getSchoolId(), command), AutocompleteResult::of);
     }
 
     @GetMapping("/teachers")
-    public Page<AutocompleteResult<Long>> teachers(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+    public Page<AutocompleteResult> teachers(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
         return autocompleteService.teachers(user.getSchoolId(), lookup);
     }
 

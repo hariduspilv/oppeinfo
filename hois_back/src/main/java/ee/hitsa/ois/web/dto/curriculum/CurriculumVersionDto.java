@@ -16,9 +16,9 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.NotEmpty;
-import ee.hitsa.ois.web.commandobject.InsertedChangedVersionCommand;
+import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 
-public class CurriculumVersionDto extends InsertedChangedVersionCommand {
+public class CurriculumVersionDto extends InsertedChangedVersionDto {
 
     private Long id;
     @NotBlank

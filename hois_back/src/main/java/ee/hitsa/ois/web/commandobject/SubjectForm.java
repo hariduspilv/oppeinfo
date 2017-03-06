@@ -74,11 +74,11 @@ public class SubjectForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.AINESTAATUS)
     private String status;
 
-    private Set<EntityConnectionCommand<Long>> mandatoryPrerequisiteSubjects;
+    private Set<EntityConnectionCommand> mandatoryPrerequisiteSubjects;
 
-    private Set<EntityConnectionCommand<Long>> recommendedPrerequisiteSubjects;
+    private Set<EntityConnectionCommand> recommendedPrerequisiteSubjects;
 
-    private Set<EntityConnectionCommand<Long>> substituteSubjects;
+    private Set<EntityConnectionCommand> substituteSubjects;
 
     public String getCode() {
         return code;
@@ -256,27 +256,27 @@ public class SubjectForm extends VersionedCommand {
         this.schoolDepartment = schoolDepartment;
     }
 
-    public Set<EntityConnectionCommand<Long>> getMandatoryPrerequisiteSubjects() {
+    public Set<EntityConnectionCommand> getMandatoryPrerequisiteSubjects() {
         return mandatoryPrerequisiteSubjects != null ? mandatoryPrerequisiteSubjects : Collections.emptySet();
     }
 
-    public void setMandatoryPrerequisiteSubjects(Set<EntityConnectionCommand<Long>> mandatoryPrerequisiteSubjects) {
+    public void setMandatoryPrerequisiteSubjects(Set<EntityConnectionCommand> mandatoryPrerequisiteSubjects) {
         this.mandatoryPrerequisiteSubjects = mandatoryPrerequisiteSubjects;
     }
 
-    public Set<EntityConnectionCommand<Long>> getRecommendedPrerequisiteSubjects() {
+    public Set<EntityConnectionCommand> getRecommendedPrerequisiteSubjects() {
         return recommendedPrerequisiteSubjects != null ? recommendedPrerequisiteSubjects : Collections.emptySet();
     }
 
-    public void setRecommendedPrerequisiteSubjects(Set<EntityConnectionCommand<Long>> recommendedPrerequisiteSubjects) {
+    public void setRecommendedPrerequisiteSubjects(Set<EntityConnectionCommand> recommendedPrerequisiteSubjects) {
         this.recommendedPrerequisiteSubjects = recommendedPrerequisiteSubjects;
     }
 
-    public Set<EntityConnectionCommand<Long>> getSubstituteSubjects() {
+    public Set<EntityConnectionCommand> getSubstituteSubjects() {
         return substituteSubjects != null ? substituteSubjects : Collections.emptySet();
     }
 
-    public void setSubstituteSubjects(Set<EntityConnectionCommand<Long>> substituteSubjects) {
+    public void setSubstituteSubjects(Set<EntityConnectionCommand> substituteSubjects) {
         this.substituteSubjects = substituteSubjects;
     }
 }

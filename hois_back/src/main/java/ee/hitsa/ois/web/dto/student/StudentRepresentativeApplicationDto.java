@@ -6,7 +6,7 @@ import java.time.LocalDateTime;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentRepresentativeApplication;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationForm;
 
 public class StudentRepresentativeApplicationDto extends StudentRepresentativeApplicationForm {
 

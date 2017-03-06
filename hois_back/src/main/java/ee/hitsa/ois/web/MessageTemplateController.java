@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import java.util.Set;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +21,7 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.MessageTemplateService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.MessageTemplateForm;
@@ -42,7 +45,7 @@ public class MessageTemplateController {
     
     @GetMapping("/{id:\\d+}")
     public MessageTemplateDto get(HoisUserDetails user, @WithEntity("id") MessageTemplate messageTemplate) {
-        assertSameSchool(user, messageTemplate);
+        UserUtil.assertSameSchool(user, messageTemplate.getSchool());
         return MessageTemplateDto.of(messageTemplate);
     }
     
@@ -57,21 +60,19 @@ public class MessageTemplateController {
     public MessageTemplateDto update(HoisUserDetails user, 
             @WithVersionedEntity(value = "id", versionRequestBody = true) MessageTemplate messageTemplate, 
             @Valid @RequestBody MessageTemplateForm form) {
-        assertSameSchool(user, messageTemplate);
+        UserUtil.assertSameSchool(user, messageTemplate.getSchool());
         EntityUtil.bindToEntity(form, messageTemplate);
         return get(user, messageTemplateService.save(messageTemplate, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") MessageTemplate generalMessage, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertSameSchool(user, generalMessage);
+        UserUtil.assertSameSchool(user, generalMessage.getSchool());
         messageTemplateService.delete(generalMessage);
     }
-
-    private static void assertSameSchool(HoisUserDetails user, MessageTemplate messageTemplate) {
-        Long schoolId = user.getSchoolId();
-        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(messageTemplate.getSchool()))) {
-            throw new IllegalArgumentException();
-        }
+    
+    @GetMapping("/usedTypeCodes")
+    public Set<String> getUsedTypeCodes(String code) {
+        return messageTemplateService.getUsedTypeCodes(code);
     }
 }

@@ -65,7 +65,11 @@ angular.module('hitsaOis').factory('Classifier', ['$resource', 'config', 'QueryU
     Classifier.queryForDropdown = function(params, successCallback) {
       // TODO caching
       var resource = $resource(config.apiUrl+'/autocomplete/classifiers');
-      return resource.query({mainClassCode: params.mainClassCode}, function(result) {
+      var queryParams = {mainClassCode: params.mainClassCode};
+      if (angular.isDefined(params.mainClassCodes)) {
+        queryParams = {mainClassCodes: params.mainClassCodes};
+      }
+      return resource.query(queryParams, function(result) {
         var order = params.order;
         if(order) {
           result.sort(function(a, b) {

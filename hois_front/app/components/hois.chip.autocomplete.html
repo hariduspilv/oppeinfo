@@ -4,6 +4,7 @@
           md-max-chips="{{maxChips}}">
   <md-autocomplete
     md-selected-item="selectedItem"
+    md-selected-item-change="selectedItemChange()"
     md-search-text="searchText"
     md-min-length="2"
     md-no-cache="true"
@@ -11,7 +12,7 @@
     md-item-text="item.nameEt"
     placeholder="{{label | translate}}"
     ng-hide="ngModel.length > maxChips" flex>
-    <span md-highlight-text="searchText">{{currentLanguage()==='en' ? (item.nameEn || item.nameEt) : item.nameEt}}</span>
+    <span md-highlight-text="searchText">{{$root.currentLanguageNameField(item)}}</span>
   </md-autocomplete>
   <md-chip-template>
         <span>

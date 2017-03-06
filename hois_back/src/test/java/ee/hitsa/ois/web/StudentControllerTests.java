@@ -18,7 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.service.StudentService;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
-import ee.hitsa.ois.web.commandobject.StudentSearchCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 @RunWith(SpringRunner.class)

@@ -1,11 +1,9 @@
 <div layout="column" layout-padding>
     <form name="messageTemplateForm">
-        <h1 class="md-title">{{currentLanguageNameField(school)}}</h1>
-        <h1 class="md-title">{{'messageTemplate.messageTemplate' | translate}}</h1>
         <div layout="column">
             <md-input-container>
                 <label>{{'messageTemplate.type' | translate}}</label>
-                <hois-classifier-select ng-model="record.type" model-value-attr="code" main-classifier-code="TEATE_LIIK" required></hois-classifier-select>
+                <hois-classifier-select ng-model="record.type" model-value-attr="code" main-classifier-code="TEATE_LIIK" required filter-values="allowedTypes"></hois-classifier-select>
             </md-input-container>
             <md-input-container>
                 <label>{{'generalmessage.title' | translate}}</label>
