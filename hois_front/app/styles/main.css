@@ -195,7 +195,9 @@ md-dialog md-toolbar  h2{
   margin-bottom: 0px;
 }
 
-.ois-form-layout md-input-container > md-select {
+.ois-form-layout md-input-container > md-select,
+.ois-form-layout md-input-container > .hois-classifier-value,
+.ois-form-layout md-input-container > .hois-value {
   padding-bottom: 1.5em;
 }
 

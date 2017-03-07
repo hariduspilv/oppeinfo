@@ -18,7 +18,7 @@
 
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <hois-autocomplete ng-model="record.curriculum" method="curriculums" name="curriculum" ng-readonly="record.id" label="studentGroup.curriculum" md-selected-item-change="curriculumChanged()" required></hois-autocomplete>
+          <hois-autocomplete ng-model="record.curriculum" method="curriculums" name="curriculum" ng-disabled="record.id" label="studentGroup.curriculum" md-selected-item-change="curriculumChanged()" required></hois-autocomplete>
         </md-input-container>
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -30,12 +30,12 @@
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'studentGroup.studyForm' | translate}}</label>
-          <hois-classifier-select ng-model="record.studyForm" name="studyForm" ng-disabled="record.id" main-classifier-code="OPPEVORM" show-only-values="formState.studyForms" model-value-attr="code"></hois-classifier-select>
+          <hois-classifier-select ng-model="record.studyForm" name="studyForm" ng-disabled="record.id" main-classifier-code="OPPEVORM" show-only-values="formState.studyForms" model-value-attr="code" required></hois-classifier-select>
         </md-input-container>
 
         <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.language' | translate}}</label>
-          <hois-classifier-select ng-model="record.language" name="language" ng-disabled="record.id" main-classifier-code="OPPEKEEL" show-only-values="formState.languages" model-value-attr="code"></hois-classifier-select>
+          <hois-classifier-select ng-model="record.language" name="language" ng-disabled="record.id" main-classifier-code="OPPEKEEL" show-only-values="formState.languages" model-value-attr="code" required></hois-classifier-select>
         </md-input-container>
 
         <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -46,7 +46,7 @@
 
       <div layout="row" layout-sm="column" layout-xs="column" ng-if="!formState.isVocational">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <hois-autocomplete ng-model="record.teacher" method="teachers" name="teacher" ng-readonly="record.id" label="studentGroup.teacher"></hois-autocomplete>
+          <hois-autocomplete ng-model="record.teacher" method="teachers" name="teacher" ng-disabled="record.id" label="studentGroup.teacher"></hois-autocomplete>
         </md-input-container>
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -58,7 +58,7 @@
     </form>
 
     <md-table-container ng-if="formState.students">
-      <table md-table md-row-select multiple ng-model="formState.selectedStudents">
+      <table md-table md-row-select="!record.id" multiple ng-model="formState.selectedStudents">
         <thead md-head md-order="criteria.order">
           <tr md-row>
             <th md-column>{{'studentGroup.studentname' | translate}}</th>
@@ -66,6 +66,7 @@
             <th md-column>{{'studentGroup.curriculum' | translate}}</th>
             <th md-column>{{'studentGroup.studyForm' | translate}}</th>
             <th md-column>{{'studentGroup.studyLevel' | translate}}</th>
+            <th></th>
           </tr>
         </thead>
         <tbody md-body>
@@ -75,6 +76,9 @@
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyLevel)}}</td>
+            <td md-cell>
+              <md-button ng-if="record.id" md-no-ink class="md-primary change-button" ng-click="removeStudent(row.id)">{{'main.button.delete' | translate}}</md-button>
+            </td>
           </tr>
         </tbody>
       </table>

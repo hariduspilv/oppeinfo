@@ -11,7 +11,7 @@
 angular.module('hitsaOis')
   .directive('hoisClassifierValue', function (Classifier) {
     return {
-      template:'<div>{{value}}</div>',
+      template:'<div class="hois-classifier-value">{{value}}</div>',
       restrict: 'E',
       replace: true,
       scope: {

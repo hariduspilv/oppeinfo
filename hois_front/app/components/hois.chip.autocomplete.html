@@ -10,6 +10,7 @@
     md-no-cache="true"
     md-items="item in search(searchText)"
     md-item-text="item.nameEt"
+    ng-required="required && ngModel.length < 1"
     placeholder="{{label | translate}}"
     ng-hide="ngModel.length > maxChips" flex>
     <span md-highlight-text="searchText">{{$root.currentLanguageNameField(item)}}</span>

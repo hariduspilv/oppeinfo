@@ -3,6 +3,9 @@ package ee.hitsa.ois.enums;
 public enum MainClassCode {
 
     AINESTAATUS,
+    AKADPUHKUS_POHJUS,
+    AVALDUS_LIIK,
+    AVALDUS_STAATUS,
     EHIS_AMETIKOHT,
     EHIS_EESTI_OPPEASUTUS,
     EHIS_EESTI_OPPEASUTUS_ENDINE,
@@ -16,7 +19,10 @@ public enum MainClassCode {
     EHIS_ROK,
     EHIS_TOOSUHE,
     EKR,
+    EKSMAT_POHJUS,
     ERIVAJADUS,
+    FINALLIKAS,
+    FINTAPSUSTUS,
     HINDAMISVIIS,
     ISCED_RYHM,
     ISCED_VALD,
@@ -44,7 +50,8 @@ public enum MainClassCode {
     ROLL,
     SEADMED,
     SPETSKUTSE,
-    SUGU, 
-    TEATE_LIIK, 
-    TOEND_LIIK
+    SUGU,
+    TEATE_LIIK,
+    TOEND_LIIK,
+    TOEND_STAATUS
 }

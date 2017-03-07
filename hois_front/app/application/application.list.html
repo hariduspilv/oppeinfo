@@ -1,17 +1,10 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <form ng-submit="loadData()" layout="column">
-
-      <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <h2>{{school[currentLanguageNameField()]}}</h2>
-          </md-input-container>
-      </div>
-
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'application.type' | translate}}</label>
-            <hois-classifier-select multiple ng-model="criteria.type" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
+            <label>{{'application.type' | translate}}</label>
+            <hois-classifier-select multiple ng-model="criteria.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
           </md-input-container>
       </div>
 
@@ -53,7 +46,7 @@
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'main.status' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.status" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-select>
           </md-input-container>
       </div>
 
@@ -97,7 +90,11 @@
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>{{::row.student}}</td>
+          <td md-cell>{{::row.student.nameEt}}</td>
+          <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+          <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+          <td md-cell>{{'main.formattedDateTime' | translate: {date: row.inserted} }}</td>
+          <td md-cell>{{'main.formattedDateTime' | translate: {date: row.submited} }}</td>
           <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/application/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
         </tr>
         </tbody>

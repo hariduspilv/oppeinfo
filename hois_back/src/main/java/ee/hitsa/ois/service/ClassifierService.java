@@ -28,6 +28,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.specification.ClassifierSpecification;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.ClassifierWithCount;
 
 @Transactional
@@ -60,7 +61,7 @@ public class ClassifierService {
     @SuppressWarnings("unchecked")
     public Page<ClassifierWithCount> searchTables(ClassifierSearchCommand criteria, Pageable pageable) {
         return JpaQueryUtil.query(ClassifierWithCount.class, Classifier.class, (root, query, cb) -> {
-            ((CriteriaQuery<ClassifierWithCount>)query).select(cb.construct(ClassifierWithCount.class, root.get("code"), root.get("nameEt"), root.get("nameEn"), root.get("mainClassCode"), root.get("nameRu"), cb.count(root.join("children").get("code"))));
+            ((CriteriaQuery<ClassifierWithCount>)query).select(cb.construct(ClassifierWithCount.class, root.get("code"), root.get("nameEt"), root.get("nameEn"), root.get("mainClassCode"), root.get("nameRu"), cb.count(root.join("children").get("code")), root.get("value")));
             query.groupBy(root.get("code"), root.get("nameEt"), root.get("nameEn"), root.get("nameRu"), root.get("mainClassCode"));
 
             List<Predicate> filters = new ArrayList<>();
@@ -72,8 +73,8 @@ public class ClassifierService {
         }, pageable, em);
     }
 
-    public Page<Classifier> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
-        return classifierRepository.findAll(new ClassifierSpecification(classifierSearchCommand), pageable);
+    public Page<ClassifierSelection> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
+        return classifierRepository.findAll(new ClassifierSpecification(classifierSearchCommand), pageable).map(ClassifierSelection::of);
     }
 
     public List<Classifier> searchAll(ClassifierSearchCommand classifierSearchCommand, Sort sort) {

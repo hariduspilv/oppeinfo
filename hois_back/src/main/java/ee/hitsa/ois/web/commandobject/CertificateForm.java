@@ -32,7 +32,7 @@ public class CertificateForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.TOEND_LIIK)
     private String type;
     @NotNull
-//    @ClassifierRestriction(MainClassCode.TOEND_LIIK)  // TODO: mainClassCode
+    @ClassifierRestriction(MainClassCode.TOEND_STAATUS)
     private String status;
     private Long student;
 

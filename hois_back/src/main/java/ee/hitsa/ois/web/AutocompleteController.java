@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -47,10 +48,8 @@ public class AutocompleteController {
         if (mainClassCode == null && mainClassCodes == null) {
             throw new IllegalArgumentException("mainClassCode or mainClassCodes must be specified");
         }
-        if(mainClassCodes != null) {
-            return autocompleteService.classifiers(mainClassCodes);
-        }
-        return autocompleteService.classifiers(mainClassCode);
+        List<String> codes = mainClassCodes != null ? mainClassCodes : Collections.singletonList(mainClassCode);
+        return autocompleteService.classifiers(codes);
     }
 
     @GetMapping("/curriculums")
@@ -99,6 +98,11 @@ public class AutocompleteController {
     @GetMapping("/teachers")
     public Page<AutocompleteResult> teachers(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
         return autocompleteService.teachers(user.getSchoolId(), lookup);
+    }
+
+    @GetMapping("/students")
+    public Page<AutocompleteResult> students(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+        return autocompleteService.students(user.getSchoolId(), lookup);
     }
 
     private static <V, R> Page<R> asAutocompleteResult(Page<V> data, Function<V, R> mapper) {

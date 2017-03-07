@@ -13,19 +13,8 @@ angular.module('hitsaOis').controller('ClassifierContentListController', functio
     $scope.tabledata.$promise = Classifier.query(query, $scope.afterLoadData).$promise;
   };
 
-  function isStillValid(date) {
-    var todayDate = new Date();
-    var validThruDate = new Date(date);
-    var today = new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate());
-    var validThru = new Date(validThruDate.getFullYear(), validThruDate.getMonth(), validThruDate.getDate());
-    return today.getTime() <= validThru.getTime();
-  }
-
-  $scope.isValid = function(classifier) {
-    if(!classifier.validThru) {
-      return true;
-    }
-    return isStillValid(classifier.validThru);
+  $scope.isValid = function(record) {
+    return (!record.validFrom || new Date(record.validFrom) <= new Date()) && (!record.validThru || new Date(record.validThru) >= new Date());
   };
 
   $scope.loadData();

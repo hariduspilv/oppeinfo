@@ -71,11 +71,21 @@ public class MessageTemplateService {
         }, pageable).map(MessageTemplateDto::of);
     }
 
-    public Set<String> getUsedTypeCodes(String code) {
-        Set<String> set = messageTemplateRepository.findAll().stream().map(mt -> EntityUtil.getCode(mt.getType())).collect(Collectors.toSet());
-        if(code != null && set.contains(code)) {
-            set.remove(code);
-        }
+    public Set<String> getUsedTypeCodes(Long schoolId, String code) {
+        Set<String> set = messageTemplateRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            
+            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+            if(code != null) {
+                filters.add(cb.notEqual(root.get("type").get("code"), code));
+            }
+            
+            LocalDate now = LocalDate.now();
+            filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
+            filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
+
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }).stream().map(mt -> EntityUtil.getCode(mt.getType())).collect(Collectors.toSet());
         return set;
     }
 }

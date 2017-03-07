@@ -30,6 +30,7 @@
       "update": "Uuenda",
       "uploadFile": "Lae fail",
       "updateFromEhis": "Uuenda staatust EHISest",
+      "submit": "Esita",
       "status": {
         "approving": "Menetle õk",
         "close": "Sulge õk",
@@ -149,6 +150,7 @@
     "joinedSchools": "ÕISi liitunud õppeasutused:"
   },
   "student": {
+    "label": "Õppur",
     "absences": "Puudumistõendid",
     "address": "Postiaadress",
     "bankaccount": "Arveldusarve",
@@ -391,7 +393,14 @@
       "inserted": "Koostamise kuupäev",
       "nr": "Tõendi number",
       "add": "Koosta tõend",
-      "whom": "Kellele"
+      "whom": "Kellele",
+      "content": "Tõendi sisu",
+      "student": "Õppur",
+      "deleteconfirm": "Kas oled kindel, et soovid tõendi kustutada?",
+      "signatory": "Allkirjastaja",
+      "signatoryName": "Allkirjastaja nimi",
+      "signatoryIdcode": "Allkirjastaja isikukood",
+      "clearSignatory": "Eemalda allkirjastaja"
   },
   "stateCurriculum": {
     "deleteconfirm": "Kas oled kindel, et soovid riikliku õppekava kustutada?",
@@ -612,7 +621,9 @@
   "file": {
     "nameAndFile": "Faili nimi ja fail",
     "creationLocation": "Faili tekkimise asukoht",
-    "type": "Faili liik"
+    "type": "Faili liik",
+    "additionDate": "Lisamise kuupäev",
+    "addedBy": "Lisaja"
   },
   "teacher": {
     "data": "Põhiandmed",
@@ -821,8 +832,10 @@
     "curriculum": "Õppekava",
     "curriculumVersion": "Õppekava versioon",
     "deleteconfirm": "Kas oled kindel, et soovid õpperühma kustutada?",
+    "deletestudentconfirm": "Kas oled kindel, et soovid õppurit õpperühmast eemaldada?",
     "idcode": "Isikukood",
     "language": "Õppekeel",
+    "mandatoryfields": "Kohustuslikud väljad täitmata",
     "nostudentsfound": "Tingimustele vastavaid õppureid ei leitud",
     "origStudyLevel": "Õppetase",
     "speciality": "Spetsialiseerumine",
@@ -847,6 +860,12 @@
     "student": "Õppur",
     "studentName": "Õppuri nimi",
     "studentIdCode": "Õppuri isikukood",
-    "addStudent": "Lisa õppur"
+    "addStudent": "Lisa õppur",
+    "reason": "Põhjus",
+    "additionalInfo": "Lisainfo",
+    "validFinancialSource": "Kehtiv finantseerimisallikas",
+    "validFinancialSourceSpecification":"Kehtiv finatseerimisallika täpsustus",
+    "newFinancialSource": "Uus finantseerimisallikas",
+    "newFinancialSourceSpecification":"Uus finatseerimisallika täpsustus"
   }
 }

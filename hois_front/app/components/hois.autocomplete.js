@@ -19,6 +19,7 @@ angular.module('hitsaOis')
         label: '@',
         method: '@',
         multiple: '@',
+        required: '=', // todo add chip visuals
         mdSelectedItemChange: '&?'
       },
       link: {

@@ -556,42 +556,41 @@
 
 
 
-	<div layout="row" class="top-margin">
-                <h2>{{'main.relatedFiles' | translate}} </h2>
-				<a class="md-button md-primary" href="" ng-click="openAddFileDialog()" ng-show="!readOnly">{{'main.button.uploadFile' | translate}}</a>
-            </div>
-  <table md-table class="secondary-table">
-                        <thead md-head>
-                        <tr md-row>
-                        <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
-                        <th md-column><span>{{'file.creationLocation' | translate}}</span></th>
-                        <th md-column>{{'file.type' | translate}}</th>
-                        <th md-column>{{'curriculum.sendToEhis' | translate}}</th>
-                        <th md-column></th>
-                        </tr>
-                        </thead>
-                        <tbody md-body>
-                        <tr md-row ng-repeat="file in curriculum.files" ng-class-odd="'odd'" ng-class-even="'even'">
-                            <td md-cell>
-                                {{file.oisFile.fname}}
-                                <a ng-href="{{getUrl(file.oisFile)}}" target="_blank"><md-icon md-font-set="material-icons">file_download</md-icon></a>
-                            </td>
-                            <td md-cell>
-                                {{file.ehis ? 'EHIS' : 'ÕIS'}}
-                            </td>
-                            <td md-cell>
-                                <hois-classifier-value ng-model="file.ehisFile" main-classifier-code="EHIS_FAIL"></hois-classifier-value>
-                            </td>
-                            <td md-cell>
-                                <md-checkbox ng-model="file.sendEhis" aria-label="send to ehis"></md-checkbox>
-                            </td>
-                            <td md-cell>
-								<md-button class="remove nomargin" ng-click="removeFromArray(curriculum.files, file)">&times;</md-button>
-
-                            </td>
-                        </tr>
-                        </tbody>
-                    </table>
+    <div layout="row" class="top-margin">
+      <h2>{{'main.relatedFiles' | translate}} </h2>
+      <a class="md-button md-primary" href="" ng-click="openAddFileDialog()" ng-show="!readOnly">{{'main.button.uploadFile' | translate}}</a>
+    </div>
+    <table md-table class="secondary-table">
+      <thead md-head>
+        <tr md-row>
+          <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+          <th md-column><span>{{'file.creationLocation' | translate}}</span></th>
+          <th md-column>{{'file.type' | translate}}</th>
+          <th md-column>{{'curriculum.sendToEhis' | translate}}</th>
+          <th md-column></th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="file in curriculum.files" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>
+            {{file.oisFile.fname}}
+            <a ng-href="{{getUrl(file.oisFile)}}" target="_blank"><md-icon md-font-set="material-icons">file_download</md-icon></a>
+          </td>
+          <td md-cell>
+            {{file.ehis ? 'EHIS' : 'ÕIS'}}
+          </td>
+          <td md-cell>
+            <hois-classifier-value ng-model="file.ehisFile" main-classifier-code="EHIS_FAIL"></hois-classifier-value>
+          </td>
+          <td md-cell>
+            <md-checkbox ng-model="file.sendEhis" aria-label="send to ehis"></md-checkbox>
+          </td>
+          <td md-cell>
+            <md-button class="remove nomargin" ng-click="removeFromArray(curriculum.files, file)">&times;</md-button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
     <!--div layout="column">
 	    <md-table-container>
 	      <table md-table >

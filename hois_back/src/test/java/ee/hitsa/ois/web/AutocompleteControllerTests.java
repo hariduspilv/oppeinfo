@@ -57,6 +57,13 @@ public class AutocompleteControllerTests {
     }
 
     @Test
+    public void buildings() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/autocomplete/buildings", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void classifiers() {
         String uri = "/autocomplete/classifiers";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uri);
@@ -72,8 +79,24 @@ public class AutocompleteControllerTests {
     }
 
     @Test
+    public void curriculums() {
+        String uri = "/autocomplete/curriculums";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void curriculumVersions() {
         String uri = "/autocomplete/curriculumversions";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void directiveCoordinators() {
+        String uri = "/autocomplete/directivecoordinators";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -100,7 +123,7 @@ public class AutocompleteControllerTests {
     }
 
     @Test
-    public void student() {
+    public void personAsStudent() {
         String uri = "/autocomplete/persons";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uri);
         uriBuilder.queryParam("idcode", "48908209998");
@@ -127,6 +150,14 @@ public class AutocompleteControllerTests {
     @Test
     public void subjects() {
         String uri = "/autocomplete/subjects";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void students() {
+        String uri = "/autocomplete/students";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

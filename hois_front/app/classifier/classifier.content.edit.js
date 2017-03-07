@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('ClassifierContentEditController', function ($scope, $route, Classifier, classifierAutocomplete, $location, message, $mdDialog, ClassifierConnect) {
+  .controller('ClassifierContentEditController', function ($scope, $route, Classifier, classifierAutocomplete, $location, message, $mdDialog, ClassifierConnect, dialogService) {
 
     function getThisClassifier() {
         $scope.parents = [];
@@ -83,9 +83,12 @@ angular.module('hitsaOis')
     };
 
     $scope.delete = function() {
-      new Classifier($scope.classifier).delete().$promise.then(function() {
-        $location.path( '/classifier/' + $scope.mainClassCode);
-      });
+        dialogService.confirmDialog({prompt: 'main.messages.confirm'}, function() {
+            new Classifier($scope.classifier).delete().$promise.then(function() {
+                message.info('main.messages.delete.success');
+                $location.path( '/classifier/' + $scope.mainClassCode);
+            });
+        });
     };
 
     $scope.create = function() {

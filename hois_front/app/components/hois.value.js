@@ -11,11 +11,12 @@
 angular.module('hitsaOis')
   .directive('hoisValue', function () {
     return {
-      template:'<div class="md-body-1">{{value}}</div>',
+      template:'<div class="md-body-1 hois-value"><a ng-if="hrefValue" ng-href="{{hrefValue}}">{{value}}</a><span ng-if="!hrefValue">{{value}}</span></div>',
       restrict: 'E',
       replace: true,
       scope: {
-        value: '='
+        value: '=',
+        hrefValue: '='
       },
       link: function postLink(scope, element) {
         element[0].parentElement.classList.add("md-input-has-value");

@@ -23,15 +23,14 @@ import ee.hitsa.ois.domain.student.Student;
 public class Application extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false, insertable = true)
     private Student student;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
     private Classifier status;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false, insertable = true)
     private Classifier type;
 
     private LocalDateTime submited;
@@ -43,60 +42,54 @@ public class Application extends BaseEntityWithId {
     private LocalDate endDate;
 
     @Size(max = 4000)
-    private String addInfo;
+    @Column(name = "add_info")
+    private String additionalInfo;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
     private Classifier reason;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false)
     private CurriculumVersion oldCurriculumVersion;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false)
     private CurriculumVersion newCurriculumVersion;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false)
     private Classifier oldStudyForm;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "old_fin_code", nullable = true, updatable = false)
+    @JoinColumn(name = "old_fin_code", nullable = true)
     private Classifier oldFinancialSource;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "new_fin_code", nullable = true, updatable = false)
+    @JoinColumn(name = "new_fin_code", nullable = true)
     private Classifier newFinancialSource;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "old_fin_specific_code", nullable = true, updatable = false)
-    private Classifier oldFinancialSourceSpecifics;
+    @JoinColumn(name = "old_fin_specific_code", nullable = true)
+    private Classifier oldFinancialSourceSpecification;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "new_fin_specific_code", nullable = true, updatable = false)
-    private Classifier newFinancialSourceSpecifics;
+    @JoinColumn(name = "new_fin_specific_code", nullable = true)
+    private Classifier newFinancialSourceSpecification;
 
     @Column(name = "is_abroad")
     private Boolean abroad;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false)
     private Classifier state;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false)
+    @JoinColumn(nullable = true, updatable = false, insertable = true)
     private Classifier ehisSchool;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false)
     private Classifier abroadPurpose;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false)
     private Classifier abroadProgramme;
 
-    private Boolean needsRepresentativeConfirm;
+    private Boolean needsRepresentativeConfirm = Boolean.FALSE;
 
     @Size(max = 255)
     private String abroadSchool;
@@ -165,12 +158,12 @@ public class Application extends BaseEntityWithId {
         this.endDate = endDate;
     }
 
-    public String getAddInfo() {
-        return addInfo;
+    public String getAdditionalInfo() {
+        return additionalInfo;
     }
 
-    public void setAddInfo(String addInfo) {
-        this.addInfo = addInfo;
+    public void setAdditionalInfo(String additionalInfo) {
+        this.additionalInfo = additionalInfo;
     }
 
     public Classifier getReason() {
@@ -221,20 +214,20 @@ public class Application extends BaseEntityWithId {
         this.newFinancialSource = newFinancialSource;
     }
 
-    public Classifier getOldFinancialSourceSpecifics() {
-        return oldFinancialSourceSpecifics;
+    public Classifier getOldFinancialSourceSpecification() {
+        return oldFinancialSourceSpecification;
     }
 
-    public void setOldFinancialSourceSpecifics(Classifier oldFinancialSourceSpecifics) {
-        this.oldFinancialSourceSpecifics = oldFinancialSourceSpecifics;
+    public void setOldFinancialSourceSpecification(Classifier oldFinancialSourceSpecification) {
+        this.oldFinancialSourceSpecification = oldFinancialSourceSpecification;
     }
 
-    public Classifier getNewFinancialSourceSpecifics() {
-        return newFinancialSourceSpecifics;
+    public Classifier getNewFinancialSourceSpecification() {
+        return newFinancialSourceSpecification;
     }
 
-    public void setNewFinancialSourceSpecifics(Classifier newFinancialSourceSpecifics) {
-        this.newFinancialSourceSpecifics = newFinancialSourceSpecifics;
+    public void setNewFinancialSourceSpecification(Classifier newFinancialSourceSpecification) {
+        this.newFinancialSourceSpecification = newFinancialSourceSpecification;
     }
 
     public Boolean getAbroad() {

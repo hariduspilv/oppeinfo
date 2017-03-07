@@ -43,7 +43,7 @@ public class DirectiveConfirmService {
         directive.setConfirmer(user.getUsername());
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
-        if(TYHISTAMINE.equals(directiveType)) {
+        if(KASKKIRI_TYHIST.equals(directiveType)) {
             cancelDirective(directive);
         } else {
             Classifier studentStatus = directiveType.studentStatus() != null ? classifierRepository.getOne(directiveType.studentStatus().name()) : null;
@@ -61,24 +61,24 @@ public class DirectiveConfirmService {
         Student student = directive.getStudent();
 
         switch(directiveType) {
-        case AKAD:
+        case KASKKIRI_AKAD:
             // Akadeemilisele puhkusele lubamise käskkiri
             // TODO Õppuri eeldatav nominaalaja lõppkuupäev ==  „õppuri eeldatav nominaalaja lõppkuupäev“ + „akadeemilise puhkuse pikkus“.
             break;
-        case AKADOFF:
+        case KASKKIRI_AKADK:
             // Akadeemilise puhkuse katkestamise käskkiri
             // TODO Õppuri eeldatav nominaalaja lõppkuupäev ==  „õppuri eeldatav nominaalaja lõppkuupäev“ – „päevade arv, mis jäi akadeemilise puhkuse lõppkuupäeva ja akadeemilise puhkuse katkestamise kuupäeva vahele“.
             break;
-        case EXMAT:
+        case KASKKIRI_EKSMAT:
             // Eksmatrikuleerimise käskkiri
             // TODO Õppuri eksmatrikuleerimise kuupäev == käskkirja EKIS-es kinnitamise kuupäev
             // TODO Õppuri rollile ’õppur’ märgitakse kehtivuse lõppkuupäevaks käskkirja kinnitamise kuupäev
             break;
-        case IMMAT:
+        case KASKKIRI_IMMAT:
             // Immatrikuleerimise käskkiri
             student = createStudent(directive);
             break;
-        case ENNISTAMINE:
+        case KASKKIRI_ENNIST:
             // Ennistamise käskkiri
             // TODO Ennistamise kuupäev == käskkirjal olev väärtus;
             // TODO Õppuri roll ’õppur’ muudetakse käskkirja kinnitamise kuupäevast alates kehtivaks;
@@ -111,7 +111,7 @@ public class DirectiveConfirmService {
         for(DirectiveStudent ds : directive.getCanceledDirective().getStudents()) {
             Student student = ds.getStudent();
             if(includedStudentIds.contains(student.getId())) {
-                if(!IMMAT.equals(canceledDirectiveType)) {
+                if(!KASKKIRI_IMMAT.equals(canceledDirectiveType)) {
                     copyDirectiveProperties(canceledDirectiveType, ds.getStudentHistory(), student, true);
                 } else {
                     // TODO undo create student

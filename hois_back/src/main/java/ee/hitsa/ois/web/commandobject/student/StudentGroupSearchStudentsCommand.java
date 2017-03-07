@@ -10,6 +10,7 @@ public class StudentGroupSearchStudentsCommand {
     private Long id;
     @NotNull
     private EntityConnectionCommand curriculum;
+    private Long curriculumVersion;
     @NotEmpty
     private String language;
     @NotEmpty
@@ -29,6 +30,14 @@ public class StudentGroupSearchStudentsCommand {
 
     public void setCurriculum(EntityConnectionCommand curriculum) {
         this.curriculum = curriculum;
+    }
+
+    public Long getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(Long curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 
     public String getLanguage() {

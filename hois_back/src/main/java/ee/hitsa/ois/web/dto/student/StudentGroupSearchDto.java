@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web.dto.student;
 
-import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentGroupSearchDto {
@@ -11,18 +10,6 @@ public class StudentGroupSearchDto {
     private String studyForm;
     private Integer course;
     private Long studentCount;
-
-    public StudentGroupSearchDto() {
-    }
-
-    public StudentGroupSearchDto(Long id, String code, Curriculum curriculum, String studyForm, Integer course, Long studentCount) {
-        this.id = id;
-        this.code = code;
-        this.curriculum = AutocompleteResult.of(curriculum);
-        this.studyForm = studyForm;
-        this.course = course;
-        this.studentCount = studentCount;
-    }
 
     public Long getId() {
         return id;

@@ -103,7 +103,7 @@ public class DirectiveService {
                 EntityUtil.bindToEntity(formStudent, student);
 
                 String idcode = formStudent.getIdcode();
-                if(StringUtils.hasText(idcode) && DirectiveType.IMMAT.name().equals(EntityUtil.getCode(directive.getType()))) {
+                if(StringUtils.hasText(idcode) && DirectiveType.KASKKIRI_IMMAT.name().equals(EntityUtil.getCode(directive.getType()))) {
                     // add new person if person idcode is not known
                     Person person = personRepository.findByIdcode(idcode);
                     // FIXME should update existing person?

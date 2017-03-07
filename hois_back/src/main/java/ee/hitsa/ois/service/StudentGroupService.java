@@ -6,7 +6,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -44,7 +47,7 @@ import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
 @Service
 public class StudentGroupService {
 
-    private static final List<String> STUDENT_STATUS_FOR_LIST = Arrays.asList(StudentStatus.OPPURSTAATUS_OPIB.name(), StudentStatus.OPPURSTAATUS_AKAD.name(), StudentStatus.OPPURSTAATUS_VALISOPPUR.name());
+    private static final List<String> STUDENT_STATUS_ACTIVE = Arrays.asList(StudentStatus.OPPURSTAATUS_O.name(), StudentStatus.OPPURSTAATUS_A.name(), StudentStatus.OPPURSTAATUS_V.name());
     private static final String STUDENT_GROUP_LIST_SELECT =
             "sg.id, sg.code, sg.study_form_code, sg.course, curriculum.id as curriculum_id, "+
             "curriculum.name_et, curriculum.name_en, "+
@@ -78,9 +81,7 @@ public class StudentGroupService {
         qb.optionalCriteria("sg.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("sg.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
 
-        qb.parameter("studentStatus", STUDENT_STATUS_FOR_LIST);
-
-        return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em), pageable, () -> qb.count(em)).map(r -> {
+        return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setCode(resultAsString(r, 1));
@@ -113,23 +114,31 @@ public class StudentGroupService {
 
         studentGroup = studentGroupRepository.save(studentGroup);
         // update student list in group
-        List<Long> studentIds = form.getStudents();
-        if(studentIds != null) {
-            for(Long studentId : studentIds) {
-                Student student = studentRepository.getOne(studentId);
+        Set<Long> studentIds = new HashSet<>(form.getStudents() != null ? form.getStudents() : Collections.emptyList());
+        List<Student> added = new ArrayList<>();
+        for(Long studentId : studentIds) {
+            Student student = studentRepository.getOne(studentId);
+            if(!studentGroup.getId().equals(EntityUtil.getNullableId(student.getStudentGroup()))) {
                 student.setStudentGroup(studentGroup);
                 studentService.saveWithHistory(student);
+                added.add(student);
             }
-            // update student group for these sutdents which were removed
-            List<Student> oldStudents = studentGroup.getStudents();
-            if(oldStudents != null) {
-                for(Student student : oldStudents) {
-                    if(!studentIds.contains(EntityUtil.getId(student))) {
-                        student.setStudentGroup(null);
-                        studentService.saveWithHistory(student);
-                    }
+        }
+        // update student group for these students which were removed
+        List<Student> oldStudents = studentGroup.getStudents();
+        if(oldStudents != null) {
+            oldStudents.addAll(added);
+            List<Student> removed = new ArrayList<>();
+            for(Student student : oldStudents) {
+                if(!studentIds.contains(EntityUtil.getId(student))) {
+                    student.setStudentGroup(null);
+                    studentService.saveWithHistory(student);
+                    removed.add(student);
                 }
             }
+            oldStudents.removeAll(removed);
+        } else {
+            studentGroup.setStudents(added);
         }
         return studentGroup;
     }
@@ -151,6 +160,9 @@ public class StudentGroupService {
                 filters.add(cb.or(cb.notEqual(studentGroup, studentGroupId), cb.isNull(studentGroup)));
             }
             filters.add(cb.equal(root.get("curriculumVersion").get("curriculum").get("id"), criteria.getCurriculum().getId()));
+            if(criteria.getCurriculumVersion() != null) {
+                filters.add(cb.equal(root.get("curriculumVersion").get("id"), criteria.getCurriculumVersion()));
+            }
             filters.add(cb.equal(root.get("language").get("code"), criteria.getLanguage()));
             filters.add(cb.equal(root.get("studyForm").get("code"), criteria.getStudyForm()));
 

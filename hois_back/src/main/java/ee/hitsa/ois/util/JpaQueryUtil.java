@@ -33,7 +33,6 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
-import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
@@ -141,7 +140,7 @@ public abstract class JpaQueryUtil {
         }
 
         public void optionalCriteria(String criteria, String name, Collection<?> value) {
-            if(!CollectionUtils.isEmpty(value)) {
+            if(value != null && !value.isEmpty()) {
                 filter(criteria, name, value);
             }
         }
@@ -182,6 +181,13 @@ public abstract class JpaQueryUtil {
             }
         }
 
+        public void requiredCriteria(String criteria, String name, Collection<?> value) {
+            if(value == null || value.isEmpty()) {
+                throw new IllegalArgumentException();
+            }
+            filter(criteria, name, value);
+        }
+
         public void requiredCriteria(String criteria, String name, LocalDate value) {
             filter(criteria, name, Timestamp.valueOf(LocalDateTime.of(value, LocalTime.MIN)));
         }
@@ -218,14 +224,18 @@ public abstract class JpaQueryUtil {
         }
 
         public Query select(String projection, EntityManager em) {
-            return buildQuery(projection, em, true);
+            return select(projection, em, null);
+        }
+
+        public Query select(String projection, EntityManager em, Map<String, Object> additionalParameters) {
+            return buildQuery(projection, em, true, additionalParameters);
         }
 
         public Number count(EntityManager em) {
-            return (Number)buildQuery("count(*)", em, false).getSingleResult();
+            return (Number)buildQuery("count(*)", em, false, null).getSingleResult();
         }
 
-        private Query buildQuery(String projection, EntityManager em, boolean ordered) {
+        private Query buildQuery(String projection, EntityManager em, boolean ordered, Map<String, Object> additionalParameters) {
             StringBuilder sql = new StringBuilder("select ");
             sql.append(Objects.requireNonNull(projection));
             sql.append(' ');
@@ -251,9 +261,16 @@ public abstract class JpaQueryUtil {
             }
 
             Query q = em.createNativeQuery(sql.toString());
+
             for(Map.Entry<String, Object> me : parameters.entrySet()) {
                 q.setParameter(me.getKey(), me.getValue());
             }
+            if(additionalParameters != null) {
+                for(Map.Entry<String, Object> me : additionalParameters.entrySet()) {
+                    q.setParameter(me.getKey(), me.getValue());
+                }
+            }
+
             return q;
         }
 
@@ -270,6 +287,11 @@ public abstract class JpaQueryUtil {
             }
             return sb.toString();
         }
+    }
+
+    public static Boolean resultAsBoolean(Object value, int index) {
+        value = (((Object[])value)[index]);
+        return (Boolean)value;
     }
 
     public static Integer resultAsInteger(Object value, int index) {

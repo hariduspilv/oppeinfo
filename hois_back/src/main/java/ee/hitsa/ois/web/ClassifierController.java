@@ -40,11 +40,6 @@ public class ClassifierController {
     public Classifier create(@Valid @RequestBody Classifier classifier) {
         return classifierService.save(classifier);
     }
-    //TODO: using this method causes an exception when list of classifiers is loaded
-//    @ModelAttribute("code")
-//    public Classifier getClassifier(@PathVariable String code) {
-//        return classifierService.findOne(code);
-//    }
 
     /**
      * For updating existing classifier
@@ -67,7 +62,7 @@ public class ClassifierController {
      * Getting classifiers as paginated results
      */
     @GetMapping("")
-    public Page<Classifier> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
+    public Page<ClassifierSelection> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
         return classifierService.search(classifierSearchCommand, pageable);
     }
 

@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$rootScope', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, $rootScope) {
+angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q) {
 
     var clMapper = Classifier.valuemapper({type: 'TEATE_LIIK'});
     QueryUtils.createQueryForm($scope, '/messageTemplate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
@@ -9,12 +9,19 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
     $scope.isValid = function(record) {
         return (!record.validFrom || new Date(record.validFrom) <= new Date()) && (!record.validThru || new Date(record.validThru) >= new Date());
     };
-}]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', '$rootScope',
-  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils, $rootScope) {
+}]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', 
+  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
+
+    $scope.getIsValid = function() {
+        $scope.isValid = 
+        ($scope.record.validFrom === undefined || $scope.record.validFrom === null || $scope.record.validFrom <= new Date()) &&
+        ($scope.record.validThru === undefined || $scope.record.validThru === null || $scope.record.validThru >= new Date());
+    };
 
     function afterLoad() {
       DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
       getUsedTypes();
+      $scope.getIsValid();
     }
 
     var baseUrl = '/messageTemplate';

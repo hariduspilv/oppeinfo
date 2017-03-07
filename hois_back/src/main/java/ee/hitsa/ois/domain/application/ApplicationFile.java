@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.application;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -15,8 +16,8 @@ public class ApplicationFile extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Application application;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(nullable = false, updatable = false, insertable = true)
     private OisFile oisFile;
 
     public Application getApplication() {

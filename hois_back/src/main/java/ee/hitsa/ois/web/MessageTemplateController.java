@@ -20,7 +20,6 @@ import ee.hitsa.ois.domain.MessageTemplate;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.MessageTemplateService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -61,18 +60,17 @@ public class MessageTemplateController {
             @WithVersionedEntity(value = "id", versionRequestBody = true) MessageTemplate messageTemplate, 
             @Valid @RequestBody MessageTemplateForm form) {
         UserUtil.assertSameSchool(user, messageTemplate.getSchool());
-        EntityUtil.bindToEntity(form, messageTemplate);
         return get(user, messageTemplateService.save(messageTemplate, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") MessageTemplate generalMessage, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertSameSchool(user, generalMessage.getSchool());
-        messageTemplateService.delete(generalMessage);
+    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") MessageTemplate messageTemplate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        UserUtil.assertSameSchool(user, messageTemplate.getSchool());
+        messageTemplateService.delete(messageTemplate);
     }
     
     @GetMapping("/usedTypeCodes")
-    public Set<String> getUsedTypeCodes(String code) {
-        return messageTemplateService.getUsedTypeCodes(code);
+    public Set<String> getUsedTypeCodes(HoisUserDetails user, String code) {
+        return messageTemplateService.getUsedTypeCodes(user.getSchoolId(), code);
     }
 }

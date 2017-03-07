@@ -7,8 +7,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('StudentGroupEditController', ['$location', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
-  function ($location, $q, $route, $scope, dialogService, message, Classifier, QueryUtils) {
+]).controller('StudentGroupEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
+  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Classifier, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -33,8 +33,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         $scope.formState.specialities = result.specialities;
 
         // try to restore values
-        $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) ? $scope.formState.language : null;
-        $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) ? $scope.formState.studyForm : null;
+        $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) !== -1 ? $scope.formState.language : null;
+        $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
       };
       if(curriculumId) {
         QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: curriculumId}, afterCurriculumChange);
@@ -44,8 +44,14 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       }
     };
 
+    function afterLoad() {
+      $scope.formState.students = clMapper.objectmapper($scope.record.members);
+      $scope.formState.selectedStudents = angular.copy($scope.formState.students);
+      $scope.curriculumChanged();
+    }
+
     if(id) {
-      $scope.record = Endpoint.get({id: id}, $scope.curriculumChanged);
+      $scope.record = Endpoint.get({id: id}, afterLoad);
     } else {
       // new student group
       $scope.record = new Endpoint();
@@ -60,6 +66,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
       function afterSave() {
         message.info(msg);
+        afterLoad();
       }
       $scope.record.students = $scope.formState.selectedStudents.map(function(item) { return item.id; });
       if($scope.record.id) {
@@ -78,21 +85,60 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       });
     };
 
+    function storeStudents(selectedStudents) {
+      $scope.formState.selectedStudents = $scope.formState.selectedStudents.concat(selectedStudents);
+      $scope.update();
+    }
+
     $scope.addStudents = function() {
-      $scope.studentGroupForm.$setSubmitted();
-      if($scope.studentGroupForm.$valid) {
-        var query = angular.extend({}, $scope.record);
+      var query = angular.extend({}, $scope.record);
+      var findstudents = function(scope) {
         QueryUtils.endpoint(baseUrl+'/findstudents').query(query, function(result) {
           if(result.length === 0) {
-            $scope.formState.students = undefined;
+            scope.formState.students = undefined;
             message.info('studentGroup.nostudentsfound');
             return;
           }
           $q.all(clMapper.promises).then(function() {
-            $scope.formState.students = clMapper.objectmapper(result);
+            scope.formState.students = clMapper.objectmapper(result);
           });
         });
+      };
+
+      if($scope.record.id) {
+        $mdDialog.show({
+          controller: function($scope) {
+            $scope.formState = {selectedStudents: []};
+
+            $scope.cancel = $mdDialog.hide;
+            $scope.select = function() {
+              storeStudents($scope.formState.selectedStudents);
+              $mdDialog.hide();
+            };
+
+            findstudents($scope);
+          },
+          templateUrl: 'studentGroup/student.select.dialog.html',
+          clickOutsideToClose: true
+        });
+        return;
       }
+      $scope.studentGroupForm.$setSubmitted();
+      if(!$scope.studentGroupForm.$valid) {
+        message.info('studentGroup.mandatoryfields');
+        return;
+      }
+      findstudents($scope);
+    };
+
+    $scope.removeStudent = function(id) {
+      dialogService.confirmDialog({prompt: 'studentGroup.deletestudentconfirm'}, function() {
+        function filter(i) {
+          return i.id !== id;
+        }
+        $scope.formState.students = $scope.formState.students.filter(filter);
+        $scope.formState.selectedStudents = $scope.formState.selectedStudents.filter(filter);
+      });
     };
   }
 ]);

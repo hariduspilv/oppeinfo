@@ -2,21 +2,21 @@ package ee.hitsa.ois.enums;
 
 public enum DirectiveType {
 
-    // TODO correct names from classifier KASKKIRI
-    AKAD(StudentStatus.OPPURSTAATUS_AKAD, "nominalStudyEnd"),
-    AKADOFF(StudentStatus.OPPURSTAATUS_OPIB, "nominalStudyEnd"),
-    OPPEKOORMUSE_MUUTMINE(null, "fin", "finSpecific"),
-    OPPEKAVA_VAHETAMINE(null, "curriculumVersion", "studyForm", "studentGroup"),
-    FINALLIKAS_MUUTMINE(null, "fin", "finSpecific"),
-    OPPEVORM_VAHETAMINE(null, "studyForm"),
-    VALISOPPUR(StudentStatus.OPPURSTAATUS_VALISOPPUR),
-    EXMAT(StudentStatus.OPPURSTAATUS_EKSMAT),
-    LOPETAMINE(StudentStatus.OPPURSTAATUS_LOPETANUD),
-    IMMAT(StudentStatus.OPPURSTAATUS_OPIB, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
-    ENNISTAMINE(null, "studendGroup"),
+    KASKKIRI_AKAD(StudentStatus.OPPURSTAATUS_A, "nominalStudyEnd"),
+    KASKKIRI_AKADK(StudentStatus.OPPURSTAATUS_O, "nominalStudyEnd"),
+    KASKKIRI_OKOORM(null, "fin", "finSpecific"),
+    KASKKIRI_OKAVA(null, "curriculumVersion", "studyForm", "studentGroup"),
+    KASKKIRI_FINM(null, "fin", "finSpecific"),
+    KASKKIRI_OVORM(null, "studyForm"),
+    KASKKIRI_VALIS(StudentStatus.OPPURSTAATUS_V),
+    KASKKIRI_EKSMAT(StudentStatus.OPPURSTAATUS_K),
+    KASKKIRI_LOPET(StudentStatus.OPPURSTAATUS_L),
+    KASKKIRI_IMMAT(StudentStatus.OPPURSTAATUS_O, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
+    KASKKIRI_ENNIST(null, "studendGroup"),
+    KASKKIRI_TYHIST(null),
+    // FIXME these are missing
     KYLALISOPILANE(null, "nominalStudyEnd"),
-    RIIGIKEEL(null, "nominalStudyEnd"),
-    TYHISTAMINE(null);
+    RIIGIKEEL(null, "nominalStudyEnd");
 
     private final StudentStatus studentStatus;
     private final String[] updatedFields;

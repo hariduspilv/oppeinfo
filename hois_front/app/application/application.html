@@ -1,24 +1,130 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <form ng-submit="loadData()" layout="column">
+      <div ng-show="!application.student">
+        <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.type' | translate}}</label>
+              <hois-classifier-select ng-model="application.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
+            </md-input-container>
+        </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <h2>{{school[currentLanguageNameField()]}}</h2>
-          </md-input-container>
+        <div ng-hide="!application.type" layout="row" layout-sm="column" layout-xs="column">
+            <div flex="60" flex-sm="100" flex-xs="100">
+              <hois-autocomplete ng-model="application.student" method="students" name="student"
+                label="student.label"></hois-autocomplete>
+            </div>
+        </div>
       </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column"  >
+      <div ng-if="application.student" style="padding-top: 1em">
+        <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.type' | translate}}</label>
+              <hois-classifier-value ng-model="application.type" main-classifier-code="AVALDUS_LIIK"></hois-classifier-value>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'student.label' | translate}}</label>
+              <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
+            </md-input-container>
+        </div>
+
+        <div ng-show="['AVALDUS_LIIK_EKSMAT'].indexOf(application.type) !== -1" layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.reason' | translate}}</label>
+              <hois-classifier-select ng-model="application.reason" model-value-attr="code"
+              ng-required="application.type === 'AVALDUS_LIIK_EKSMAT'" main-classifier-code="{{application.type === 'AVALDUS_LIIK_EKSMAT' ? 'EKSMAT_POHJUS' : 'AKADPUHKUS_POHJUS'}}"></hois-classifier-select>
+            </md-input-container>
+        </div>
+
+        <div ng-show="['AVALDUS_LIIK_FINM'].indexOf(application.type) !== -1">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.validFinancialSource' | translate}}</label>
+              <hois-classifier-value ng-model="application.oldFinancialSource" model-value-attr="code"
+                main-classifier-code="FINALLIKAS"></hois-classifier-value>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.validFinancialSourceSpecification' | translate}}</label>
+              <hois-classifier-value ng-model="application.oldFinancialSourceSpecification" model-value-attr="code"
+                main-classifier-code="FINTAPSUSTUS"></hois-classifier-value>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.newFinancialSource' | translate}}</label>
+              <hois-classifier-value ng-model="application.newFinancialSource" model-value-attr="code"
+                main-classifier-code="FINALLIKAS"></hois-classifier-value>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.newFinancialSourceSpecification' | translate}}</label>
+              <hois-classifier-select ng-model="application.newFinancialSourceSpecification" model-value-attr="code"
+                main-classifier-code="FINTAPSUSTUS" filter-values="[application.oldFinancialSourceSpecification]"></hois-classifier-select>
+            </md-input-container>
+          </div>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'application.type' | translate}}</label>
-            <hois-classifier-select ng-model="application.type" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
+            <label class="textInput">{{'application.additionalInfo' | translate}}</label>
+            <textarea ng-model="application.additionalInfo" md-maxlength="4000"></textarea>
           </md-input-container>
+        </div>
+
+
+        <div layout="column" flex>
+          <div layout="row" class="top-margin">
+            <h2>{{'main.relatedFiles' | translate}} </h2>
+            <a class="md-button md-primary" href="" ng-click="openAddFileDialog()" ng-show="!readOnly">{{'main.button.uploadFile' | translate}}</a>
+          </div>
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+                <th md-column><span>{{'file.additionDate' | translate}}</span></th>
+                <th md-column>{{'file.addedBy' | translate}}</th>
+                <th md-column></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="file in application.files" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>
+                  {{file.oisFile.fname}}
+                  <a ng-href="{{getUrl(file.oisFile)}}" target="_blank"><md-icon md-font-set="material-icons">file_download</md-icon></a>
+                </td>
+                <td md-cell>
+                  {{'main.formattedDateTime' | translate: {date: file.inserted} }}
+                </td>
+                <td md-cell>
+                  {{file.insertedBy}}
+                </td>
+                <td md-cell>
+                  <md-button class="remove nomargin" ng-click="removeFromArray(application.files, file)">&times;</md-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
+      <br/>
+
 
       <div layout="row">
-        <md-button type="submit" class="md-raised md-primary">{{'application.addStudent' | translate}}</md-button>
+        <md-button ng-show="application.student" class="md-raised md-primary" ng-click="saveAndSubmit()">{{'main.button.submit' | translate}}</md-button>
+        <md-button ng-show="application.student" class="md-raised" ng-click="save()">{{'main.button.save' | translate}}</md-button>
         <md-button ng-href="#/application" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
-      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
 
+    </form>
+  </div>
 </div>

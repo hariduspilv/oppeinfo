@@ -17,7 +17,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.repository.CertificateRepository;
+import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
 import ee.hitsa.ois.web.dto.CertificateSearchDto;
 
@@ -26,10 +31,14 @@ import ee.hitsa.ois.web.dto.CertificateSearchDto;
 public class CertificateService {
     
     @Autowired
-    private CertificateRepository sertificateRepository;
+    private CertificateRepository certificateRepository;
+    @Autowired
+    private ClassifierRepository classifierRepository;
+    @Autowired
+    private StudentRepository studentRepository;
     
     public Page<CertificateSearchDto> search(Long schoolId, CertificateSearchCommand criteria, Pageable pageable) {
-        return sertificateRepository.findAll((root, query, cb) -> {
+        return certificateRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             
             if (schoolId != null) {
@@ -62,5 +71,17 @@ public class CertificateService {
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(CertificateSearchDto::of);
+    }
+
+    public Certificate save(Certificate certificate, CertificateForm form) {
+        EntityUtil.bindToEntity(form, certificate, classifierRepository, "student");
+        if(form.getStudent() != null) {
+            certificate.setStudent(studentRepository.findOne(form.getStudent()));
+        }
+        return certificateRepository.save(certificate);
+    }
+
+    public void delete(Certificate certificate) {
+        EntityUtil.deleteEntity(certificateRepository, certificate);        
     }
 }

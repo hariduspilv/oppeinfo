@@ -11,6 +11,14 @@ angular.module('hitsaOis')
       console.log('customFunction ', value);
       return value && value.length < 6;
     };
+
+    $scope.testMultiAC = function () {
+      console.log($scope.acMultiForm.$valid);
+    };
+
+    $scope.testSingleAC = function () {
+      console.log($scope.acSingleForm.$valid);
+    }
   })
 
 
