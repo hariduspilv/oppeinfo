@@ -105,6 +105,11 @@ public class AutocompleteController {
         return autocompleteService.students(user.getSchoolId(), lookup);
     }
 
+    @GetMapping("/studyPeriods")
+    public List<AutocompleteResult> studyPeriods(HoisUserDetails user) {
+        return autocompleteService.studyPeriods(user.getSchoolId());
+    }
+
     private static <V, R> Page<R> asAutocompleteResult(Page<V> data, Function<V, R> mapper) {
         return asAutocompleteResult(data.getContent(), mapper);
     }

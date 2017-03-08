@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import java.util.List;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +25,7 @@ import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
+import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.dto.CertificateDto;
 import ee.hitsa.ois.web.dto.CertificateSearchDto;
 
@@ -65,5 +68,14 @@ public class CertificateController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Certificate certificate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertSameSchool(user, certificate.getSchool());
         certificateService.delete(certificate);
+    }
+    /**
+     * AutocompleteController.person() is not used 
+     * as idcode may not match any in database
+     * (there must be no 404 "not found" error)
+     */
+    @GetMapping("/signatoryName")
+    public List<String> getSignatoryName(@Valid PersonLookupCommand lookup) {
+        return certificateService.getSignatoryName(lookup);
     }
 }

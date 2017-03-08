@@ -84,7 +84,7 @@ public class StudentGroupController {
         data.put("languages", curriculum.getStudyLanguages().stream().map(r -> EntityUtil.getCode(r.getStudyLang())).collect(Collectors.toList()));
         data.put("studyForms", curriculum.getStudyForms().stream().map(r -> EntityUtil.getCode(r.getStudyForm())).collect(Collectors.toList()));
         data.put("origStudyLevel", EntityUtil.getCode(curriculum.getOrigStudyLevel()));
-        data.put("specialities", curriculum.getSpecialities().stream().map(AutocompleteResult::of).collect(Collectors.toList()));
+        data.put("specialities", studentGroupService.findSpecialities(curriculum));
         data.put("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(curriculum.getOrigStudyLevel())));
         return data;
     }

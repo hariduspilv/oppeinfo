@@ -15,6 +15,7 @@ public class ApplicationSearchCommand {
     private LocalDate submitedFrom;
     private LocalDate submitedThru;
     private String status;
+    private Long student;
     private String studentName;
     private String studentIdCode;
     private String ehisSchool;
@@ -55,6 +56,12 @@ public class ApplicationSearchCommand {
     }
     public void setStatus(String status) {
         this.status = status;
+    }
+    public Long getStudent() {
+        return student;
+    }
+    public void setStudent(Long student) {
+        this.student = student;
     }
     public String getStudentName() {
         return studentName;

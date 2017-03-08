@@ -62,6 +62,10 @@ public class TeacherService {
         if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
             throw new ValidationFailedException(null, "teacher-vocational-higher");
         }
+        String nativeLanguage = teacherForm.getPerson().getNativeLanguage();
+        if (Boolean.TRUE.equals(teacherForm.getIsVocational() && (nativeLanguage == null || nativeLanguage.trim().length() == 0))) {
+            throw new ValidationFailedException("nativeLanguage", null);
+        }
         EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification");
         teacher.setSchool(schoolRepository.getOne(user.getSchoolId()));
         teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation(), user.getSchoolId()));
@@ -214,9 +218,6 @@ public class TeacherService {
     }
 
     private static void clearConflictingFields(TeacherForm.TeacherPositionEhisForm positionEhis) {
-        if (positionEhis.getContractStart() != null && positionEhis.getContractEnd() != null && !positionEhis.getContractEnd().isAfter(positionEhis.getContractStart())) {
-            throw new ValidationFailedException("contractEnd", "early");
-        }
         if (Boolean.TRUE.equals(positionEhis.getIsVocational())) {
             positionEhis.setEmploymentCode(null);
             positionEhis.setEmploymentType(null);

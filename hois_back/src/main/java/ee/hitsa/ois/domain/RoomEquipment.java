@@ -12,7 +12,7 @@ public class RoomEquipment extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private Room room;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "equipment_code", nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier equipment;
     private Long equipmentCount;
 

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 import javax.validation.constraints.NotNull;
@@ -7,11 +8,13 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.dto.ApplicationFileDto;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 
+@DateRange(from = "startDate", thru = "endDate")
 public class ApplicationForm extends InsertedChangedVersionDto {
 
     @NotNull
@@ -29,19 +32,31 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     private String reason;
 
     @Size(max = 4000)
-    private String additionalInfo;
+    private String addInfo;
 
     @ClassifierRestriction(MainClassCode.FINALLIKAS)
-    private String oldFinancialSource;
+    private String oldFin;
 
     @ClassifierRestriction(MainClassCode.FINTAPSUSTUS)
-    private String oldFinancialSourceSpecification;
+    private String oldFinSpecific;
 
     @ClassifierRestriction(MainClassCode.FINALLIKAS)
-    private String newFinancialSource;
+    private String newFin;
 
     @ClassifierRestriction(MainClassCode.FINTAPSUSTUS)
-    private String newFinancialSourceSpecification;
+    private String newFinSpecific;
+
+    @ClassifierRestriction(MainClassCode.OPPEVORM)
+    private String oldStudyForm;
+
+    @ClassifierRestriction(MainClassCode.OPPEVORM)
+    private String newStudyForm;
+
+    private Boolean period;
+    private LocalDate startDate;
+    private LocalDate endDate;
+    private Long studyPeriodStart;
+    private Long studyPeriodEnd;
 
     private Set<ApplicationFileDto> files;
 
@@ -78,44 +93,100 @@ public class ApplicationForm extends InsertedChangedVersionDto {
         this.reason = reason;
     }
 
-    public String getAdditionalInfo() {
-        return additionalInfo;
+    public String getAddInfo() {
+        return addInfo;
     }
 
-    public void setAdditionalInfo(String additionalInfo) {
-        this.additionalInfo = additionalInfo;
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
-    public String getOldFinancialSource() {
-        return oldFinancialSource;
+    public String getOldFin() {
+        return oldFin;
     }
 
-    public void setOldFinancialSource(String oldFinancialSource) {
-        this.oldFinancialSource = oldFinancialSource;
+    public void setOldFin(String oldFin) {
+        this.oldFin = oldFin;
     }
 
-    public String getOldFinancialSourceSpecification() {
-        return oldFinancialSourceSpecification;
+    public String getOldFinSpecific() {
+        return oldFinSpecific;
     }
 
-    public void setOldFinancialSourceSpecification(String oldFinancialSourceSpecification) {
-        this.oldFinancialSourceSpecification = oldFinancialSourceSpecification;
+    public void setOldFinSpecific(String oldFinSpecific) {
+        this.oldFinSpecific = oldFinSpecific;
     }
 
-    public String getNewFinancialSource() {
-        return newFinancialSource;
+    public String getNewFin() {
+        return newFin;
     }
 
-    public void setNewFinancialSource(String newFinancialSource) {
-        this.newFinancialSource = newFinancialSource;
+    public void setNewFin(String newFin) {
+        this.newFin = newFin;
     }
 
-    public String getNewFinancialSourceSpecification() {
-        return newFinancialSourceSpecification;
+    public String getNewFinSpecific() {
+        return newFinSpecific;
     }
 
-    public void setNewFinancialSourceSpecification(String newFinancialSourceSpecification) {
-        this.newFinancialSourceSpecification = newFinancialSourceSpecification;
+    public void setNewFinSpecific(String newFinSpecific) {
+        this.newFinSpecific = newFinSpecific;
+    }
+
+    public String getOldStudyForm() {
+        return oldStudyForm;
+    }
+
+    public void setOldStudyForm(String oldStudyForm) {
+        this.oldStudyForm = oldStudyForm;
+    }
+
+    public String getNewStudyForm() {
+        return newStudyForm;
+    }
+
+    public void setNewStudyForm(String newStudyForm) {
+        this.newStudyForm = newStudyForm;
+    }
+
+    public Boolean getPeriod() {
+        return period;
+    }
+
+    public void setPeriod(Boolean period) {
+        this.period = period;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public Long getStudyPeriodStart() {
+        return studyPeriodStart;
+    }
+
+    public void setStudyPeriodStart(Long studyPeriodStart) {
+        this.studyPeriodStart = studyPeriodStart;
+    }
+
+    public Long getStudyPeriodEnd() {
+        return studyPeriodEnd;
+    }
+
+    public void setStudyPeriodEnd(Long studyPeriodEnd) {
+        this.studyPeriodEnd = studyPeriodEnd;
     }
 
     public Set<ApplicationFileDto> getFiles() {

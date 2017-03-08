@@ -1,11 +1,15 @@
 package ee.hitsa.ois.domain;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.school.School;
 
@@ -17,7 +21,10 @@ public class StudyYear extends BaseEntityWithId {
     private School school;
     private LocalDate startDate;
     private LocalDate endDate;
+    @ManyToOne(fetch = FetchType.LAZY)
     private Classifier year;
+    @OneToMany(mappedBy = "studyYear",cascade = CascadeType.ALL)
+    private Set<StudyPeriod> studyPeriods;
 
     public School getSchool() {
         return school;
@@ -49,5 +56,13 @@ public class StudyYear extends BaseEntityWithId {
 
     public void setYear(Classifier year) {
         this.year = year;
+    }
+
+    public Set<StudyPeriod> getStudyPeriods() {
+        return studyPeriods == null ? (studyPeriods = new HashSet<>()) : studyPeriods;
+    }
+
+    public void setStudyPeriods(Set<StudyPeriod> studyPeriods) {
+        this.studyPeriods = studyPeriods;
     }
 }

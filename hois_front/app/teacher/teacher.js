@@ -113,10 +113,13 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
 
   $scope.update = function() {
     $scope.teacherForm.$setSubmitted();
-
-    //console.log($scope.teacherPositionEhis);
+    var errors = false;
+    if ($scope.teacher.teacherPositionEhis.length === 0) {
+      message.error('teacher.teacherPositionEhis.error');
+      errors = true;
+    }
     console.log($scope.teacherForm.$valid);
-    if($scope.teacherForm.$valid) {
+    if($scope.teacherForm.$valid && !errors) {
       if($scope.teacher.id) {
         $scope.teacher.$update().then(function() {
           message.info('main.messages.update.success');

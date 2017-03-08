@@ -1,5 +1,9 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -9,6 +13,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +27,7 @@ import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentSearchCommand;
 import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
 
@@ -30,11 +36,13 @@ import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
 public class SchoolDepartmentService {
 
     @Autowired
+    private EntityManager em;
+    @Autowired
     private SchoolDepartmentRepository schoolDepartmentRepository;
 
     public Page<SchoolDepartmentDto> findAll(Long schoolId, SchoolDepartmentSearchCommand criteria, Pageable pageable) {
         // load full structure for given school, already sorted
-        List<SchoolDepartmentDto> structure = schoolDepartmentRepository.findAllTree(schoolId, pageable.getSort());
+        List<SchoolDepartmentDto> structure = findForTree(schoolId, pageable);
         Map<Long, SchoolDepartmentDto> mappedStructure = structure.stream().collect(Collectors.toMap(SchoolDepartmentDto::getId, Function.identity()));
         // filter out matched departments and their parents
         LocalDate now = LocalDate.now();
@@ -107,6 +115,25 @@ public class SchoolDepartmentService {
 
     public void delete(SchoolDepartment schoolDepartment) {
         EntityUtil.deleteEntity(schoolDepartmentRepository, schoolDepartment);
+    }
+
+    private List<SchoolDepartmentDto> findForTree(Long schoolId, Pageable pageable) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd", pageable.getSort());
+        qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
+
+        List<?> data = qb.select("sd.id, sd.version, sd.code, sd.name_et, sd.name_en, sd.valid_from, sd.valid_thru, sd.parent_school_department_id", em).getResultList();
+        return data.stream().map(r -> {
+            SchoolDepartmentDto dto = new SchoolDepartmentDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setVersion(resultAsLong(r, 1));
+            dto.setCode(resultAsString(r, 2));
+            dto.setNameEt(resultAsString(r, 3));
+            dto.setNameEn(resultAsString(r, 4));
+            dto.setValidFrom(resultAsLocalDate(r, 5));
+            dto.setValidThru(resultAsLocalDate(r, 6));
+            dto.setParentSchoolDepartment(resultAsLong(r, 7));
+            return dto;
+        }).collect(Collectors.toList());
     }
 
     private static SchoolDepartmentDto createTreeItem(SchoolDepartmentDto sd, Map<Long, List<SchoolDepartmentDto>> children, Set<Long> filtered) {

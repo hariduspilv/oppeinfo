@@ -21,25 +21,20 @@ public class StudentBase extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_form_code")
     private Classifier studyForm;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudentGroup studentGroup;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "language_code")
     private Classifier language;
     private String email;
     private Boolean isSpecialNeed;
     private Boolean isRepresentativeMandatory;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "special_need_code")
     private Classifier specialNeed;
     private String studentCard;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "previous_study_level_code")
     private Classifier previousStudyLevel;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "status_code")
     private Classifier status;
     @OneToOne(cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
     @JoinColumn(name = "ois_file_id")
@@ -50,13 +45,10 @@ public class StudentBase extends BaseEntityWithId {
     private LocalDate studyEnd;
     private LocalDate nominalStudyEnd;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_load_code")
     private Classifier studyLoad;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fin_code")
     private Classifier fin;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fin_specific_code")
     private Classifier finSpecific;
     private String studyCompany;
     private String boardingSchool;

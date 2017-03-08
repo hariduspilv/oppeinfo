@@ -16,6 +16,7 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
 
@@ -33,6 +34,7 @@ public class Application extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false, insertable = true)
     private Classifier type;
 
+    //TODO:should be submitted
     private LocalDateTime submited;
 
     @Column(name = "is_period")
@@ -41,9 +43,14 @@ public class Application extends BaseEntityWithId {
     private LocalDate startDate;
     private LocalDate endDate;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    private StudyPeriod studyPeriodStart;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private StudyPeriod studyPeriodEnd;
+
     @Size(max = 4000)
-    @Column(name = "add_info")
-    private String additionalInfo;
+    private String addInfo;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier reason;
@@ -58,20 +65,16 @@ public class Application extends BaseEntityWithId {
     private Classifier oldStudyForm;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "old_fin_code", nullable = true)
-    private Classifier oldFinancialSource;
+    private Classifier oldFin;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "new_fin_code", nullable = true)
-    private Classifier newFinancialSource;
+    private Classifier newFin;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "old_fin_specific_code", nullable = true)
-    private Classifier oldFinancialSourceSpecification;
+    private Classifier oldFinSpecific;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(name = "new_fin_specific_code", nullable = true)
-    private Classifier newFinancialSourceSpecification;
+    private Classifier newFinSpecific;
 
     @Column(name = "is_abroad")
     private Boolean abroad;
@@ -158,12 +161,28 @@ public class Application extends BaseEntityWithId {
         this.endDate = endDate;
     }
 
-    public String getAdditionalInfo() {
-        return additionalInfo;
+    public StudyPeriod getStudyPeriodStart() {
+        return studyPeriodStart;
     }
 
-    public void setAdditionalInfo(String additionalInfo) {
-        this.additionalInfo = additionalInfo;
+    public void setStudyPeriodStart(StudyPeriod studyPeriodStart) {
+        this.studyPeriodStart = studyPeriodStart;
+    }
+
+    public StudyPeriod getStudyPeriodEnd() {
+        return studyPeriodEnd;
+    }
+
+    public void setStudyPeriodEnd(StudyPeriod studyPeriodEnd) {
+        this.studyPeriodEnd = studyPeriodEnd;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
     public Classifier getReason() {
@@ -198,36 +217,36 @@ public class Application extends BaseEntityWithId {
         this.oldStudyForm = oldStudyForm;
     }
 
-    public Classifier getOldFinancialSource() {
-        return oldFinancialSource;
+    public Classifier getOldFin() {
+        return oldFin;
     }
 
-    public void setOldFinancialSource(Classifier oldFinancialSource) {
-        this.oldFinancialSource = oldFinancialSource;
+    public void setOldFin(Classifier oldFin) {
+        this.oldFin = oldFin;
     }
 
-    public Classifier getNewFinancialSource() {
-        return newFinancialSource;
+    public Classifier getNewFin() {
+        return newFin;
     }
 
-    public void setNewFinancialSource(Classifier newFinancialSource) {
-        this.newFinancialSource = newFinancialSource;
+    public void setNewFin(Classifier newFin) {
+        this.newFin = newFin;
     }
 
-    public Classifier getOldFinancialSourceSpecification() {
-        return oldFinancialSourceSpecification;
+    public Classifier getOldFinSpecific() {
+        return oldFinSpecific;
     }
 
-    public void setOldFinancialSourceSpecification(Classifier oldFinancialSourceSpecification) {
-        this.oldFinancialSourceSpecification = oldFinancialSourceSpecification;
+    public void setOldFinSpecific(Classifier oldFinSpecific) {
+        this.oldFinSpecific = oldFinSpecific;
     }
 
-    public Classifier getNewFinancialSourceSpecification() {
-        return newFinancialSourceSpecification;
+    public Classifier getNewFinSpecific() {
+        return newFinSpecific;
     }
 
-    public void setNewFinancialSourceSpecification(Classifier newFinancialSourceSpecification) {
-        this.newFinancialSourceSpecification = newFinancialSourceSpecification;
+    public void setNewFinSpecific(Classifier newFinSpecific) {
+        this.newFinSpecific = newFinSpecific;
     }
 
     public Boolean getAbroad() {

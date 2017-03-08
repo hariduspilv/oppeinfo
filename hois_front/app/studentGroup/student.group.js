@@ -24,17 +24,19 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       // store current values
       $scope.formState.language = $scope.record.language;
       $scope.formState.studyForm = $scope.record.studyForm;
+      $scope.formState.speciality = $scope.record.speciality;
 
       var afterCurriculumChange = function(result) {
         $scope.formState.curriculumVersions = result.curriculumVersions;
         $scope.formState.languages = result.languages || [];
         $scope.formState.studyForms = result.studyForms || [];
         $scope.formState.origStudyLevel = result.origStudyLevel;
-        $scope.formState.specialities = result.specialities;
+        $scope.formState.specialities = result.specialities || [];
 
         // try to restore values
         $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) !== -1 ? $scope.formState.language : null;
         $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
+        $scope.record.speciality = $scope.formState.specialities.indexOf($scope.formState.speciality) !== -1 ? $scope.formState.speciality : null;
       };
       if(curriculumId) {
         QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: curriculumId}, afterCurriculumChange);

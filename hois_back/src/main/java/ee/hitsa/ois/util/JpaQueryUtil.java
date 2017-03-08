@@ -4,7 +4,6 @@ import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -301,7 +300,15 @@ public abstract class JpaQueryUtil {
 
     public static LocalDate resultAsLocalDate(Object value, int index) {
         value = (((Object[])value)[index]);
-        return LocalDateTime.ofInstant(((java.sql.Timestamp)value).toInstant(), ZoneId.systemDefault()).toLocalDate();
+        if(value instanceof java.sql.Date) {
+            return ((java.sql.Date)value).toLocalDate();
+        }
+        return value != null ? ((java.sql.Timestamp)value).toLocalDateTime().toLocalDate() : null;
+    }
+
+    public static LocalDateTime resultAsLocalDateTime(Object value, int index) {
+        value = (((Object[])value)[index]);
+        return value != null ? ((java.sql.Timestamp)value).toLocalDateTime() : null;
     }
 
     public static Long resultAsLong(Object value, int index) {

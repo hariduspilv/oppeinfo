@@ -33,7 +33,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     var clMapper = Classifier.valuemapper({type: 'TOEND_LIIK'});
     QueryUtils.createQueryForm($scope, '/certificate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
     $q.all(clMapper.promises).then($scope.loadData);
-}]).controller('CertificateEditController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$route', '$location', 'dialogService', 'message', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $route, $location, dialogService, message) {
+}]).controller('CertificateEditController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $route, $location, dialogService, message, $resource, config) {
 
 
     $scope.getStudent = function() {
@@ -112,18 +112,28 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
 
     $scope.signatoryFound = false;
     
-    $scope.lookupPerson = function(response) {
-      $scope.record.signatoryName = response.firstname + ' ' + response.lastname;
-      $scope.signatoryFound = true;
-    };
-
-    $scope.personNotFound = function() {
-        $scope.signatoryFound = false;
-    };
-
     $scope.clearSignatory = function() {
         $scope.signatoryFound = false;
         $scope.record.signatoryName = null;
         $scope.record.signatoryIdcode = null;
+    };
+
+    $scope.$watch('record.signatoryIdcode', function() {
+            if($scope.record && !$scope.record.signatoryName && $scope.record.signatoryIdcode && 
+            $scope.certificateEditForm.idcode && $scope.certificateEditForm.idcode.$valid) {
+                $scope.getNameByIdcode();
+            }
+        }
+    );
+    $scope.idcodePattern = "^[1-6][0-9]{2}[0-1][0-9][0-3][0-9][0-9]{4}";
+
+    $scope.getNameByIdcode = function() {
+        $resource(config.apiUrl + baseUrl + '/signatoryName/').query({idcode: $scope.record.signatoryIdcode})
+        .$promise.then(function(result){
+            if(result[0] !== undefined) {
+                $scope.record.signatoryName = result[0];
+                $scope.signatoryFound = true;
+            }
+        });
     };
 }]);

@@ -227,6 +227,32 @@ public abstract class EntityUtil {
         });
     }
 
+    public static void setEntityFromRepository(Object command, Object entity,
+            JpaRepository<?, Long> repository, String...fields) {
+        List<String> fieldsList = Arrays.asList(fields);
+        for(PropertyDescriptor spd : BeanUtils.getPropertyDescriptors(command.getClass())) {
+            Method readMethod = spd.getReadMethod();
+            String propertyName = spd.getName();
+            if(readMethod != null && fieldsList.contains(propertyName) && Modifier.isPublic(readMethod.getDeclaringClass().getModifiers())) {
+                PropertyDescriptor tpd = BeanUtils.getPropertyDescriptor(entity.getClass(), propertyName);
+                if(tpd == null) {
+                    continue;
+                }
+                Method writeMethod = tpd.getWriteMethod();
+                if (writeMethod != null && Modifier.isPublic(writeMethod.getDeclaringClass().getModifiers())) {
+                    try {
+                        Long id = (Long) readMethod.invoke(command);
+                        if (id != null) {
+                            writeMethod.invoke(entity, repository.getOne(id));
+                        }
+                    } catch (Throwable e) {
+                        throw new FatalBeanException("Could not copy property '" + propertyName + "' from command to entity", e);
+                    }
+                }
+            }
+        }
+    }
+
     /**
      * Apply supplied function to loaded entity.
      *
@@ -368,4 +394,5 @@ public abstract class EntityUtil {
     }
 
     private static final ConcurrentMap<String, ConcurrentMap<Language, String>> PROPERTY_NAME_CACHE = new ConcurrentHashMap<>();
+
 }

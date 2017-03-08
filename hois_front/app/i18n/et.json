@@ -102,6 +102,8 @@
     "required": "Kohustuslik",
     "inOrder":"Korras",
     "hour": "tund",
+    "period": "Periood",
+    "date": "Kuupäev",
     "menu":{
       "curriculum": {
         "label": "Õppekavad"
@@ -121,6 +123,7 @@
         "messageTemplates": "Automaatsete teadete mallid",
         "certificates": "Tõendid",
         "studyLevels": "Õppeasutuse õppeastmed",
+        "studyYears": "Õppeasutuse õppeperioodid",
         "classifiers": "Klassifikaatorid"
       },
       "more": {
@@ -400,7 +403,8 @@
       "signatory": "Allkirjastaja",
       "signatoryName": "Allkirjastaja nimi",
       "signatoryIdcode": "Allkirjastaja isikukood",
-      "clearSignatory": "Eemalda allkirjastaja"
+      "clearSignatory": "Eemalda allkirjastaja",
+      "invalidIdcode": "Vale isikukood!"
   },
   "stateCurriculum": {
     "deleteconfirm": "Kas oled kindel, et soovid riikliku õppekava kustutada?",
@@ -631,6 +635,7 @@
     "email": "E-posti aadress",
     "phone": "Kontakttelefon",
     "person": {
+      "alreadyexist": "Sisestatud õpetaja on juba süsteemis olemas",
       "name": "Õpetaja nimi",
       "firstname": "Õpetaja eesnimi",
       "lastname": "Õpetaja perekonnanimi",
@@ -674,7 +679,8 @@
       "meetsQualification": "Vastab kvalifikatsioonile",
       "position": "Ametikoht",
       "positionSpecificationEn": "Ametikoha täpsustus (inglise keeles)",
-      "positionSpecificationEt": "Täpsustus"
+      "positionSpecificationEt": "Täpsustus",
+      "error": "Vähemalt üks EHISe ametikoht peab olema lisatud"
     },
     "qualification": {
       "add": "lisa Kvalifikatsioon",
@@ -866,6 +872,13 @@
     "validFinancialSource": "Kehtiv finantseerimisallikas",
     "validFinancialSourceSpecification":"Kehtiv finatseerimisallika täpsustus",
     "newFinancialSource": "Uus finantseerimisallikas",
-    "newFinancialSourceSpecification":"Uus finatseerimisallika täpsustus"
+    "newFinancialSourceSpecification":"Uus finatseerimisallika täpsustus",
+    "validStudyForm": "Kehtiv õppevorm",
+    "newStudyForm": "Uus õppevorm",
+    "periodType": "Ajavahemiku liik",
+    "academicLeaveStart": "Akadeemilise puhkuse algus",
+    "academicLeaveEnd": "Akadeemilise puhkuse lõpp",
+    "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
+    "academicLeaveCancellationDate": "Katkestamise kuupäev"
   }
 }

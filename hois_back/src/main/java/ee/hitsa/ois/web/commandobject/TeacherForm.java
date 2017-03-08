@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.commandobject;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.NotEmpty;
 
@@ -152,6 +153,7 @@ public class TeacherForm extends VersionedCommand {
         }
     }
 
+    @DateRange(from = "contractStart", thru = "contractEnd")
     public static class TeacherPositionEhisForm {
 
         private Long id;

@@ -12,7 +12,7 @@ public enum DirectiveType {
     KASKKIRI_EKSMAT(StudentStatus.OPPURSTAATUS_K),
     KASKKIRI_LOPET(StudentStatus.OPPURSTAATUS_L),
     KASKKIRI_IMMAT(StudentStatus.OPPURSTAATUS_O, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
-    KASKKIRI_ENNIST(null, "studendGroup"),
+    KASKKIRI_ENNIST(null, "studentGroup"),
     KASKKIRI_TYHIST(null),
     // FIXME these are missing
     KYLALISOPILANE(null, "nominalStudyEnd"),

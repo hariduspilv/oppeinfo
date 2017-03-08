@@ -23,6 +23,7 @@ import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
@@ -44,6 +45,9 @@ public class ApplicationService {
 
     @Autowired
     private ClassifierRepository classifierRepository;
+
+    @Autowired
+    private StudyPeriodRepository studyPeriodRepository;
 
 
     public Page<ApplicationDto> search(ApplicationSearchCommand criteria, Pageable pageable) {
@@ -71,6 +75,9 @@ public class ApplicationService {
             if(!StringUtils.isEmpty(criteria.getStatus())) {
                 filters.add(cb.equal(root.get("status").get("code"), criteria.getStatus()));
             }
+            if (criteria.getStudent() != null) {
+                filters.add(cb.equal(root.get("student").get("id"), criteria.getStudent()));
+            }
             if(!StringUtils.isEmpty(criteria.getStudentName())) {
                 List<Predicate> name = new ArrayList<>();
                 propertyContains(() -> root.get("student").get("person").get("firstname"), cb, criteria.getStudentName(), name::add);
@@ -88,7 +95,9 @@ public class ApplicationService {
     }
 
     public ApplicationDto save(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
-        EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files");
+        EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files", "studyPeriodStart", "studyPeriodStart");
+        EntityUtil.setEntityFromRepository(applicationForm, application, studyPeriodRepository, "studyPeriodStart", "studyPeriodEnd");
+
         application.setEhisSchool(schoolRepository.getOne(user.getSchoolId()).getEhisSchool());
         application.setStudent(studentRepository.getOne(applicationForm.getStudent().getId()));
         updateFiles(application, applicationForm);

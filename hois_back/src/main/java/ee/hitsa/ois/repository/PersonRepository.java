@@ -1,11 +1,12 @@
 package ee.hitsa.ois.repository;
 
-import ee.hitsa.ois.domain.Person;
-
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.CrudRepository;
 
-public interface PersonRepository extends CrudRepository<Person, Long> {
+import ee.hitsa.ois.domain.Person;
+
+public interface PersonRepository extends CrudRepository<Person, Long> , JpaSpecificationExecutor<Person>{
     Person findByIdcode(String idcode);
 
     @Query("select s.person from Student s where s.person.idcode = ?1")

@@ -204,7 +204,7 @@ md-dialog md-toolbar  h2{
 .horizontal-radio-group {
   padding-bottom: 1.5em;
   padding-top: 1em;
-  padding-left: 5px;
+  /* padding-left: 5px; */
 }
 
 .horizontal-radio-group > md-input-container > label {

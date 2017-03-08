@@ -150,5 +150,6 @@ public class ControllerErrorHandler {
         UNIQUE_VIOLATION_MESSAGES.put("room", "room.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative", "student.representative.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative_application", "student.representative.application.alreadyexist");
+        UNIQUE_VIOLATION_MESSAGES.put("teacher", "teacher.person.alreadyexist");
     }
 }

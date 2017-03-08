@@ -34,6 +34,7 @@ public enum MainClassCode {
     KUTSEHINDAMISVIIS,
     KUTSEMOODUL,
     MAHT,
+    OPPEAASTA,
     OPPEASTE,
     OPPEKAVA_EHIS_STAATUS,
     OPPEKAVA_LOOMISE_VIIS,
@@ -43,6 +44,7 @@ public enum MainClassCode {
     OPPEKAVA_VERSIOON_STAATUS,
     OPPEKAVAGRUPP,
     OPPEKEEL,
+    OPPEPERIOOD,
     OPPEVORM,
     OPPURESINDAJA,
     OSAKUTSE,
@@ -51,6 +53,7 @@ public enum MainClassCode {
     SEADMED,
     SPETSKUTSE,
     SUGU,
+    SYNDMUS,
     TEATE_LIIK,
     TOEND_LIIK,
     TOEND_STAATUS

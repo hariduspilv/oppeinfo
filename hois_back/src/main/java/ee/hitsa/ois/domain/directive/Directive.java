@@ -21,13 +21,12 @@ public class Directive extends BaseEntityWithId {
     private School school;
     private String headline;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "type_code", nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier type;
     private String directiveNr;
     private LocalDate confirmDate;
     private String addInfo;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "status_code")
     private Classifier status;
     @ManyToOne(fetch = FetchType.LAZY)
     private DirectiveCoordinator directiveCoordinator;
@@ -38,7 +37,6 @@ public class Directive extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     private Directive canceledDirective;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "cancel_type_code")
     private Classifier cancelType;
     @OneToMany(mappedBy = "directive", orphanRemoval = true)
     private List<DirectiveStudent> students;

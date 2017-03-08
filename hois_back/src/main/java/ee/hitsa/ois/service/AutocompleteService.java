@@ -26,6 +26,7 @@ import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -58,6 +59,8 @@ public class AutocompleteService {
     private TeacherRepository teacherRepository;
     @Autowired
     private StudentRepository studentRepository;
+    @Autowired
+    private StudyPeriodRepository studyPeriodRepository;
 
     public List<AutocompleteResult> buildings(Long schoolId) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from building b");
@@ -176,5 +179,13 @@ public class AutocompleteService {
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, sortAndLimit("person.lastname", "person.firstname")).map(AutocompleteResult::of);
+    }
+
+    public List<AutocompleteResult> studyPeriods(Long schoolId) {
+        return studyPeriodRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("studyYear").get("school").get("id"), schoolId));
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }).stream().map(AutocompleteResult::of).collect(Collectors.toList());
     }
 }

@@ -12,7 +12,7 @@ import ee.hitsa.ois.domain.Classifier;
 public class SchoolStudyLevel extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_level_code", nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier studyLevel;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)

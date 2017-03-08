@@ -22,12 +22,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.SchoolDepartmentService;
 import ee.hitsa.ois.service.SchoolService;
+import ee.hitsa.ois.service.StudyYearService;
 import ee.hitsa.ois.service.TeacherOccupationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -39,10 +41,13 @@ import ee.hitsa.ois.web.commandobject.SchoolDepartmentSearchCommand;
 import ee.hitsa.ois.web.commandobject.SchoolForm;
 import ee.hitsa.ois.web.commandobject.SchoolSearchCommand;
 import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyLevelsCommand;
+import ee.hitsa.ois.web.commandobject.StudyYearForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
 import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
 import ee.hitsa.ois.web.dto.SchoolDto;
+import ee.hitsa.ois.web.dto.StudyYearDto;
+import ee.hitsa.ois.web.dto.StudyYearsSearchDto;
 import ee.hitsa.ois.web.dto.TeacherOccupationDto;
 
 
@@ -58,6 +63,8 @@ public class SchoolController {
     private SchoolDepartmentService schoolDepartmentService;
     @Autowired
     private TeacherOccupationService teacherOccupationService;
+    @Autowired
+    private StudyYearService studyYearService;
 
     @GetMapping("")
     public Page<SchoolDto> search(@Valid SchoolSearchCommand schoolSearchCommand, Pageable pageable) {
@@ -177,6 +184,27 @@ public class SchoolController {
     public void deleteTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") TeacherOccupation teacherOccupation, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertSameSchool(user, teacherOccupation.getSchool());
         teacherOccupationService.delete(teacherOccupation);
+    }
+
+    @GetMapping("/studyYears")
+    public List<StudyYearsSearchDto> getAllStudyYears(HoisUserDetails user) {
+        return studyYearService.getStudyYears(user.getSchoolId());
+    }
+
+    @GetMapping("/studyYears/{id:\\d+}")
+    public StudyYearDto getStudyYear(HoisUserDetails user, @WithEntity("id") StudyYear studyYear) {
+        return StudyYearDto.of(studyYear);
+    }
+
+    @PostMapping("/studyYears")
+    public StudyYearDto createStudyYear(HoisUserDetails user, @Valid @RequestBody StudyYearForm studyYearForm) {
+        return studyYearService.save(getSchool(user), new StudyYear(), studyYearForm);
+    }
+
+    @PutMapping("/studyYears/{id:\\d+}")
+    public StudyYearDto updateStudyYear(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudyYear studyYear, @Valid @RequestBody StudyYearForm request) {
+        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        return studyYearService.save(getSchool(user), studyYear, request);
     }
 
     private School getSchool(HoisUserDetails user) {

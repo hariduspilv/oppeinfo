@@ -28,15 +28,12 @@ public class StudentGroup extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Curriculum curriculum;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_form_code")
     private Classifier studyForm;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "language_code")
     private Classifier language;
     @ManyToOne(fetch = FetchType.LAZY)
     private Teacher teacher;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "speciality_code")
     private Classifier speciality;
     @OneToMany(mappedBy = "studentGroup")
     private List<Student> students;

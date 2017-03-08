@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -26,11 +28,13 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveSearchCommand;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveStudentSearchCommand;
 import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveSearchDto;
-import ee.hitsa.ois.web.dto.directive.DirectiveStudentDto;
+import ee.hitsa.ois.web.dto.directive.DirectiveStudentSearchDto;
 
 @RestController
 @RequestMapping("/directives")
@@ -65,14 +69,21 @@ public class DirectiveController {
         return get(user, directiveService.save(directive, form));
     }
 
+    @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Directive directive, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertSameSchool(user, directive.getSchool());
         directiveService.delete(directive);
     }
-    
+
+    @PostMapping("/directivedata")
+    public Map<String, Object> directivedata(HoisUserDetails user, @Valid @RequestBody DirectiveDataCommand cmd) {
+        // fetch all data for selected students and given directive type
+        return Collections.singletonMap("students", directiveService.loadStudents(user.getSchoolId(), cmd));
+    }
+
     @GetMapping("/findstudents")
-    public List<DirectiveStudentDto> searchStudents(HoisUserDetails user) {
-        return directiveService.searchStudents(user.getSchoolId());
+    public List<DirectiveStudentSearchDto> searchStudents(HoisUserDetails user, @Valid DirectiveStudentSearchCommand criteria) {
+        return directiveService.searchStudents(user.getSchoolId(), criteria);
     }
 
     @GetMapping("/coordinators")

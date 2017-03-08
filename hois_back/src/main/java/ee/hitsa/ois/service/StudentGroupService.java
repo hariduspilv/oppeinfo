@@ -169,4 +169,13 @@ public class StudentGroupService {
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }).stream().map(StudentGroupStudentDto::of).collect(Collectors.toList());
     }
+
+    @SuppressWarnings("unchecked")
+    public List<String> findSpecialities(Curriculum curriculum) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum_occupation_speciality s inner join curriculum_occupation co on s.curriculum_occupation_id = co.id");
+        qb.requiredCriteria("co.curriculum_id = :curriculumId", "curriculumId", EntityUtil.getId(curriculum));
+
+        List<?> data = qb.select("s.speciality_code", em).getResultList();
+        return (List<String>)data;
+    }
 }

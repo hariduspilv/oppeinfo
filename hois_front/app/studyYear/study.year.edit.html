@@ -1,0 +1,83 @@
+<div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+  <form name="schoolYearForm" layout="column">
+    <div layout="column" flex>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex>
+          <label class="label">{{'studyYear.year' | translate}}</label>
+          <hois-classifier-value ng-model="studyYear.year" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'studyYear.startDate' | translate}}</label>
+          <md-datepicker ng-model="studyYear.startDate" md-max-date="studyYear.endDate" required md-open-on-focus></md-datepicker>
+        </md-input-container>
+        <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'studyYear.endDate' | translate}}</label>
+          <md-datepicker ng-model="studyYear.endDate" md-min-date="studyYear.startDate" required md-open-on-focus></md-datepicker>
+        </md-input-container>
+        <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+      </div>
+    </div>
+    <div layout="column" flex>
+      <div layout="row" class="align-center">
+        <h2>{{'studyYear.studyPeriods' | translate}}</h2>
+        <md-button class="md-primary" ng-click="openStudyPeriodDialog()">{{'button.create' | translate}}</md-button>
+      </div>
+
+      <div layout="row">
+        <table md-table class="secondary-table">
+          <thead md-head>
+          <tr md-row>
+            <th md-column>{{'studyYear.studyPeriod.type' | translate}}</th>
+            <th md-column>{{'studyYear.studyPeriod.name' | translate}}</th>
+            <th md-column>{{'studyYear.studyPeriod.start' | translate}}</th>
+            <th md-column>{{'studyYear.studyPeriod.end' | translate}}</th>
+            <th md-column></th>
+          </tr>
+          </thead>
+          <tbody md-body>
+          <tr md-row ng-repeat="item in studyYear.studyPeriods" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{item.type.nameEn}}</td>
+            <td md-cell>{{item.nameEn}}</td>
+            <td md-cell>{{item.startDate}}</td>
+            <td md-cell>{{item.endDate}}</td>
+            <td md-cell ><md-button ng-click="openStudyPeriodDialog(item)">{{'button.edit' | translate}}</md-button></td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+      <div layout="column" flex>
+        <div layout="row" class="align-center">
+          <h2>{{'studyYear.studyPeriods' | translate}}</h2>
+          <md-button class="md-primary" ng-click="openStudyEventDialog()">{{'button.create' | translate}}</md-button>
+        </div>
+        <div layout="row">
+          <table md-table class="secondary-table">
+            <thead md-head>
+            <tr md-row>
+              <th md-column>{{'studyYear.studyEvent.description' | translate}}</th>
+              <th md-column>{{'studyYear.studyEvent.period' | translate}}</th>
+              <th md-column>{{'studyYear.studyPeriod.start' | translate}}</th>
+              <th md-column>{{'studyYear.studyPeriod.end' | translate}}</th>
+              <th md-column></th>
+            </tr>
+            </thead>
+            <tbody md-body>
+            <tr md-row ng-repeat="item in studyYear.studyEvents" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{item.descriptionEn}}</td>
+              <td md-cell>{{item.studyPeriod.nameEn}}</td>
+              <td md-cell>{{item.startDate}}</td>
+              <td md-cell>{{item.endDate}}</td>
+              <td md-cell ><md-button ng-click="openStudyEventDialog(item)">{{'button.edit' | translate}}</md-button></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div layout="row">
+        <md-button ng-href="#/school/studyYears" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </div>
+  </form>
+</div>

@@ -17,9 +17,9 @@
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+        <div flex="45" flex-sm="100" flex-xs="100">
           <hois-autocomplete ng-model="record.curriculum" method="curriculums" name="curriculum" ng-disabled="record.id" label="studentGroup.curriculum" md-selected-item-change="curriculumChanged()" required></hois-autocomplete>
-        </md-input-container>
+        </div>
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.curriculumVersion' | translate}}</label>
@@ -43,15 +43,14 @@
         </md-input-container>
       </div>
 
-
       <div layout="row" layout-sm="column" layout-xs="column" ng-if="!formState.isVocational">
-        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+        <div flex="45" flex-sm="100" flex-xs="100">
           <hois-autocomplete ng-model="record.teacher" method="teachers" name="teacher" ng-disabled="record.id" label="studentGroup.teacher"></hois-autocomplete>
-        </md-input-container>
+        </div>
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
-          <hois-select ng-model="record.speciality" name="speciality" ng-disabled="record.id" values="formState.specialities"></hois-select>
+          <hois-classifier-select ng-model="record.speciality" name="speciality" ng-disabled="record.id" main-classifier-code="SPETSKUTSE" show-only-values="formState.specialities" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
       </div>
 

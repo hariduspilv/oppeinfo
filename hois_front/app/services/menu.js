@@ -21,7 +21,7 @@ angular.module('hitsaOis')
         //{name: 'Vilistlased'},
         {
           name: 'Riiklikud õppekavad',
-          url: "/stateCurriculum"
+          url: "/stateCurriculum?_menu"
         },
         //{name: 'Riikliku õppekava lisamine', url: "/stateCurriculum/new"},
         //{name: 'Õppekavade otsing', url: "/curriculum"},
@@ -129,6 +129,10 @@ angular.module('hitsaOis')
           url: "/school/studyLevels"
         },
         {
+          name: 'main.menu.fixData.studyYears',
+          url: "/school/studyYears"
+        },
+        {
           name: 'main.menu.fixData.classifiers',
           id: 'classifiers',
           url: "/classifier?_menu"
@@ -143,7 +147,7 @@ angular.module('hitsaOis')
         {
           name: 'main.menu.applications.search',
           id: 'applications',
-          url: "/application?_menu"
+          url: "/applications?_menu"
         }
       ]
     });

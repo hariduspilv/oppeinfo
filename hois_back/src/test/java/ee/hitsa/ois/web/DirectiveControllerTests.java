@@ -48,6 +48,25 @@ public class DirectiveControllerTests {
     }
 
     @Test
+    public void searchStudents() {
+        String url = "/directives/findstudents";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/directives/findstudents");
+        uriBuilder.queryParam("firstname", "FIRSTNAME");
+        uriBuilder.queryParam("lastname", "LASTNAME");
+        uriBuilder.queryParam("idcode", "48908209998");
+        uriBuilder.queryParam("application", "true");
+        uriBuilder.queryParam("directive", "1");
+        url = uriBuilder.build().toUriString();
+        responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void searchCoordinators() {
         String url = "/directives/coordinators";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);

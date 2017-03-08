@@ -1,10 +1,10 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -51,7 +51,7 @@ public class GeneralMessageService {
         qb.parameter("schoolId", user.getSchoolId());
         qb.parameter("userId", user.getUserId());
         Page<Object[]> messages = JpaQueryUtil.pagingResult(qb.select(SHOW_MESSAGES_SELECT, em), pageable, () -> qb.count(em));
-        return messages.map(d -> new GeneralMessageDto(Long.valueOf(((Number)d[0]).longValue()), (String)d[1], LocalDateTime.ofInstant(((java.sql.Timestamp)d[2]).toInstant(), ZoneId.systemDefault())));
+        return messages.map(d -> new GeneralMessageDto(resultAsLong(d, 0), (String)d[1], resultAsLocalDateTime(d, 2)));
     }
 
     public Page<GeneralMessageDto> search(Long schoolId, GeneralMessageSearchCommand criteria, Pageable pageable) {

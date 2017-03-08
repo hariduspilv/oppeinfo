@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -77,5 +78,9 @@ public class AutocompleteResult extends EntityConnectionCommand {
     public static AutocompleteResult of(Student student) {
         String name = student.getPerson().getFullname() + " ("+student.getPerson().getIdcode()+")";
         return new AutocompleteResult(student.getId(), name, name);
+    }
+
+    public static AutocompleteResult of(StudyPeriod studyPeriod) {
+        return new AutocompleteResult(studyPeriod.getId(), studyPeriod.getNameEt(), studyPeriod.getNameEn());
     }
 }

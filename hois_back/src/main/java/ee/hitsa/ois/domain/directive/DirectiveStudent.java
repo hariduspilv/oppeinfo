@@ -30,26 +30,20 @@ public class DirectiveStudent extends BaseEntityWithId {
     private LocalDate startDate;
     private LocalDate endDate;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "reason_code")
     private Classifier reason;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_load_code")
     private Classifier studyLoad;
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "study_form_code")
     private Classifier studyForm;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudentGroup studentGroup;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fin_code")
     private Classifier fin;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "fin_specific_code")
     private Classifier finSpecific;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "language_code")
     private Classifier language;
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumGrade curriculumGrade;
@@ -60,26 +54,20 @@ public class DirectiveStudent extends BaseEntityWithId {
     private StudyPeriod studyPeriodEnd;
     private Boolean isAbroad;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ehis_school_code")
     private Classifier ehisSchool;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "country_code")
     private Classifier country;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "abroad_purpose_code")
     private Classifier abroadPurpose;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "abroad_programme_code")
     private Classifier abroadProgramme;
     private String abroadSchool;
     private String email;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "previous_study_level_code")
     private Classifier previousStudyLevel;
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "state_language_ects_code")
     private Classifier stateLanguageEcts;
     @ManyToOne(fetch = FetchType.LAZY)
     private Application application;

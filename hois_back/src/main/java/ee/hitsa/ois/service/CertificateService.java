@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -18,12 +19,15 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Certificate;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.repository.CertificateRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
+import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.dto.CertificateSearchDto;
 
 @Transactional
@@ -36,6 +40,8 @@ public class CertificateService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private StudentRepository studentRepository;
+    @Autowired
+    private PersonRepository personRepository;
     
     public Page<CertificateSearchDto> search(Long schoolId, CertificateSearchCommand criteria, Pageable pageable) {
         return certificateRepository.findAll((root, query, cb) -> {
@@ -83,5 +89,16 @@ public class CertificateService {
 
     public void delete(Certificate certificate) {
         EntityUtil.deleteEntity(certificateRepository, certificate);        
+    }
+
+    public List<String> getSignatoryName(PersonLookupCommand lookup) {
+        List<Person> list = personRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            if(lookup.getIdcode() != null) {
+                filters.add(cb.equal(root.get("idcode"), lookup.getIdcode()));
+            }
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        });
+        return list.stream().map(p -> p.getFullname()).collect(Collectors.toList());
     }
 }

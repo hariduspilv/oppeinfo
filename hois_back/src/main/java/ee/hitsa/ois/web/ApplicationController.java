@@ -26,7 +26,7 @@ import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.ApplicationDto;
 
 @RestController
-@RequestMapping("/application")
+@RequestMapping("/applications")
 public class ApplicationController {
 
     @Autowired
