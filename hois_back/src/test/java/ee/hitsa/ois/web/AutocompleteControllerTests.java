@@ -17,11 +17,12 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfiguration;
-import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.SchoolDepartmentService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
+import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -43,12 +44,11 @@ public class AutocompleteControllerTests {
 
     @Before
     public void setUp() {
-        School school = schoolRepository.getOne(hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId());
-        schoolDepartment = new SchoolDepartment();
-        schoolDepartment.setNameEt("Struktuuriüksus");
-        schoolDepartment.setValidFrom(LocalDate.now());
-        schoolDepartment.setSchool(school);
-        schoolDepartment = schoolDepartmentService.save(schoolDepartment, null);
+        HoisUserDetails user = hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID);
+        SchoolDepartmentForm schoolDepartmentForm = new SchoolDepartmentForm();
+        schoolDepartmentForm.setNameEt("Struktuuriüksus");
+        schoolDepartmentForm.setValidFrom(LocalDate.now());
+        schoolDepartment = schoolDepartmentService.create(user, schoolDepartmentForm);
     }
 
     @After

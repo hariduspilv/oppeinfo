@@ -62,8 +62,17 @@ public class AutocompleteResult extends EntityConnectionCommand {
         return new AutocompleteResult(stateCurriculum.getId(), stateCurriculum.getNameEt(), stateCurriculum.getNameEn());
     }
 
+    public static AutocompleteResult of(Student student) {
+        String name = student.getPerson().getFullname() + " ("+student.getPerson().getIdcode()+")";
+        return new AutocompleteResult(student.getId(), name, name);
+    }
+
     public static AutocompleteResult of(StudentGroup studentGroup) {
         return new AutocompleteResult(studentGroup.getId(), studentGroup.getCode(), studentGroup.getCode());
+    }
+
+    public static AutocompleteResult of(StudyPeriod studyPeriod) {
+        return new AutocompleteResult(studyPeriod.getId(), studyPeriod.getNameEt(), studyPeriod.getNameEn());
     }
 
     public static AutocompleteResult of(SubjectAutocompleteResult subject) {
@@ -73,14 +82,5 @@ public class AutocompleteResult extends EntityConnectionCommand {
     public static AutocompleteResult of(Teacher teacher) {
         String name = teacher.getPerson().getFullname();
         return new AutocompleteResult(teacher.getId(), name, name);
-    }
-
-    public static AutocompleteResult of(Student student) {
-        String name = student.getPerson().getFullname() + " ("+student.getPerson().getIdcode()+")";
-        return new AutocompleteResult(student.getId(), name, name);
-    }
-
-    public static AutocompleteResult of(StudyPeriod studyPeriod) {
-        return new AutocompleteResult(studyPeriod.getId(), studyPeriod.getNameEt(), studyPeriod.getNameEn());
     }
 }

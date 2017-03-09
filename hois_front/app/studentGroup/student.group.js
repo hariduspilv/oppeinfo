@@ -12,7 +12,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     var id = $route.current.params.id;
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
-    var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', studyLevel: 'OPPETASE'});
+    var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM', studyLevel: 'OPPEASTE'});
 
     $scope.formState = {curriculumVersions: [], languages: [], studyForms: [], specialities: [], selectedStudents: []};
     $scope.curriculumChanged = function() {

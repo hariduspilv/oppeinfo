@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.commandobject.directive;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.validation.EstonianIdCode;
+import ee.hitsa.ois.validation.NotEmpty;
 
 public class DirectiveStudentSearchCommand {
 
@@ -13,6 +14,7 @@ public class DirectiveStudentSearchCommand {
     @EstonianIdCode
     private String idcode;
     private Boolean application;
+    @NotEmpty
     private String type;
     private Long directive;
 

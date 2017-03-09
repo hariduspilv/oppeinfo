@@ -26,8 +26,11 @@ import org.springframework.util.StringUtils;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentSearchCommand;
 import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
 
@@ -39,6 +42,8 @@ public class SchoolDepartmentService {
     private EntityManager em;
     @Autowired
     private SchoolDepartmentRepository schoolDepartmentRepository;
+    @Autowired
+    private SchoolRepository schoolRepository;
 
     public Page<SchoolDepartmentDto> findAll(Long schoolId, SchoolDepartmentSearchCommand criteria, Pageable pageable) {
         // load full structure for given school, already sorted
@@ -84,7 +89,16 @@ public class SchoolDepartmentService {
         return new PageImpl<>(items, pageable, totalCount);
     }
 
-    public SchoolDepartment save(SchoolDepartment schoolDepartment, Long parentSchoolDepartmentId) {
+    public SchoolDepartment create(HoisUserDetails user, SchoolDepartmentForm form) {
+        SchoolDepartment schoolDepartment = new SchoolDepartment();
+        schoolDepartment.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(schoolDepartment, form);
+    }
+
+    public SchoolDepartment save(SchoolDepartment schoolDepartment, SchoolDepartmentForm form) {
+        EntityUtil.bindToEntity(form, schoolDepartment);
+
+        Long parentSchoolDepartmentId = form.getParentSchoolDepartment();
         SchoolDepartment parentSchoolDepartment = null;
         if(parentSchoolDepartmentId != null) {
             parentSchoolDepartment = schoolDepartmentRepository.findOne(parentSchoolDepartmentId);

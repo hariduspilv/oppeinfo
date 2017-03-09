@@ -29,6 +29,7 @@ public class StudentGroupForm extends VersionedCommand {
     @NotEmpty
     @ClassifierRestriction(MainClassCode.OPPEKEEL)
     private String language;
+    private AutocompleteResult teacher;
     @ClassifierRestriction(MainClassCode.SPETSKUTSE)
     private String speciality;
     private List<Long> students;
@@ -79,6 +80,14 @@ public class StudentGroupForm extends VersionedCommand {
 
     public void setLanguage(String language) {
         this.language = language;
+    }
+
+    public AutocompleteResult getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
     }
 
     public String getSpeciality() {

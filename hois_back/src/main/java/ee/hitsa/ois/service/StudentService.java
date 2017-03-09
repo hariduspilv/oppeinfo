@@ -30,6 +30,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -131,12 +132,20 @@ public class StudentService {
         return studentAbsenceRepository.findAllByStudent_id(studentId, pageable).map(StudentAbsenceDto::of);
     }
 
-    public StudentAbsence save(StudentAbsence absence) {
+    public StudentAbsence create(Student student, StudentAbsenceForm form) {
+        StudentAbsence absence = EntityUtil.bindToEntity(form, new StudentAbsence());
+        absence.setStudent(student);
+        absence.setIsAccepted(Boolean.FALSE);
+        return save(absence, form);
+    }
+
+    public StudentAbsence save(StudentAbsence absence, StudentAbsenceForm form) {
+        EntityUtil.bindToEntity(form, absence);
         return studentAbsenceRepository.save(absence);
     }
 
     public void delete(StudentAbsence absence) {
-        studentAbsenceRepository.delete(absence);
+        EntityUtil.deleteEntity(studentAbsenceRepository, absence);
     }
 
     public Page<StudentApplicationDto> applications(Long studentId, Pageable pageable) {

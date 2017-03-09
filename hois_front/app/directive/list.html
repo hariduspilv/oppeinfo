@@ -68,7 +68,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/view">{{::row.headline}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}">{{::row.headline}}</md-button>
             </td>
             <td md-cell>{{::row.directiveNr}}</td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
@@ -76,7 +76,7 @@
             <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
             <td md-cell>
-              <md-button ng-if="row.status.code === 'KASKKIRI_KOOSTAMISEL'" md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button ng-if="row.status === 'KASKKIRI_STAATUS_KOOSTAMISEL'" md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

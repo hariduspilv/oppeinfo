@@ -1,5 +1,7 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.enums.DirectiveType.*;
+import static ee.hitsa.ois.enums.StudentStatus.*;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
@@ -8,10 +10,14 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
@@ -29,16 +35,22 @@ import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.repository.ApplicationRepository;
+import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.DirectiveCoordinatorRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveSearchCommand;
@@ -56,19 +68,39 @@ public class DirectiveService {
             "d.id, d.headline, d.directive_nr, d.type_code, d.status_code, d.inserted, d.confirm_date";
     private static final String DIRECTIVE_LIST_FROM =
             "from directive d inner join classifier type on d.type_code=type.code inner join classifier status on d.status_code=status.code";
+
     // maximum number of students returned by search for one directive
     private static final int STUDENTS_MAX = 100;
+
+    // required student status for given directive type
+    private static final Map<DirectiveType, List<String>> STUDENT_STATUS_FOR_DIRECTIVE_TYPE = new HashMap<>();
+    static {
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_AKAD, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_AKADK, Arrays.asList(OPPURSTAATUS_A.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OKAVA, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_FINM, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OVORM, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_VALIS, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_EKSMAT, Arrays.asList(OPPURSTAATUS_O.name(), OPPURSTAATUS_A.name(), OPPURSTAATUS_V.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_LOPET, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_ENNIST, Arrays.asList(OPPURSTAATUS_K.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(RIIGIKEEL, Arrays.asList(OPPURSTAATUS_O.name()));
+    }
 
     @Autowired
     private EntityManager em;
     @Autowired
     private ApplicationRepository applicationRepository;
     @Autowired
+    private ClassifierRepository classifierRepository;
+    @Autowired
     private DirectiveRepository directiveRepository;
     @Autowired
     private DirectiveCoordinatorRepository directiveCoordinatorRepository;
     @Autowired
     private PersonRepository personRepository;
+    @Autowired
+    private SchoolRepository schoolRepository;
     @Autowired
     private StudentRepository studentRepository;
 
@@ -100,20 +132,36 @@ public class DirectiveService {
             dto.setDirectiveNr(resultAsString(r, 2));
             dto.setType(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
-            dto.setCreated(resultAsLocalDate(r, 5));
+            dto.setInserted(resultAsLocalDate(r, 5));
             dto.setConfirmDate(resultAsLocalDate(r, 6));
             return dto;
         });
     }
 
+    public Directive create(HoisUserDetails user, DirectiveForm form) {
+        Directive directive = new Directive();
+        directive.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        directive.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name()));
+        return save(directive, form);
+    }
+
     public Directive save(Directive directive, DirectiveForm form) {
-        if(directive.getId() == null) {
-        } else {
-            assertModifyable(directive);
+        assertModifyable(directive);
+
+        EntityUtil.bindToEntity(form, directive, classifierRepository, "students");
+
+        DirectiveCoordinator coordinator = form.getDirectiveCoordinator() != null ? directiveCoordinatorRepository.getOne(form.getDirectiveCoordinator()) : null;
+        if(coordinator != null && !EntityUtil.getId(directive.getSchool()).equals(EntityUtil.getId(coordinator.getSchool()))) {
+            // coordinator is not from same school
+            throw new IllegalArgumentException();
         }
-        EntityUtil.bindToEntity(form, directive, "students");
+        directive.setDirectiveCoordinator(coordinator);
+
         if(form.getStudents() != null) {
             List<DirectiveStudent> students = directive.getStudents();
+            if(students == null) {
+                directive.setStudents(students = new ArrayList<>());
+            }
             Map<Long, DirectiveStudent> studentMapping = students.stream().collect(Collectors.toMap(DirectiveStudent::getId, ds -> ds));
             for(DirectiveFormStudent formStudent : form.getStudents()) {
                 DirectiveStudent student = studentMapping.remove(formStudent.getId());
@@ -125,7 +173,7 @@ public class DirectiveService {
                 EntityUtil.bindToEntity(formStudent, student);
 
                 String idcode = formStudent.getIdcode();
-                if(StringUtils.hasText(idcode) && DirectiveType.KASKKIRI_IMMAT.name().equals(EntityUtil.getCode(directive.getType()))) {
+                if(StringUtils.hasText(idcode) && KASKKIRI_IMMAT.name().equals(EntityUtil.getCode(directive.getType()))) {
                     // add new person if person idcode is not known
                     Person person = personRepository.findByIdcode(idcode);
                     // FIXME should update existing person?
@@ -185,8 +233,23 @@ public class DirectiveService {
         qb.optionalContains("person.firstname", "firstname", criteria.getFirstname());
         qb.optionalContains("person.lastname", "lastname", criteria.getLastname());
         qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getIdcode());
-        if(Boolean.TRUE.equals(criteria.getApplication())) {
-            // TODO directive
+        qb.optionalCriteria("s.id not in (select ds.student_id from directive_student ds where ds.directive_id = :directiveId)", "directiveId", criteria.getDirective());
+
+        DirectiveType directiveType = DirectiveType.valueOf(criteria.getType());
+        Optional<ApplicationType> applicationType = Stream.of(ApplicationType.values()).filter(r -> directiveType.equals(r.directiveType())).findFirst();
+        if(applicationType.isPresent()) {
+            String applicationSql = "select a.id from application a where a.student_id = s.id and a.type_code = :applicationType and a.status_code in (:applicationStatus)";
+            qb.requiredCriteria(String.format(Boolean.TRUE.equals(criteria.getApplication()) ? "exists (%s)" : "not exists (%s)", applicationSql), "applicationType", applicationType.get().name());
+            qb.parameter("applicationStatus", Arrays.asList(ApplicationStatus.AVALDUS_STAATUS_ESIT.name(), ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
+        }
+
+        // student has no unconfirmed directive of same type
+        qb.requiredCriteria("not exists(select ds2.id from directive_student ds2 inner join directive d2 on ds2.directive_id = d2.id where ds2.student_id = s.id and d2.type_code = :directiveType and d2.status_code in (:directiveStatus))", "directiveType", directiveType.name());
+        qb.parameter("directiveStatus", Arrays.asList(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name(), DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name()));
+
+        List<String> allowedStudentStatus = STUDENT_STATUS_FOR_DIRECTIVE_TYPE.get(directiveType);
+        if(allowedStudentStatus != null && !allowedStudentStatus.isEmpty()) {
+            qb.requiredCriteria("s.status_code in (:studentStatus)", "studentStatus", allowedStudentStatus);
         }
 
         List<?> data = qb.select("s.id, person.firstname, person.lastname, person.idcode", em).setMaxResults(STUDENTS_MAX).getResultList();
@@ -216,12 +279,19 @@ public class DirectiveService {
         });
     }
 
-    public DirectiveCoordinator save(DirectiveCoordinator coordinator) {
+    public DirectiveCoordinator create(HoisUserDetails user, DirectiveCoordinatorForm form) {
+        DirectiveCoordinator coordinator = new DirectiveCoordinator();
+        coordinator.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(coordinator, form);
+    }
+
+    public DirectiveCoordinator save(DirectiveCoordinator coordinator, DirectiveCoordinatorForm form) {
+        EntityUtil.bindToEntity(form, coordinator);
         return directiveCoordinatorRepository.save(coordinator);
     }
 
     public void delete(DirectiveCoordinator coordinator) {
-        directiveCoordinatorRepository.delete(coordinator);
+        EntityUtil.deleteEntity(directiveCoordinatorRepository, coordinator);
     }
 
     private static void assertModifyable(Directive directive) {

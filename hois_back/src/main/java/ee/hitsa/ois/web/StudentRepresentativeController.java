@@ -63,9 +63,7 @@ public class StudentRepresentativeController {
         if(Objects.equals(student.getPerson().getIdcode(), form.getPerson().getIdcode())) {
             throw new ValidationFailedException("person.idcode", "representative-and-student-are-same");
         }
-        StudentRepresentative studentRepresentative = new StudentRepresentative();
-        studentRepresentative.setStudent(student);
-        return get(user, studentRepresentativeService.save(studentRepresentative, form));
+        return get(user, studentRepresentativeService.create(student, form));
     }
 
     @PutMapping("/{studentId:\\d+}/{id:\\d+}")

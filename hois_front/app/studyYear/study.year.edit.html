@@ -19,10 +19,10 @@
         <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
       </div>
     </div>
-    <div layout="column" flex>
+    <div ng-if="studyYear.id" layout="column" flex>
       <div layout="row" class="align-center">
         <h2>{{'studyYear.studyPeriods' | translate}}</h2>
-        <md-button class="md-primary" ng-click="openStudyPeriodDialog()">{{'button.create' | translate}}</md-button>
+        <md-button class="md-primary" ng-click="openStudyPeriodDialog()">{{'main.button.create' | translate}}</md-button>
       </div>
 
       <div layout="row">
@@ -31,53 +31,53 @@
           <tr md-row>
             <th md-column>{{'studyYear.studyPeriod.type' | translate}}</th>
             <th md-column>{{'studyYear.studyPeriod.name' | translate}}</th>
-            <th md-column>{{'studyYear.studyPeriod.start' | translate}}</th>
-            <th md-column>{{'studyYear.studyPeriod.end' | translate}}</th>
+            <th md-column>{{'studyYear.studyPeriod.startDate' | translate}}</th>
+            <th md-column>{{'studyYear.studyPeriod.endDate' | translate}}</th>
             <th md-column></th>
           </tr>
           </thead>
           <tbody md-body>
-          <tr md-row ng-repeat="item in studyYear.studyPeriods" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{item.type.nameEn}}</td>
-            <td md-cell>{{item.nameEn}}</td>
-            <td md-cell>{{item.startDate}}</td>
-            <td md-cell>{{item.endDate}}</td>
-            <td md-cell ><md-button ng-click="openStudyPeriodDialog(item)">{{'button.edit' | translate}}</md-button></td>
+          <tr md-row ng-repeat="item in studyPeriods" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(item.type)}}</td>
+            <td md-cell>{{currentLanguageNameField(item)}}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: item.startDate} }}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: item.endDate} }}</td>
+            <td md-cell ><md-button ng-click="openStudyPeriodDialog(item)">{{'main.button.change' | translate}}</md-button></td>
           </tr>
           </tbody>
         </table>
       </div>
       <div layout="column" flex>
         <div layout="row" class="align-center">
-          <h2>{{'studyYear.studyPeriods' | translate}}</h2>
-          <md-button class="md-primary" ng-click="openStudyEventDialog()">{{'button.create' | translate}}</md-button>
+          <h2>{{'studyYear.studyPeriodEvents' | translate}}</h2>
+          <md-button class="md-primary" ng-click="openStudyEventDialog()">{{'main.button.create' | translate}}</md-button>
         </div>
         <div layout="row">
           <table md-table class="secondary-table">
             <thead md-head>
             <tr md-row>
-              <th md-column>{{'studyYear.studyEvent.description' | translate}}</th>
-              <th md-column>{{'studyYear.studyEvent.period' | translate}}</th>
-              <th md-column>{{'studyYear.studyPeriod.start' | translate}}</th>
-              <th md-column>{{'studyYear.studyPeriod.end' | translate}}</th>
+              <th md-column>{{'studyYear.studyPeriodEvent.description' | translate}}</th>
+              <th md-column>{{'studyYear.studyPeriodEvent.period' | translate}}</th>
+              <th md-column>{{'studyYear.studyPeriodEvent.start' | translate}}</th>
+              <th md-column>{{'studyYear.studyPeriodEvent.end' | translate}}</th>
               <th md-column></th>
             </tr>
             </thead>
             <tbody md-body>
-            <tr md-row ng-repeat="item in studyYear.studyEvents" ng-class-odd="'odd'" ng-class-even="'even'">
+            <tr md-row ng-repeat="item in studyPeriodEvents" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell>{{item.descriptionEn}}</td>
               <td md-cell>{{item.studyPeriod.nameEn}}</td>
               <td md-cell>{{item.startDate}}</td>
               <td md-cell>{{item.endDate}}</td>
-              <td md-cell ><md-button ng-click="openStudyEventDialog(item)">{{'button.edit' | translate}}</md-button></td>
+              <td md-cell ><md-button ng-click="openStudyEventDialog(item)">{{'main.button.change' | translate}}</md-button></td>
             </tr>
             </tbody>
           </table>
         </div>
       </div>
-      <div layout="row">
-        <md-button ng-href="#/school/studyYears" class="md-raised">{{'main.button.back' | translate}}</md-button>
-      </div>
+    </div>
+    <div layout="row">
+      <md-button ng-href="#/school/studyYears" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>

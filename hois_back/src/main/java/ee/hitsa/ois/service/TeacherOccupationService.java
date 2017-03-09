@@ -15,8 +15,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.web.commandobject.TeacherOccupationForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherOccupationDto;
 
@@ -24,6 +27,8 @@ import ee.hitsa.ois.web.dto.TeacherOccupationDto;
 @Service
 public class TeacherOccupationService {
 
+    @Autowired
+    private SchoolRepository schoolRepository;
     @Autowired
     TeacherOccupationRepository teacherOccupationRepository;
 
@@ -47,7 +52,14 @@ public class TeacherOccupationService {
                 .stream().map(TeacherOccupationDto::of).collect(Collectors.toList());
     }
 
-    public TeacherOccupation save(TeacherOccupation teacherOccupation) {
+    public TeacherOccupation create(HoisUserDetails user, TeacherOccupationForm form) {
+        TeacherOccupation teacherOccupation = new TeacherOccupation();
+        teacherOccupation.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(teacherOccupation, form);
+    }
+
+    public TeacherOccupation save(TeacherOccupation teacherOccupation, TeacherOccupationForm form) {
+        EntityUtil.bindToEntity(form, teacherOccupation);
         return teacherOccupationRepository.save(teacherOccupation);
     }
 

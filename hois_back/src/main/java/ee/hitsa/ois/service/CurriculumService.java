@@ -63,7 +63,9 @@ import ee.hitsa.ois.repository.CurriculumDepartmentRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
@@ -109,6 +111,8 @@ public class CurriculumService {
 	private CurriculumVersionRepository curriculumVersionRepository;
 	@Autowired
 	private SubjectRepository subjectRepository;
+    @Autowired
+    private SchoolRepository schoolRepository;
 
 	public List<CurriculumDepartment> findAllDepartments() {
 		return curriculumDepartmentRepository.findAll();
@@ -236,6 +240,12 @@ public class CurriculumService {
 	public List<Classifier> getAreasOfStudyByGroupOfStudy(String code) {
 	    return classifierRepository.findAreasOfStudyByGroupOfStudy(code);
 	}
+
+    public Curriculum create(HoisUserDetails user, CurriculumForm curriculumForm) {
+        Curriculum curriculum = new Curriculum();
+        curriculum.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(curriculum, curriculumForm);
+    }
 
     public Curriculum save(Curriculum curriculum, CurriculumForm curriculumForm) {
 
@@ -745,7 +755,7 @@ public class CurriculumService {
         return CurriculumVersionDto.of(curriculumVersionRepository.save(updatedCurriculumVersion));
     }
 
-    public CurriculumVersionDto save(Curriculum curriculum, CurriculumVersionDto dto) {
+    public CurriculumVersionDto create(Curriculum curriculum, CurriculumVersionDto dto) {
         CurriculumVersion curriculumVersion = new CurriculumVersion();
         curriculumVersion.setCurriculum(curriculum);
         CurriculumVersion updatedCurriculumVersion = updateVersion(curriculumVersion.getCurriculum(), curriculumVersion, dto);

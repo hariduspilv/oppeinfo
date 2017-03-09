@@ -36,7 +36,7 @@ public class TeacherController {
 
     @PostMapping("")
     public TeacherDto create(@Valid @RequestBody TeacherForm teacherForm, HoisUserDetails user) {
-        return teacherService.save(user , new Teacher(), teacherForm);
+        return teacherService.create(user, teacherForm);
     }
 
     @PutMapping("/{id:\\d+}")

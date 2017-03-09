@@ -37,16 +37,15 @@ public class StateCurriculumControllerTest {
     
     @Test	
     public void testIsUniqueTrue() {
-    	Assert.assertTrue(testIsUnique(NAME.concat(NAME)));
+        Assert.assertEquals(testIsUnique(NAME.concat(NAME)), Boolean.TRUE);
     }
     
     @Test
     public void testIsUniqueFalse() {
-    	Assert.assertFalse(testIsUnique(NAME));
+        Assert.assertEquals(testIsUnique(NAME), Boolean.FALSE);
     }
 
     private Boolean testIsUnique(String name) {
-
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/stateCurriculum/unique");
         uriBuilder.queryParam("paramName", "nameEt");
         uriBuilder.queryParam("paramValue", name);
@@ -186,7 +185,7 @@ public class StateCurriculumControllerTest {
         stateCurriculumDto.setFinalExamDescription("StateCurriculumControllerTest");
         module = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn().equals("StateCurriculumControllerTestNameEn")).findFirst().get();
         module.getModuleOccupations().clear();
-        module.setCredits(2);
+        module.setCredits(Integer.valueOf(2));
         
         responseEntity = restTemplate.exchange("/stateCurriculum/{id}", HttpMethod.PUT, new HttpEntity<>(stateCurriculumDto), StateCurriculumDto.class, stateCurriculumDto.getId());
         Assert.assertNotNull(responseEntity);
@@ -200,7 +199,7 @@ public class StateCurriculumControllerTest {
 
         module = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn().equals("StateCurriculumControllerTestNameEn")).findFirst().get();
         Assert.assertTrue(module.getModuleOccupations().isEmpty());
-        Assert.assertTrue(module.getCredits().equals(2));
+        Assert.assertTrue(module.getCredits().equals(Integer.valueOf(2)));
         Assert.assertTrue(module.getVersion().equals(Long.valueOf(2)));
 
 
@@ -252,14 +251,14 @@ public class StateCurriculumControllerTest {
 
     }    
     
-    private StateCurriculumForm getForm() {
+    private static StateCurriculumForm getForm() {
         StateCurriculumForm stateCurriculumForm = new StateCurriculumForm();
         stateCurriculumForm.setNameEt("StateCurriculumControllerTest");
         stateCurriculumForm.setOutcomesEt("StateCurriculumControllerTest");
         stateCurriculumForm.setObjectivesEt("StateCurriculumControllerTest");
         stateCurriculumForm.setAdmissionRequirementsEt("StateCurriculumControllerTest");
-        stateCurriculumForm.setCredits(1);
-        stateCurriculumForm.setOptionalStudyCredits(1);
+        stateCurriculumForm.setCredits(Integer.valueOf(1));
+        stateCurriculumForm.setOptionalStudyCredits(Integer.valueOf(1));
         stateCurriculumForm.setValidFrom(LocalDate.now());
         stateCurriculumForm.setStatus("OPPEKAVA_STAATUS_S");
         stateCurriculumForm.setIscedClass("ISCED_RYHM_0522");
@@ -268,13 +267,13 @@ public class StateCurriculumControllerTest {
         return stateCurriculumForm;
     }
     
-    private StateCurriculumModuleDto getModuleDto() {
+    private static StateCurriculumModuleDto getModuleDto() {
         StateCurriculumModuleDto dto = new StateCurriculumModuleDto();
         dto.setNameEt("StateCurriculumControllerTest");
         dto.setObjectivesEt("StateCurriculumControllerTest");
         dto.setAssessmentsEt("StateCurriculumControllerTest");
         dto.setModule("KUTSEMOODUL_Y");
-        dto.setCredits(1);
+        dto.setCredits(Integer.valueOf(1));
         dto.setOutcomesEt("StateCurriculumControllerTest");
         return dto;
     }

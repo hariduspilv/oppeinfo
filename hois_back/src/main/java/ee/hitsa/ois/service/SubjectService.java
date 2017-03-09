@@ -27,6 +27,7 @@ import ee.hitsa.ois.domain.subject.SubjectLanguage;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectConnection;
+import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
@@ -60,6 +61,11 @@ public class SubjectService {
 
     @Autowired
     private SchoolDepartmentRepository schoolDepartmentRepository;
+
+    public Subject create(HoisUserDetails user, SubjectForm newSubject) {
+        newSubject.setStatus(SubjectStatus.AINESTAATUS_S.name());
+        return save(user, new Subject(), newSubject);
+    }
 
     public Subject save(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
         // TODO remove comment when status change logic is resolved

@@ -29,8 +29,11 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.BuildingRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.RoomRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.web.commandobject.BuildingForm;
 import ee.hitsa.ois.web.commandobject.RoomForm;
 import ee.hitsa.ois.web.commandobject.RoomSearchCommand;
 import ee.hitsa.ois.web.dto.RoomSearchDto;
@@ -47,8 +50,17 @@ public class BuildingService {
     private EntityManager entityManager;
     @Autowired
     private RoomRepository roomRepository;
+    @Autowired
+    private SchoolRepository schoolRepository;
 
-    public Building save(Building building) {
+    public Building create(HoisUserDetails user, BuildingForm form) {
+        Building building = new Building();
+        building.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(building, form);
+    }
+
+    public Building save(Building building, BuildingForm form) {
+        EntityUtil.bindToEntity(form, building);
         return buildingRepository.save(building);
     }
 
@@ -78,6 +90,10 @@ public class BuildingService {
         Map<Long, List<RoomEquipment>> equipment = JpaQueryUtil.loadRelationChilds(RoomEquipment.class, roomIds, entityManager, "room", "id").stream().collect(Collectors.groupingBy(re -> EntityUtil.getId(re.getRoom())));
 
         return data.map(r -> RoomSearchDto.of((Building)r[0], (Room)r[1], equipment.get(EntityUtil.getNullableId((Room)r[1]))));
+    }
+
+    public Room create(RoomForm form) {
+        return save(new Room(), form);
     }
 
     public Room save(Room room, RoomForm form) {

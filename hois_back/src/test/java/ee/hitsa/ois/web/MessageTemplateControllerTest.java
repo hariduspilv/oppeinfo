@@ -101,7 +101,7 @@ public class MessageTemplateControllerTest {
         restTemplate.delete(uri);
     }
     
-    private MessageTemplateForm getForm() {
+    private static MessageTemplateForm getForm() {
         MessageTemplateForm form = new MessageTemplateForm();
         form.setHeadline("MessageTemplateControllerTest");
         form.setContent("MessageTemplateControllerTest");

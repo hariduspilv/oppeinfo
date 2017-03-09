@@ -58,12 +58,16 @@ public class TeacherService {
     @Autowired
     private TeacherRepository teacherRepository;
 
+    public TeacherDto create(HoisUserDetails user, TeacherForm teacherForm) {
+        return save(user, new Teacher(), teacherForm);
+    }
+
     public TeacherDto save(HoisUserDetails user, Teacher teacher, TeacherForm teacherForm) {
         if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
             throw new ValidationFailedException(null, "teacher-vocational-higher");
         }
         String nativeLanguage = teacherForm.getPerson().getNativeLanguage();
-        if (Boolean.TRUE.equals(teacherForm.getIsVocational() && (nativeLanguage == null || nativeLanguage.trim().length() == 0))) {
+        if (Boolean.TRUE.equals(teacherForm.getIsVocational()) && !StringUtils.hasText(nativeLanguage)) {
             throw new ValidationFailedException("nativeLanguage", null);
         }
         EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification");

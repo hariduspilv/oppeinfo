@@ -39,6 +39,10 @@ public class SchoolService {
     @Autowired
     private SchoolRepository schoolRepository;
 
+    public School create(SchoolForm schoolForm) {
+        return save(new School(), schoolForm);
+    }
+
     public School save(School school, SchoolForm schoolForm) {
         EntityUtil.bindToEntity(schoolForm, school, classifierRepository);
         OisFile logo = school.getLogo();

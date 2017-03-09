@@ -81,17 +81,13 @@ public class StudentController {
     @PostMapping("/{studentId:\\d+}/absences")
     public void createAbsence(HoisUserDetails user, @WithEntity(value = "studentId") Student student, @Valid @RequestBody StudentAbsenceForm form) {
         assertCanCreateAbsence(user, student);
-        StudentAbsence absence = EntityUtil.bindToEntity(form, new StudentAbsence());
-        absence.setStudent(student);
-        absence.setIsAccepted(Boolean.FALSE);
-        studentService.save(absence);
+        studentService.create(student, form);
     }
 
     @PutMapping("/{studentId:\\d+}/absences/{id:\\d+}")
     public void updateAbsence(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentAbsence absence, @Valid @RequestBody StudentAbsenceForm form) {
         assertCanEditAbsence(user, absence);
-        EntityUtil.bindToEntity(form, absence);
-        studentService.save(absence);
+        studentService.save(absence, form);
     }
 
     @DeleteMapping("/{studentId:\\d+}/absences/{id:\\d+}")

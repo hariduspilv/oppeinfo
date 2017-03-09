@@ -12,7 +12,7 @@ public class DirectiveSearchDto {
     private String directiveNr;
     private String type;
     private String status;
-    private LocalDate created;
+    private LocalDate inserted;
     private LocalDate confirmDate;
 
     public Long getId() {
@@ -55,12 +55,12 @@ public class DirectiveSearchDto {
         this.status = status;
     }
 
-    public LocalDate getCreated() {
-        return created;
+    public LocalDate getInserted() {
+        return inserted;
     }
 
-    public void setCreated(LocalDate created) {
-        this.created = created;
+    public void setInserted(LocalDate inserted) {
+        this.inserted = inserted;
     }
 
     public LocalDate getConfirmDate() {

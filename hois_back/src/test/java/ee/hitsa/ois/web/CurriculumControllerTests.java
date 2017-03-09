@@ -593,18 +593,18 @@ public class CurriculumControllerTests {
         CurriculumVersionOccupationModuleCapacityDto capacity = new CurriculumVersionOccupationModuleCapacityDto();
         capacity.setCapacityType("MAHT_a");
         capacity.setContact(Boolean.TRUE);
-        capacity.setHours(2);
+        capacity.setHours(Integer.valueOf(2));
         savedOccupationModule.getCapacities().add(capacity);
 
         CurriculumVersionOccupationModuleThemeDto theme = new CurriculumVersionOccupationModuleThemeDto();
         theme.setNameEt("themeNameEt");
-        theme.setCredits(1.0);
-        theme.setHours(1);
+        theme.setCredits(Double.valueOf(1.0));
+        theme.setHours(Integer.valueOf(1));
 
         CurriculumVersionOccupationModuleThemeCapacityDto themeCapacity = new CurriculumVersionOccupationModuleThemeCapacityDto();
         themeCapacity.setCapacityType("MAHT_a");
         themeCapacity.setContact(Boolean.TRUE);
-        themeCapacity.setHours(2);
+        themeCapacity.setHours(Integer.valueOf(2));
         theme.getCapacities().add(themeCapacity);
 
         CurriculumVersionOccupationModuleOutcomeDto themeOutcome = new CurriculumVersionOccupationModuleOutcomeDto();
@@ -633,7 +633,7 @@ public class CurriculumControllerTests {
         Assert.assertNotNull(updatedOccupationModule.getThemes().stream().findFirst().get().getId());
     }
 
-    private CurriculumVersionOccupationModuleDto getCurriculumVersionOccupationModuleDto(CurriculumModuleDto curriculumModuleDto) {
+    private static CurriculumVersionOccupationModuleDto getCurriculumVersionOccupationModuleDto(CurriculumModuleDto curriculumModuleDto) {
         CurriculumVersionOccupationModuleDto dto = new CurriculumVersionOccupationModuleDto();
         dto.setRequirementsEt("requirementsEt");
         dto.setAssessmentsEt("assessmentsEt");
@@ -643,9 +643,6 @@ public class CurriculumControllerTests {
         dto.setCurriculumModule(curriculumModuleDto.getId());
         return dto;
     }
-
-
-
 
     private boolean testIsUnique(String code) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/curriculum/unique");
@@ -660,7 +657,7 @@ public class CurriculumControllerTests {
         return responseEntity.getBody().booleanValue();
     }
 
-    private CurriculumForm getForm(LocalDate validFrom) {
+    private static CurriculumForm getForm(LocalDate validFrom) {
         CurriculumForm curriculumForm = new CurriculumForm();
         curriculumForm.setCode("testCode");
         curriculumForm.setOptionalStudyCredits(Integer.valueOf(1));
@@ -726,7 +723,7 @@ public class CurriculumControllerTests {
         curriculumForm.setVersions(versions);
     }
 
-    private CurriculumFileDto getCurriculumFileDto() {
+    private static CurriculumFileDto getCurriculumFileDto() {
         CurriculumFileDto dto = new CurriculumFileDto();
         dto.setEhis(Boolean.FALSE);
         dto.setSendEhis(Boolean.FALSE);
@@ -751,7 +748,7 @@ public class CurriculumControllerTests {
         return dto;
     }
 
-    private CurriculumGradeDto getCurriculumGradeDto() {
+    private static CurriculumGradeDto getCurriculumGradeDto() {
         CurriculumGradeDto dto = new CurriculumGradeDto();
         dto.setNameEt("CurriculumControllerTest");
         dto.setNameEn("CurriculumControllerTest");
@@ -760,7 +757,7 @@ public class CurriculumControllerTests {
         return dto;
     }
 
-    private CurriculumJointPartnerDto getCurriculumJointPartnerDto() {
+    private static CurriculumJointPartnerDto getCurriculumJointPartnerDto() {
         CurriculumJointPartnerDto dto = new CurriculumJointPartnerDto();
         dto.setAbroad(Boolean.FALSE);
         dto.setContractEt("CurriculumControllerTest");
@@ -770,7 +767,7 @@ public class CurriculumControllerTests {
         return dto;
     }
 
-    private CurriculumOccupationDto getCurriculumOccupationDto(String occupation) {
+    private static CurriculumOccupationDto getCurriculumOccupationDto(String occupation) {
         CurriculumOccupationDto dto = new CurriculumOccupationDto();
         dto.setOccupationGrant(Boolean.FALSE);
         dto.setOccupation(occupation);
@@ -781,54 +778,54 @@ public class CurriculumControllerTests {
         return dto;
     }
 
-    private CurriculumModuleDto getCurriculumModuleDto(){
+    private static CurriculumModuleDto getCurriculumModuleDto(){
         CurriculumModuleDto dto = new CurriculumModuleDto();
         dto.setNameEt("CurriculumControllerTest");
         dto.setObjectivesEt("CurriculumControllerTest");
         dto.setModule("KUTSEMOODUL_P");
         dto.setPractice(Boolean.FALSE);
-        dto.setCredits(1);
+        dto.setCredits(Integer.valueOf(1));
         dto.setOccupations(Sets.newLinkedHashSet("OSAKUTSE_10498104", "KUTSE_10463859"));
         dto.setCompetences(Sets.newLinkedHashSet("KOMPETENTS_4", "KOMPETENTS_13"));
         dto.setOutcomes(Sets.newLinkedHashSet(getCurriculumModuleOutcomeDto(), getCurriculumModuleOutcomeDto()));
         return dto;
     }
 
-    private CurriculumModuleOutcomeDto getCurriculumModuleOutcomeDto() {
+    private static CurriculumModuleOutcomeDto getCurriculumModuleOutcomeDto() {
         CurriculumModuleOutcomeDto dto = new CurriculumModuleOutcomeDto();
         dto.setOutcomeEt("CurriculumControllerTest");
         return dto;
     }
 
-    private CurriculumVersionDto getCurriculumVersionDto() {
+    private static CurriculumVersionDto getCurriculumVersionDto() {
         CurriculumVersionDto dto = new CurriculumVersionDto();
         dto.setCode("CurriculumControllerTest");
         dto.setType("OPPEKAVA_VERSIOON_LIIK_O");
         dto.setStatus("OPPEKAVA_VERSIOON_STAATUS_K");
-        dto.setAdmissionYear(2017);
+        dto.setAdmissionYear(Integer.valueOf(2017));
         return dto;
     }
 
-    private CurriculumVersionHigherModuleDto getCurriculumVersionHigherModuleDto() {
+    private static CurriculumVersionHigherModuleDto getCurriculumVersionHigherModuleDto() {
         CurriculumVersionHigherModuleDto dto = new CurriculumVersionHigherModuleDto();
-        dto.setTotalCredits(1);
-        dto.setOptionalStudyCredits(1);
+        dto.setTotalCredits(Integer.valueOf(1));
+        dto.setOptionalStudyCredits(Integer.valueOf(1));
         dto.setType("KORGMOODUL_F");
         dto.setNameEn("CurriculumControllerTest");
         dto.setNameEt("CurriculumControllerTest");
-        dto.setElectiveModulesNumber(1);
-        dto.setCompulsoryStudyCredits(1);
+        dto.setElectiveModulesNumber(Integer.valueOf(1));
+        dto.setCompulsoryStudyCredits(Integer.valueOf(1));
         return dto;
     }
 
-    private CurriculumVersionElectiveModuleDto getCurriculumVersionElectiveModuleDto() {
+    private static CurriculumVersionElectiveModuleDto getCurriculumVersionElectiveModuleDto() {
         CurriculumVersionElectiveModuleDto dto = new CurriculumVersionElectiveModuleDto();
         dto.setNameEt("CurriculumControllerTest");
         dto.setNameEn("CurriculumControllerTest");
         return dto;
     }
 
-    private CurriculumVersionHigherModuleSubjectDto getCurriculumVersionHigherModuleSubjectDto(Long subjectId, Boolean isOptional){
+    private static CurriculumVersionHigherModuleSubjectDto getCurriculumVersionHigherModuleSubjectDto(Long subjectId, Boolean isOptional){
         CurriculumVersionHigherModuleSubjectDto dto = new CurriculumVersionHigherModuleSubjectDto();
         dto.setSubjectId(subjectId);
         dto.setOptional(isOptional);

@@ -83,7 +83,7 @@ public class DirectiveConfirmService {
             // TODO Ennistamise kuupäev == käskkirjal olev väärtus;
             // TODO Õppuri roll ’õppur’ muudetakse käskkirja kinnitamise kuupäevast alates kehtivaks;
             break;
-        case KYLALISOPILANE:
+        case KASKKIRI_KYLALIS:
             // Külalisõpilaseks vormistamise käskkiri
             // TODO Õppuri eeldatav nominaalaja lõppkuupäev ==  õppuri eeldatav nominaalaja lõppkuupäev + „nominaalaega pikendatakse“ väljale valitud semestrite arvu alusel kas ühe lisanduva semestri pikkus või kahe lisanduva semestri kogupikkus
             break;

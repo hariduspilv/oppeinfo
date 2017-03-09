@@ -120,10 +120,10 @@ angular.module('hitsaOis')
           name: 'main.menu.fixData.messageTemplates',
           url: "/messageTemplate"
         },
-        {
-          name: 'main.menu.fixData.certificates',
-          url: "/certificate"
-        },
+        // {
+        //   name: 'main.menu.fixData.certificates',
+        //   url: "/certificate"
+        // },
         {
           name: 'main.menu.fixData.studyLevels',
           url: "/school/studyLevels"
@@ -136,6 +136,11 @@ angular.module('hitsaOis')
           name: 'main.menu.fixData.classifiers',
           id: 'classifiers',
           url: "/classifier?_menu"
+        },
+        {
+          name: 'main.menu.fixData.users',
+          id: 'users',
+          url: "/users"
         }
       ]
     });
@@ -148,6 +153,44 @@ angular.module('hitsaOis')
           name: 'main.menu.applications.search',
           id: 'applications',
           url: "/applications?_menu"
+        }
+      ]
+    });
+
+    sections.push({
+      name: 'main.menu.study.label',
+      type: 'toggle',
+      pages: [
+        {
+          name: 'main.menu.study.subjectTeacher',
+          id: 'subjectTeacher',
+          url: "/subjectTeacher"
+        },
+        {
+          name: 'main.menu.study.declaration',
+          id: 'declaration',
+          url: "/declaration"
+        },
+        {
+          name: 'main.menu.fixData.certificates',
+          url: "/certificate"
+        },
+        {
+          name: 'main.menu.study.notifications',
+          url: "/notifications"
+        },
+      ]
+    });
+
+
+    sections.push({
+      name: 'main.menu.reception.label',
+      type: 'toggle',
+      pages: [
+        {
+          name: 'main.menu.reception.import',
+          id: 'receptionImport',
+          url: "/receptionImport"
         }
       ]
     });

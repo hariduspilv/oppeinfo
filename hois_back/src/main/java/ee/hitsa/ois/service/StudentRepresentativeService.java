@@ -59,6 +59,12 @@ public class StudentRepresentativeService {
         return studentRepresentativeRepository.findAllByStudent_id(studentId, pageable).map(r -> StudentRepresentativeDto.of(r, user));
     }
 
+    public StudentRepresentative create(Student student, StudentRepresentativeForm form) {
+        StudentRepresentative representative = new StudentRepresentative();
+        representative.setStudent(student);
+        return save(representative, form);
+    }
+
     public StudentRepresentative save(StudentRepresentative representative, StudentRepresentativeForm form) {
         Person p;
         StudentRepresentativeForm.StudentRepresentativePersonForm personForm = form.getPerson();
@@ -89,7 +95,7 @@ public class StudentRepresentativeService {
 
     public void delete(StudentRepresentative representative) {
         // TODO if there is StudentRepresentativeApplication, change it's status too?
-        studentRepresentativeRepository.delete(representative);
+        EntityUtil.deleteEntity(studentRepresentativeRepository, representative);
     }
 
     public Page<StudentRepresentativeApplicationDto> searchApplications(Long schoolId, StudentRepresentativeApplicationSearchCommand criteria, Pageable pageable) {

@@ -25,9 +25,11 @@ import ee.hitsa.ois.domain.GeneralMessageTarget;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.GeneralMessageRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.web.commandobject.GeneralMessageForm;
 import ee.hitsa.ois.web.commandobject.GeneralMessageSearchCommand;
 import ee.hitsa.ois.web.dto.GeneralMessageDto;
 
@@ -45,6 +47,8 @@ public class GeneralMessageService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private GeneralMessageRepository generalMessageRepository;
+    @Autowired
+    private SchoolRepository schoolRepository;
 
     public Page<GeneralMessageDto> show(HoisUserDetails user, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SHOW_MESSAGES_FROM, pageable);
@@ -82,7 +86,15 @@ public class GeneralMessageService {
         }, pageable).map(GeneralMessageDto::of);
     }
 
-    public GeneralMessage save(GeneralMessage generalMessage, List<String> targetCodes) {
+    public GeneralMessage create(HoisUserDetails user, GeneralMessageForm form) {
+        GeneralMessage generalMessage = EntityUtil.bindToEntity(form, new GeneralMessage(), "targets");
+        generalMessage.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(generalMessage, form);
+    }
+
+    public GeneralMessage save(GeneralMessage generalMessage, GeneralMessageForm form) {
+        EntityUtil.bindToEntity(form, generalMessage, "targets");
+        List<String> targetCodes = form.getTargets();
         if(targetCodes != null) {
             List<GeneralMessageTarget> storedTargets = generalMessage.getTargets();
             if(storedTargets == null) {

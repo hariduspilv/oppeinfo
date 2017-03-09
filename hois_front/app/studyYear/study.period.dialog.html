@@ -15,11 +15,11 @@
         <div layout="row">
           <md-input-container flex>
             <label class="label">{{'studyYear.studyPeriod.year' | translate}}</label>
-            <hois-classifier-value ng-model="studyPeriod.year" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+            <hois-classifier-value ng-model="studyPeriod.year" model-value-attr="code" main-classifier-code="OPPEAASTA"></hois-classifier-value>
           </md-input-container>
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'studyYear.studyPeriod.type' | translate}}</label>
-            <hois-classifier-select ng-model="studyPeriod.type" main-classifier-code="OPPEPERIOOD"></hois-classifier-select>
+            <hois-classifier-select ng-model="studyPeriod.type" model-value-attr="code" required main-classifier-code="OPPEPERIOOD"></hois-classifier-select>
           </md-input-container>
         </div>
         <div layout="column" layout-xs="row">

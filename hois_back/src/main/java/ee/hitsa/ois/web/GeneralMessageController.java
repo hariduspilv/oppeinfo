@@ -15,10 +15,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.GeneralMessage;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.GeneralMessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -32,8 +30,6 @@ public class GeneralMessageController {
 
     @Autowired
     private GeneralMessageService generalMessageService;
-    @Autowired
-    private SchoolRepository schoolRepository;
 
     @GetMapping("/show")
     public Page<GeneralMessageDto> show(HoisUserDetails user, Pageable pageable) {
@@ -53,16 +49,13 @@ public class GeneralMessageController {
 
     @PostMapping
     public GeneralMessageDto createGeneralMessage(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
-        GeneralMessage generalMessage = EntityUtil.bindToEntity(form, new GeneralMessage(), "targets");
-        generalMessage.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        return getGeneralMessage(user, generalMessageService.save(generalMessage, form.getTargets()));
+        return getGeneralMessage(user, generalMessageService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
     public GeneralMessageDto updateGeneralMessage(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) GeneralMessage generalMessage, @Valid @RequestBody GeneralMessageForm form) {
         UserUtil.assertSameSchool(user, generalMessage.getSchool());
-        EntityUtil.bindToEntity(form, generalMessage, "targets");
-        return getGeneralMessage(user, generalMessageService.save(generalMessage, form.getTargets()));
+        return getGeneralMessage(user, generalMessageService.save(generalMessage, form));
     }
 
     @DeleteMapping("/{id:\\d+}")

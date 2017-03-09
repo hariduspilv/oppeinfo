@@ -66,9 +66,7 @@ public class CurriculumController {
 
     @PostMapping("")
     public CurriculumDto create(HoisUserDetails user, @RequestBody CurriculumForm curriculumForm) {
-        Curriculum curriculum = new Curriculum();
-        curriculum.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        return CurriculumDto.of(curriculumService.save(curriculum, curriculumForm));
+        return CurriculumDto.of(curriculumService.create(user, curriculumForm));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -107,7 +105,7 @@ public class CurriculumController {
     public CurriculumVersionDto createVersion(HoisUserDetails user, @WithEntity(value = "curriculumId") Curriculum curriculum,
             @Valid @RequestBody CurriculumVersionDto dto) {
         assertSameOrJoinSchool(user, curriculum);
-        return curriculumService.save(curriculum, dto);
+        return curriculumService.create(curriculum, dto);
     }
 
     @PutMapping("/{curriculumId:\\d+}/versions/{id:\\d+}")

@@ -20,6 +20,8 @@ import org.springframework.util.CollectionUtils;
 import ee.hitsa.ois.domain.MessageTemplate;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.MessageTemplateRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.MessageTemplateForm;
 import ee.hitsa.ois.web.commandobject.MessageTemplateSearchCommand;
@@ -28,12 +30,20 @@ import ee.hitsa.ois.web.dto.MessageTemplateDto;
 @Transactional
 @Service
 public class MessageTemplateService {
-    
+
     @Autowired
     private MessageTemplateRepository messageTemplateRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
-    
+    @Autowired
+    private SchoolRepository schoolRepository;
+
+    public MessageTemplate create(HoisUserDetails user, MessageTemplateForm form) {
+        MessageTemplate messageTemplate = new MessageTemplate();
+        messageTemplate.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(messageTemplate, form);
+    }
+
     public MessageTemplate save(MessageTemplate messageTemplate, MessageTemplateForm form) {
         EntityUtil.bindToEntity(form, messageTemplate, classifierRepository);
         return messageTemplateRepository.save(messageTemplate);

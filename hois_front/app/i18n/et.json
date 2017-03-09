@@ -124,7 +124,8 @@
         "certificates": "Tõendid",
         "studyLevels": "Õppeasutuse õppeastmed",
         "studyYears": "Õppeasutuse õppeperioodid",
-        "classifiers": "Klassifikaatorid"
+        "classifiers": "Klassifikaatorid",
+        "users": "Kasutajad"
       },
       "more": {
         "label": "VEEL MIDAGI"
@@ -144,6 +145,16 @@
       "applications": {
         "label": "Avaldused",
         "search": "Avalduste otsing"
+      },
+      "study": {
+        "label": "Õppetöö",
+        "subjectTeacher": "Aine-õppejõu paarid",
+        "declaration": "Deklareerimine",
+        "notifications": "Teated"
+      },
+      "reception": {
+        "label": "Vastuvõtt",
+        "import": "Avalduste import CSV"
       }
     }
   },
@@ -347,15 +358,21 @@
     "studyLevels": "Õppeastmed"
   },
   "directive": {
+    "addInfo": "Lisainfo",
+    "addToDirective": "Lisa käskkirjale",
     "confirmDate": "Kinnitamise kuupäev",
     "confirmDateFrom": "Kinnitamise kuupäev alates",
     "confirmDateThru": "Kinnitamise kuupäev kuni",
     "create": "Koosta käskkiri",
+    "deleteconfirm": "Kas oled kindel, et soovid käskkirja kustutada?",
+    "directiveCoordinator": "Kellele suunatud",
     "directiveNr": "Dokumendi number",
     "headline": "Pealkiri",
     "inserted": "Koostamise kuupäev",
+    "insertedBy": "Koostaja",
     "insertedFrom": "Koostamise kuupäev alates",
     "insertedThru": "Koostamise kuupäev kuni",
+    "nostudentsfound": "Õppureid ei leitud",
     "status": "Staatus",
     "type": "Käskkirja liik",
     "coordinator": {
@@ -369,6 +386,12 @@
       "directive": "Käskkiri",
       "certificate": "Tõend",
       "certificateDefault": "Õppuri tõend vaikimisi"
+    },
+    "student": {
+      "akadEndDate": "Akadeemilise puhkuse katkestamise kuupäev",
+      "finSpecific": "Finantseerimise allika täpsustus",
+      "fullname": "Õppuri nimi",
+      "idcode": "Isikukood"
     }
   },
   "generalmessage": {
@@ -804,6 +827,37 @@
     "nameEt":"Õpiväljund eesti keeles",
     "nameEn":"Õpiväljund inglise keeles"
   },
+  "studyYear": {
+    "year": "Õppeaasta",
+    "startDate": "Alguskuupäev",
+    "endDate": "Lõppkuupäev",
+    "periods": "Perioodide arv",
+    "studyPeriods": "Õppeperiood",
+    "studyPeriodEvents": "Kalendri-sündmus",
+    "studyPeriod": {
+      "heading": "Õppeperioodi andmed",
+      "year": "Õppeaasta",
+      "nameEt": "Õppeperioodi nimetus",
+      "nameEn": "Õppeperioodi nimetus inglise keeles",
+      "type": "Õppeperioodi tüüp",
+      "name": "Nimetus",
+      "startDate": "Alguskuupäev",
+      "endDate": "Lõppkuupäev"
+    },
+    "studyPeriodEvent": {
+      "heading": "Kalendri-sündmuste andmed",
+      "description": "Kalendri-sündmus",
+      "period": "Õppeperiood",
+      "start": "Algus",
+      "end": "Lõpp",
+      "eventType": "Kalendri-sündmuse tüüp",
+      "nameEt": "Kirjeldus",
+      "startDate": "Alguskuupäev",
+      "endDate": "Lõppkuupäev",
+      "startTime": "Alguse kellaaeg",
+      "endTime": "Lõpu kellaaeg"
+    }
+  },
   "ehis": {
     "fileType": "Ehise faili liik"
   },
@@ -875,10 +929,17 @@
     "newFinancialSourceSpecification":"Uus finatseerimisallika täpsustus",
     "validStudyForm": "Kehtiv õppevorm",
     "newStudyForm": "Uus õppevorm",
+    "validCurriculumVersion": "Kehtiv õppekava",
+    "newCurriculumVersion": "Uus õppekava",
     "periodType": "Ajavahemiku liik",
     "academicLeaveStart": "Akadeemilise puhkuse algus",
     "academicLeaveEnd": "Akadeemilise puhkuse lõpp",
-    "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
-    "academicLeaveCancellationDate": "Katkestamise kuupäev"
+    "academicLeaveCancellationDate": "Katkestamise kuupäev",
+    "makeApplication":"Koosta avaldus",
+    "messages": {
+      "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
+      "validAcademicLeaveApplicationExists": "Akadeemilise puhkuse avaldus juba eksisteerib",
+      "validAcademicLeaveRevocationApplicationExists": "Akadeemilise puhkuse katkestamise avaldus juba eksisteerib"
+    }
   }
 }

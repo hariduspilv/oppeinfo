@@ -52,11 +52,15 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     @ClassifierRestriction(MainClassCode.OPPEVORM)
     private String newStudyForm;
 
-    private Boolean period;
+    private AutocompleteResult oldCurriculumVersion;
+    private AutocompleteResult newCurriculumVersion;
+
+    private Boolean isPeriod;
     private LocalDate startDate;
     private LocalDate endDate;
     private Long studyPeriodStart;
     private Long studyPeriodEnd;
+    private Long academicApplication;
 
     private Set<ApplicationFileDto> files;
 
@@ -149,12 +153,28 @@ public class ApplicationForm extends InsertedChangedVersionDto {
         this.newStudyForm = newStudyForm;
     }
 
-    public Boolean getPeriod() {
-        return period;
+    public AutocompleteResult getOldCurriculumVersion() {
+        return oldCurriculumVersion;
     }
 
-    public void setPeriod(Boolean period) {
-        this.period = period;
+    public void setOldCurriculumVersion(AutocompleteResult oldCurriculumVersion) {
+        this.oldCurriculumVersion = oldCurriculumVersion;
+    }
+
+    public AutocompleteResult getNewCurriculumVersion() {
+        return newCurriculumVersion;
+    }
+
+    public void setNewCurriculumVersion(AutocompleteResult newCurriculumVersion) {
+        this.newCurriculumVersion = newCurriculumVersion;
+    }
+
+    public Boolean getIsPeriod() {
+        return isPeriod;
+    }
+
+    public void setIsPeriod(Boolean isPeriod) {
+        this.isPeriod = isPeriod;
     }
 
     public LocalDate getStartDate() {
@@ -187,6 +207,14 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setStudyPeriodEnd(Long studyPeriodEnd) {
         this.studyPeriodEnd = studyPeriodEnd;
+    }
+
+    public Long getAcademicApplication() {
+        return academicApplication;
+    }
+
+    public void setAcademicApplication(Long academicApplication) {
+        this.academicApplication = academicApplication;
     }
 
     public Set<ApplicationFileDto> getFiles() {

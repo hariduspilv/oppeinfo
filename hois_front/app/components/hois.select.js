@@ -6,7 +6,7 @@
  * @description
  * # hoisCurriculumVersionSelect
  */
-angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School) {
+angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School, QueryUtils) {
   return {
     template: '<md-select>'+
       '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>'+
@@ -33,6 +33,8 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School)
       if(angular.isDefined(attrs.type)) {
         if(attrs.type === 'curriculumversion') {
           Curriculum.queryVersions().$promise.then(afterLoad);
+        } else if(attrs.type === 'directivecoordinator') {
+          QueryUtils.endpoint('/autocomplete/directivecoordinators').search(afterLoad);
         } else if(attrs.type === 'school') {
           scope.options = School.getAll();
         }

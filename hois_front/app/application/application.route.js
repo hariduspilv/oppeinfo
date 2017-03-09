@@ -40,5 +40,5 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', '$stateProvid
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
-      })
+      });
 }]);

@@ -2,7 +2,7 @@
   <form name="dialogForm" ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{"studyYear.studyEvent.heading" | translate}}</h2>
+        <h2>{{"studyYear.studyPeriodEvent.heading" | translate}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -14,34 +14,43 @@
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
         <div layout="row">
           <md-input-container flex>
-            <label class="label">{{'studyYear.studyEvent.year' | translate}}</label>
-            <hois-classifier-value ng-model="studyPeriod.year" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+            <label class="label">{{'studyYear.studyPeriodEvent.period' | translate}}</label>
+            <hois-select ng-model="studyPeriodEvent.studyPeriod" values="studyPeriods"></hois-select>
           </md-input-container>
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'studyYear.studyEvent.type' | translate}}</label>
-            <hois-classifier-select ng-model="studyPeriod.type" main-classifier-code="SYNDMUS" required></hois-classifier-select>
+            <label class="textInput">{{'studyYear.studyPeriodEvent.eventType' | translate}}</label>
+            <hois-classifier-select ng-model="studyPeriodEvent.eventType" main-classifier-code="SYNDMUS" required></hois-classifier-select>
           </md-input-container>
         </div>
         <div layout="column" layout-xs="row">
           <md-input-container flex>
-            <label>{{'studyYear.studyEvent.nameEt' | translate}}</label>
-            <input ng-model="studyPeriod.nameEt" type="text" md-maxlength="100" required>
+            <label>{{'studyYear.studyPeriodEvent.nameEt' | translate}}</label>
+            <input ng-model="studyPeriodEvent.nameEt" type="text" md-maxlength="100" required>
           </md-input-container>
           <!--<md-input-container flex>
-            <label>{{'studyYear.studyEvent.nameEn' | translate}}</label>
-            <input ng-model="studyPeriod.nameEn" type="text" md-maxlength="100">
+            <label>{{'studyYear.studyPeriodEvent.nameEn' | translate}}</label>
+            <input ng-model="studyPeriodEvent.nameEn" type="text" md-maxlength="100">
           </md-input-container>-->
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'studyYear.studyEvent.startDate' | translate}}</label>
+            <label>{{'studyYear.studyPeriodEvent.startDate' | translate}}</label>
+            <md-datepicker ng-model="studyPeriodEvent.startDate" md-max-date="studyPeriodEvent.endDate" required md-open-on-focus></md-datepicker>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'studyYear.studyPeriodEvent.startTime' | translate}}</label>
+            <input ng-model="studyPeriodEvent.startTime" type="time" required>
           </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
-          <!--<md-input-container flex>
-            <label>{{'studyYear.studyEvent.endDate' | translate}}</label>
-
-          </md-input-container>-->
+          <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'studyYear.studyPeriodEvent.endDate' | translate}}</label>
+            <md-datepicker ng-model="studyPeriodEvent.endDate" md-max-date="studyPeriodEvent.startDate" required md-open-on-focus></md-datepicker>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'studyYear.studyPeriodEvent.endTime' | translate}}</label>
+            <input ng-model="studyPeriodEvent.endTime" type="time" required>
+          </md-input-container>
         </div>
       </div>
     </md-dialog-content>

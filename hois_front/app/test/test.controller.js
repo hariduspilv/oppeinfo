@@ -19,7 +19,7 @@ angular.module('hitsaOis')
     $scope.testSingleAC = function () {
       $scope.acSingleForm.$setSubmitted();
       console.log($scope.acSingleForm.$valid);
-    }
+    };
   })
 
 

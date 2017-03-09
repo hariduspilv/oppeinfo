@@ -8,6 +8,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     DataUtils.convertStringToDates(savedApplication, ["startDate", "endDate"]);
     angular.extend($scope.application, savedApplication);
   }
+
+  function isEdit() {
+    return angular.isNumber($scope.application.id);
+  }
+
   $scope.applicationEditView = false;
   $scope.application = {
     files: [],
@@ -19,40 +24,68 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     entityToForm(entity);
   }
 
+
   $scope.$watch('application.student', function(student) {
     if (angular.isObject(student)) {
       var StudentEndpoint = QueryUtils.endpoint('/students');
-      if (['AVALDUS_LIIK_FINM', 'AVALDUS_LIIK_OVORM'].indexOf($scope.application.type) !== -1) {
+      if (['AVALDUS_LIIK_FINM', 'AVALDUS_LIIK_OVORM', 'AVALDUS_LIIK_OKAVA'].indexOf($scope.application.type) !== -1) {
         StudentEndpoint.get({id: student.id}, function(result) {
           if ($scope.application.type === 'AVALDUS_LIIK_FINM') {
-            $scope.application.oldFinancialSource = result.fin;
-            $scope.application.oldFinancialSourceSpecification = result.finSpecific;
-            $scope.application.newFinancialSource = result.fin === "FINALLIKAS_RE" ? "FINALLIKAS_RE" : "FINALLIKAS_REV";
+            $scope.application.oldFin = result.fin;
+            $scope.application.oldFinSpecific = result.finSpecific;
+            $scope.application.newFin = result.fin === "FINALLIKAS_RE" ? "FINALLIKAS_REV" : "FINALLIKAS_RE";
           } else if ($scope.application.type === 'AVALDUS_LIIK_OVORM') {
             $scope.application.oldStudyForm = result.studyForm;
           }
-          $scope.applicationEditView = true;
-        });
-      } else if($scope.application.type === 'AVALDUS_LIIK_AKAD') {
-        $scope.application.period = true;
-        QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
-          $scope.studyPeriods = result;
-          $scope.applicationEditView = true;
-        });
-      } else if($scope.application.type === 'AVALDUS_LIIK_AKADK') {
-        ApplicationsEndpoint.get({type: 'AVALDUS_LIIK_AKAD', student: $scope.application.student.id, order: "id"}, function(result) {
-          if (result.numberOfElements === 0) {
-            $scope.applicationEditView = false;
-            message.error('application.messages.academicLeaveApplicationNotfound');
-          } else {
-            $scope.academicLeaveApplication = result.content[0];
-            QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
-              $scope.studyPeriods = result;
-              $scope.applicationEditView = true;
-            });
+          else if ($scope.application.type === 'AVALDUS_LIIK_OKAVA') {
+            $scope.application.oldStudyForm = result.studyForm;
+            $scope.application.oldCurriculumVersion = result.curriculumVersion;
           }
-          //TODO: vaja on leida viimane akadeemilise puhkuse avaldus, millel ei ole tühistamise avaldust
+          $scope.applicationEditView = true;
         });
+      } else if(['AVALDUS_LIIK_AKAD', 'AVALDUS_LIIK_AKADK'].indexOf($scope.application.type) !== -1) {
+        var AcademicLeaveApplicationsEndpoint = QueryUtils.endpoint('/applications/academicLeave');
+        AcademicLeaveApplicationsEndpoint.get({student: $scope.application.student.id}, function(academicLeaveApplication) {
+          var hasAcademicLeaveApplication = angular.isNumber(academicLeaveApplication.id) && academicLeaveApplication.id > 0;
+          if($scope.application.type === 'AVALDUS_LIIK_AKAD') {
+            if (!isEdit() && hasAcademicLeaveApplication) {
+              $scope.applicationEditView = false;
+              message.error('application.messages.validAcademicLeaveApplicationExists');
+            } else {
+              if (!isEdit()) {
+                $scope.application.isPeriod = true;
+              }
+              QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
+                $scope.studyPeriods = result;
+                $scope.applicationEditView = true;
+              });
+            }
+          } else if ($scope.application.type === 'AVALDUS_LIIK_AKADK') {
+            if (!hasAcademicLeaveApplication) {
+              $scope.applicationEditView = false;
+              message.error('application.messages.academicLeaveApplicationNotfound');
+            } else {
+              var AcademicLeaveApplicationRevocationsEndpoint = QueryUtils.endpoint('/applications/' + academicLeaveApplication.id + '/academicLeaveRevocation');
+              AcademicLeaveApplicationRevocationsEndpoint.get({}, function(revocation) {
+                var hasAcademicLeaveRevocationApplication = angular.isNumber(revocation.id) && revocation.id > 0;
+                if (!isEdit() && hasAcademicLeaveRevocationApplication) {
+                  $scope.applicationEditView = false;
+                  message.error('application.messages.validAcademicLeaveRevocationApplicationExists');
+                } else {
+                  DataUtils.convertStringToDates(academicLeaveApplication, ["startDate", "endDate"]);
+                  $scope.academicLeaveApplication = academicLeaveApplication;
+                  $scope.application.academicApplication = academicLeaveApplication.id;
+                  QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
+                    $scope.studyPeriods = result;
+                    $scope.applicationEditView = true;
+                  });
+                }
+              });
+            }
+          }
+        });
+      } else {
+        $scope.applicationEditView = true;
       }
     }
   });

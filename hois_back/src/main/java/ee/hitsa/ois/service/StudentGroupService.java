@@ -26,12 +26,15 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -65,11 +68,15 @@ public class StudentGroupService {
     @Autowired
     private CurriculumVersionRepository curriculumVersionRepository;
     @Autowired
+    private SchoolRepository schoolRepository;
+    @Autowired
     private StudentGroupRepository studentGroupRepository;
     @Autowired
     private StudentRepository studentRepository;
     @Autowired
     private StudentService studentService;
+    @Autowired
+    private TeacherRepository teacherRepository;
 
     public Page<StudentGroupSearchDto> search(Long schoolId, StudentGroupSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_GROUP_LIST_FROM, pageable);
@@ -93,6 +100,12 @@ public class StudentGroupService {
         });
     }
 
+    public StudentGroup create(HoisUserDetails user, StudentGroupForm form) {
+        StudentGroup studentGroup = new StudentGroup();
+        studentGroup.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(user, studentGroup, form);
+    }
+
     public StudentGroup save(HoisUserDetails user, StudentGroup studentGroup, StudentGroupForm form) {
         EntityUtil.bindToEntity(form, studentGroup, classifierRepository, "students");
 
@@ -111,6 +124,14 @@ public class StudentGroupService {
             throw new IllegalArgumentException();
         }
         studentGroup.setCurriculumVersion(curriculumVersion);
+
+        // teacher is optional but must be from same school
+        Long teacherId = form.getTeacher() != null ? form.getTeacher().getId() : null;
+        Teacher teacher = teacherId != null ? teacherRepository.getOne(teacherId) : null;
+        if(teacher != null) {
+            UserUtil.assertSameSchool(user, teacher.getSchool());
+        }
+        studentGroup.setTeacher(teacher);
 
         studentGroup = studentGroupRepository.save(studentGroup);
         // update student list in group

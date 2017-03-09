@@ -10,6 +10,22 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
     })
+    .when('/directives/new', {
+      templateUrl: 'directive/directive.edit.html',
+      controller: 'DirectiveEditController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/directives/:id', {
+      templateUrl: 'directive/directive.edit.html',
+      controller: 'DirectiveEditController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
     .when('/directives/coordinators', {
       templateUrl: 'directive/coordinator.search.html',
       controller: 'DirectiveCoordinatorSearchController',

@@ -4,9 +4,9 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.commandobject.directive.DirectiveStudentForm;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 
-public class DirectiveStudentDto extends DirectiveStudentForm {
+public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
     public static DirectiveStudentDto of(Application application) {
         return EntityUtil.bindToDto(application, new DirectiveStudentDto());

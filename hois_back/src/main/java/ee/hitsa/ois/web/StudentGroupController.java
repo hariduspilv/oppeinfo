@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.student.StudentGroup;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.StudentGroupService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -42,8 +41,6 @@ import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
 public class StudentGroupController {
 
     @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
     private StudentGroupService studentGroupService;
 
     @GetMapping
@@ -59,9 +56,7 @@ public class StudentGroupController {
 
     @PostMapping
     public StudentGroupDto create(HoisUserDetails user, @Valid @RequestBody StudentGroupForm form) {
-        StudentGroup studentGroup = new StudentGroup();
-        studentGroup.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        return get(user, studentGroupService.save(user, studentGroup, form));
+        return get(user, studentGroupService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")

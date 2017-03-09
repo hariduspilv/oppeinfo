@@ -46,7 +46,7 @@
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'main.status' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-select>
+            <hois-classifier-select multiple ng-model="criteria.status" model-value-attr="code" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-select>
           </md-input-container>
       </div>
 
@@ -68,7 +68,7 @@
       <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button ng-href="#/applications/new" class="md-raised">{{'main.button.create' | translate}}</md-button>
+          <md-button ng-href="#/applications/new" class="md-raised">{{'application.makeApplication' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>
@@ -80,11 +80,11 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
-          <th md-column>{{'application.student' | translate}}</th>
-          <th md-column>{{'application.type' | translate}}</th>
-          <th md-column>{{'main.status' | translate}}</th>
-          <th md-column>{{'application.insertionDate' | translate}}</th>
-          <th md-column>{{'application.submissionDate' | translate}}</th>
+          <th md-column md-order-by="student.person.lastname,student.person.firstname">{{'application.student' | translate}}</th>
+          <th md-column md-order-by="type">{{'application.type' | translate}}</th>
+          <th md-column md-order-by="status">{{'main.status' | translate}}</th>
+          <th md-column md-order-by="inserted">{{'application.insertionDate' | translate}}</th>
+          <th md-column md-order-by="submitted">{{'application.submissionDate' | translate}}</th>
           <th md-column></th>
         </tr>
         </thead>
@@ -94,7 +94,7 @@
           <td md-cell>{{currentLanguageNameField(row.type)}}</td>
           <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           <td md-cell>{{'main.formattedDateTime' | translate: {date: row.inserted} }}</td>
-          <td md-cell>{{'main.formattedDateTime' | translate: {date: row.submited} }}</td>
+          <td md-cell>{{'main.formattedDateTime' | translate: {date: row.submitted} }}</td>
           <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
         </tr>
         </tbody>

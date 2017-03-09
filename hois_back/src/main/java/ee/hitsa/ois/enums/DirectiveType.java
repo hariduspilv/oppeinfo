@@ -14,8 +14,8 @@ public enum DirectiveType {
     KASKKIRI_IMMAT(StudentStatus.OPPURSTAATUS_O, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
     KASKKIRI_ENNIST(null, "studentGroup"),
     KASKKIRI_TYHIST(null),
-    // FIXME these are missing
-    KYLALISOPILANE(null, "nominalStudyEnd"),
+    // TODO these are missing
+    KASKKIRI_KYLALIS(null, "nominalStudyEnd"),
     RIIGIKEEL(null, "nominalStudyEnd");
 
     private final StudentStatus studentStatus;

@@ -188,6 +188,10 @@ public class StateCurriculumService {
         }, sort);
     }
 
+    public StateCurriculum create(StateCurriculumForm stateCurriculumForm) {
+        return save(new StateCurriculum(), stateCurriculumForm);
+    }
+
     public StateCurriculum save(StateCurriculum stateCurriculum, StateCurriculumForm stateCurriculumForm) {
         
         EntityUtil.bindToEntity(stateCurriculumForm, stateCurriculum, classifierRepository, "occupations", "modules");     

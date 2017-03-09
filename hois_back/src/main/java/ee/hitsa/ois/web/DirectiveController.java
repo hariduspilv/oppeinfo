@@ -1,8 +1,7 @@
 package ee.hitsa.ois.web;
 
-import java.util.Collections;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -20,7 +19,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
-import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.service.DirectiveService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -33,6 +32,7 @@ import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveSearchCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveStudentSearchCommand;
 import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
+import ee.hitsa.ois.web.dto.directive.DirectiveDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveSearchDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveStudentSearchDto;
 
@@ -42,8 +42,6 @@ public class DirectiveController {
 
     @Autowired
     private DirectiveService directiveService;
-    @Autowired
-    private SchoolRepository schoolRepository;
 
     @GetMapping
     public Page<DirectiveSearchDto> search(HoisUserDetails user, @Valid DirectiveSearchCommand criteria, Pageable pageable) {
@@ -51,20 +49,18 @@ public class DirectiveController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public DirectiveForm get(HoisUserDetails user, @WithEntity("id") Directive directive) {
+    public DirectiveDto get(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertSameSchool(user, directive.getSchool());
-        return DirectiveForm.of(directive);
+        return DirectiveDto.of(directive);
     }
 
     @PostMapping
-    public DirectiveForm create(HoisUserDetails user, @Valid @RequestBody DirectiveForm form) {
-        Directive directive = new Directive();
-        directive.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        return get(user, directiveService.save(directive, form));
+    public DirectiveDto create(HoisUserDetails user, @Valid @RequestBody DirectiveForm form) {
+        return get(user, directiveService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
-    public DirectiveForm update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Directive directive, @Valid @RequestBody DirectiveForm form) {
+    public DirectiveDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Directive directive, @Valid @RequestBody DirectiveForm form) {
         UserUtil.assertSameSchool(user, directive.getSchool());
         return get(user, directiveService.save(directive, form));
     }
@@ -76,9 +72,15 @@ public class DirectiveController {
     }
 
     @PostMapping("/directivedata")
-    public Map<String, Object> directivedata(HoisUserDetails user, @Valid @RequestBody DirectiveDataCommand cmd) {
+    public DirectiveDto directivedata(HoisUserDetails user, @Valid @RequestBody DirectiveDataCommand cmd) {
         // fetch all data for selected students and given directive type
-        return Collections.singletonMap("students", directiveService.loadStudents(user.getSchoolId(), cmd));
+        DirectiveDto dto = EntityUtil.bindToDto(cmd, new DirectiveDto(), "students");
+        dto.setStatus(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name());
+        dto.setInserted(LocalDateTime.now());
+        dto.setInsertedBy(user.getUsername());
+        // TODO return pre-configured headline
+        dto.setStudents(directiveService.loadStudents(user.getSchoolId(), cmd));
+        return dto;
     }
 
     @GetMapping("/findstudents")
@@ -99,16 +101,13 @@ public class DirectiveController {
 
     @PostMapping("/coordinators")
     public DirectiveCoordinatorDto createCoordinator(HoisUserDetails user, @Valid @RequestBody DirectiveCoordinatorForm form) {
-        DirectiveCoordinator coordinator = EntityUtil.bindToEntity(form, new DirectiveCoordinator());
-        coordinator.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        return getCoordinator(user, directiveService.save(coordinator));
+        return getCoordinator(user, directiveService.create(user, form));
     }
 
     @PutMapping("/coordinators/{id:\\d+}")
     public DirectiveCoordinatorDto updateCoordinator(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) DirectiveCoordinator coordinator, @Valid @RequestBody DirectiveCoordinatorForm form) {
         UserUtil.assertSameSchool(user, coordinator.getSchool());
-        EntityUtil.bindToEntity(form, coordinator);
-        return getCoordinator(user, directiveService.save(coordinator));
+        return getCoordinator(user, directiveService.save(coordinator, form));
     }
 
     @DeleteMapping("/coordinators/{id:\\d+}")

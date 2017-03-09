@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
 
@@ -52,13 +53,31 @@ public class DirectiveControllerTests {
         String url = "/directives/findstudents";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
+
+        for(DirectiveType directiveType : DirectiveType.values()) {
+            // student has application
+            UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/directives/findstudents");
+            uriBuilder.queryParam("type", directiveType.name());
+            uriBuilder.queryParam("application", "true");
+            responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+            Assert.assertNotNull(responseEntity);
+            Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+            // student does not have application
+            uriBuilder = UriComponentsBuilder.fromUriString("/directives/findstudents");
+            uriBuilder.queryParam("type", directiveType.name());
+            responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+            Assert.assertNotNull(responseEntity);
+            Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        }
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/directives/findstudents");
         uriBuilder.queryParam("firstname", "FIRSTNAME");
         uriBuilder.queryParam("lastname", "LASTNAME");
         uriBuilder.queryParam("idcode", "48908209998");
         uriBuilder.queryParam("application", "true");
+        uriBuilder.queryParam("type", DirectiveType.KASKKIRI_AKAD.name());
         uriBuilder.queryParam("directive", "1");
         url = uriBuilder.build().toUriString();
         responseEntity = restTemplate.getForEntity(url, Object.class);

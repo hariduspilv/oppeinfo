@@ -23,7 +23,9 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.repository.CertificateRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
@@ -39,10 +41,12 @@ public class CertificateService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
     private PersonRepository personRepository;
-    
+    @Autowired
+    private SchoolRepository schoolRepository;
+    @Autowired
+    private StudentRepository studentRepository;
+
     public Page<CertificateSearchDto> search(Long schoolId, CertificateSearchCommand criteria, Pageable pageable) {
         return certificateRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
@@ -77,6 +81,12 @@ public class CertificateService {
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(CertificateSearchDto::of);
+    }
+
+    public Certificate create(HoisUserDetails user, CertificateForm form) {
+        Certificate certificate = new Certificate();
+        certificate.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(certificate, form);
     }
 
     public Certificate save(Certificate certificate, CertificateForm form) {

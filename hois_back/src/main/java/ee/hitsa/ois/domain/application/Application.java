@@ -6,7 +6,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -34,11 +33,9 @@ public class Application extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false, insertable = true)
     private Classifier type;
 
-    //TODO:should be submitted
-    private LocalDateTime submited;
+    private LocalDateTime submitted;
 
-    @Column(name = "is_period")
-    private Boolean period;
+    private Boolean isPeriod;
 
     private LocalDate startDate;
     private LocalDate endDate;
@@ -65,6 +62,9 @@ public class Application extends BaseEntityWithId {
     private Classifier oldStudyForm;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    private Classifier newStudyForm;
+
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier oldFin;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
@@ -76,11 +76,10 @@ public class Application extends BaseEntityWithId {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier newFinSpecific;
 
-    @Column(name = "is_abroad")
-    private Boolean abroad;
+    private Boolean isAbroad;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    private Classifier state;
+    private Classifier country;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = true, updatable = false, insertable = true)
@@ -96,6 +95,9 @@ public class Application extends BaseEntityWithId {
 
     @Size(max = 255)
     private String abroadSchool;
+
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    private Application academicApplication;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = true)
@@ -129,20 +131,36 @@ public class Application extends BaseEntityWithId {
         this.type = type;
     }
 
-    public LocalDateTime getSubmited() {
-        return submited;
+    public LocalDateTime getSubmitted() {
+        return submitted;
     }
 
-    public void setSubmited(LocalDateTime submited) {
-        this.submited = submited;
+    public void setSubmitted(LocalDateTime submitted) {
+        this.submitted = submitted;
     }
 
-    public Boolean getPeriod() {
-        return period;
+    public Classifier getCountry() {
+        return country;
     }
 
-    public void setPeriod(Boolean period) {
-        this.period = period;
+    public void setCountry(Classifier country) {
+        this.country = country;
+    }
+
+    public Boolean getIsPeriod() {
+        return isPeriod;
+    }
+
+    public void setIsPeriod(Boolean isPeriod) {
+        this.isPeriod = isPeriod;
+    }
+
+    public Boolean getIsAbroad() {
+        return isAbroad;
+    }
+
+    public void setIsAbroad(Boolean isAbroad) {
+        this.isAbroad = isAbroad;
     }
 
     public LocalDate getStartDate() {
@@ -217,6 +235,14 @@ public class Application extends BaseEntityWithId {
         this.oldStudyForm = oldStudyForm;
     }
 
+    public Classifier getNewStudyForm() {
+        return newStudyForm;
+    }
+
+    public void setNewStudyForm(Classifier newStudyForm) {
+        this.newStudyForm = newStudyForm;
+    }
+
     public Classifier getOldFin() {
         return oldFin;
     }
@@ -247,22 +273,6 @@ public class Application extends BaseEntityWithId {
 
     public void setNewFinSpecific(Classifier newFinSpecific) {
         this.newFinSpecific = newFinSpecific;
-    }
-
-    public Boolean getAbroad() {
-        return abroad;
-    }
-
-    public void setAbroad(Boolean abroad) {
-        this.abroad = abroad;
-    }
-
-    public Classifier getState() {
-        return state;
-    }
-
-    public void setState(Classifier state) {
-        this.state = state;
     }
 
     public Classifier getEhisSchool() {
@@ -303,6 +313,14 @@ public class Application extends BaseEntityWithId {
 
     public void setAbroadSchool(String abroadSchool) {
         this.abroadSchool = abroadSchool;
+    }
+
+    public Application getAcademicApplication() {
+        return academicApplication;
+    }
+
+    public void setAcademicApplication(Application academicApplication) {
+        this.academicApplication = academicApplication;
     }
 
     public Set<ApplicationFile> getFiles() {

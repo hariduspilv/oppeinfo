@@ -2,6 +2,7 @@ package ee.hitsa.ois.util;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -241,7 +242,18 @@ public abstract class EntityUtil {
                 Method writeMethod = tpd.getWriteMethod();
                 if (writeMethod != null && Modifier.isPublic(writeMethod.getDeclaringClass().getModifiers())) {
                     try {
-                        Long id = (Long) readMethod.invoke(command);
+                        Long id = null;
+                        //usually Long is used in DTO classes to have references to other objects, but
+                        //sometimes ee.hitsa.ois.web.dto.AutoCompleteResult is also used.
+                        Object wrapper = readMethod.invoke(command);
+                        if (wrapper != null) {
+                            if (wrapper instanceof Long) {
+                                id = (Long) wrapper;
+                            } else {
+                                id = getIdFromWrapper(wrapper);
+                            }
+                        }
+
                         if (id != null) {
                             writeMethod.invoke(entity, repository.getOne(id));
                         }
@@ -251,6 +263,17 @@ public abstract class EntityUtil {
                 }
             }
         }
+    }
+
+    private static Long getIdFromWrapper(Object wrapper)
+            throws IllegalAccessException, InvocationTargetException {
+        Long id = null;
+        Method getIdMethod = BeanUtils.findMethod(wrapper.getClass(), "getId");
+        if(getIdMethod != null && Modifier.isPublic(getIdMethod.getDeclaringClass().getModifiers())
+                && getIdMethod.getReturnType() == Long.class) {
+            id = (Long) getIdMethod.invoke(wrapper);
+        }
+        return id;
     }
 
     /**

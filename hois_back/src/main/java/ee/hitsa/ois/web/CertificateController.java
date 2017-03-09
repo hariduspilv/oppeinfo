@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Certificate;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.CertificateService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
@@ -35,8 +34,6 @@ public class CertificateController {
     
     @Autowired
     private CertificateService certificateService;
-    @Autowired
-    private SchoolRepository schoolRepository;
     
     @GetMapping
     public Page<CertificateSearchDto> search(HoisUserDetails user, @Valid CertificateSearchCommand criteria, Pageable pageable) {
@@ -51,9 +48,7 @@ public class CertificateController {
     
     @PostMapping
     public CertificateDto create(HoisUserDetails user, @Valid @RequestBody CertificateForm form) {
-        Certificate certificate = new Certificate();
-        certificate.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        return get(user, certificateService.save(certificate, form));
+        return get(user, certificateService.create(user, form));
     }
     
     @PutMapping("/{id:\\d+}")

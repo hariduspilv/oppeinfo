@@ -14,7 +14,7 @@ public class ApplicationSearchCommand {
     private LocalDate insertedThru;
     private LocalDate submitedFrom;
     private LocalDate submitedThru;
-    private String status;
+    private List<String> status;
     private Long student;
     private String studentName;
     private String studentIdCode;
@@ -51,10 +51,10 @@ public class ApplicationSearchCommand {
     public void setSubmitedThru(LocalDate submitedThru) {
         this.submitedThru = submitedThru;
     }
-    public String getStatus() {
+    public List<String> getStatus() {
         return status;
     }
-    public void setStatus(String status) {
+    public void setStatus(List<String> status) {
         this.status = status;
     }
     public Long getStudent() {

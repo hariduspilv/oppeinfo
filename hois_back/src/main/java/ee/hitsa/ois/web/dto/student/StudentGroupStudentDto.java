@@ -67,6 +67,7 @@ public class StudentGroupStudentDto {
         Person p = student.getPerson();
         dto.setFullname(p.getFullname());
         dto.setIdcode(p.getIdcode());
+        dto.setStudyLevel(EntityUtil.getCode(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel()));
         return dto;
     }
 }

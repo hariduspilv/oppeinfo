@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.MessageTemplate;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.MessageTemplateService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
@@ -33,10 +32,7 @@ public class MessageTemplateController {
     
     @Autowired
     private MessageTemplateService messageTemplateService;
-    
-    @Autowired
-    private SchoolRepository schoolRepository;
-    
+
     @GetMapping
     public Page<MessageTemplateDto> search(HoisUserDetails user, @Valid MessageTemplateSearchCommand criteria, Pageable pageable) {
         return messageTemplateService.search(user.getSchoolId(), criteria, pageable);
@@ -50,9 +46,7 @@ public class MessageTemplateController {
     
     @PostMapping
     public MessageTemplateDto create(HoisUserDetails user, @Valid @RequestBody MessageTemplateForm form) {
-        MessageTemplate messageTemplate = new MessageTemplate();
-        messageTemplate.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        return get(user, messageTemplateService.save(messageTemplate, form));
+        return get(user, messageTemplateService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")

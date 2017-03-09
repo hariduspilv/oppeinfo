@@ -8,6 +8,11 @@ import java.util.stream.Collectors;
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 
+import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
+import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
+import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -78,7 +83,7 @@ public class SchoolController {
 
     @PostMapping("")
     public SchoolDto create(@Valid @RequestBody SchoolForm schoolForm) {
-        return get(schoolService.save(new School(), schoolForm));
+        return get(schoolService.create(schoolForm));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -132,17 +137,14 @@ public class SchoolController {
     }
 
     @PostMapping("/departments")
-    public SchoolDepartmentDto createSchoolDepartment(HoisUserDetails user, @Valid @RequestBody SchoolDepartmentForm request) {
-        SchoolDepartment schoolDepartment = EntityUtil.bindToEntity(request, new SchoolDepartment());
-        schoolDepartment.setSchool(getSchool(user));
-        return getSchoolDepartment(user, schoolDepartmentService.save(schoolDepartment, request.getParentSchoolDepartment()));
+    public SchoolDepartmentDto createSchoolDepartment(HoisUserDetails user, @Valid @RequestBody SchoolDepartmentForm form) {
+        return getSchoolDepartment(user, schoolDepartmentService.create(user, form));
     }
 
     @PutMapping("/departments/{id:\\d+}")
-    public SchoolDepartmentDto updateSchoolDepartment(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) SchoolDepartment schoolDepartment, @Valid @RequestBody SchoolDepartmentForm request) {
+    public SchoolDepartmentDto updateSchoolDepartment(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) SchoolDepartment schoolDepartment, @Valid @RequestBody SchoolDepartmentForm form) {
         UserUtil.assertSameSchool(user, schoolDepartment.getSchool());
-        EntityUtil.bindToEntity(request, schoolDepartment);
-        return getSchoolDepartment(user, schoolDepartmentService.save(schoolDepartment, request.getParentSchoolDepartment()));
+        return getSchoolDepartment(user, schoolDepartmentService.save(schoolDepartment, form));
     }
 
     @DeleteMapping("/departments/{id:\\d+}")
@@ -168,16 +170,14 @@ public class SchoolController {
     }
 
     @PostMapping("/teacheroccupations")
-    public TeacherOccupationDto createTeacherOccupation(HoisUserDetails user, @Valid @RequestBody TeacherOccupationForm request) {
-        TeacherOccupation teacherOccupation = EntityUtil.bindToEntity(request, new TeacherOccupation());
-        teacherOccupation.setSchool(getSchool(user));
-        return getTeacherOccupation(user, teacherOccupationService.save(teacherOccupation));
+    public TeacherOccupationDto createTeacherOccupation(HoisUserDetails user, @Valid @RequestBody TeacherOccupationForm form) {
+        return getTeacherOccupation(user, teacherOccupationService.create(user, form));
     }
 
     @PutMapping("/teacheroccupations/{id:\\d+}")
-    public TeacherOccupationDto updateTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) TeacherOccupation teacherOccupation, @Valid @RequestBody TeacherOccupationForm request) {
+    public TeacherOccupationDto updateTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) TeacherOccupation teacherOccupation, @Valid @RequestBody TeacherOccupationForm form) {
         UserUtil.assertSameSchool(user, teacherOccupation.getSchool());
-        return getTeacherOccupation(user, teacherOccupationService.save(EntityUtil.bindToEntity(request, teacherOccupation)));
+        return getTeacherOccupation(user, teacherOccupationService.save(teacherOccupation, form));
     }
 
     @DeleteMapping("/teacheroccupations/{id:\\d+}")
@@ -198,13 +198,40 @@ public class SchoolController {
 
     @PostMapping("/studyYears")
     public StudyYearDto createStudyYear(HoisUserDetails user, @Valid @RequestBody StudyYearForm studyYearForm) {
-        return studyYearService.save(getSchool(user), new StudyYear(), studyYearForm);
+        return studyYearService.create(getSchool(user), studyYearForm);
     }
 
     @PutMapping("/studyYears/{id:\\d+}")
-    public StudyYearDto updateStudyYear(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudyYear studyYear, @Valid @RequestBody StudyYearForm request) {
+    public StudyYearDto updateStudyYear(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyYear studyYear, @Valid @RequestBody StudyYearForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
         return studyYearService.save(getSchool(user), studyYear, request);
+    }
+
+    @PostMapping("/studyYears/{id:\\d+}/studyPeriods")
+    public StudyPeriodDto createStudyPeriod(HoisUserDetails user, @WithEntity("id") StudyYear studyYear, @Valid @RequestBody StudyPeriodForm request) {
+        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        return studyYearService.createStudyPeriod(studyYear, request);
+    }
+
+    @PutMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
+    public StudyPeriodDto updateStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyPeriod studyPeriod, @Valid @RequestBody StudyPeriodForm request) {
+        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        return studyYearService.saveStudyPeriod(studyYear, studyPeriod, request);
+    }
+
+    @DeleteMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
+    public void deleteStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithEntity("id") StudyPeriod studyPeriod) {
+        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriod.getStudyYear()))) {
+            throw new IllegalArgumentException();
+        }
+        studyYearService.delete(studyPeriod);
+    }
+
+    @PostMapping("/studyYears/{id:\\d+}/studyPeriodEvents")
+    public StudyPeriodEventDto createStudyPeriodEvent(HoisUserDetails user, @WithEntity("id") StudyYear studyYear, @Valid @RequestBody StudyPeriodEventForm request) {
+        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        return null;
     }
 
     private School getSchool(HoisUserDetails user) {

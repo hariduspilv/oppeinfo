@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import ee.hitsa.ois.domain.subject.Subject;
-import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.SubjectService;
@@ -39,8 +38,7 @@ public class SubjectController {
 
     @PostMapping("")
     public SubjectDto create(HoisUserDetails user, @Valid @RequestBody SubjectForm newSubject) {
-        newSubject.setStatus(SubjectStatus.AINESTAATUS_S.name());
-        return get(user, subjectService.save(user, new Subject(), newSubject));
+        return get(user, subjectService.create(user, newSubject));
     }
 
     @PutMapping("/{id:\\d+}")
