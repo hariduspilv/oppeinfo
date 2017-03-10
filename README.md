@@ -1,3 +1,5 @@
+VERSIOON: 0.2.0/20170310
+
 STRUKTUUR:
 ------------------------------------------------------
 README.md - tarne ja installeerimise kirjeldus
@@ -16,6 +18,9 @@ DOK1 - HOIS_analyys_klassifikaatorid_seaded.docx
 		3.1	Õppeasutuse ja õppeastmete vastavus
 		3.2	Õppesutuse hooned ja ruumid
 		3.3	Õpetaja amet
+		3.4	Automaatsete teadete mallid
+		3.5	Õppeaasta ja õppeperiood
+		3.6	Käskkirjade kooskõlastaja seadistamine
 		4	Klassifikaatorite haldamine
 	   
 DOK2 - HOIS_analyys_oppekavad_ained.docx
@@ -32,7 +37,7 @@ DOK3 - HOIS_analyys_opilased_liikumised.docx
 		2.2	Õppuri andmete vaatamine (va välisõppes viibimine ja dokumendid)
 		2.3	Õppuri andmete muutmine
 		2.4	Õppuri esindaja andmete muutmine
-		2.6	Õpperühma/grupi otsing ja muutmine (ainult otsing)
+		2.6	Õpperühma/grupi otsing ja muutmine
 		2.7	Õppuri puudumise tõendi sisestamine
 		3.1	Õppurile uue esindaja lisamine
 		3.2	Avalduse esitamine õppuri andmete nägemiseks
@@ -41,6 +46,21 @@ DOK3 - HOIS_analyys_opilased_liikumised.docx
 DOK4 - HOIS_analyys_opetajad_materjalid.docx
 		2.1	Õpetaja andmete sisestamine süsteemi (va täiendkoolitused, tasemekoolitused, ametijärk)
 		2.2	Õpetajate otsing 
+
+DOK5 - HOIS_analyys_avaldused_kaskkirjad.docx
+	    2.1	Avalduste otsing
+		2.2	Avalduse koostamine
+		2.4	Akadeemilise puhkuse taotlemine
+		2.5	Akadeemilise puhkuse katkestamise taotlemine
+		2.6	Õppekava vahetamise taotlemine
+		2.7	Õppevormi vahetamise taotlemine
+		2.8	Finantseerimisallika muutmise taotlemine
+		2.10 Eksmatrikuleerimise taotlemine
+		2.11	Avaldusele faili lisamine
+		2.13	Avalduse andmete muutmine
+		3.1	Käskkirjade otsing
+		4.1	Tõendite otsing
+		4.3	Tõendi tellimine (admin. töötaja töökohal, ilma reaalse sisuta)
 
 	   
 Testisikute kasutajanimed, kellena saab ÕISi sisse logida ja süsteemi testida (kasutajanimi - isiku nimi, rollid):
@@ -53,7 +73,7 @@ test5 - Test5 Kasutaja5, õpetaja Tallinna Tehnikakõrgkoolis
 TPÜs on olemas 2 õppekava ja 4 õppuri testandmed.
 	   
 
-EELDUS: 1. tarne 20170116
+EELDUS: 2. tarne 20170215
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x
