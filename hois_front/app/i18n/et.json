@@ -121,7 +121,6 @@
         "directivecoordinators": "Käskkirjade kooskõlastajad",
         "generalmessages": "Üldteadete haldamine",
         "messageTemplates": "Automaatsete teadete mallid",
-        "certificates": "Tõendid",
         "studyLevels": "Õppeasutuse õppeastmed",
         "studyYears": "Õppeasutuse õppeperioodid",
         "classifiers": "Klassifikaatorid",
@@ -155,6 +154,10 @@
       "reception": {
         "label": "Vastuvõtt",
         "import": "Avalduste import CSV"
+      },
+      "certificates": {
+        "label": "Tõendid",
+        "search": "Tõendite otsing"
       }
     }
   },
@@ -426,8 +429,10 @@
       "signatory": "Allkirjastaja",
       "signatoryName": "Allkirjastaja nimi",
       "signatoryIdcode": "Allkirjastaja isikukood",
-      "clearSignatory": "Eemalda allkirjastaja",
-      "invalidIdcode": "Vale isikukood!"
+      "clearOther": "Tühista õppuri nimi ja isikukood",
+      "invalidIdcode": "Vale isikukood!",
+      "otherName": "Õppuri nimi",
+      "otherIdcode": "Õppuri isikukood"
   },
   "stateCurriculum": {
     "deleteconfirm": "Kas oled kindel, et soovid riikliku õppekava kustutada?",
@@ -934,7 +939,7 @@
     "periodType": "Ajavahemiku liik",
     "academicLeaveStart": "Akadeemilise puhkuse algus",
     "academicLeaveEnd": "Akadeemilise puhkuse lõpp",
-    "academicLeaveCancellationDate": "Katkestamise kuupäev",
+    "academicLeaveRevocationDate": "Katkestamise kuupäev",
     "makeApplication":"Koosta avaldus",
     "messages": {
       "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",

@@ -26,6 +26,10 @@ public class CertificateForm extends VersionedCommand {
     @NotBlank
     @Size(max=20)
     private String signatoryIdcode;
+    @Size(max=100)
+    private String otherName;
+    @Size(max=20)
+    private String otherIdcode;
     private String wdUrl;
     private BigInteger wdId;
     @NotNull
@@ -35,7 +39,19 @@ public class CertificateForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.TOEND_STAATUS)
     private String status;
     private Long student;
-
+    
+    public String getOtherName() {
+        return otherName;
+    }
+    public void setOtherName(String otherName) {
+        this.otherName = otherName;
+    }
+    public String getOtherIdcode() {
+        return otherIdcode;
+    }
+    public void setOtherIdcode(String otherIdcode) {
+        this.otherIdcode = otherIdcode;
+    }
     public String getHeadline() {
         return headline;
     }

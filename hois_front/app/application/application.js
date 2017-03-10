@@ -1,8 +1,9 @@
 'use strict';
 
 
-angular.module('hitsaOis').controller('ApplicationController', function ($scope, dialogService, oisFileService, QueryUtils, message, $location, $route, DataUtils) {
+angular.module('hitsaOis').controller('ApplicationController', function ($scope, dialogService, oisFileService, QueryUtils, message, $location, $route, DataUtils, ArrayUtils) {
   var ApplicationsEndpoint = QueryUtils.endpoint('/applications');
+  $scope.removeFromArray = ArrayUtils.remove;
 
   function entityToForm(savedApplication) {
     DataUtils.convertStringToDates(savedApplication, ["startDate", "endDate"]);
@@ -24,22 +25,73 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     entityToForm(entity);
   }
 
+  function financialSourceChange(student) {
+    $scope.application.oldFin = student.fin;
+    $scope.application.oldFinSpecific = student.finSpecific;
+    $scope.application.newFin = student.fin === "FINALLIKAS_RE" ? "FINALLIKAS_REV" : "FINALLIKAS_RE";
+  }
+
+  function curriculumVersionChange(student) {
+    var CurriculumVersionsEndpoint = QueryUtils.endpoint('/autocomplete/curriculumversions');
+    CurriculumVersionsEndpoint.get({valid: true}, function(result) {
+      $scope.curriculumVersions = result.content;
+    });
+    $scope.application.oldStudyForm = student.studyForm;
+    $scope.application.oldCurriculumVersion = student.curriculumVersion;
+  }
+
+  function academicLeave(hasAcademicLeaveApplication) {
+    if (!isEdit() && hasAcademicLeaveApplication) {
+        $scope.applicationEditView = false;
+        message.error('application.messages.validAcademicLeaveApplicationExists');
+      } else {
+        if (!isEdit()) {
+          $scope.application.isPeriod = true;
+        }
+        QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
+          $scope.studyPeriods = result;
+          $scope.applicationEditView = true;
+        });
+      }
+  }
+
+  function academicLeaveRevocation(hasAcademicLeaveApplication, academicLeaveApplication) {
+    if (!hasAcademicLeaveApplication) {
+      $scope.applicationEditView = false;
+      message.error('application.messages.academicLeaveApplicationNotfound');
+    } else {
+      var AcademicLeaveApplicationRevocationsEndpoint = QueryUtils.endpoint('/applications/' + academicLeaveApplication.id + '/academicLeaveRevocation');
+      AcademicLeaveApplicationRevocationsEndpoint.get({}, function(revocation) {
+        var hasAcademicLeaveRevocationApplication = angular.isNumber(revocation.id) && revocation.id > 0;
+        if (!isEdit() && hasAcademicLeaveRevocationApplication) {
+          $scope.applicationEditView = false;
+          message.error('application.messages.validAcademicLeaveRevocationApplicationExists');
+        } else {
+          DataUtils.convertStringToDates(academicLeaveApplication, ["startDate", "endDate"]);
+          $scope.academicLeaveApplication = academicLeaveApplication;
+          $scope.application.academicApplication = academicLeaveApplication.id;
+          QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
+            $scope.studyPeriods = result;
+            $scope.applicationEditView = true;
+          });
+        }
+      });
+    }
+  }
+
 
   $scope.$watch('application.student', function(student) {
     if (angular.isObject(student)) {
-      var StudentEndpoint = QueryUtils.endpoint('/students');
       if (['AVALDUS_LIIK_FINM', 'AVALDUS_LIIK_OVORM', 'AVALDUS_LIIK_OKAVA'].indexOf($scope.application.type) !== -1) {
-        StudentEndpoint.get({id: student.id}, function(result) {
+        var StudentEndpoint = QueryUtils.endpoint('/students');
+        StudentEndpoint.get({id: student.id}, function(student) {
           if ($scope.application.type === 'AVALDUS_LIIK_FINM') {
-            $scope.application.oldFin = result.fin;
-            $scope.application.oldFinSpecific = result.finSpecific;
-            $scope.application.newFin = result.fin === "FINALLIKAS_RE" ? "FINALLIKAS_REV" : "FINALLIKAS_RE";
+            financialSourceChange(student);
           } else if ($scope.application.type === 'AVALDUS_LIIK_OVORM') {
-            $scope.application.oldStudyForm = result.studyForm;
+            $scope.application.oldStudyForm = student.studyForm;
           }
           else if ($scope.application.type === 'AVALDUS_LIIK_OKAVA') {
-            $scope.application.oldStudyForm = result.studyForm;
-            $scope.application.oldCurriculumVersion = result.curriculumVersion;
+            curriculumVersionChange(student);
           }
           $scope.applicationEditView = true;
         });
@@ -48,40 +100,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         AcademicLeaveApplicationsEndpoint.get({student: $scope.application.student.id}, function(academicLeaveApplication) {
           var hasAcademicLeaveApplication = angular.isNumber(academicLeaveApplication.id) && academicLeaveApplication.id > 0;
           if($scope.application.type === 'AVALDUS_LIIK_AKAD') {
-            if (!isEdit() && hasAcademicLeaveApplication) {
-              $scope.applicationEditView = false;
-              message.error('application.messages.validAcademicLeaveApplicationExists');
-            } else {
-              if (!isEdit()) {
-                $scope.application.isPeriod = true;
-              }
-              QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
-                $scope.studyPeriods = result;
-                $scope.applicationEditView = true;
-              });
-            }
+            academicLeave(hasAcademicLeaveApplication);
           } else if ($scope.application.type === 'AVALDUS_LIIK_AKADK') {
-            if (!hasAcademicLeaveApplication) {
-              $scope.applicationEditView = false;
-              message.error('application.messages.academicLeaveApplicationNotfound');
-            } else {
-              var AcademicLeaveApplicationRevocationsEndpoint = QueryUtils.endpoint('/applications/' + academicLeaveApplication.id + '/academicLeaveRevocation');
-              AcademicLeaveApplicationRevocationsEndpoint.get({}, function(revocation) {
-                var hasAcademicLeaveRevocationApplication = angular.isNumber(revocation.id) && revocation.id > 0;
-                if (!isEdit() && hasAcademicLeaveRevocationApplication) {
-                  $scope.applicationEditView = false;
-                  message.error('application.messages.validAcademicLeaveRevocationApplicationExists');
-                } else {
-                  DataUtils.convertStringToDates(academicLeaveApplication, ["startDate", "endDate"]);
-                  $scope.academicLeaveApplication = academicLeaveApplication;
-                  $scope.application.academicApplication = academicLeaveApplication.id;
-                  QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
-                    $scope.studyPeriods = result;
-                    $scope.applicationEditView = true;
-                  });
-                }
-              });
-            }
+            academicLeaveRevocation(hasAcademicLeaveApplication, academicLeaveApplication);
           }
         });
       } else {

@@ -7,8 +7,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -47,6 +45,7 @@ import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -116,10 +115,10 @@ public class DirectiveService {
         qb.optionalCriteria("d.confirm_date <= :confirmDateThru", "confirmDateThru", criteria.getConfirmDateThru());
         qb.optionalCriteria("d.status_code in (:status)", "status", criteria.getStatus());
         if(criteria.getInsertedFrom() != null) {
-            qb.requiredCriteria("d.inserted >= :insertedFrom", "insertedFrom", LocalDateTime.of(criteria.getInsertedFrom(), LocalTime.MIN));
+            qb.requiredCriteria("d.inserted >= :insertedFrom", "insertedFrom", DateUtils.firstMomentOfDay(criteria.getInsertedFrom()));
         }
         if(criteria.getInsertedThru() != null) {
-            qb.requiredCriteria("d.inserted <= :insertedThru", "insertedThru", LocalDateTime.of(criteria.getInsertedThru(), LocalTime.MAX));
+            qb.requiredCriteria("d.inserted <= :insertedThru", "insertedThru", DateUtils.lastMomentOfDay(criteria.getInsertedThru()));
         }
         if(StringUtils.hasText(criteria.getStudentGroup())) {
             qb.requiredCriteria("d.id in (select ds.directive_id from directive_student ds inner join student_group sg on ds.student_group_id=sg.id where upper(sg.code) like :studentGroup)", "studentGroup", "%"+criteria.getStudentGroup().toUpperCase()+"%");

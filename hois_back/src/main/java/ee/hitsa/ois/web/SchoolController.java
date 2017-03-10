@@ -192,31 +192,35 @@ public class SchoolController {
     }
 
     @GetMapping("/studyYears/{id:\\d+}")
-    public StudyYearDto getStudyYear(HoisUserDetails user, @WithEntity("id") StudyYear studyYear) {
+    public StudyYearDto getStudyYear(@WithEntity("id") StudyYear studyYear) {
         return StudyYearDto.of(studyYear);
     }
 
     @PostMapping("/studyYears")
     public StudyYearDto createStudyYear(HoisUserDetails user, @Valid @RequestBody StudyYearForm studyYearForm) {
-        return studyYearService.create(getSchool(user), studyYearForm);
+        return getStudyYear(studyYearService.create(getSchool(user), studyYearForm));
     }
 
     @PutMapping("/studyYears/{id:\\d+}")
     public StudyYearDto updateStudyYear(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyYear studyYear, @Valid @RequestBody StudyYearForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
-        return studyYearService.save(getSchool(user), studyYear, request);
+        return getStudyYear(studyYearService.save(getSchool(user), studyYear, request));
+    }
+
+    private StudyPeriodDto getStudyPeriod(@WithEntity("id") StudyPeriod studyPeriod) {
+        return StudyPeriodDto.of(studyPeriod);
     }
 
     @PostMapping("/studyYears/{id:\\d+}/studyPeriods")
     public StudyPeriodDto createStudyPeriod(HoisUserDetails user, @WithEntity("id") StudyYear studyYear, @Valid @RequestBody StudyPeriodForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
-        return studyYearService.createStudyPeriod(studyYear, request);
+        return getStudyPeriod(studyYearService.createStudyPeriod(studyYear, request));
     }
 
     @PutMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
     public StudyPeriodDto updateStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyPeriod studyPeriod, @Valid @RequestBody StudyPeriodForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
-        return studyYearService.saveStudyPeriod(studyYear, studyPeriod, request);
+        return getStudyPeriod(studyYearService.saveStudyPeriod(studyYear, studyPeriod, request));
     }
 
     @DeleteMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
@@ -235,6 +239,6 @@ public class SchoolController {
     }
 
     private School getSchool(HoisUserDetails user) {
-        return schoolService.getOne(user.getSchoolId());
+        return schoolRepository.getOne(user.getSchoolId());
     }
 }

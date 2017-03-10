@@ -55,8 +55,9 @@
             <th md-column md-order-by="headline">{{'certificate.headline' | translate}}</th>
             <th md-column md-order-by="whom">{{'certificate.whom' | translate}}</th>
             <th md-column md-order-by="inserted">{{'certificate.inserted' | translate}}</th>
-            <th md-column md-order-by="student.person.lastname,student.person.firstname">{{'certificate.studentName' | translate}}</th>
+            <th md-column md-order-by="">{{'certificate.studentName' | translate}}</th>
             <th md-column></th>
+            <!--    student.person.lastname,student.person.firstname     -->
           </tr>
         </thead>
         <tbody md-body>
@@ -66,12 +67,21 @@
             <td md-cell>{{::row.headline}}</td>
             <td md-cell>{{::row.whom}}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
+
             <td md-cell>
-                <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.student.id}}/main">{{::row.student.fullname}}</md-button>
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{row.studentId}}/main" ng-disabled="!row.studentId">{{::row.studentFullname}}</md-button>
             </td>
+
+            <!--<td md-cell>
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.student.id}}/main">{{::row.student.fullname}}</md-button>
+            </td>-->
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
+
+
+
+
           </tr>
         </tbody>
       </table>

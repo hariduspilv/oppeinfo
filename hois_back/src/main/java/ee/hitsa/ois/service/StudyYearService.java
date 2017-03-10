@@ -36,26 +36,25 @@ public class StudyYearService {
         return studyYearRepository.findStudyYearsBySchool(schoolId).stream().map(StudyYearsSearchDto::new).collect(Collectors.toList());
     }
 
-    public StudyYearDto create(School school, StudyYearForm studyYearForm) {
+    public StudyYear create(School school, StudyYearForm studyYearForm) {
         return save(school, new StudyYear(), studyYearForm);
     }
 
-    public StudyYearDto save(School school, StudyYear studyYear, StudyYearForm studyYearForm) {
+    public StudyYear save(School school, StudyYear studyYear, StudyYearForm studyYearForm) {
         EntityUtil.bindToEntity(studyYearForm, studyYear, classifierRepository);
         studyYear.setSchool(school);
-        return StudyYearDto.of(studyYearRepository.save(studyYear));
+        return studyYearRepository.save(studyYear);
     }
 
     public void delete(StudyPeriod studyPeriod) {
         studyPeriodRepository.delete(studyPeriod);
     }
 
-    public StudyPeriodDto createStudyPeriod(StudyYear studyYear, StudyPeriodForm request) {
-
+    public StudyPeriod createStudyPeriod(StudyYear studyYear, StudyPeriodForm request) {
         return saveStudyPeriod(studyYear, new StudyPeriod(), request);
     }
 
-    public StudyPeriodDto saveStudyPeriod(StudyYear studyYear, StudyPeriod studyPeriod, StudyPeriodForm request) {
+    public StudyPeriod saveStudyPeriod(StudyYear studyYear, StudyPeriod studyPeriod, StudyPeriodForm request) {
         EntityUtil.bindToEntity(request, studyPeriod, classifierRepository);
         if (studyPeriod.getId() != null) {
             if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriod.getStudyYear()))) {
@@ -64,6 +63,6 @@ public class StudyYearService {
         } else {
             studyPeriod.setStudyYear(studyYear);
         }
-        return StudyPeriodDto.of(studyPeriodRepository.save(studyPeriod));
+        return studyPeriodRepository.save(studyPeriod);
     }
 }

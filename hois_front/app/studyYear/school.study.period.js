@@ -84,7 +84,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       var afterSave = function (data) {
         clMapper.objectmapper(data);
         DataUtils.convertStringToDates(data, ['startDate', 'endDate']);
-        if(item) {
+        if (item) {
           angular.extend(item, data);
         } else {
           $scope.studyPeriods.push(data);
@@ -94,7 +94,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       dialogService.showDialog('studyYear/study.period.dialog.html', DialogController,
         function (submitScope) {
           var period = submitScope.studyPeriod;
-          if(period.id) {
+          if (period.id) {
             period.$update().then(afterSave);
           } else {
             period.$save().then(afterSave);
@@ -102,7 +102,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         });
     };
 
-    $scope.openStudyEventDialog = function (item) {
+    $scope.openStudyPeriodEventDialog = function (item) {
       var DialogController = function (scope) {
         if (item) {
           scope.data =  angular.extend({}, item);
@@ -120,7 +120,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         function (submitScope) {
           var data = submitScope.data;
           if(item) {
-            angular.extend(item, data);
+            angular.merge(item, data);
           } else {
             $scope.studyEvents.push(data);
           }
@@ -132,6 +132,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       if ($scope.schoolYearForm.$valid) {
         if (id) {
           $scope.studyYear.$update().then(function() {
+            afterLoad();
             message.info('main.messages.update.success');
           });
         } else if (code) {

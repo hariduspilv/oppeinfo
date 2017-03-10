@@ -18,6 +18,8 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -38,7 +40,7 @@ public class DirectiveConfirmService {
     public void confirm(HoisUserDetails user, Directive directive, LocalDate confirmDate) {
         // TODO assert correct status
         // update directive fields
-        directive.setStatus(classifierRepository.getOne("DIRECTIVE_STATUS_CONFIRMED"));
+        directive.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name()));
         directive.setConfirmDate(confirmDate);
         directive.setConfirmer(user.getUsername());
 
@@ -51,7 +53,7 @@ public class DirectiveConfirmService {
                 // TODO put changes which should occur in future, into task queue
                 // store student version for undo
                 ds.setStudentHistory(ds.getStudent().getStudentHistory());
-                updateStudentApplicationStatus(ds, "KINNITATUD");
+                updateStudentApplicationStatus(ds, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD);
                 updateStudentData(directiveType, ds, studentStatus);
             }
         }
@@ -120,10 +122,10 @@ public class DirectiveConfirmService {
         }
     }
 
-    private void updateStudentApplicationStatus(DirectiveStudent directive, String statusCode) {
+    private void updateStudentApplicationStatus(DirectiveStudent directive, ApplicationStatus status) {
         Application application = directive.getApplication();
         if(application != null) {
-            application.setStatus(classifierRepository.getOne(statusCode));
+            application.setStatus(classifierRepository.getOne(status.name()));
             applicationRepository.save(application);
         }
     }

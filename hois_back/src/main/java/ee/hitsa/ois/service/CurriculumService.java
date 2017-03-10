@@ -100,8 +100,6 @@ public class CurriculumService {
 	@Autowired
     private CurriculumRepository curriculumRepository;
 	@Autowired
-    private ClassifierService classifierService;
-	@Autowired
 	private ClassifierRepository classifierRepository;
 	@Autowired
     private SchoolDepartmentRepository schoolDepartmentRepository;
@@ -123,14 +121,7 @@ public class CurriculumService {
     }
 
     public void delete(Curriculum curriculum) {
-        curriculumRepository.delete(curriculum);
-    }
-
-    /**
-     * For testing
-     */
-    public Curriculum getOne(Long id) {
-    	return curriculumRepository.getOne(id);
+        EntityUtil.deleteEntity(curriculumRepository, curriculum);
     }
 
     @SuppressWarnings("unchecked")
@@ -299,7 +290,7 @@ public class CurriculumService {
 
     private void updateSchoolDepartment(CurriculumVersion version, CurriculumVersionDto dto) {
         if (dto.getSchoolDepartment() != null) {
-            version.setSchoolDepartment(schoolDepartmentRepository.findOne(dto.getSchoolDepartment()));
+            version.setSchoolDepartment(schoolDepartmentRepository.getOne(dto.getSchoolDepartment()));
         }
     }
 
@@ -678,7 +669,7 @@ public class CurriculumService {
         //TODO: get rid of this approach? (Requires equals() and hashCode())
         if(newDepartments != null) {
             Set<CurriculumDepartment> departments = newDepartments
-            .stream().map(d -> new CurriculumDepartment(schoolDepartmentRepository.findOne(d))).collect(Collectors.toSet());
+            .stream().map(d -> new CurriculumDepartment(schoolDepartmentRepository.getOne(d))).collect(Collectors.toSet());
             merge(curriculum.getDepartments(), departments);
           } else {
               curriculum.setDepartments(new HashSet<>());
@@ -730,7 +721,7 @@ public class CurriculumService {
               if(langs.keySet().contains(lang)) {
                   newSet.add(langs.get(lang));
               } else {
-                  newSet.add(new CurriculumStudyLanguage(classifierService.findOne(lang)));
+                  newSet.add(new CurriculumStudyLanguage(classifierRepository.getOne(lang)));
               }
           }
           target.setStudyLanguages(newSet);

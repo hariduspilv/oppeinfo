@@ -73,7 +73,7 @@ public class SubjectService {
         subject.setSchool(schoolRepository.getOne(user.getSchoolId()));
         SchoolDepartment schoolDepartment = null;
         if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().longValue() > 0) {
-            schoolDepartment = schoolDepartmentRepository.findOne(newSubject.getSchoolDepartment());
+            schoolDepartment = schoolDepartmentRepository.getOne(newSubject.getSchoolDepartment());
         }
         subject.setSchoolDepartment(schoolDepartment);
         EntityUtil.bindClassifierCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {

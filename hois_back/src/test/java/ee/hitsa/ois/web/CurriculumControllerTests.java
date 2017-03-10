@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
-import ee.hitsa.ois.service.CurriculumService;
+import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
@@ -63,10 +63,8 @@ public class CurriculumControllerTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
-
     @Autowired
-    private CurriculumService curriculumService;
-
+    private CurriculumRepository curriculumRepository;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -74,7 +72,7 @@ public class CurriculumControllerTests {
 
     private Curriculum testCurriculum;
 
-    private Long referenceNumber = Long.valueOf(-1);
+    private long referenceNumber = -1;
 
     @Before
     public void setup() {
@@ -157,7 +155,7 @@ public class CurriculumControllerTests {
                 CurriculumDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity);
-        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
+        testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
 
         Assert.assertNotNull(testCurriculum);
         Assert.assertEquals("testCode", testCurriculum.getCode());
@@ -251,7 +249,7 @@ public class CurriculumControllerTests {
         Assert.assertTrue(referenceNumbers.contains(moduleRefNum));
 
         // for deleting
-        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
+        testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
 
     }
 
@@ -364,7 +362,7 @@ public class CurriculumControllerTests {
                 CurriculumDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
-        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
+        testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
         Assert.assertFalse(testCurriculum.getNameEt().equals("newName"));
 
         // update curriculum text field and classifier field
@@ -441,7 +439,7 @@ public class CurriculumControllerTests {
         // check that collection items do not change their id when not changed
         // one from join table and other item that is created on form
         Long specialityId = updatedCurriculum.getSpecialities().stream().findFirst().get().getId();
-        testCurriculum = curriculumService.getOne(updatedCurriculum.getId());
+        testCurriculum = curriculumRepository.getOne(updatedCurriculum.getId());
         Long studyLanguageId = testCurriculum.getStudyLanguages().stream().findAny().get().getId();
 
         responseEntity = restTemplate.exchange("/curriculum/{id}", HttpMethod.PUT, new HttpEntity<>(updatedCurriculum), CurriculumDto.class, testCurriculum.getId());
@@ -453,7 +451,7 @@ public class CurriculumControllerTests {
                 .equals(specialityId)).findFirst().get();
         Assert.assertNotNull(updatedSpeciality);
 
-        testCurriculum = curriculumService.getOne(updatedCurriculum.getId());
+        testCurriculum = curriculumRepository.getOne(updatedCurriculum.getId());
         CurriculumStudyLanguage lang = testCurriculum.getStudyLanguages().stream()
                 .filter(l -> l.getId().equals(studyLanguageId)).findFirst().get();
         Assert.assertNotNull(lang);
@@ -531,7 +529,7 @@ public class CurriculumControllerTests {
                 CurriculumDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         CurriculumDto dto = responseEntity.getBody();
-        testCurriculum = curriculumService.getOne(dto.getId());
+        testCurriculum = curriculumRepository.getOne(dto.getId());
         
         Assert.assertNotNull(dto);
         Assert.assertTrue(dto.getVersions().size() == 2);
@@ -564,7 +562,7 @@ public class CurriculumControllerTests {
                 CurriculumDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity);
-        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
+        testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
         Assert.assertTrue(testCurriculum.getVersions().isEmpty());
         Assert.assertFalse(testCurriculum.getModules().stream().findFirst().get().getOutcomes().isEmpty());
 
@@ -744,7 +742,7 @@ public class CurriculumControllerTests {
         dto.setNameEn("CurriculumControllerTest");
         dto.setCredits(Double.valueOf(1));
         dto.setOccupation("KUTSE_10491530");
-        dto.setReferenceNumber(referenceNumber--);
+        dto.setReferenceNumber(Long.valueOf(referenceNumber--));
         return dto;
     }
 

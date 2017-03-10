@@ -3,9 +3,11 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
@@ -23,7 +25,6 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.application.ApplicationFile;
-import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.repository.ApplicationRepository;
@@ -33,6 +34,7 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
@@ -73,16 +75,16 @@ public class ApplicationService {
                 filters.add(root.get("type").get("code").in(criteria.getType()));
             }
             if(criteria.getInsertedFrom() != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("insertedFrom"), criteria.getInsertedFrom()));
+                filters.add(cb.greaterThanOrEqualTo(root.get("inserted"), DateUtils.firstMomentOfDay(criteria.getInsertedFrom())));
             }
             if(criteria.getInsertedThru() != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("insertedThru"), criteria.getInsertedThru()));
+                filters.add(cb.lessThanOrEqualTo(root.get("inserted"), DateUtils.lastMomentOfDay(criteria.getInsertedThru())));
             }
-            if(criteria.getSubmitedFrom() != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("submitedFrom"), criteria.getSubmitedFrom()));
+            if(criteria.getSubmittedFrom() != null) {
+                filters.add(cb.greaterThanOrEqualTo(root.get("submitted"), DateUtils.firstMomentOfDay(criteria.getSubmittedFrom())));
             }
-            if(criteria.getSubmitedThru() != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("submitedThru"), criteria.getSubmitedThru()));
+            if(criteria.getSubmittedThru() != null) {
+                filters.add(cb.lessThanOrEqualTo(root.get("submitted"), DateUtils.lastMomentOfDay(criteria.getSubmittedThru())));
             }
             if(!StringUtils.isEmpty(criteria.getStatus())) {
                 filters.add(cb.equal(root.get("status").get("code"), criteria.getStatus()));
@@ -106,44 +108,58 @@ public class ApplicationService {
         }, pageable).map(ApplicationDto::of);
     }
 
-    public ApplicationDto create(HoisUserDetails user, ApplicationForm applicationForm) {
+    public Application create(HoisUserDetails user, ApplicationForm applicationForm) {
+        Classifier ehisSchool = schoolRepository.getOne(user.getSchoolId()).getEhisSchool();
+        if (applicationForm.getType().equals(ApplicationType.AVALDUS_LIIK_AKAD.toString())
+                && existsValidAcademicLeaveApplication(applicationForm.getStudent().getId(), ehisSchool)) {
+            throw new ValidationFailureException("Student already has valid academic leave application");
+        } else if (applicationForm.getType().equals(ApplicationType.AVALDUS_LIIK_AKADK.toString())
+                && !existsValidAcademicLeaveApplication(applicationForm.getStudent().getId(),ehisSchool)) {
+            throw new ValidationFailureException("Student has no valid academic leave application");
+        }
+
         return save(user, new Application(), applicationForm);
     }
 
-    public ApplicationDto save(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
+    public Application save(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
         EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files",
-                "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion");
+                "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion", "submitted");
         EntityUtil.setEntityFromRepository(applicationForm, application, studyPeriodRepository, "studyPeriodStart", "studyPeriodEnd");
         EntityUtil.setEntityFromRepository(applicationForm, application, curriculumVersionRepository, "newCurriculumVersion", "oldCurriculumVersion");
         EntityUtil.setEntityFromRepository(applicationForm, application, studentRepository, "student");
 
         application.setEhisSchool(schoolRepository.getOne(user.getSchoolId()).getEhisSchool());
+
+        if (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.toString())) {
+            application.setSubmitted(LocalDateTime.now());
+        }
+
         if (applicationForm.getAcademicApplication() != null) {
             application.setAcademicApplication(applicationRepository.getOne(applicationForm.getAcademicApplication()));
         }
         updateFiles(application, applicationForm);
 
-        if (application.getType().getCode().equals(ApplicationType.AVALDUS_LIIK_AKAD.toString()) && existsValidAcademicLeaveApplication(application.getStudent(), application.getEhisSchool())) {
-            throw new ValidationFailureException("Student already has valid academic leave application");
-        } else if (application.getType().getCode().equals(ApplicationType.AVALDUS_LIIK_AKADK.toString()) && !existsValidAcademicLeaveApplication(application.getStudent(), application.getEhisSchool())) {
-            throw new ValidationFailureException("Student has no valid academic leave application");
-        }
-
-        return ApplicationDto.of(applicationRepository.save(application));
+        return applicationRepository.save(application);
     }
 
-    private boolean existsValidAcademicLeaveApplication(Student student, Classifier ehisSchool) {
-        return findValidAcademicLeave(EntityUtil.getNullableId(student), EntityUtil.getNullableCode(ehisSchool)) != null;
+    private boolean existsValidAcademicLeaveApplication(Long studentId, Classifier ehisSchool) {
+        return findValidAcademicLeave(studentId, EntityUtil.getNullableCode(ehisSchool)) != null;
     }
 
     private static void updateFiles(Application application, ApplicationForm applicationForm) {
-        List<ApplicationFile> files = applicationForm.getFiles().stream().map(it -> {
-            ApplicationFile file = new ApplicationFile();
-            file.setOisFile(EntityUtil.bindToEntity(it.getOisFile(), new OisFile()));
-            return file;
-        }).collect(Collectors.toList());
+        Set<ApplicationFile> newFiles = new HashSet<>();
+        if(applicationForm.getFiles() != null) {
+            applicationForm.getFiles().forEach(dto -> {
+                ApplicationFile file = dto.getId() == null ? new ApplicationFile() :
+                    application.getFiles().stream().filter(f -> f.getId().equals(dto.getId())).findFirst().get();
+                if (dto.getId() == null) {
+                    file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
+                }
+                newFiles.add(file);
+            });
+        }
         application.getFiles().clear();
-        application.getFiles().addAll(files);
+        application.getFiles().addAll(newFiles);
     }
 
     public void delete(Application application) {

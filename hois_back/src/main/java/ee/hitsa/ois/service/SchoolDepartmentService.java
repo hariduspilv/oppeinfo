@@ -101,7 +101,7 @@ public class SchoolDepartmentService {
         Long parentSchoolDepartmentId = form.getParentSchoolDepartment();
         SchoolDepartment parentSchoolDepartment = null;
         if(parentSchoolDepartmentId != null) {
-            parentSchoolDepartment = schoolDepartmentRepository.findOne(parentSchoolDepartmentId);
+            parentSchoolDepartment = schoolDepartmentRepository.getOne(parentSchoolDepartmentId);
             Long id = schoolDepartment.getId();
             if(parentSchoolDepartment == null || parentSchoolDepartmentId.equals(id) ||
                !EntityUtil.getId(parentSchoolDepartment.getSchool()).equals(EntityUtil.getId(schoolDepartment.getSchool()))) {

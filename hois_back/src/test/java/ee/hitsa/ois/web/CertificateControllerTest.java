@@ -18,6 +18,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.dto.CertificateDto;
+import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -98,6 +99,57 @@ public class CertificateControllerTest {
         uriBuilder.queryParam("version", version);
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);
+    }
+
+    @Test
+    public void getPersonByIdcode() {
+        final String METHOD_URL = "/otherStudent";
+        // get student
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
+        uriBuilder.queryParam("idcode", "123667");
+        String uri = uriBuilder.build().toUriString();
+        ResponseEntity<StudentSearchDto> response = restTemplate.getForEntity(uri, StudentSearchDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assert.assertNotNull(response.getBody());
+        Assert.assertNotNull(response.getBody().getId());
+        Assert.assertNotNull(response.getBody().getIdcode());
+        Assert.assertNotNull(response.getBody().getFullname());
+
+        // get person, who is not student
+        uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
+        uriBuilder.queryParam("idcode", "37810012983");
+        uriBuilder.build().toUriString();
+        uri = uriBuilder.build().toUriString();
+        response = restTemplate.getForEntity(uri, StudentSearchDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assert.assertNotNull(response.getBody());
+        Assert.assertNull(response.getBody().getId());
+        Assert.assertNotNull(response.getBody().getIdcode());
+        Assert.assertNotNull(response.getBody().getFullname());
+        
+        // get person, who is student in another school
+        uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
+        uriBuilder.queryParam("idcode", "37810010008");
+        uriBuilder.build().toUriString();
+        uri = uriBuilder.build().toUriString();
+        response = restTemplate.getForEntity(uri, StudentSearchDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assert.assertNotNull(response.getBody());
+        Assert.assertNull(response.getBody().getId());
+        Assert.assertNotNull(response.getBody().getIdcode());
+        Assert.assertNotNull(response.getBody().getFullname());
+
+        // there is no person with such idcode
+        uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
+        uriBuilder.queryParam("idcode", "37910012983");
+        uri = uriBuilder.build().toUriString();
+        response = restTemplate.getForEntity(uri, StudentSearchDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assert.assertNull(response.getBody());
     }
     
     public CertificateForm getForm() {

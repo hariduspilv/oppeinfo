@@ -1,7 +1,5 @@
 package ee.hitsa.ois.web;
 
-import java.util.List;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,33 +22,33 @@ import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
-import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.dto.CertificateDto;
 import ee.hitsa.ois.web.dto.CertificateSearchDto;
+import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 @RestController
 @RequestMapping("/certificate")
 public class CertificateController {
-    
+
     @Autowired
     private CertificateService certificateService;
-    
+
     @GetMapping
     public Page<CertificateSearchDto> search(HoisUserDetails user, @Valid CertificateSearchCommand criteria, Pageable pageable) {
         return certificateService.search(user.getSchoolId(), criteria, pageable);
     }
-    
+
     @GetMapping("/{id:\\d+}")
     public CertificateDto get(HoisUserDetails user, @WithEntity("id") Certificate certificate) {
         UserUtil.assertSameSchool(user, certificate.getSchool());
         return CertificateDto.of(certificate);
     }
-    
+
     @PostMapping
     public CertificateDto create(HoisUserDetails user, @Valid @RequestBody CertificateForm form) {
         return get(user, certificateService.create(user, form));
     }
-    
+
     @PutMapping("/{id:\\d+}")
     public CertificateDto update(HoisUserDetails user, 
             @WithVersionedEntity(value = "id", versionRequestBody = true) Certificate certificate, 
@@ -58,19 +56,15 @@ public class CertificateController {
         UserUtil.assertSameSchool(user, certificate.getSchool());
         return get(user, certificateService.save(certificate, form));
     }
-    
+
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Certificate certificate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertSameSchool(user, certificate.getSchool());
         certificateService.delete(certificate);
     }
-    /**
-     * AutocompleteController.person() is not used 
-     * as idcode may not match any in database
-     * (there must be no 404 "not found" error)
-     */
-    @GetMapping("/signatoryName")
-    public List<String> getSignatoryName(@Valid PersonLookupCommand lookup) {
-        return certificateService.getSignatoryName(lookup);
+
+    @GetMapping("/otherStudent")
+    public StudentSearchDto getOtherPerson(HoisUserDetails user, String idcode) {
+        return certificateService.getOtherPerson(user.getSchoolId(), idcode);
     }
 }

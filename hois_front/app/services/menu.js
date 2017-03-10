@@ -120,10 +120,6 @@ angular.module('hitsaOis')
           name: 'main.menu.fixData.messageTemplates',
           url: "/messageTemplate"
         },
-        // {
-        //   name: 'main.menu.fixData.certificates',
-        //   url: "/certificate"
-        // },
         {
           name: 'main.menu.fixData.studyLevels',
           url: "/school/studyLevels"
@@ -172,8 +168,8 @@ angular.module('hitsaOis')
           url: "/declaration"
         },
         {
-          name: 'main.menu.fixData.certificates',
-          url: "/certificate"
+          name: 'main.menu.certificates.label',
+          url: "/certificate?_menu"
         },
         {
           name: 'main.menu.study.notifications',
@@ -214,7 +210,8 @@ angular.module('hitsaOis')
         return;
       }
       var matchPage = function(section, page) {
-        if (path.indexOf(page.url.replace(/(\?_menu)$/, '')) === 0) {
+        if (page.url.replace(/(\?_menu)$/, '').indexOf(path) === 0) {
+          //console.log("matched path ", path, " to page url ", page.url);
           self.selectSection(section);
           self.selectPage(section, page);
           return true;
@@ -223,36 +220,30 @@ angular.module('hitsaOis')
       };
 
       //sections.forEach(function(section) {
-      for(var i = 0; i < menu.length; i++) {
+      var match = false;
+      for(var i = 0; i < menu.length && !match; i++) {
         var section = menu[i];
-        var match = false;
         if (section.children) {
           // matches nested section toggles, such as API or Customization
-          for (var childIndex = 0; childIndex < section.children.length; childIndex++) {
+          for (var childIndex = 0; childIndex < section.children.length && !match; childIndex++) {
             var childSection = section.children[childIndex];
             if(childSection.pages) {
-              for (var childSectionPageIndex = 0; childSectionPageIndex < childSection.pages.length; childSectionPageIndex++) {
+              for (var childSectionPageIndex = 0; childSectionPageIndex < childSection.pages.length  && !match; childSectionPageIndex++) {
                 match = matchPage(childSection, childSection.pages[childSectionPageIndex]);
-                if (match === true) { break; }
               }
             }
-            if (match === true) { break; }
           }
-
         }
         else if (section.pages) {
           // matches top-level section toggles, such as Demos
-          for (var sectionPageIndex = 0; sectionPageIndex < section.pages.length; sectionPageIndex++) {
+          for (var sectionPageIndex = 0; sectionPageIndex < section.pages.length && !match; sectionPageIndex++) {
             match = matchPage(section, section.pages[sectionPageIndex]);
-            if (match === true) { break; }
           }
         }
         else if (section.type === 'link') {
           // matches top-level links, such as "Getting Started"
           match = matchPage(section, section);
         }
-
-        if (match === true) { break; }
       }
 
 

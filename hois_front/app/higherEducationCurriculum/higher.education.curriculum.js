@@ -527,7 +527,7 @@ angular.module('hitsaOis')
         setVersionFormReadOnly();
         $scope.versionCodes = $scope.curriculum.versions.map(function(v){return v.code;});
         $scope.higherEducationCurriculumVersionForm.code.$setDirty();
-        $scope.higherEducationCurriculumVersionForm.code.$setValidity("hoisCommonValidation", $scope.validateVersionCode($scope.version.code));
+        $scope.higherEducationCurriculumVersionForm.code.$setValidity("hoisFunctionValidation", $scope.validateVersionCode($scope.version.code));
     };
 
     $scope.deleteVersion = function() {

@@ -18,7 +18,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.SchoolDepartmentService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
@@ -30,15 +29,10 @@ public class AutocompleteControllerTests {
 
     @Autowired
     private HoisUserDetailsService hoisUserDetailsService;
-
     @Autowired
     private TestRestTemplate restTemplate;
-
     @Autowired
     private SchoolDepartmentService schoolDepartmentService;
-
-    @Autowired
-    private SchoolRepository schoolRepository;
 
     private SchoolDepartment schoolDepartment;
 
@@ -90,6 +84,11 @@ public class AutocompleteControllerTests {
     public void curriculumVersions() {
         String uri = "/autocomplete/curriculumversions";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/curriculumversions?valid=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

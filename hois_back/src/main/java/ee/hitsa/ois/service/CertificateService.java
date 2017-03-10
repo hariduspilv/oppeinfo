@@ -3,10 +3,8 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDateTime;
-import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -20,17 +18,19 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.repository.CertificateRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
-import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.dto.CertificateSearchDto;
+import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 @Transactional
 @Service
@@ -41,11 +41,11 @@ public class CertificateService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
+    private StudentRepository studentRepository;
+    @Autowired
     private PersonRepository personRepository;
     @Autowired
     private SchoolRepository schoolRepository;
-    @Autowired
-    private StudentRepository studentRepository;
 
     public Page<CertificateSearchDto> search(Long schoolId, CertificateSearchCommand criteria, Pageable pageable) {
         return certificateRepository.findAll((root, query, cb) -> {
@@ -56,12 +56,11 @@ public class CertificateService {
             }
             LocalDateTime insertedFrom = criteria.getInsertedFrom();
             if(insertedFrom != null) {
-              filters.add(cb.greaterThanOrEqualTo(root.get("inserted"), insertedFrom));
+              filters.add(cb.greaterThanOrEqualTo(root.get("inserted"), DateUtils.firstMomentOfDay(insertedFrom)));
             }
             LocalDateTime insertedThru = criteria.getInsertedThru();
             if(insertedThru != null) {
-              insertedThru = LocalDateTime.of(insertedThru.toLocalDate(), LocalTime.of(0, 0, 0)).plusDays(1).minusNanos(1);
-              filters.add(cb.lessThanOrEqualTo(root.get("inserted"), insertedThru));
+              filters.add(cb.lessThanOrEqualTo(root.get("inserted"), DateUtils.lastMomentOfDay(insertedThru)));
             }
             if(!CollectionUtils.isEmpty(criteria.getType())) {
                 filters.add(root.get("type").get("code").in(criteria.getType()));
@@ -91,24 +90,42 @@ public class CertificateService {
 
     public Certificate save(Certificate certificate, CertificateForm form) {
         EntityUtil.bindToEntity(form, certificate, classifierRepository, "student");
-        if(form.getStudent() != null) {
-            certificate.setStudent(studentRepository.findOne(form.getStudent()));
-        }
+        Student student = form.getStudent() != null ? studentRepository.getOne(form.getStudent()) : null;
+        certificate.setStudent(student);
         return certificateRepository.save(certificate);
     }
 
     public void delete(Certificate certificate) {
         EntityUtil.deleteEntity(certificateRepository, certificate);        
     }
-
-    public List<String> getSignatoryName(PersonLookupCommand lookup) {
-        List<Person> list = personRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            if(lookup.getIdcode() != null) {
-                filters.add(cb.equal(root.get("idcode"), lookup.getIdcode()));
+    
+    public StudentSearchDto getOtherPerson(Long schoolId, String idcode) {
+        Person person = personRepository.findByIdcode(idcode);
+        List<Student> students = new ArrayList<>();
+        if(person != null) {
+            students = studentRepository.findAll((root, query, cb) -> {
+                List<Predicate> filters = new ArrayList<>();
+                
+                if (schoolId != null) {
+                    filters.add(cb.equal(root.get("school").get("id"), schoolId));
+                }
+                filters.add(cb.equal(root.get("person").get("id"), person.getId()));
+                return cb.and(filters.toArray(new Predicate[filters.size()]));
+            });
+        }
+        
+        StudentSearchDto dto;
+        
+        if(!students.isEmpty()) {
+            dto = StudentSearchDto.of(students.get(0));
+        } else {
+            if(person == null) {
+                return null;
             }
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        });
-        return list.stream().map(p -> p.getFullname()).collect(Collectors.toList());
+            dto = new StudentSearchDto();
+            dto.setIdcode(idcode);
+            dto.setFullname(person.getFullname());
+        }
+        return dto;
     }
 }

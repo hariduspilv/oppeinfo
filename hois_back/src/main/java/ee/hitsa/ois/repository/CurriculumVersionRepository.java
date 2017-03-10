@@ -16,6 +16,4 @@ public interface CurriculumVersionRepository extends JpaRepository<CurriculumVer
     long countBySchoolAndOtherCurriculums(Long schoolId, String code, Long curriculumId);
 
     List<CurriculumVersion> findAllDistinctByModules_Subjects_Subject_id(Long subjectId);
-
-    List<CurriculumVersion> findAllByCurriculumSchoolIdAndStatusCode(Long schoolId, String status);
 }

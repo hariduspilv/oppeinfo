@@ -1,6 +1,5 @@
 package ee.hitsa.ois.service;
 
-import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
@@ -78,7 +77,7 @@ public class TeacherService {
         if (teacherForm.getPerson().getIdcode() != null) {
             person = personRepository.findByIdcode(teacherForm.getPerson().getIdcode());
         } else if (teacherForm.getPerson().getId() != null) {
-            person = personRepository.findOne(teacherForm.getPerson().getId());
+            person = personRepository.getOne(teacherForm.getPerson().getId());
         }
         if (person == null) {
             teacher.setPerson(EntityUtil.bindToEntity(teacherForm.getPerson(), new Person(), classifierRepository));
@@ -127,7 +126,7 @@ public class TeacherService {
         Set<TeacherMobility> result = new HashSet<>();
         if (Boolean.TRUE.equals(teacher.getIsHigher())) {
             Map<Long, TeacherMobility> mobilityMap = teacherMobilities
-                    .stream().collect(Collectors.toMap(BaseEntityWithId::getId, v -> v));
+                    .stream().collect(Collectors.toMap(TeacherMobility::getId, v -> v));
             for (TeacherForm.TeacherMobilityForm mobilityForm : teacherForm.getTeacherMobility()) {
                 Long id = mobilityForm.getId();
                 TeacherMobility teacherMobility;
@@ -160,7 +159,7 @@ public class TeacherService {
         Set<TeacherQualification> result = new HashSet<>();
         if (Boolean.TRUE.equals(teacher.getIsHigher())) {
             Map<Long, TeacherQualification> qualifications = teacherQualifications
-                    .stream().collect(Collectors.toMap(BaseEntityWithId::getId, v -> v));
+                    .stream().collect(Collectors.toMap(TeacherQualification::getId, v -> v));
             for (TeacherForm.TeacherQualificationFrom teacherQualificationFrom : teacherForm.getTeacherQualifications()) {
                 Long id = teacherQualificationFrom.getId();
                 TeacherQualification teacherQualification;
@@ -191,7 +190,7 @@ public class TeacherService {
     private void bindTeacherPositionEhisForm(Teacher teacher, TeacherForm teacherForm) {
         Set<TeacherPositionEhis> oldTeacherPositions = teacher.getTeacherPositionEhis();
         Map<Long, TeacherPositionEhis> teacherPositions = oldTeacherPositions
-                .stream().collect(Collectors.toMap(BaseEntityWithId::getId, v -> v));
+                .stream().collect(Collectors.toMap(TeacherPositionEhis::getId, v -> v));
         Set<TeacherPositionEhis> result = new HashSet<>();
         for (TeacherForm.TeacherPositionEhisForm positionEhis: teacherForm.getTeacherPositionEhis()) {
             clearConflictingFields(positionEhis);
@@ -215,7 +214,7 @@ public class TeacherService {
         newTeacherPositionEhis.setTeacher(teacher);
         SchoolDepartment schoolDepartment = null;
         if (positionEhis.getSchoolDepartment() != null && positionEhis.getSchoolDepartment().longValue() > 0) {
-            schoolDepartment = schoolDepartmentRepository.findOne(positionEhis.getSchoolDepartment());
+            schoolDepartment = schoolDepartmentRepository.getOne(positionEhis.getSchoolDepartment());
         }
         newTeacherPositionEhis.setSchoolDepartment(schoolDepartment);
         return newTeacherPositionEhis;

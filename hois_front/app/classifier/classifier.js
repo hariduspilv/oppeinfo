@@ -1,7 +1,9 @@
 'use strict';
 
-
-angular.module('hitsaOis').factory('Classifier', ['$resource', 'config', 'QueryUtils', function ($resource, config, QueryUtils) {
+angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', 'CacheFactory', 'QueryUtils',
+  function ($q, $resource, config, CacheFactory, QueryUtils) {
+	// qrunt jshint gives Missing 'new' prefix when invoking a constructor
+    CacheFactory('classifierCache');
 
     function Classifier(args) {
 
@@ -63,13 +65,24 @@ angular.module('hitsaOis').factory('Classifier', ['$resource', 'config', 'QueryU
     };
 
     Classifier.queryForDropdown = function(params, successCallback) {
-      // TODO caching
       var resource = $resource(config.apiUrl+'/autocomplete/classifiers');
       var queryParams = {mainClassCode: params.mainClassCode};
       if (angular.isDefined(params.mainClassCodes)) {
         queryParams = {mainClassCodes: params.mainClassCodes};
       }
-      return resource.query(queryParams, function(result) {
+
+      var cache = CacheFactory.get('classifierCache');
+      var cachekey = queryParams.mainClassCodes || queryParams.mainClassCode;
+
+      var result = [];
+      var deferred = $q.defer();
+      result.$promise = deferred.promise;
+
+      function resolve(data) {
+        // make copy to avoid modifying cached value
+        for(var i = 0, cnt = data.length;i < cnt;i ++)  {
+          result.push(angular.copy(data[i]));
+        }
         var order = params.order;
         if(order) {
           result.sort(function(a, b) {
@@ -80,10 +93,27 @@ angular.module('hitsaOis').factory('Classifier', ['$resource', 'config', 'QueryU
             return aProp > bProp ? 1 : 0;
           });
         }
+
+        deferred.resolve(result);
+        result.$resolved = true;
         if(angular.isFunction(successCallback)) {
           successCallback(result);
         }
-      });
+      }
+
+      var cached = cache.get(cachekey);
+      if(cached) {
+        resolve(cached);
+      } else {
+        result.$resolved = false;
+
+        resource.query(queryParams, function(data) {
+          cache.put(cachekey, data);
+
+          resolve(data);
+        });
+      }
+      return result;
     };
 
     Classifier.getChildren = function(code) {

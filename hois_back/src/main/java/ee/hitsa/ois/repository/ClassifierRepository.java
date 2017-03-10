@@ -39,11 +39,6 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
     //@Cacheable(cacheNames = "classifier", key="#spec.getSearchCommand().getCacheKey()+#sort.toString()")
     List<Classifier> findAll(Specification<Classifier> spec, Sort sort);
 
-	List<Classifier> findByCode(String code);
-
-	List<Classifier> findTop20ByNameEtStartingWithIgnoreCaseAndMainClassCodeOrderByNameEtAsc(String nameEt, String mainClassCode);
-	List<Classifier> findTop20ByNameEnStartingWithIgnoreCaseAndMainClassCodeOrderByNameEnAsc(String nameEn, String mainClassCode);
-
 	@CacheEvict(cacheNames = "classifier", allEntries = true)
 	List<Classifier> removeByCode(String code);
 

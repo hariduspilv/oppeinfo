@@ -12,8 +12,8 @@ public class ApplicationSearchCommand {
     private List<String> type;
     private LocalDate insertedFrom;
     private LocalDate insertedThru;
-    private LocalDate submitedFrom;
-    private LocalDate submitedThru;
+    private LocalDate submittedFrom;
+    private LocalDate submittedThru;
     private List<String> status;
     private Long student;
     private String studentName;
@@ -39,17 +39,17 @@ public class ApplicationSearchCommand {
     public void setInsertedThru(LocalDate insertedThru) {
         this.insertedThru = insertedThru;
     }
-    public LocalDate getSubmitedFrom() {
-        return submitedFrom;
+    public LocalDate getSubmittedFrom() {
+        return submittedFrom;
     }
-    public void setSubmitedFrom(LocalDate submitedFrom) {
-        this.submitedFrom = submitedFrom;
+    public void setSubmittedFrom(LocalDate submittedFrom) {
+        this.submittedFrom = submittedFrom;
     }
-    public LocalDate getSubmitedThru() {
-        return submitedThru;
+    public LocalDate getSubmittedThru() {
+        return submittedThru;
     }
-    public void setSubmitedThru(LocalDate submitedThru) {
-        this.submitedThru = submitedThru;
+    public void setSubmittedThru(LocalDate submittedThru) {
+        this.submittedThru = submittedThru;
     }
     public List<String> getStatus() {
         return status;

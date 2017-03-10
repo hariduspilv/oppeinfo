@@ -2,7 +2,6 @@ package ee.hitsa.ois.web;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.validation.Valid;
@@ -61,17 +60,17 @@ public class AutocompleteController {
             Language lang = term.getLang();
             curriculums = curriculums.stream().filter(r -> (Language.EN.equals(lang) ? r.getNameEn() : r.getNameEt()).toUpperCase().contains(searchTerm)).collect(Collectors.toList());
         }
-        return asAutocompleteResult(curriculums, r -> r);
+        return asPage(curriculums);
     }
 
     @GetMapping("/curriculumversions")
-    public Page<AutocompleteResult> curriculumVersions(HoisUserDetails user) {
-        return asAutocompleteResult(autocompleteService.curriculumVersions(user.getSchoolId()), r -> r);
+    public Page<AutocompleteResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
+        return asPage(autocompleteService.curriculumVersions(user.getSchoolId(), valid));
     }
 
     @GetMapping("/directivecoordinators")
     public Page<AutocompleteResult> directiveCoordinators(HoisUserDetails user) {
-        return asAutocompleteResult(autocompleteService.directiveCoordinators(user.getSchoolId()), r -> r);
+        return asPage(autocompleteService.directiveCoordinators(user.getSchoolId()));
     }
 
     @GetMapping("/persons")
@@ -87,12 +86,12 @@ public class AutocompleteController {
 
     @GetMapping("/schooldepartments")
     public Page<AutocompleteResult> schoolDepartments(HoisUserDetails user, SchoolDepartmentAutocompleteCommand criteria) {
-        return asAutocompleteResult(autocompleteService.schoolDepartments(user.getSchoolId(), criteria), Function.identity());
+        return asPage(autocompleteService.schoolDepartments(user.getSchoolId(), criteria));
     }
 
     @GetMapping("/subjects")
     public Page<AutocompleteResult> subjects(HoisUserDetails user, AutocompleteCommand command) {
-        return asAutocompleteResult(autocompleteService.subjects(user.getSchoolId(), command), AutocompleteResult::of);
+        return autocompleteService.subjects(user.getSchoolId(), command).map(AutocompleteResult::of);
     }
 
     @GetMapping("/teachers")
@@ -110,11 +109,7 @@ public class AutocompleteController {
         return autocompleteService.studyPeriods(user.getSchoolId());
     }
 
-    private static <V, R> Page<R> asAutocompleteResult(Page<V> data, Function<V, R> mapper) {
-        return asAutocompleteResult(data.getContent(), mapper);
-    }
-
-    private static <V, R> Page<R> asAutocompleteResult(List<V> data, Function<V, R> mapper) {
-        return new PageImpl<>(data.stream().map(mapper).collect(Collectors.toList()));
+    private static <R> Page<R> asPage(List<R> data) {
+        return new PageImpl<>(data);
     }
 }

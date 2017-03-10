@@ -133,7 +133,7 @@ public class StudentService {
     }
 
     public StudentAbsence create(Student student, StudentAbsenceForm form) {
-        StudentAbsence absence = EntityUtil.bindToEntity(form, new StudentAbsence());
+        StudentAbsence absence = new StudentAbsence();
         absence.setStudent(student);
         absence.setIsAccepted(Boolean.FALSE);
         return save(absence, form);

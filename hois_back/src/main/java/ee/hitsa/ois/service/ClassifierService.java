@@ -50,14 +50,6 @@ public class ClassifierService {
         return classifierRepository.save(classifier);
     }
 
-    public List<Classifier> findByCode(String code) {
-        return classifierRepository.findByCode(code);
-    }
-
-    public Classifier findOne(String code) {
-        return classifierRepository.findOne(code);
-    }
-
     @SuppressWarnings("unchecked")
     public Page<ClassifierWithCount> searchTables(ClassifierSearchCommand criteria, Pageable pageable) {
         return JpaQueryUtil.query(ClassifierWithCount.class, Classifier.class, (root, query, cb) -> {
@@ -79,21 +71,6 @@ public class ClassifierService {
 
     public List<Classifier> searchAll(ClassifierSearchCommand classifierSearchCommand, Sort sort) {
         return classifierRepository.findAll(new ClassifierSpecification(classifierSearchCommand), sort);
-    }
-
-    // TODO move into AutocompleteService
-    public List<Classifier> searchForAutocomplete(ClassifierSearchCommand classifierSearchCommand) {
-        List<Classifier> result = null;
-
-        String name = classifierSearchCommand.getName();
-        String mainClassCode = classifierSearchCommand.getMainClassCode();
-        if(Language.EN.equals(classifierSearchCommand.getLang())) {
-            result = classifierRepository.findTop20ByNameEnStartingWithIgnoreCaseAndMainClassCodeOrderByNameEnAsc(name, mainClassCode);
-        } else {
-            result = classifierRepository.findTop20ByNameEtStartingWithIgnoreCaseAndMainClassCodeOrderByNameEtAsc(name, mainClassCode);
-        }
-
-        return result;
     }
 
     public void delete(String code) {
@@ -133,6 +110,6 @@ public class ClassifierService {
             return new ArrayList<>();
         }
 
-        return requiredCodes.stream().map(this::findOne).collect(Collectors.toList());
+        return requiredCodes.stream().map(classifierRepository::findOne).collect(Collectors.toList());
     }
 }

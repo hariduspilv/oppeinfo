@@ -450,15 +450,14 @@
     <form name="higherEducationCurriculumVersionForm" layout="column">
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex ng-if="!showMainForm">
-                <!--TODO: unique='curriculumVersionCodeUniqueQuery'
-                causes exception-->
                 <label>{{'curriculum.version.code' | translate}}</label>
-                <input name="code" ng-model="version.code" type="text" required md-maxlength="100" ng-model-options="{ debounce: 250 }" hois-common-validator="validateVersionCode">
+                <input name="code" ng-model="version.code" type="text" required md-maxlength="100" ng-model-options="{ debounce: 250 }"  
+                hois-curriculum-version-code-validator unique-query="curriculumVersionCodeUniqueQuery" unique-function="validateVersionCode">
                 <div ng-messages="higherEducationCurriculumVersionForm.code.$error" ng-show="higherEducationCurriculumVersionForm.code.$dirty">
-                    <div ng-message="notUnique">
+                    <div ng-message="hoisQueryValidation">
                         {{'main.messages.error.mustBeUnique' | translate}}
                     </div>
-                    <div ng-message="hoisCommonValidation">
+                    <div ng-message="hoisFunctionValidation">
                         {{'main.messages.error.mustBeUnique' | translate}}
                     </div>
                 </div>

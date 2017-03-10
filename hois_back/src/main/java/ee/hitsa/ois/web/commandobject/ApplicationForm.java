@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Set;
 
 import javax.validation.constraints.NotNull;
@@ -61,6 +62,8 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     private Long studyPeriodStart;
     private Long studyPeriodEnd;
     private Long academicApplication;
+
+    private LocalDateTime submitted;
 
     private Set<ApplicationFileDto> files;
 
@@ -215,6 +218,14 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setAcademicApplication(Long academicApplication) {
         this.academicApplication = academicApplication;
+    }
+
+    public LocalDateTime getSubmitted() {
+        return submitted;
+    }
+
+    public void setSubmitted(LocalDateTime submitted) {
+        this.submitted = submitted;
     }
 
     public Set<ApplicationFileDto> getFiles() {

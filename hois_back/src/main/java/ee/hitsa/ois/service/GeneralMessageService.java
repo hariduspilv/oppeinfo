@@ -87,7 +87,7 @@ public class GeneralMessageService {
     }
 
     public GeneralMessage create(HoisUserDetails user, GeneralMessageForm form) {
-        GeneralMessage generalMessage = EntityUtil.bindToEntity(form, new GeneralMessage(), "targets");
+        GeneralMessage generalMessage = new GeneralMessage();
         generalMessage.setSchool(schoolRepository.getOne(user.getSchoolId()));
         return save(generalMessage, form);
     }

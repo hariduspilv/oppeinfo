@@ -46,19 +46,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
         }
-      })
-}]).controller('fakeController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q) {
-    // var clMapper = Classifier.valuemapper({type: 'TOEND_LIIK'});
-    // QueryUtils.createQueryForm($scope, '/certificate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
-    // $q.all(clMapper.promises).then($scope.loadData);
-    // var clMapper = Classifier.valuemapper({status: 'OPPEKAVA_STAATUS', ekrLevel: 'EKR'});
-    // QueryUtils.createQueryForm($scope, '/stateCurriculum', {order: 'fakeOrder'}, clMapper.objectmapper);
-    // $q.all(clMapper.promises).then($scope.loadData);
-    // $scope.filteredOutStatuses = [{code: 'OPPEKAVA_STAATUS_M'}];
-
-    QueryUtils.endpoint("/fake/get505Error").get().$promise.then(function(response){
-        // console.log("got error!");
-
-            });
-    // console.log("F!");
+      });
+}]).controller('fakeController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
+    QueryUtils.endpoint("/fake/get505Error").get();
 }]);

@@ -21,7 +21,8 @@ angular
     'md.data.table',
     'ui.router',
     'lfNgMdFileInput',
-    'ngStorage'
+    'ngStorage',
+    'angular-cache'
   ])
   .config(function ($routeProvider) {
     $routeProvider
@@ -70,4 +71,6 @@ angular
       return $injector.get('AuthInterceptor');
     }
   ]);
+}).config(function (CacheFactoryProvider) {
+  angular.extend(CacheFactoryProvider.defaults, { maxAge: 15 * 60 * 1000, cacheFlushInterval: 60 * 60 * 1000, deleteOnExpire: 'aggressive'});
 });

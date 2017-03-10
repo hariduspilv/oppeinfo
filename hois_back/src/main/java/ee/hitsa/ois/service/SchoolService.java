@@ -64,10 +64,6 @@ public class SchoolService {
         return schoolRepository.save(school);
     }
 
-    public School getOne(Long id) {
-        return schoolRepository.getOne(id);
-    }
-
     public Page<SchoolDto> search(SchoolSearchCommand searchCommand, Pageable pageable) {
         return schoolRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();

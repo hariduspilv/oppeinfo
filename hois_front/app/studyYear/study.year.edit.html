@@ -50,7 +50,7 @@
       <div layout="column" flex>
         <div layout="row" class="align-center">
           <h2>{{'studyYear.studyPeriodEvents' | translate}}</h2>
-          <md-button class="md-primary" ng-click="openStudyEventDialog()">{{'main.button.create' | translate}}</md-button>
+          <md-button class="md-primary" ng-click="openStudyPeriodEventDialog()">{{'main.button.create' | translate}}</md-button>
         </div>
         <div layout="row">
           <table md-table class="secondary-table">
@@ -69,7 +69,7 @@
               <td md-cell>{{item.studyPeriod.nameEn}}</td>
               <td md-cell>{{item.startDate}}</td>
               <td md-cell>{{item.endDate}}</td>
-              <td md-cell ><md-button ng-click="openStudyEventDialog(item)">{{'main.button.change' | translate}}</md-button></td>
+              <td md-cell ><md-button ng-click="openStudyPeriodEventDialog(item)">{{'main.button.change' | translate}}</md-button></td>
             </tr>
             </tbody>
           </table>

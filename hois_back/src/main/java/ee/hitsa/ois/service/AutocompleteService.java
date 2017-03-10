@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -20,8 +21,12 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.SubjectStatus;
+import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
@@ -31,6 +36,7 @@ import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
@@ -47,6 +53,8 @@ public class AutocompleteService {
 
     @Autowired
     private EntityManager em;
+    @Autowired
+    private ClassifierRepository classifierRepository;
     @Autowired
     private CurriculumRepository curriculumRepository;
     @Autowired
@@ -73,6 +81,16 @@ public class AutocompleteService {
         }).collect(Collectors.toList());
     }
 
+    public List<Classifier> classifierForAutocomplete(ClassifierSearchCommand classifierSearchCommand) {
+        String nameField = Language.EN.equals(classifierSearchCommand.getLang()) ? "nameEn" : "nameEt";
+        return classifierRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("mainClassCode"), classifierSearchCommand.getMainClassCode()));
+            propertyContains(() -> root.get(nameField), cb, classifierSearchCommand.getName(), filters::add);
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }, sortAndLimit(nameField)).getContent();
+    }
+
     public List<ClassifierSelection> classifiers(List<String> mainClassCodes) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from classifier c");
         qb.requiredCriteria("c.main_class_code in :mainClassCodes", "mainClassCodes", mainClassCodes);
@@ -88,12 +106,15 @@ public class AutocompleteService {
         return curriculumRepository.findAllBySchool_id(schoolId);
     }
 
-    public List<AutocompleteResult> curriculumVersions(Long schoolId) {
+    public List<AutocompleteResult> curriculumVersions(Long schoolId, Boolean valid) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id");
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        if(Boolean.TRUE.equals(valid)) {
+            // only valid ones
+            qb.requiredCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K.name());
+            qb.requiredCriteria("c.valid_from <= :currentDate and (c.valid_thru is null or c.valid_thru >= :currentDate)", "currentDate", LocalDate.now());
+        }
 
-        // FIXME add validity too?
-        // (cv.curriculum.validFrom is null or cv.curriculum.validFrom <= current_date) and (cv.curriculum.validThru is null or cv.curriculum.validThru >= current_date)
         List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en", em).getResultList();
         return data.stream().map(r -> {
             String code = resultAsString(r, 1);

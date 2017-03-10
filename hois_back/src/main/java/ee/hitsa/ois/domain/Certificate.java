@@ -1,7 +1,5 @@
 package ee.hitsa.ois.domain;
 
-import java.math.BigInteger;
-
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
@@ -17,8 +15,10 @@ public class Certificate extends BaseEntityWithId {
     private String certificateNr;
     private String signatoryName;
     private String signatoryIdcode;
+    private String otherName;
+    private String otherIdcode;
     private String wdUrl;
-    private BigInteger wdId;
+    private Long wdId;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier type;
@@ -30,6 +30,18 @@ public class Certificate extends BaseEntityWithId {
     private Student student;
 
 
+    public String getOtherName() {
+        return otherName;
+    }
+    public void setOtherName(String otherName) {
+        this.otherName = otherName;
+    }
+    public String getOtherIdcode() {
+        return otherIdcode;
+    }
+    public void setOtherIdcode(String otherIdcode) {
+        this.otherIdcode = otherIdcode;
+    }
     public String getHeadline() {
         return headline;
     }
@@ -72,10 +84,10 @@ public class Certificate extends BaseEntityWithId {
     public void setWdUrl(String wdUrl) {
         this.wdUrl = wdUrl;
     }
-    public BigInteger getWdId() {
+    public Long getWdId() {
         return wdId;
     }
-    public void setWdId(BigInteger wdId) {
+    public void setWdId(Long wdId) {
         this.wdId = wdId;
     }
     public Classifier getType() {

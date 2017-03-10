@@ -123,12 +123,19 @@ public class ClassifierControllerTests {
 	public void testGetPossibleParentClassifiers() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/classifier/getPossibleParentClassifiers");
         uriBuilder.queryParam("name", "Eesti");
-        uriBuilder.queryParam("language", "ET");
+        uriBuilder.queryParam("lang", "ET");
         uriBuilder.queryParam("mainClassCode", "EKR");
-		
-        String uri = uriBuilder.build().toUriString();
 
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uriBuilder = UriComponentsBuilder.fromUriString("/classifier/getPossibleParentClassifiers");
+        uriBuilder.queryParam("name", "Estonia");
+        uriBuilder.queryParam("lang", "EN");
+        uriBuilder.queryParam("mainClassCode", "EKR");
+
+        responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}

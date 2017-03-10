@@ -4,7 +4,6 @@ import java.time.LocalDateTime;
 
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 public class CertificateSearchDto {
     
@@ -14,12 +13,35 @@ public class CertificateSearchDto {
     private String headline;
     private String whom;
     private LocalDateTime inserted;
-    private StudentSearchDto student;
+    private String studentFullname;
+    private Long studentId;
 
     public static CertificateSearchDto of(Certificate certificate) {
         CertificateSearchDto dto = EntityUtil.bindToDto(certificate, new CertificateSearchDto(), "student");
-        dto.setStudent(StudentSearchDto.of(certificate.getStudent()));
+        if(certificate.getStudent() != null) {
+            dto.setStudentFullname(certificate.getStudent().getPerson().getFullname());
+            dto.setStudentId(certificate.getStudent().getId());
+        } else {
+            dto.setStudentFullname(certificate.getOtherName());
+        }
         return dto;
+    }
+    
+   
+    public String getStudentFullname() {
+        return studentFullname;
+    }
+
+    public void setStudentFullname(String studentFullname) {
+        this.studentFullname = studentFullname;
+    }
+
+    public Long getStudentId() {
+        return studentId;
+    }
+
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
     }
 
     public Long getId() {
@@ -68,13 +90,5 @@ public class CertificateSearchDto {
 
     public void setInserted(LocalDateTime inserted) {
         this.inserted = inserted;
-    }
-
-    public StudentSearchDto getStudent() {
-        return student;
-    }
-
-    public void setStudent(StudentSearchDto student) {
-        this.student = student;
     }
 }

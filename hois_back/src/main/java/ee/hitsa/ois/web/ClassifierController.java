@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -30,6 +31,8 @@ import ee.hitsa.ois.web.dto.ClassifierWithCount;
 @RequestMapping("classifier")
 public class ClassifierController {
 
+    @Autowired
+    private AutocompleteService autocompleteService;
     @Autowired
     private ClassifierService classifierService;
 
@@ -77,9 +80,10 @@ public class ClassifierController {
         return classifierService.searchTables(classifierSearchCommand, pageable);
     }
 
+    // TODO move into AutocompleteController
     @GetMapping("/getPossibleParentClassifiers")
     public List<Classifier> searchForAuto(ClassifierSearchCommand classifierSearchCommand) {
-        return classifierService.searchForAutocomplete(classifierSearchCommand);
+        return autocompleteService.classifierForAutocomplete(classifierSearchCommand);
     }
 
     /**
