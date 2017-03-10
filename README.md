@@ -62,6 +62,11 @@ DOK5 - HOIS_analyys_avaldused_kaskkirjad.docx
 		4.1	Tõendite otsing
 		4.3	Tõendi tellimine (admin. töötaja töökohal, ilma reaalse sisuta)
 
+DOK6 - HOIS_analyys_teated.docx
+		2.1	Üldteate otsing
+		2.2	Üldteate lisamine ja muutmine
+		2.3	Üldteate vaatamine avalehel
+
 	   
 Testisikute kasutajanimed, kellena saab ÕISi sisse logida ja süsteemi testida (kasutajanimi - isiku nimi, rollid):
 test1 - Test1 Kasutaja1, peaadministraator, administratiivne töötaja Tallinna Polütehnikumis ja EBS-s
