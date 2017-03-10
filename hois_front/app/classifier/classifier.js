@@ -97,7 +97,9 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
         deferred.resolve(result);
         result.$resolved = true;
         if(angular.isFunction(successCallback)) {
-          successCallback(result);
+          deferred.promise.then(function() {
+            successCallback(result);
+          });
         }
       }
 
