@@ -6,6 +6,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -14,59 +15,109 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.StateCurriculum;
-import ee.hitsa.ois.domain.StateCurriculumModule;
-import ee.hitsa.ois.domain.StateCurriculumModuleOccupation;
-import ee.hitsa.ois.domain.StateCurriculumModuleOutcome;
-import ee.hitsa.ois.domain.StateCurriculumOccupation;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOccupation;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumOccupation;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.repository.specification.StateCurriculumSpecification;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SearchUtil;
+import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
+import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
 
 @Transactional
 @Service
 public class StateCurriculumService {
 
 	@Autowired
-    StateCurriculumRepository repository;
+	private StateCurriculumRepository stateCurriculumRepository;
 
     @Autowired
-    ClassifierRepository classifierRepository;
-
-    public StateCurriculum create(StateCurriculum curriculum) {
-        return repository.save(curriculum);
-    }
+    private ClassifierRepository classifierRepository;
+    
+//    @Autowired
+//    private EntityManager em;
 
     /**
-     * TODO: Searching and filtering by EKR level seems to work fine,
-     * however, this is probably not the optimal solution.
+     * TODO: this is not optimal solution. 
      */
-	public Page<StateCurriculum> search(StateCurriculumSearchCommand stateCurriculumSearchCommand, Pageable pageable) {
-		if(stateCurriculumSearchCommand.getEkrLevels() != null && !stateCurriculumSearchCommand.getEkrLevels().isEmpty() ||
-				pageable.getSort().toString().equals("ekrLevel: DESC") || pageable.getSort().toString().equals("ekrLevel: ASC")) {
-			List<StateCurriculum> theBestList = repository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand));
-			setEkrLevels(theBestList);
+    public Page<StateCurriculumSearchDto> search(StateCurriculumSearchCommand stateCurriculumSearchCommand, Pageable pageable) {
+        if(stateCurriculumSearchCommand.getEkrLevel() != null && !stateCurriculumSearchCommand.getEkrLevel().isEmpty() ||
+                pageable.getSort().toString().equals("ekrLevel: DESC") || pageable.getSort().toString().equals("ekrLevel: ASC")) {
+            List<StateCurriculum> theBestList = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand));
+            setEkrLevels(theBestList);
 
-			if(stateCurriculumSearchCommand.getEkrLevels() != null && !stateCurriculumSearchCommand.getEkrLevels().isEmpty()) {
-				theBestList =  theBestList.stream().filter(
-						sc -> correctEkrLevel(sc.getEkrLevel(), stateCurriculumSearchCommand.getEkrLevels())
-						).collect(Collectors.toList());
-			}
-			return sortList(theBestList, pageable);
-		}
-		Page<StateCurriculum> page = repository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand), pageable);
-		setEkrLevels(page);
-		return page;
-	}
+            if(stateCurriculumSearchCommand.getEkrLevel() != null && !stateCurriculumSearchCommand.getEkrLevel().isEmpty()) {
+                theBestList =  theBestList.stream().filter(
+                        sc -> correctEkrLevel(sc.getEkrLevel(), stateCurriculumSearchCommand.getEkrLevel())
+                        ).collect(Collectors.toList());
+            }
+            Page<StateCurriculum> page = sortList(theBestList, pageable);
+            Page<StateCurriculumSearchDto> newPage = new PageImpl<>(getSearchDtoList(page.getContent()), pageable, theBestList.size());
+            return newPage;
+        }
+        Page<StateCurriculum> page = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand), pageable);
+        setEkrLevels(page);
+        Page<StateCurriculumSearchDto> newPage = new PageImpl<>(getSearchDtoList(page.getContent()), pageable, page.getTotalElements());
+        return newPage;
+    }
+    
+    private static List<StateCurriculumSearchDto> getSearchDtoList(List<StateCurriculum> list) {
+        return list.stream().map(StateCurriculumSearchDto::of).collect(Collectors.toList());
+    }
+	
+	/*
+	 * Attempt to make better solution for search. 
+	 * It Works, but does not support search and filter by EKR level
+	 */
+//	   @SuppressWarnings("unchecked")
+//	    public Page<StateCurriculumSearchDto> search(StateCurriculumSearchCommand criteria, Pageable pageable) {
+//	        return JpaQueryUtil.query(StateCurriculumSearchDto.class, StateCurriculum.class, (root, query, cb) -> {
+//	            ((CriteriaQuery<StateCurriculumSearchDto>)query).select(cb.construct(StateCurriculumSearchDto.class,
+//	                root.get("id"),
+//	                root.get("nameEt"), 
+//	                root.get("nameEn"),
+//	                root.get("validFrom"), 
+//	                root.get("validThru"), 
+//	                root.get("credits"), 
+//	                root.get("status").get("code"),
+//	                root.get("iscedClass").get("code")
+//	                ));
+//
+//	            List<Predicate> filters = new ArrayList<>();
+//	            
+//	            String nameField = Language.EN.equals(criteria.getLang()) ? "nameEn" : "nameEt";
+//	            propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
+//
+//	            if(criteria.getValidFrom() != null) {
+//	                filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), criteria.getValidFrom()));
+//	            }
+//	            if(criteria.getValidThru() != null) {
+//	                filters.add(cb.lessThanOrEqualTo(root.get("validThru"), criteria.getValidThru()));
+//	            }
+//	            if(!CollectionUtils.isEmpty(criteria.getStatus())) {
+//	                filters.add(root.get("status").get("code").in(criteria.getStatus()));
+//	            }
+//	            if(!CollectionUtils.isEmpty(criteria.getIscedClass())) {
+//	                filters.add(root.get("iscedClass").get("code").in(criteria.getIscedClass()));
+//	            }
+//
+//	            return cb.and(filters.toArray(new Predicate[filters.size()]));
+//	        }, pageable, em);
+//	    }
 
 	private static boolean correctEkrLevel(String ekrLevel, List<String> ekrLevels) {
 		return ekrLevels.contains(ekrLevel);
@@ -104,17 +155,17 @@ public class StateCurriculumService {
 		while(iterator.hasNext()) {
 			StateCurriculum s = iterator.next();
 			if(!s.getOccupations().isEmpty()) {
-				String occupation = s.getOccupations().iterator().next().getOccupation().getCode();
+				String occupation = EntityUtil.getCode(s.getOccupations().iterator().next().getOccupation());
 				List<Classifier> occupations = classifierRepository.findParentsByMainClassifier(occupation, "EKR");
 				if(occupations != null && !occupations.isEmpty()) {
-					s.setEkrLevel(occupations.get(0).getNameEt());
+					s.setEkrLevel(occupations.get(0).getCode());
 				}
 			}
 		}
 	}
 
     public boolean isUnique(UniqueCommand command) {
-        return repository.count((root, query, cb) -> {
+        return stateCurriculumRepository.count((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             if(command.getId() != null) {
                 filters.add(cb.notEqual(root.get("id"), command.getId()));
@@ -128,91 +179,84 @@ public class StateCurriculumService {
     }
 
 	public void delete(StateCurriculum curriculum) {
-		repository.delete(curriculum);
+		EntityUtil.deleteEntity(stateCurriculumRepository, curriculum);
 	}
 
-	public StateCurriculum update(StateCurriculum newStateCurriculum, StateCurriculum stateCurriculum) {
-	   EntityUtil.bindToEntity(newStateCurriculum, stateCurriculum, "occupations", "modules");
-	   updateOccupations(stateCurriculum, newStateCurriculum.getOccupations());
-	   updateModules(stateCurriculum, newStateCurriculum.getModules());
-       return repository.save(stateCurriculum);
-	}
-
-    private void updateOccupations(StateCurriculum stateCurriculum, Set<StateCurriculumOccupation> occupations) {
-        Set<StateCurriculumOccupation> newOccupations = new HashSet<>(); 
-        if(occupations != null) {
-            Set<Long> existingOccupations = stateCurriculum.getOccupations().stream().map(o -> o.getId()).collect(Collectors.toSet());
-            occupations.forEach(o ->{
-                if(o.getId() != null && existingOccupations.contains(o.getId())) {
-                    newOccupations.add(stateCurriculum.getOccupations().stream()
-                            .filter(o2 -> o2.getId().equals(o.getId())).findFirst().get());
-                } else if(o.getId() == null) {
-                    newOccupations.add(o);
-                }
-            });
-
-            }
-        stateCurriculum.setOccupations(newOccupations);
+    public List<StateCurriculum> searchAll(StateCurriculumSearchCommand stateCurriculumSearchCommand, Sort sort) {
+        return stateCurriculumRepository.findAll((root, query, cb) -> {
+            return null;
+        }, sort);
     }
-    
-    private void updateModules(StateCurriculum stateCurriculum, Set<StateCurriculumModule> modules) {
-        Set<StateCurriculumModule> newModules = new HashSet<>();
+
+    public StateCurriculum create(StateCurriculumForm stateCurriculumForm) {
+        return save(new StateCurriculum(), stateCurriculumForm);
+    }
+
+    public StateCurriculum save(StateCurriculum stateCurriculum, StateCurriculumForm stateCurriculumForm) {
         
-        if(modules != null) {
-            Set <Long> existingModulesIds =  stateCurriculum.getModules().stream().map(m -> m.getId()).collect(Collectors.toSet());
-            modules.forEach(m -> {
-                Long id = m.getId();
-                if(id == null) {
-                    newModules.add(m);
-                } else if (existingModulesIds.contains(id)){
-                    StateCurriculumModule editedModule = getModuleById(id, stateCurriculum.getModules());
-                    EntityUtil.bindToEntity(m, editedModule, "version", "moduleOccupations", "outcome");
-                    updateModuleOutcome(editedModule.getOutcome(), m.getOutcome());
-                    updateModuleOccupations(editedModule, m.getModuleOccupations());
-                    newModules.add(editedModule);
+        EntityUtil.bindToEntity(stateCurriculumForm, stateCurriculum, classifierRepository, "occupations", "modules");     
+        updateOccupations(stateCurriculum, stateCurriculumForm.getOccupations());
+        updateModules(stateCurriculum, stateCurriculumForm.getModules());
+        return stateCurriculumRepository.save(stateCurriculum);
+    }
+
+    private void updateOccupations(StateCurriculum stateCurriculum, Set<String> occupations) {
+        Set<StateCurriculumOccupation> storedOccupations = stateCurriculum.getOccupations();
+        if(occupations != null && !occupations.isEmpty()) {
+            EntityUtil.bindClassifierCollection(storedOccupations, o -> EntityUtil.getCode(o.getOccupation()), occupations, occupation -> {
+                Classifier c = classifierRepository.getOne(occupation);
+                if(!MainClassCode.KUTSE.name().equals(c.getMainClassCode())) {
+                    throw new IllegalArgumentException("Wrong classifier code: " + c.getMainClassCode());
                 }
+                return new StateCurriculumOccupation(c);
             });
+        } else {
+            stateCurriculum.setOccupations(new HashSet<>());
         }
+    }
+
+    private void updateModules(StateCurriculum stateCurriculum, Set<StateCurriculumModuleDto> moduleDtos) {
+        Set<StateCurriculumModule> newModules = new HashSet<>();
+        moduleDtos.forEach(dto -> {
+            StateCurriculumModule module = dto.getId() == null ? new StateCurriculumModule() : 
+                stateCurriculum.getModules().stream().filter(m -> m.getId().equals(dto.getId())).findFirst().get();
+            module = EntityUtil.bindToEntity(dto, module, classifierRepository, "outcome", "moduleOccupations");
+            StateCurriculumModuleOutcome outcome = module.getOutcome() != null 
+                    ? module.getOutcome() : new StateCurriculumModuleOutcome();
+            outcome.setOutcomesEt(dto.getOutcomesEt());
+            outcome.setOutcomesEn(dto.getOutcomesEn());
+            module.setOutcome(outcome);
+            updateModuleOccupations(module, dto.getModuleOccupations());
+            newModules.add(module);
+        });
         stateCurriculum.setModules(newModules);
     }
 
-    private void updateModuleOccupations(StateCurriculumModule editedModule,
-            Set<StateCurriculumModuleOccupation> moduleOccupations) {
-        Set<StateCurriculumModuleOccupation> newOccupations = new HashSet<>();
-        Set<Long> existingIds = editedModule.getModuleOccupations().stream()
-                .map(StateCurriculumModuleOccupation::getId).collect(Collectors.toSet());
+    private void updateModuleOccupations(StateCurriculumModule module, Set<String> moduleOccupations) {
+        Set<StateCurriculumModuleOccupation> newSet = new HashSet<>();
 
-        if(moduleOccupations != null) {
-            moduleOccupations.forEach(mo -> {
-                Long id = mo.getId();
-                if(id == null) {
-                    newOccupations.add(mo);
-                } else if(existingIds.contains(id)) {
-                    StateCurriculumModuleOccupation moduleOccupation = getModuleOccupationById(id, editedModule.getModuleOccupations());
-                    newOccupations.add(moduleOccupation);
+        if(moduleOccupations != null && !moduleOccupations.isEmpty()) {
+            Map<String, StateCurriculumModuleOccupation> occupations = module.getModuleOccupations().stream()
+                    .collect(Collectors.toMap(o -> EntityUtil.getCode(o.getOccupation()), e -> e));
+            for(String occupation : moduleOccupations) {
+                if(occupations.keySet().contains(occupation)) {
+                    newSet.add(occupations.get(occupation));
+                } else {
+                  Classifier c = classifierRepository.getOne(occupation);
+
+                  if(!MainClassCode.KUTSE.name().equals(c.getMainClassCode()) && 
+                          !MainClassCode.OSAKUTSE.name().equals(c.getMainClassCode()) &&
+                          !MainClassCode.SPETSKUTSE.name().equals(c.getMainClassCode())) {
+                      throw new IllegalArgumentException("Wrong classifier code: " + c.getMainClassCode());
+                  }
+                  newSet.add(new StateCurriculumModuleOccupation(c));
                 }
-            });
-        }
-        editedModule.setModuleOccupations(newOccupations);
+            }
+        } 
+        module.setModuleOccupations(newSet);
     }
 
-    private StateCurriculumModuleOccupation getModuleOccupationById(Long id,
-            Set<StateCurriculumModuleOccupation> moduleOccupations) {
-        return moduleOccupations.stream().filter(mo -> mo.getId().equals(id)).findFirst().get();
-    }
-
-    private void updateModuleOutcome(StateCurriculumModuleOutcome oldOutcome, StateCurriculumModuleOutcome newOutCome) {
-        oldOutcome.setOutcomesEt(newOutCome.getOutcomesEt());
-        oldOutcome.setOutcomesEn(newOutCome.getOutcomesEn());
-    }
-
-    private StateCurriculumModule getModuleById(Long id, Set<StateCurriculumModule> modules) {
-        return modules.stream().filter(m -> m.getId().equals(id)).findFirst().get();
-    }
-
-    public List<StateCurriculum> searchAll(StateCurriculumSearchCommand stateCurriculumSearchCommand, Sort sort) {
-        return repository.findAll((root, query, cb) -> {
-            return null;
-        }, sort);
+    public StateCurriculum create(StateCurriculum stateCurriculum) {
+        return stateCurriculumRepository.save(stateCurriculum);
     }
 }

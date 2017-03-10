@@ -18,7 +18,7 @@ public class CurriculumVersionOccupationModuleThemeCapacity extends BaseEntityWi
     @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false, insertable = false)
     private CurriculumVersionOccupationModuleTheme theme;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier capacityType;
 
     @Column(nullable = false)

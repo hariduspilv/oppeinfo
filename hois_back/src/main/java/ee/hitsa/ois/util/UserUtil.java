@@ -1,9 +1,9 @@
 package ee.hitsa.ois.util;
 
-import ee.hitsa.ois.domain.School;
-import ee.hitsa.ois.domain.Student;
-import ee.hitsa.ois.domain.StudentAbsence;
-import ee.hitsa.ois.domain.StudentRepresentative;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class UserUtil {
@@ -75,5 +75,12 @@ public abstract class UserUtil {
 
     public static boolean isStudentRepresentative(HoisUserDetails user, Student student) {
         return student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
+    }
+
+    public static void assertSameSchool(HoisUserDetails user, School school) {
+        Long schoolId = user.getSchoolId();
+        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school))) {
+            throw new IllegalArgumentException();
+        }
     }
 }

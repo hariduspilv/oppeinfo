@@ -16,9 +16,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.Student;
-import ee.hitsa.ois.domain.StudentRepresentative;
-import ee.hitsa.ois.domain.StudentRepresentativeApplication;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.domain.student.StudentRepresentativeApplication;
 import ee.hitsa.ois.service.StudentRepresentativeService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -26,11 +26,11 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationSearchCommand;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationDeclineForm;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeApplicationForm;
-import ee.hitsa.ois.web.commandobject.StudentRepresentativeForm;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationDeclineForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationForm;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeForm;
 import ee.hitsa.ois.web.dto.student.StudentRepresentativeApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentRepresentativeDto;
 
@@ -41,19 +41,19 @@ public class StudentRepresentativeController {
     @Autowired
     private StudentRepresentativeService studentRepresentativeService;
 
-    @GetMapping("/{studentId}")
+    @GetMapping("/{studentId:\\d+}")
     public Page<StudentRepresentativeDto> getRepresentatives(HoisUserDetails user, @WithEntity("studentId") Student student, Pageable pageable) {
         assertCanView(user, student);
         return studentRepresentativeService.search(user, EntityUtil.getId(student), pageable);
     }
 
-    @GetMapping("/{studentId}/{id}")
+    @GetMapping("/{studentId:\\d+}/{id:\\d+}")
     public StudentRepresentativeDto get(HoisUserDetails user, @WithEntity("id") StudentRepresentative studentRepresentative) {
         assertCanView(user, studentRepresentative.getStudent());
         return StudentRepresentativeDto.of(studentRepresentative, user);
     }
 
-    @PostMapping("/{studentId}")
+    @PostMapping("/{studentId:\\d+}")
     public StudentRepresentativeDto create(HoisUserDetails user, @WithEntity("studentId") Student student, @Valid @RequestBody StudentRepresentativeForm form) {
         if(!UserUtil.canAddStudentRepresentative(user, student)) {
             // TODO
@@ -63,12 +63,10 @@ public class StudentRepresentativeController {
         if(Objects.equals(student.getPerson().getIdcode(), form.getPerson().getIdcode())) {
             throw new ValidationFailedException("person.idcode", "representative-and-student-are-same");
         }
-        StudentRepresentative studentRepresentative = new StudentRepresentative();
-        studentRepresentative.setStudent(student);
-        return get(user, studentRepresentativeService.save(studentRepresentative, form));
+        return get(user, studentRepresentativeService.create(student, form));
     }
 
-    @PutMapping("/{studentId}/{id}")
+    @PutMapping("/{studentId:\\d+}/{id:\\d+}")
     public StudentRepresentativeDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentRepresentative representative, @Valid @RequestBody StudentRepresentativeForm form) {
         if(!UserUtil.canEditStudentRepresentative(user, representative)) {
             // TODO
@@ -77,7 +75,7 @@ public class StudentRepresentativeController {
         return get(user, studentRepresentativeService.save(representative, form));
     }
 
-    @DeleteMapping("/{studentId}/{id}")
+    @DeleteMapping("/{studentId:\\d+}/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudentRepresentative representative, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         if(!UserUtil.canEditStudentRepresentative(user, representative)) {
             // TODO
@@ -96,13 +94,13 @@ public class StudentRepresentativeController {
         studentRepresentativeService.createApplication(user, form);
     }
 
-    @PutMapping("/applications/accept/{id}")
+    @PutMapping("/applications/accept/{id:\\d+}")
     public void acceptApplication(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentRepresentativeApplication application, @SuppressWarnings("unused") @RequestBody VersionedCommand form) {
         assertCanEdit(user, application);
         studentRepresentativeService.acceptApplication(application);
     }
 
-    @PutMapping("/applications/decline/{id}")
+    @PutMapping("/applications/decline/{id:\\d+}")
     public void declineApplication(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentRepresentativeApplication application, @Valid @RequestBody StudentRepresentativeApplicationDeclineForm form) {
         assertCanEdit(user, application);
         studentRepresentativeService.declineApplication(application, form);

@@ -44,7 +44,7 @@ public class UserController {
     public AuthenticatedUser user(Principal principal) {
         if (principal != null) {
             HoisUserDetails userDetails = HoisUserDetails.fromPrincipal(principal);
-            User user = userRepository.findOne(userDetails.getUserId());
+            User user = userRepository.getOne(userDetails.getUserId());
             AuthenticatedUser authenticatedUser = new AuthenticatedUser(user);
             // todo excess line
             Person person = personRepository.findByIdcode(authenticatedUser.getName());
@@ -68,13 +68,14 @@ public class UserController {
         if (principal != null && id != null) {
 
             HoisUserDetails oldUserDetails = HoisUserDetails.fromPrincipal(principal);
-            User user = userRepository.findOne(oldUserDetails.getUserId());
-            Person person = user.getPerson();
-            // todo proper exceptions
-            User u = person.getUsers().stream().filter(it -> id.equals(EntityUtil.getId(it))).findFirst()
-                    .orElseThrow(() -> new RuntimeException("Person has no user with id : " + id));
+            User oldUser = userRepository.getOne(oldUserDetails.getUserId());
+            User newUser = userRepository.getOne(id);
+            if(!EntityUtil.getId(oldUser.getPerson()).equals(EntityUtil.getId(newUser.getPerson()))) {
+                // TODO proper exception
+                throw new RuntimeException("Person has no user with id : " + id);
+            }
 
-            HoisUserDetails userDetails = userDetailsService.getHoisUserDetails(u);
+            HoisUserDetails userDetails = userDetailsService.getHoisUserDetails(newUser);
 
             AbstractAuthenticationToken auth = new PreAuthenticatedAuthenticationToken(principal, "", userDetails.getAuthorities());
             auth.setDetails(userDetails);

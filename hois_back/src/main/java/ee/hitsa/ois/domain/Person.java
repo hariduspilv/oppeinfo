@@ -5,10 +5,11 @@ import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
-import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
+
+import ee.hitsa.ois.util.PersonUtil;
 
 @Entity
 public class Person extends BaseEntityWithId {
@@ -18,20 +19,16 @@ public class Person extends BaseEntityWithId {
     private String idcode;
     private String foreignIdcode;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "sex_code")
     private Classifier sex;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "citizenship_code")
     private Classifier citizenship;
     private String bankaccount;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "language_code")
     private Classifier language;
     private String nativeLanguage;
     private String phone;
     private String address;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "residence_country_code")
     private Classifier residenceCountry;
     private String postcode;
     private String email;
@@ -169,7 +166,6 @@ public class Person extends BaseEntityWithId {
 
     @Transient
     public String getFullname() {
-        // firstname is optional
-        return firstname == null ? lastname : (firstname + " " + lastname);
+        return PersonUtil.fullname(firstname, lastname);
     }
 }

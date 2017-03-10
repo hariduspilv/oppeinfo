@@ -1,0 +1,79 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="loadData()" novalidate>
+      <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'student.name' | translate}}</label>
+            <input ng-model="criteria.name" name="name" type="text" autofocus>
+          </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label class="textInput">{{'student.idcode' | translate}}</label>
+            <input ng-model="criteria.idcode" name="idcode" type="text" md-minlength="11" md-maxlength="11">
+          </md-input-container>
+      </div>
+	  <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'student.curriculum' | translate}}</label>
+            <hois-curriculum-version-select ng-model="criteria.curriculumVersion" name="curriculumVersion" multiple></hois-curriculum-version-select>
+          </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.studentGroup' | translate}}</label>
+            <input ng-model="criteria.studentGroup" name="studentGroup" type="text">
+          </md-input-container>
+      </div>
+	  <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'student.studyForm' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.studyForm" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
+          </md-input-container>
+
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="OPPURSTAATUS" multiple></hois-classifier-select>
+          </md-input-container>
+		</div>
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          </div>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="person.lastname,person.firstname">{{'student.name' | translate}}</th>
+            <th md-column md-order-by="person.idcode">{{'student.idcode' | translate}}</th>
+            <th md-column md-order-by="curriculumVersion.code">{{'student.curriculum' | translate}}</th>
+            <th md-column md-order-by="studentGroup.code">{{'student.studentGroup' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'student.studyForm' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'student.status' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</md-button>
+            </td>
+            <td md-cell>{{::row.idcode}}</td>
+            <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+            <td md-cell>{{::row.studentGroup}}</td>
+            <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

@@ -12,7 +12,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.web.dto.ClassifierSelection;
 
 public interface ClassifierRepository extends JpaRepository<Classifier, String> {
 
@@ -40,14 +39,6 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
     //@Cacheable(cacheNames = "classifier", key="#spec.getSearchCommand().getCacheKey()+#sort.toString()")
     List<Classifier> findAll(Specification<Classifier> spec, Sort sort);
 
-	List<Classifier> findByCode(String code);
-
-	List<Classifier> findTop20ByNameEtStartingWithIgnoreCaseAndMainClassCodeOrderByNameEtAsc(String nameEt, String mainClassCode);
-	List<Classifier> findTop20ByNameEnStartingWithIgnoreCaseAndMainClassCodeOrderByNameEnAsc(String nameEn, String mainClassCode);
-
-    @Query("select new ee.hitsa.ois.web.dto.ClassifierSelection(c.code, c.nameEt, c.nameEn, c.nameRu, c.valid, c.mainClassCode) from Classifier c where c.mainClassCode=?1")
-    List<ClassifierSelection> findAllByMainClassCode(String mainClassCode);
-
 	@CacheEvict(cacheNames = "classifier", allEntries = true)
 	List<Classifier> removeByCode(String code);
 
@@ -69,4 +60,5 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 	List<Classifier> findAreasOfStudyByGroupOfStudy(String code);
 
     Classifier findOneByCodeAndMainClassCode(String code, String mainClassCode);
+
 }

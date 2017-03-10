@@ -1,8 +1,8 @@
 package ee.hitsa.ois.web.dto.student;
 
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.Student;
-import ee.hitsa.ois.domain.StudentGroup;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -11,7 +11,7 @@ public class StudentSearchDto {
     private Long id;
     private String fullname;
     private String idcode;
-    private AutocompleteResult<Long> curriculum;
+    private AutocompleteResult curriculumVersion;
     private String studentGroup;
     private String studyForm;
     private String status;
@@ -40,12 +40,12 @@ public class StudentSearchDto {
         this.idcode = idcode;
     }
 
-    public AutocompleteResult<Long>  getCurriculum() {
-        return curriculum;
+    public AutocompleteResult getCurriculumVersion() {
+        return curriculumVersion;
     }
 
-    public void setCurriculum(AutocompleteResult<Long> curriculum) {
-        this.curriculum = curriculum;
+    public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 
     public String getStudentGroup() {
@@ -77,7 +77,6 @@ public class StudentSearchDto {
         Person p = student.getPerson();
         dto.setFullname(p.getFullname());
         dto.setIdcode(p.getIdcode());
-        dto.setCurriculum(AutocompleteResult.of(student.getCurriculumVersion()));
         StudentGroup sg = student.getStudentGroup();
         dto.setStudentGroup(sg != null ? sg.getCode() : null);
         return dto;

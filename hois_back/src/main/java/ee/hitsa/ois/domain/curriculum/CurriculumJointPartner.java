@@ -2,6 +2,7 @@ package ee.hitsa.ois.domain.curriculum;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -35,7 +36,7 @@ public class CurriculumJointPartner extends BaseEntityWithId{
 	@Size(max=255)
 	private String nameEn;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Classifier ehisSchool;
 
 	public boolean isAbroad() {

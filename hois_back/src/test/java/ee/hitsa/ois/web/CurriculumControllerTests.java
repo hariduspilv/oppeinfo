@@ -33,7 +33,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
-import ee.hitsa.ois.service.CurriculumService;
+import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
@@ -63,10 +63,8 @@ public class CurriculumControllerTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
-
     @Autowired
-    private CurriculumService curriculumService;
-
+    private CurriculumRepository curriculumRepository;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -74,7 +72,7 @@ public class CurriculumControllerTests {
 
     private Curriculum testCurriculum;
 
-    private Long referenceNumber = Long.valueOf(1);
+    private long referenceNumber = -1;
 
     @Before
     public void setup() {
@@ -157,7 +155,7 @@ public class CurriculumControllerTests {
                 CurriculumDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity);
-        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
+        testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
 
         Assert.assertNotNull(testCurriculum);
         Assert.assertEquals("testCode", testCurriculum.getCode());
@@ -251,7 +249,7 @@ public class CurriculumControllerTests {
         Assert.assertTrue(referenceNumbers.contains(moduleRefNum));
 
         // for deleting
-        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
+        testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
 
     }
 
@@ -364,7 +362,7 @@ public class CurriculumControllerTests {
                 CurriculumDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
-        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
+        testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
         Assert.assertFalse(testCurriculum.getNameEt().equals("newName"));
 
         // update curriculum text field and classifier field
@@ -441,7 +439,7 @@ public class CurriculumControllerTests {
         // check that collection items do not change their id when not changed
         // one from join table and other item that is created on form
         Long specialityId = updatedCurriculum.getSpecialities().stream().findFirst().get().getId();
-        testCurriculum = curriculumService.getOne(updatedCurriculum.getId());
+        testCurriculum = curriculumRepository.getOne(updatedCurriculum.getId());
         Long studyLanguageId = testCurriculum.getStudyLanguages().stream().findAny().get().getId();
 
         responseEntity = restTemplate.exchange("/curriculum/{id}", HttpMethod.PUT, new HttpEntity<>(updatedCurriculum), CurriculumDto.class, testCurriculum.getId());
@@ -453,7 +451,7 @@ public class CurriculumControllerTests {
                 .equals(specialityId)).findFirst().get();
         Assert.assertNotNull(updatedSpeciality);
 
-        testCurriculum = curriculumService.getOne(updatedCurriculum.getId());
+        testCurriculum = curriculumRepository.getOne(updatedCurriculum.getId());
         CurriculumStudyLanguage lang = testCurriculum.getStudyLanguages().stream()
                 .filter(l -> l.getId().equals(studyLanguageId)).findFirst().get();
         Assert.assertNotNull(lang);
@@ -469,8 +467,90 @@ public class CurriculumControllerTests {
         Assert.assertNotNull(updatedCurriculum);
         Assert.assertTrue(updatedCurriculum.getStudyLanguages().size() == 3);
         Assert.assertTrue(updatedCurriculum.getSpecialities().size() == 3);
+    }
+    
+    /**
+     * 
+     * This test was created to fix an error, which occurred 
+     * when deleting CurriculumVersion, which have module with the same CurriculumSpeciality,
+     * as some module in another CurriculumVersion 
+     * 
+     * Caused by: org.postgresql.util.PSQLException: 
+     * ERROR: update or delete on table "curriculum_version_hmodule" 
+     * violates foreign key constraint "FK_curriculum_version_hmodule_speciality_curriculum_version_hmo" 
+     * on table "curriculum_version_hmodule_speciality"
+     * Detail: Key (id)=(668) is still referenced from table "curriculum_version_hmodule_speciality".
+     */
+    @Test
+    public void updateVersions() {
+        CurriculumForm curriculumForm = getForm(LocalDate.now());
 
+        curriculumForm.setSpecialities(new HashSet<>());
+        CurriculumSpecialityDto spec1 = getCurriculumSpecialityDto();
+        curriculumForm.getSpecialities().add(spec1);
 
+        CurriculumVersionDto version1 = getCurriculumVersionDto();
+        version1.setSpecialitiesReferenceNumbers(new HashSet<>());
+        version1.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        CurriculumVersionHigherModuleDto module1 = getCurriculumVersionHigherModuleDto();
+        module1.setSpecialitiesReferenceNumbers(new HashSet<>());
+        module1.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        CurriculumVersionHigherModuleDto module2 = getCurriculumVersionHigherModuleDto();
+        module2.setSpecialitiesReferenceNumbers(new HashSet<>());
+        module2.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        version1.setModules(new HashSet<>());
+        version1.getModules().add(module1);
+        version1.getModules().add(module2);
+        
+        CurriculumVersionDto version2 = getCurriculumVersionDto();
+        version2.setSpecialitiesReferenceNumbers(new HashSet<>());
+        version2.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        CurriculumVersionHigherModuleDto module3 = getCurriculumVersionHigherModuleDto();
+        module3.setSpecialitiesReferenceNumbers(new HashSet<>());
+        module3.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        CurriculumVersionHigherModuleDto module4 = getCurriculumVersionHigherModuleDto();
+        module4.setSpecialitiesReferenceNumbers(new HashSet<>());
+        module4.getSpecialitiesReferenceNumbers().add(spec1.getReferenceNumber());
+        
+        version2.setModules(new HashSet<>());
+        version2.getModules().add(module3);
+        version2.getModules().add(module4);
+        
+        curriculumForm.setVersions(new HashSet<>());
+        curriculumForm.getVersions().add(version1);
+        curriculumForm.getVersions().add(version2);
+        
+        ResponseEntity<CurriculumDto> responseEntity = this.restTemplate.postForEntity("/curriculum", curriculumForm,
+                CurriculumDto.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        CurriculumDto dto = responseEntity.getBody();
+        testCurriculum = curriculumRepository.getOne(dto.getId());
+        
+        Assert.assertNotNull(dto);
+        Assert.assertTrue(dto.getVersions().size() == 2);
+        Assert.assertTrue(dto.getSpecialities().size() == 1);
+        
+        dto.getVersions().forEach(v -> {
+            Assert.assertTrue(v.getModules().size() == 2);
+            Assert.assertTrue(v.getSpecialitiesReferenceNumbers().size() == 1);
+        });
+        
+        // remove version. it caused an exception in front end
+        
+        CurriculumVersionDto versionDto = dto.getVersions().stream().findFirst().get();
+        dto.getVersions().remove(versionDto);
+        System.out.println(dto);
+        
+        responseEntity = restTemplate.exchange("/curriculum/{id}", HttpMethod.PUT, new HttpEntity<>(dto), CurriculumDto.class, dto.getId());
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        dto = responseEntity.getBody();
+        Assert.assertNotNull(dto);
+        Assert.assertTrue(dto.getVersions().size() == 1);
     }
 
     @Test
@@ -482,7 +562,7 @@ public class CurriculumControllerTests {
                 CurriculumDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity);
-        testCurriculum = curriculumService.getOne(responseEntity.getBody().getId());
+        testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
         Assert.assertTrue(testCurriculum.getVersions().isEmpty());
         Assert.assertFalse(testCurriculum.getModules().stream().findFirst().get().getOutcomes().isEmpty());
 
@@ -511,18 +591,18 @@ public class CurriculumControllerTests {
         CurriculumVersionOccupationModuleCapacityDto capacity = new CurriculumVersionOccupationModuleCapacityDto();
         capacity.setCapacityType("MAHT_a");
         capacity.setContact(Boolean.TRUE);
-        capacity.setHours(2);
+        capacity.setHours(Integer.valueOf(2));
         savedOccupationModule.getCapacities().add(capacity);
 
         CurriculumVersionOccupationModuleThemeDto theme = new CurriculumVersionOccupationModuleThemeDto();
         theme.setNameEt("themeNameEt");
-        theme.setCredits(1.0);
-        theme.setHours(1);
+        theme.setCredits(Double.valueOf(1.0));
+        theme.setHours(Integer.valueOf(1));
 
         CurriculumVersionOccupationModuleThemeCapacityDto themeCapacity = new CurriculumVersionOccupationModuleThemeCapacityDto();
         themeCapacity.setCapacityType("MAHT_a");
         themeCapacity.setContact(Boolean.TRUE);
-        themeCapacity.setHours(2);
+        themeCapacity.setHours(Integer.valueOf(2));
         theme.getCapacities().add(themeCapacity);
 
         CurriculumVersionOccupationModuleOutcomeDto themeOutcome = new CurriculumVersionOccupationModuleOutcomeDto();
@@ -551,7 +631,7 @@ public class CurriculumControllerTests {
         Assert.assertNotNull(updatedOccupationModule.getThemes().stream().findFirst().get().getId());
     }
 
-    private CurriculumVersionOccupationModuleDto getCurriculumVersionOccupationModuleDto(CurriculumModuleDto curriculumModuleDto) {
+    private static CurriculumVersionOccupationModuleDto getCurriculumVersionOccupationModuleDto(CurriculumModuleDto curriculumModuleDto) {
         CurriculumVersionOccupationModuleDto dto = new CurriculumVersionOccupationModuleDto();
         dto.setRequirementsEt("requirementsEt");
         dto.setAssessmentsEt("assessmentsEt");
@@ -561,9 +641,6 @@ public class CurriculumControllerTests {
         dto.setCurriculumModule(curriculumModuleDto.getId());
         return dto;
     }
-
-
-
 
     private boolean testIsUnique(String code) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/curriculum/unique");
@@ -578,7 +655,7 @@ public class CurriculumControllerTests {
         return responseEntity.getBody().booleanValue();
     }
 
-    private CurriculumForm getForm(LocalDate validFrom) {
+    private static CurriculumForm getForm(LocalDate validFrom) {
         CurriculumForm curriculumForm = new CurriculumForm();
         curriculumForm.setCode("testCode");
         curriculumForm.setOptionalStudyCredits(Integer.valueOf(1));
@@ -644,7 +721,7 @@ public class CurriculumControllerTests {
         curriculumForm.setVersions(versions);
     }
 
-    private CurriculumFileDto getCurriculumFileDto() {
+    private static CurriculumFileDto getCurriculumFileDto() {
         CurriculumFileDto dto = new CurriculumFileDto();
         dto.setEhis(Boolean.FALSE);
         dto.setSendEhis(Boolean.FALSE);
@@ -665,11 +742,11 @@ public class CurriculumControllerTests {
         dto.setNameEn("CurriculumControllerTest");
         dto.setCredits(Double.valueOf(1));
         dto.setOccupation("KUTSE_10491530");
-        dto.setReferenceNumber(referenceNumber++);
+        dto.setReferenceNumber(Long.valueOf(referenceNumber--));
         return dto;
     }
 
-    private CurriculumGradeDto getCurriculumGradeDto() {
+    private static CurriculumGradeDto getCurriculumGradeDto() {
         CurriculumGradeDto dto = new CurriculumGradeDto();
         dto.setNameEt("CurriculumControllerTest");
         dto.setNameEn("CurriculumControllerTest");
@@ -678,7 +755,7 @@ public class CurriculumControllerTests {
         return dto;
     }
 
-    private CurriculumJointPartnerDto getCurriculumJointPartnerDto() {
+    private static CurriculumJointPartnerDto getCurriculumJointPartnerDto() {
         CurriculumJointPartnerDto dto = new CurriculumJointPartnerDto();
         dto.setAbroad(Boolean.FALSE);
         dto.setContractEt("CurriculumControllerTest");
@@ -688,7 +765,7 @@ public class CurriculumControllerTests {
         return dto;
     }
 
-    private CurriculumOccupationDto getCurriculumOccupationDto(String occupation) {
+    private static CurriculumOccupationDto getCurriculumOccupationDto(String occupation) {
         CurriculumOccupationDto dto = new CurriculumOccupationDto();
         dto.setOccupationGrant(Boolean.FALSE);
         dto.setOccupation(occupation);
@@ -699,54 +776,54 @@ public class CurriculumControllerTests {
         return dto;
     }
 
-    private CurriculumModuleDto getCurriculumModuleDto(){
+    private static CurriculumModuleDto getCurriculumModuleDto(){
         CurriculumModuleDto dto = new CurriculumModuleDto();
         dto.setNameEt("CurriculumControllerTest");
         dto.setObjectivesEt("CurriculumControllerTest");
         dto.setModule("KUTSEMOODUL_P");
         dto.setPractice(Boolean.FALSE);
-        dto.setCredits(1);
+        dto.setCredits(Integer.valueOf(1));
         dto.setOccupations(Sets.newLinkedHashSet("OSAKUTSE_10498104", "KUTSE_10463859"));
         dto.setCompetences(Sets.newLinkedHashSet("KOMPETENTS_4", "KOMPETENTS_13"));
         dto.setOutcomes(Sets.newLinkedHashSet(getCurriculumModuleOutcomeDto(), getCurriculumModuleOutcomeDto()));
         return dto;
     }
 
-    private CurriculumModuleOutcomeDto getCurriculumModuleOutcomeDto() {
+    private static CurriculumModuleOutcomeDto getCurriculumModuleOutcomeDto() {
         CurriculumModuleOutcomeDto dto = new CurriculumModuleOutcomeDto();
         dto.setOutcomeEt("CurriculumControllerTest");
         return dto;
     }
 
-    private CurriculumVersionDto getCurriculumVersionDto() {
+    private static CurriculumVersionDto getCurriculumVersionDto() {
         CurriculumVersionDto dto = new CurriculumVersionDto();
         dto.setCode("CurriculumControllerTest");
         dto.setType("OPPEKAVA_VERSIOON_LIIK_O");
         dto.setStatus("OPPEKAVA_VERSIOON_STAATUS_K");
-        dto.setAdmissionYear(2017);
+        dto.setAdmissionYear(Integer.valueOf(2017));
         return dto;
     }
 
-    private CurriculumVersionHigherModuleDto getCurriculumVersionHigherModuleDto() {
+    private static CurriculumVersionHigherModuleDto getCurriculumVersionHigherModuleDto() {
         CurriculumVersionHigherModuleDto dto = new CurriculumVersionHigherModuleDto();
-        dto.setTotalCredits(1);
-        dto.setOptionalStudyCredits(1);
+        dto.setTotalCredits(Integer.valueOf(1));
+        dto.setOptionalStudyCredits(Integer.valueOf(1));
         dto.setType("KORGMOODUL_F");
         dto.setNameEn("CurriculumControllerTest");
         dto.setNameEt("CurriculumControllerTest");
-        dto.setElectiveModulesNumber(1);
-        dto.setCompulsoryStudyCredits(1);
+        dto.setElectiveModulesNumber(Integer.valueOf(1));
+        dto.setCompulsoryStudyCredits(Integer.valueOf(1));
         return dto;
     }
 
-    private CurriculumVersionElectiveModuleDto getCurriculumVersionElectiveModuleDto() {
+    private static CurriculumVersionElectiveModuleDto getCurriculumVersionElectiveModuleDto() {
         CurriculumVersionElectiveModuleDto dto = new CurriculumVersionElectiveModuleDto();
         dto.setNameEt("CurriculumControllerTest");
         dto.setNameEn("CurriculumControllerTest");
         return dto;
     }
 
-    private CurriculumVersionHigherModuleSubjectDto getCurriculumVersionHigherModuleSubjectDto(Long subjectId, Boolean isOptional){
+    private static CurriculumVersionHigherModuleSubjectDto getCurriculumVersionHigherModuleSubjectDto(Long subjectId, Boolean isOptional){
         CurriculumVersionHigherModuleSubjectDto dto = new CurriculumVersionHigherModuleSubjectDto();
         dto.setSubjectId(subjectId);
         dto.setOptional(isOptional);

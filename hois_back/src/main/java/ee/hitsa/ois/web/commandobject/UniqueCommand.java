@@ -5,6 +5,7 @@ public class UniqueCommand {
 	Long fk;
 	String paramName;
 	String paramValue;
+	Boolean countOnlyValid;
 
 	public String getParamName() {
 		return paramName;
@@ -30,4 +31,10 @@ public class UniqueCommand {
 	public void setFk(Long fk) {
 		this.fk = fk;
 	}
+    public Boolean getCountOnlyValid() {
+        return countOnlyValid;
+    }
+    public void setCountOnlyValid(Boolean countOnlyValid) {
+        this.countOnlyValid = countOnlyValid;
+    }
 }

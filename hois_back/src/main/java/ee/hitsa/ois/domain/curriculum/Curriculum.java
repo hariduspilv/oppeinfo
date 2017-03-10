@@ -18,8 +18,8 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.School;
-import ee.hitsa.ois.domain.StateCurriculum;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 
 @Entity
 public class Curriculum extends BaseEntityWithId {

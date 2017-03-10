@@ -1,9 +1,12 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.util.List;
+
 public class ClassifierSearchCommand extends SearchCommand {
 
     private String value;
     private String mainClassCode;
+    private List<String> mainClassCodes;
     private Boolean vocational;
     private Boolean higher;
 
@@ -39,14 +42,15 @@ public class ClassifierSearchCommand extends SearchCommand {
         this.higher = higher;
     }
 
-//    /**
-//     * This method is used by ClassifierRepository
-//     */
-//    public String getCacheKey() {
-//        return "search:"+value+getCode()+getName()+mainClassCode+getLang();
-//    }
+	public List<String> getMainClassCodes() {
+        return mainClassCodes;
+    }
 
-	@Override
+    public void setMainClassCodes(List<String> mainClassCodes) {
+        this.mainClassCodes = mainClassCodes;
+    }
+
+    @Override
 	public String toString() {
 		return "ClassifierSearchCommand [value=" + value + ", code=" + getCode() + ", name=" + getName() + ", mainClassCode="
 				+ mainClassCode + ", language=" + getLang() + "]";

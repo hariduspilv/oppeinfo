@@ -3,6 +3,7 @@ package ee.hitsa.ois.domain.curriculum;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -23,10 +24,10 @@ public class CurriculumFile extends BaseEntityWithId{
 	@NotNull
 	private boolean sendEhis;
 
-	@ManyToOne(optional = false, cascade = CascadeType.ALL)
+	@ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private OisFile oisFile;
 
-	@ManyToOne(optional = false)
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier ehisFile;
 
 	public boolean isEhis() {

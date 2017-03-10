@@ -1,10 +1,8 @@
 package ee.hitsa.ois.web.commandobject;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import ee.hitsa.ois.EntityWithIdJsonDeserializer;
-import ee.hitsa.ois.domain.Subject;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.NotEmpty;
 
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
@@ -16,14 +14,14 @@ import java.util.Set;
 
 public class SubjectForm extends VersionedCommand {
 
-    @NotNull
-    @Size(min = 1, max = 20)
+    @NotEmpty
+    @Size(max = 20)
     private String code;
-    @NotNull
-    @Size(min = 1, max = 255)
+    @NotEmpty
+    @Size(max = 255)
     private String nameEt;
-    @NotNull
-    @Size(min = 1, max = 255)
+    @NotEmpty
+    @Size(max = 255)
     private String nameEn;
     @Size(min = 1, max = 4000)
     private String description;
@@ -32,24 +30,23 @@ public class SubjectForm extends VersionedCommand {
     @DecimalMin("0.1")
     private BigDecimal credits;
 
-    @NotNull
-    @Size(min = 1)
+    @NotEmpty
     @ClassifierRestriction(MainClassCode.HINDAMISVIIS)
     private String assessment;
 
     @Size(max = 10000)
     private String assessmentDescription;
-    @NotNull
-    @Size(min = 1, max = 10000)
+    @NotEmpty
+    @Size(max = 10000)
     private String objectivesEt;
-    @NotNull
-    @Size(min = 1, max = 10000)
+    @NotEmpty
+    @Size(max = 10000)
     private String objectivesEn;
-    @NotNull
-    @Size(min = 1, max = 10000)
+    @NotEmpty
+    @Size(max = 10000)
     private String outcomesEt;
-    @NotNull
-    @Size(min = 1, max = 10000)
+    @NotEmpty
+    @Size(max = 10000)
     private String outcomesEn;
     @Size(max = 4000)
     private String descriptionEt;
@@ -73,19 +70,15 @@ public class SubjectForm extends VersionedCommand {
 
     private Long schoolDepartment;
 
-    @NotNull
-    @Size(min = 1)
+    @NotEmpty
     @ClassifierRestriction(MainClassCode.AINESTAATUS)
     private String status;
 
-    @JsonDeserialize(contentUsing = EntityWithIdJsonDeserializer.class)
-    private Set<Subject> mandatoryPrerequisiteSubjects;
+    private Set<EntityConnectionCommand> mandatoryPrerequisiteSubjects;
 
-    @JsonDeserialize(contentUsing = EntityWithIdJsonDeserializer.class)
-    private Set<Subject> recommendedPrerequisiteSubjects;
+    private Set<EntityConnectionCommand> recommendedPrerequisiteSubjects;
 
-    @JsonDeserialize(contentUsing = EntityWithIdJsonDeserializer.class)
-    private Set<Subject> substituteSubjects;
+    private Set<EntityConnectionCommand> substituteSubjects;
 
     public String getCode() {
         return code;
@@ -263,27 +256,27 @@ public class SubjectForm extends VersionedCommand {
         this.schoolDepartment = schoolDepartment;
     }
 
-    public Set<Subject> getMandatoryPrerequisiteSubjects() {
+    public Set<EntityConnectionCommand> getMandatoryPrerequisiteSubjects() {
         return mandatoryPrerequisiteSubjects != null ? mandatoryPrerequisiteSubjects : Collections.emptySet();
     }
 
-    public void setMandatoryPrerequisiteSubjects(Set<Subject> mandatoryPrerequisiteSubjects) {
+    public void setMandatoryPrerequisiteSubjects(Set<EntityConnectionCommand> mandatoryPrerequisiteSubjects) {
         this.mandatoryPrerequisiteSubjects = mandatoryPrerequisiteSubjects;
     }
 
-    public Set<Subject> getRecommendedPrerequisiteSubjects() {
+    public Set<EntityConnectionCommand> getRecommendedPrerequisiteSubjects() {
         return recommendedPrerequisiteSubjects != null ? recommendedPrerequisiteSubjects : Collections.emptySet();
     }
 
-    public void setRecommendedPrerequisiteSubjects(Set<Subject> recommendedPrerequisiteSubjects) {
+    public void setRecommendedPrerequisiteSubjects(Set<EntityConnectionCommand> recommendedPrerequisiteSubjects) {
         this.recommendedPrerequisiteSubjects = recommendedPrerequisiteSubjects;
     }
 
-    public Set<Subject> getSubstituteSubjects() {
+    public Set<EntityConnectionCommand> getSubstituteSubjects() {
         return substituteSubjects != null ? substituteSubjects : Collections.emptySet();
     }
 
-    public void setSubstituteSubjects(Set<Subject> substituteSubjects) {
+    public void setSubstituteSubjects(Set<EntityConnectionCommand> substituteSubjects) {
         this.substituteSubjects = substituteSubjects;
     }
 }

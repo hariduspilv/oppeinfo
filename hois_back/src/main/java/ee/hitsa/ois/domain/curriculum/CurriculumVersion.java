@@ -20,7 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.SchoolDepartment;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
 
 @Entity
 public class CurriculumVersion extends BaseEntityWithId {

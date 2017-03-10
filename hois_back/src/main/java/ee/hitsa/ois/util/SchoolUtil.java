@@ -1,6 +1,6 @@
 package ee.hitsa.ois.util;
 
-import ee.hitsa.ois.domain.School;
+import ee.hitsa.ois.domain.school.School;
 
 public class SchoolUtil {
 

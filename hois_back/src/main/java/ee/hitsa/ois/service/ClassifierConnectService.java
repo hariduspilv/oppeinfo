@@ -57,11 +57,11 @@ public class ClassifierConnectService {
 		}
 	}
 
-	private boolean notInNewParents(ClassifierConnect oldParent, List<Classifier> newParents) {
+	private static boolean notInNewParents(ClassifierConnect oldParent, List<Classifier> newParents) {
 	    return !newParents.stream().anyMatch(newParent -> newParent.getCode().equals(oldParent.getConnectClassifier().getCode()));
 	}
 
-	private void removeUnchangedConnections(List<Classifier> newParents, List<ClassifierConnect> oldParents,
+	private static void removeUnchangedConnections(List<Classifier> newParents, List<ClassifierConnect> oldParents,
 			String code) {
 
 		newParents.removeIf(newParent -> inOldParents(newParent, oldParents));
@@ -77,7 +77,7 @@ public class ClassifierConnectService {
 		}
 	}
 
-	private boolean inOldParents(Classifier newParent, List<ClassifierConnect> oldParents) {
+	private static boolean inOldParents(Classifier newParent, List<ClassifierConnect> oldParents) {
 		return oldParents.stream().anyMatch(oldParent -> newParent.getCode().equals(oldParent.getConnectClassifier().getCode()));
 	}
 

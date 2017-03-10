@@ -1,0 +1,70 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="loadData()" novalidate>
+      <div layout="row">
+        <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
+          <md-input-container>
+            <label class="textInput">{{'generalmessage.title' | translate}}</label>
+            <input ng-model="criteria.title" type="text" autofocus>
+          </md-input-container>
+
+          <md-input-container>
+             <md-datepicker ng-model="criteria.validFrom" md-placeholder="{{'generalmessage.validFrom' | translate}}"></md-datepicker>
+          </md-input-container>
+          <md-input-container>
+             <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom" md-placeholder="{{'generalmessage.validThru' | translate}}"></md-datepicker>
+          </md-input-container>
+
+          <md-input-container>
+            <label>{{'generalmessage.targets' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.targets" model-value-attr="code" main-classifier-code="ROLL" multiple></hois-classifier-select>
+          </md-input-container>
+
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="#/generalmessages/new">{{'main.button.create' | translate}}</md-button>
+          </div>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="title">{{'generalmessage.title' | translate}}</th>
+            <th md-column md-order-by="validFrom">{{'generalmessage.validFrom' | translate}}</th>
+            <th md-column md-order-by="validThru">{{'generalmessage.validThru' | translate}}</th>
+            <th md-column>{{'generalmessage.targets' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.title}}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.validFrom} }}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="role in row.targets | orderBy: 'nameEt'">
+                  <td>{{currentLanguageNameField(role)}}</td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/generalmessages/{{::row.id}}">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

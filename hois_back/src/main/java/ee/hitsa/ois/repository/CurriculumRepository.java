@@ -13,5 +13,5 @@ public interface CurriculumRepository extends JpaRepository<Curriculum, Long> {
     // TODO implement as fetch first id (count is costly operation)
     long count(Specification<Curriculum> spec);
 
-    List<AutocompleteResult<Long>> findAllBySchool_id(Long schoolId);
+    List<AutocompleteResult> findAllBySchool_id(Long schoolId);
 }

@@ -15,10 +15,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.GeneralMessage;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.GeneralMessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.GeneralMessageForm;
@@ -31,8 +30,6 @@ public class GeneralMessageController {
 
     @Autowired
     private GeneralMessageService generalMessageService;
-    @Autowired
-    private SchoolRepository schoolRepository;
 
     @GetMapping("/show")
     public Page<GeneralMessageDto> show(HoisUserDetails user, Pageable pageable) {
@@ -44,36 +41,26 @@ public class GeneralMessageController {
         return generalMessageService.search(user.getSchoolId(), criteria, pageable);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public GeneralMessageDto getGeneralMessage(HoisUserDetails user, @WithEntity("id") GeneralMessage generalMessage) {
-        assertSameSchool(user, generalMessage);
+        UserUtil.assertSameSchool(user, generalMessage.getSchool());
         return GeneralMessageDto.of(generalMessage);
     }
 
     @PostMapping
     public GeneralMessageDto createGeneralMessage(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
-        GeneralMessage generalMessage = EntityUtil.bindToEntity(form, new GeneralMessage(), "targets");
-        generalMessage.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        return getGeneralMessage(user, generalMessageService.save(generalMessage, form.getTargets()));
+        return getGeneralMessage(user, generalMessageService.create(user, form));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public GeneralMessageDto updateGeneralMessage(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) GeneralMessage generalMessage, @Valid @RequestBody GeneralMessageForm form) {
-        assertSameSchool(user, generalMessage);
-        EntityUtil.bindToEntity(form, generalMessage, "targets");
-        return getGeneralMessage(user, generalMessageService.save(generalMessage, form.getTargets()));
+        UserUtil.assertSameSchool(user, generalMessage.getSchool());
+        return getGeneralMessage(user, generalMessageService.save(generalMessage, form));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public void deleteGeneralMessage(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") GeneralMessage generalMessage, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertSameSchool(user, generalMessage);
+        UserUtil.assertSameSchool(user, generalMessage.getSchool());
         generalMessageService.delete(generalMessage);
-    }
-
-    private static void assertSameSchool(HoisUserDetails user, GeneralMessage generalMessage) {
-        Long schoolId = user.getSchoolId();
-        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(generalMessage.getSchool()))) {
-            throw new IllegalArgumentException();
-        }
     }
 }

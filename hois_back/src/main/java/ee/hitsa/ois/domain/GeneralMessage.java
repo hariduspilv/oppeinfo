@@ -10,6 +10,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
+import ee.hitsa.ois.domain.school.School;
+
 @Entity
 public class GeneralMessage extends BaseEntityWithId {
 

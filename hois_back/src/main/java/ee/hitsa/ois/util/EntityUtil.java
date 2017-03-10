@@ -2,6 +2,7 @@ package ee.hitsa.ois.util;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -30,6 +31,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.ClassUtils;
+import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
@@ -38,6 +40,7 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public abstract class EntityUtil {
 
@@ -163,13 +166,22 @@ public abstract class EntityUtil {
                             Object value = readMethod.invoke(entity);
                             writeMethod.invoke(dto, value);
                         } else {
-                            // special handling for Classifier -> String and BaseEntityWithId -> Long
+                            // special handling for Classifier -> String and BaseEntityWithId -> Long and BaseEntityWithId -> AutocompleteResult
                             if(Classifier.class.isAssignableFrom(sourcePropertyType) && String.class.isAssignableFrom(targetPropertyType)) {
                                 Object value = readMethod.invoke(entity);
                                 writeMethod.invoke(dto, getNullableCode((Classifier)value));
                             }else if(BaseEntityWithId.class.isAssignableFrom(sourcePropertyType) && Long.class.isAssignableFrom(targetPropertyType)) {
                                 Object value = readMethod.invoke(entity);
                                 writeMethod.invoke(dto, getNullableId((BaseEntityWithId)value));
+                            }else if(BaseEntityWithId.class.isAssignableFrom(sourcePropertyType) && AutocompleteResult.class.isAssignableFrom(targetPropertyType)) {
+                                Method m = ReflectionUtils.findMethod(AutocompleteResult.class, "of", sourcePropertyType);
+                                if(m != null && Modifier.isStatic(m.getModifiers()) && Modifier.isPublic(m.getModifiers())) {
+                                    Object value = readMethod.invoke(entity);
+                                    if(value != null) {
+                                        value = m.invoke(null, value);
+                                    }
+                                    writeMethod.invoke(dto, value);
+                                }
                             }
                         }
                      } catch (Throwable e) {
@@ -214,6 +226,54 @@ public abstract class EntityUtil {
                 destination.setPropertyValue(p, c);
             }
         });
+    }
+
+    public static void setEntityFromRepository(Object command, Object entity,
+            JpaRepository<?, Long> repository, String...fields) {
+        List<String> fieldsList = Arrays.asList(fields);
+        for(PropertyDescriptor spd : BeanUtils.getPropertyDescriptors(command.getClass())) {
+            Method readMethod = spd.getReadMethod();
+            String propertyName = spd.getName();
+            if(readMethod != null && fieldsList.contains(propertyName) && Modifier.isPublic(readMethod.getDeclaringClass().getModifiers())) {
+                PropertyDescriptor tpd = BeanUtils.getPropertyDescriptor(entity.getClass(), propertyName);
+                if(tpd == null) {
+                    continue;
+                }
+                Method writeMethod = tpd.getWriteMethod();
+                if (writeMethod != null && Modifier.isPublic(writeMethod.getDeclaringClass().getModifiers())) {
+                    try {
+                        Long id = null;
+                        //usually Long is used in DTO classes to have references to other objects, but
+                        //sometimes ee.hitsa.ois.web.dto.AutoCompleteResult is also used.
+                        Object wrapper = readMethod.invoke(command);
+                        if (wrapper != null) {
+                            if (wrapper instanceof Long) {
+                                id = (Long) wrapper;
+                            } else {
+                                id = getIdFromWrapper(wrapper);
+                            }
+                        }
+
+                        if (id != null) {
+                            writeMethod.invoke(entity, repository.getOne(id));
+                        }
+                    } catch (Throwable e) {
+                        throw new FatalBeanException("Could not copy property '" + propertyName + "' from command to entity", e);
+                    }
+                }
+            }
+        }
+    }
+
+    private static Long getIdFromWrapper(Object wrapper)
+            throws IllegalAccessException, InvocationTargetException {
+        Long id = null;
+        Method getIdMethod = BeanUtils.findMethod(wrapper.getClass(), "getId");
+        if(getIdMethod != null && Modifier.isPublic(getIdMethod.getDeclaringClass().getModifiers())
+                && getIdMethod.getReturnType() == Long.class) {
+            id = (Long) getIdMethod.invoke(wrapper);
+        }
+        return id;
     }
 
     /**
@@ -357,4 +417,5 @@ public abstract class EntityUtil {
     }
 
     private static final ConcurrentMap<String, ConcurrentMap<Language, String>> PROPERTY_NAME_CACHE = new ConcurrentHashMap<>();
+
 }

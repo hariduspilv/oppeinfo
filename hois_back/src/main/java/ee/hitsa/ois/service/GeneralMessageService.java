@@ -1,15 +1,14 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -26,20 +25,21 @@ import ee.hitsa.ois.domain.GeneralMessageTarget;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.GeneralMessageRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.web.commandobject.GeneralMessageForm;
 import ee.hitsa.ois.web.commandobject.GeneralMessageSearchCommand;
 import ee.hitsa.ois.web.dto.GeneralMessageDto;
 
 @Transactional
 @Service
 public class GeneralMessageService {
-    private static final String SHOW_QUERY_COMMON = "from general_message g where g.school_id=? "+
+    private static final String SHOW_MESSAGES_FROM = "from general_message g where g.school_id=:schoolId "+
         "and (g.valid_from is null or g.valid_from <= now()) and (g.valid_thru is null or g.valid_thru >= cast(now() as date)) "+
-        "and g.id in (select gt.general_message_id from general_message_target gt where gt.role_code in (select u.role_code from user_ u where u.id=?))";
-    private static final String SHOW_QUERY = String.format("select g.id, g.title, g.inserted %s order by g.inserted, g.title", SHOW_QUERY_COMMON);
-    private static final String SHOW_COUNT_QUERY = "select count(*) " + SHOW_QUERY_COMMON;
+        "and g.id in (select gt.general_message_id from general_message_target gt where gt.role_code in (select u.role_code from user_ u where u.id=:userId))";
+    private static final String SHOW_MESSAGES_SELECT = "g.id, g.title, g.inserted";
 
     @Autowired
     private EntityManager em;
@@ -47,18 +47,15 @@ public class GeneralMessageService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private GeneralMessageRepository generalMessageRepository;
+    @Autowired
+    private SchoolRepository schoolRepository;
 
     public Page<GeneralMessageDto> show(HoisUserDetails user, Pageable pageable) {
-        Query q = em.createNativeQuery(SHOW_QUERY);
-        q.setParameter(1, user.getSchoolId());
-        q.setParameter(2, user.getUserId());
-        Page<Object[]> messages = JpaQueryUtil.pagingResult(q, pageable, () -> {
-            Query cq = em.createNativeQuery(SHOW_COUNT_QUERY);
-            cq.setParameter(1, user.getSchoolId());
-            cq.setParameter(2, user.getUserId());
-            return (Number)cq.getSingleResult();
-        });
-        return messages.map(d -> new GeneralMessageDto(Long.valueOf(((Number)d[0]).longValue()), (String)d[1], LocalDateTime.ofInstant(((java.sql.Timestamp)d[2]).toInstant(), ZoneId.systemDefault())));
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SHOW_MESSAGES_FROM, pageable);
+        qb.parameter("schoolId", user.getSchoolId());
+        qb.parameter("userId", user.getUserId());
+        Page<Object[]> messages = JpaQueryUtil.pagingResult(qb.select(SHOW_MESSAGES_SELECT, em), pageable, () -> qb.count(em));
+        return messages.map(d -> new GeneralMessageDto(resultAsLong(d, 0), (String)d[1], resultAsLocalDateTime(d, 2)));
     }
 
     public Page<GeneralMessageDto> search(Long schoolId, GeneralMessageSearchCommand criteria, Pageable pageable) {
@@ -71,11 +68,11 @@ public class GeneralMessageService {
             // display periods should overlap
             LocalDate validFrom = criteria.getValidFrom();
             if(validFrom != null) {
-                filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), validFrom), cb.isNull(root.get("validThru"))));
+                filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), validFrom));
             }
             LocalDate validThru = criteria.getValidThru();
             if(validThru != null) {
-                filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), validThru), cb.isNull(root.get("validFrom"))));
+                filters.add(cb.lessThanOrEqualTo(root.get("validThru"), validThru));
             }
             List<String> targets = criteria.getTargets();
             if(targets != null && !targets.isEmpty()) {
@@ -89,7 +86,15 @@ public class GeneralMessageService {
         }, pageable).map(GeneralMessageDto::of);
     }
 
-    public GeneralMessage save(GeneralMessage generalMessage, List<String> targetCodes) {
+    public GeneralMessage create(HoisUserDetails user, GeneralMessageForm form) {
+        GeneralMessage generalMessage = new GeneralMessage();
+        generalMessage.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(generalMessage, form);
+    }
+
+    public GeneralMessage save(GeneralMessage generalMessage, GeneralMessageForm form) {
+        EntityUtil.bindToEntity(form, generalMessage, "targets");
+        List<String> targetCodes = form.getTargets();
         if(targetCodes != null) {
             List<GeneralMessageTarget> storedTargets = generalMessage.getTargets();
             if(storedTargets == null) {

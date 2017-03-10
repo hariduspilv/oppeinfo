@@ -14,7 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.domain.TeacherOccupation;
+import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationForm;
 
 @RunWith(SpringRunner.class)

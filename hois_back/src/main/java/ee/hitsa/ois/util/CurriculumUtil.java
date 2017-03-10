@@ -19,4 +19,8 @@ public class CurriculumUtil {
     public static boolean isVocational(Classifier studyLevel) {
         return studyLevel.getValue().charAt(0) < SCHOOL_STUDY_LEVEL;
     }
+
+    public static String versionName(String versionCode, String curriculumName) {
+        return versionCode+" "+curriculumName;
+    }
 }

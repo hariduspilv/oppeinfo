@@ -1,0 +1,74 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+<h1>this is test page</h1>
+<form name="testForm" layout="column" >
+  <md-input-container>
+    <label>input-text</label>
+    <input ng-model="inputText" type="text" name="inputText" test-hois-validator test-validator-arbitrary="arbitraryFunction"
+    test-validator-custom="customFunction">
+    <div md-colors="{color: 'warn-A400'}"  ng-messages="testForm.inputText.$error">
+        <div ng-message="arbitrary">arbitrary error text</div>
+        <div ng-message="custom">custom error text</div>
+    </div>
+  </md-input-container>
+
+  <div layout="row">
+    <md-input-container layout="row">
+      <span class="label">radio group</span>
+      <md-radio-group ng-model="radioGroup1" layout="row">
+        <md-radio-button ng-value="true" aria-label="yes">{{ 'main.yes' | translate }}</md-radio-button>
+        <md-radio-button ng-value="false" aria-label="no">{{ 'main.no' | translate }}</md-radio-button>
+      </md-radio-group>
+    </md-input-container>
+  </div>
+
+  <div layout="row" class="horizontal-radio-group">
+    <md-input-container layout="row" flex="15">
+      <label class="md-required">radio group required</label>
+    </md-input-container>
+    <md-input-container layout="row" flex="35">
+      <md-radio-group ng-model="radioGroup2" layout="row">
+        <md-radio-button ng-value="true" aria-label="yes">{{ 'main.yes' | translate }}</md-radio-button>
+        <md-radio-button ng-value="false" aria-label="no">{{ 'main.no' | translate }}</md-radio-button>
+      </md-radio-group>
+    </md-input-container>
+  </div>
+
+<div layout="row">
+  <md-input-container flex>
+    <label>classifier radio</label>
+    <hois-classifier-radio layout="row" ng-model="radioGroup3" model-value-attr="code" main-classifier-code="KUTSEHINDAMISVIIS" required></hois-classifier-radio>
+  </md-input-container>
+</div>
+
+<div layout="row">
+  <md-input-container flex>
+    <label>multi classifier select</label>
+    <hois-classifier-select ng-model="multiClassifier"  main-classifier-codes="KUTSE, OSAKUTSE"></hois-classifier-select>
+  </md-input-container>
+</div>
+
+<div layout="row">
+  <md-input-container flex>
+    <label>multi classifier value</label>
+    <hois-classifier-value ng-model="multiClassifier"  main-classifier-codes="KUTSE, OSAKUTSE"></hois-classifier-value>
+  </md-input-container>
+</div>
+
+
+</form>
+</div>
+<div>
+  <form name="acMultiForm">
+    <hois-autocomplete ng-model="multiAC" label='req' method="subjects" multiple="true" required="true"></hois-autocomplete>
+    <hois-autocomplete ng-model="multiACopt" label='opt' method="subjects" multiple="true"></hois-autocomplete>
+    <md-button ng-click="testMultiAC()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+  </form>
+</div>
+<div>
+  <form name="acSingleForm">
+    <hois-autocomplete ng-model="singleAC" label='req' method="subjects" required="true"></hois-autocomplete>
+    <hois-autocomplete ng-model="singleACopt" label='opt' method="subjects"></hois-autocomplete>
+    <md-button ng-click="testSingleAC()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+  </form>
+</div>
+

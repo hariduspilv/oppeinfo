@@ -1,6 +1,7 @@
 package ee.hitsa.ois.domain.curriculum;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.validation.constraints.Size;
 
@@ -21,7 +22,7 @@ public class CurriculumGrade extends BaseEntityWithId{
 	@Size(max=255)
 	private String nameGenitiveEt;
 
-	@ManyToOne(optional = false)
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier ehisGrade;
 
 	public String getNameEt() {

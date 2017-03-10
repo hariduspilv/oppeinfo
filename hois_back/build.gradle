@@ -1,6 +1,6 @@
 buildscript {
 	ext {
-		springBootVersion = '1.4.4.RELEASE'
+		springBootVersion = '1.5.1.RELEASE'
 	}
 	repositories {
 		mavenCentral()
@@ -29,7 +29,9 @@ jar {
 }
 
 test {
-	systemProperties = System.properties
+	if (System.properties['spring.config.location']) {
+		systemProperties = System.properties
+	}
 }
 
 sourceCompatibility = 1.8

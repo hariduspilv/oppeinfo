@@ -1,45 +1,47 @@
 package ee.hitsa.ois.domain;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.JoinColumn;
 import javax.persistence.OneToMany;
-import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.Hibernate;
-import org.hibernate.annotations.Fetch;
-import org.hibernate.annotations.FetchMode;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.validation.NotEmpty;
 
 @Entity
 public class Classifier extends BaseEntity {
     private static final long serialVersionUID = 3111361264166192650L;
 
     @Id
-    @Size(min = 1, max = 200)
-    @NotNull
+    @Size(max = 200)
+    @NotEmpty
     // https://hibernate.atlassian.net/browse/HHH-3718
     private String code;
 
-    @NotNull
+    @NotEmpty
     private String value;
     private String value2;
 
-    @NotNull
+    @NotEmpty
     private String nameEt;
     private String nameEn;
     private String nameRu;
     private String mainClassCode;
 
-    //@Cacheable can't serialize lazily fetched list
-    @OneToMany(mappedBy = "mainClassCode", fetch = FetchType.EAGER)
-    @Fetch(FetchMode.SUBSELECT)
+    //lazy load causes - org.springframework.http.converter.HttpMessageNotWritableException: Could not write content: failed to lazily initialize a collection of role: ee.hitsa.ois.domain.Classifier.children, could not initialize proxy - no Session (through reference chain: ee.hitsa.ois.domain.Classifier["children"]);
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name = "mainClassCode", nullable = false, updatable = false, insertable = false)
     private Set<Classifier> children;
 
     private String description;
@@ -53,6 +55,11 @@ public class Classifier extends BaseEntity {
     @Column(name="is_higher")
     private boolean higher;
     private boolean valid;
+
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "classifier_code", nullable = false, updatable = false, insertable = false)
+    private Set<ClassifierConnect> classifierConnects;
 
     @Override
     public int hashCode() {
@@ -80,7 +87,7 @@ public class Classifier extends BaseEntity {
     }
 
     public Set<Classifier> getChildren() {
-        return children;
+        return children != null ? children : (children = new HashSet<>());
     }
 
     public String getCode() {
@@ -201,5 +208,9 @@ public class Classifier extends BaseEntity {
 
     public void setHigher(boolean higher) {
         this.higher = higher;
+    }
+
+    public Set<ClassifierConnect> getClassifierConnects() {
+        return classifierConnects != null ? classifierConnects : (classifierConnects = new HashSet<>());
     }
 }

@@ -1,8 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
-import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.SchoolDepartment;
-import ee.hitsa.ois.domain.Subject;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 
@@ -19,8 +17,9 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
     private String assessment;
     private Set<String> languages;
     private String status;
-    private AutocompleteResult<Long> schoolDepartment;
+    private AutocompleteResult schoolDepartment;
 
+    @Override
     public Long getId() {
         return id;
     }
@@ -30,15 +29,12 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
     }
 
     public static SubjectSearchDto of(Subject subject) {
-        SubjectSearchDto dto = EntityUtil.bindToDto(subject, new SubjectSearchDto(), "schoolDepartment", "languages");
-        SchoolDepartment department = subject.getSchoolDepartment();
-        if (department != null) {
-            dto.schoolDepartment = new AutocompleteResult<>(department.getId(), department.getNameEt(), department.getNameEn());
-        }
-        dto.languages = SubjectUtil.getLanguages(subject).stream().map(Classifier::getCode).collect(Collectors.toSet());
+        SubjectSearchDto dto = EntityUtil.bindToDto(subject, new SubjectSearchDto(), "languages");
+        dto.languages = SubjectUtil.getLanguages(subject).stream().map(EntityUtil::getCode).collect(Collectors.toSet());
         return dto;
     }
 
+    @Override
     public String getCode() {
         return code;
     }
@@ -47,6 +43,7 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
         this.code = code;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -55,6 +52,7 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }
@@ -95,11 +93,11 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
         this.status = status;
     }
 
-    public AutocompleteResult<Long> getSchoolDepartment() {
+    public AutocompleteResult getSchoolDepartment() {
         return schoolDepartment;
     }
 
-    public void setSchoolDepartment(AutocompleteResult<Long> schoolDepartment) {
+    public void setSchoolDepartment(AutocompleteResult schoolDepartment) {
         this.schoolDepartment = schoolDepartment;
     }
 }

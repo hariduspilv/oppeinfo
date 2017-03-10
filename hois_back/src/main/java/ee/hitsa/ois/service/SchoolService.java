@@ -17,8 +17,8 @@ import ee.hitsa.ois.domain.Classifier;
 
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.domain.OisFile;
-import ee.hitsa.ois.domain.School;
-import ee.hitsa.ois.domain.SchoolStudyLevel;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.school.SchoolStudyLevel;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.OisFileRepository;
@@ -27,7 +27,6 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.SchoolForm;
 import ee.hitsa.ois.web.commandobject.SchoolSearchCommand;
 import ee.hitsa.ois.web.dto.SchoolDto;
-import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 
 @Transactional
 @Service
@@ -39,6 +38,10 @@ public class SchoolService {
     private OisFileRepository oisFileRepository;
     @Autowired
     private SchoolRepository schoolRepository;
+
+    public School create(SchoolForm schoolForm) {
+        return save(new School(), schoolForm);
+    }
 
     public School save(School school, SchoolForm schoolForm) {
         EntityUtil.bindToEntity(schoolForm, school, classifierRepository);
@@ -61,10 +64,6 @@ public class SchoolService {
         return schoolRepository.save(school);
     }
 
-    public School getOne(Long id) {
-        return schoolRepository.getOne(id);
-    }
-
     public Page<SchoolDto> search(SchoolSearchCommand searchCommand, Pageable pageable) {
         return schoolRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
@@ -78,10 +77,6 @@ public class SchoolService {
 
     public void delete(School school) {
         EntityUtil.deleteEntity(schoolRepository, school);
-    }
-
-    public List<SchoolWithoutLogo> findAll() {
-        return schoolRepository.findAllSchools();
     }
 
     public School updateStudyLevels(School school, List<String> studyLevels) {

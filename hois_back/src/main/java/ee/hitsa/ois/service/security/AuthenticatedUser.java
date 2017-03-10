@@ -1,7 +1,7 @@
 package ee.hitsa.ois.service.security;
 
-import ee.hitsa.ois.domain.School;
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.UserProjection;
 

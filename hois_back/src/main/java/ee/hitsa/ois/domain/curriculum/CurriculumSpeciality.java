@@ -5,6 +5,7 @@ import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
@@ -35,7 +36,7 @@ public class CurriculumSpeciality extends BaseEntityWithId {
 	@Size(max=255)
 	private String occupationEn;
 
-	@ManyToOne
+	@ManyToOne(fetch = FetchType.LAZY)
 	private Classifier occupation;
 	
 	@OneToMany(mappedBy = "curriculumSpeciality", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -1,0 +1,35 @@
+<md-dialog aria-label="grade add dialog" flex="60" flex-sm="100" flex-xs="100">
+  <form name="studentGroupStudentForm" novalidate ng-cloak>
+    <md-dialog-content>
+      <div class="md-dialog-content">
+        <md-table-container>
+          <table md-table md-row-select multiple ng-model="formState.selectedStudents">
+            <thead md-head md-order="criteria.order">
+              <tr md-row>
+                <th md-column>{{'studentGroup.studentname' | translate}}</th>
+                <th md-column>{{'studentGroup.idcode' | translate}}</th>
+                <th md-column>{{'studentGroup.curriculum' | translate}}</th>
+                <th md-column>{{'studentGroup.studyForm' | translate}}</th>
+                <th md-column>{{'studentGroup.studyLevel' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{::row.fullname}}</td>
+                <td md-cell>{{::row.idcode}}</td>
+                <td md-cell>{{$root.currentLanguageNameField(row.curriculumVersion)}}</td>
+                <td md-cell>{{$root.currentLanguageNameField(row.studyForm)}}</td>
+                <td md-cell>{{$root.currentLanguageNameField(row.studyLevel)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button ng-click="select()" class="md-raised md-primary">{{'main.button.add' | translate}}</md-button>
+      <md-button ng-click="cancel()" class="md-raised">{{'main.button.close' | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

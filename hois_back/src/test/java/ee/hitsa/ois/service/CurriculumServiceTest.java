@@ -21,19 +21,22 @@ import org.springframework.test.context.junit4.SpringRunner;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
-import ee.hitsa.ois.domain.School;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.CurriculumRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 
 /**
- * Created in order to test Curriculum mapping with dependent objects 
- * as controller test does not 
- * 
- * NB! getValidInstance() methods made static in order to enabling 
+ * Created in order to test Curriculum mapping with dependent objects
+ * as controller test does not
+ *
+ * NB! getValidInstance() methods made static in order to enabling
  * creation of test instances in another test classes,
  * thus making test independent from values in database.
- * 
+ *
  */
 @Transactional
 @RunWith(SpringRunner.class)
@@ -46,30 +49,30 @@ public class CurriculumServiceTest {
     private static final List<String> LANGUAGES = Arrays.asList("OPPEKEEL_E", "OPPEKEEL_I", "OPPEKEEL_V");
 
     @Autowired
-    private ClassifierService classifierService;
-    
+    private ClassifierRepository classifierRepository;
+    @Autowired
+    private CurriculumRepository curriculumRepository;
     @Autowired
     private CurriculumService curriculumService;
-    
     @Autowired
-    private SchoolService schoolService;
+    private SchoolRepository schoolRepository;
 
     @BeforeClass
     public static void setUp() {
     }
-    
+
     @AfterClass
-    public static void cleanUp() {	
+    public static void cleanUp() {
     }
-    
+
     @Test
     public void crud() {
         //create
-        Classifier testClassifier = classifierService.findOne("OPPEKAVA_TYPE_E");
-        Curriculum c = getValidCurriculum(NAME, NUMBER, schoolService.getOne(SCHOOL_ID), testClassifier);
+        Classifier testClassifier = classifierRepository.getOne("OPPEKAVA_TYPE_E");
+        Curriculum c = getValidCurriculum(NAME, NUMBER, schoolRepository.getOne(SCHOOL_ID), testClassifier);
         Set<CurriculumStudyLanguage> studyLanguages = new HashSet<>();
-        studyLanguages.add(getValidCurriculumStudyLang(classifierService.findOne(LANGUAGES.get(0))));
-        studyLanguages.add(getValidCurriculumStudyLang(classifierService.findOne(LANGUAGES.get(1))));
+        studyLanguages.add(getValidCurriculumStudyLang(classifierRepository.getOne(LANGUAGES.get(0))));
+        studyLanguages.add(getValidCurriculumStudyLang(classifierRepository.getOne(LANGUAGES.get(1))));
         c.setStudyLanguages(studyLanguages);
 
         c = curriculumService.save(c);
@@ -99,10 +102,10 @@ public class CurriculumServiceTest {
         studyLanguages = new HashSet<>();
         studyLanguages.add(c.getStudyLanguages().iterator().next());
         studyLanguages.add(c.getStudyLanguages().iterator().next());
-        studyLanguages.add(getValidCurriculumStudyLang(classifierService.findOne(LANGUAGES.get(2))));
+        studyLanguages.add(getValidCurriculumStudyLang(classifierRepository.getOne(LANGUAGES.get(2))));
         c.setStudyLanguages(studyLanguages);
-        
-        
+
+
         // check
         c = curriculumService.save(c);
         Assert.assertEquals(2, c.getStudyLanguages().size());
@@ -117,11 +120,9 @@ public class CurriculumServiceTest {
 
         // read
         Long id = c.getId();
-        Curriculum c2 = curriculumService.getOne(id);
+        Curriculum c2 = curriculumRepository.getOne(id);
         Assert.assertEquals(id, c2.getId());
 
-        // delete
-        curriculumService.delete(c);
     }
 
     public static Curriculum getValidCurriculum(String name, Integer number, School school, Classifier classifier) {
@@ -143,15 +144,15 @@ public class CurriculumServiceTest {
 
         return curriculum;
     }
-     
+
     public static CurriculumStudyLanguage getValidCurriculumStudyLang(Classifier lang) {
         CurriculumStudyLanguage studyLang = new CurriculumStudyLanguage();
         studyLang.setStudyLang(lang);
         return studyLang;
     }
-        
+
     /*
-     * TODO: test managing list of CurriculumFiles, 
+     * TODO: test managing list of CurriculumFiles,
      * using two methods below
      */
     public static CurriculumFile getValidCurriculumFile(String name) {

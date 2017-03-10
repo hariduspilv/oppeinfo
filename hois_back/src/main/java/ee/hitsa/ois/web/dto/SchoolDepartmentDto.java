@@ -3,7 +3,7 @@ package ee.hitsa.ois.web.dto;
 import java.time.LocalDate;
 import java.util.List;
 
-import ee.hitsa.ois.domain.SchoolDepartment;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
 

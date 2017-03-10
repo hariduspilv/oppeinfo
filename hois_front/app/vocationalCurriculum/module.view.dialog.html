@@ -1,0 +1,98 @@
+<md-dialog aria-label="module add dialog" flex="30" flex-xs="100">
+  <form ng-cloak name="dialogForm">
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"module.viewToughtModule" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="column">
+          <md-input-container flex>
+            <label>{{'module.occupationPartOccupationSpecialize' | translate}}</label>
+          </md-input-container>
+          <md-input-container style="height: 100%;">
+            <div layout="column">
+              <div ng-repeat="item in occupations">
+                <md-checkbox ng-model="occupationsSelected[item.occupation.code]" aria-label="{{item.occupation[currentLanguageNameField()]}}" disabled>
+                  {{item.occupation[currentLanguageNameField()]}}
+                </md-checkbox>
+                <div layout="column" layout-padding>
+                  <md-input-container style="height: 100%;">
+                    <div layout="column">
+                      <div ng-repeat="partOccupation in item.partOccupations" flex>
+                        <md-checkbox ng-model="occupationsSelected[partOccupation.code]" aria-label="{{partOccupation[currentLanguageNameField()]}}" disabled>
+                          {{partOccupation[currentLanguageNameField()]}}
+                        </md-checkbox>
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+                <div layout="column" layout-padding>
+                  <md-input-container style="height: 100%;">
+                    <div layout="column">
+                      <div ng-repeat="speciality in item.specialities" flex>
+                        <md-checkbox ng-model="specialitiesSelected[speciality.code]" aria-label="{{speciality[currentLanguageNameField()]}}" disabled>
+                          {{speciality[currentLanguageNameField()]}}
+                        </md-checkbox>
+                      </div>
+                    </div>
+                  </md-input-container>
+                </div>
+              </div>
+            </div>
+          </md-input-container>
+
+          <md-input-container flex>
+            <label>{{'module.type' | translate}}</label>
+            <hois-classifier-value name="module" ng-model="module.module" main-classifier-code="KUTSEMOODUL"></hois-classifier-value>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'module.nameEt' | translate}}</label>
+            <hois-value value="module.nameEt"></hois-value>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'module.nameEn' | translate}}</label>
+            <hois-value value="module.nameEn"></hois-value>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'module.credits' | translate}}</label>
+            <hois-value value="module.credits"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.objectivesEt' | translate}}</label>
+            <hois-value value="module.objectivesEt"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'module.objectivesEn' | translate}}</label>
+            <hois-value value="module.objectivesEn"></hois-value>
+          </md-input-container>
+          <md-input-container layout="column" style="height: 100%">
+            <span class="md-headline">{{'module.studyOutcome' | translate}}</span>
+            <md-list-item ng-repeat="item in module.outcomes">
+              <span>{{item.outcomeEt}} {{item.outcomeEn}}</span>
+            </md-list-item>
+          </md-input-container>
+          <md-input-container layout="column" style="height: 100%">
+            <span class="md-headline">{{'module.competencesAquired' | translate}}</span>
+            <md-list-item ng-repeat="item in module.competences">
+              <span>{{item.nameEt}} {{item.nameEn}}</span>
+            </md-list-item>
+          </md-input-container>
+          <md-input-container flex>
+            <md-checkbox ng-model="module.practice" disabled>{{'module.practice' | translate}}</md-checkbox>
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

@@ -1,0 +1,12 @@
+package ee.hitsa.ois.enums;
+
+public enum ApplicationStatus {
+    
+    AVALDUS_STAATUS_KINNITAM,
+    AVALDUS_STAATUS_KINNITATUD,
+    AVALDUS_STAATUS_TAGASI,
+    AVALDUS_STAATUS_KOOST,
+    AVALDUS_STAATUS_ESIT,
+    AVALDUS_STAATUS_YLEVAAT
+    
+}

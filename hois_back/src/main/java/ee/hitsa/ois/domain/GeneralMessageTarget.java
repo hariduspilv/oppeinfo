@@ -9,9 +9,10 @@ import javax.persistence.ManyToOne;
 public class GeneralMessageTarget extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private GeneralMessage generalMessage;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_code")
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier role;
 
     public GeneralMessage getGeneralMessage() {

@@ -1,0 +1,87 @@
+<md-dialog aria-label="module add dialog" flex="70" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"module.addToughtModule" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+          <span flex></span>
+          <md-input-container>
+            <label>{{'stateCurriculum.enter.module.occupation' | translate}}</label>
+            <md-select ng-model="data.moduleOccupations" multiple="true" required>
+                <!--TODO: find better solution-->
+                <md-option ng-value="option" ng-repeat="option in occupations | filter: filterOccupations('KUTSE')">
+                    <hois-classifier-value ng-model="option" main-classifier-code="KUTSE"></hois-classifier-value>
+                </md-option>
+                <md-option ng-value="option" ng-repeat="option in occupations | filter: filterOccupations('OSAKUTSE')">
+                    <hois-classifier-value ng-model="option" main-classifier-code="OSAKUTSE"></hois-classifier-value>
+                </md-option>
+                <md-option ng-value="option" ng-repeat="option in occupations | filter: filterOccupations('SPETSKUTSE')">
+                    <hois-classifier-value ng-model="option" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+                </md-option>
+            </md-select>
+          </md-input-container>
+          <md-input-container>
+            <label>{{'stateCurriculum.enter.module.type' | translate}}</label>
+            <hois-classifier-select ng-model="data.module" main-classifier-code="KUTSEMOODUL"
+                   show-only-values="allowedModuleTypes" required model-value-attr="code"></hois-classifier-select>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.nameEt' | translate}}</label>
+            <input ng-model="data.nameEt" type="text" required md-maxlength="255">
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.nameEn' | translate}}</label>
+            <input ng-model="data.nameEn" type="text" md-maxlength="255">
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.credits' | translate}}</label>
+            <input ng-model="data.credits" type="number" min="0" required name="credits">
+              <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
+                  <div ng-message="min">
+                    {{'stateCurriculum.enter.credits.positive' | translate}}
+                  </div>
+              </div>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.objectiveEt' | translate}}</label>
+            <textarea ng-model="data.objectivesEt" required md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.objectiveEn' | translate}}</label>
+            <textarea ng-model="data.objectivesEn" md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.outcome.outcomeLabelEt' | translate}}</label>
+            <textarea ng-model="data.outcomesEt" required md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.outcome.outcomeLabelEn' | translate}}</label>
+            <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+
+
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>
+            <input ng-model="data.assessmentsEt" type="text" required md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+          <md-input-container  flex>
+            <label>{{'stateCurriculum.enter.module.criteriaEn' | translate}}</label>
+            <textarea ng-model="data.assessmentsEn" md-maxlength="20000" max-rows="2"></textarea>
+          </md-input-container>
+        <span flex></span>
+      </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

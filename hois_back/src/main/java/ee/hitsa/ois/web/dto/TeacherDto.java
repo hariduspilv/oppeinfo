@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
-import ee.hitsa.ois.domain.Teacher;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.TeacherForm;
 

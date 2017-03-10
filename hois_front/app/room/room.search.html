@@ -1,0 +1,87 @@
+<div  class="ois-form-layout-padding">
+  <div flex>
+    <form ng-submit="loadData()" novalidate layout="column" class="nomargin">
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <!--div class="indentForToast"></div-->
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'building.name' | translate}}</label>
+          <input ng-model="criteria.buildingName" name="buildingName" type="text">
+        </md-input-container>
+        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'building.code' | translate}}</label>
+          <input ng-model="criteria.buildingCode" name="buildingCode" type="text" autofocus>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'room.name' | translate}}</label>
+          <input ng-model="criteria.name" name="name" type="text">
+        </md-input-container>
+        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'room.code' | translate}}</label>
+          <input ng-model="criteria.code" name="code" type="text">
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/rooms/new">{{'room.add' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/buildings/new">{{'building.add' | translate}}</md-button>
+      </div>
+
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="name">{{'building.name' | translate}}</th>
+            <th md-column md-order-by="code">{{'building.code' | translate}}</th>
+            <th md-column md-order-by="address">{{'building.address' | translate}}</th>
+            <th md-column md-order-by="rooms.name">{{'room.name' | translate}}</th>
+            <th md-column md-order-by="rooms.code">{{'room.code' | translate}}</th>
+            <th md-column md-numeric md-order-by="rooms.seats">{{'room.seats' | translate}}</th>
+            <th md-column>{{'room.isStudyInTable' | translate}}</th>
+            <th md-column>{{'room.equipment' | translate}}</th>
+            <th md-column></th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.buildingName}}</td>
+            <td md-cell>{{::row.buildingCode}}</td>
+            <td md-cell>{{::row.buildingAddress}}</td>
+            <td md-cell>{{::row.name}}</td>
+            <td md-cell>{{::row.code}}</td>
+            <td md-cell>{{::row.seats}}</td>
+            <td md-cell>{{row.isStudy ? 'main.yes' : 'main.no' | translate}}</td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="device in row.equipment">
+                  <td>{{currentLanguageNameField(device.equipment)}}</td>
+                  <td>{{::device.equipmentCount}}</td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-if="row.id" ng-href="#/rooms/{{::row.id}}">{{'room.change' | translate}}</md-button>
+            </td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/buildings/{{::row.building}}">{{'building.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

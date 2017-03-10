@@ -10,18 +10,30 @@ public class ClassifierSelection {
     private final String nameRu;
     private final Boolean valid;
     private final String mainClassCode;
+    private final Boolean vocational;
+    private final Boolean higher;
+    private final String value;
 
-    public ClassifierSelection(String code, String nameEt, String nameEn, String nameRu, Boolean valid, String mainClassCode) {
+    public ClassifierSelection(String code, String nameEt, String nameEn, String nameRu, Boolean valid, Boolean higher, Boolean vocational, String mainClassCode, String value) {
         this.code = code;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
         this.nameRu = nameRu;
         this.valid = valid;
+        this.higher = higher;
+        this.vocational = vocational;
         this.mainClassCode = mainClassCode;
+        this.value = value;
     }
 
     public static ClassifierSelection of(Classifier c) {
-        return new ClassifierSelection(c.getCode(), c.getNameEt(), c.getNameEn(), c.getNameRu(), Boolean.valueOf(c.isValid()), c.getMainClassCode());
+        return new ClassifierSelection(c.getCode(), c.getNameEt(), c.getNameEn(), c.getNameRu(),
+                Boolean.valueOf(c.isValid()), Boolean.valueOf(c.isHigher()), Boolean.valueOf(c.isVocational()),
+                c.getMainClassCode(), c.getValue());
+    }
+
+    public String getValue() {
+        return value;
     }
 
     public String getCode() {
@@ -48,5 +60,11 @@ public class ClassifierSelection {
         return mainClassCode;
     }
 
+    public Boolean getVocational() {
+        return vocational;
+    }
 
+    public Boolean getHigher() {
+        return higher;
+    }
 }

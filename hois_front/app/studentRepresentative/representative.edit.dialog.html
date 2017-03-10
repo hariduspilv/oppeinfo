@@ -1,0 +1,47 @@
+<md-dialog aria-label="grade add dialog" flex="30" flex-xs="100">
+  <form name="studentRepresentativeEditForm" novalidate ng-cloak>
+    <md-dialog-content>
+      <div class="md-dialog-content">
+        <md-input-container class="md-block">
+          <label>{{'student.representative.idcode' | translate}}</label>
+          <hois-idcode-lookup ng-model="record.person.idcode" name="idcode" role="forrepresentative" after-lookup="lookupPerson(response)" after-failed-lookup="lookupFailure()" ng-readonly="record.id" required></hois-idcode-lookup>
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.firstname' | translate}}</label>
+          <input ng-model="record.person.firstname" name="firstname" type="text" ng-readonly="record.id || formState.idcode" required md-maxlength="255">
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.lastname' | translate}}</label>
+          <input ng-model="record.person.lastname" name="lastname" type="text" ng-readonly="record.id || formState.idcode" required md-maxlength="255">
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.relation' | translate}}</label>
+          <hois-classifier-select ng-model="record.relation" name="relation" ng-disabled="record.id" main-classifier-code="OPPURESINDAJA" required model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.phone' | translate}}</label>
+          <input ng-model="record.person.phone" name="phone" type="text" required md-maxlength="100">
+        </md-input-container>
+
+        <md-input-container class="md-block">
+          <label>{{'student.representative.email' | translate}}</label>
+          <input ng-model="record.person.email" name="email" type="text" required md-maxlength="255">
+        </md-input-container>
+
+        <md-checkbox ng-model="record.isStudentVisible" name="isStudentVisible">
+          {{'student.representative.studentVisible' | translate}}
+        </md-checkbox>
+      </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+      <md-button ng-click="delete()" ng-if="record.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+      <md-button ng-click="cancel()" class="md-raised">{{'main.button.close' | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

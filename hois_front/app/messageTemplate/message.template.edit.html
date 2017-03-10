@@ -1,0 +1,35 @@
+<div layout="column" layout-padding>
+    <form name="messageTemplateForm">
+        <div layout="column">
+            <md-input-container ng-if="isValid">
+                <label>{{'messageTemplate.type' | translate}}</label>
+                <hois-classifier-select ng-if="isValid" ng-model="record.type" model-value-attr="code" main-classifier-code="TEATE_LIIK" required filter-values="allowedTypes"></hois-classifier-select>
+            </md-input-container>
+            <md-input-container ng-if="!isValid">
+                <label>{{'messageTemplate.type' | translate}}</label>
+                <hois-classifier-select ng-if="!isValid" ng-model="record.type" model-value-attr="code" main-classifier-code="TEATE_LIIK" required></hois-classifier-select>
+            </md-input-container>
+            <md-input-container>
+                <label>{{'generalmessage.title' | translate}}</label>
+                <textarea ng-model="record.headline" required md-maxlength="1000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container>
+                <label>{{'generalmessage.content' | translate}}</label>
+                <textarea ng-model="record.content" required md-maxlength="2000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container>
+                <label>{{'messageTemplate.validFrom' | translate}}</label>
+                <md-datepicker ng-model="record.validFrom" ng-change="getIsValid()"></md-datepicker>
+            </md-input-container>
+            <md-input-container>
+                <label>{{'messageTemplate.validThru' | translate}}</label>
+                <md-datepicker ng-model="record.validThru" md-min-date="record.validFrom" ng-change="getIsValid()"></md-datepicker>
+            </md-input-container>
+        </div>
+        <div layout="row">
+            <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-href="/#/messageTemplate">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
+        </div>
+    </form>
+</div>

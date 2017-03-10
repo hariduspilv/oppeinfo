@@ -1,0 +1,29 @@
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="endpoint.$promise">
+        <thead md-head>
+        <tr md-row>
+          <th md-column>{{'studyYear.year' | translate}}</th>
+          <th md-column>{{'studyYear.startDate' | translate}}</th>
+          <th md-column>{{'studyYear.endDate' | translate}}</th>
+          <th md-column>{{'studyYear.periods' | translate}}</th>
+          <th md-column></th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="row in tabledata" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>{{currentLanguageNameField(row)}}</td>
+          <td md-cell>{{'main.formattedDate' | translate: {date: row.startDate} }}</td>
+          <td md-cell>{{'main.formattedDate' | translate: {date: row.endDate} }}</td>
+          <td md-cell>{{::row.count}}</td>
+          <td md-cell>
+            <md-button md-no-ink class="md-primary change-button" ng-if="!row.id" ng-href="#/school/studyYears/{{::row.code}}/new">{{'main.button.change' | translate}}</md-button>
+            <md-button md-no-ink class="md-primary change-button" ng-if="row.id" ng-href="#/school/studyYears/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </div>
+</div>

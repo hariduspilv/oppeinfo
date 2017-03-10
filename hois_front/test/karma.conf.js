@@ -35,6 +35,7 @@ module.exports = function(config) {
       'bower_components/lf-ng-md-file-input/dist/lf-ng-md-file-input.js',
       'bower_components/moment/moment.js',
       'bower_components/ng-storage/ngStorage.js',
+      'bower_components/angular-cache/dist/angular-cache.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',

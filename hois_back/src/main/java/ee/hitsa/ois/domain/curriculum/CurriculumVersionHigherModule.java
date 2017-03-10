@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
@@ -50,7 +51,7 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
     @Column(name="is_minor_speciality")
     private Boolean minorSpeciality;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier type;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)

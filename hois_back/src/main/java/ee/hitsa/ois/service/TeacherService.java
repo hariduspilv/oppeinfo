@@ -1,17 +1,17 @@
 package ee.hitsa.ois.service;
 
-import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.SchoolDepartment;
-import ee.hitsa.ois.domain.Teacher;
-import ee.hitsa.ois.domain.TeacherMobility;
-import ee.hitsa.ois.domain.TeacherPositionEhis;
-import ee.hitsa.ois.domain.TeacherQualification;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
+import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.teacher.TeacherMobility;
+import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
+import ee.hitsa.ois.domain.teacher.TeacherQualification;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -46,32 +46,38 @@ public class TeacherService {
 
     @Autowired
     private ClassifierRepository classifierRepository;
-
+    @Autowired
+    private PersonRepository personRepository;
+    @Autowired
+    private SchoolRepository schoolRepository;
+    @Autowired
+    private SchoolDepartmentRepository schoolDepartmentRepository;
+    @Autowired
+    private TeacherOccupationRepository teacherOccupationRepository;
     @Autowired
     private TeacherRepository teacherRepository;
 
-    @Autowired
-    private PersonRepository personRepository;
-
-    @Autowired
-    private TeacherOccupationRepository teacherOccupationRepository;
-
-    @Autowired
-    private SchoolDepartmentRepository schoolDepartmentRepository;
+    public TeacherDto create(HoisUserDetails user, TeacherForm teacherForm) {
+        return save(user, new Teacher(), teacherForm);
+    }
 
     public TeacherDto save(HoisUserDetails user, Teacher teacher, TeacherForm teacherForm) {
-        if (!teacherForm.getIsHigher() && !teacherForm.getIsVocational()) {
+        if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
             throw new ValidationFailedException(null, "teacher-vocational-higher");
         }
+        String nativeLanguage = teacherForm.getPerson().getNativeLanguage();
+        if (Boolean.TRUE.equals(teacherForm.getIsVocational()) && !StringUtils.hasText(nativeLanguage)) {
+            throw new ValidationFailedException("nativeLanguage", null);
+        }
         EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification");
-        teacher.setSchool(user.getSchool());
+        teacher.setSchool(schoolRepository.getOne(user.getSchoolId()));
         teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation(), user.getSchoolId()));
         // TODO: this logic is wrong?
         Person person = null;
         if (teacherForm.getPerson().getIdcode() != null) {
             person = personRepository.findByIdcode(teacherForm.getPerson().getIdcode());
         } else if (teacherForm.getPerson().getId() != null) {
-            person = personRepository.findOne(teacherForm.getPerson().getId());
+            person = personRepository.getOne(teacherForm.getPerson().getId());
         }
         if (person == null) {
             teacher.setPerson(EntityUtil.bindToEntity(teacherForm.getPerson(), new Person(), classifierRepository));
@@ -118,9 +124,9 @@ public class TeacherService {
     private void bindTeacherMobilityForm(Teacher teacher, TeacherForm teacherForm) {
         Set<TeacherMobility> teacherMobilities = teacher.getTeacherMobility();
         Set<TeacherMobility> result = new HashSet<>();
-        if (teacher.getIsHigher()) {
+        if (Boolean.TRUE.equals(teacher.getIsHigher())) {
             Map<Long, TeacherMobility> mobilityMap = teacherMobilities
-                    .stream().collect(Collectors.toMap(BaseEntityWithId::getId, v -> v));
+                    .stream().collect(Collectors.toMap(TeacherMobility::getId, v -> v));
             for (TeacherForm.TeacherMobilityForm mobilityForm : teacherForm.getTeacherMobility()) {
                 Long id = mobilityForm.getId();
                 TeacherMobility teacherMobility;
@@ -151,9 +157,9 @@ public class TeacherService {
     private void bindTeacherQualificationForm(Teacher teacher, TeacherForm teacherForm) {
         Set<TeacherQualification> teacherQualifications = teacher.getTeacherQualification();
         Set<TeacherQualification> result = new HashSet<>();
-        if (teacher.getIsHigher()) {
+        if (Boolean.TRUE.equals(teacher.getIsHigher())) {
             Map<Long, TeacherQualification> qualifications = teacherQualifications
-                    .stream().collect(Collectors.toMap(BaseEntityWithId::getId, v -> v));
+                    .stream().collect(Collectors.toMap(TeacherQualification::getId, v -> v));
             for (TeacherForm.TeacherQualificationFrom teacherQualificationFrom : teacherForm.getTeacherQualifications()) {
                 Long id = teacherQualificationFrom.getId();
                 TeacherQualification teacherQualification;
@@ -184,7 +190,7 @@ public class TeacherService {
     private void bindTeacherPositionEhisForm(Teacher teacher, TeacherForm teacherForm) {
         Set<TeacherPositionEhis> oldTeacherPositions = teacher.getTeacherPositionEhis();
         Map<Long, TeacherPositionEhis> teacherPositions = oldTeacherPositions
-                .stream().collect(Collectors.toMap(BaseEntityWithId::getId, v -> v));
+                .stream().collect(Collectors.toMap(TeacherPositionEhis::getId, v -> v));
         Set<TeacherPositionEhis> result = new HashSet<>();
         for (TeacherForm.TeacherPositionEhisForm positionEhis: teacherForm.getTeacherPositionEhis()) {
             clearConflictingFields(positionEhis);
@@ -195,9 +201,8 @@ public class TeacherService {
                 TeacherPositionEhis oldTeacherPositionEhis = teacherPositions.get(id);
                 if (oldTeacherPositionEhis == null) {
                     throw new ValidationFailedException("TeacherPositionEhis", "dirty-entity");
-                } else {
-                    result.add(createTeacherPositionEhisForm(teacher, positionEhis, oldTeacherPositionEhis));
                 }
+                result.add(createTeacherPositionEhisForm(teacher, positionEhis, oldTeacherPositionEhis));
             }
         }
         oldTeacherPositions.clear();
@@ -208,18 +213,15 @@ public class TeacherService {
         TeacherPositionEhis newTeacherPositionEhis = EntityUtil.bindToEntity(positionEhis, oldPositionEhis, classifierRepository);
         newTeacherPositionEhis.setTeacher(teacher);
         SchoolDepartment schoolDepartment = null;
-        if (positionEhis.getSchoolDepartment() != null && positionEhis.getSchoolDepartment() > 0) {
-            schoolDepartment = schoolDepartmentRepository.findOne(positionEhis.getSchoolDepartment());
+        if (positionEhis.getSchoolDepartment() != null && positionEhis.getSchoolDepartment().longValue() > 0) {
+            schoolDepartment = schoolDepartmentRepository.getOne(positionEhis.getSchoolDepartment());
         }
         newTeacherPositionEhis.setSchoolDepartment(schoolDepartment);
         return newTeacherPositionEhis;
     }
 
-    private void clearConflictingFields(TeacherForm.TeacherPositionEhisForm positionEhis) {
-        if (positionEhis.getContractStart() != null && positionEhis.getContractEnd() != null && !positionEhis.getContractEnd().isAfter(positionEhis.getContractStart())) {
-            throw new ValidationFailedException("contractEnd", "early");
-        }
-        if (positionEhis.getIsVocational()) {
+    private static void clearConflictingFields(TeacherForm.TeacherPositionEhisForm positionEhis) {
+        if (Boolean.TRUE.equals(positionEhis.getIsVocational())) {
             positionEhis.setEmploymentCode(null);
             positionEhis.setEmploymentType(null);
             positionEhis.setEmploymentTypeSpecification(null);

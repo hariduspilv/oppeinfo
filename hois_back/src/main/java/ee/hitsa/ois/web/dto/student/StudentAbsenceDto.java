@@ -1,8 +1,8 @@
 package ee.hitsa.ois.web.dto.student;
 
-import ee.hitsa.ois.domain.StudentAbsence;
+import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.commandobject.StudentAbsenceForm;
+import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 
 public class StudentAbsenceDto extends StudentAbsenceForm {
 

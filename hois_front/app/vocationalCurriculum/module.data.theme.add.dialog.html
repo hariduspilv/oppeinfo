@@ -1,0 +1,134 @@
+<md-dialog aria-label="vocational curriculum implementation plan module theme add dialog">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"module.addingTheme" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <div class="ois-form-layout md-dialog-content" layout="column" flex ng-cloak>
+        <div layout="column" flex>
+
+          <md-input-container>
+            <label>{{'theme.name' | translate}}</label>
+            <input ng-model="occupationModuleTheme.nameEt" type="text" required></textarea>
+          </md-input-container>
+
+          <div layout="row">
+            <md-input-container flex="30">
+              <label>{{'theme.capacityAndUnit' | translate}}</label>
+            </md-input-container>
+
+            <md-input-container flex="10">
+              <label>EKAP</label>
+              <input ng-model="occupationModuleTheme.credits" type="number" ng-model-options='{ debounce: 500 }' ng-change="setDefaultHours()" required>
+            </md-input-container>
+
+            <md-input-container flex="10">
+              <label>{{'main.hour' | translate}}</label>
+              <input ng-model="occupationModuleTheme.hours" type="number" required>
+            </md-input-container>
+
+            <md-input-container flex="30">
+              <label>{{'theme.proportionInModule' | translate}}</label>
+              <input ng-model="occupationModuleTheme.proportion" type="number" >
+            </md-input-container>
+
+            <md-input-container flex="20">
+              <label>{{'module.studyYear' | translate}}</label>
+              <md-select ng-model="occupationModuleTheme.studyYearNumber">
+                <md-option ng-repeat="studyYearNumber in [1,2,3]" ng-value="studyYearNumber" aria-label="{{studyYearNumber}}">{{studyYearNumber}}</md-option>
+              </md-select>
+            </md-input-container>
+
+          </div>
+
+          <md-input-container flex>
+            <span class="md-headline">{{'theme.capacityDistribution' | translate}}</span>
+          </md-input-container>
+
+          <div layout="row" style="padding-bottom:1em" flex>
+            <div flex="50"></div>
+            <div flex="30">{{'module.capacity' | translate}}</div>
+            <div flex="20" layout="row" layout-align="end end">{{'module.contactStudy' | translate}}</div>
+          </div>
+
+          <div ng-repeat="item in capacities track by item.code">
+            <div layout="row">
+              <div flex="50">
+                {{item[currentLanguageNameField()]}}
+              </div>
+
+              <div flex="30">
+                <md-input-container  flex>
+                  <input ng-model="occupationModuleTheme.capacities[$index].hours" type="number" aria-label="capacity hours"
+                    ng-change="occupationModuleTheme.capacities[$index].capacityType = item.code" ng-required="occupationModuleTheme.capacities[$index].contact!==undefined">
+                </md-input-container>
+              </div>
+              <div flex="20" layout="row" layout-align="end center">
+                <md-checkbox ng-model="occupationModuleTheme.capacities[$index].contact" aria-label="capacity contact"></md-checkbox>
+              </div>
+            </div>
+          </div>
+
+          <md-input-container flex>
+            <label>{{'module.subthemes' | translate}}</label>
+            <textarea ng-model="occupationModuleTheme.subthemes" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+          </md-input-container>
+
+          <md-input-container flex>
+            <label>{{'theme.connectionToStudyOutcome' | translate}}</label>
+            <md-select ng-model="occupationModuleTheme.outcomes">
+              <md-option ng-repeat="outcome in outcomes" ng-value="outcome" aria-label="{{outcome}}">{{outcome}}</md-option>
+            </md-select>
+          </md-input-container>
+
+          <md-input-container flex>
+            <label>{{'theme.assessmentType' | translate}}</label>
+            <hois-classifier-radio layout="row" ng-model="occupationModuleTheme.assessment" model-value-attr="code" main-classifier-code="KUTSEHINDAMISVIIS" required></hois-classifier-radio>
+          </md-input-container>
+
+          <md-input-container flex>
+            <label>{{'module.totalGradeDescription' | translate}}</label>
+            <textarea ng-model="occupationModuleTheme.totalGradeDescription" md-maxlength="20000" max-rows="2" md-select-on-focus required></textarea>
+          </md-input-container>
+
+          <md-input-container flex>
+            <span class="md-headline">{{'module.gradeAssessments' | translate}}</span>
+          </md-input-container>
+          <div ng-show="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'"  layout="column" flex>
+            <md-input-container flex>
+              <label>{{'module.grade3Description' | translate}}</label>
+              <textarea ng-model="occupationModuleTheme.grade3Description" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'module.grade4Description' | translate}}</label>
+              <textarea ng-model="occupationModuleTheme.grade4Description" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'module.grade5Description' | translate}}</label>
+              <textarea ng-model="occupationModuleTheme.grade5Description" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'"></textarea>
+            </md-input-container>
+          </div>
+          <div ng-show="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_M'"  layout="column" flex>
+            <md-input-container flex>
+              <label>{{'module.gradeADescription' | translate}}</label>
+              <textarea ng-model="occupationModuleTheme.passDescription" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_M'"></textarea>
+            </md-input-container>
+          </div>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

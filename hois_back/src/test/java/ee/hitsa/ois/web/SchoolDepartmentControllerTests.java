@@ -16,7 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.domain.SchoolDepartment;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
 
 @RunWith(SpringRunner.class)

@@ -34,7 +34,8 @@
     "karma-phantomjs-launcher": "^1.0.2",
     "phantomjs-prebuilt": "^2.1.12",
     "time-grunt": "^1.0.0",
-    "grunt-json-minify": "^1.1.0"
+    "grunt-json-minify": "^1.1.0",
+    "grunt-processhtml": "0.3.13"
   },
   "engines": {
     "node": ">=0.10.0"

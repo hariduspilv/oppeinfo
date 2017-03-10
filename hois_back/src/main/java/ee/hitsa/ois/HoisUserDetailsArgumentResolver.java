@@ -12,15 +12,8 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.service.security.HoisUserDetailsService;
 
 public class HoisUserDetailsArgumentResolver implements HandlerMethodArgumentResolver {
-
-    private final HoisUserDetailsService hoisUserDetailsService;
-
-    public HoisUserDetailsArgumentResolver(HoisUserDetailsService hoisUserDetailsService) {
-        this.hoisUserDetailsService = hoisUserDetailsService;
-    }
 
     @Override
     public boolean supportsParameter(MethodParameter parameter) {
@@ -36,10 +29,6 @@ public class HoisUserDetailsArgumentResolver implements HandlerMethodArgumentRes
         }
         if(!(auth instanceof AnonymousAuthenticationToken)) {
             HoisUserDetails user = HoisUserDetails.fromPrincipal(auth);
-            if(user != null && user.getSchoolId() == null) {
-                // reload to get school property filled
-                user = hoisUserDetailsService.getHoisUserDetails(user.getUserId());
-            }
             if(user != null) {
                 return user;
             }

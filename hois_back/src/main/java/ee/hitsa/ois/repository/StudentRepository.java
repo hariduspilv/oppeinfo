@@ -1,10 +1,10 @@
 package ee.hitsa.ois.repository;
 
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.repository.CrudRepository;
 
-import ee.hitsa.ois.domain.Student;
+import ee.hitsa.ois.domain.student.Student;
 
-public interface StudentRepository extends CrudRepository<Student, Long>, JpaSpecificationExecutor<Student> {
+public interface StudentRepository extends JpaRepository<Student, Long>, JpaSpecificationExecutor<Student> {
 
 }

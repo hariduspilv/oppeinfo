@@ -61,7 +61,7 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     public static CurriculumVersionOccupationModuleDto of(CurriculumVersionOccupationModule module) {
         CurriculumVersionOccupationModuleDto dto = EntityUtil.bindToDto(module, new CurriculumVersionOccupationModuleDto(),
                 "curriculumModule", "capacities", "themes", "yearCapacities");
-        dto.setCurriculumModule(module.getCurriculumModule().getId());
+        dto.setCurriculumModule(EntityUtil.getId(module.getCurriculumModule()));
 
         if (module.getCapacities() != null) {
             Set<CurriculumVersionOccupationModuleCapacityDto> capacities = module.getCapacities().stream().

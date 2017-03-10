@@ -19,7 +19,7 @@ import ee.hitsa.ois.domain.Classifier;
 @Table(name="curriculum_version_omodule")
 public class CurriculumVersionOccupationModule extends BaseEntityWithId {
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false, insertable = true)
     private CurriculumModule curriculumModule;
 
