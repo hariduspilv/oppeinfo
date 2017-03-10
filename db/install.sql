@@ -1,8 +1,8 @@
-SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'hois';
+﻿SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE datname = 'hois';
 
 drop database if exists hois;
 
-create database hois;
+create database hois; 
 \c hois;
 
 DROP SEQUENCE IF EXISTS "public"."application_file_id_seq";
