@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -47,17 +48,15 @@ public class StateCurriculumService {
 
     @Autowired
     private ClassifierRepository classifierRepository;
-    
-//    @Autowired
-//    private EntityManager em;
 
     /**
      * TODO: this is not optimal solution. 
      */
     public Page<StateCurriculumSearchDto> search(StateCurriculumSearchCommand stateCurriculumSearchCommand, Pageable pageable) {
+        
         if(stateCurriculumSearchCommand.getEkrLevel() != null && !stateCurriculumSearchCommand.getEkrLevel().isEmpty() ||
                 pageable.getSort().toString().equals("ekrLevel: DESC") || pageable.getSort().toString().equals("ekrLevel: ASC")) {
-            List<StateCurriculum> theBestList = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand));
+            List<StateCurriculum> theBestList = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand, classifierRepository));
             setEkrLevels(theBestList);
 
             if(stateCurriculumSearchCommand.getEkrLevel() != null && !stateCurriculumSearchCommand.getEkrLevel().isEmpty()) {
@@ -69,7 +68,7 @@ public class StateCurriculumService {
             Page<StateCurriculumSearchDto> newPage = new PageImpl<>(getSearchDtoList(page.getContent()), pageable, theBestList.size());
             return newPage;
         }
-        Page<StateCurriculum> page = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand), pageable);
+        Page<StateCurriculum> page = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand, classifierRepository), pageable);
         setEkrLevels(page);
         Page<StateCurriculumSearchDto> newPage = new PageImpl<>(getSearchDtoList(page.getContent()), pageable, page.getTotalElements());
         return newPage;
@@ -78,46 +77,6 @@ public class StateCurriculumService {
     private static List<StateCurriculumSearchDto> getSearchDtoList(List<StateCurriculum> list) {
         return list.stream().map(StateCurriculumSearchDto::of).collect(Collectors.toList());
     }
-	
-	/*
-	 * Attempt to make better solution for search. 
-	 * It Works, but does not support search and filter by EKR level
-	 */
-//	   @SuppressWarnings("unchecked")
-//	    public Page<StateCurriculumSearchDto> search(StateCurriculumSearchCommand criteria, Pageable pageable) {
-//	        return JpaQueryUtil.query(StateCurriculumSearchDto.class, StateCurriculum.class, (root, query, cb) -> {
-//	            ((CriteriaQuery<StateCurriculumSearchDto>)query).select(cb.construct(StateCurriculumSearchDto.class,
-//	                root.get("id"),
-//	                root.get("nameEt"), 
-//	                root.get("nameEn"),
-//	                root.get("validFrom"), 
-//	                root.get("validThru"), 
-//	                root.get("credits"), 
-//	                root.get("status").get("code"),
-//	                root.get("iscedClass").get("code")
-//	                ));
-//
-//	            List<Predicate> filters = new ArrayList<>();
-//	            
-//	            String nameField = Language.EN.equals(criteria.getLang()) ? "nameEn" : "nameEt";
-//	            propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
-//
-//	            if(criteria.getValidFrom() != null) {
-//	                filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), criteria.getValidFrom()));
-//	            }
-//	            if(criteria.getValidThru() != null) {
-//	                filters.add(cb.lessThanOrEqualTo(root.get("validThru"), criteria.getValidThru()));
-//	            }
-//	            if(!CollectionUtils.isEmpty(criteria.getStatus())) {
-//	                filters.add(root.get("status").get("code").in(criteria.getStatus()));
-//	            }
-//	            if(!CollectionUtils.isEmpty(criteria.getIscedClass())) {
-//	                filters.add(root.get("iscedClass").get("code").in(criteria.getIscedClass()));
-//	            }
-//
-//	            return cb.and(filters.toArray(new Predicate[filters.size()]));
-//	        }, pageable, em);
-//	    }
 
 	private static boolean correctEkrLevel(String ekrLevel, List<String> ekrLevels) {
 		return ekrLevels.contains(ekrLevel);
@@ -150,7 +109,23 @@ public class StateCurriculumService {
 	}
 
 	private void setEkrLevels(Iterable<StateCurriculum> iterable) {
+        List<Object[]> list = stateCurriculumRepository.getEkrLEvels();
+        Map<Object, String> map = new HashMap<>();
+        list.forEach(e -> {
+            map.put(e[0], (String) e[1]);
+        });
+	    
 		Iterator<StateCurriculum> iterator = iterable.iterator();
+		
+		// does not work for now
+//		while(iterator.hasNext()) {
+//            StateCurriculum s = iterator.next();
+//            Long key = s.getId();
+//            String ekr = map.get(key);
+//            s.setEkrLevel(ekr);
+//        }
+		
+//		iterable.str
 
 		while(iterator.hasNext()) {
 			StateCurriculum s = iterator.next();

@@ -2,16 +2,16 @@ package ee.hitsa.ois.web.commandobject;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.DateRange;
+import ee.hitsa.ois.validation.DateTimeRange;
 import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 import javax.validation.constraints.NotNull;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
-@DateRange(from = "startDate", thru = "endDate")
+@DateTimeRange(from = "start", thru = "end")
 public class StudyPeriodEventForm extends VersionedCommand {
-    private Long studyYear;
-    private Long studyPeriod;
+    private AutocompleteResult studyPeriod;
     @NotEmpty
     private String descriptionEt;
     private String descriptionEn;
@@ -19,22 +19,14 @@ public class StudyPeriodEventForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.SYNDMUS)
     private String eventType;
     @NotNull
-    private LocalDate startDate;
-    private LocalDate endDate;
+    private LocalDateTime start;
+    private LocalDateTime end;
 
-    public Long getStudyYear() {
-        return studyYear;
-    }
-
-    public void setStudyYear(Long studyYear) {
-        this.studyYear = studyYear;
-    }
-
-    public Long getStudyPeriod() {
+    public AutocompleteResult getStudyPeriod() {
         return studyPeriod;
     }
 
-    public void setStudyPeriod(Long studyPeriod) {
+    public void setStudyPeriod(AutocompleteResult studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
 
@@ -62,19 +54,19 @@ public class StudyPeriodEventForm extends VersionedCommand {
         this.eventType = eventType;
     }
 
-    public LocalDate getStartDate() {
-        return startDate;
+    public LocalDateTime getStart() {
+        return start;
     }
 
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
+    public void setStart(LocalDateTime start) {
+        this.start = start;
     }
 
-    public LocalDate getEndDate() {
-        return endDate;
+    public LocalDateTime getEnd() {
+        return end;
     }
 
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
+    public void setEnd(LocalDateTime end) {
+        this.end = end;
     }
 }

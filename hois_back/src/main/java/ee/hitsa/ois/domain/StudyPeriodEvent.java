@@ -14,7 +14,6 @@ public class StudyPeriodEvent extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private StudyYear studyYear;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
     private StudyPeriod studyPeriod;
     private String descriptionEt;
     private String descriptionEn;

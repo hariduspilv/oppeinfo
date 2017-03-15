@@ -10,6 +10,7 @@
     "formattedDateTime": "{{date|date:'dd.MM.yyyy HH:mm:ss'}}",
     "button": {
       "add": "Lisa",
+      "addRow": "Lisa rida",
       "back": "Tagasi",
       "cancel": "Katkesta",
       "change": "Muuda",
@@ -104,6 +105,12 @@
     "hour": "tund",
     "period": "Periood",
     "date": "Kuupäev",
+    "abroadStudies":"Välisõpingud",
+    "educationInstitution": "Õppeasutus",
+    "country": "Riik",
+    "purposeOfStudies": "Õpingute eesmärk",
+    "programmeOfStudies": "Õppeprogramm",
+    "subjects": "Õppeained",
     "menu":{
       "curriculum": {
         "label": "Õppekavad"
@@ -856,7 +863,7 @@
       "start": "Algus",
       "end": "Lõpp",
       "eventType": "Kalendri-sündmuse tüüp",
-      "nameEt": "Kirjeldus",
+      "descriptionEt": "Kirjeldus",
       "startDate": "Alguskuupäev",
       "endDate": "Lõppkuupäev",
       "startTime": "Alguse kellaaeg",
@@ -941,6 +948,8 @@
     "academicLeaveEnd": "Akadeemilise puhkuse lõpp",
     "academicLeaveRevocationDate": "Katkestamise kuupäev",
     "makeApplication":"Koosta avaldus",
+    "plannedSubject": "Planeeritav õppeaine",
+    "substitutableSubject": "Asendatav õppeaine",
     "messages": {
       "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
       "validAcademicLeaveApplicationExists": "Akadeemilise puhkuse avaldus juba eksisteerib",

@@ -23,9 +23,13 @@ public class ApplicationDto extends ApplicationForm {
             return null;
         }
 
-        ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files");
+        ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects");
         if (application.getFiles() != null) {
             dto.setFiles(application.getFiles().stream().map(ApplicationFileDto::of).collect(Collectors.toSet()));
+        }
+        if (application.getPlannedSubjects() != null) {
+            dto.setPlannedSubjects(application.getPlannedSubjects().stream()
+                    .map(ApplicationPlannedSubjectDto::of).collect(Collectors.toSet()));
         }
         return dto;
     }

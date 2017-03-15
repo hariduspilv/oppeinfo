@@ -31,7 +31,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="classifier in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a ng-href="#/classifier/{{::classifier.code}}">{{currentLanguageNameField(classifier)}}</a></td>
+            <td md-cell><a ng-href="#/classifier/{{::classifier.code}}?_menu">{{currentLanguageNameField(classifier)}}</a></td>
             <td md-cell>{{::classifier.count}}</td>
           </tr>
         </tbody>

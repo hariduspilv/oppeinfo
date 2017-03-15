@@ -56,5 +56,7 @@ public enum MainClassCode {
     SYNDMUS,
     TEATE_LIIK,
     TOEND_LIIK,
-    TOEND_STAATUS
+    TOEND_STAATUS,
+    VALISKOOL_PROGRAMM,
+    VALISOPE_EESMARK
 }

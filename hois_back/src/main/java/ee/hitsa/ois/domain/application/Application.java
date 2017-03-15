@@ -81,8 +81,8 @@ public class Application extends BaseEntityWithId {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier country;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false, insertable = true)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
     private Classifier ehisSchool;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)

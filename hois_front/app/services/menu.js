@@ -10,7 +10,7 @@ angular.module('hitsaOis')
       pages: [
         {
           name: 'main.menu.curriculum.label',
-          url: "/curriculum"
+          url: "/curriculum?_menu"
         },
         //{name: 'Õppejõud'},
         {
@@ -118,7 +118,7 @@ angular.module('hitsaOis')
         },
         {
           name: 'main.menu.fixData.messageTemplates',
-          url: "/messageTemplate"
+          url: "/messageTemplate?_menu"
         },
         {
           name: 'main.menu.fixData.studyLevels',

@@ -12,6 +12,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.dto.ApplicationFileDto;
+import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 
@@ -65,7 +66,26 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     private LocalDateTime submitted;
 
+    @ClassifierRestriction(MainClassCode.EHIS_KOOL)
+    private String ehisSchool;
+
+    private Boolean isAbroad;
+
+    @Size(max = 255)
+    private String abroadSchool;
+
+    @ClassifierRestriction(MainClassCode.RIIK)
+    private String country;
+
+    @ClassifierRestriction(MainClassCode.VALISOPE_EESMARK)
+    private String abroadPurpose;
+
+    @ClassifierRestriction(MainClassCode.VALISKOOL_PROGRAMM)
+    private String abroadProgramme;
+
     private Set<ApplicationFileDto> files;
+
+    private Set<ApplicationPlannedSubjectDto> plannedSubjects;
 
 
     public AutocompleteResult getStudent() {
@@ -226,6 +246,62 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setSubmitted(LocalDateTime submitted) {
         this.submitted = submitted;
+    }
+
+    public String getEhisSchool() {
+        return ehisSchool;
+    }
+
+    public void setEhisSchool(String ehisSchool) {
+        this.ehisSchool = ehisSchool;
+    }
+
+    public Boolean getIsAbroad() {
+        return isAbroad;
+    }
+
+    public void setIsAbroad(Boolean isAbroad) {
+        this.isAbroad = isAbroad;
+    }
+
+    public String getAbroadSchool() {
+        return abroadSchool;
+    }
+
+    public void setAbroadSchool(String abroadSchool) {
+        this.abroadSchool = abroadSchool;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getAbroadPurpose() {
+        return abroadPurpose;
+    }
+
+    public void setAbroadPurpose(String abroadPurpose) {
+        this.abroadPurpose = abroadPurpose;
+    }
+
+    public String getAbroadProgramme() {
+        return abroadProgramme;
+    }
+
+    public void setAbroadProgramme(String abroadProgramme) {
+        this.abroadProgramme = abroadProgramme;
+    }
+
+    public Set<ApplicationPlannedSubjectDto> getPlannedSubjects() {
+        return plannedSubjects;
+    }
+
+    public void setPlannedSubjects(Set<ApplicationPlannedSubjectDto> plannedSubjects) {
+        this.plannedSubjects = plannedSubjects;
     }
 
     public Set<ApplicationFileDto> getFiles() {

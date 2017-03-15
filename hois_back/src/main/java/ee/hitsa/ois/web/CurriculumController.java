@@ -55,8 +55,8 @@ public class CurriculumController {
     }
 
     @GetMapping("")
-    public Page<CurriculumSearchDto> search(CurriculumSearchCommand curriculumSearchCommand, Pageable pageable) {
-        return curriculumService.search(curriculumSearchCommand, pageable);
+    public Page<CurriculumSearchDto> search(HoisUserDetails user, CurriculumSearchCommand curriculumSearchCommand, Pageable pageable) {
+        return curriculumService.search(user.getSchoolId(), curriculumSearchCommand, pageable);
     }
     // TODO: use dto or AutocompleteResult
     @GetMapping("/departments")

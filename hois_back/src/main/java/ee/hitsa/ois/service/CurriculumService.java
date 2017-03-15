@@ -125,7 +125,7 @@ public class CurriculumService {
     }
 
     @SuppressWarnings("unchecked")
-    public Page<CurriculumSearchDto> search(CurriculumSearchCommand criteria, Pageable pageable) {
+    public Page<CurriculumSearchDto> search(Long schoolId, CurriculumSearchCommand criteria, Pageable pageable) {
         return JpaQueryUtil.query(CurriculumSearchDto.class, Curriculum.class, (root, query, cb) -> {
             ((CriteriaQuery<CurriculumSearchDto>)query).select(cb.construct(CurriculumSearchDto.class,
                 root.get("id"), root.get("nameEt"), root.get("nameEn"),
@@ -161,9 +161,12 @@ public class CurriculumService {
             propertyContains(() -> root.get("code"), cb, criteria.getCode(), filters::add);
             propertyContains(() -> root.get("merCode"), cb, criteria.getMerCode(), filters::add);
 
-            if(!CollectionUtils.isEmpty(criteria.getSchool())) {
-                filters.add(root.get("school").get("id").in(criteria.getSchool()));
+            if(schoolId != null) {
+                filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }
+//            else if(!CollectionUtils.isEmpty(criteria.getSchool())) {
+//                filters.add(root.get("school").get("id").in(criteria.getSchool()));
+//            }
             if(!CollectionUtils.isEmpty(criteria.getStatus())) {
                 filters.add(root.get("status").get("code").in(criteria.getStatus()));
             }

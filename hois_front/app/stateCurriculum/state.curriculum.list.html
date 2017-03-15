@@ -21,13 +21,13 @@
             <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.fieldOfStudy' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" criteria="{vocational: true}" watch-model="criteria.iscedVald"
-                                    search-from-connect connect-main-classifier-code="ISCED_VALD"></hois-classifier-select>
+                                    search-from-connect connect-main-classifier-code="ISCED_VALD" multiple></hois-classifier-select>
             </md-input-container>
 
             <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.group' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.iscedClass" model-value-attr="code" main-classifier-code="ISCED_RYHM" criteria="{vocational: true}" watch-model="criteria.iscedSuun"
-                                    search-from-connect connect-main-classifier-code="ISCED_SUUN"></hois-classifier-select>
+                                    search-from-connect connect-main-classifier-code="ISCED_SUUN" multiple></hois-classifier-select>
             </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">

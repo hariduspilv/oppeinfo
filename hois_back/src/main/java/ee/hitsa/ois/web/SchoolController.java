@@ -9,6 +9,7 @@ import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
 import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
@@ -207,20 +208,20 @@ public class SchoolController {
         return getStudyYear(studyYearService.save(getSchool(user), studyYear, request));
     }
 
-    private StudyPeriodDto getStudyPeriod(@WithEntity("id") StudyPeriod studyPeriod) {
+    private StudyPeriodDto get(StudyPeriod studyPeriod) {
         return StudyPeriodDto.of(studyPeriod);
     }
 
     @PostMapping("/studyYears/{id:\\d+}/studyPeriods")
     public StudyPeriodDto createStudyPeriod(HoisUserDetails user, @WithEntity("id") StudyYear studyYear, @Valid @RequestBody StudyPeriodForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
-        return getStudyPeriod(studyYearService.createStudyPeriod(studyYear, request));
+        return get(studyYearService.createStudyPeriod(studyYear, request));
     }
 
     @PutMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
     public StudyPeriodDto updateStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyPeriod studyPeriod, @Valid @RequestBody StudyPeriodForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
-        return getStudyPeriod(studyYearService.saveStudyPeriod(studyYear, studyPeriod, request));
+        return get(studyYearService.saveStudyPeriod(studyYear, studyPeriod, request));
     }
 
     @DeleteMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
@@ -232,10 +233,19 @@ public class SchoolController {
         studyYearService.delete(studyPeriod);
     }
 
+    private StudyPeriodEventDto get(StudyPeriodEvent studyPeriodEvent) {
+        return StudyPeriodEventDto.of(studyPeriodEvent);
+    }
+
     @PostMapping("/studyYears/{id:\\d+}/studyPeriodEvents")
     public StudyPeriodEventDto createStudyPeriodEvent(HoisUserDetails user, @WithEntity("id") StudyYear studyYear, @Valid @RequestBody StudyPeriodEventForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
-        return null;
+        return get(studyYearService.create(studyYear, request));
+    }
+
+    @PutMapping("/studyYears/{year:\\d+}/studyPeriodEvents/{id:\\d+}")
+    public StudyPeriodEventDto updateStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyPeriodEvent studyPeriodEvent, @Valid @RequestBody StudyPeriodEventForm request) {
+        return get(studyYearService.save(studyYear, studyPeriodEvent, request));
     }
 
     private School getSchool(HoisUserDetails user) {

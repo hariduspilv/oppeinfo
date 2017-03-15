@@ -16,16 +16,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.application.Application;
-import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.ApplicationDto;
+import ee.hitsa.ois.web.dto.ApplicationSearchDto;
 
 @RestController
 @RequestMapping("/applications")
@@ -42,7 +43,7 @@ public class ApplicationController {
     }
 
     @GetMapping("")
-    public Page<ApplicationDto> search(ApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
+    public Page<ApplicationSearchDto> search(ApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
         return applicationService.search(user, command, pageable);
     }
 
@@ -54,13 +55,13 @@ public class ApplicationController {
     @PutMapping("/{id:\\d+}")
     public ApplicationDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application,
             @Valid @RequestBody ApplicationForm applicationForm) {
-        assertSameSchool(user, application);
-        return get(applicationService.save(user, application, applicationForm));
+        UserUtil.assertSameSchool(user, application.getStudent().getSchool());
+        return get(applicationService.save(application, applicationForm));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application) {
-        assertSameSchool(user, application);
+        UserUtil.assertSameSchool(user, application.getStudent().getSchool());
         applicationService.delete(application);
     }
 
@@ -74,15 +75,4 @@ public class ApplicationController {
         return ApplicationDto.of(applicationService.findValidAcademicLeaveRevocation(applicationId));
     }
 
-    private void assertSameSchool(HoisUserDetails user, Application application) {
-        Long schoolId = user.getSchoolId();
-        if (schoolId == null) {
-            throw new IllegalArgumentException();
-        }
-        School school = schoolRepository.getOne(schoolId);
-        String code = EntityUtil.getNullableCode(application.getEhisSchool());
-        if (school == null || school.getEhisSchool() == null || !school.getEhisSchool().getCode().equals(code)) {
-            throw new IllegalArgumentException();
-        }
-    }
 }

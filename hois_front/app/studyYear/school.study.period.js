@@ -36,15 +36,18 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
 
     var Endpoint = QueryUtils.endpoint('/school/studyYears');
 
-    var clMapper = Classifier.valuemapper({type: "OPPEPERIOOD"});
+    var periodTypes = Classifier.valuemapper({type: "OPPEPERIOOD"});
 
     function afterLoad() {
       DataUtils.convertStringToDates($scope.studyYear, ['startDate', 'endDate']);
       $scope.studyPeriods = $scope.studyYear.studyPeriods || [];
       $scope.studyPeriodEvents = $scope.studyYear.studyPeriodEvents || [];
-      clMapper.objectmapper($scope.studyPeriods);
+      periodTypes.objectmapper($scope.studyPeriods);
       $scope.studyPeriods.forEach(function (it) {
         DataUtils.convertStringToDates(it, ['startDate', 'endDate']);
+      });
+      $scope.studyPeriodEvents.forEach(function (it) {
+        DataUtils.convertStringToDates(it, ['start', 'end']);
       });
     }
 
@@ -68,9 +71,9 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         }
         scope.studyPeriod.year = $scope.studyYear.year;
         scope.remove = function () {
-          dialogService.confirmDialog({prompt: 'student.absence.deleteconfirm'}, function() {
+          dialogService.confirmDialog({prompt: 'studyYear.studyPeriod.deleteconfirm'}, function() {
             scope.studyPeriod.$delete().then(function() {
-              $scope.studyPeriodEvents = $scope.studyPeriodEvents.filter(function (it) {
+              $scope.studyPeriods = $scope.studyPeriods.filter(function (it) {
                 return it !== item;
               });
               message.info('main.messages.delete.success');
@@ -82,7 +85,6 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       };
 
       var afterSave = function (data) {
-        clMapper.objectmapper(data);
         DataUtils.convertStringToDates(data, ['startDate', 'endDate']);
         if (item) {
           angular.extend(item, data);
@@ -103,26 +105,64 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     };
 
     $scope.openStudyPeriodEventDialog = function (item) {
+      var StudyPeriodEventEndpoint = QueryUtils.endpoint('/school/studyYears/'+$scope.studyYear.id+'/studyPeriodEvents');
       var DialogController = function (scope) {
         if (item) {
-          scope.data =  angular.extend({}, item);
+          scope.studyPeriodEvent =  new StudyPeriodEventEndpoint(item);
+          if (scope.studyPeriodEvent.studyPeriod) {
+            for (var i = 0; i < $scope.studyPeriods.length; i++) {
+              if ($scope.studyPeriods[i].id === scope.studyPeriodEvent.studyPeriod.id) {
+                scope.studyPeriodEvent.studyPeriod = $scope.studyPeriods[i];
+                break;
+              }
+            }
+          }
+        } else {
+          scope.studyPeriodEvent = new StudyPeriodEventEndpoint({});
         }
-        scope.year = $scope.year;
-        scope.remove = function (it) {
-          // Todo delete request
-          $scope.studyPeriods = $scope.studyPeriods.filter(function (it) {
-            return it !== item;
+        var end = scope.studyPeriodEvent.end;
+        scope.studyPeriodEvent.end = function (value) {
+          if (arguments.length && !end) {
+            var momentValue = moment(value);
+            if (momentValue.isSame(moment(value).startOf('day'))) {
+              value = momentValue.hours(23).minutes(59).toDate();
+            }
+          }
+          return arguments.length ? (end = value) : end;
+        };
+
+        scope.studyPeriods = $scope.studyPeriods;
+        scope.remove = function () {
+          dialogService.confirmDialog({prompt: 'studyYear.studyPeriodEvent.deleteconfirm'}, function() {
+            scope.studyPeriodEvent.$delete().then(function() {
+              $scope.studyPeriodEvents = $scope.studyPeriodEvents.filter(function (it) {
+                return it !== item;
+              });
+              message.info('main.messages.delete.success');
+              $mdDialog.hide();
+
+            });
           });
         };
       };
 
-      dialogService.showDialog('studyYear/study.event.dialog.html', DialogController,
+      var afterSave = function (data) {
+        DataUtils.convertStringToDates(data, ['start', 'end']);
+        if (item) {
+          angular.extend(item, data);
+        } else {
+          $scope.studyPeriodEvents.push(data);
+        }
+      };
+
+      dialogService.showDialog('studyYear/study.period.event.dialog.html', DialogController,
         function (submitScope) {
-          var data = submitScope.data;
-          if(item) {
-            angular.merge(item, data);
+          var periodEvent = submitScope.studyPeriodEvent;
+          console.log(submitScope);
+          if (periodEvent.id) {
+            periodEvent.$update().then(afterSave);
           } else {
-            $scope.studyEvents.push(data);
+            periodEvent.$save().then(afterSave);
           }
         });
     };

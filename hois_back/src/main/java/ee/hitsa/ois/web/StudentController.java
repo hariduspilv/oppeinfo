@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.validation.Valid;
@@ -31,6 +32,7 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
@@ -125,6 +127,12 @@ public class StudentController {
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
         assertCanView(user, student);
         return studentService.directives(EntityUtil.getId(student), pageable);
+    }
+
+    @GetMapping("/{id:\\d+}/subjects")
+    public List<AutocompleteResult> subjects(HoisUserDetails user, @WithEntity("id") Student student) {
+        assertCanView(user, student);
+        return studentService.subjects(student);
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {

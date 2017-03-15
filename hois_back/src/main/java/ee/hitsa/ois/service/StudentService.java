@@ -4,6 +4,8 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -20,6 +22,7 @@ import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.StudentAbsenceRepository;
@@ -67,6 +70,8 @@ public class StudentService {
     private StudentAbsenceRepository studentAbsenceRepository;
     @Autowired
     private StudentRepository studentRepository;
+    @Autowired
+    private CurriculumVersionRepository curriculumVersionRepository;
 
     public Page<StudentSearchDto> search(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_LIST_FROM, pageable);
@@ -154,5 +159,13 @@ public class StudentService {
 
     public Page<StudentDirectiveDto> directives(Long studentId, Pageable pageable) {
         return directiveRepository.findAllByStudent_id(studentId, pageable).map(StudentDirectiveDto::of);
+    }
+
+    public List<AutocompleteResult> subjects(Student student) {
+        //TODO single query
+        List<AutocompleteResult> subjects = new ArrayList<>();
+        student.getCurriculumVersion().getModules().forEach(
+                m -> m.getSubjects().forEach(s -> subjects.add(AutocompleteResult.of(s.getSubject()))));
+        return subjects;
     }
 }

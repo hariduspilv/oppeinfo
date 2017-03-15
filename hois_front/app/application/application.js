@@ -7,6 +7,13 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
   function entityToForm(savedApplication) {
     DataUtils.convertStringToDates(savedApplication, ["startDate", "endDate"]);
+    if (angular.isArray(savedApplication.plannedSubjects)) {
+      savedApplication.plannedSubjects.forEach(function(plannedSubject) {
+        if (angular.isArray(plannedSubject.equivalents)) {
+          plannedSubject.subjectsSelected = plannedSubject.equivalents.map(function(it){return it.subject;});
+        }
+      });
+    }
     angular.extend($scope.application, savedApplication);
   }
 
@@ -79,6 +86,60 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     }
   }
 
+  function abroadStudentApplication() {
+    $scope.isAbroadChanged = function() {
+      if ($scope.application.isAbroad) {
+        $scope.application.ehisSchool = undefined;
+      } else {
+        $scope.application.abroadSchool = undefined;
+        $scope.application.country = undefined;
+      }
+    };
+
+    $scope.addPlannedSubjectRow = function() {
+      if (!angular.isArray($scope.application.plannedSubjects)) {
+        $scope.application.plannedSubjects = [];
+      }
+      $scope.application.plannedSubjects.push({equivalents: []});
+    };
+
+    $scope.subjectsSelected = function(plannedSubject) {
+      if (angular.isArray(plannedSubject.subjectsSelected)) {
+        var newEquivalents = [];
+        plannedSubject.subjectsSelected.forEach(function(subjectId) {
+          var found = false;
+          for(var i = 0; i < plannedSubject.equivalents.length && !found; i++) {
+            var equivalent = plannedSubject.equivalents[i];
+            if (equivalent.subject === subjectId) {
+              newEquivalents.push(equivalent);
+              found = true;
+            }
+          }
+          if (!found) {
+            newEquivalents.push({subject: subjectId});
+          }
+        });
+        plannedSubject.equivalents = newEquivalents;
+      } else {
+        plannedSubject.equivalents = [];
+      }
+    };
+
+    $scope.studentEhisSchool = $route.current.locals.auth.school.ehisSchool;
+    if (!isEdit()) {
+      $scope.application.isPeriod = true;
+      $scope.application.isAbroad = false;
+    }
+    QueryUtils.endpoint('/students/' + $scope.application.student.id + '/subjects').query({}, function(result) {
+      $scope.studentSubjects = result;
+    });
+    QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
+      $scope.studyPeriods = result;
+    });
+
+    $scope.applicationEditView = true;
+  }
+
 
   $scope.$watch('application.student', function(student) {
     if (angular.isObject(student)) {
@@ -105,7 +166,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
             academicLeaveRevocation(hasAcademicLeaveApplication, academicLeaveApplication);
           }
         });
-      } else {
+      } else if ($scope.application.type === 'AVALDUS_LIIK_KYLALIS') {
+        abroadStudentApplication();
+        $scope.applicationEditView = true;
+      }
+      else {
         $scope.applicationEditView = true;
       }
     }

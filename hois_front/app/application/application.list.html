@@ -80,9 +80,9 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
-          <th md-column md-order-by="student.person.lastname,student.person.firstname">{{'application.student' | translate}}</th>
-          <th md-column md-order-by="type">{{'application.type' | translate}}</th>
-          <th md-column md-order-by="status">{{'main.status' | translate}}</th>
+          <th md-column md-order-by="person.lastname,person.firstname">{{'application.student' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'application.type' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'main.status' | translate}}</th>
           <th md-column md-order-by="inserted">{{'application.insertionDate' | translate}}</th>
           <th md-column md-order-by="submitted">{{'application.submissionDate' | translate}}</th>
           <th md-column></th>
@@ -90,8 +90,8 @@
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>{{::row.student.nameEt}}</td>
-          <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+          <td md-cell><a ng-href="/#/students/{{::row.student.id}}/main">{{::row.student.nameEt}}</a></td>
+          <td md-cell><a ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
           <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           <td md-cell>{{'main.formattedDateTime' | translate: {date: row.inserted} }}</td>
           <td md-cell>{{'main.formattedDateTime' | translate: {date: row.submitted} }}</td>
