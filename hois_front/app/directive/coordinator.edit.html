@@ -5,23 +5,23 @@
     <form name="directiveCoordinatorForm">
       <md-input-container class="md-block">
         <label>{{'directive.coordinator.name' | translate}}</label>
-        <input ng-model="directiveCoordinator.name" name="name" type="text" required md-maxlength="100">
+        <input ng-model="record.name" name="name" type="text" required md-maxlength="100">
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'directive.coordinator.idcode' | translate}}</label>
-        <input ng-model="directiveCoordinator.idcode" name="idcode" type="text" required md-minlength="11" md-maxlength="11">
+        <input ng-model="record.idcode" name="idcode" type="text" required md-minlength="11" md-maxlength="11">
       </md-input-container>
       <div layout="column">
-          <md-checkbox ng-model="directiveCoordinator.isDirective"
+          <md-checkbox ng-model="record.isDirective"
                  aria-label="{{'directive.coordinator.isDirective' | translate}}"> 
         {{'directive.coordinator.isDirective' | translate}} 
          </md-checkbox>
-        <md-checkbox ng-model="directiveCoordinator.isCertificate"
+        <md-checkbox ng-model="record.isCertificate"
                  aria-label="{{'directive.coordinator.isCertificate' | translate}}"> 
         {{'directive.coordinator.isCertificate' | translate}} 
          </md-checkbox>
-        <md-checkbox ng-model="directiveCoordinator.isCertificateDefault"
+        <md-checkbox ng-model="record.isCertificateDefault"
                  aria-label="{{'directive.coordinator.isCertificateDefault' | translate}}"> 
         {{'directive.coordinator.isCertificateDefault' | translate}} 
          </md-checkbox>
@@ -29,7 +29,7 @@
     </form>
 
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-    <md-button ng-click="delete()" ng-if="directiveCoordinator.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-if="record.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
     <md-button ng-href="#/directives/coordinators" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

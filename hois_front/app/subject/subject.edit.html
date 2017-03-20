@@ -97,7 +97,7 @@
     <!-- info tund -->
     <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
     <div ng-repeat="it in subject.primarySubjects">
-      <a ng-href="#/subject/{{it.id}}/edit">{{currentLanguage()==='en' ? (it.nameEn || it.nameEt) : it.nameEt}}</a>
+      <a ng-href="#/subject/{{it.id}}/edit">{{currentLanguageNameField(it)}}</a>
     </div>
     <h3>{{'subject.belongsCurriculum' | translate}}</h3>
     <div ng-repeat="curriculumVersion in subject.curriculumVersions">

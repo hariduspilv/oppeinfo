@@ -211,4 +211,8 @@ angular.module('hitsaOis')
     return function (value) {
       return (!value) ? '' : value.replace(/ /g, '');
     };
+  }).filter('encodeURIComponent', function () {
+    return function (value) {
+      return window.encodeURIComponent(value);
+    };
   });

@@ -568,11 +568,7 @@ public class CurriculumService {
                 oldSet = module.getCompetences();
             }
             EntityUtil.bindClassifierCollection(oldSet, c -> EntityUtil.getCode(c.getCompetence()), competences, competenceCode -> {
-                Classifier c = classifierRepository.getOne(competenceCode);
-                if(!MainClassCode.KOMPETENTS.name().equals(c.getMainClassCode())) {
-                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                }
-                return new CurriculumModuleCompetence(c);
+                return new CurriculumModuleCompetence(EntityUtil.validateClassifier(classifierRepository.getOne(competenceCode), MainClassCode.KOMPETENTS));
             });
         } else {
             module.setCompetences(new HashSet<>());
@@ -587,12 +583,8 @@ public class CurriculumService {
                 oldSet = module.getOccupations();
             }
             EntityUtil.bindClassifierCollection(oldSet, o -> EntityUtil.getCode(o.getOccupation()), occupations, occupaionCode -> {
-              Classifier c = classifierRepository.getOne(occupaionCode);
-              if(!MainClassCode.OSAKUTSE.name().equals(c.getMainClassCode()) &&
-                      !MainClassCode.KUTSE.name().equals(c.getMainClassCode()) &&
-                      !MainClassCode.SPETSKUTSE.name().equals(c.getMainClassCode())) {
-                  throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-              }
+              Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupaionCode),
+                      MainClassCode.OSAKUTSE, MainClassCode.KUTSE, MainClassCode.SPETSKUTSE);
               return new CurriculumModuleOccupation(c);
             });
         } else {
@@ -621,10 +613,7 @@ public class CurriculumService {
                 occupation.setSpecialities(new HashSet<>());
             }
             EntityUtil.bindClassifierCollection(oldList, s -> EntityUtil.getCode(s.getSpeciality()), specialities, specialityCode -> {
-                Classifier c = classifierRepository.getOne(specialityCode);
-                if(!MainClassCode.SPETSKUTSE.name().equals(c.getMainClassCode())) {
-                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                }
+                Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(specialityCode), MainClassCode.SPETSKUTSE);
                 return new CurriculumOccupationSpeciality(c);
             });
         } else {
@@ -702,12 +691,7 @@ public class CurriculumService {
             }
             EntityUtil.bindClassifierCollection(storedStudyForms, sf -> EntityUtil.getCode(sf.getStudyForm()), studyForms, studyForm -> {
                 // add new link
-                Classifier c = classifierRepository.getOne(studyForm);
-             // verify that domain code is from OPPEVORM and raise IllegalArgumentException if wrong
-                if(!MainClassCode.OPPEVORM.name().equals(c.getMainClassCode())) {
-                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                }
-//                return new CurriculumStudyForm(c, curriculum);
+                Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(studyForm), MainClassCode.OPPEVORM);
                 return new CurriculumStudyForm(c);
             });
         } else {

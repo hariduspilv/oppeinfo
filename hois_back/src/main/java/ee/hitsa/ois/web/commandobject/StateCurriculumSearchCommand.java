@@ -15,6 +15,8 @@ public class StateCurriculumSearchCommand extends SearchCommand {
 	private List<String> iscedSuun;
 	private List<String> ekrLevel;
 	private String iscedVald;
+	private Boolean valid;
+	private Boolean expired;
 
 	public List<String> getEkrLevel() {
 		return ekrLevel;
@@ -71,4 +73,21 @@ public class StateCurriculumSearchCommand extends SearchCommand {
 	public void setValidThru(LocalDate validThru) {
 		this.validThru = validThru;
 	}
+
+    public Boolean getValid() {
+        return valid;
+    }
+
+    public void setValid(Boolean valid) {
+        this.valid = valid;
+    }
+
+    public Boolean getExpired() {
+        return expired;
+    }
+
+    public void setExpired(Boolean expired) {
+        this.expired = expired;
+    }
+
 }

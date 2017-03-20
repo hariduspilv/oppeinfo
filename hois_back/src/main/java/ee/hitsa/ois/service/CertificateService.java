@@ -6,6 +6,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -40,6 +41,8 @@ public class CertificateService {
     private CertificateRepository certificateRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private EntityManager em;
     @Autowired
     private StudentRepository studentRepository;
     @Autowired
@@ -90,8 +93,7 @@ public class CertificateService {
 
     public Certificate save(Certificate certificate, CertificateForm form) {
         EntityUtil.bindToEntity(form, certificate, classifierRepository, "student");
-        Student student = form.getStudent() != null ? studentRepository.getOne(form.getStudent()) : null;
-        certificate.setStudent(student);
+        certificate.setStudent(EntityUtil.getOptionalOne(Student.class, form.getStudent(), em));
         return certificateRepository.save(certificate);
     }
 

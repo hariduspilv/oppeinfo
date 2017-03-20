@@ -1,14 +1,14 @@
 package ee.hitsa.ois.web.commandobject.directive;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
-import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
@@ -68,9 +68,33 @@ public class DirectiveForm extends VersionedCommand {
 
     public static class DirectiveFormStudent {
         private Long id;
+        @EstonianIdCode
         private String idcode;
+        @Size(max = 255)
         private String firstname;
+        @Size(max = 255)
         private String lastname;
+        private LocalDate startDate;
+        private LocalDate endDate;
+        @ClassifierRestriction({MainClassCode.AKADPUHKUS_POHJUS, MainClassCode.EKSMAT_POHJUS})
+        private String reason;
+        @ClassifierRestriction(MainClassCode.OPPEVORM)
+        private String studyForm;
+        private Long studentGroup;
+        private Long curriculumVersion;
+        @ClassifierRestriction(MainClassCode.OPPEKOORMUS)
+        private String studyLoad;
+        @ClassifierRestriction(MainClassCode.FINALLIKAS)
+        private String fin;
+        @ClassifierRestriction(MainClassCode.FINTAPSUSTUS)
+        private String finSpecific;
+        @ClassifierRestriction(MainClassCode.OPPEKEEL)
+        private String language;
+        @ClassifierRestriction(MainClassCode.OPPEASTE)
+        private String previousStudyLevel;
+        private String email;
+        private Long application;
+        private Long student;
 
         public Long getId() {
             return id;
@@ -104,8 +128,116 @@ public class DirectiveForm extends VersionedCommand {
             this.lastname = lastname;
         }
 
-        public static DirectiveFormStudent of(DirectiveStudent student) {
-            return EntityUtil.bindToDto(student, new DirectiveFormStudent());
+        public LocalDate getStartDate() {
+            return startDate;
+        }
+
+        public void setStartDate(LocalDate startDate) {
+            this.startDate = startDate;
+        }
+
+        public LocalDate getEndDate() {
+            return endDate;
+        }
+
+        public void setEndDate(LocalDate endDate) {
+            this.endDate = endDate;
+        }
+
+        public String getReason() {
+            return reason;
+        }
+
+        public void setReason(String reason) {
+            this.reason = reason;
+        }
+
+        public String getStudyForm() {
+            return studyForm;
+        }
+
+        public void setStudyForm(String studyForm) {
+            this.studyForm = studyForm;
+        }
+
+        public Long getStudentGroup() {
+            return studentGroup;
+        }
+
+        public void setStudentGroup(Long studentGroup) {
+            this.studentGroup = studentGroup;
+        }
+
+        public Long getCurriculumVersion() {
+            return curriculumVersion;
+        }
+
+        public void setCurriculumVersion(Long curriculumVersion) {
+            this.curriculumVersion = curriculumVersion;
+        }
+
+        public String getStudyLoad() {
+            return studyLoad;
+        }
+
+        public void setStudyLoad(String studyLoad) {
+            this.studyLoad = studyLoad;
+        }
+
+        public String getFin() {
+            return fin;
+        }
+
+        public void setFin(String fin) {
+            this.fin = fin;
+        }
+
+        public String getFinSpecific() {
+            return finSpecific;
+        }
+
+        public void setFinSpecific(String finSpecific) {
+            this.finSpecific = finSpecific;
+        }
+
+        public String getLanguage() {
+            return language;
+        }
+
+        public void setLanguage(String language) {
+            this.language = language;
+        }
+
+        public String getPreviousStudyLevel() {
+            return previousStudyLevel;
+        }
+
+        public void setPreviousStudyLevel(String previousStudyLevel) {
+            this.previousStudyLevel = previousStudyLevel;
+        }
+
+        public String getEmail() {
+            return email;
+        }
+
+        public void setEmail(String email) {
+            this.email = email;
+        }
+
+        public Long getApplication() {
+            return application;
+        }
+
+        public void setApplication(Long application) {
+            this.application = application;
+        }
+
+        public Long getStudent() {
+            return student;
+        }
+
+        public void setStudent(Long student) {
+            this.student = student;
         }
     }
 }

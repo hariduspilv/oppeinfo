@@ -30,6 +30,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
@@ -65,6 +66,8 @@ public class AutocompleteService {
     private SubjectService subjectService;
     @Autowired
     private TeacherRepository teacherRepository;
+    @Autowired
+    private StudentGroupRepository studentGroupRepository;
     @Autowired
     private StudentRepository studentRepository;
     @Autowired
@@ -173,6 +176,10 @@ public class AutocompleteService {
 
         List<?> data = qb.select("sd.id, sd.name_et, sd.name_en", em).getResultList();
         return data.stream().map(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2))).collect(Collectors.toList());
+    }
+
+    public List<AutocompleteResult> studentGroups(Long schoolId) {
+        return studentGroupRepository.findAllBySchool_id(schoolId).stream().map(AutocompleteResult::of).collect(Collectors.toList());
     }
 
     public Page<SubjectSearchDto> subjects(Long schoolId, AutocompleteCommand command) {

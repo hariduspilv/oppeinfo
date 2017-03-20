@@ -14,6 +14,7 @@ import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
@@ -48,14 +49,12 @@ public class StateCurriculumSpecification implements Specification<StateCurricul
 		List<String> icsedRyhms = new ArrayList<>();
         if(!CollectionUtils.isEmpty(searchCommand.getIscedClass())) {
             icsedRyhms.addAll(searchCommand.getIscedClass());
-        }
-        if(!CollectionUtils.isEmpty(searchCommand.getIscedSuun())) {
-            icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(searchCommand.getIscedSuun(), "ISCED_RYHM"));
-        }
-        if(searchCommand.getIscedVald() != null) {
-            List<String> iscedSuuns = classifierRepository.findChildrenByMainClassifier(Arrays.asList(searchCommand.getIscedVald()), "ISCED_SUUN");
+        } else if(!CollectionUtils.isEmpty(searchCommand.getIscedSuun())) {
+            icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(searchCommand.getIscedSuun(), MainClassCode.ISCED_RYHM.name()));
+        } else if(searchCommand.getIscedVald() != null) {
+            List<String> iscedSuuns = classifierRepository.findChildrenByMainClassifier(Arrays.asList(searchCommand.getIscedVald()), MainClassCode.ISCED_SUUN.name());
               if(!CollectionUtils.isEmpty(iscedSuuns)) {
-                   icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(iscedSuuns, "ISCED_RYHM"));
+                   icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(iscedSuuns, MainClassCode.ISCED_RYHM.name()));
               }
         }
         if(!CollectionUtils.isEmpty(icsedRyhms)) {

@@ -70,7 +70,7 @@ public class GeneralMessageControllerTests {
         form.setTargets(Arrays.asList("ROLL_P"));
         ResponseEntity<GeneralMessageDto> responseEntity = restTemplate.postForEntity(uri, form, GeneralMessageDto.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         Long id = responseEntity.getBody().getId();
         Assert.assertNotNull(id);

@@ -4,6 +4,7 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
@@ -35,6 +36,10 @@ public class AutocompleteResult extends EntityConnectionCommand {
 
     public String getNameEn() {
         return nameEn;
+    }
+
+    public static AutocompleteResult of(DirectiveCoordinator coordinator) {
+        return new AutocompleteResult(coordinator.getId(), coordinator.getName(), coordinator.getName());
     }
 
     public static AutocompleteResult of(Curriculum curriculum) {

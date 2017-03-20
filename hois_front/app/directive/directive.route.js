@@ -28,9 +28,17 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
     })
-    .when('/directives/:id', {
+    .when('/directives/:id/edit', {
       templateUrl: 'directive/directive.edit.html',
       controller: 'DirectiveEditController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/directives/:id/view', {
+      templateUrl: 'directive/directive.view.html',
+      controller: 'DirectiveViewController',
       controllerAs: 'controller',
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
@@ -45,7 +53,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
     })
-    .when('/directives/coordinators/:id', {
+    .when('/directives/coordinators/:id/edit', {
       templateUrl: 'directive/coordinator.edit.html',
       controller: 'DirectiveCoordinatorEditController',
       controllerAs: 'controller',

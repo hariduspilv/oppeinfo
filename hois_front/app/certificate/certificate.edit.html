@@ -9,7 +9,7 @@
             <div ng-if="record.type === 'TOEND_LIIK_MUU'">
                 <md-input-container class="md-block">
                     <label>{{'certificate.otherIdcode' | translate}}</label>
-                    <input type="text" ng-model="record.otherIdcode" name="idcode" required ng-pattern="idcodePattern" ng-readonly="otherFound" md-maxlength="11"></hois-idcode-lookup>
+                    <input type="text" ng-model="record.otherIdcode" name="idcode" required ng-pattern="idcodePattern" ng-readonly="otherFound" md-maxlength="11">
                     <div ng-messages="certificateEditForm.idcode.$error" ng-show="certificateEditForm.idcode.$dirty">
                         <div ng-message="pattern">
                             {{'certificate.invalidIdcode' | translate}}

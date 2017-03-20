@@ -1,5 +1,7 @@
 package ee.hitsa.ois.enums;
 
+import java.util.EnumSet;
+
 public enum DirectiveType {
 
     KASKKIRI_AKAD(StudentStatus.OPPURSTAATUS_A, "nominalStudyEnd"),
@@ -12,6 +14,7 @@ public enum DirectiveType {
     KASKKIRI_EKSMAT(StudentStatus.OPPURSTAATUS_K),
     KASKKIRI_LOPET(StudentStatus.OPPURSTAATUS_L),
     KASKKIRI_IMMAT(StudentStatus.OPPURSTAATUS_O, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
+    KASKKIRI_IMMATV(StudentStatus.OPPURSTAATUS_O, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
     KASKKIRI_ENNIST(null, "studentGroup"),
     KASKKIRI_TYHIST(null),
     // TODO these are missing
@@ -33,4 +36,8 @@ public enum DirectiveType {
     public String[] updatedFields() {
         return updatedFields;
     }
+
+    // these types require always application
+    public static EnumSet<DirectiveType> ONLY_FROM_APPLICATION = EnumSet.of(
+            KASKKIRI_AKAD, KASKKIRI_AKADK, KASKKIRI_OKAVA, KASKKIRI_FINM, KASKKIRI_OVORM, KASKKIRI_VALIS);
 }

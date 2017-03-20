@@ -37,8 +37,8 @@ public class AutocompleteController {
     private AutocompleteService autocompleteService;
 
     @GetMapping("/buildings")
-    public List<AutocompleteResult> buildings(HoisUserDetails user) {
-        return autocompleteService.buildings(user.getSchoolId());
+    public Page<AutocompleteResult> buildings(HoisUserDetails user) {
+        return asPage(autocompleteService.buildings(user.getSchoolId()));
     }
 
     @GetMapping("/classifiers")
@@ -87,6 +87,11 @@ public class AutocompleteController {
     @GetMapping("/schooldepartments")
     public Page<AutocompleteResult> schoolDepartments(HoisUserDetails user, SchoolDepartmentAutocompleteCommand criteria) {
         return asPage(autocompleteService.schoolDepartments(user.getSchoolId(), criteria));
+    }
+
+    @GetMapping("/studentgroups")
+    public Page<AutocompleteResult> studentGroups(HoisUserDetails user) {
+        return asPage(autocompleteService.studentGroups(user.getSchoolId()));
     }
 
     @GetMapping("/subjects")

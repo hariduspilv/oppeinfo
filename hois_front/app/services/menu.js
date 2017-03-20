@@ -136,7 +136,7 @@ angular.module('hitsaOis')
         {
           name: 'main.menu.fixData.users',
           id: 'users',
-          url: "/users"
+          url: "/users?_menu"
         }
       ]
     });
@@ -149,6 +149,11 @@ angular.module('hitsaOis')
           name: 'main.menu.applications.search',
           id: 'applications',
           url: "/applications?_menu"
+        },
+        {
+          name: 'main.menu.applications.student.list',
+          id: 'studentApplicationsList',
+          url: "/applications/student?_menu"
         }
       ]
     });
@@ -173,7 +178,7 @@ angular.module('hitsaOis')
         },
         {
           name: 'main.menu.study.notifications',
-          url: "/notifications"
+          url: "/messages/received?_menu"
         },
       ]
     });

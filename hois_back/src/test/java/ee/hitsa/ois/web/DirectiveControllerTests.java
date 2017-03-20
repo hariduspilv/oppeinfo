@@ -130,7 +130,7 @@ public class DirectiveControllerTests {
         form.setIdcode("48908209998");
         ResponseEntity<DirectiveCoordinatorDto> responseEntity = restTemplate.postForEntity(uri, form, DirectiveCoordinatorDto.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         Long id = responseEntity.getBody().getId();
         Assert.assertNotNull(id);

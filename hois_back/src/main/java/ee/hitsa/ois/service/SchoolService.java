@@ -13,8 +13,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import ee.hitsa.ois.domain.Classifier;
-
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.school.School;
@@ -87,14 +85,9 @@ public class SchoolService {
             }
             EntityUtil.bindClassifierCollection(storedStudyLevels, sl -> EntityUtil.getCode(sl.getStudyLevel()), studyLevels, studyLevel -> {
                 // add new link
-                Classifier c = classifierRepository.getOne(studyLevel);
-                // verify that domain code is from OPPEASTE and raise IllegalArgumentException if wrong
-                if(!MainClassCode.OPPEASTE.name().equals(c.getMainClassCode())) {
-                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                }
                 SchoolStudyLevel sl = new SchoolStudyLevel();
                 sl.setSchool(school);
-                sl.setStudyLevel(c);
+                sl.setStudyLevel(EntityUtil.validateClassifier(classifierRepository.getOne(studyLevel), MainClassCode.OPPEASTE));
                 return sl;
             });
         }

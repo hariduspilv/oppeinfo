@@ -53,6 +53,14 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     public boolean isSchoolAdmin() {
         return schoolId != null && Role.ROLL_A.name().equals(role);
     }
+    
+    public boolean isMainAdmin() {
+        return Role.ROLL_P.name().equals(role);
+    }
+
+    public String getRole() {
+        return role;
+    }
 
     public static HoisUserDetails fromPrincipal(Principal principal) {
         if (principal instanceof PreAuthenticatedAuthenticationToken) {

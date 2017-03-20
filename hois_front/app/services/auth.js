@@ -71,13 +71,25 @@ angular.module('hitsaOis')
   })
 
   .factory('AuthResolver', function ($q, $rootScope) {
+    function isUserInRole(currentUser, roleIn) {
+      return function() {
+        return angular.isString(currentUser.roleCode) && angular.isString(roleIn) && currentUser.roleCode === roleIn;
+      };
+    }
     return {
       resolve: function () {
         var deferred = $q.defer();
         var unwatch = $rootScope.$watch('currentUser', function (currentUser) {
           if (angular.isDefined(currentUser)) {
             if (currentUser) {
-              deferred.resolve(currentUser);
+              var authObject = angular.extend({}, currentUser);
+              authObject.isHeadAdmin = isUserInRole(currentUser, 'ROLL_P');
+              authObject.isAdmin = isUserInRole(currentUser, 'ROLL_A');
+              authObject.isTeacher = isUserInRole(currentUser, 'ROLL_O');
+              authObject.isStudent = isUserInRole(currentUser, 'ROLL_T');
+              authObject.isParent = isUserInRole(currentUser, 'ROLL_L');
+              authObject.isExternalExpert = isUserInRole(currentUser, 'ROLL_V');
+              deferred.resolve(authObject);
             } else {
               deferred.reject();
             }

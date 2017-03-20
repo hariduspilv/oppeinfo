@@ -18,7 +18,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
     })
-    .when('/studentgroups/:id', {
+    .when('/studentgroups/:id/edit', {
       templateUrl: 'studentGroup/student.group.edit.html',
       controller: 'StudentGroupEditController',
       controllerAs: 'controller',

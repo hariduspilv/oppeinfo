@@ -26,6 +26,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.CurriculumService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -133,7 +134,7 @@ public class CurriculumController {
                 .map(it -> EntityUtil.getCode(it.getEhisSchool())).collect(Collectors.toList()));
 
         if (!ehisSchools.contains(EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool()))) {
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("EHIS school mismatch");
         }
     }
 }

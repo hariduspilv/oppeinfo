@@ -70,6 +70,7 @@ public class DirectiveStudent extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier stateLanguageEcts;
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
     private Application application;
     @ManyToOne(fetch = FetchType.LAZY)
     private Person person;

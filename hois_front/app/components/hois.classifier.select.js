@@ -31,6 +31,7 @@ angular.module('hitsaOis')
         byProperty: '@',
         showOnlyValues: '@', //model of array of classifiers
         watchModel: '@',
+        watchMultiple: '@',
         searchFromConnect: '@',
         selectFirstValue: '@'
       },
@@ -138,7 +139,13 @@ angular.module('hitsaOis')
 
     var postLoad = function() {
       var deselectHiddenValue = function() {
-        if(angular.isObject(scope.value) && angular.isString(scope.value.code) &&
+        if (angular.isArray(scope.value)) {
+          scope.value.forEach(function(valueCode) {
+            if(angular.isString(valueCode) && (!angular.isDefined(scope.optionsByCode[valueCode]) || scope.optionsByCode[valueCode].hide)) {
+              scope.value = undefined;
+            }
+          });
+        } else if(angular.isObject(scope.value) && angular.isString(scope.value.code) &&
           (!angular.isDefined(scope.optionsByCode[scope.value.code]) || scope.optionsByCode[scope.value.code].hide)) {
           scope.value = undefined;
         } else if(scope.modelValueAttr === 'code' && angular.isString(scope.value) &&
@@ -200,17 +207,29 @@ angular.module('hitsaOis')
       };
       doOptionsFilering();
 
-      if(angular.isDefined(scope.watchModel)) {
-        scope.$parent.$watch(scope.watchModel, function(newValue) {
-          if(!angular.isDefined(newValue) || newValue === null) {
+      function hideAllValues() {
+        for(var key in scope.optionsByCode) {
+          scope.optionsByCode[key].hide = true;
+        }
+      }
+
+      function watchCallback(newValue) {
+          if(!angular.isDefined(newValue) || newValue === null || newValue === '' || (angular.isArray(newValue) && newValue.length === 0)) {
             scope.value = undefined;
-          } else if(!!newValue) {
+            hideAllValues();
+          } else  {
               var params = {
                 mainClassifierCode: scope.connectMainClassifierCode
               };
 
-              var code = angular.isString(newValue) ? newValue : newValue.code;
-              if(angular.isDefined(scope.searchFromConnect)){
+              var code = newValue;
+              if (angular.isArray(newValue)) {
+                code = newValue.join(",");
+              } else if(angular.isObject(newValue)) {
+                code = newValue.code;
+              }
+
+              if(angular.isDefined(scope.searchFromConnect)) {
                 params.connectClassifierCode = code;
               } else {
                 params.classifierCode = code;
@@ -239,7 +258,12 @@ angular.module('hitsaOis')
                 deselectHiddenValue();
               });
           }
-        });
+      }
+
+      if(angular.isDefined(scope.watchMultiple)) {
+        scope.$parent.$watchCollection(scope.watchModel, watchCallback);
+      } else if(angular.isDefined(scope.watchModel)) {
+        scope.$parent.$watch(scope.watchModel, watchCallback);
       }
     };
 

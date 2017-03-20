@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityRemoveException;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
@@ -46,6 +47,9 @@ public class ControllerErrorHandler {
             status = HttpStatus.NOT_FOUND;
         }else if(e instanceof IllegalArgumentException) {
             status = HttpStatus.BAD_REQUEST;
+        }else if(e instanceof AssertionFailedException) {
+            status = HttpStatus.BAD_REQUEST;
+            log.error("Assertion failure:", e);
         }else if(e instanceof BindException) {
             info = ErrorInfo.fromErrors(((BindException) e).getBindingResult());
             status = HttpStatus.PRECONDITION_FAILED;

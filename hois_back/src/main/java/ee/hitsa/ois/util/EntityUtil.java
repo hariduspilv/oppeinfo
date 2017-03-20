@@ -19,6 +19,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 
@@ -218,14 +219,21 @@ public abstract class EntityUtil {
                 if(classCode == null || classCode.isEmpty()) {
                     c = null;
                 } else {
-                    c = loader.getOne(classCode);
-                    if(!Arrays.stream(t).anyMatch(cc -> cc.name().equals(c.getMainClassCode()))) {
-                        throw new IllegalArgumentException();
-                    }
+                    c = validateClassifier(loader.getOne(classCode), t);
                 }
                 destination.setPropertyValue(p, c);
             }
         });
+    }
+
+    public static Classifier validateClassifier(Classifier c, MainClassCode... domains) {
+        String mainClassCode = c.getMainClassCode();
+        for(MainClassCode domain : domains) {
+            if(domain.name().equals(mainClassCode)) {
+                return c;
+            }
+        }
+        throw new AssertionFailedException("Wrong classifier main class code: " + mainClassCode);
     }
 
     public static void setEntityFromRepository(Object command, Object entity,
@@ -388,6 +396,17 @@ public abstract class EntityUtil {
             }
         }
         return entity.getCode();
+    }
+
+    /**
+     * Return reference to entity of given class or null
+     * @param entityClass
+     * @param id
+     * @param em
+     * @return null if id is null
+     */
+    public static <T extends BaseEntityWithId> T getOptionalOne(Class<T> entityClass, Long id, EntityManager em) {
+        return id != null ? em.getReference(entityClass, id) : null;
     }
 
     /**

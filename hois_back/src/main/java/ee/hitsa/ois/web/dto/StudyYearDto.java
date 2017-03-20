@@ -4,7 +4,6 @@ import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.StudyYearForm;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 

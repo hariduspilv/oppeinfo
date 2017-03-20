@@ -49,6 +49,9 @@ public class Application extends BaseEntityWithId {
     @Size(max = 4000)
     private String addInfo;
 
+    @Size(max = 4000)
+    private String rejectReason;
+
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier reason;
 
@@ -201,6 +204,14 @@ public class Application extends BaseEntityWithId {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 
     public Classifier getReason() {

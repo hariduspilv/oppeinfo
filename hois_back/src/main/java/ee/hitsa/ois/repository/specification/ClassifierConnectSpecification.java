@@ -25,20 +25,16 @@ public class ClassifierConnectSpecification  implements Specification<Classifier
     public Predicate toPredicate(Root<ClassifierConnect> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
         List<Predicate> filters = new ArrayList<>();
 
-        if(searchCommand.getClassifierCode() != null) {
-            filters.add(cb.equal(root.get("classifier").get("code"), searchCommand.getClassifierCode()));
+        if(searchCommand.getClassifierCode() != null && !searchCommand.getClassifierCode().isEmpty()) {
+            filters.add(root.get("classifier").get("code").in(searchCommand.getClassifierCode()));
         }
 
-        if(searchCommand.getConnectClassifierCode() != null) {
-            filters.add(cb.equal(root.get("connectClassifier").get("code"), searchCommand.getConnectClassifierCode()));
+        if(searchCommand.getConnectClassifierCode() != null && !searchCommand.getClassifierCode().isEmpty()) {
+            filters.add(root.get("connectClassifier").get("code").in(searchCommand.getConnectClassifierCode()));
         }
 
         if(searchCommand.getMainClassifierCode() != null) {
             filters.add(cb.equal(root.get("mainClassifierCode"), searchCommand.getMainClassifierCode()));
-        }
-
-        if(searchCommand.getConnectClassifierCodes() != null) {
-            filters.add(root.get("connectClassifier").get("code").in(searchCommand.getConnectClassifierCodes()));
         }
 
         return cb.and(filters.toArray(new Predicate[filters.size()]));

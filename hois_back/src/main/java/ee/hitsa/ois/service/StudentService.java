@@ -20,9 +20,9 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
+import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.StudentAbsenceRepository;
@@ -48,7 +48,7 @@ public class StudentService {
 
     private static final String STUDENT_LIST_SELECT = "s.id, person.firstname, person.lastname, person.idcode, "+
             "curriculum_version.id curriculum_version_id, curriculum_version.code curriculum_version_code, curriculum.name_et, curriculum.name_en, " +
-            "student_group.id student_group_id, student_group.code student_group_code, s.study_form_code, s.status_code";
+            "student_group.id student_group_id, student_group.code student_group_code, s.study_form_code, s.status_code, s.person_id";
     private static final String STUDENT_LIST_FROM = "from student s inner join person person on s.person_id=person.id "+
             "inner join curriculum_version curriculum_version on s.curriculum_version_id=curriculum_version.id "+
             "inner join curriculum curriculum on curriculum_version.curriculum_id=curriculum.id "+
@@ -70,8 +70,6 @@ public class StudentService {
     private StudentAbsenceRepository studentAbsenceRepository;
     @Autowired
     private StudentRepository studentRepository;
-    @Autowired
-    private CurriculumVersionRepository curriculumVersionRepository;
 
     public Page<StudentSearchDto> search(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_LIST_FROM, pageable);
@@ -79,8 +77,10 @@ public class StudentService {
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getIdcode());
         if(StringUtils.hasText(criteria.getName()))  {
-            qb.requiredCriteria("(upper(person.firstname) like :name or upper(person.lastname) like :name)", "name", "%"+criteria.getName().toUpperCase()+"%");
+            qb.requiredCriteria("(upper(person.firstname) like :name or upper(person.lastname) like :name "
+                    + "or upper(person.firstname || ' ' || person.lastname) like :name)", "name", "%"+criteria.getName().toUpperCase()+"%");
         }
+        qb.optionalCriteria("curriculum.id in (:curriculum)", "curriculum", criteria.getCurriculum());
         qb.optionalCriteria("s.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalContains("student_group.code", "code", criteria.getStudentGroup());
         qb.optionalCriteria("s.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
@@ -100,6 +100,7 @@ public class StudentService {
             dto.setStudentGroup(resultAsString(r, 9));
             dto.setStudyForm(resultAsString(r, 10));
             dto.setStatus(resultAsString(r, 11));
+            dto.setPersonId(resultAsLong(r, 12));
             return dto;
         });
     }
@@ -129,6 +130,7 @@ public class StudentService {
         StudentHistory current = EntityUtil.bindToEntity(student, new StudentHistory());
         current.setStudent(student);
         current.setValidFrom(now);
+        current.setPrevStudentHistory(old);
         student.setStudentHistory(current);
         return studentRepository.save(student);
     }
@@ -157,8 +159,13 @@ public class StudentService {
         return applicationRepository.findAllByStudent_id(studentId, pageable).map(StudentApplicationDto::of);
     }
 
-    public Page<StudentDirectiveDto> directives(Long studentId, Pageable pageable) {
-        return directiveRepository.findAllByStudent_id(studentId, pageable).map(StudentDirectiveDto::of);
+    public Page<StudentDirectiveDto> directives(HoisUserDetails user, Student student, Pageable pageable) {
+        boolean isAdmin = UserUtil.isSchoolAdmin(user, student.getSchool());
+        return directiveRepository.findAllByStudent_id(EntityUtil.getId(student), pageable).map(r -> {
+            StudentDirectiveDto dto = StudentDirectiveDto.of(r);
+            dto.setUserCanEdit(Boolean.valueOf(isAdmin && DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name().equals(EntityUtil.getCode(r.getStatus()))));
+            return dto;
+        });
     }
 
     public List<AutocompleteResult> subjects(Student student) {
@@ -168,4 +175,5 @@ public class StudentService {
                 m -> m.getSubjects().forEach(s -> subjects.add(AutocompleteResult.of(s.getSubject()))));
         return subjects;
     }
+
 }

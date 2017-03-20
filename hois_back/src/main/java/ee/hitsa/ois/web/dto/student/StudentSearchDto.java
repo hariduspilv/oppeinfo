@@ -15,6 +15,7 @@ public class StudentSearchDto {
     private String studentGroup;
     private String studyForm;
     private String status;
+    private Long personId;
 
     public Long getId() {
         return id;
@@ -70,6 +71,14 @@ public class StudentSearchDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+    
+    public Long getPersonId() {
+        return personId;
+    }
+
+    public void setPersonId(Long personId) {
+        this.personId = personId;
     }
 
     public static StudentSearchDto of(Student student) {

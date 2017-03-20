@@ -62,18 +62,21 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
 
     $scope.openStudyPeriodDialog = function (item) {
       var StudyPeriodEndpoint = QueryUtils.endpoint('/school/studyYears/'+$scope.studyYear.id+'/studyPeriods');
-      var DialogController = function (scope) {
+      var parentScope = $scope;
+      var DialogController = function ($scope) {
+        var scope = $scope;
         if (item) {
           scope.studyPeriod =  new StudyPeriodEndpoint(item);
           scope.studyPeriod.type = scope.studyPeriod.type.code;
         } else {
           scope.studyPeriod = new StudyPeriodEndpoint({});
         }
-        scope.studyPeriod.year = $scope.studyYear.year;
-        scope.remove = function () {
+        scope.studyPeriod.year = parentScope.studyYear.year;
+
+        scope.delete = function () {
           dialogService.confirmDialog({prompt: 'studyYear.studyPeriod.deleteconfirm'}, function() {
             scope.studyPeriod.$delete().then(function() {
-              $scope.studyPeriods = $scope.studyPeriods.filter(function (it) {
+              parentScope.studyPeriods = parentScope.studyPeriods.filter(function (it) {
                 return it !== item;
               });
               message.info('main.messages.delete.success');
@@ -82,60 +85,64 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
             });
           });
         };
-      };
 
-      var afterSave = function (data) {
-        DataUtils.convertStringToDates(data, ['startDate', 'endDate']);
-        if (item) {
-          angular.extend(item, data);
-        } else {
-          $scope.studyPeriods.push(data);
-        }
-      };
-
-      dialogService.showDialog('studyYear/study.period.dialog.html', DialogController,
-        function (submitScope) {
-          var period = submitScope.studyPeriod;
-          if (period.id) {
-            period.$update().then(afterSave);
+        var afterSave = function (data) {
+          DataUtils.convertStringToDates(data, ['startDate', 'endDate']);
+          periodTypes.objectmapper(data);
+          if (item) {
+            angular.extend(item, data);
           } else {
-            period.$save().then(afterSave);
+            parentScope.studyPeriods.push(data);
           }
-        });
+          $mdDialog.hide();
+          message.info('main.messages.update.success');
+        };
+
+        scope.submit = function () {
+          scope.dialogForm.$setSubmitted();
+          if (scope.dialogForm.$valid) {
+            var period = scope.studyPeriod;
+            if (period.id) {
+              period.$update().then(afterSave);
+            } else {
+              period.$save().then(afterSave);
+            }
+          }
+        };
+        $scope.cancel = function() {
+          $mdDialog.hide();
+        };
+      };
+
+      $mdDialog.show({
+        controller: DialogController,
+        templateUrl: 'studyYear/study.period.dialog.html'
+      });
     };
 
     $scope.openStudyPeriodEventDialog = function (item) {
       var StudyPeriodEventEndpoint = QueryUtils.endpoint('/school/studyYears/'+$scope.studyYear.id+'/studyPeriodEvents');
-      var DialogController = function (scope) {
+      var parentScope = $scope;
+      var DialogController = function ($scope) {
         if (item) {
-          scope.studyPeriodEvent =  new StudyPeriodEventEndpoint(item);
-          if (scope.studyPeriodEvent.studyPeriod) {
-            for (var i = 0; i < $scope.studyPeriods.length; i++) {
-              if ($scope.studyPeriods[i].id === scope.studyPeriodEvent.studyPeriod.id) {
-                scope.studyPeriodEvent.studyPeriod = $scope.studyPeriods[i];
+          $scope.studyPeriodEvent = new StudyPeriodEventEndpoint(item);
+          if ($scope.studyPeriodEvent.studyPeriod) {
+            for (var i = 0; i < parentScope.studyPeriods.length; i++) {
+              if (parentScope.studyPeriods[i].id === $scope.studyPeriodEvent.studyPeriod.id) {
+                $scope.studyPeriodEvent.studyPeriod = parentScope.studyPeriods[i];
                 break;
               }
             }
           }
         } else {
-          scope.studyPeriodEvent = new StudyPeriodEventEndpoint({});
+          $scope.studyPeriodEvent = new StudyPeriodEventEndpoint({});
         }
-        var end = scope.studyPeriodEvent.end;
-        scope.studyPeriodEvent.end = function (value) {
-          if (arguments.length && !end) {
-            var momentValue = moment(value);
-            if (momentValue.isSame(moment(value).startOf('day'))) {
-              value = momentValue.hours(23).minutes(59).toDate();
-            }
-          }
-          return arguments.length ? (end = value) : end;
-        };
 
-        scope.studyPeriods = $scope.studyPeriods;
-        scope.remove = function () {
+        $scope.studyPeriods = parentScope.studyPeriods;
+        $scope.delete = function () {
           dialogService.confirmDialog({prompt: 'studyYear.studyPeriodEvent.deleteconfirm'}, function() {
-            scope.studyPeriodEvent.$delete().then(function() {
-              $scope.studyPeriodEvents = $scope.studyPeriodEvents.filter(function (it) {
+            $scope.studyPeriodEvent.$delete().then(function() {
+              parentScope.studyPeriodEvents = parentScope.studyPeriodEvents.filter(function (it) {
                 return it !== item;
               });
               message.info('main.messages.delete.success');
@@ -144,6 +151,24 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
             });
           });
         };
+
+        $scope.cancel = function() {
+          $mdDialog.hide();
+        };
+
+        $scope.submit = function () {
+          $scope.dialogForm.$setSubmitted();
+
+          if ($scope.dialogForm.$valid) {
+            var studyPeriodEvent = $scope.studyPeriodEvent;
+            if (studyPeriodEvent.id) {
+              studyPeriodEvent.$update().then(afterSave);
+            } else {
+              studyPeriodEvent.$save().then(afterSave);
+            }
+          }
+        };
+
       };
 
       var afterSave = function (data) {
@@ -151,20 +176,17 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         if (item) {
           angular.extend(item, data);
         } else {
-          $scope.studyPeriodEvents.push(data);
+          parentScope.studyPeriodEvents.push(data);
         }
+        $mdDialog.hide();
+        message.info('main.messages.update.success');
       };
 
-      dialogService.showDialog('studyYear/study.period.event.dialog.html', DialogController,
-        function (submitScope) {
-          var periodEvent = submitScope.studyPeriodEvent;
-          console.log(submitScope);
-          if (periodEvent.id) {
-            periodEvent.$update().then(afterSave);
-          } else {
-            periodEvent.$save().then(afterSave);
-          }
-        });
+
+      $mdDialog.show({
+        controller: DialogController,
+        templateUrl: 'studyYear/study.period.event.dialog.html'
+      });
     };
 
     $scope.update = function () {

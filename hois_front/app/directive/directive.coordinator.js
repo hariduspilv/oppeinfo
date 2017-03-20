@@ -11,10 +11,10 @@ angular.module('hitsaOis').controller('DirectiveCoordinatorSearchController', ['
     var baseUrl = '/directives/coordinators';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     if(id) {
-      $scope.directiveCoordinator = Endpoint.get({id: id});
+      $scope.record = Endpoint.get({id: id});
     } else {
       // new coordinator
-      $scope.directiveCoordinator = new Endpoint();
+      $scope.record = new Endpoint();
     }
 
     $scope.update = function() {
@@ -23,20 +23,22 @@ angular.module('hitsaOis').controller('DirectiveCoordinatorSearchController', ['
         message.error('main.messages.form-has-errors');
         return;
       }
-      var msg = $scope.directiveCoordinator.id ? 'main.messages.update.success' : 'main.messages.create.success';
       function afterSave() {
-        message.info(msg);
+        message.info(id ? 'main.messages.update.success' : 'main.messages.create.success');
+        if(!id) {
+          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+        }
       }
-      if($scope.directiveCoordinator.id) {
-        $scope.directiveCoordinator.$update().then(afterSave);
+      if($scope.record.id) {
+        $scope.record.$update().then(afterSave);
       }else{
-        $scope.directiveCoordinator.$save().then(afterSave);
+        $scope.record.$save().then(afterSave);
       }
     };
 
     $scope.delete = function() {
       dialogService.confirmDialog({prompt: 'directive.coordinator.deleteconfirm'}, function() {
-        $scope.directiveCoordinator.$delete().then(function() {
+        $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
           $location.path(baseUrl);
         });

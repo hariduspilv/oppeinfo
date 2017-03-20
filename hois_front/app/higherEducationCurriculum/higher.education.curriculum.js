@@ -246,7 +246,7 @@ angular.module('hitsaOis')
     }
 
     $scope.delete = function () {
-        dialogService.confirmDialog({prompt: 'main.messages.confirm'}, function() {
+        dialogService.confirmDialog({prompt: 'curriculum.deleteconfirmHigher'}, function() {
             $scope.curriculum.$delete().then(function () {
                 message.info('main.messages.delete.success');
                 $location.path(baseUrl);
@@ -340,7 +340,7 @@ angular.module('hitsaOis')
         var rand;
         while(true) {
             rand = - Math.floor((Math.random() * 1000) + 1);
-            if(!ArrayUtils.includes(existingReferenceNumbers), rand) {
+            if(!ArrayUtils.includes(existingReferenceNumbers, rand)) {
                 break;
             }
         }
@@ -531,7 +531,7 @@ angular.module('hitsaOis')
     };
 
     $scope.deleteVersion = function() {
-        dialogService.confirmDialog({prompt: 'main.messages.confirm'}, function() {
+        dialogService.confirmDialog({prompt: 'curriculum.version.deleteconfirm'}, function() {
             $scope.removeFromArray($scope.curriculum.versions, $scope.editedVersion);
             $scope.editedVersion = undefined;
             $scope.goToCurriculumForm();

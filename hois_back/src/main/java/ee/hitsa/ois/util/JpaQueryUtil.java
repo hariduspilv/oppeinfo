@@ -182,7 +182,7 @@ public abstract class JpaQueryUtil {
 
         public void requiredCriteria(String criteria, String name, Collection<?> value) {
             if(value == null || value.isEmpty()) {
-                throw new IllegalArgumentException();
+                throw new AssertionFailedException("Required criteria is missing");
             }
             filter(criteria, name, value);
         }
@@ -201,7 +201,7 @@ public abstract class JpaQueryUtil {
 
         public void requiredCriteria(String criteria, String name, String value) {
             if(!StringUtils.hasText(value)) {
-                throw new IllegalArgumentException();
+                throw new AssertionFailedException("Required criteria is missing");
             }
             filter(criteria, name, value);
         }

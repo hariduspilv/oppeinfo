@@ -19,7 +19,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       })
-      .when('/rooms/:id', {
+      .when('/rooms/:id/edit', {
         templateUrl: 'room/room.edit.html',
         controller: 'RoomEditController',
         controllerAs: 'controller',

@@ -7,8 +7,11 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
@@ -95,7 +98,8 @@ public class ApplicationService {
         qb.optionalCriteria("a.status_code in (:status)", "status", criteria.getStatus());
         qb.optionalCriteria("a.student_id in (:studentId)", "studentId", criteria.getStudent());
         if(StringUtils.hasText(criteria.getStudentName()))  {
-            qb.requiredCriteria("(upper(person.firstname) like :name or upper(person.lastname) like :name)", "name", "%"+criteria.getStudentName().toUpperCase()+"%");
+            qb.requiredCriteria("(upper(person.firstname) like :name or upper(person.lastname) like :name "
+                    + "or upper(person.firstname || ' ' || person.lastname) like :name)", "name", "%"+criteria.getStudentName().toUpperCase()+"%");
         }
         qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getStudentIdCode());
 
@@ -114,10 +118,10 @@ public class ApplicationService {
 
     public Application create(HoisUserDetails user, ApplicationForm applicationForm) {
         Classifier ehisSchool = schoolRepository.getOne(user.getSchoolId()).getEhisSchool();
-        if (applicationForm.getType().equals(ApplicationType.AVALDUS_LIIK_AKAD.name())
+        if (ApplicationType.AVALDUS_LIIK_AKAD.name().equals(applicationForm.getType())
                 && existsValidAcademicLeaveApplication(applicationForm.getStudent().getId(), ehisSchool)) {
             throw new ValidationFailureException("Student already has valid academic leave application");
-        } else if (applicationForm.getType().equals(ApplicationType.AVALDUS_LIIK_AKADK.name())
+        } else if (ApplicationType.AVALDUS_LIIK_AKADK.name().equals(applicationForm.getType())
                 && !existsValidAcademicLeaveApplication(applicationForm.getStudent().getId(),ehisSchool)) {
             throw new ValidationFailureException("Student has no valid academic leave application");
         }
@@ -132,7 +136,7 @@ public class ApplicationService {
         EntityUtil.setEntityFromRepository(applicationForm, application, curriculumVersionRepository, "newCurriculumVersion", "oldCurriculumVersion");
         EntityUtil.setEntityFromRepository(applicationForm, application, studentRepository, "student");
 
-        if (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.name())) {
+        if (ApplicationStatus.AVALDUS_STAATUS_ESIT.name().equals(applicationForm.getStatus())) {
             application.setSubmitted(LocalDateTime.now());
         }
 
@@ -227,4 +231,25 @@ public class ApplicationService {
         });
     }
 
+    public Map<ApplicationType, Boolean> applicableApplications(Long studentId, Long schoolId) {
+        Map<ApplicationType, Boolean> result = new HashMap<>();
+        for (ApplicationType type : ApplicationType.values()) {
+            result.put(type, Boolean.TRUE);
+        }
+        //Kui õppur on juba koostanud seda liiki avalduse, mille staatus on „Koostamisel“, „Esitatud“, „Ülevaatamisel“ või „Kinnitamisel“;
+        List<Application> existingApplications = applicationRepository.findDistinctTypeByStudentIdAndStatusCodeIn(studentId,
+                Arrays.asList(ApplicationStatus.AVALDUS_STAATUS_KOOST.name(), ApplicationStatus.AVALDUS_STAATUS_ESIT.name(),
+                        ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name()));
+
+        for (Application application : existingApplications) {
+            result.put(ApplicationType.valueOf(EntityUtil.getNullableCode(application.getType())), Boolean.FALSE);
+        }
+
+        //Kui õppur ei viibi akadeemilisel puhkusel, siis ei ole tal võimalik esitada taotlust „akadeemilise puhkuse katkestamiseks“;
+        String ehisSchoolCode = EntityUtil.getNullableCode(schoolRepository.getOne(schoolId).getEhisSchool());
+        boolean studentOnAcademicLeave = findValidAcademicLeave(studentId, ehisSchoolCode) != null;
+        result.put(ApplicationType.AVALDUS_LIIK_AKADK, Boolean.valueOf(studentOnAcademicLeave));
+
+        return result;
+    }
 }

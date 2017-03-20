@@ -47,7 +47,9 @@ angular.module('hitsaOis').directive('hoisSchoolDepartmentSelect', function (Que
       if(angular.isDefined(scope.excludedId)) {
         scope.$parent.$watch(scope.excludedId, function(excludedId) {
           scope.excludedIdValue = excludedId;
-          filterValues();
+          if(scope.optionValues !== undefined) {
+            filterValues();
+          }
         });
       }
     }

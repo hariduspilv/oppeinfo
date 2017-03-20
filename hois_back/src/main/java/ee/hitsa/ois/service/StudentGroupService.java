@@ -30,12 +30,11 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
-import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -66,8 +65,6 @@ public class StudentGroupService {
     @Autowired
     private CurriculumRepository curriculumRepository;
     @Autowired
-    private CurriculumVersionRepository curriculumVersionRepository;
-    @Autowired
     private SchoolRepository schoolRepository;
     @Autowired
     private StudentGroupRepository studentGroupRepository;
@@ -75,8 +72,6 @@ public class StudentGroupService {
     private StudentRepository studentRepository;
     @Autowired
     private StudentService studentService;
-    @Autowired
-    private TeacherRepository teacherRepository;
 
     public Page<StudentGroupSearchDto> search(Long schoolId, StudentGroupSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_GROUP_LIST_FROM, pageable);
@@ -119,15 +114,15 @@ public class StudentGroupService {
         studentGroup.setCurriculum(curriculum);
 
         // curriculum version is optional but must be from same curriculum
-        CurriculumVersion curriculumVersion = form.getCurriculumVersion() != null ? curriculumVersionRepository.getOne(form.getCurriculumVersion()) : null;
+        CurriculumVersion curriculumVersion = EntityUtil.getOptionalOne(CurriculumVersion.class, form.getCurriculumVersion(), em);
         if(curriculumVersion != null && !curriculumId.equals(EntityUtil.getId(curriculumVersion.getCurriculum()))) {
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("Curriculum mismatch");
         }
         studentGroup.setCurriculumVersion(curriculumVersion);
 
         // teacher is optional but must be from same school
         Long teacherId = form.getTeacher() != null ? form.getTeacher().getId() : null;
-        Teacher teacher = teacherId != null ? teacherRepository.getOne(teacherId) : null;
+        Teacher teacher = EntityUtil.getOptionalOne(Teacher.class, teacherId, em);
         if(teacher != null) {
             UserUtil.assertSameSchool(user, teacher.getSchool());
         }

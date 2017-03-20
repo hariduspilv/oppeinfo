@@ -56,9 +56,8 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
               message.error('main.messages.form-has-errors');
               return;
             }
-            var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
             function afterSave() {
-              message.info(msg);
+              message.info(representativeId ? 'main.messages.update.success' : 'main.messages.create.success');
               $mdDialog.hide();
               loadRepresentatives();
             }

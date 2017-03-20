@@ -1,10 +1,5 @@
 package ee.hitsa.ois.service.security;
 
-import ee.hitsa.ois.domain.User;
-import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.dto.UserProjection;
-
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.Collections;
@@ -13,11 +8,17 @@ import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 
+import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.web.dto.UserProjection;
+
 public class AuthenticatedUser implements Serializable {
 
     private final String name;
 
     private final Long user;
+    private final Long student;
 
     // rights?
     private String roleCode;
@@ -30,14 +31,15 @@ public class AuthenticatedUser implements Serializable {
 
     private List<UserProjection> users;
 
-    public AuthenticatedUser(String name, Long user, String roleCode) {
+    public AuthenticatedUser(String name, Long user, String roleCode, Long student) {
         this.name = name;
         this.user = user;
         this.roleCode = roleCode;
+        this.student = student;
     }
 
     public AuthenticatedUser(User user) {
-        this(user.getPerson().getIdcode(), user.getId(), EntityUtil.getCode(user.getRole()));
+        this(user.getPerson().getIdcode(), user.getId(), EntityUtil.getCode(user.getRole()), EntityUtil.getNullableId(user.getStudent()));
     }
 
     public Long getUser() {
@@ -93,4 +95,9 @@ public class AuthenticatedUser implements Serializable {
     public void setRoleCode(String roleCode) {
         this.roleCode = roleCode;
     }
+
+    public Long getStudent() {
+        return student;
+    }
+
 }

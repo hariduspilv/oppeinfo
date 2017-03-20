@@ -28,10 +28,13 @@
       "save": "Salvesta",
       "search": "Otsi",
       "sendToEhis": "Saada EHISesse",
+      "send": "Saada",
       "update": "Uuenda",
       "uploadFile": "Lae fail",
       "updateFromEhis": "Uuenda staatust EHISest",
       "submit": "Esita",
+      "reject": "Lükka tagasi",
+      "apply": "Taotle",
       "status": {
         "approving": "Menetle õk",
         "close": "Sulge õk",
@@ -96,7 +99,11 @@
     "insertOrChangeDate": "Sisestamise/muutmise kuupäev",
     "insertedOrChangedByFirstAndLastName": "Sisestaja/muutja ees- ja perekonnanimi",
     "inserted": "Sisestatud",
+    "insertedBy": "Sisestaja",
     "changed": "Muudetud",
+    "changedBy": "Muudetja",
+    "created": "Koostatud",
+    "createdBy": "Koostaja",
     "additionalInfo": "Lisainfo",
     "addFile": "Lisa fail",
     "files": "Seotud failid",
@@ -150,7 +157,11 @@
       },
       "applications": {
         "label": "Avaldused",
-        "search": "Avalduste otsing"
+        "search": "Avalduste otsing",
+        "student": {
+          "list": "Minu avaldused",
+          "new": "Avalduse koostamine"
+        }
       },
       "study": {
         "label": "Õppetöö",
@@ -231,11 +242,12 @@
       "type": "Avalduse liik"
     },
     "directive": {
+      "confirmDate": "Kinnitamise kuupäev",
+      "createdBy": "Koostaja",
+      "directiveNr": "Dokumendi number",
       "headline": "Pealkiri",
       "label": "Käskkirjad",
-      "type": "Käskkirja liik",
-      "directiveNr": "Dokumendi number",
-      "createdBy": "Koostaja"
+      "type": "Käskkirja liik"
     },
     "representative": {
       "add": "Lisa uus esindaja",
@@ -369,6 +381,7 @@
   },
   "directive": {
     "addInfo": "Lisainfo",
+    "addStudents": "Lisa õppurid",
     "addToDirective": "Lisa käskkirjale",
     "confirmDate": "Kinnitamise kuupäev",
     "confirmDateFrom": "Kinnitamise kuupäev alates",
@@ -383,7 +396,9 @@
     "insertedFrom": "Koostamise kuupäev alates",
     "insertedThru": "Koostamise kuupäev kuni",
     "nostudentsfound": "Õppureid ei leitud",
+    "preamble": "Preambula",
     "status": "Staatus",
+    "studentList": "Õppurite nimekiri",
     "type": "Käskkirja liik",
     "coordinator": {
       "alreadyexist": "Isik on juba käskkirjade kooskõlastaja",
@@ -398,10 +413,27 @@
       "certificateDefault": "Õppuri tõend vaikimisi"
     },
     "student": {
+      "addInfo": "Lisainfo",
       "akadEndDate": "Akadeemilise puhkuse katkestamise kuupäev",
+      "curriculum": "Õppekava",
+      "curriculumGrade": "Omistatav kraad",
+      "curriculumVersion": "Uus õppekava",
+      "fin": "Finantseerimise allikas",
+      "firstname": "Õppuri eesnimi",
       "finSpecific": "Finantseerimise allika täpsustus",
       "fullname": "Õppuri nimi",
-      "idcode": "Isikukood"
+      "idcode": "Isikukood",
+      "isapplication": "Õppur on avalduse esitanud",
+      "isCumLaude": "Cum laude",
+      "lastname": "Õppuri perekonnanimi",
+      "oldCurriculumVersion": "Kehtiv õppekava",
+      "oldStudyForm": "Kehtiv õppevorm",
+      "reason": "Põhjus",
+      "studentGroup": "Õppegrupp/rühm",
+      "studyForm": "Uus õppevorm",
+      "studyLoad": "Õppekoormuse muutmise suund",
+      "studyLoadOPPEKOORMUS_OSA": "Täiskoormuselt osakoormusele",
+      "studyLoadOPPEKOORMUS_TAIS": "Osakoormuselt täiskoormusele"
     }
   },
   "generalmessage": {
@@ -411,6 +443,25 @@
     "title": "Pealkiri",
     "validFrom": "Üldteate kuvamise alguskuupäev",
     "validThru": "Üldteate kuvamise lõppkuupäev"
+  },
+  "message": {
+    "received": "Saabunud teated",
+    "sent": "Saadetud teated",
+    "search": "Teate otsing",
+    "subject": "Pealkiri",
+    "content": "Sisu",
+    "dateSent": "Saatmise kuupäev",
+    "sentDatesRange": "Teate saatmise kuupäevade vahemik",
+    "sender": "Saatja nimi",
+    "messageReceiver": "Teade saaja",
+    "receiver": "Saaja nimi",
+    "send": "Saada teade",
+    "respond": "Vasta",
+    "messageSent": "Teade saadetud",
+    "targetGroup": "Sihtgrupp",
+    "curriculumStudents": "Õppekava õppurid",
+    "studyGroupStudents": "Õpperühma õppurid",
+    "studyFormStudents": "Õppevormi õppurid"
   },
   "messageTemplate": {
     "messageTemplate": "Teate mall",
@@ -606,6 +657,8 @@
     "inserted": "Sisestatud",
     "changed": "Muudetud",
     "curriculumInsertions": "Sisestamised/viimati muudetud",
+    "deleteconfirm": "Kas oled kindel, et soovid kutseõppe õppekava kustutada?",
+    "deleteconfirmHigher": "Kas oled kindel, et soovid kõrgharidusõppe õppekava kustutada?",
     "consecution": {
       "primary": "Esmaõppe õppekava",
       "secondary": "Jätkuõppe õppekava"
@@ -651,7 +704,8 @@
         "type": "Versiooni liik",
         "firstAdmissionYear": "Esimene vastuvõtu aasta",
         "status": "Versiooni staatus",
-        "copy": "Loo uus antud RK alusel"
+        "copy": "Loo uus antud RK alusel",
+        "deleteconfirm": "Kas oled kindel, et soovid õppekava versiooni kustutada?"
     },
     "error": {
         "numberOfElectiveModules": "Number peab olema mitte suurem, kui valikmoodulite arv"
@@ -847,6 +901,7 @@
     "studyPeriods": "Õppeperiood",
     "studyPeriodEvents": "Kalendri-sündmus",
     "studyPeriod": {
+      "deleteconfirm": "Kas oled kindel, et soovid õppeperioodi kustutada?",
       "heading": "Õppeperioodi andmed",
       "year": "Õppeaasta",
       "nameEt": "Õppeperioodi nimetus",
@@ -857,6 +912,7 @@
       "endDate": "Lõppkuupäev"
     },
     "studyPeriodEvent": {
+      "deleteconfirm": "Kas oled kindel, et soovid kalendri-sündmust kustutada?",
       "heading": "Kalendri-sündmuste andmed",
       "description": "Kalendri-sündmus",
       "period": "Õppeperiood",
@@ -950,6 +1006,9 @@
     "makeApplication":"Koosta avaldus",
     "plannedSubject": "Planeeritav õppeaine",
     "substitutableSubject": "Asendatav õppeaine",
+    "justification": "Põhjendus",
+    "rejection": "Avalduse tagasilükkamine",
+    "confirmedByRepresentative": "Lapsevanema/esindaja poolt kinnitatud",
     "messages": {
       "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
       "validAcademicLeaveApplicationExists": "Akadeemilise puhkuse avaldus juba eksisteerib",

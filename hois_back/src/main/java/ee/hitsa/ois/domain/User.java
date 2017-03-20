@@ -1,5 +1,7 @@
 package ee.hitsa.ois.domain;
 
+import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -8,8 +10,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.school.School;
-
-import java.util.Set;
+import ee.hitsa.ois.domain.student.Student;
 
 @Entity
 @Table(name = "user_")
@@ -27,6 +28,9 @@ public class User extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private School school;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Student student;
 
     public Classifier getRole() {
         return role;
@@ -59,4 +63,13 @@ public class User extends BaseEntityWithId {
     public void setSchool(School school) {
         this.school = school;
     }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
 }

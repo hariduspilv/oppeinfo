@@ -19,7 +19,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.GeneralMessage;
 import ee.hitsa.ois.domain.GeneralMessageTarget;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -102,14 +101,9 @@ public class GeneralMessageService {
             }
             EntityUtil.bindClassifierCollection(storedTargets, gmt -> EntityUtil.getCode(gmt.getRole()),targetCodes, roleCode -> {
                 // add new link
-                Classifier c = classifierRepository.getOne(roleCode);
-                // verify that domain code is from ROLL and raise IllegalArgumentException if wrong
-                if(!MainClassCode.ROLL.name().equals(c.getMainClassCode())) {
-                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                }
                 GeneralMessageTarget sl = new GeneralMessageTarget();
                 sl.setGeneralMessage(generalMessage);
-                sl.setRole(c);
+                sl.setRole(EntityUtil.validateClassifier(classifierRepository.getOne(roleCode), MainClassCode.ROLL));
                 return sl;
             });
         }

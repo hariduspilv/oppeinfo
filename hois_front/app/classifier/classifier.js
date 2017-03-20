@@ -104,15 +104,17 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
       }
 
       var cached = cache.get(cachekey);
-      if(cached) {
+      if(cached && cached.$resolved) {
         resolve(cached);
       } else {
         result.$resolved = false;
 
-        resource.query(queryParams, function(data) {
-          cache.put(cachekey, data);
-
-          resolve(data);
+        if(!cached) {
+          cached = resource.query(queryParams);
+          cache.put(cachekey, cached);
+        }
+        cached.$promise.then(function() {
+          resolve(cached);
         });
       }
       return result;

@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import java.util.Map;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -65,12 +68,17 @@ public class ApplicationController {
         applicationService.delete(application);
     }
 
-    @GetMapping("/academicLeave")
-    public ApplicationDto academicLeave(HoisUserDetails user, @RequestParam Long student) {
-        return ApplicationDto.of(applicationService.findValidAcademicLeave(student, EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool())));
+    @GetMapping("/student/{id:\\d+}/validAcademicLeave")
+    public ApplicationDto academicLeave(HoisUserDetails user, @WithEntity(value = "id") Student student) {
+        return ApplicationDto.of(applicationService.findValidAcademicLeave(EntityUtil.getId(student), EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool())));
     }
 
-    @GetMapping("/{id:\\d+}/academicLeaveRevocation")
+    @GetMapping("student/{id:\\d+}/applicable")
+    public Map<ApplicationType, Boolean> applicableApplications(HoisUserDetails user, @WithEntity(value = "id") Student student) {
+        return applicationService.applicableApplications(EntityUtil.getId(student), user.getSchoolId());
+    }
+
+    @GetMapping("/{id:\\d+}/validAcademicLeaveRevocation")
     public ApplicationDto academicLeaveRevocation(@PathVariable("id") Long applicationId) {
         return ApplicationDto.of(applicationService.findValidAcademicLeaveRevocation(applicationId));
     }

@@ -70,6 +70,7 @@ public class DirectiveConfirmService {
         case KASKKIRI_AKADK:
             // Akadeemilise puhkuse katkestamise käskkiri
             // TODO Õppuri eeldatav nominaalaja lõppkuupäev ==  „õppuri eeldatav nominaalaja lõppkuupäev“ – „päevade arv, mis jäi akadeemilise puhkuse lõppkuupäeva ja akadeemilise puhkuse katkestamise kuupäeva vahele“.
+            // startDate - katkestamise kuupäev
             break;
         case KASKKIRI_EKSMAT:
             // Eksmatrikuleerimise käskkiri
@@ -77,6 +78,7 @@ public class DirectiveConfirmService {
             // TODO Õppuri rollile ’õppur’ märgitakse kehtivuse lõppkuupäevaks käskkirja kinnitamise kuupäev
             break;
         case KASKKIRI_IMMAT:
+        case KASKKIRI_IMMATV:
             // Immatrikuleerimise käskkiri
             student = createStudent(directive);
             break;
@@ -113,7 +115,7 @@ public class DirectiveConfirmService {
         for(DirectiveStudent ds : directive.getCanceledDirective().getStudents()) {
             Student student = ds.getStudent();
             if(includedStudentIds.contains(student.getId())) {
-                if(!KASKKIRI_IMMAT.equals(canceledDirectiveType)) {
+                if(!KASKKIRI_IMMAT.equals(canceledDirectiveType) && !KASKKIRI_IMMATV.equals(canceledDirectiveType)) {
                     copyDirectiveProperties(canceledDirectiveType, ds.getStudentHistory(), student, true);
                 } else {
                     // TODO undo create student

@@ -8,6 +8,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.StudyPeriodEventRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.StudyYearRepository;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
 import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
@@ -17,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -63,7 +63,7 @@ public class StudyYearService {
         EntityUtil.bindToEntity(request, studyPeriod, classifierRepository);
         if (studyPeriod.getId() != null) {
             if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriod.getStudyYear()))) {
-                throw new IllegalArgumentException();
+                throw new AssertionFailedException("Study year mismatch");
             }
         } else {
             studyPeriod.setStudyYear(studyYear);
@@ -81,7 +81,7 @@ public class StudyYearService {
         if (studyPeriodEvent.getId() != null) {
             if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriodEvent.getStudyYear())) ||
                     studyPeriodEvent.getStudyPeriod() != null && !EntityUtil.getId(studyPeriodEvent.getStudyPeriod().getStudyYear()).equals(EntityUtil.getId(studyYear))) {
-                throw new IllegalArgumentException();
+                throw new AssertionFailedException("Study year mismatch");
             }
         } else {
             studyPeriodEvent.setStudyYear(studyYear);

@@ -18,8 +18,9 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
   }
 ]).controller('RoomEditController', ['dialogService', 'message', '$location', '$route', '$scope', 'Classifier', 'QueryUtils',
   function (dialogService, message, $location, $route, $scope, Classifier, QueryUtils) {
-    var Endpoint = QueryUtils.endpoint('/rooms');
     var id = $route.current.params.id;
+    var baseUrl = '/rooms';
+    var Endpoint = QueryUtils.endpoint(baseUrl);
 
     $scope.equipmentDefs = Classifier.queryForDropdown({mainClassCode: 'SEADMED'});
     $scope.formState = {};
@@ -64,9 +65,11 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
         message.error('main.messages.form-has-errors');
         return;
       }
-      var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
       var afterSave = function() {
-        message.info(msg);
+        message.info(id ? 'main.messages.update.success' : 'main.messages.create.success');
+        if(!id) {
+          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+        }
       };
       $scope.record.roomEquipment = $scope.formState.roomEquipment.map(function(e) { return {equipment: e.equipment.code, equipmentCount: e.equipmentCount}; });
       if($scope.record.id) {

@@ -4,6 +4,7 @@
 angular.module('hitsaOis').controller('ApplicationController', function ($scope, dialogService, oisFileService, QueryUtils, message, $location, $route, DataUtils, ArrayUtils) {
   var ApplicationsEndpoint = QueryUtils.endpoint('/applications');
   $scope.removeFromArray = ArrayUtils.remove;
+  $scope.auth = $route.current.locals.auth;
 
   function entityToForm(savedApplication) {
     DataUtils.convertStringToDates(savedApplication, ["startDate", "endDate"]);
@@ -47,6 +48,30 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     $scope.application.oldCurriculumVersion = student.curriculumVersion;
   }
 
+  $scope.studyPeriodView = function(studyPeriodId) {
+    if (angular.isArray($scope.studyPeriods) && angular.isNumber(studyPeriodId)) {
+      for(var i = 0; i < $scope.studyPeriods.length; i++) {
+        if ($scope.studyPeriods[i].id === studyPeriodId) {
+          return $scope.currentLanguageNameField($scope.studyPeriods[i]);
+        }
+      }
+    }
+  };
+
+  $scope.subjectsListView = function(plannedSubject) {
+    if (angular.isDefined(plannedSubject) && angular.isArray(plannedSubject.subjectsSelected)) {
+      var subjects = [];
+      $scope.studentSubjects.forEach(function(it) {
+        if (plannedSubject.subjectsSelected.indexOf(it.id) !== -1) {
+          subjects.push($scope.currentLanguageNameField(it));
+        }
+      });
+      return subjects.join(", ");
+    } else {
+      return "";
+    }
+  };
+
   function academicLeave(hasAcademicLeaveApplication) {
     if (!isEdit() && hasAcademicLeaveApplication) {
         $scope.applicationEditView = false;
@@ -67,7 +92,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       $scope.applicationEditView = false;
       message.error('application.messages.academicLeaveApplicationNotfound');
     } else {
-      var AcademicLeaveApplicationRevocationsEndpoint = QueryUtils.endpoint('/applications/' + academicLeaveApplication.id + '/academicLeaveRevocation');
+      var AcademicLeaveApplicationRevocationsEndpoint = QueryUtils.endpoint('/applications/' + academicLeaveApplication.id + '/validAcademicLeaveRevocation');
       AcademicLeaveApplicationRevocationsEndpoint.get({}, function(revocation) {
         var hasAcademicLeaveRevocationApplication = angular.isNumber(revocation.id) && revocation.id > 0;
         if (!isEdit() && hasAcademicLeaveRevocationApplication) {
@@ -157,8 +182,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           $scope.applicationEditView = true;
         });
       } else if(['AVALDUS_LIIK_AKAD', 'AVALDUS_LIIK_AKADK'].indexOf($scope.application.type) !== -1) {
-        var AcademicLeaveApplicationsEndpoint = QueryUtils.endpoint('/applications/academicLeave');
-        AcademicLeaveApplicationsEndpoint.get({student: $scope.application.student.id}, function(academicLeaveApplication) {
+        var AcademicLeaveApplicationsEndpoint = QueryUtils.endpoint('/applications/student/'+$scope.application.student.id+'/validAcademicLeave');
+        AcademicLeaveApplicationsEndpoint.get({}, function(academicLeaveApplication) {
           var hasAcademicLeaveApplication = angular.isNumber(academicLeaveApplication.id) && academicLeaveApplication.id > 0;
           if($scope.application.type === 'AVALDUS_LIIK_AKAD') {
             academicLeave(hasAcademicLeaveApplication);
@@ -178,12 +203,12 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
   $scope.openAddFileDialog = function() {
     dialogService.showDialog('application/file.add.dialog.html', null, function(submittedDialogScope) {
-        var data = submittedDialogScope.data;
-        oisFileService.getFromLfFile(data.file[0], function(file) {
-          data.oisFile = file;
-          $scope.application.files.push(data);
-        });
+      var data = submittedDialogScope.data;
+      oisFileService.getFromLfFile(data.file[0], function(file) {
+        data.oisFile = file;
+        $scope.application.files.push(data);
       });
+    });
   };
 
   $scope.getUrl = function(oisFile) {
@@ -193,6 +218,14 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   $scope.saveAndSubmit = function() {
     $scope.application.status = 'AVALDUS_STAATUS_ESIT';
     $scope.save();
+  };
+
+  $scope.reject = function() {
+    dialogService.showDialog('application/reject.dialog.html', null, function(submittedDialogScope) {
+      $scope.application.status = 'AVALDUS_STAATUS_TAGASI';
+      $scope.application.rejectReason = submittedDialogScope.rejectReason;
+      $scope.save();
+    });
   };
 
   $scope.save = function() {
@@ -208,7 +241,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           application.$save().then(function() {
           message.info('main.messages.create.success');
           $location.path('/applications/'+application.id+'/edit');
-          entityToForm(application);
         });
       }
     } else {

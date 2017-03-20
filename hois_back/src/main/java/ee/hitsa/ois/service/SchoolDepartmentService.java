@@ -28,6 +28,7 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
@@ -106,7 +107,7 @@ public class SchoolDepartmentService {
             if(parentSchoolDepartment == null || parentSchoolDepartmentId.equals(id) ||
                !EntityUtil.getId(parentSchoolDepartment.getSchool()).equals(EntityUtil.getId(schoolDepartment.getSchool()))) {
                 // bad input, trying to set as parent school department from another school or missing one or itself
-                throw new IllegalArgumentException();
+                throw new AssertionFailedException("School mismatch or self as parent");
             }
             if(id != null) {
                 // existing school department - verify that new parent is not child of us
@@ -132,7 +133,7 @@ public class SchoolDepartmentService {
     }
 
     private List<SchoolDepartmentDto> findForTree(Long schoolId, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd", pageable.getSort());
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd", pageable);
         qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
 
         List<?> data = qb.select("sd.id, sd.version, sd.code, sd.name_et, sd.name_en, sd.valid_from, sd.valid_thru, sd.parent_school_department_id", em).getResultList();

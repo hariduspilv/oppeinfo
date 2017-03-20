@@ -34,6 +34,9 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     private String reason;
 
     @Size(max = 4000)
+    private String rejectReason;
+
+    @Size(max = 4000)
     private String addInfo;
 
     @ClassifierRestriction(MainClassCode.FINALLIKAS)
@@ -118,6 +121,14 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 
     public String getAddInfo() {
