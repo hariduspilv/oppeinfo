@@ -1,17 +1,17 @@
 package ee.hitsa.ois.service.security;
 
-import ee.hitsa.ois.domain.User;
-import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.util.EntityUtil;
+import java.security.Principal;
+import java.util.Collection;
+import java.util.List;
 
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
-import java.security.Principal;
-import java.util.Collection;
-import java.util.List;
+import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.util.EntityUtil;
 
 
 /**
@@ -25,13 +25,15 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     private Long personId;
     private String role;
     private Long schoolId;
+    private Long studentId;
 
     HoisUserDetails(User user, List<String> roles) {
         super(user.getPerson().getIdcode(), "undefined", getAuthorities(roles));
-        this.userId = user.getId();
-        this.personId = user.getPerson().getId();
+        this.userId = EntityUtil.getId(user);
+        this.personId = EntityUtil.getId(user.getPerson());
         this.role = EntityUtil.getCode(user.getRole());
         this.schoolId = EntityUtil.getNullableId(user.getSchool());
+        this.studentId = EntityUtil.getNullableId(user.getStudent());
     }
 
     private static Collection<? extends GrantedAuthority> getAuthorities(List<String> roles) {
@@ -53,13 +55,17 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     public boolean isSchoolAdmin() {
         return schoolId != null && Role.ROLL_A.name().equals(role);
     }
-    
+
     public boolean isMainAdmin() {
         return Role.ROLL_P.name().equals(role);
     }
 
     public String getRole() {
         return role;
+    }
+
+    public Long getStudentId() {
+        return studentId;
     }
 
     public static HoisUserDetails fromPrincipal(Principal principal) {

@@ -36,5 +36,9 @@ angular.module('hitsaOis')
       showTranslatedMessage(messageText, 'toastError');
     };
 
+    factory.updateSuccess = function() {
+      showTranslatedMessage('main.messages.update.success', 'toastInfo');
+    };
+
     return factory;
   });

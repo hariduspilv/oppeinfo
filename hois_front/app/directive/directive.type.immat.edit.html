@@ -1,0 +1,64 @@
+<md-table-container>
+  <table md-table>
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.firstname' | translate}}</th>
+        <th md-column>{{'directive.student.lastname' | translate}}</th>
+        <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
+        <th md-column>{{'directive.student.studyLoad' | translate}}</th>
+        <th md-column>{{'directive.student.studyForm' | translate}}</th>
+        <th md-column>{{'directive.student.fin' | translate}}</th>
+        <th md-column>{{'directive.student.finSpecific' | translate}}</th>
+        <th md-column>{{'directive.student.language' | translate}}</th>
+        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column>{{'directive.student.startDate' | translate}}</th>
+        <th md-column>{{'directive.student.previousStudyLevel' | translate}}</th>
+        <th md-column>{{'directive.student.email' | translate}}</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>
+          <hois-idcode-lookup ng-model="row.idcode" role="student" after-lookup="lookupStudent(row, response)"></hois-idcode-lookup>
+        </td>
+        <td md-cell>{{::row.firstname}}</td>
+        <td md-cell>{{::row.firstname}}</td>
+        <td md-cell>
+          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersion.scontent"></hois-select>
+        </td>
+        <td md-cell>
+          <hois-classifier-select ng-model="row.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
+        </td>
+        <td md-cell>
+          <hois-classifier-select ng-model="row.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
+        </td>
+        <td md-cell>
+          <hois-classifier-select ng-model="row.fin" model-value-attr="code" main-classifier-code="FINALLIKAS"></hois-classifier-select>
+        </td>
+        <td md-cell>
+          <hois-classifier-select ng-model="row.finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS"></hois-classifier-select>
+        </td>
+        <td md-cell>
+          <hois-classifier-select ng-model="row.language" model-value-attr="code" main-classifier-code="OPPEKEEL"></hois-classifier-select>
+        </td>
+        <td md-cell>
+          <hois-select ng-model="row.studentGroup" values="formState.studentGroups.content"></hois-select>
+        </td>
+        <td md-cell>
+          <md-datepicker ng-model="row.startDate" md-placeholder="{{'directive.student.akadEndDate' | translate}}"></md-datepicker>
+        </td>
+        <td md-cell>
+          <hois-classifier-select ng-model="row.previousStudyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"></hois-classifier-select>
+        </td>
+        <td md-cell>
+          <input type="text" ng-model="row.email">
+        </td>
+        <td md-cell>
+          <md-button ng-click="deleteStudent(row.idcode)" md-no-ink class="md-primary change-button">{{'main.button.delete' | translate}}</md-button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>

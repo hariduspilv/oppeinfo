@@ -65,19 +65,15 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         message.error('main.messages.form-has-errors');
         return;
       }
-      function afterSave() {
-        message.info(id ? 'main.messages.update.success' : 'main.messages.create.success');
-        if(!id) {
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
-        } else {
-          afterLoad();
-        }
-      }
+
       $scope.record.students = $scope.formState.selectedStudents.map(function(item) { return item.id; });
       if($scope.record.id) {
-        $scope.record.$update().then(afterSave);
+        $scope.record.$update().then(afterLoad).then(message.updateSuccess);
       }else{
-        $scope.record.$save().then(afterSave);
+        $scope.record.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+        });
       }
     };
 

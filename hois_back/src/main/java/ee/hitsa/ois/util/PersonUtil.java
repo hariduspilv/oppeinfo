@@ -4,13 +4,19 @@ import java.time.LocalDate;
 import java.time.Period;
 
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 
 public abstract class PersonUtil {
 
     private static final int ADULT_YEARS = 18;
 
     public static boolean isAdult(Person person) {
-        return Period.between(person.getBirthdate(), LocalDate.now()).getYears() >= ADULT_YEARS;
+        LocalDate birthdate = person.getBirthdate();
+        if (birthdate == null) {
+            birthdate = EstonianIdCodeValidator.birthdateFromIdcode(person.getIdcode());
+        }
+        //if information about birth date is missing the person is considered as an adult
+        return birthdate == null ? true : Period.between(birthdate, LocalDate.now()).getYears() >= ADULT_YEARS;
     }
 
     public static String fullname(String firstname, String lastname) {

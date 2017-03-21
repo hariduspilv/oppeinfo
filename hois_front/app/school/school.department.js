@@ -25,18 +25,14 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$locat
         message.error('main.messages.form-has-errors');
         return;
       }
-      function afterSave() {
-        message.info(id ? 'main.messages.update.success' : 'main.messages.create.success');
-        if(!id) {
-          $location.path(baseUrl + '/' + $scope.schoolDepartment.id + '/edit');
-        } else {
-          afterLoad();
-        }
-      }
+
       if($scope.schoolDepartment.id) {
-        $scope.schoolDepartment.$update().then(afterSave);
+        $scope.schoolDepartment.$update().then(afterLoad).then(message.updateSuccess);
       } else {
-        $scope.schoolDepartment.$save().then(afterSave);
+        $scope.schoolDepartment.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.schoolDepartment.id + '/edit');
+        });
       }
     };
 

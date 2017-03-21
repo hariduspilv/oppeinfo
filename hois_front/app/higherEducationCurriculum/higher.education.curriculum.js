@@ -222,7 +222,7 @@ angular.module('hitsaOis')
         $scope.curriculum.fieldOfStudy : $scope.curriculum.areaOfStudy;
         if($scope.curriculum.id) {
             $scope.curriculum.$update().then(function(){
-                message.info('main.messages.update.success');
+                message.updateSuccess();
                 setVariablesForExistingCurriculum();
             });
         } else {

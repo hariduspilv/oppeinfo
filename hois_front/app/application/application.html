@@ -24,11 +24,14 @@
       <br/>
 
 
-      <div layout="row">
-        <md-button ng-show="applicationEditView" class="md-raised md-primary" ng-click="saveAndSubmit()">{{'main.button.submit' | translate}}</md-button>
+      <div ng-show="applicationEditView" layout="row">
         <md-button ng-show="applicationEditView" class="md-raised" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+        <div ng-include="'application/templates/action.buttons.html'"></div>
+      </div>
+      <div ng-hide="applicationEditView" layout="row">
         <md-button ng-href="#/applications/" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
+
 
     </form>
   </div>

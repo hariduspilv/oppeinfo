@@ -65,17 +65,15 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
         message.error('main.messages.form-has-errors');
         return;
       }
-      var afterSave = function() {
-        message.info(id ? 'main.messages.update.success' : 'main.messages.create.success');
-        if(!id) {
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
-        }
-      };
+
       $scope.record.roomEquipment = $scope.formState.roomEquipment.map(function(e) { return {equipment: e.equipment.code, equipmentCount: e.equipmentCount}; });
       if($scope.record.id) {
-        $scope.record.$update().then(afterLoad).then(afterSave);
+        $scope.record.$update().then(afterLoad).then(message.updateSuccess);
       } else {
-        $scope.record.$save().then(afterLoad).then(afterSave);
+        $scope.record.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+        });
       }
     };
 

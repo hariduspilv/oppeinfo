@@ -46,20 +46,36 @@ public class StateCurriculumSpecification implements Specification<StateCurricul
 			filters.add(cb.lessThanOrEqualTo(root.get("validThru"), searchCommand.getValidThru()));
 		}
 		
-		List<String> icsedRyhms = new ArrayList<>();
-        if(!CollectionUtils.isEmpty(searchCommand.getIscedClass())) {
-            icsedRyhms.addAll(searchCommand.getIscedClass());
-        } else if(!CollectionUtils.isEmpty(searchCommand.getIscedSuun())) {
-            icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(searchCommand.getIscedSuun(), MainClassCode.ISCED_RYHM.name()));
-        } else if(searchCommand.getIscedVald() != null) {
-            List<String> iscedSuuns = classifierRepository.findChildrenByMainClassifier(Arrays.asList(searchCommand.getIscedVald()), MainClassCode.ISCED_SUUN.name());
-              if(!CollectionUtils.isEmpty(iscedSuuns)) {
-                   icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(iscedSuuns, MainClassCode.ISCED_RYHM.name()));
-              }
-        }
-        if(!CollectionUtils.isEmpty(icsedRyhms)) {
-          filters.add(root.get("iscedClass").get("code").in(icsedRyhms));
-        }
+		if(!CollectionUtils.isEmpty(searchCommand.getIscedClass()) || 
+		        !CollectionUtils.isEmpty(searchCommand.getIscedSuun()) || 
+		        searchCommand.getIscedVald() != null) {
+	        List<String> icsedRyhms = new ArrayList<>();
+	        
+	        if(!CollectionUtils.isEmpty(searchCommand.getIscedClass())) {
+	            icsedRyhms.addAll(searchCommand.getIscedClass());
+	        } else if(!CollectionUtils.isEmpty(searchCommand.getIscedSuun())) {
+	            icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(searchCommand.getIscedSuun(), 
+	                    MainClassCode.ISCED_RYHM.name()));
+	        } else if(searchCommand.getIscedVald() != null) {
+	            List<String> iscedSuuns = classifierRepository.findChildrenByMainClassifier(
+	                    Arrays.asList(searchCommand.getIscedVald()), MainClassCode.ISCED_SUUN.name());
+	              if(!CollectionUtils.isEmpty(iscedSuuns)) {
+	                   icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(iscedSuuns, 
+	                           MainClassCode.ISCED_RYHM.name()));
+	              }
+	        }
+	        /*
+	         * There may be situations, when user selects isced_vald or isced_suun
+	         * and no isced_ryhm corresponds for them.
+	         * In this case search result must be empty.
+	         */
+	        if(!CollectionUtils.isEmpty(icsedRyhms)) {
+	            filters.add(root.get("iscedClass").get("code").in(icsedRyhms));
+	        } else {
+//	            condition which is always false
+	            filters.add(cb.isNull(root.get("id")));
+	        }
+		}
 		return cb.and(filters.toArray(new Predicate[filters.size()]));
 	}
 }

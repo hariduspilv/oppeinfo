@@ -3,6 +3,7 @@
 
 angular.module('hitsaOis').controller('ApplicationController', function ($scope, dialogService, oisFileService, QueryUtils, message, $location, $route, DataUtils, ArrayUtils) {
   var ApplicationsEndpoint = QueryUtils.endpoint('/applications');
+
   $scope.removeFromArray = ArrayUtils.remove;
   $scope.auth = $route.current.locals.auth;
 
@@ -215,16 +216,23 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     return oisFileService.getFileUrl(oisFile);
   };
 
-  $scope.saveAndSubmit = function() {
-    $scope.application.status = 'AVALDUS_STAATUS_ESIT';
-    $scope.save();
+  $scope.isStudentRepresentative = function() {
+    return $scope.auth.student === $scope.application.student.id;
+  };
+
+  $scope.submit = function() {
+    QueryUtils.endpoint('/applications/'+$scope.application.id+'/submit/').put({}, function(response) {
+      message.info('application.messages.submitted');
+      entityToForm(response);
+    });
   };
 
   $scope.reject = function() {
     dialogService.showDialog('application/reject.dialog.html', null, function(submittedDialogScope) {
-      $scope.application.status = 'AVALDUS_STAATUS_TAGASI';
-      $scope.application.rejectReason = submittedDialogScope.rejectReason;
-      $scope.save();
+      QueryUtils.endpoint('/applications/'+$scope.application.id+'/reject/').put({reason: submittedDialogScope.rejectReason}, function(response) {
+        message.info('application.messages.rejected');
+        entityToForm(response);
+      });
     });
   };
 

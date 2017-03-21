@@ -29,7 +29,7 @@ public class ClassifierConnectSpecification  implements Specification<Classifier
             filters.add(root.get("classifier").get("code").in(searchCommand.getClassifierCode()));
         }
 
-        if(searchCommand.getConnectClassifierCode() != null && !searchCommand.getClassifierCode().isEmpty()) {
+        if(searchCommand.getConnectClassifierCode() != null && !searchCommand.getConnectClassifierCode().isEmpty()) {
             filters.add(root.get("connectClassifier").get("code").in(searchCommand.getConnectClassifierCode()));
         }
 

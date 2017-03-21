@@ -1,0 +1,53 @@
+<div layout-padding>
+  <div flex>
+    <h2>{{'student.application.label' | translate}}</h2>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+        <tr md-row>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'application.type' | translate}}</th>
+          <th md-column md-order-by="submitted">{{'application.submissionDate' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'main.status' | translate}}</th>
+          <th md-column md-order-by="confirmDate">{{'student.application.confirmDate' | translate}}</th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell><a ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
+          <td md-cell>{{'main.formattedDate' | translate: {date: row.submitted} }}</td>
+          <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+          <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="applicationTypes.$promise">
+        <thead md-head>
+        <tr md-row>
+          <th md-column>{{'application.type' | translate}}</th>
+          <th md-column></th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>{{currentLanguageNameField(row)}}</td>
+          <td md-cell>
+            <div ng-if="applicationTypesApplicable[row.code] === true" layout="row" layout-align="end end">
+              <a class="md-button md-primary" ng-href="#/applications/student/new/{{row.code}}">{{'main.button.apply' | translate}}</a>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </div>
+</div>

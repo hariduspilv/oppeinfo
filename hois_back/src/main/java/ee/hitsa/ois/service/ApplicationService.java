@@ -32,6 +32,7 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.application.ApplicationFile;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.repository.ApplicationRepository;
@@ -46,7 +47,9 @@ import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
+import ee.hitsa.ois.web.commandobject.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.ApplicationSearchDto;
@@ -135,10 +138,6 @@ public class ApplicationService {
         EntityUtil.setEntityFromRepository(applicationForm, application, studyPeriodRepository, "studyPeriodStart", "studyPeriodEnd");
         EntityUtil.setEntityFromRepository(applicationForm, application, curriculumVersionRepository, "newCurriculumVersion", "oldCurriculumVersion");
         EntityUtil.setEntityFromRepository(applicationForm, application, studentRepository, "student");
-
-        if (ApplicationStatus.AVALDUS_STAATUS_ESIT.name().equals(applicationForm.getStatus())) {
-            application.setSubmitted(LocalDateTime.now());
-        }
 
         if (applicationForm.getAcademicApplication() != null) {
             application.setAcademicApplication(applicationRepository.getOne(applicationForm.getAcademicApplication()));
@@ -251,5 +250,22 @@ public class ApplicationService {
         result.put(ApplicationType.AVALDUS_LIIK_AKADK, Boolean.valueOf(studentOnAcademicLeave));
 
         return result;
+    }
+
+    public void submit(HoisUserDetails user, Application application) {
+        Student student = application.getStudent();
+        if (UserUtil.isAdultStudent(user, student) || UserUtil.isStudentRepresentative(user, student)) {
+            application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()));
+            application.setSubmitted(LocalDateTime.now());
+        } else {
+            application.setNeedsRepresentativeConfirm(Boolean.TRUE);
+        }
+        applicationRepository.save(application);
+    }
+
+    public void reject(Application application, ApplicationRejectForm applicationRejectForm) {
+        application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name()));
+        application.setRejectReason(applicationRejectForm.getReason());
+        applicationRepository.save(application);
     }
 }

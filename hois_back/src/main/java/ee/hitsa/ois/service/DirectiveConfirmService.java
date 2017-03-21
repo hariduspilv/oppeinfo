@@ -91,10 +91,6 @@ public class DirectiveConfirmService {
             // Külalisõpilaseks vormistamise käskkiri
             // TODO Õppuri eeldatav nominaalaja lõppkuupäev ==  õppuri eeldatav nominaalaja lõppkuupäev + „nominaalaega pikendatakse“ väljale valitud semestrite arvu alusel kas ühe lisanduva semestri pikkus või kahe lisanduva semestri kogupikkus
             break;
-        case RIIGIKEEL:
-            // Riigikeele süvaõppe käskkiri
-            // TODO Õppuri eeldatav nominaalaja lõppkuupäev ==  õppuri eeldatav nominaalaja lõppkuupäev + „nominaalaega pikendatakse“ väljale valitud EAP alusel (30 EAP – 1 semester, 60 EAP – 2 semestrit)  kas ühe lisanduva semestri pikkus või kahe lisanduva semestri kogupikkus
-            break;
         default:
             break;
         }

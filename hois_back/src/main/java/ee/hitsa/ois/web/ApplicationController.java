@@ -27,6 +27,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
+import ee.hitsa.ois.web.commandobject.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.ApplicationDto;
 import ee.hitsa.ois.web.dto.ApplicationSearchDto;
@@ -81,6 +82,36 @@ public class ApplicationController {
     @GetMapping("/{id:\\d+}/validAcademicLeaveRevocation")
     public ApplicationDto academicLeaveRevocation(@PathVariable("id") Long applicationId) {
         return ApplicationDto.of(applicationService.findValidAcademicLeaveRevocation(applicationId));
+    }
+
+    @PutMapping("/{id:\\d+}/submit")
+    public ApplicationDto submit(HoisUserDetails user, @WithEntity(value = "id") Application application) {
+        Student student = application.getStudent();
+        if (UserUtil.isStudentRepresentative(user, student)) {
+            applicationService.submit(user, application);
+        } else if (UserUtil.isSame(user, student)) {
+            applicationService.submit(user, application);
+        } else {
+            throw new RuntimeException("User has no rights to submit this application");
+        }
+        
+        return get(application);
+    }
+
+    @PutMapping("/{id:\\d+}/reject")
+    public ApplicationDto reject(HoisUserDetails user, @WithEntity(value = "id") Application application,
+            @Valid @RequestBody ApplicationRejectForm applicationRejectForm) {
+        Student student = application.getStudent();
+        
+        if (UserUtil.isStudentRepresentative(user, student)) {
+            applicationService.reject(application, applicationRejectForm);
+        } else if (UserUtil.isSame(user, student)) {
+            applicationService.reject(application, applicationRejectForm);
+        } else {
+            throw new RuntimeException("User has no rights to reject this application");
+        }
+
+        return get(application);
     }
 
 }

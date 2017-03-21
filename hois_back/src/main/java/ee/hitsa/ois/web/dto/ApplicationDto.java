@@ -9,6 +9,7 @@ import ee.hitsa.ois.web.commandobject.ApplicationForm;
 public class ApplicationDto extends ApplicationForm {
 
     private Long id;
+    private Boolean needsRepresentativeConfirm;
 
     public Long getId() {
         return id;
@@ -16,6 +17,14 @@ public class ApplicationDto extends ApplicationForm {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Boolean getNeedsRepresentativeConfirm() {
+        return needsRepresentativeConfirm;
+    }
+
+    public void setNeedsRepresentativeConfirm(Boolean needsRepresentativeConfirm) {
+        this.needsRepresentativeConfirm = needsRepresentativeConfirm;
     }
 
     public static ApplicationDto of(Application application) {

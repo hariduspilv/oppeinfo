@@ -33,6 +33,7 @@
       "uploadFile": "Lae fail",
       "updateFromEhis": "Uuenda staatust EHISest",
       "submit": "Esita",
+      "allowSubmit": "Luba esitada",
       "reject": "Lükka tagasi",
       "apply": "Taotle",
       "status": {
@@ -1012,7 +1013,9 @@
     "messages": {
       "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
       "validAcademicLeaveApplicationExists": "Akadeemilise puhkuse avaldus juba eksisteerib",
-      "validAcademicLeaveRevocationApplicationExists": "Akadeemilise puhkuse katkestamise avaldus juba eksisteerib"
+      "validAcademicLeaveRevocationApplicationExists": "Akadeemilise puhkuse katkestamise avaldus juba eksisteerib",
+      "submitted": "Avaldus on esitatud",
+      "rejected": "Avaldus on tagasi lükatud"
     }
   }
 }

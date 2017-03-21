@@ -18,16 +18,14 @@ angular.module('hitsaOis').controller('BuildingEditController', ['dialogService'
         message.error('main.messages.form-has-errors');
         return;
       }
-      var afterSave = function() {
-        message.info(id ? 'main.messages.update.success' : 'main.messages.create.success');
-        if(!id) {
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
-        }
-      };
+
       if($scope.record.id) {
-        $scope.record.$update().then(afterSave);
+        $scope.record.$update().then(message.updateSuccess);
       } else {
-        $scope.record.$save().then(afterSave);
+        $scope.record.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+        });
       }
     };
 

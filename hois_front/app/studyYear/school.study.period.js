@@ -95,7 +95,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
             parentScope.studyPeriods.push(data);
           }
           $mdDialog.hide();
-          message.info('main.messages.update.success');
+          message.updateSuccess();
         };
 
         scope.submit = function () {
@@ -179,7 +179,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
           parentScope.studyPeriodEvents.push(data);
         }
         $mdDialog.hide();
-        message.info('main.messages.update.success');
+        message.updateSuccess();
       };
 
 
@@ -193,10 +193,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       $scope.schoolYearForm.$setSubmitted();
       if ($scope.schoolYearForm.$valid) {
         if (id) {
-          $scope.studyYear.$update().then(function() {
-            afterLoad();
-            message.info('main.messages.update.success');
-          });
+          $scope.studyYear.$update().then(afterLoad).then(message.updateSuccess);
         } else if (code) {
           $scope.studyYear.$save().then(function(response) {
             $location.path('/school/studyYears/'+ response.id +'/edit');

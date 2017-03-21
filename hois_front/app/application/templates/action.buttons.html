@@ -1,0 +1,4 @@
+<md-button ng-if="application.status === 'AVALDUS_STAATUS_KOOST' && application.needsRepresentativeConfirm === false" ng-click="submit()" class="md-raised md-primary">{{'main.button.submit' | translate}}</md-button>
+<md-button ng-if="application.status === 'AVALDUS_STAATUS_KOOST' && application.needsRepresentativeConfirm === true && isStudentRepresentative()" ng-click="submit()" class="md-raised md-primary">{{'main.button.allowSubmit' | translate}}</md-button>
+<md-button ng-if="['AVALDUS_STAATUS_ESIT', 'AVALDUS_STAATUS_YLEVAAT', 'AVALDUS_STAATUS_KOOST'].indexOf(application.status) !== -1" class="md-raised" ng-click="reject()">{{'main.button.reject' | translate}}</md-button>
+<md-button ng-href="#/applications/{{auth.isStudent() ? 'student': ''}}" class="md-raised">{{'main.button.back' | translate}}</md-button>

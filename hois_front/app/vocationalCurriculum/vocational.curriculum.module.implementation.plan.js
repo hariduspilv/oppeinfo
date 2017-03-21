@@ -324,7 +324,7 @@ angular.module('hitsaOis')
 
         if (angular.isDefined($scope.implementationPlan.id)) {
           curriculumVersion.$update().then(function(response) {
-            message.info('main.messages.update.success');
+            message.updateSuccess();
             $scope.implementationPlan.version = response.version;
           });
         } else {

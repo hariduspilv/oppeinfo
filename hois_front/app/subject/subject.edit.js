@@ -20,9 +20,7 @@ angular.module('hitsaOis').controller('SubjectEditController',
       $scope.subjectForm.$setSubmitted();
       if($scope.subjectForm.$valid) {
         if($scope.subject.id) {
-          $scope.subject.$update().then(function() {
-            message.info('main.messages.update.success');
-          });
+          $scope.subject.$update().then(message.updateSuccess);
         } else {
           $scope.subject.$save().then(function(response) {
             $location.path('/subject/'+ response.id +'/edit');

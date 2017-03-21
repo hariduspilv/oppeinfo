@@ -1,0 +1,66 @@
+<md-dialog aria-label="grade add dialog" flex="70" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"studyYear.studyPeriodEvent.heading" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="row">
+          <md-input-container flex>
+            <label class="label">{{'studyYear.studyPeriodEvent.period' | translate}}</label>
+            <md-select ng-model="studyPeriodEvent.studyPeriod">
+              <md-option md-option-empty></md-option>
+              <md-option ng-repeat="option in studyPeriods" ng-value="option" aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-option>
+            </md-select>
+          </md-input-container>
+          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'studyYear.studyPeriodEvent.eventType' | translate}}</label>
+            <hois-classifier-select ng-model="studyPeriodEvent.eventType" model-value-attr="code" main-classifier-code="SYNDMUS" required></hois-classifier-select>
+          </md-input-container>
+        </div>
+        <div layout="column" layout-xs="row">
+          <md-input-container flex>
+            <label>{{'studyYear.studyPeriodEvent.descriptionEt' | translate}}</label>
+            <input ng-model="studyPeriodEvent.descriptionEt" type="text" md-maxlength="100" required>
+          </md-input-container>
+          <!--<md-input-container flex>
+            <label>{{'studyYear.studyPeriodEvent.nameEn' | translate}}</label>
+            <input ng-model="studyPeriodEvent.nameEn" type="text" md-maxlength="100">
+          </md-input-container>-->
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'studyYear.studyPeriodEvent.startDate' | translate}}</label>
+            <md-datepicker ng-model="studyPeriodEvent.start" md-max-date="studyPeriodEvent.endDate" required md-open-on-focus></md-datepicker>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'studyYear.studyPeriodEvent.startTime' | translate}}</label>
+            <input ng-model="studyPeriodEvent.start" type="time">
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'studyYear.studyPeriodEvent.endDate' | translate}}</label>
+            <md-datepicker ng-model="studyPeriodEvent.end" md-min-date="studyPeriodEvent.startDate" ng-model-options="{ getterSetter: true }" md-open-on-focus></md-datepicker>
+          </md-input-container>
+          <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'studyYear.studyPeriodEvent.endTime' | translate}}</label>
+            <input ng-model="studyPeriodEvent.end" type="time" ng-model-options="{ getterSetter: true }">
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="delete()" ng-if="studyPeriodEvent.id">{{"main.button.delete" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

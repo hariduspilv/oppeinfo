@@ -83,6 +83,16 @@ public class EstonianIdCodeValidator implements ConstraintValidator<EstonianIdCo
         }
     }
 
+    public static LocalDate birthdateFromIdcode(String value) {
+        if (value == null) {
+            return null;
+        }
+        
+        Matcher m = PATTERN.matcher(value);
+
+        return m.matches() ? birthdateFromIdcode(m) : null;
+    }
+
     protected static String sexFromIdcode(Matcher m) {
         return SEX.get(m.group(1));
     }

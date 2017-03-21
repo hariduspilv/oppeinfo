@@ -207,16 +207,16 @@ angular.module('hitsaOis')
       };
       doOptionsFilering();
 
-      function hideAllValues() {
+      function showAllValues() {
         for(var key in scope.optionsByCode) {
-          scope.optionsByCode[key].hide = true;
+          scope.optionsByCode[key].hide = false;
         }
       }
 
       function watchCallback(newValue) {
           if(!angular.isDefined(newValue) || newValue === null || newValue === '' || (angular.isArray(newValue) && newValue.length === 0)) {
             scope.value = undefined;
-            hideAllValues();
+            showAllValues();
           } else  {
               var params = {
                 mainClassifierCode: scope.connectMainClassifierCode

@@ -15,7 +15,7 @@
     "angular-material-data-table": "0.10.10",
     "angular-ui-router": "0.4.2",
     "lf-ng-md-file-input": "1.5.1",
-    "moment": "2.17.1",
+    "moment": "2.18.0",
     "ng-storage": "0.4.2",
     "angular-cache": "^4.6.0"
   },

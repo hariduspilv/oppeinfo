@@ -83,7 +83,7 @@ angular.module('hitsaOis')
           if (angular.isDefined(currentUser)) {
             if (currentUser) {
               var authObject = angular.extend({}, currentUser);
-              authObject.isHeadAdmin = isUserInRole(currentUser, 'ROLL_P');
+              authObject.isMainAdmin = isUserInRole(currentUser, 'ROLL_P');
               authObject.isAdmin = isUserInRole(currentUser, 'ROLL_A');
               authObject.isTeacher = isUserInRole(currentUser, 'ROLL_O');
               authObject.isStudent = isUserInRole(currentUser, 'ROLL_T');

@@ -7,8 +7,8 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('DirectiveEditController', ['$location', '$mdDialog', '$route', '$scope', 'dialogService', 'message', 'Curriculum', 'QueryUtils',
-  function ($location, $mdDialog, $route, $scope, dialogService, message, Curriculum, QueryUtils) {
+]).controller('DirectiveEditController', ['$location', '$mdDialog', '$route', '$scope', 'dialogService', 'message', 'Curriculum', 'DataUtils', 'QueryUtils',
+  function ($location, $mdDialog, $route, $scope, dialogService, message, Curriculum, DataUtils, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/directives';
 
@@ -19,8 +19,13 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.edit.html';
     }
 
+    function studentConverter(student) {
+      return DataUtils.convertStringToDates(student, ['startDate', 'endDate']);
+    }
+
     function afterLoad() {
       setTemplateUrl();
+      $scope.record.students = studentConverter($scope.record.students);
     }
 
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -37,18 +42,14 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
         message.error('main.messages.form-has-errors');
         return;
       }
-      function afterSave() {
-        message.info(id ? 'main.messages.update.success' : 'main.messages.create.success');
-        if(!id) {
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
-        } else {
-          afterLoad();
-        }
-      }
+
       if($scope.record.id) {
-        $scope.record.$update().then(afterSave);
+        $scope.record.$update().then(afterLoad).then(message.updateSuccess);
       }else{
-        $scope.record.$save().then(afterSave);
+        $scope.record.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+        });
       }
     };
 
@@ -82,7 +83,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       $scope.formState.state = 'EDIT';
       studentsToDirective($scope.formState.selectedStudents, function(result) {
         angular.copy(result.toJSON(), $scope.record);
-        $scope.record.students = result.students;
+        $scope.record.students = studentConverter(result.students);
       });
       var type = $scope.record.type;
       if(type === 'KASKKIRI_OKAVA' || type === 'KASKKIRI_IMMAT') {
@@ -91,12 +92,15 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       if(type === 'KASKKIRI_ENNIST' || type === 'KASKKIRI_IMMAT' || type === 'KASKKIRI_OKAVA' || type === 'KASKKIRI_OVORM') {
         $scope.formState.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').search();
       }
+      if(type === 'KASKKIRI_AKAD') {
+        $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+      }
     };
 
     function storeStudents(students) {
       studentsToDirective(students, function(result) {
         for(var i = 0, cnt = result.students.length; i < cnt; i++) {
-          $scope.record.students.push(result.students[i]);
+          $scope.record.students.push(studentConverter(result.students[i]));
         }
       });
     }

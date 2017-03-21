@@ -1,0 +1,67 @@
+
+<md-nav-bar md-selected-nav-item="currentNavItem">
+  <md-nav-item md-nav-href="#/messages/received" name="message.received">{{'message.received' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/messages/sent" name="message.sent">{{'message.sent' | translate}}</md-nav-item>
+</md-nav-bar>
+
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <form ng-submit="loadData()" layout="column" novalidate>
+        <div layout="row">
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                <label class="textInput">{{'message.subject' | translate}}</label>
+                <input ng-model="criteria.subject" type="text">
+            </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="20" flex-sm="100" flex-xs="100">
+                <label>{{'message.sentDatesRange' | translate}}</label>
+                <input type="hidden">
+            </md-input-container>
+            <div flex="33">
+                <md-input-container flex>
+                    <label>{{'main.from' | translate}}</label>
+                    <md-datepicker ng-model="criteria.sentFrom"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex>
+                    <label>{{'main.thru' | translate}}</label>
+                    <md-datepicker ng-model="criteria.sentThru"></md-datepicker>
+                </md-input-container>
+            </div>
+        </div>
+        <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="/#/message/new">{{'message.send' | translate}}</md-button>
+        </div>
+    </form>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="subject">{{'message.subject' | translate}}</th>
+            <th md-column md-order-by="inserted">{{'message.dateSent' | translate}}</th>
+            <th md-column>{{'message.receiver' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell><a href="#/message/sent/{{row.id}}/view">{{::row.subject}}</a></td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.dateSent} }}</td>
+            <td md-cell ng-click="row.clicked = !row.clicked">
+                <span ng-if="!row.clicked">{{showReceivers(row, false)}}</span>
+                <span ng-if="row.clicked">{{showReceivers(row, true)}}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

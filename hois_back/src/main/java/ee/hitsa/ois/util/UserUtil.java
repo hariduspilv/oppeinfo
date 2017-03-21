@@ -14,7 +14,7 @@ public abstract class UserUtil {
     }
 
     public static boolean canEditStudent(HoisUserDetails user, Student student) {
-        return isSchoolAdmin(user, student.getSchool()) || isAdultStudent(user, student)|| isStudentRepresentative(user, student);        
+        return isSchoolAdmin(user, student.getSchool()) || isAdultStudent(user, student)|| isStudentRepresentative(user, student);
     }
 
     public static boolean canAddStudentAbsence(HoisUserDetails user, Student student) {

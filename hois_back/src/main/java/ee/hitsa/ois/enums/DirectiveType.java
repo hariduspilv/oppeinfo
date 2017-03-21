@@ -17,9 +17,8 @@ public enum DirectiveType {
     KASKKIRI_IMMATV(StudentStatus.OPPURSTAATUS_O, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
     KASKKIRI_ENNIST(null, "studentGroup"),
     KASKKIRI_TYHIST(null),
-    // TODO these are missing
-    KASKKIRI_KYLALIS(null, "nominalStudyEnd"),
-    RIIGIKEEL(null, "nominalStudyEnd");
+    // TODO not yet implemented
+    KASKKIRI_KYLALIS(null, "nominalStudyEnd");
 
     private final StudentStatus studentStatus;
     private final String[] updatedFields;

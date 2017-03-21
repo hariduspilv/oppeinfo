@@ -1,0 +1,29 @@
+<div layout="row" layout-sm="column" layout-xs="column">
+  <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+    <label>{{'application.periodType' | translate}}</label>
+    <hois-value value="application.isPeriod ? ('main.period' | translate) : ('main.date' | translate)"></hois-value>
+  </md-input-container>
+</div>
+
+<div ng-show="!application.isPeriod" layout="row" layout-xs="column">
+  <md-input-container  flex>
+    <label>{{'application.academicLeaveStart' | translate}}</label>
+    <hois-value value="'main.formattedDate' | translate: {date: application.startDate}"></hois-value>
+  </md-input-container>
+
+  <md-input-container style="margin-left: 0px" flex flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+    <label>{{'application.academicLeaveEnd' | translate}}</label>
+    <hois-value value="'main.formattedDate' | translate: {date: application.endDate}"></hois-value>
+  </md-input-container>
+</div>
+
+<div ng-show="application.isPeriod" layout="row" layout-xs="column">
+  <md-input-container  flex>
+    <label>{{'application.academicLeaveStart' | translate}}</label>
+    <hois-value value="studyPeriodView(application.studyPeriodStart)"></hois-value>
+  </md-input-container>
+  <md-input-container  flex>
+    <label>{{'application.academicLeaveEnd' | translate}}</label>
+    <hois-value value="studyPeriodView(application.studyPeriodEnd)"></hois-value>
+  </md-input-container>
+</div>

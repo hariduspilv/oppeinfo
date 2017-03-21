@@ -14,7 +14,6 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
     var roleMapper = function(i) { return $scope.roleDefs[i]; };
     for(var rowNo = 0; rowNo < rows.length; rowNo++) {
       var row = rows[rowNo];
-      DataUtils.convertStringToDates(row, ['validFrom', 'validThru']);
       row.targets = (row.targets || []).map(roleMapper);
     }
   });
@@ -61,16 +60,13 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
 
       $scope.record.targets = Classifier.getSelectedCodes($scope.roleDefs);
 
-      function afterSave() {
-        message.info(id ? 'main.messages.update.success' : 'main.messages.create.success');
-        if(!id) {
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
-        }
-      }
       if($scope.record.id) {
-        $scope.record.$update(afterLoad).then(afterSave);
+        $scope.record.$update(afterLoad).then(message.updateSuccess);
       }else{
-        $scope.record.$save(afterLoad).then(afterSave);
+        $scope.record.$save(afterLoad).then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+        });
       }
     };
 

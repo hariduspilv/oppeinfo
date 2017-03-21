@@ -19,16 +19,14 @@ angular.module('hitsaOis').controller('TeacherOccupationEditController', ['$loca
         message.error('main.messages.form-has-errors');
         return;
       }
-      function afterSave() {
-        message.info(id ? 'main.messages.update.success' : 'main.messages.create.success');
-        if(!id) {
-          $location.path(baseUrl + '/' + $scope.teacherOccupation.id + '/edit');
-        }
-      }
+
       if($scope.teacherOccupation.id) {
-        $scope.teacherOccupation.$update().then(afterSave);
+        $scope.teacherOccupation.$update().then(message.updateSuccess);
       }else{
-        $scope.teacherOccupation.$save().then(afterSave);
+        $scope.teacherOccupation.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.teacherOccupation.id + '/edit');
+        });
       }
     };
 

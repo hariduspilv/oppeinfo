@@ -90,7 +90,6 @@ public class DirectiveService {
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_EKSMAT, Arrays.asList(OPPURSTAATUS_O.name(), OPPURSTAATUS_A.name(), OPPURSTAATUS_V.name()));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_LOPET, Arrays.asList(OPPURSTAATUS_O.name()));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_ENNIST, Arrays.asList(OPPURSTAATUS_K.name()));
-        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(RIIGIKEEL, Arrays.asList(OPPURSTAATUS_O.name()));
     }
 
     // application statuses which can added to directive

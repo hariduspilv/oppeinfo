@@ -1,0 +1,292 @@
+        <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.type' | translate}}</label>
+              <hois-classifier-value ng-model="application.type" main-classifier-code="AVALDUS_LIIK"></hois-classifier-value>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.isStudent()">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'student.label' | translate}}</label>
+              <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
+            </md-input-container>
+        </div>
+
+        <div ng-if="application.type === 'AVALDUS_LIIK_AKAD'" layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.reason' | translate}}</label>
+              <hois-classifier-select ng-model="application.reason" model-value-attr="code"
+              ng-required="application.type === 'AVALDUS_LIIK_AKAD'" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-select>
+            </md-input-container>
+        </div>
+        <div ng-if="application.type === 'AVALDUS_LIIK_EKSMAT'" layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.reason' | translate}}</label>
+              <hois-classifier-select ng-model="application.reason" model-value-attr="code"
+              ng-required="application.type === 'AVALDUS_LIIK_EKSMAT'" main-classifier-code="EKSMAT_POHJUS"></hois-classifier-select>
+            </md-input-container>
+        </div>
+
+        <div ng-if="application.type === 'AVALDUS_LIIK_FINM'">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.validFinancialSource' | translate}}</label>
+              <hois-classifier-value ng-model="application.oldFin" model-value-attr="code"
+                main-classifier-code="FINALLIKAS"></hois-classifier-value>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.validFinancialSourceSpecification' | translate}}</label>
+              <hois-classifier-value ng-model="application.oldFinSpecific" model-value-attr="code"
+                main-classifier-code="FINTAPSUSTUS"></hois-classifier-value>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.newFinancialSource' | translate}}</label>
+              <hois-classifier-value ng-model="application.newFin" model-value-attr="code"
+                main-classifier-code="FINALLIKAS"></hois-classifier-value>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.newFinancialSourceSpecification' | translate}}</label>
+              <hois-classifier-select ng-model="application.newFinSpecific" model-value-attr="code"
+                main-classifier-code="FINTAPSUSTUS" filter-values="[application.oldFinSpecific]" ng-required="application.type === 'AVALDUS_LIIK_FINM'"></hois-classifier-select>
+            </md-input-container>
+          </div>
+        </div>
+
+        <div ng-if="application.type === 'AVALDUS_LIIK_OVORM'">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.validStudyForm' | translate}}</label>
+              <hois-classifier-value ng-model="application.oldStudyForm" model-value-attr="code"
+                main-classifier-code="OPPEVORM"></hois-classifier-value>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.newStudyForm' | translate}}</label>
+              <hois-classifier-select ng-model="application.newStudyForm" model-value-attr="code"
+                main-classifier-code="OPPEVORM" filter-values="[application.oldStudyForm]" ng-required="application.type === 'AVALDUS_LIIK_OVORM'"></hois-classifier-select>
+            </md-input-container>
+          </div>
+        </div>
+
+        <div ng-if="application.type === 'AVALDUS_LIIK_AKAD'" layout="row" layout-sm="column" layout-xs="column">
+          <div flex="60" flex-sm="100" flex-xs="100" ng-include="'application/templates/period.html'"
+            ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_AKAD')"></div>
+        </div>
+
+        <div ng-if="application.type === 'AVALDUS_LIIK_AKADK'">
+          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+            <label>{{'application.reason' | translate}}</label>
+            <hois-classifier-value ng-model="academicLeaveApplication.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+          </md-input-container>
+
+          <div ng-show="!academicLeaveApplication.isPeriod" layout="row" layout-xs="column">
+            <md-input-container  flex="20" flex-sm="100" flex-xs="100">
+              <label>{{'application.academicLeaveStart' | translate}}</label>
+              <hois-value value="'main.formattedDate' | translate: {date: academicLeaveApplication.startDate}"></hois-value>
+            </md-input-container>
+
+            <md-input-container style="margin-left: 0px" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+              <label>{{'application.academicLeaveEnd' | translate}}</label>
+              <hois-value value="'main.formattedDate' | translate: {date: academicLeaveApplication.endDate}"></hois-value>
+            </md-input-container>
+          </div>
+
+          <div ng-show="academicLeaveApplication.isPeriod" layout="row" layout-xs="column">
+            <md-input-container  flex="20" flex-sm="100" flex-xs="100">
+              <label>{{'application.academicLeaveStart' | translate}}</label>
+              <hois-select ng-model="academicLeaveApplication.studyPeriodStart" values="studyPeriods" disabled></hois-select>
+            </md-input-container>
+            <md-input-container  flex="20" flex-sm="100" flex-xs="100">
+              <label>{{'application.academicLeaveEnd' | translate}}</label>
+              <hois-select ng-model="academicLeaveApplication.studyPeriodEnd" values="studyPeriods" disabled></hois-select>
+            </md-input-container>
+          </div>
+
+          <md-input-container  flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'application.academicLeaveRevocationDate' | translate}}</label>
+            <md-datepicker ng-model="application.startDate" md-open-on-focus ng-required="application.type === 'AVALDUS_LIIK_AKADK'"></md-datepicker>
+          </md-input-container>
+        </div>
+
+
+
+        <div ng-if="application.type === 'AVALDUS_LIIK_OKAVA'">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.validCurriculumVersion' | translate}}</label>
+              <hois-value value="currentLanguageNameField(application.oldCurriculumVersion)"></hois-value>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.validStudyForm' | translate}}</label>
+              <hois-classifier-value ng-model="application.oldStudyForm" model-value-attr="code"
+                main-classifier-code="OPPEVORM"></hois-classifier-value>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.newCurriculumVersion' | translate}}</label>
+              <hois-select ng-model="application.newCurriculumVersion.id" values="curriculumVersions" filter-values="[application.oldCurriculumVersion]" ng-required="application.type === 'AVALDUS_LIIK_OKAVA'"></hois-select>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.newStudyForm' | translate}}</label>
+              <hois-classifier-select ng-model="application.newStudyForm" model-value-attr="code"
+                main-classifier-code="OPPEVORM" filter-values="[application.oldStudyForm]" ng-required="application.type === 'AVALDUS_LIIK_OKAVA'"></hois-classifier-select>
+            </md-input-container>
+          </div>
+        </div>
+
+        <div ng-if="application.type === 'AVALDUS_LIIK_KYLALIS'">
+          <div flex="60" flex-sm="100" flex-xs="100" layout="row" class="horizontal-radio-group">
+            <md-input-container flex="20" flex-xs="100">
+              <label class="md-required common-label">{{'main.abroadStudies' | translate}}</label>
+            </md-input-container>
+            <md-input-container layout="row" layout-align="start center" flex="20">
+              <md-radio-group name="isAbroad" ng-model="application.isAbroad" ng-change="isAbroadChanged()" ng-required="application.type === 'AVALDUS_LIIK_KYLALIS'" layout="row">
+                <md-radio-button ng-value="true" aria-label="yes">{{ 'main.yes' | translate }}</md-radio-button>
+                <md-radio-button ng-value="false" aria-label="no">{{ 'main.no' | translate }}</md-radio-button>
+              </md-radio-group>
+            </md-input-container>
+            <div layout="row" flex="20" md-colors="{color: 'warn-A400'}"  ng-if="applicationForm.$submitted" ng-messages="applicationForm.isAbroad.$error" >
+              <div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
+            </div>
+          </div>
+
+
+          <div layout="row" layout-sm="column" layout-xs="column" ng-hide="application.isAbroad">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'main.educationInstitution' | translate}}</label>
+              <hois-classifier-select ng-model="application.ehisSchool" main-classifier-code="EHIS_KOOL"
+              filter-values="[studentEhisSchool]" by-property="ehisSchool" model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" ng-hide="!application.isAbroad">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label class="textInput">{{'main.educationInstitution' | translate}}</label>
+              <input type="text" ng-model="application.abroadSchool" ></input>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" ng-hide="!application.isAbroad">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'main.country' | translate}}</label>
+              <hois-classifier-select ng-model="application.country" main-classifier-code="RIIK"
+              filter-values="['RIIK_EST']" model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <div flex="60" flex-sm="100" flex-xs="100" ng-include="'application/templates/period.html'"
+              ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_AKAD')"></div>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" >
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'main.purposeOfStudies' | translate}}</label>
+              <hois-classifier-select ng-model="application.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"
+              model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" >
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'main.programmeOfStudies' | translate}}</label>
+              <hois-classifier-select ng-model="application.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"
+              model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+          </div>
+        </div>
+
+
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'application.additionalInfo' | translate}}</label>
+            <textarea ng-model="application.addInfo" md-maxlength="4000"></textarea>
+          </md-input-container>
+        </div>
+
+        <div ng-if="application.type === 'AVALDUS_LIIK_KYLALIS'">
+          <div layout="column" flex>
+            <div layout="row" class="top-margin">
+              <h2>{{'main.subjects' | translate}} </h2>
+              <a class="md-button md-primary" href="" ng-click="addPlannedSubjectRow()" ng-show="!readOnly">{{'main.button.addRow' | translate}}</a>
+            </div>
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column><span>{{'application.plannedSubject' | translate}} *</span></th>
+                  <th md-column><span>{{'application.substitutableSubject' | translate}} *</span></th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="plannedSubject in application.plannedSubjects | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>
+                    <md-input-container>
+                      <input type="text" ng-model="plannedSubject.name" aria-label="planned subject name" required></input>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+                      <hois-select multiple ng-model="plannedSubject.subjectsSelected" ng-change="subjectsSelected(plannedSubject)"  aria-label="planned subject equivalent subject" values="studentSubjects" required></hois-select>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <md-button class="remove nomargin" ng-click="removeFromArray(application.plannedSubjects, plannedSubject)">&times;</md-button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+
+        <div layout="column" flex>
+          <div layout="row" class="top-margin">
+            <h2>{{'main.relatedFiles' | translate}} </h2>
+            <a class="md-button md-primary" href="" ng-click="openAddFileDialog()" ng-show="!readOnly">{{'main.button.uploadFile' | translate}}</a>
+          </div>
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+                <th md-column><span>{{'file.additionDate' | translate}}</span></th>
+                <th md-column>{{'file.addedBy' | translate}}</th>
+                <th md-column></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>
+                  {{file.oisFile.fname}}
+                  <a ng-href="{{getUrl(file.oisFile)}}" target="_blank"><md-icon md-font-set="material-icons">file_download</md-icon></a>
+                </td>
+                <td md-cell>
+                  {{'main.formattedDateTime' | translate: {date: file.inserted} }}
+                </td>
+                <td md-cell>
+                  {{file.insertedBy}}
+                </td>
+                <td md-cell>
+                  <md-button class="remove nomargin" ng-click="removeFromArray(application.files, file)">&times;</md-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>

@@ -77,9 +77,7 @@ angular.module('hitsaOis')
 
     $scope.update = function() {
       ClassifierConnect.sendListOfParents($scope.classifier, $scope.parents);
-      new Classifier($scope.classifier).save().$promise.then(function() {
-        message.info('main.messages.update.success');
-      });
+      new Classifier($scope.classifier).save().$promise.then(message.updateSuccess);
     };
 
     $scope.delete = function() {

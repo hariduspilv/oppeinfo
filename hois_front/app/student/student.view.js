@@ -1,8 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'DataUtils', 'QueryUtils',
+angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
 
-  function ($mdDialog, $q, $route, $scope, dialogService, message, Classifier, DataUtils, QueryUtils) {
+  function ($mdDialog, $q, $route, $scope, dialogService, message, Classifier, QueryUtils) {
     var studentId = $route.current.params.id;
     var Endpoint = QueryUtils.endpoint('/students');
 
@@ -13,7 +13,6 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 
     $scope.student = Endpoint.get({id: studentId});
     $scope.student.$promise.then(function() {
-      DataUtils.convertStringToDates($scope.student, ['studyStart', 'nominalStudyEnd']);
       if($scope.student.photo) {
         $scope.student.imageUrl = 'data:' + $scope.student.photo.ftype + ';base64,' + $scope.student.photo.fdata;
       } else {
@@ -153,11 +152,11 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
         return;
       }
       $scope.student.$update().then(function() {
-        message.info('main.messages.update.success');
+        message.updateSuccess();
         $location.path('/students/'+id+'/main');
       });
     };
-}]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
+}]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'DataUtils','QueryUtils',
   function ($mdDialog, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
     $scope.studentId = $route.current.params.id;
     $scope.currentNavItem = 'student.absences';
@@ -165,10 +164,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     $scope.formState = {backRef: backUrl ? '?backUrl='+backUrl : '', backUrl: backUrl === 'applications' ? '#/studentrepresentatives/applications' : '#/students'};
 
     QueryUtils.createQueryForm($scope, '/students/' + $scope.studentId + '/absences', {order: 'validFrom'}, function(rows) {
-      for(var rowNo = 0; rowNo < rows.length; rowNo++) {
-        var row = rows[rowNo];
-        DataUtils.convertStringToDates(row, ['validFrom', 'validThru']);
-      }
+      DataUtils.convertStringToDates(rows, ['validFrom', 'validThru']);
     });
 
     $scope.editAbsence = function(absence) {

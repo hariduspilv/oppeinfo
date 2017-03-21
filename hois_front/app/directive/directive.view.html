@@ -1,0 +1,57 @@
+<div layout-padding ng-cloak>
+  <div flex>
+
+    <div layout="row" layout-xs="column" flex>
+      <div flex="70">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'directive.headline' | translate}}</label>
+            <hois-value value="record.headline"></hois-value>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'directive.directiveNr' | translate}}</label>
+            <hois-value value="record.directiveNr"></hois-value>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'directive.preamble' | translate}}</label>
+            <hois-value value="record.preamble"></hois-value>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'directive.type' | translate}}</label>
+            <hois-classifier-value ng-model="record.type" main-classifier-code="KASKKIRI"></hois-classifier-value>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'directive.inserted' | translate}}</label>
+            <hois-value value="'main.formattedDate' | translate: {date: record.inserted}"></hois-value>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'directive.confirmDate' | translate}}</label>
+            <hois-value value="'main.formattedDate' | translate: {date: record.confirmDate}"></hois-value>
+          </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'directive.addInfo' | translate}}</label>
+            <hois-value value="record.addInfo"></hois-value>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'directive.directiveCoordinator' | translate}}</label>
+            <hois-value value="record.directiveCoordinator.nameEt"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+    </div>
+
+    <div ng-include="formState.templateUrl"></div>
+
+    <md-button ng-href="{{formState.backUrl || '#/directives'}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-click="cancelDirective()" ng-if="record.status === 'KASKKIRI_STAATUS_KINNITATUD'" class="md-primary md-raised">{{'directive.cancel' | translate}}</md-button>
+  </div>
+</div>

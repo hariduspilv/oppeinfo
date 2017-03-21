@@ -100,19 +100,16 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             message.error('main.messages.form-has-errors');
             return;
         }
-        var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
-        function afterSave() {
-            message.info(msg);
-        }
         $scope.record.signatoryName = $scope.signatories.filter(function(e){return e.idcode === $scope.record.signatoryIdcode;})[0].name;
         if($scope.record.student) {
             $scope.record.otherName = null;
             $scope.record.otherIdcode = null;
         }
         if($scope.record.id) {
-            $scope.record.$update(afterLoad).then(afterSave);
+            $scope.record.$update(afterLoad).then(message.updateSuccess);
         }else{
-            $scope.record.$save(afterSave).then(function(){
+            $scope.record.$save().then(function() {
+                message.info('main.messages.create.success');
                 $location.path(baseUrl + "/" + $scope.record.id + "/edit");
             });
         }
