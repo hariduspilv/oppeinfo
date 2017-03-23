@@ -136,7 +136,7 @@ angular.module('hitsaOis')
         {
           name: 'main.menu.fixData.users',
           id: 'users',
-          url: "/users?_menu"
+          url: "/persons?_menu"
         }
       ]
     });
@@ -191,7 +191,17 @@ angular.module('hitsaOis')
         {
           name: 'main.menu.reception.import',
           id: 'receptionImport',
-          url: "/receptionImport"
+          url: "/reception/import?_menu"
+        },
+        {
+          name: 'main.menu.reception.saisAdmissionSearch',
+          id: 'receptionSaisAdmissionSearch',
+          url: "/reception/saisAdmission/search?_menu"
+        },
+        {
+          name: 'main.menu.reception.saisApplicationSearch',
+          id: 'receptionSaisApplicationSearch',
+          url: "/reception/saisApplication/search?_menu"
         }
       ]
     });

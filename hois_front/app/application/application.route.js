@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', '$stateProvider', function ($routeProvider, USER_ROLES) {
+angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
     .when('/applications', {
         templateUrl: 'application/application.list.html',

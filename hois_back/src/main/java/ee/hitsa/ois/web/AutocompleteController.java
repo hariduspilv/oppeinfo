@@ -114,6 +114,11 @@ public class AutocompleteController {
         return autocompleteService.studyPeriods(user.getSchoolId());
     }
 
+    @GetMapping("/saisAdmissionCodes")
+    public List<AutocompleteResult> saisAdmissionCodes(HoisUserDetails user) {
+        return autocompleteService.saisAdmissionCodes(user.getSchoolId());
+    }
+
     private static <R> Page<R> asPage(List<R> data) {
         return new PageImpl<>(data);
     }

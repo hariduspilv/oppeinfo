@@ -1,0 +1,71 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form layout="column">
+      <div style="padding-top: 1em">
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'reception.contest.code' | translate}}</label>
+              <hois-value value="saisAdmission.code" ></hois-value>
+            </md-input-container>
+
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'student.curriculum' | translate}}</label>
+              <hois-value value="currentLanguageNameField(saisAdmission.curriculumVersion)"></hois-value>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'student.fin' | translate}}</label>
+              <hois-classifier-value ng-model="saisAdmission.fin" main-classifier-code="FINALLIKAS"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'reception.contest.language' | translate}}</label>
+              <hois-classifier-value ng-model="saisAdmission.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'reception.contest.places' | translate}}</label>
+              <hois-value value="saisAdmission.places"></hois-value>
+            </md-input-container>
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'student.studyForm' | translate}}</label>
+              <hois-classifier-value ng-model="saisAdmission.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'student.studyLoad' | translate}}</label>
+              <hois-classifier-value ng-model="saisAdmission.studyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'student.studyLevel' | translate}}</label>
+              <hois-classifier-value ng-model="saisAdmission.studyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'studyYear.startDate' | translate}}</label>
+              <hois-value value="'main.formattedDate' | translate: {date: saisAdmission.periodStart}" ></hois-value>
+            </md-input-container>
+
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+              <label>{{'studyYear.endDate' | translate}}</label>
+              <hois-value value="'main.formattedDate' | translate: {date: saisAdmission.periodEnd}"></hois-value>
+            </md-input-container>
+        </div>
+      <br/>
+
+
+      <div layout="row">
+        <md-button ng-href="#/reception/saisAdmission/search?_menu" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+
+    </form>
+  </div>
+</div>

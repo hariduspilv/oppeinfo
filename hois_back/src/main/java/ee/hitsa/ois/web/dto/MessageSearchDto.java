@@ -22,6 +22,16 @@ public class MessageSearchDto {
         this.id = message.getId();
     }
     
+    public MessageSearchDto(Long id, String subject, String content, LocalDate dateSent, String sender,
+            Boolean isRead) {
+        this.id = id;
+        this.subject = subject;
+        this.content = content;
+        this.dateSent = dateSent;
+        this.sender = sender;
+        this.isRead = isRead;
+    }
+
     public static MessageSearchDto ofReceived(Message message, Long personId) {
         MessageSearchDto dto = new MessageSearchDto(message);
         dto.setSender(message.getSender().getFullname());

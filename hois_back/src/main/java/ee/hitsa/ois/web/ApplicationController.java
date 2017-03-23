@@ -89,12 +89,12 @@ public class ApplicationController {
         Student student = application.getStudent();
         if (UserUtil.isStudentRepresentative(user, student)) {
             applicationService.submit(user, application);
-        } else if (UserUtil.isSame(user, student)) {
+        } else if (UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) {
             applicationService.submit(user, application);
         } else {
             throw new RuntimeException("User has no rights to submit this application");
         }
-        
+
         return get(application);
     }
 
@@ -102,10 +102,10 @@ public class ApplicationController {
     public ApplicationDto reject(HoisUserDetails user, @WithEntity(value = "id") Application application,
             @Valid @RequestBody ApplicationRejectForm applicationRejectForm) {
         Student student = application.getStudent();
-        
+
         if (UserUtil.isStudentRepresentative(user, student)) {
             applicationService.reject(application, applicationRejectForm);
-        } else if (UserUtil.isSame(user, student)) {
+        } else if (UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) {
             applicationService.reject(application, applicationRejectForm);
         } else {
             throw new RuntimeException("User has no rights to reject this application");

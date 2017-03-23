@@ -19,7 +19,7 @@
           </md-input-container>
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label class="textInput">{{'studyYear.studyPeriod.type' | translate}}</label>
-            <hois-classifier-select ng-model="studyPeriod.type" model-value-attr="code" required main-classifier-code="OPPEPERIOOD"></hois-classifier-select>
+            <hois-classifier-select ng-model="studyPeriod.type" model-value-attr="code" ng-change="typeChange()" required main-classifier-code="OPPEPERIOOD"></hois-classifier-select>
           </md-input-container>
         </div>
         <div layout="column" layout-xs="row">

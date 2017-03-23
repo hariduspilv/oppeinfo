@@ -1,11 +1,16 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -25,6 +30,7 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
@@ -34,6 +40,11 @@ import ee.hitsa.ois.web.dto.MessageSearchDto;
 @Service
 public class MessageService {
     
+    private static final String RECEIVED_MESSAGES_FROM = 
+            "from message m inner join message_receiver mr on m.id = mr.message_id inner join person p on m.person_id = p.id ";
+    private static final String RECEIVED_MESSAGES_SELECT = 
+            "m.id, m.subject, m.content, m.inserted, mr.read is not null as isRead, p.firstname || ' ' || p.lastname as sendersName ";
+    
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
@@ -42,6 +53,8 @@ public class MessageService {
     private MessageRepository messageRepository;
     @Autowired
     private PersonRepository personRepository;
+    @Autowired
+    private EntityManager em;
     
     public Page<MessageSearchDto> searchSent(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {
         return messageRepository.findAll((root, query, cb) -> {
@@ -66,6 +79,17 @@ public class MessageService {
             
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(MessageSearchDto::ofSent);
+    }
+
+    public Page<MessageSearchDto> show(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM, pageable);
+        qb.requiredCriteria("mr.person_id = :personId", "personId", user.getPersonId());
+        if(!user.isMainAdmin()) {
+            qb.requiredCriteria("m.school_id = :schoolId", "schoolId", user.getSchoolId());
+        }
+        qb.filter("mr.read is null");
+        Page<Object[]> messages = JpaQueryUtil.pagingResult(qb.select(RECEIVED_MESSAGES_SELECT, em), pageable, () -> qb.count(em));
+        return messages.map(d -> new MessageSearchDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 3).toLocalDate(), resultAsString(d, 2), Boolean.FALSE));
     }
 
     public Page<Message> searchReceived(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {

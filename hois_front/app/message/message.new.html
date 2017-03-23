@@ -16,8 +16,6 @@
                 <hois-classifier-select ng-model="targetGroup" model-value-attr="code" main-classifier-code="ROLL" show-only-values="targetGroups"></hois-classifier-select>
             </md-input-container>
 
-            <!--<hois-autocomplete label="message.receiver" ng-model="receiver" method="students" md-selected-item-change="addReceiver(receiver)"></hois-autocomplete>-->
-
             <md-autocomplete
                 name="receiverInput"
                 md-selected-item="receiver"
@@ -44,17 +42,17 @@
 
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label>{{'message.curriculumStudents' | translate}}</label>
-                <hois-select ng-model="curriculum" type="curriculum"></hois-select>
+                <hois-select multiple ng-model="curriculum" type="curriculum"></hois-select>
             </md-input-container>
 
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label>{{'message.studyGroupStudents' | translate}}</label>
-                <hois-select ng-model="studentGroup"  type="studentgroups"></hois-select>
+                <hois-select multiple ng-model="studentGroup"  type="studentgroups"></hois-select>
             </md-input-container>
 
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label>{{'message.studyFormStudents' | translate}}</label>
-                <hois-classifier-select ng-model="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
+                <hois-classifier-select multiple ng-model="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
             </md-input-container>
 
             <h2 ng-class="{invalid: messageNewForm.$submitted && receivers.length === 0}">{{'message.messageReceiver' | translate}} *</h2>
@@ -84,7 +82,7 @@
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="send()">{{'main.button.send' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="/#/messages/sent">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="{{::formState.backUrl}}">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>

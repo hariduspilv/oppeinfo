@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.domain.SaisAdmission;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
@@ -10,6 +11,7 @@ import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.SubjectUtil;
@@ -84,8 +86,16 @@ public class AutocompleteResult extends EntityConnectionCommand {
         return new AutocompleteResult(subject.getId(), SubjectUtil.subjectName(subject.getCode(), subject.getNameEt()), SubjectUtil.subjectName(subject.getCode(), subject.getNameEn()));
     }
 
+    public static AutocompleteResult of(Subject subject) {
+        return new AutocompleteResult(subject.getId(), SubjectUtil.subjectName(subject.getCode(), subject.getNameEt(), subject.getCredits()), SubjectUtil.subjectName(subject.getCode(), subject.getNameEn(), subject.getCredits()));
+    }
+
     public static AutocompleteResult of(Teacher teacher) {
         String name = teacher.getPerson().getFullname();
         return new AutocompleteResult(teacher.getId(), name, name);
+    }
+
+    public static AutocompleteResult of(SaisAdmission saisAdmission) {
+        return new AutocompleteResult(saisAdmission.getId(), saisAdmission.getCode(), saisAdmission.getCode());
     }
 }

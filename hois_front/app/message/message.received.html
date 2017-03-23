@@ -37,7 +37,7 @@
         <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="/#/message/new">{{'message.send' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="/#/message/new?backUrl=received">{{'message.send' | translate}}</md-button>
         </div>
     </form>
 </div>
@@ -55,7 +55,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a href="#/message/received/{{row.id}}/view" ng-class="{bold: !row.isRead}">{{::row.subject}}</a></td>
+            <td md-cell><a href="#/message/{{row.id}}/view?backUrl=received" ng-class="{bold: !row.isRead}">{{::row.subject}}</a></td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.dateSent} }}</td>
             <td md-cell>{{::row.sender}}</td>
           </tr>

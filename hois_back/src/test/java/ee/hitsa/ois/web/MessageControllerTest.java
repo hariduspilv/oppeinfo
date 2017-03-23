@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.dto.MessageDto;
 
@@ -104,7 +103,6 @@ public class MessageControllerTest {
         MessageForm form = new MessageForm();
         form.setSubject(TEXT);
         form.setContent(TEXT);
-        form.setSendersRole(Role.ROLL_A.name());
         form.setReceivers(Stream.of(Long.valueOf(2)).collect(Collectors.toSet()));
         return form;
     }

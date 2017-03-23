@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
+import javax.validation.Validator;
 
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
@@ -23,7 +24,9 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 
 @Transactional
@@ -35,10 +38,30 @@ public class DirectiveConfirmService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
+    private DirectiveRepository directiveRepository;
+    @Autowired
     private StudentService studentService;
+    @Autowired
+    private Validator validator;
+
+    public void sendToConfirm(Directive directive) {
+        if(!DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name().equals(EntityUtil.getCode(directive.getStatus()))) {
+            throw new AssertionFailedException("Inalid directive status");
+        }
+        DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
+        // validate each student's data for given directive
+        for(DirectiveStudent ds : directive.getStudents()) {
+            validator.validate(ds, directiveType.validationGroup());
+        }
+
+        directive.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name()));
+        directiveRepository.save(directive);
+    }
 
     public void confirm(HoisUserDetails user, Directive directive, LocalDate confirmDate) {
-        // TODO assert correct status
+        if(!DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name().equals(EntityUtil.getCode(directive.getStatus()))) {
+            throw new AssertionFailedException("Inalid directive status");
+        }
         // update directive fields
         directive.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name()));
         directive.setConfirmDate(confirmDate);
@@ -57,6 +80,7 @@ public class DirectiveConfirmService {
                 updateStudentData(directiveType, ds, studentStatus);
             }
         }
+        directiveRepository.save(directive);
     }
 
     private void updateStudentData(DirectiveType directiveType, DirectiveStudent directive, Classifier studentStatus) {
@@ -107,8 +131,9 @@ public class DirectiveConfirmService {
     private static void cancelDirective(Directive directive) {
         // cancellation may include only some students
         Set<Long> includedStudentIds = directive.getStudents().stream().map(ds -> EntityUtil.getId(ds.getStudent())).collect(Collectors.toSet());
-        DirectiveType canceledDirectiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getCanceledDirective().getType()));        
-        for(DirectiveStudent ds : directive.getCanceledDirective().getStudents()) {
+        Directive canceledDirective = directive.getCanceledDirective();
+        DirectiveType canceledDirectiveType = DirectiveType.valueOf(EntityUtil.getCode(canceledDirective.getType()));
+        for(DirectiveStudent ds : canceledDirective.getStudents()) {
             Student student = ds.getStudent();
             if(includedStudentIds.contains(student.getId())) {
                 if(!KASKKIRI_IMMAT.equals(canceledDirectiveType) && !KASKKIRI_IMMATV.equals(canceledDirectiveType)) {
@@ -116,6 +141,7 @@ public class DirectiveConfirmService {
                 } else {
                     // TODO undo create student
                 }
+                // TODO cancel task from task queue, if there is one for given student and directive
             }
         }
     }

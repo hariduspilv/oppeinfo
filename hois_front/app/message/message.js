@@ -19,21 +19,11 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
-      }).when('/message/sent/:id/view', {
+      }).when('/message/:id/view', {
         templateUrl: 'message/message.view.html',
         controller: 'messageViewController',
         controllerAs: 'controller',
         resolve: {translationLoaded: function($translate) { return $translate.onReady(); }
-        },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      }).when('/message/received/:id/view', {
-        templateUrl: 'message/message.view.html',
-        controller: 'messageViewController',
-        controllerAs: 'controller',
-        resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
@@ -83,12 +73,19 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
 
+    var backUrl = $route.current.params.backUrl;
+    $scope.formState = {
+        backUrl: backUrl === "received" ?  "#/messages/received" : "#/messages/sent"
+    };
+    $scope.isSent = $scope.formState.backUrl === "#/messages/sent";
+
     function afterLoad() {
         DataUtils.convertStringToDates($scope.record, ['inserted']);
         $scope.record.receivers =  $scope.record.receiversNames.join("; ");
-        $scope.isSent = $route.current.$$route.originalPath.indexOf("sent") !== -1;
         setRead();
     }
+    
+    $scope.record = Endpoint.get({id: id}, afterLoad);
 
     function setRead() {
         if(!$scope.isSent && !$scope.record.isRead) {
@@ -96,21 +93,23 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
     }
 
-    if(id) {
-      $scope.record = Endpoint.get({id: id}, afterLoad);
-    } else {
-      $scope.record = new Endpoint();
-    }
+
 }]).controller('messageRespondController', ['$scope', 'QueryUtils', '$route', 'message', '$location', function ($scope, QueryUtils, $route, message, $location) {
     var baseUrl = '/message';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
 
+    var backUrl = $route.current.params.backUrl;
+    $scope.formState = {
+        backUrl: backUrl && backUrl === "home" ? "#/" : "#/message/" + id + "/view?backUrl=received"
+    };
+
     function afterLoad() {
         var record = {
             subject: "Re: " + $scope.respondedMessage.subject,
             content: "> " + $scope.respondedMessage.subject,
-            receivers: [$scope.respondedMessage.sendersId]
+            receivers: [$scope.respondedMessage.sendersId],
+            responseTo: id
         };
         $scope.record = new Endpoint(record);
     }
@@ -125,7 +124,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
         function afterSend() {
             message.info('message.messageSent');
-            $location.path("/messages/received");
+            $location.path($scope.formState.backUrl.substring(1));
         }
         $scope.record.$save(afterSend);
     };
@@ -135,17 +134,26 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     var Endpoint = QueryUtils.endpoint(baseUrl);
     $scope.record = new Endpoint();
 
+    var backUrl = $route.current.params.backUrl;
+    $scope.formState = {
+        backUrl: backUrl && backUrl === "received" ? "#/messages/received" : "#/messages/sent"
+    };
+
     $scope.targetGroups = ["ROLL_O", "ROLL_T", "ROLL_L", "ROLL_P"];
     $scope.receivers = [];
 
+    $scope.studyForm = [];
+    $scope.studentGroup = [];
+    $scope.curriculum = [];
+
     $scope.addReceiver = function(receiver) {
-        console.log("addReceiver", receiver);
         if(receiver && !isPersonAdded(receiver.id)) {
             $scope.receivers.push({
                 personId: receiver.id,
                 idcode: receiver.idcode,
                 fullname: receiver.name,
-                role: $scope.targetGroup ? [$scope.targetGroup] : receiver.role
+                role: $scope.targetGroup ? [$scope.targetGroup] : receiver.role,
+                addedWithAutocomplete: true
             });
         }
         $scope.receiver = undefined;
@@ -161,73 +169,99 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
 
     function getStudents(query) {
         $resource(config.apiUrl + "/students", query).get().$promise.then(function(response){
-            var list = studentListToReceiverOption(response, query).filter(function(s){return !isPersonAdded(s.personId);});
+            var list = studentListToReceiverOption(response).filter(function(s){return !isPersonAdded(s.personId);});
             $scope.receivers = $scope.receivers.concat(list);
         });
     }
 
-    function studentListToReceiverOption(page, query) {
+    function studentListToReceiverOption(page) {
         var list = page.content.map(function(s){
             return {
                 personId: s.personId,
                 idcode: s.idcode,
                 fullname: s.fullname,
                 role: ["ROLL_T"],
-                curriculum: query.curriculum,
-                studentGroup: query.studentGroup, 
-                studyForm: query.studyForm
+                curriculum: s.curriculum.id,
+                studentGroup: s.studentGroup.id, 
+                studyForm: s.studyForm
             };
         });
         return list;
     }
 
+    function filterReceivers() {
+        $scope.receivers = $scope.receivers.filter(function(r){
+            console.log(r.fullname + " " + !r.addedWithAutocomplete);
+            return r.addedWithAutocomplete || 
+            ArrayUtils.includes($scope.curriculum, r.curriculum) || 
+            ArrayUtils.includes($scope.studentGroup, r.studentGroup) || 
+            ArrayUtils.includes($scope.studyForm, r.studyForm);
+        });
+    }
+
     $scope.getStudentsByCurriculum = function() {
-        getStudents({curriculum: $scope.curriculum});
+        if($scope.curriculum.length > 0) {
+            getStudents({curriculum: $scope.curriculum});
+        }
     };
 
     var previousCurriculum = false;
-    $scope.$watch('curriculum', function() {
+    $scope.$watch('curriculum', function(newValue, oldValue) {
             if(!previousCurriculum) {
                 previousCurriculum = true;
-            } else if($scope.curriculum){
-                $scope.getStudentsByCurriculum();
             } else {
-                $scope.receivers = $scope.receivers.filter(function(r){return !r.curriculum;});
+                if (!newItemAdded(newValue, oldValue)){
+                    filterReceivers();
+                } else {
+                    $scope.getStudentsByCurriculum();
+                }
             }
         }
     );
 
     $scope.getStudentsByStudentGroup = function() {
-        getStudents({studentGroup: $scope.studentGroup});
+        if($scope.studentGroup.length > 0) {
+            getStudents({studentGroupId: $scope.studentGroup});
+        }
     };
 
     var previousStudentGroup = false;
-    $scope.$watch('studentGroup', function() {
+    $scope.$watch('studentGroup', function(newValue, oldValue) {
             if(!previousStudentGroup) {
                 previousStudentGroup = true;
-            } else if($scope.studentGroup){
-                $scope.getStudentsByStudentGroup();
             } else {
-                $scope.receivers = $scope.receivers.filter(function(r){return !r.studentGroup;});
+                if (!newItemAdded(newValue, oldValue)){
+                    filterReceivers();
+                } else {
+                    $scope.getStudentsByStudentGroup();
+                }
             }
         }
     );
 
     $scope.getStudentsByStudyForm = function() {
-        getStudents({studyForm: $scope.studyForm});
+        if($scope.studyForm.length > 0) {
+            getStudents({studyForm: $scope.studyForm});
+        }
     };
 
     var previousStudyForm = false;
-    $scope.$watch('studyForm', function() {
+    $scope.$watch('studyForm', function(newValue, oldValue) {
             if(!previousStudyForm) {
                 previousStudyForm = true;
-            } else if($scope.studyForm){
-                $scope.getStudentsByStudyForm();
             } else {
-                $scope.receivers = $scope.receivers.filter(function(r){return !r.studyForm;});
+                if (!newItemAdded(newValue, oldValue)){
+                    filterReceivers();
+                } else {
+                    $scope.getStudentsByStudyForm();
+                }
             }
         }
     );
+
+    function newItemAdded(newArray, oldArray) {
+        return newArray.length > oldArray.length;
+    }
 
     $scope.querySearch = function(queryText) {
       if(!queryText || queryText.length < 3) {
@@ -249,7 +283,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
         function afterSend() {
             message.info('message.messageSent');
-            $location.path("/messages/sent");
+            $location.path($scope.formState.backUrl.substring(1));
         }
         $scope.record.receivers = $scope.receivers.map(function(r){return r.personId;});
         $scope.record.$save(afterSend);
@@ -258,5 +292,4 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     function formIsValid() {
         return $scope.messageNewForm.$valid && $scope.receivers.length > 0;
     }
-
 }]);

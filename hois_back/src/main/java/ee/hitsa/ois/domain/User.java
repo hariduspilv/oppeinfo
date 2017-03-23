@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 import javax.persistence.Entity;
@@ -31,6 +32,9 @@ public class User extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Student student;
+
+    private LocalDate validFrom;
+    private LocalDate validThru;
 
     public Classifier getRole() {
         return role;
@@ -72,4 +76,19 @@ public class User extends BaseEntityWithId {
         this.student = student;
     }
 
+    public LocalDate getValidThru() {
+        return validThru;
+    }
+
+    public void setValidThru(LocalDate validThru) {
+        this.validThru = validThru;
+    }
+
+    public LocalDate getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
+    }
 }

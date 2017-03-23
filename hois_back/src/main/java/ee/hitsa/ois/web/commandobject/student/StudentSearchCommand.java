@@ -16,8 +16,17 @@ public class StudentSearchCommand {
     private List<Long> curriculumVersion;
     @Size(max = 100)
     private String studentGroup;
+    private List<Long> studentGroupId;
     private List<String> studyForm;
     private List<String> status;
+
+    public List<Long> getStudentGroupId() {
+        return studentGroupId;
+    }
+
+    public void setStudentGroupId(List<Long> studentGroupId) {
+        this.studentGroupId = studentGroupId;
+    }
 
     public List<Long> getCurriculum() {
         return curriculum;

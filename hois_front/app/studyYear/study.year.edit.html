@@ -69,8 +69,8 @@
             <tr md-row ng-repeat="item in studyPeriodEvents" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell>{{currentLanguage()==='en' ?(item.descriptionEn || item.descriptionEt) : item.descriptionEt}}</td>
               <td md-cell>{{currentLanguageNameField(item.studyPeriod)}}</td>
-              <td md-cell>{{'main.formattedDateTime' | translate: {date: item.start} }}</td>
-              <td md-cell>{{'main.formattedDateTime' | translate: {date: item.end} }}</td>
+              <td md-cell>{{'main.formattedDateMinTime' | translate: {date: item.start} }}</td>
+              <td md-cell>{{'main.formattedDateMinTime' | translate: {date: item.end} }}</td>
               <td md-cell ><md-button ng-click="openStudyPeriodEventDialog(item)">{{'main.button.change' | translate}}</md-button></td>
             </tr>
             </tbody>

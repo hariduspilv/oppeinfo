@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.directive;
 
+import java.time.LocalDate;
+
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
@@ -23,6 +25,11 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private String curriculumGrade;
     private Boolean isCumLaude;
     private String addInfo;
+    private Boolean applicationIsPeriod;
+    private LocalDate applicationStartDate;
+    private LocalDate applicationEndDate;
+    private AutocompleteResult applicationStudyPeriodStart;
+    private AutocompleteResult applicationStudyPeriodEnd;
 
     public String getFullname() {
         return fullname;
@@ -104,15 +111,63 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.addInfo = addInfo;
     }
 
+    public Boolean getApplicationIsPeriod() {
+        return applicationIsPeriod;
+    }
+
+    public void setApplicationIsPeriod(Boolean applicationIsPeriod) {
+        this.applicationIsPeriod = applicationIsPeriod;
+    }
+
+    public LocalDate getApplicationStartDate() {
+        return applicationStartDate;
+    }
+
+    public void setApplicationStartDate(LocalDate applicationStartDate) {
+        this.applicationStartDate = applicationStartDate;
+    }
+
+    public LocalDate getApplicationEndDate() {
+        return applicationEndDate;
+    }
+
+    public void setApplicationEndDate(LocalDate applicationEndDate) {
+        this.applicationEndDate = applicationEndDate;
+    }
+
+    public AutocompleteResult getApplicationStudyPeriodStart() {
+        return applicationStudyPeriodStart;
+    }
+
+    public void setApplicationStudyPeriodStart(AutocompleteResult applicationStudyPeriodStart) {
+        this.applicationStudyPeriodStart = applicationStudyPeriodStart;
+    }
+
+    public AutocompleteResult getApplicationStudyPeriodEnd() {
+        return applicationStudyPeriodEnd;
+    }
+
+    public void setApplicationStudyPeriodEnd(AutocompleteResult applicationStudyPeriodEnd) {
+        this.applicationStudyPeriodEnd = applicationStudyPeriodEnd;
+    }
+
     public static DirectiveStudentDto of(Application application, DirectiveType directiveType) {
         DirectiveStudentDto dto = of(application.getStudent(), directiveType);
         dto.setApplication(application.getId());
         // FIXME should copy old* values from application?
         switch(directiveType) {
         case KASKKIRI_AKAD:
-            // TODO
+            dto.setReason(EntityUtil.getNullableCode(application.getReason()));
+            dto.setIsPeriod(application.getIsPeriod());
             dto.setStartDate(application.getStartDate());
             dto.setEndDate(application.getEndDate());
+            dto.setStudyPeriodStart(EntityUtil.getNullableId(application.getStudyPeriodStart()));
+            dto.setStudyPeriodEnd(EntityUtil.getNullableId(application.getStudyPeriodEnd()));
+            dto.setApplicationIsPeriod(application.getIsPeriod());
+            dto.setApplicationStartDate(application.getStartDate());
+            dto.setApplicationEndDate(application.getEndDate());
+            dto.setApplicationStudyPeriodStart(application.getStudyPeriodStart() != null ? AutocompleteResult.of(application.getStudyPeriodStart()) : null);
+            dto.setApplicationStudyPeriodEnd(application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
             break;
         case KASKKIRI_AKADK:
             dto.setStartDate(application.getStartDate());
@@ -130,6 +185,19 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_OVORM:
             dto.setStudyForm(EntityUtil.getNullableCode(application.getNewStudyForm()));
+            break;
+        case KASKKIRI_VALIS:
+            dto.setIsAbroad(application.getIsAbroad());
+            dto.setAbroadSchool(application.getAbroadSchool());
+            dto.setEhisSchool(EntityUtil.getNullableCode(application.getEhisSchool()));
+            dto.setCountry(EntityUtil.getNullableCode(application.getCountry()));
+            dto.setIsPeriod(application.getIsPeriod());
+            dto.setStartDate(application.getStartDate());
+            dto.setEndDate(application.getEndDate());
+            dto.setStudyPeriodStart(EntityUtil.getNullableId(application.getStudyPeriodStart()));
+            dto.setStudyPeriodEnd(EntityUtil.getNullableId(application.getStudyPeriodEnd()));
+            dto.setAbroadPurpose(EntityUtil.getNullableCode(application.getAbroadPurpose()));
+            dto.setAbroadProgramme(EntityUtil.getNullableCode(application.getAbroadProgramme()));
             break;
         default:
             break;
@@ -154,7 +222,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
                 setPersonData(person, dto);
             }
         }
-        return EntityUtil.bindToDto(student, dto);
+        return EntityUtil.bindToDto(directiveStudent, dto);
     }
 
     public static DirectiveStudentDto of(Student student, DirectiveType directiveType) {
@@ -164,6 +232,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
 
         switch(directiveType) {
         case KASKKIRI_ENNIST:
+            dto.setStudentGroup(EntityUtil.getNullableId(student.getStudentGroup()));
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
             dto.setOldStudyLoad(EntityUtil.getNullableCode(student.getStudyLoad()));

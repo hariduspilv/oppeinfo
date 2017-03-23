@@ -8,6 +8,7 @@
     },
     "formattedDate": "{{date|date:'dd.MM.yyyy'}}",
     "formattedDateTime": "{{date|date:'dd.MM.yyyy HH:mm:ss'}}",
+    "formattedDateMinTime": "{{date|date:'dd.MM.yyyy HH:mm'}}",
     "button": {
       "add": "Lisa",
       "addRow": "Lisa rida",
@@ -36,6 +37,7 @@
       "allowSubmit": "Luba esitada",
       "reject": "Lükka tagasi",
       "apply": "Taotle",
+      "loadCsvFile": "Lae CSV fail",
       "status": {
         "approving": "Menetle õk",
         "close": "Sulge õk",
@@ -172,7 +174,9 @@
       },
       "reception": {
         "label": "Vastuvõtt",
-        "import": "Avalduste import CSV"
+        "import": "Avalduste import CSV",
+        "saisAdmissionSearch": "Konkursi otsing",
+        "saisApplicationSearch": "Vastuvõtu avalduste otsing"
       },
       "certificates": {
         "label": "Tõendid",
@@ -228,6 +232,7 @@
     "studyLanguage": "Õppekeel",
     "studyLoad": "Õppekoormus",
     "studyStart": "Õpingute algus",
+    "studyLevel": "Õppetase",
     "absence": {
       "cause": "Puudumise põhjus",
       "deleteconfirm": "Kas oled kindel, et soovid puudumistõendi kustutada?",
@@ -356,7 +361,7 @@
   },
   "classifier": {
     "id": "ID",
-	"mainname": "Klassifikaator",
+	  "mainname": "Klassifikaator",
     "name": "Nimetus",
     "nameEt": "Nimetus",
     "nameEn": "Nimetus i.k.",
@@ -415,26 +420,44 @@
     },
     "student": {
       "addInfo": "Lisainfo",
-      "akadEndDate": "Akadeemilise puhkuse katkestamise kuupäev",
+      "akadCancelDate": "Akadeemilise puhkuse katkestamise kuupäev",
+      "akadEndDate": "Akadeemilise puhkuse lõpp",
+      "akadStartDate": "Akadeemilise puhkuse algus",
+      "applicationAkadEndDate": "Akadeemilise puhkuse lõpp avaldusel",
+      "applicationAkadStartDate": "Akadeemilise puhkuse algus avaldusel",
+      "country": "Riik",
       "curriculum": "Õppekava",
       "curriculumGrade": "Omistatav kraad",
-      "curriculumVersion": "Uus õppekava",
+      "curriculumVersion": "Õppekava",
+      "ennistStartDate": "Ennistamise kuupäev",
+      "estonianEducationalInstitute": "Eesti õppeasutus",
+      "foreignEducationalInstitute": "Välismaa õppeasutus",
       "fin": "Finantseerimise allikas",
       "firstname": "Õppuri eesnimi",
       "finSpecific": "Finantseerimise allika täpsustus",
       "fullname": "Õppuri nimi",
       "idcode": "Isikukood",
+      "isAbroad": "Välisõpingud",
       "isapplication": "Õppur on avalduse esitanud",
       "isCumLaude": "Cum laude",
+      "isPeriod": "Ajavahemiku liik",
+      "language": "Õppekeel",
       "lastname": "Õppuri perekonnanimi",
+      "newCurriculumVersion": "Uus õppekava",
+      "newStudentGroup": "Uus õppegrupp/rühm",
+      "newStudyForm": "Uus õppevorm",
+      "newStudyLoad": "Õppekoormuse muutmise suund",
       "oldCurriculumVersion": "Kehtiv õppekava",
       "oldStudyForm": "Kehtiv õppevorm",
       "reason": "Põhjus",
+      "school": "Õppeasutus",
       "studentGroup": "Õppegrupp/rühm",
-      "studyForm": "Uus õppevorm",
-      "studyLoad": "Õppekoormuse muutmise suund",
+      "studyForm": "Õppevorm",
+      "studyLoad": "Õppekoormus",
       "studyLoadOPPEKOORMUS_OSA": "Täiskoormuselt osakoormusele",
-      "studyLoadOPPEKOORMUS_TAIS": "Osakoormuselt täiskoormusele"
+      "studyLoadOPPEKOORMUS_TAIS": "Osakoormuselt täiskoormusele",
+      "valisEndDate": "Välisõppe lõpp",
+      "valisStartDate": "Välisõppe algus"
     }
   },
   "generalmessage": {
@@ -446,6 +469,8 @@
     "validThru": "Üldteate kuvamise lõppkuupäev"
   },
   "message": {
+    "messages": "Teaded",
+    "noNewMessages": "Uued teaded puuduvad",
     "received": "Saabunud teated",
     "sent": "Saadetud teated",
     "search": "Teate otsing",
@@ -455,6 +480,7 @@
     "sentDatesRange": "Teate saatmise kuupäevade vahemik",
     "sender": "Saatja nimi",
     "messageReceiver": "Teade saaja",
+    "messageSender": "Teade saatja",
     "receiver": "Saaja nimi",
     "send": "Saada teade",
     "respond": "Vasta",
@@ -1016,6 +1042,22 @@
       "validAcademicLeaveRevocationApplicationExists": "Akadeemilise puhkuse katkestamise avaldus juba eksisteerib",
       "submitted": "Avaldus on esitatud",
       "rejected": "Avaldus on tagasi lükatud"
+    }
+  },
+  "reception": {
+    "label": "Vastuvõtt",
+    "contest": {
+      "code": "Konkursi kood",
+      "language": "Konkursi keel",
+      "places": "Kohtade arv"
+    },
+    "application": {
+      "nr": "Avalduse number",
+      "status": "Avalduse staatus",
+      "candidateName": "Kandidaadi nimi",
+      "candidateIdCode": "Kandidaadi isikukood",
+      "showRevoked":"Kuva tühistatud avaldusi ",
+      "addedToDirective":"Avaldus on lisatud käskkirjale "
     }
   }
 }

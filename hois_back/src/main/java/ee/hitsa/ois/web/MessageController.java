@@ -43,8 +43,7 @@ public class MessageController {
     
     @GetMapping("/received/mainPage")
     public Page<MessageSearchDto> searchReceivedForMainPage(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
-        criteria.setIsRead(Boolean.FALSE);
-        return messageService.searchReceived(user, criteria, pageable).map(m -> MessageSearchDto.ofReceivedWithContent(m, user.getPersonId()));
+        return messageService.show(user, criteria, pageable);
     }
 
     @GetMapping("/{id:\\d+}")

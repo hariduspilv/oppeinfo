@@ -11,12 +11,14 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.dto.ApplicationFileDto;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 
 @DateRange(from = "startDate", thru = "endDate")
+@StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
 public class ApplicationForm extends InsertedChangedVersionDto {
 
     @NotNull

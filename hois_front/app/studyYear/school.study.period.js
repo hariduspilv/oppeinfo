@@ -73,6 +73,19 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         }
         scope.studyPeriod.year = parentScope.studyYear.year;
 
+        scope.typeChange = function () {
+          if (scope.studyPeriod.type) {
+            var type = periodTypes.objectmapper({type : scope.studyPeriod.type});
+            if (!angular.isString(scope.studyPeriod.nameEt)) {
+              scope.studyPeriod.nameEt = type.type.nameEt;
+            }
+            /* todo method for all possible languages?
+             if (!angular.isString(scope.studyPeriod.nameEn)) {
+             scope.studyPeriod.nameEn = type.type.nameEn;
+             }
+             */
+          }
+        };
         scope.delete = function () {
           dialogService.confirmDialog({prompt: 'studyYear.studyPeriod.deleteconfirm'}, function() {
             scope.studyPeriod.$delete().then(function() {

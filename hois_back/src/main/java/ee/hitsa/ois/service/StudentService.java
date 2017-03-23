@@ -47,7 +47,7 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 public class StudentService {
 
     private static final String STUDENT_LIST_SELECT = "s.id, person.firstname, person.lastname, person.idcode, "+
-            "curriculum_version.id curriculum_version_id, curriculum_version.code curriculum_version_code, curriculum.name_et, curriculum.name_en, " +
+            "curriculum_version.id curriculum_version_id, curriculum_version.code curriculum_version_code, curriculum.id curriculum_id, curriculum.name_et, curriculum.name_en, " +
             "student_group.id student_group_id, student_group.code student_group_code, s.study_form_code, s.status_code, s.person_id";
     private static final String STUDENT_LIST_FROM = "from student s inner join person person on s.person_id=person.id "+
             "inner join curriculum_version curriculum_version on s.curriculum_version_id=curriculum_version.id "+
@@ -83,6 +83,7 @@ public class StudentService {
         qb.optionalCriteria("curriculum.id in (:curriculum)", "curriculum", criteria.getCurriculum());
         qb.optionalCriteria("s.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalContains("student_group.code", "code", criteria.getStudentGroup());
+        qb.optionalCriteria("s.student_group_id in (:studentGroup)", "studentGroup", criteria.getStudentGroupId());
         qb.optionalCriteria("s.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("s.status_code in (:status)", "status", criteria.getStatus());
 
@@ -94,13 +95,13 @@ public class StudentService {
             dto.setStudyForm(resultAsString(r, 2));
             String curriculumVersionCode = resultAsString(r, 5);
             dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
-                    CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 6)),
-                    CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 7))));
-            // TODO studentgroup as AutocompleteResult
-            dto.setStudentGroup(resultAsString(r, 9));
-            dto.setStudyForm(resultAsString(r, 10));
-            dto.setStatus(resultAsString(r, 11));
-            dto.setPersonId(resultAsLong(r, 12));
+                    CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 7)),
+                    CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 8))));
+            dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 6), resultAsString(r, 7), resultAsString(r, 8)));
+            dto.setStudentGroup(new AutocompleteResult(resultAsLong(r, 9), resultAsString(r, 10), resultAsString(r, 10)));
+            dto.setStudyForm(resultAsString(r, 11));
+            dto.setStatus(resultAsString(r, 12));
+            dto.setPersonId(resultAsLong(r, 13));
             return dto;
         });
     }

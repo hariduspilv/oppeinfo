@@ -3,9 +3,11 @@ package ee.hitsa.ois.web.commandobject;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.EstonianIdCode;
+import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.validation.NotEmpty;
 
 import javax.validation.constraints.Size;
+import java.time.LocalDate;
 
 @EstonianIdCode
 public class PersonForm extends VersionedCommand {
@@ -18,6 +20,9 @@ public class PersonForm extends VersionedCommand {
 
     @NotEmpty
     private String lastname;
+
+    // todo is this correct thing todo?
+    private LocalDate birthdate;
 
     @NotEmpty
     @ClassifierRestriction(MainClassCode.SUGU)
@@ -34,6 +39,7 @@ public class PersonForm extends VersionedCommand {
 
     public void setIdcode(String idcode) {
         this.idcode = idcode;
+        birthdate = EstonianIdCodeValidator.birthdateFromIdcode(idcode);
     }
 
     public String getFirstname() {
@@ -74,5 +80,9 @@ public class PersonForm extends VersionedCommand {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public LocalDate getBirthdate() {
+        return birthdate;
     }
 }

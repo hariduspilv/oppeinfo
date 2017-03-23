@@ -10,7 +10,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
   return {
     template: '<md-select>'+
       '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>'+
-      '<md-option ng-repeat="option in options | orderBy: $root.currentLanguageNameField()" ng-value="option.id"'+
+      '<md-option ng-repeat="option in options | orderBy: $root.currentLanguageNameField()" ng-value="option[valueProperty]"'+
       'aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-option></md-select>',
     restrict: 'E',
     replace: true,
@@ -18,11 +18,13 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
       multiple:'@',
       ngRequired:'=',
       required:'@',
-      values: '@'
+      values: '@',
+      valueProperty: '@'
     },
     link: function postLink(scope, element, attrs) {
       scope.isMultiple = angular.isDefined(scope.multiple);
       scope.isRequired = angular.isDefined(scope.required);
+      scope.valueProperty = angular.isString(scope.valueProperty) ? scope.valueProperty : 'id';
       //fix select not showing required visuals if required attribute is used
       element.attr('required', scope.isRequired);
 

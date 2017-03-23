@@ -3,6 +3,7 @@ package ee.hitsa.ois.domain;
 import java.time.LocalDateTime;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
@@ -10,15 +11,15 @@ import javax.persistence.ManyToOne;
 public class MessageReceiver extends BaseEntityWithId {
 
     private LocalDateTime read;
-    
-    @ManyToOne(optional = false)
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
-    
-    @ManyToOne(optional = false)
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false, insertable = true)    
     private Message message;
-    
-    @ManyToOne(optional = false)
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Person person;
 
     public LocalDateTime getRead() {

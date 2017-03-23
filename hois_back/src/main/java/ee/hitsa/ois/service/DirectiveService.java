@@ -32,23 +32,24 @@ import org.springframework.util.StringUtils;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.DirectiveCoordinatorRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.DateUtils;
@@ -102,13 +103,19 @@ public class DirectiveService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
+    private CurriculumVersionRepository curriculumVersionRepository;
+    @Autowired
     private DirectiveRepository directiveRepository;
     @Autowired
     private DirectiveCoordinatorRepository directiveCoordinatorRepository;
     @Autowired
     private PersonRepository personRepository;
     @Autowired
+    private StudentGroupRepository studentGroupRepository;
+    @Autowired
     private StudentRepository studentRepository;
+    @Autowired
+    private StudyPeriodRepository studyPeriodRepository;
 
     public Page<DirectiveSearchDto> search(Long schoolId, DirectiveSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(DIRECTIVE_LIST_FROM, pageable);
@@ -156,12 +163,9 @@ public class DirectiveService {
 
         EntityUtil.bindToEntity(form, directive, classifierRepository, "students");
 
-        DirectiveCoordinator coordinator = EntityUtil.getOptionalOne(DirectiveCoordinator.class, form.getDirectiveCoordinator(), em);
-        if(coordinator != null && !EntityUtil.getId(directive.getSchool()).equals(EntityUtil.getId(coordinator.getSchool()))) {
-            // coordinator is not from same school
-            throw new AssertionFailedException("School mismatch");
-        }
-        directive.setDirectiveCoordinator(coordinator);
+        EntityUtil.setEntityFromRepository(form, directive, directiveCoordinatorRepository, "directiveCoordinator");
+        DirectiveCoordinator coordinator = directive.getDirectiveCoordinator();
+        assertSameSchool(directive, coordinator != null ? coordinator.getSchool() : null);
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
 
@@ -191,36 +195,44 @@ public class DirectiveService {
                 }
 
                 EntityUtil.bindToEntity(formStudent, student, classifierRepository, "application", "directive", "person", "student");
-                StudentGroup studentGroup = EntityUtil.getOptionalOne(StudentGroup.class, formStudent.getStudentGroup(), em);
-                assertSameSchool(directive, studentGroup != null ? studentGroup.getSchool() : null);
-                student.setStudentGroup(studentGroup);
-                CurriculumVersion curriculumVersion = EntityUtil.getOptionalOne(CurriculumVersion.class, formStudent.getCurriculumVersion(), em);
-                assertSameSchool(directive, curriculumVersion != null ? curriculumVersion.getCurriculum().getSchool() : null);
-                student.setCurriculumVersion(curriculumVersion);
-                if(KASKKIRI_LOPET.equals(directiveType)) {
+
+                EntityUtil.setEntityFromRepository(formStudent, student, studentGroupRepository, "studentGroup");
+                EntityUtil.setEntityFromRepository(formStudent, student, curriculumVersionRepository, "curriculumVersion");
+                EntityUtil.setEntityFromRepository(formStudent, student, studyPeriodRepository, "studyPeriodStart", "studyPeriodEnd");
+
+                switch(directiveType) {
+                case KASKKIRI_AKAD:
+                    adjustPeriod(student);
+                    break;
+                case KASKKIRI_LOPET:
                     // TODO copy from student data
                     // student.setIsCumLaude(isCumLaude);
                     // student.setCurriculumGrade(curriculumGrade);
                     student.setCurriculumVersion(student.getStudent().getCurriculumVersion());
+                    break;
+                case KASKKIRI_VALIS:
+                    adjustPeriod(student);
+                    break;
+                default:
+                    break;
                 }
+
+                assertSameSchool(directive, student.getStudentGroup() != null ? student.getStudentGroup().getSchool() : null);
+                assertSameSchool(directive, student.getCurriculumVersion() != null ? student.getCurriculumVersion().getCurriculum().getSchool() : null);
+                assertSameSchool(directive, student.getStudyPeriodStart() != null ? student.getStudyPeriodStart().getStudyYear().getSchool() : null);
+                assertSameSchool(directive, student.getStudyPeriodEnd() != null ? student.getStudyPeriodEnd().getStudyYear().getSchool() : null);
             }
             // remove possible existing directive students not included in update command
             students.removeAll(studentMapping.values());
-            for(DirectiveStudent student : studentMapping.values()) {
-                Application app = student.getApplication();
-                if(app != null && !ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(EntityUtil.getCode(app.getType()))) {
-                    // student with application is removed from directive
-                    // update application status to AVALDUS_STAATUS_YLEVAAT
-                    app.setStatus(em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
-                    applicationRepository.save(app);
-                }
-            }
+            studentMapping.values().forEach(this::studentRemovedFromDirective);
         }
         return directiveRepository.save(directive);
     }
 
     public void delete(Directive directive) {
         assertModifyable(directive);
+        // update possible applications as free for directives
+        directive.getStudents().forEach(this::studentRemovedFromDirective);
         EntityUtil.deleteEntity(directiveRepository, directive);
     }
 
@@ -409,6 +421,26 @@ public class DirectiveService {
                 throw new AssertionFailedException("Student status for given directive mismatch");
             }
             student.setStudent(s);
+        }
+    }
+
+    private void studentRemovedFromDirective(DirectiveStudent student) {
+        Application app = student.getApplication();
+        if(app != null && !ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(EntityUtil.getCode(app.getType()))) {
+            // student with application is removed from directive
+            // update application status to AVALDUS_STAATUS_YLEVAAT
+            app.setStatus(em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
+            applicationRepository.save(app);
+        }
+    }
+
+    private static void adjustPeriod(DirectiveStudent student) {
+        if(Boolean.TRUE.equals(student.getIsPeriod())) {
+            student.setStartDate(null);
+            student.setEndDate(null);
+        } else {
+            student.setStudyPeriodStart(null);
+            student.setStudyPeriodEnd(null);
         }
     }
 

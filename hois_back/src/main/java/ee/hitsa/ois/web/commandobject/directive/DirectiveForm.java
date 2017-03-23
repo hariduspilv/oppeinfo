@@ -8,8 +8,10 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class DirectiveForm extends VersionedCommand {
@@ -66,6 +68,8 @@ public class DirectiveForm extends VersionedCommand {
         this.students = students;
     }
 
+    @DateRange(from = "startDate", thru = "endDate")
+    @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
     public static class DirectiveFormStudent {
         private Long id;
         @EstonianIdCode
@@ -93,6 +97,19 @@ public class DirectiveForm extends VersionedCommand {
         @ClassifierRestriction(MainClassCode.OPPEASTE)
         private String previousStudyLevel;
         private String email;
+        private Boolean isPeriod;
+        private Long studyPeriodStart;
+        private Long studyPeriodEnd;
+        private Boolean isAbroad;
+        @ClassifierRestriction(MainClassCode.EHIS_KOOL)
+        private String ehisSchool;
+        private String abroadSchool;
+        private String country;
+        @ClassifierRestriction(MainClassCode.VALISOPE_EESMARK)
+        private String abroadPurpose;
+        @ClassifierRestriction(MainClassCode.VALISKOOL_PROGRAMM)
+        private String abroadProgramme;
+
         private Long application;
         private Long student;
 
@@ -224,6 +241,30 @@ public class DirectiveForm extends VersionedCommand {
             this.email = email;
         }
 
+        public Boolean getIsPeriod() {
+            return isPeriod;
+        }
+
+        public void setIsPeriod(Boolean isPeriod) {
+            this.isPeriod = isPeriod;
+        }
+
+        public Long getStudyPeriodStart() {
+            return studyPeriodStart;
+        }
+
+        public void setStudyPeriodStart(Long studyPeriodStart) {
+            this.studyPeriodStart = studyPeriodStart;
+        }
+
+        public Long getStudyPeriodEnd() {
+            return studyPeriodEnd;
+        }
+
+        public void setStudyPeriodEnd(Long studyPeriodEnd) {
+            this.studyPeriodEnd = studyPeriodEnd;
+        }
+
         public Long getApplication() {
             return application;
         }
@@ -238,6 +279,54 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setStudent(Long student) {
             this.student = student;
+        }
+
+        public Boolean getIsAbroad() {
+            return isAbroad;
+        }
+
+        public void setIsAbroad(Boolean isAbroad) {
+            this.isAbroad = isAbroad;
+        }
+
+        public String getEhisSchool() {
+            return ehisSchool;
+        }
+
+        public void setEhisSchool(String ehisSchool) {
+            this.ehisSchool = ehisSchool;
+        }
+
+        public String getAbroadSchool() {
+            return abroadSchool;
+        }
+
+        public void setAbroadSchool(String abroadSchool) {
+            this.abroadSchool = abroadSchool;
+        }
+
+        public String getCountry() {
+            return country;
+        }
+
+        public void setCountry(String country) {
+            this.country = country;
+        }
+
+        public String getAbroadPurpose() {
+            return abroadPurpose;
+        }
+
+        public void setAbroadPurpose(String abroadPurpose) {
+            this.abroadPurpose = abroadPurpose;
+        }
+
+        public String getAbroadProgramme() {
+            return abroadProgramme;
+        }
+
+        public void setAbroadProgramme(String abroadProgramme) {
+            this.abroadProgramme = abroadProgramme;
         }
     }
 }

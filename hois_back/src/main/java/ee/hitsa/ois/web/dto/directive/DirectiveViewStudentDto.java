@@ -18,6 +18,7 @@ public class DirectiveViewStudentDto {
     private String lastname;
     private String fullname;
     private LocalDate startDate;
+    private LocalDate endDate;
     private String reason;
     private String addInfo;
     private String fin;
@@ -27,6 +28,17 @@ public class DirectiveViewStudentDto {
     private AutocompleteResult oldCurriculumVersion;
     private AutocompleteResult curriculumVersion;
     private String studentGroup;
+    private Boolean applicationIsPeriod;
+    private LocalDate applicationStartDate;
+    private LocalDate applicationEndDate;
+    private AutocompleteResult applicationStudyPeriodStart;
+    private AutocompleteResult applicationStudyPeriodEnd;
+    private Boolean isAbroad;
+    private String ehisSchool;
+    private String abroadSchool;
+    private String country;
+    private String abroadPurpose;
+    private String abroadProgramme;
 
     public Long getStudent() {
         return student;
@@ -74,6 +86,14 @@ public class DirectiveViewStudentDto {
 
     public void setStartDate(LocalDate startDate) {
         this.startDate = startDate;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public String getReason() {
@@ -148,6 +168,94 @@ public class DirectiveViewStudentDto {
         this.studentGroup = studentGroup;
     }
 
+    public Boolean getApplicationIsPeriod() {
+        return applicationIsPeriod;
+    }
+
+    public void setApplicationIsPeriod(Boolean applicationIsPeriod) {
+        this.applicationIsPeriod = applicationIsPeriod;
+    }
+
+    public LocalDate getApplicationStartDate() {
+        return applicationStartDate;
+    }
+
+    public void setApplicationStartDate(LocalDate applicationStartDate) {
+        this.applicationStartDate = applicationStartDate;
+    }
+
+    public LocalDate getApplicationEndDate() {
+        return applicationEndDate;
+    }
+
+    public void setApplicationEndDate(LocalDate applicationEndDate) {
+        this.applicationEndDate = applicationEndDate;
+    }
+
+    public AutocompleteResult getApplicationStudyPeriodStart() {
+        return applicationStudyPeriodStart;
+    }
+
+    public void setApplicationStudyPeriodStart(AutocompleteResult applicationStudyPeriodStart) {
+        this.applicationStudyPeriodStart = applicationStudyPeriodStart;
+    }
+
+    public AutocompleteResult getApplicationStudyPeriodEnd() {
+        return applicationStudyPeriodEnd;
+    }
+
+    public void setApplicationStudyPeriodEnd(AutocompleteResult applicationStudyPeriodEnd) {
+        this.applicationStudyPeriodEnd = applicationStudyPeriodEnd;
+    }
+
+    public Boolean getIsAbroad() {
+        return isAbroad;
+    }
+
+    public void setIsAbroad(Boolean isAbroad) {
+        this.isAbroad = isAbroad;
+    }
+
+    public String getEhisSchool() {
+        return ehisSchool;
+    }
+
+    public void setEhisSchool(String ehisSchool) {
+        this.ehisSchool = ehisSchool;
+    }
+
+    public String getAbroadSchool() {
+        return abroadSchool;
+    }
+
+    public void setAbroadSchool(String abroadSchool) {
+        this.abroadSchool = abroadSchool;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getAbroadPurpose() {
+        return abroadPurpose;
+    }
+
+    public void setAbroadPurpose(String abroadPurpose) {
+        this.abroadPurpose = abroadPurpose;
+    }
+
+    public String getAbroadProgramme() {
+        return abroadProgramme;
+    }
+
+    public void setAbroadProgramme(String abroadProgramme) {
+        this.abroadProgramme = abroadProgramme;
+    }
+
     public static DirectiveViewStudentDto of(DirectiveStudent directiveStudent) {
         DirectiveViewStudentDto dto = new DirectiveViewStudentDto();
         Student student = directiveStudent.getStudent();
@@ -168,10 +276,26 @@ public class DirectiveViewStudentDto {
             Application application = directiveStudent.getApplication();
             DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directiveStudent.getDirective().getType()));
             switch(directiveType) {
+            case KASKKIRI_AKAD:
+                dto.setApplicationIsPeriod(application != null ? application.getIsPeriod() : null);
+                dto.setApplicationStartDate(application != null ? application.getStartDate() : null);
+                dto.setApplicationEndDate(application != null ? application.getEndDate() : null);
+                dto.setApplicationStudyPeriodStart(application != null && application.getStudyPeriodStart() != null ? AutocompleteResult.of(application.getStudyPeriodStart()) : null);
+                dto.setApplicationStudyPeriodEnd(application != null && application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
+                break;
             case KASKKIRI_EKSMAT:
                 if(application != null) {
                     dto.setAddInfo(application.getAddInfo());
                 }
+                break;
+            case KASKKIRI_FINM:
+                dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
+                break;
+            case KASKKIRI_LOPET:
+                dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+                // TODO
+                // dto.setIsCumLaude(isCumLaude);
+                // dto.setCurriculumGrade(curriculumGrade);
                 break;
             case KASKKIRI_OKAVA:
                 dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
@@ -179,18 +303,9 @@ public class DirectiveViewStudentDto {
                 dto.setCurriculumVersion(AutocompleteResult.of(directiveStudent.getCurriculumVersion()));
                 dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
                 break;
-            case KASKKIRI_FINM:
-                dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
-                break;
             case KASKKIRI_OVORM:
                 dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
                 dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
-                break;
-            case KASKKIRI_LOPET:
-                dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-                // TODO
-                // dto.setIsCumLaude(isCumLaude);
-                // dto.setCurriculumGrade(curriculumGrade);
                 break;
             default:
                 break;

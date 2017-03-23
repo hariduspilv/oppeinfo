@@ -83,10 +83,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     });
 
     $scope.studentChanged = function() {
-        if($scope.student) {
+        if($scope.student && $scope.record.student !== $scope.student.id) {
             $scope.record.student = $scope.student.id;
             getStudent();
-        } else {
+        } else if(!$scope.student){
             $scope.record.student = null;
             $scope.record.otherName = null;
             $scope.record.otherIdcode = null;

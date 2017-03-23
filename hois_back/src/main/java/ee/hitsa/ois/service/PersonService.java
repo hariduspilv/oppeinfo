@@ -1,12 +1,18 @@
 package ee.hitsa.ois.service;
 
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.web.commandobject.PersonForm;
 import ee.hitsa.ois.web.commandobject.UsersSeachCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.UsersSearchDto;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,6 +36,12 @@ public class PersonService {
 
     @Autowired
     private EntityManager em;
+
+    @Autowired
+    private ClassifierRepository classifierRepository;
+
+    @Autowired
+    private PersonRepository personRepository;
 
     @Autowired
     private SchoolRepository schoolRepository;
@@ -73,5 +85,14 @@ public class PersonService {
             dto.setRole(Arrays.asList(resultAsString(r, 5).split(", ")));
             return dto;
         });
+    }
+
+    public Person create(PersonForm personForm) {
+        return save(personForm, new Person());
+    }
+
+    public Person save(PersonForm personForm, Person person) {
+        EntityUtil.bindToEntity(personForm, person, classifierRepository);
+        return personRepository.save(person);
     }
 }

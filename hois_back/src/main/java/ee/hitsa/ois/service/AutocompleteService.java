@@ -29,6 +29,7 @@ import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudentRepository;
@@ -72,6 +73,8 @@ public class AutocompleteService {
     private StudentRepository studentRepository;
     @Autowired
     private StudyPeriodRepository studyPeriodRepository;
+    @Autowired
+    private SaisAdmissionRepository saisAdmissionRepository;
 
     public List<AutocompleteResult> buildings(Long schoolId) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from building b");
@@ -216,4 +219,10 @@ public class AutocompleteService {
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }).stream().map(AutocompleteResult::of).collect(Collectors.toList());
     }
+
+    public List<AutocompleteResult> saisAdmissionCodes(Long schoolId) {
+        return saisAdmissionRepository.findAllDistinctCodeByCurriculumVersionCurriculumSchoolId(schoolId)
+                .stream().map(AutocompleteResult::of).collect(Collectors.toList());
+    }
+
 }

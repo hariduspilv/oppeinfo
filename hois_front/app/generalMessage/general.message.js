@@ -79,4 +79,10 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       });
     };
   }
+]).controller('GeneralMessageViewController', ['$route', '$scope', 'QueryUtils',
+  function ($route, $scope, QueryUtils) {
+    var id = $route.current.params.id;
+
+    $scope.record = QueryUtils.endpoint('/generalmessages').get({id: id});
+  }
 ]);

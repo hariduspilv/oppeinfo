@@ -26,9 +26,10 @@ public class GeneralMessageDto extends GeneralMessageForm {
     public GeneralMessageDto() {
     }
 
-    public GeneralMessageDto(Long id, String title, LocalDateTime inserted) {
+    public GeneralMessageDto(Long id, String title, String content, LocalDateTime inserted) {
         this.id = id;
         setTitle(title);
+        setContent(content);
         this.inserted = inserted;
     }
 

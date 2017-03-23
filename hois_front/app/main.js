@@ -95,12 +95,21 @@ angular.module('hitsaOis')
       }
     };
 
+     var _currentLanguageNameField = function (nameField, item) {
+       return angular.isObject(item) ? (item[nameField] || item.nameEt) : undefined;
+     };
+
     $scope.currentLanguageNameField = function(item) {
       var nameField = $scope.currentLanguageNameVariable();
       if(arguments.length === 0) {
         return nameField;
       }
-      return angular.isObject(item) ? (item[nameField] || item.nameEt) : undefined;
+      if (angular.isArray(item)) {
+        return item.map(function (it) {
+          return _currentLanguageNameField(nameField, it);
+        }).join(', ');
+      }
+      return _currentLanguageNameField(nameField, item);
     };
     //make this function available in root scope as well
     $rootScope.currentLanguageNameField = $scope.currentLanguageNameField;

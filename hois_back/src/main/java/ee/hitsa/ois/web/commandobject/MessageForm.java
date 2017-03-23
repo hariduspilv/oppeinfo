@@ -2,15 +2,10 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.Set;
 
-import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.validation.ClassifierRestriction;
-
 public class MessageForm extends VersionedCommand {
     
     private String subject;
     private String content;
-    @ClassifierRestriction(MainClassCode.ROLL)
-    private String sendersRole;
     private Long responseTo;
     private Set<Long> receivers;
 
@@ -31,12 +26,6 @@ public class MessageForm extends VersionedCommand {
     }
     public void setContent(String content) {
         this.content = content;
-    }
-    public String getSendersRole() {
-        return sendersRole;
-    }
-    public void setSendersRole(String sendersRole) {
-        this.sendersRole = sendersRole;
     }
     public Long getResponseTo() {
         return responseTo;

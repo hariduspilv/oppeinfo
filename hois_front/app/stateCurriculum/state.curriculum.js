@@ -36,12 +36,14 @@ angular.module('hitsaOis')
     }
 
     function fillCascadeDropdowns() {
-      Classifier.getParentsWithMainClass('ISCED_SUUN', $scope.stateCurriculum.iscedClass).$promise.then(function(response) {
-        $scope.iscedSuun = response[0].code;
-        return response[0];
+        var iscedClass = $scope.stateCurriculum.iscedClass;
+        Classifier.getParentsWithMainClass('ISCED_SUUN', $scope.stateCurriculum.iscedClass).$promise.then(function(response) {
+          $scope.iscedSuun = response[0].code;
+          return response[0];
       }).then(function(result){
           Classifier.getParentsWithMainClass('ISCED_VALD', result.code).$promise.then(function(response) {
           $scope.iscedVald = response[0].code;
+          $scope.stateCurriculum.iscedClass = iscedClass;
         });
       });
     }
