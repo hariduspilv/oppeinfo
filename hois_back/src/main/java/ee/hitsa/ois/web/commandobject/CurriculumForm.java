@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 import ee.hitsa.ois.enums.MainClassCode;
@@ -130,7 +131,7 @@ public class CurriculumForm extends VersionedCommand {
     }
 
     public Set<CurriculumVersionDto> getVersions() {
-        return versions;
+        return versions != null ? versions : (versions = new HashSet<>());
     }
 
     public Set<CurriculumGradeDto> getGrades() {

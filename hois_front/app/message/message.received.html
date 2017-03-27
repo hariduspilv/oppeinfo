@@ -1,6 +1,6 @@
 <md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/messages/received" name="message.received">{{'message.received' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/messages/sent" name="message.sent">{{'message.sent' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/messages/received?_menu" name="message.received">{{'message.received' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/messages/sent?_menu" name="message.sent">{{'message.sent' | translate}}</md-nav-item>
 </md-nav-bar>
 
 
@@ -50,7 +50,7 @@
           <tr md-row>
             <th md-column md-order-by="subject">{{'message.subject' | translate}}</th>
             <th md-column md-order-by="inserted">{{'message.dateSent' | translate}}</th>
-            <th md-column md-order-by="sender.lastname,sender.firstname">{{'message.sender' | translate}}</th>
+            <th md-column md-order-by="p.lastname,p.firstname">{{'message.sender' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>

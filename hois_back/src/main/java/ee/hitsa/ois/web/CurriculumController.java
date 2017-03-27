@@ -113,8 +113,15 @@ public class CurriculumController {
     public CurriculumVersionDto updateVersion(HoisUserDetails user, @WithEntity(value = "id") CurriculumVersion curriculumVersion,
             @Valid @RequestBody CurriculumVersionDto curriculumVersionDto) {
         assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
-        return curriculumService.save(curriculumVersion, curriculumVersionDto);
+        return curriculumService.saveVersion(curriculumVersion, curriculumVersionDto);
     }
+    
+    @DeleteMapping("/{curriculumId:\\d+}/versions/{id:\\d+}")
+    public void deleteVersion(HoisUserDetails user, @WithEntity(value = "id") CurriculumVersion curriculumVersion) {
+        assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
+        curriculumService.deleteVersion(curriculumVersion);
+    }
+
 
     /**
      * TODO: test

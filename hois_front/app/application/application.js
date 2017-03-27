@@ -42,7 +42,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
   function curriculumVersionChange(student) {
     var CurriculumVersionsEndpoint = QueryUtils.endpoint('/autocomplete/curriculumversions');
-    CurriculumVersionsEndpoint.get({valid: true}, function(result) {
+    //TODO: valid to true
+    CurriculumVersionsEndpoint.get({valid: false}, function(result) {
       $scope.curriculumVersions = result.content;
     });
     $scope.application.oldStudyForm = student.studyForm;
@@ -192,7 +193,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
             academicLeaveRevocation(hasAcademicLeaveApplication, academicLeaveApplication);
           }
         });
-      } else if ($scope.application.type === 'AVALDUS_LIIK_KYLALIS') {
+      } else if ($scope.application.type === 'AVALDUS_LIIK_VALIS') {
         abroadStudentApplication();
         $scope.applicationEditView = true;
       }
@@ -217,7 +218,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   };
 
   $scope.isStudentRepresentative = function() {
-    return $scope.auth.student === $scope.application.student.id;
+    return angular.isDefined($scope.auth.student) && angular.isDefined($scope.application.student) &&
+      $scope.auth.student === $scope.application.student.id && $scope.auth.isParent();
   };
 
   $scope.submit = function() {
@@ -244,6 +246,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         application.$update().then(function() {
           message.info('main.messages.create.success');
           entityToForm(application);
+          $scope.applicationForm.$setPristine();
         });
       } else {
           application.$save().then(function() {
@@ -255,4 +258,14 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         console.log($scope.applicationForm.$error);
     }
   };
+
+  $scope.delete = function() {
+      dialogService.confirmDialog({prompt: 'application.deleteconfirm'}, function() {
+        var application = new ApplicationsEndpoint($scope.application);
+        application.$delete().then(function() {
+          message.info('main.messages.delete.success');
+          $location.path('/applications/search');
+        });
+      });
+    };
 });

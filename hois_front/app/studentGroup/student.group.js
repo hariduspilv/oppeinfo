@@ -1,9 +1,37 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$scope', 'Classifier', 'QueryUtils',
-  function ($q, $scope, Classifier, QueryUtils) {
+angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$scope', 'Classifier', 'Curriculum', 'QueryUtils',
+  function ($q, $scope, Classifier, Curriculum, QueryUtils) {
+    var baseUrl = '/studentgroups';
     var clMapper = Classifier.valuemapper({studyForm: 'OPPEVORM'});
-    QueryUtils.createQueryForm($scope, '/studentgroups', {order: 'code'}, clMapper.objectmapper);
+    QueryUtils.createQueryForm($scope, baseUrl, {order: 'code'}, clMapper.objectmapper);
+
+    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions(), curriculumVersions: [],
+                        studyForms: [], curriculumVersionLabel: 'studentGroup.curriculumVersionBoth'};
+
+    $scope.curriculumChanged = function() {
+      var curriculumId = $scope.criteria.curriculum ? $scope.criteria.curriculum.id : null;
+      // store current values
+      $scope.formState.studyForm = $scope.criteria.studyForm;
+
+      var afterCurriculumChange = function(result) {
+        $scope.formState.curriculumVersions = result.curriculumVersions;
+        $scope.formState.studyForms = result.studyForms || [];
+        $scope.formState.isVocational = result.isVocational;
+        $scope.formState.curriculumVersionLabel = result.isVocational ? 'studentGroup.curriculumVersionVocational' : 'studentGroup.curriculumVersionHigher';
+        // try to restore values
+        $scope.criteria.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
+      };
+      if(curriculumId) {
+        QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: curriculumId}, afterCurriculumChange);
+      } else {
+        // curriculum cleared
+        afterCurriculumChange({});
+        // all versions allowed
+        $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions.content;
+        $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionBoth';
+      }
+    };
 
     $q.all(clMapper.promises).then($scope.loadData);
   }

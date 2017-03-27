@@ -67,6 +67,10 @@ public abstract class JpaQueryUtil {
         return pagingResult(tq, pageable, () -> countQuery(entityClass, entityManager, filter));
     }
 
+    public static <T> Page<T> pagingResult(NativeQueryBuilder qb, String select, EntityManager em, Pageable pageable) {
+        return pagingResult(qb.select(select, em), pageable, () -> qb.count(em));
+    }
+
     public static <T> Page<T> pagingResult(Query query, Pageable pageable, Supplier<Number> countSupplier) {
         @SuppressWarnings("unchecked")
         List<T> content = query.setFirstResult(pageable.getOffset())
@@ -150,6 +154,12 @@ public abstract class JpaQueryUtil {
             }
         }
 
+        public void optionalCriteria(String criteria, String name, String value, Function<String, String> adjuster) {
+            if(StringUtils.hasText(value)) {
+                filter(criteria, name, adjuster.apply(value));
+            }
+        }
+
         public void optionalCriteria(String criteria, String name, EntityConnectionCommand value) {
             if(value != null && value.getId() != null) {
                 filter(criteria, name, value.getId());
@@ -159,6 +169,12 @@ public abstract class JpaQueryUtil {
         public void optionalCriteria(String criteria, String name, LocalDate value) {
             if(value != null) {
                 filter(criteria, name, Timestamp.valueOf(LocalDateTime.of(value, LocalTime.MIN)));
+            }
+        }
+
+        public void optionalCriteria(String criteria, String name, LocalDate value, Function<LocalDate, LocalDateTime> adjuster) {
+            if(value != null) {
+                filter(criteria, name, Timestamp.valueOf(adjuster.apply(value)));
             }
         }
 
@@ -174,9 +190,26 @@ public abstract class JpaQueryUtil {
             }
         }
 
+        public void optionalContains(List<String> fields, String name, String value) {
+            if(value != null && !value.isEmpty()) {
+                StringBuilder sb = new StringBuilder(fields.size() > 1 ? "(" : "");
+                for(String field : fields) {
+                    if(sb.length() > 1) {
+                        sb.append(" or ");
+                    }
+                    sb.append(String.format("upper(%s) like :%s", field, name));
+                }
+                if(fields.size() > 1) {
+                    sb.append(")");
+                }
+
+                filter(sb.toString(), name, SearchUtil.toContains(value));
+            }
+        }
+
         public void optionalContains(String field, String name, String value) {
             if(StringUtils.hasText(value)) {
-                filter(String.format("upper(%s) like :%s", field, name), name, "%"+value.toUpperCase()+"%");
+                optionalContains(Collections.singletonList(field), name, value);
             }
         }
 
@@ -185,6 +218,13 @@ public abstract class JpaQueryUtil {
                 throw new AssertionFailedException("Required criteria is missing");
             }
             filter(criteria, name, value);
+        }
+
+        public void requiredCriteria(String criteria, String name, EntityConnectionCommand value) {
+            if(value == null || value.getId() == null) {
+                throw new AssertionFailedException("Required criteria is missing");
+            }
+            filter(criteria, name, value.getId());
         }
 
         public void requiredCriteria(String criteria, String name, LocalDate value) {

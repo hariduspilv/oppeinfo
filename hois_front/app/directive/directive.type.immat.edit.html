@@ -12,24 +12,24 @@
         <th md-column>{{'directive.student.finSpecific' | translate}}</th>
         <th md-column>{{'directive.student.language' | translate}}</th>
         <th md-column>{{'directive.student.studentGroup' | translate}}</th>
-        <th md-column>{{'directive.student.startDate' | translate}}</th>
+        <th md-column>{{'directive.student.studyStartDate' | translate}}</th>
         <th md-column>{{'directive.student.previousStudyLevel' | translate}}</th>
-        <th md-column>{{'directive.student.email' | translate}}</th>
+        <th md-column>{{'directive.student.schoolEmail' | translate}}</th>
         <th></th>
       </tr>
     </thead>
     <tbody md-body>
       <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>
-          <hois-idcode-lookup ng-model="row.idcode" role="student" after-lookup="lookupStudent(row, response)"></hois-idcode-lookup>
+          <hois-idcode-lookup ng-model="row.idcode" role="person" after-lookup="lookupStudent(row, response)" after-failed-lookup="lookupFailed(row)"></hois-idcode-lookup>
         </td>
-        <td md-cell>{{::row.firstname}}</td>
-        <td md-cell>{{::row.firstname}}</td>
+        <td md-cell><input type="text" ng-readonly="row._found" ng-model="row.firstname"></td>
+        <td md-cell><input type="text" ng-readonly="row._found" ng-model="row.lastname"></td>
         <td md-cell>
-          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersion.scontent"></hois-select>
+          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersions.content"></hois-select>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
@@ -47,7 +47,7 @@
           <hois-select ng-model="row.studentGroup" values="formState.studentGroups.content"></hois-select>
         </td>
         <td md-cell>
-          <md-datepicker ng-model="row.startDate" md-placeholder="{{'directive.student.akadEndDate' | translate}}"></md-datepicker>
+          <md-datepicker ng-model="row.startDate" md-placeholder="{{'directive.student.studyStartDate' | translate}}"></md-datepicker>
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.previousStudyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"></hois-classifier-select>

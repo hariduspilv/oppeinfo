@@ -19,7 +19,9 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentHistory;
+import ee.hitsa.ois.validation.PeriodRange;
 
+@PeriodRange(groups = {Akad.class, Valis.class})
 @Entity
 public class DirectiveStudent extends BaseEntityWithId {
 
@@ -60,7 +62,6 @@ public class DirectiveStudent extends BaseEntityWithId {
     @NotNull(groups = Lopet.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumGrade curriculumGrade;
-    @NotNull(groups = {Akad.class, Valis.class})
     private Boolean isPeriod;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudyPeriod studyPeriodStart;

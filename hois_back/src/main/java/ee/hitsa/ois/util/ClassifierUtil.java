@@ -4,9 +4,9 @@ import ee.hitsa.ois.domain.Classifier;
 
 public class ClassifierUtil {
 
-    private static final String estonia = "RIIK_EST";
+    private static final String ESTONIA = "RIIK_EST";
 
     public static boolean isEstonia(Classifier riik) {
-        return estonia.equals(EntityUtil.getCode(riik));
+        return ESTONIA.equals(EntityUtil.getCode(riik));
     }
 }

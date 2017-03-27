@@ -17,7 +17,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
         $scope.generalmessages.totalElements = result.totalElements;
       });
     };
-    $scope.unreadMessageCriteria = {size: 5, page: 1, order: 'inserted'};
+    $scope.unreadMessageCriteria = {size: 5, page: 1, order: '-inserted'};
     $scope.unreadMessages = {};
     $scope.loadUnreadMessages = function() {
       var query = QueryUtils.getQueryParams($scope.unreadMessageCriteria);
@@ -34,6 +34,10 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
                 message.isRead = true;
             });
         }
+    };
+
+    $scope.openCloseDetails = function(message) {
+      message.clicked = !message.clicked;
     };
 
     if (AuthService.isAuthenticated()) {

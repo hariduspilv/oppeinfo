@@ -23,14 +23,14 @@ import ee.hitsa.ois.domain.student.Student;
 public class Application extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)
+    @JoinColumn(nullable = false, updatable = false)
     private Student student;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier type;
 
     private LocalDateTime submitted;
@@ -103,11 +103,11 @@ public class Application extends BaseEntityWithId {
     private Application academicApplication;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "application_id", nullable = false, updatable = false)
     private Set<ApplicationFile> files = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "application_id", nullable = false, updatable = false)
     private Set<ApplicationPlannedSubject> plannedSubjects = new HashSet<>();
 
     public Student getStudent() {

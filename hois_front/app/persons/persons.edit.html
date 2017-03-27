@@ -19,39 +19,41 @@
         <hois-classifier-select ng-model="person.sex" main-classifier-code="SUGU" model-value-attr="code" required></hois-classifier-select>
       </md-input-container>
       <md-input-container flex>
-        <label>{{'person.phone' | translate}}</label>
-        <input ng-model="person.phone" type="text">
-      </md-input-container>
-      <md-input-container flex>
         <label>{{'person.email' | translate}}</label>
         <input ng-model="person.email" type="email">
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'person.phone' | translate}}</label>
+        <input ng-model="person.phone" type="text">
       </md-input-container>
     </div>
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
     <md-button ng-href="#/persons" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </form>
-  <div layout="row" class="align-center">
-    <h2>{{'person.user.roles' | translate}}</h2>
-    <md-button class="md-primary" ng-click="openStudyPeriodDialog()">{{'main.button.create' | translate}}</md-button>
-  </div>
-  <div layout="row">
-    <table md-table class="secondary-table">
-      <thead md-head>
-      <tr md-row>
-        <th ng-if="true" md-column>{{'person.user.school' | translate}}</th>
-        <th md-column>{{'person.user.role' | translate}}</th>
-        <th md-column>{{'person.user.status' | translate}}</th>
-        <th md-column></th>
-      </tr>
-      </thead>
-      <tbody md-body>
-      <tr md-row ng-repeat="user in users" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td ng-if="true" md-cell>{{currentLanguageNameField(user.school)}}</td>
-        <td md-cell>{{currentLanguageNameField(user.role)}}</td>
-        <td md-cell>{{user.valid ? 'main.valid' : 'main.invalid' | translate }}</td>
-        <td md-cell ><md-button ng-click="openStudyPeriodDialog(item)">{{'main.button.change' | translate}}</md-button></td>
-      </tr>
-      </tbody>
-    </table>
+  <div ng-if="person.id">
+    <div layout="row" class="align-center">
+      <h2>{{'user.role' | translate}}</h2>
+      <md-button class="md-primary" ng-if="person.id" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
+    </div >
+    <div layout="row">
+      <table md-table class="secondary-table">
+        <thead md-head>
+        <tr md-row>
+          <th ng-if="showSchool" md-column>{{'school.label' | translate}}</th>
+          <th md-column>{{'user.role' | translate}}</th>
+          <th md-column>{{'main.status' | translate}}</th>
+          <th md-column></th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="user in users" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td ng-if="showSchool" md-cell>{{currentLanguageNameField(user.school)}}</td>
+          <td md-cell>{{currentLanguageNameField(user.role)}}</td>
+          <td md-cell>{{user.valid ? 'main.valid' : 'main.invalid' | translate }}</td>
+          <td md-cell ><md-button class="md-primary change-button" ng-href="#/persons/{{::person.id}}/users/{{::user.id}}">{{'main.button.change' | translate}}</md-button></td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
   </div>
 </div>

@@ -4,7 +4,7 @@
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label>{{'reception.contest.code' | translate}}</label>
-            <hois-select ng-model="criteria.code" values="saisApplicationCodes" value-property="nameEt" multiple></hois-select>
+            <hois-select ng-model="criteria.code" values="saisAdmissionCodes" value-property="nameEt" multiple></hois-select>
           </md-input-container>
       </div>
 
@@ -48,7 +48,7 @@
       <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="loadCsvFile()">{{'main.button.loadCsvFile' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="importFromCsvFile()">{{'main.button.loadCsvFile' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>
@@ -75,9 +75,9 @@
           <td md-cell>{{::row.idcode}}</td>
           <td md-cell>{{::row.firstname}}</td>
           <td md-cell>{{::row.lastname}}</td>
-          <td md-cell>{{::row.saisAdmission.code}}</td>
-          <td md-cell>{{row.status[currentLanguageNameField()]}}</td>
-          <td md-cell>{{::row.addedToDirective}}</td>
+          <td md-cell>{{::row.saisAdmissionCode}}</td>
+          <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+          <td md-cell>{{(row.addedToDirective ? 'main.yes' : 'main.no') | translate}}</td>
         </tr>
         </tbody>
       </table>

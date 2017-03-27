@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -14,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
@@ -76,10 +76,8 @@ public class StudentService {
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getIdcode());
-        if(StringUtils.hasText(criteria.getName()))  {
-            qb.requiredCriteria("(upper(person.firstname) like :name or upper(person.lastname) like :name "
-                    + "or upper(person.firstname || ' ' || person.lastname) like :name)", "name", "%"+criteria.getName().toUpperCase()+"%");
-        }
+        qb.optionalContains(Arrays.asList("person.firstname", "person.lastname", "person.firstname || ' ' || person.lastname"), "name", criteria.getName());
+
         qb.optionalCriteria("curriculum.id in (:curriculum)", "curriculum", criteria.getCurriculum());
         qb.optionalCriteria("s.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalContains("student_group.code", "code", criteria.getStudentGroup());
@@ -87,7 +85,7 @@ public class StudentService {
         qb.optionalCriteria("s.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("s.status_code in (:status)", "status", criteria.getStatus());
 
-        return JpaQueryUtil.pagingResult(qb.select(STUDENT_LIST_SELECT, em), pageable, () -> qb.count(em)).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, STUDENT_LIST_SELECT, em, pageable).map(r -> {
             StudentSearchDto dto = new StudentSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));

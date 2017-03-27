@@ -46,6 +46,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
+import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
 @Transactional
 @Service
@@ -141,6 +142,8 @@ public class AutocompleteService {
 
     public Person person(PersonLookupCommand lookup) {
         if("student".equals(lookup.getRole())) {
+            // FIXME multiple students with same idcode?
+            // FIXME should filter by school?
             return personRepository.findByIdcodeStudent(lookup.getIdcode());
         }
         return personRepository.findByIdcode(lookup.getIdcode());
@@ -181,8 +184,9 @@ public class AutocompleteService {
         return data.stream().map(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2))).collect(Collectors.toList());
     }
 
-    public List<AutocompleteResult> studentGroups(Long schoolId) {
-        return studentGroupRepository.findAllBySchool_id(schoolId).stream().map(AutocompleteResult::of).collect(Collectors.toList());
+    public List<StudentGroupResult> studentGroups(Long schoolId) {
+        // StudentGroupResult includes attributes for filtering
+        return studentGroupRepository.findAllBySchool_id(schoolId).stream().map(StudentGroupResult::of).collect(Collectors.toList());
     }
 
     public Page<SubjectSearchDto> subjects(Long schoolId, AutocompleteCommand command) {
@@ -214,9 +218,7 @@ public class AutocompleteService {
 
     public List<AutocompleteResult> studyPeriods(Long schoolId) {
         return studyPeriodRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("studyYear").get("school").get("id"), schoolId));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
+            return cb.equal(root.get("studyYear").get("school").get("id"), schoolId);
         }).stream().map(AutocompleteResult::of).collect(Collectors.toList());
     }
 

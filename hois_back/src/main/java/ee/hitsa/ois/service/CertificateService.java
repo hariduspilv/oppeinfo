@@ -2,7 +2,7 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -57,11 +57,11 @@ public class CertificateService {
             if (schoolId != null) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }
-            LocalDateTime insertedFrom = criteria.getInsertedFrom();
+            LocalDate insertedFrom = criteria.getInsertedFrom();
             if(insertedFrom != null) {
               filters.add(cb.greaterThanOrEqualTo(root.get("inserted"), DateUtils.firstMomentOfDay(insertedFrom)));
             }
-            LocalDateTime insertedThru = criteria.getInsertedThru();
+            LocalDate insertedThru = criteria.getInsertedThru();
             if(insertedThru != null) {
               filters.add(cb.lessThanOrEqualTo(root.get("inserted"), DateUtils.lastMomentOfDay(insertedThru)));
             }

@@ -33,7 +33,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     var clMapper = Classifier.valuemapper({type: 'TOEND_LIIK'});
     QueryUtils.createQueryForm($scope, '/certificate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
     $q.all(clMapper.promises).then($scope.loadData);
-}]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', function ($scope, QueryUtils, $route, $location, dialogService, message, $resource, config) {
+}]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', '$translate', '$q', function ($scope, QueryUtils, $route, $location, dialogService, message, $resource, config, $translate, $q) {
 
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -81,6 +81,23 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     QueryUtils.endpoint("/directives/coordinators").get().$promise.then(function(response){
         $scope.signatories = response.content;
     });
+
+    $scope.querySearch = function (text) {
+        if(text.length >= 3) {
+            var deferred = $q.defer();
+            var lookup = QueryUtils.endpoint('/autocomplete/students');
+            lookup.search({
+                lang: $translate.use().toUpperCase(),
+                name: text
+            }, function (data) {
+                deferred.$$resolve(data.content);
+            });
+            return deferred.promise;
+        }
+    };
+
+
+
 
     $scope.studentChanged = function() {
         if($scope.student && $scope.record.student !== $scope.student.id) {

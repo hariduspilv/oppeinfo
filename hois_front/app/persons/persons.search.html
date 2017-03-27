@@ -3,19 +3,19 @@
     <form ng-submit="loadData()" class="ois-form-layout nomargin" layout="column">
       <div layout="column" flex>
         <md-input-container flex>
-          <label>{{'users.school' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.school" main-classifier-code="EHIS_KOOL" model-value-attr="code"></hois-classifier-select>
+          <label>{{'school.label' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.school" ng-hide="!showSchool" main-classifier-code="EHIS_KOOL" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
         <md-input-container flex>
-          <label>{{'users.idcode' | translate}}</label>
-          <input ng-model="criteria.idcode" type="text">
-        </md-input-container>
-        <md-input-container flex>
-          <label>{{'users.name' | translate}}</label>
+          <label>{{'person.name' | translate}}</label>
           <input ng-model="criteria.name" type="text">
         </md-input-container>
         <md-input-container flex>
-          <label>{{'users.role' | translate}}</label>
+          <label>{{'person.idcode' | translate}}</label>
+          <input ng-model="criteria.idcode" type="text">
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'user.role' | translate}}</label>
           <hois-classifier-select ng-model="criteria.role" main-classifier-code="ROLL" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
       </div>
@@ -33,10 +33,10 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
-          <th md-column md-order-by="p.lastname,p.firstname">{{'users.name' | translate}}</th>
-          <th md-column md-order-by="p.idcode">{{'users.idcode' | translate}}</th>
-          <th md-column>{{'users.school' | translate}}</th>
-          <th md-column>{{'users.userRoles' | translate}}</th>
+          <th md-column md-order-by="p.lastname,p.firstname">{{'person.name' | translate}}</th>
+          <th md-column md-order-by="p.idcode">{{'person.idcode' | translate}}</th>
+          <th md-column ng-if="showSchool">{{'school.label' | translate}}</th>
+          <th md-column>{{'user.role' | translate}}</th>
           <th md-column></th>
         </tr>
         </thead>
@@ -44,7 +44,7 @@
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell>{{::row.name}}</td>
           <td md-cell>{{::row.idcode}}</td>
-          <td md-cell>{{currentLanguageNameField(row.school)}}</td>
+          <td md-cell ng-if="showSchool">{{currentLanguageNameField(row.school)}}</td>
           <td md-cell>{{currentLanguageNameField(row.role)}}</td>
           <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/persons/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
         </tr>

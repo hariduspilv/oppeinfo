@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('MainController', function ($scope, $translate, $location, Menu, AuthService, $mdSidenav, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES) {
+  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService) {
 
     var self = this;
 
@@ -134,6 +134,8 @@ angular.module('hitsaOis')
     $scope.isSectionSelected = isSectionSelected;
     $scope.scrollTop = scrollTop;
     $rootScope.$on('$locationChangeSuccess', openPage);
+
+
     var mainContentArea = document.querySelector("[role='main']");
     var scrollContentEl = mainContentArea.querySelector('md-content[md-scroll-y]');
     //var content = document.querySelector("[role='content']");
@@ -215,6 +217,46 @@ angular.module('hitsaOis')
         };
       }
     });
+
+
+    var history = [];
+    var isBack = false;
+    function pushHistoryState(oldUrl) {
+      var backUrl = oldUrl.substring(oldUrl.indexOf('#'), oldUrl.length);
+      history.push(backUrl);
+    }
+    function popHistoryState() {
+      if (history.length > 0) {
+        return history.pop();
+      }
+      return null;
+    }
+    function goBack(defaultUrl) {
+      var backUrlFromHistory = popHistoryState();
+      var backUrl = backUrlFromHistory ? backUrlFromHistory : defaultUrl;
+      isBack = true;
+      $window.location.href = backUrl ? backUrl : defaultUrl;
+    }
+
+    $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
+      //console.log(history, newUrl, oldUrl, isBack)
+      if (newUrl !== oldUrl && !isBack) {
+        pushHistoryState(oldUrl, newUrl);
+      }
+      isBack = false;
+    });
+
+    //usage <md-button ng-click="back("#/someDefaultUrl", formObject)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    //for confirm dialog to work when form.$setSubmitted() is used to submit the form, one has to call form.$setPristine() after successful update
+    $rootScope.back = function(defaultUrl, form) {
+      if (angular.isDefined(form) && form.$dirty === true ) {
+        dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function() {
+          goBack(defaultUrl);
+        });
+      } else {
+        goBack(defaultUrl);
+      }
+    };
   })
   .filter('nospace', function () {
     return function (value) {

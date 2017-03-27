@@ -9,7 +9,7 @@ import java.util.List;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 
-    List<UserProjection> findByPerson_IdAndUserRightsIsNotNull(Long id);
+    List<UserProjection> findDistinctByPerson_IdAndUserRightsIsNotNull(Long id);
 
     UserProjection findOneById(long id);
 }

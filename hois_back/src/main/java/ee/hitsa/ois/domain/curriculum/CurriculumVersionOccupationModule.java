@@ -20,7 +20,7 @@ import ee.hitsa.ois.domain.Classifier;
 public class CurriculumVersionOccupationModule extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)
+    @JoinColumn(nullable = false, updatable = false)
     private CurriculumModule curriculumModule;
 
     @Column(nullable = false)
@@ -53,15 +53,15 @@ public class CurriculumVersionOccupationModule extends BaseEntityWithId {
     private String supervisor;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false)
     private Set<CurriculumVersionOccupationModuleCapacity> capacities = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false)
     private Set<CurriculumVersionOccupationModuleTheme> themes = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false)
     private Set<CurriculumVersionOccupationModuleYearCapacity> yearCapacities = new HashSet<>();
 
     public String getRequirementsEt() {

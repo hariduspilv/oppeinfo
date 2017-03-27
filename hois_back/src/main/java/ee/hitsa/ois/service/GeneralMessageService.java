@@ -53,7 +53,7 @@ public class GeneralMessageService {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SHOW_MESSAGES_FROM, pageable);
         qb.parameter("schoolId", user.getSchoolId());
         qb.parameter("userId", user.getUserId());
-        Page<Object[]> messages = JpaQueryUtil.pagingResult(qb.select("g.id, g.title, g.content, g.inserted", em), pageable, () -> qb.count(em));
+        Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, "g.id, g.title, g.content, g.inserted", em, pageable);
         return messages.map(d -> new GeneralMessageDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 3)));
     }
 

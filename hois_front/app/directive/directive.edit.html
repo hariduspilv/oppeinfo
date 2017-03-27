@@ -4,7 +4,7 @@
       <div layout="column">
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.type' | translate}}</label>
-          <hois-classifier-select ng-model="record.type" name="type" ng-change="directiveTypeChanged()" ng-disabled="formState.state !== 'CHOOSETYPE'" model-value-attr="code" main-classifier-code="KASKKIRI" filter-values="['KASKKIRI_TYHIST']" required autofocus></hois-classifier-select>
+          <hois-classifier-select ng-model="record.type" name="type" ng-change="directiveTypeChanged()" ng-disabled="formState.state !== 'CHOOSETYPE'" model-value-attr="code" main-classifier-code="KASKKIRI" filter-values="['KASKKIRI_TYHIST', 'KASKKIRI_KYLALIS', 'KASKKIRI_IMMATV']" required autofocus></hois-classifier-select>
         </md-input-container>
       </div>
 
@@ -74,6 +74,7 @@
 
         <div layout="row">
           <md-button class="md-raised" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm()">{{'directive.sendToConfirm' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
           <md-button ng-href="#/directives" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>

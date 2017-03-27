@@ -1,10 +1,14 @@
 package ee.hitsa.ois.enums;
 
 public enum Role {
-    /** administrative user of school*/
+    /** administrative user of school */
     ROLL_A,
-    /** administrative user of school*/
+    /** representative of student */
     ROLL_L,
-    /** Main administrator (peaadministraator)*/
-    ROLL_P
+    /** main administrator (peaadministraator) */
+    ROLL_P,
+    /** student */
+    ROLL_T,
+    /** External expert */
+    ROLL_V
 }

@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.SaisAdmission;
 import ee.hitsa.ois.util.EntityUtil;
@@ -12,8 +12,8 @@ public class SaisAdmissionDto {
     private AutocompleteResult curriculumVersion;
     private Integer places;
     private String language;
-    private LocalDateTime periodStart;
-    private LocalDateTime periodEnd;
+    private LocalDate periodStart;
+    private LocalDate periodEnd;
     private String studyForm;
     private String studyLevel;
     private String studyLoad;
@@ -64,22 +64,6 @@ public class SaisAdmissionDto {
         this.language = language;
     }
 
-    public LocalDateTime getPeriodStart() {
-        return periodStart;
-    }
-
-    public void setPeriodStart(LocalDateTime periodStart) {
-        this.periodStart = periodStart;
-    }
-
-    public LocalDateTime getPeriodEnd() {
-        return periodEnd;
-    }
-
-    public void setPeriodEnd(LocalDateTime periodEnd) {
-        this.periodEnd = periodEnd;
-    }
-
     public String getStudyForm() {
         return studyForm;
     }
@@ -110,6 +94,22 @@ public class SaisAdmissionDto {
 
     public void setFin(String fin) {
         this.fin = fin;
+    }
+
+    public LocalDate getPeriodStart() {
+        return periodStart;
+    }
+
+    public void setPeriodStart(LocalDate periodStart) {
+        this.periodStart = periodStart;
+    }
+
+    public LocalDate getPeriodEnd() {
+        return periodEnd;
+    }
+
+    public void setPeriodEnd(LocalDate periodEnd) {
+        this.periodEnd = periodEnd;
     }
 
 }

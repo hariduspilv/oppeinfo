@@ -13,7 +13,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 public class CurriculumVersionOccupationModuleOutcome  extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "curriculum_module_outcomes_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_module_outcomes_id", nullable = false, updatable = false)
     private CurriculumModuleOutcome outcome;
 
     public CurriculumModuleOutcome getOutcome() {

@@ -38,12 +38,12 @@ public class MessageController {
     
     @GetMapping("/received")
     public Page<MessageSearchDto> searchReceived(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
-        return messageService.searchReceived(user, criteria, pageable).map(m -> MessageSearchDto.ofReceived(m, user.getPersonId()));
+        return messageService.searchReceived(user, criteria, pageable);
     }
     
     @GetMapping("/received/mainPage")
-    public Page<MessageSearchDto> searchReceivedForMainPage(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
-        return messageService.show(user, criteria, pageable);
+    public Page<MessageSearchDto> searchReceivedForMainPage(HoisUserDetails user, Pageable pageable) {
+        return messageService.show(user, pageable);
     }
 
     @GetMapping("/{id:\\d+}")

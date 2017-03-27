@@ -68,7 +68,7 @@ public class StudyYear extends BaseEntityWithId {
     }
 
     public Set<StudyPeriodEvent> getStudyPeriodEvents() {
-        return studyPeriodEvents;
+        return studyPeriodEvents == null ? (studyPeriodEvents = new HashSet<>()): studyPeriodEvents;
     }
 
     public void setStudyPeriodEvents(Set<StudyPeriodEvent> studyPeriodEvents) {

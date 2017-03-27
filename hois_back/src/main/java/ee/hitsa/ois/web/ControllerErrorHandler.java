@@ -51,16 +51,16 @@ public class ControllerErrorHandler {
             status = HttpStatus.BAD_REQUEST;
             log.error("Assertion failure:", e);
         }else if(e instanceof BindException) {
-            info = ErrorInfo.fromErrors(((BindException) e).getBindingResult());
+            info = ErrorInfo.of(((BindException) e).getBindingResult());
             status = HttpStatus.PRECONDITION_FAILED;
         }else if(e instanceof MethodArgumentNotValidException) {
-            info = ErrorInfo.fromErrors(((MethodArgumentNotValidException) e).getBindingResult());
+            info = ErrorInfo.of(((MethodArgumentNotValidException) e).getBindingResult());
             status = HttpStatus.PRECONDITION_FAILED;
         }else if(e instanceof MissingServletRequestParameterException) {
             info = ErrorInfo.of("Missing", ((MissingServletRequestParameterException) e).getParameterName());
             status = HttpStatus.PRECONDITION_FAILED;
         }else if(e instanceof ValidationFailedException) {
-            info = ErrorInfo.of(e.getMessage(), ((ValidationFailedException) e).getField());
+            info = ((ValidationFailedException) e).getErrorInfo();
             status = HttpStatus.PRECONDITION_FAILED;
         }else if(e instanceof EntityRemoveException) {
             String errorCode = e.getMessage();
@@ -119,13 +119,17 @@ public class ControllerErrorHandler {
             return errors;
         }
 
-        static ErrorInfo fromErrors(Errors errors) {
+        public static ErrorInfo of(Errors errors) {
             List<Error> err = errors.getAllErrors().stream().map(e -> new Error(e.getCode(), e instanceof FieldError ? ((FieldError)e).getField() : null)).collect(Collectors.toList());
             return new ErrorInfo(err);
         }
 
-        static ErrorInfo of(String code, String field) {
+        public static ErrorInfo of(String code, String field) {
             return new ErrorInfo(Collections.singletonList(new Error(code, field)));
+        }
+
+        public static ErrorInfo of(List<Map.Entry<String, String>> errors) {
+            return new ErrorInfo(errors.stream().map(me -> new Error(me.getValue(), me.getKey())).collect(Collectors.toList()));
         }
 
         static class Error {

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.service.DirectiveConfirmService;
 import ee.hitsa.ois.service.DirectiveService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -44,6 +46,8 @@ import ee.hitsa.ois.web.dto.directive.DirectiveViewDto;
 @RequestMapping("/directives")
 public class DirectiveController {
 
+    @Autowired
+    private DirectiveConfirmService directiveConfirmService;
     @Autowired
     private DirectiveService directiveService;
 
@@ -84,6 +88,20 @@ public class DirectiveController {
         directiveService.delete(directive);
     }
 
+    @PutMapping("/sendtoconfirm/{id:\\d+}")
+    public void sendToConfirm(HoisUserDetails user, @WithEntity("id") Directive directive) {
+        UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
+        directiveConfirmService.sendToConfirm(directive);
+    }
+
+    // TODO for testing only, remove later
+    @PutMapping("/confirm/{id:\\d+}")
+    public DirectiveDto confirm(HoisUserDetails user, @WithEntity("id") Directive directive) {
+        UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
+        directiveConfirmService.confirm(user, directive, LocalDate.now());
+        return get(user, directive);
+    }
+
     @PostMapping("/directivedata")
     public DirectiveDto directivedata(HoisUserDetails user, @Valid @RequestBody DirectiveDataCommand cmd) {
         UserUtil.assertIsSchoolAdmin(user);
@@ -93,7 +111,6 @@ public class DirectiveController {
         dto.setInserted(LocalDateTime.now());
         dto.setInsertedBy(user.getUsername());
         // TODO return pre-configured headline
-        // TODO if type is immat (vastuvõtt), use another source for filling student data
         dto.setStudents(directiveService.loadStudents(user.getSchoolId(), cmd));
         return dto;
     }
@@ -101,7 +118,6 @@ public class DirectiveController {
     @GetMapping("/findstudents")
     public Page<DirectiveStudentSearchDto> searchStudents(HoisUserDetails user, @Valid DirectiveStudentSearchCommand criteria) {
         UserUtil.assertIsSchoolAdmin(user);
-        // TODO if type is immat (vastuvõtt), use another source for filling student data
         return new PageImpl<>(directiveService.searchStudents(user.getSchoolId(), criteria));
     }
 

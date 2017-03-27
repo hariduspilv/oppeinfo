@@ -1,11 +1,16 @@
 package ee.hitsa.ois.domain;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -35,10 +40,10 @@ public class SaisAdmission extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier language;
     private Integer places;
-    private LocalDateTime periodStart;
+    private LocalDate periodStart;
 
     @Column(nullable = false)
-    private LocalDateTime periodEnd;
+    private LocalDate periodEnd;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier studyForm;
@@ -48,6 +53,10 @@ public class SaisAdmission extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyLoad;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "sais_admission_id", nullable = false, updatable = false)
+    private Set<SaisApplication> applications = new HashSet<>();
 
     public String getCode() {
         return code;
@@ -105,20 +114,21 @@ public class SaisAdmission extends BaseEntityWithId {
         this.places = places;
     }
 
-    public LocalDateTime getPeriodStart() {
-        return periodStart;
-    }
 
-    public void setPeriodStart(LocalDateTime periodStart) {
-        this.periodStart = periodStart;
-    }
-
-    public LocalDateTime getPeriodEnd() {
+    public LocalDate getPeriodEnd() {
         return periodEnd;
     }
 
-    public void setPeriodEnd(LocalDateTime periodEnd) {
+    public void setPeriodEnd(LocalDate periodEnd) {
         this.periodEnd = periodEnd;
+    }
+
+    public LocalDate getPeriodStart() {
+        return periodStart;
+    }
+
+    public void setPeriodStart(LocalDate periodStart) {
+        this.periodStart = periodStart;
     }
 
     public Classifier getStudyForm() {
@@ -143,6 +153,14 @@ public class SaisAdmission extends BaseEntityWithId {
 
     public void setStudyLoad(Classifier studyLoad) {
         this.studyLoad = studyLoad;
+    }
+
+    public Set<SaisApplication> getApplications() {
+        return applications;
+    }
+
+    public void setApplications(Set<SaisApplication> applications) {
+        this.applications = applications;
     }
 
 }

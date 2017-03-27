@@ -24,7 +24,11 @@ public class DirectiveViewStudentDto {
     private String fin;
     private String oldFinSpecific;
     private String finSpecific;
+    private String language;
+    private String previousStudyLevel;
     private String oldStudyForm;
+    private String studyForm;
+    private String studyLoad;
     private AutocompleteResult oldCurriculumVersion;
     private AutocompleteResult curriculumVersion;
     private String studentGroup;
@@ -36,6 +40,7 @@ public class DirectiveViewStudentDto {
     private Boolean isAbroad;
     private String ehisSchool;
     private String abroadSchool;
+    private String email;
     private String country;
     private String abroadPurpose;
     private String abroadProgramme;
@@ -136,12 +141,44 @@ public class DirectiveViewStudentDto {
         this.finSpecific = finSpecific;
     }
 
+    public String getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(String language) {
+        this.language = language;
+    }
+
+    public String getPreviousStudyLevel() {
+        return previousStudyLevel;
+    }
+
+    public void setPreviousStudyLevel(String previousStudyLevel) {
+        this.previousStudyLevel = previousStudyLevel;
+    }
+
     public String getOldStudyForm() {
         return oldStudyForm;
     }
 
     public void setOldStudyForm(String oldStudyForm) {
         this.oldStudyForm = oldStudyForm;
+    }
+
+    public String getStudyForm() {
+        return studyForm;
+    }
+
+    public void setStudyForm(String studyForm) {
+        this.studyForm = studyForm;
+    }
+
+    public String getStudyLoad() {
+        return studyLoad;
+    }
+
+    public void setStudyLoad(String studyLoad) {
+        this.studyLoad = studyLoad;
     }
 
     public AutocompleteResult getOldCurriculumVersion() {
@@ -232,6 +269,14 @@ public class DirectiveViewStudentDto {
         this.abroadSchool = abroadSchool;
     }
 
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
     public String getCountry() {
         return country;
     }
@@ -272,9 +317,9 @@ public class DirectiveViewStudentDto {
             dto.setLastname(person.getLastname());
             dto.setFullname(person.getFullname());
         }
+        DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directiveStudent.getDirective().getType()));
         if(student != null) {        
             Application application = directiveStudent.getApplication();
-            DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directiveStudent.getDirective().getType()));
             switch(directiveType) {
             case KASKKIRI_AKAD:
                 dto.setApplicationIsPeriod(application != null ? application.getIsPeriod() : null);
@@ -310,7 +355,10 @@ public class DirectiveViewStudentDto {
             default:
                 break;
             }
+        } else if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
+            dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
         }
+
         return EntityUtil.bindToDto(directiveStudent, dto);
     }
 }    

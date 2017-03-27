@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
-  var authorizedRoles = {authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]};
+  var authorizedRoles = {authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]};
   $routeProvider
     .when('/persons', {
       templateUrl: 'persons/persons.search.html',
@@ -10,7 +10,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       resolve: {
         translationLoaded: function ($translate) {
           return $translate.onReady();
-        }
+        },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: authorizedRoles
     })
@@ -19,9 +20,28 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controller: 'PersonsEditController',
       controllerAs: 'controller',
       resolve: {
-        translationLoaded: function ($translate) {
-          return $translate.onReady();
-        }
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: authorizedRoles
+    })
+    .when('/persons/:person/users/new', {
+      templateUrl: 'persons/users.html',
+      controller: 'UsersEditController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: authorizedRoles
+    })
+    .when('/persons/:person/users/:user', {
+      templateUrl: 'persons/users.html',
+      controller: 'UsersEditController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: authorizedRoles
     })
@@ -30,9 +50,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controller: 'PersonsEditController',
       controllerAs: 'controller',
       resolve: {
-        translationLoaded: function ($translate) {
-          return $translate.onReady();
-        }
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: authorizedRoles
     });

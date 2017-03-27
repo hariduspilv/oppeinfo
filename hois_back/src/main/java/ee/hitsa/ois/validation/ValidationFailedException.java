@@ -1,21 +1,23 @@
 package ee.hitsa.ois.validation;
 
+import java.util.List;
+import java.util.Map;
+
+import ee.hitsa.ois.web.ControllerErrorHandler.ErrorInfo;
+
 public class ValidationFailedException extends RuntimeException {
 
-    private String field;
-    private String message;
+    private final ErrorInfo errorInfo;
 
     public ValidationFailedException(String field, String message) {
-        this.field = field;
-        this.message = message;
+        this.errorInfo = ErrorInfo.of(message, field);
     }
 
-    @Override
-    public String getMessage() {
-        return message;
+    public ValidationFailedException(List<Map.Entry<String, String>> errors) {
+        this.errorInfo = ErrorInfo.of(errors);
     }
 
-    public String getField() {
-        return field;
+    public ErrorInfo getErrorInfo() {
+        return errorInfo;
     }
 }

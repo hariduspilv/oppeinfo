@@ -52,11 +52,11 @@ public class CurriculumVersionOccupationModuleTheme  extends BaseEntityWithId {
     private String grade5Description;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false)
     private Set<CurriculumVersionOccupationModuleOutcome> outcomes = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false)
     private Set<CurriculumVersionOccupationModuleThemeCapacity> capacities = new HashSet<>();
 
     public String getNameEt() {

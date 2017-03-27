@@ -42,7 +42,7 @@ public class AuthenticationController {
             HoisUserDetails userDetails = HoisUserDetails.fromPrincipal(principal);
             User user = userRepository.getOne(userDetails.getUserId());
             AuthenticatedUser authenticatedUser = new AuthenticatedUser(user);
-            List<UserProjection> users = userRepository.findByPerson_IdAndUserRightsIsNotNull(user.getPerson().getId());
+            List<UserProjection> users = userRepository.findDistinctByPerson_IdAndUserRightsIsNotNull(user.getPerson().getId());
 
             authenticatedUser.setSchool(user.getSchool());
             authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());

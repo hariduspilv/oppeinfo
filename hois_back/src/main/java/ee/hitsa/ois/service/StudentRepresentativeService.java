@@ -29,8 +29,8 @@ import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.StudentRepresentativeApplicationRepository;
 import ee.hitsa.ois.repository.StudentRepresentativeRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationDeclineForm;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationForm;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationSearchCommand;
@@ -156,15 +156,11 @@ public class StudentRepresentativeService {
 
         // find all students with given studentIdcode
         List<Student> students = studentRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-
-            filters.add(cb.equal(root.get("person").get("idcode"), form.getStudentIdcode()));
             // FIXME status of student?
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
+            return cb.equal(root.get("person").get("idcode"), form.getStudentIdcode());
         });
         if(students.isEmpty()) {
-            throw new ValidationFailedException(null, "invalid-student-representative-application-student-not-found");
+            throw new AssertionFailedException("Student representative application: student not found");
         }
 
         // update person data
@@ -192,7 +188,7 @@ public class StudentRepresentativeService {
 
     private static void assertApplicationIsRequested(StudentRepresentativeApplication application) {
         if(!AVALDUS_ESINDAJA_STAATUS_E.name().equals(EntityUtil.getCode(application.getStatus()))) {
-            throw new ValidationFailedException(null, "invalid-student-representative-application-status");
+            throw new AssertionFailedException("Invalid student representative application status");
         }
     }
 }

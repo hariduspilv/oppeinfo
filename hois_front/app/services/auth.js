@@ -7,7 +7,7 @@ angular.module('hitsaOis')
     var newUser = function (response) {
       Menu.setMenu(response.data);
       if (response.data && response.data.user) {
-        Session.create(response.data.user, response.data.authorizedRoles, response.data.school);
+        Session.create(response.data.user, response.data.authorizedRoles, response.data.school, response.data.roleCode);
         return response.data;
       } else {
         Session.destroy();
@@ -47,6 +47,20 @@ angular.module('hitsaOis')
       if (authService.isAuthenticated()) {
         for (var index = (authorizedRoles.length - 1); index > -1; index--) {
           if (Session.authorizedRoles.indexOf(authorizedRoles[index]) !== -1) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
+    authService.matchesRole = function (roles) {
+      if (!angular.isArray(roles)) {
+        roles = [roles];
+      }
+      if (authService.isAuthenticated()) {
+        for (var index = (roles.length - 1); index > -1; index--) {
+          if (Session.roleCode === roles[index]) {
             return true;
           }
         }
@@ -130,15 +144,17 @@ angular.module('hitsaOis')
     reAuthenticate: 'auth-re'
   })
   .service('Session', function () {
-    this.create = function (userId, authorizedRoles, school) {
+    this.create = function (userId, authorizedRoles, school, roleCode) {
       this.userId = userId;
       this.authorizedRoles = authorizedRoles;
       this.school = school;
+      this.roleCode = roleCode;
     };
     this.destroy = function () {
       this.userId = null;
       this.authorizedRoles = [];
       this.school = {};
+      this.roleCode = null;
     };
   })
   .constant('USER_ROLES', {

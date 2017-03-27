@@ -29,7 +29,7 @@ public class CurriculumVersion extends BaseEntityWithId {
 
     @JsonIgnore
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)
+    @JoinColumn(nullable = false, updatable = false)
     private Curriculum curriculum;
 
     @NotBlank
@@ -66,14 +66,14 @@ public class CurriculumVersion extends BaseEntityWithId {
     private LocalDate validThru;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false)
     private Set<CurriculumVersionHigherModule> modules = new HashSet<>();
 
     @OneToMany(mappedBy = "curriculumVersion", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumVersionSpeciality> specialities = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false)
     private Set<CurriculumVersionOccupationModule> occupationModules = new HashSet<>();
 
     @Transient

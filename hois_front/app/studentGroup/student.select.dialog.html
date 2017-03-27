@@ -8,9 +8,7 @@
               <tr md-row>
                 <th md-column>{{'studentGroup.studentname' | translate}}</th>
                 <th md-column>{{'studentGroup.idcode' | translate}}</th>
-                <th md-column>{{'studentGroup.curriculum' | translate}}</th>
-                <th md-column>{{'studentGroup.studyForm' | translate}}</th>
-                <th md-column>{{'studentGroup.studyLevel' | translate}}</th>
+                <th md-column>{{'studentGroup.curriculumVersion' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>
@@ -18,8 +16,6 @@
                 <td md-cell>{{::row.fullname}}</td>
                 <td md-cell>{{::row.idcode}}</td>
                 <td md-cell>{{$root.currentLanguageNameField(row.curriculumVersion)}}</td>
-                <td md-cell>{{$root.currentLanguageNameField(row.studyForm)}}</td>
-                <td md-cell>{{$root.currentLanguageNameField(row.studyLevel)}}</td>
               </tr>
             </tbody>
           </table>

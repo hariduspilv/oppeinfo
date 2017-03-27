@@ -21,15 +21,15 @@ public class Message extends BaseEntityWithId {
     private String content;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "role_code")
+    @JoinColumn(name = "role_code", updatable = false)
     private Classifier sendersRole;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "person_id")
+    @JoinColumn(name = "person_id", updatable = false)
     private Person sender;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "school_id")
+    @JoinColumn(name = "school_id", updatable = false)
     private School sendersSchool;
 
     @ManyToOne(fetch = FetchType.LAZY)

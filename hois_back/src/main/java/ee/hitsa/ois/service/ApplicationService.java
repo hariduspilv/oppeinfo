@@ -24,7 +24,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.oxm.ValidationFailureException;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
@@ -51,6 +50,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
+import ee.hitsa.ois.web.dto.ApplicationDto;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.ApplicationSearchDto;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -62,7 +62,10 @@ public class ApplicationService {
             "inner join person person on student.person_id = person.id inner join classifier type on a.type_code = type.code "+
             "inner join classifier status on a.status_code = status.code";
     private static final String APPLICATION_SELECT = "a.id, a.type_code, a.status_code, a.inserted, "+
-            "a.submitted, a.student_id, person.firstname, person.lastname";
+            "a.submitted, a.student_id, person.firstname, person.lastname, a.reject_reason";
+
+    private static final List<String> VALID_APPLICATION_STATUSES = Arrays.asList(ApplicationStatus.AVALDUS_STAATUS_KOOST.name(), ApplicationStatus.AVALDUS_STAATUS_ESIT.name(),
+            ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
 
     @Autowired
     private ApplicationRepository applicationRepository;
@@ -86,27 +89,20 @@ public class ApplicationService {
 
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("a.type_code in (:type)", "type", criteria.getType());
-        if(criteria.getInsertedFrom() != null) {
-            qb.requiredCriteria("a.inserted >= :insertedFrom", "insertedFrom", DateUtils.firstMomentOfDay(criteria.getInsertedFrom()));
-        }
-        if(criteria.getInsertedThru() != null) {
-            qb.requiredCriteria("a.inserted <= :insertedThru", "insertedThru", DateUtils.lastMomentOfDay(criteria.getInsertedThru()));
-        }
-        if(criteria.getSubmittedFrom() != null) {
-            qb.requiredCriteria("a.submitted >= :submittedFrom", "submittedFrom", DateUtils.firstMomentOfDay(criteria.getSubmittedFrom()));
-        }
-        if(criteria.getSubmittedThru() != null) {
-            qb.requiredCriteria("a.submitted <= :submittedThru", "submittedThru", DateUtils.lastMomentOfDay(criteria.getSubmittedThru()));
-        }
+        qb.optionalCriteria("a.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("a.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
+
+        qb.optionalCriteria("a.submitted >= :submittedFrom", "submittedFrom", criteria.getSubmittedFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("a.submitted <= :submittedThru", "submittedThru", criteria.getSubmittedThru(), DateUtils::lastMomentOfDay);
+
         qb.optionalCriteria("a.status_code in (:status)", "status", criteria.getStatus());
         qb.optionalCriteria("a.student_id in (:studentId)", "studentId", criteria.getStudent());
-        if(StringUtils.hasText(criteria.getStudentName()))  {
-            qb.requiredCriteria("(upper(person.firstname) like :name or upper(person.lastname) like :name "
-                    + "or upper(person.firstname || ' ' || person.lastname) like :name)", "name", "%"+criteria.getStudentName().toUpperCase()+"%");
-        }
+
+        qb.optionalContains(Arrays.asList("person.firstname", "person.lastname", "person.firstname || ' ' || person.lastname"), "name", criteria.getStudentName());
+
         qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getStudentIdCode());
 
-        return JpaQueryUtil.pagingResult(qb.select(APPLICATION_SELECT, em), pageable, () -> qb.count(em)).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, APPLICATION_SELECT, em, pageable).map(r -> {
             ApplicationSearchDto dto = new ApplicationSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setType(resultAsString(r, 1));
@@ -115,6 +111,7 @@ public class ApplicationService {
             dto.setSubmitted(resultAsLocalDateTime(r, 4));
             String name = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
             dto.setStudent(new AutocompleteResult(resultAsLong(r, 5), name, name));
+            dto.setRejectReason(resultAsString(r, 8));
             return dto;
         });
     }
@@ -129,7 +126,10 @@ public class ApplicationService {
             throw new ValidationFailureException("Student has no valid academic leave application");
         }
 
-        return save(new Application(), applicationForm);
+        Application application = new Application();
+        application.setEhisSchool(ehisSchool);
+
+        return save(application, applicationForm);
     }
 
     public Application save(Application application, ApplicationForm applicationForm) {
@@ -211,7 +211,7 @@ public class ApplicationService {
             filters.add(cb.equal(root.get("ehisSchool").get("code"), ehisSchool));
             filters.add(cb.equal(root.get("student").get("id"), student));
             filters.add(cb.equal(root.get("type").get("code"), ApplicationType.AVALDUS_LIIK_AKAD.name()));
-            filters.add(cb.notEqual(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_TAGASI.name()));
+            filters.add(root.get("status").get("code").in(VALID_APPLICATION_STATUSES));
 
             root.join("studyPeriodEnd", JoinType.LEFT);
             filters.add(cb.or(
@@ -226,6 +226,7 @@ public class ApplicationService {
         return applicationRepository.findOne((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("academicApplication"), applicationId));
+            filters.add(root.get("status").get("code").in(VALID_APPLICATION_STATUSES));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
     }
@@ -236,9 +237,7 @@ public class ApplicationService {
             result.put(type, Boolean.TRUE);
         }
         //Kui õppur on juba koostanud seda liiki avalduse, mille staatus on „Koostamisel“, „Esitatud“, „Ülevaatamisel“ või „Kinnitamisel“;
-        List<Application> existingApplications = applicationRepository.findDistinctTypeByStudentIdAndStatusCodeIn(studentId,
-                Arrays.asList(ApplicationStatus.AVALDUS_STAATUS_KOOST.name(), ApplicationStatus.AVALDUS_STAATUS_ESIT.name(),
-                        ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name()));
+        List<Application> existingApplications = applicationRepository.findDistinctTypeByStudentIdAndStatusCodeIn(studentId, VALID_APPLICATION_STATUSES);
 
         for (Application application : existingApplications) {
             result.put(ApplicationType.valueOf(EntityUtil.getNullableCode(application.getType())), Boolean.FALSE);
@@ -254,7 +253,10 @@ public class ApplicationService {
 
     public void submit(HoisUserDetails user, Application application) {
         Student student = application.getStudent();
-        if (UserUtil.isAdultStudent(user, student) || UserUtil.isStudentRepresentative(user, student)) {
+        if(UserUtil.isSchoolAdmin(user, student.getSchool())) {
+            application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
+            application.setSubmitted(LocalDateTime.now());
+        } if (UserUtil.isAdultStudent(user, student) || UserUtil.isStudentRepresentative(user, student)) {
             application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()));
             application.setSubmitted(LocalDateTime.now());
         } else {
@@ -267,5 +269,18 @@ public class ApplicationService {
         application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name()));
         application.setRejectReason(applicationRejectForm.getReason());
         applicationRepository.save(application);
+    }
+
+    public ApplicationDto get(HoisUserDetails user, Application application) {
+        setSeenBySchoolAdmin(user, application);
+        return ApplicationDto.of(application);
+    }
+
+    private void setSeenBySchoolAdmin(HoisUserDetails user, Application application) {
+        if (UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) &&
+                EntityUtil.getCode(application.getStatus()).equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.name())) {
+            application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
+            applicationRepository.save(application);
+        }
     }
 }

@@ -119,7 +119,6 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       message.error('teacher.teacherPositionEhis.error');
       errors = true;
     }
-    console.log($scope.teacherForm.$valid);
     if($scope.teacherForm.$valid && !errors) {
       if($scope.teacher.id) {
         $scope.teacher.$update().then(afterLoad).then(message.updateSuccess);
@@ -131,9 +130,10 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       }
     }
   };
-}]).controller('TeacherListController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
+}]).controller('TeacherListController', ['$scope', 'AuthService', 'QueryUtils', function ($scope, AuthService, QueryUtils) {
   QueryUtils.createQueryForm($scope, '/teachers', {order: 'person.lastname,person.firstname'});
 
+  $scope.showSchool = AuthService.matchesRole('ROLL_V');
   $scope.loadData();
 }]);
 

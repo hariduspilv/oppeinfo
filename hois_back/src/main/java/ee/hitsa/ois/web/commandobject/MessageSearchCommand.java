@@ -1,21 +1,14 @@
 package ee.hitsa.ois.web.commandobject;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 public class MessageSearchCommand {
     
     private String subject;
     private String sender;
-    private LocalDateTime sentFrom;
-    private LocalDateTime sentThru;
-    private Boolean isRead;
+    private LocalDate sentFrom;
+    private LocalDate sentThru;
 
-    public Boolean getIsRead() {
-        return isRead;
-    }
-    public void setIsRead(Boolean isRead) {
-        this.isRead = isRead;
-    }
     public String getSubject() {
         return subject;
     }
@@ -28,16 +21,16 @@ public class MessageSearchCommand {
     public void setSender(String sender) {
         this.sender = sender;
     }
-    public LocalDateTime getSentFrom() {
+    public LocalDate getSentFrom() {
         return sentFrom;
     }
-    public void setSentFrom(LocalDateTime sentFrom) {
+    public void setSentFrom(LocalDate sentFrom) {
         this.sentFrom = sentFrom;
     }
-    public LocalDateTime getSentThru() {
+    public LocalDate getSentThru() {
         return sentThru;
     }
-    public void setSentThru(LocalDateTime sentThru) {
+    public void setSentThru(LocalDate sentThru) {
         this.sentThru = sentThru;
     }
 }

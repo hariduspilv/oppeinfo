@@ -54,11 +54,11 @@ public class StateCurriculum extends BaseEntityWithId {
 	
 	
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true)
-	@JoinColumn(name = "state_curriculum_id", nullable=false, updatable = false, insertable = true)
+	@JoinColumn(name = "state_curriculum_id", nullable=false, updatable = false)
 	private Set<StateCurriculumModule> modules = new HashSet<>();
 	
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true)
-	@JoinColumn(name = "state_curriculum_id", nullable=false, updatable = false, insertable = true)
+	@JoinColumn(name = "state_curriculum_id", nullable=false, updatable = false)
 	private Set<StateCurriculumOccupation> occupations = new HashSet<>();
 
 	public String getEkrLevel() {

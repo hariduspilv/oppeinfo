@@ -71,9 +71,6 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     private LocalDateTime submitted;
 
-    @ClassifierRestriction(MainClassCode.EHIS_KOOL)
-    private String ehisSchool;
-
     private Boolean isAbroad;
 
     @Size(max = 255)
@@ -259,14 +256,6 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setSubmitted(LocalDateTime submitted) {
         this.submitted = submitted;
-    }
-
-    public String getEhisSchool() {
-        return ehisSchool;
-    }
-
-    public void setEhisSchool(String ehisSchool) {
-        this.ehisSchool = ehisSchool;
     }
 
     public Boolean getIsAbroad() {

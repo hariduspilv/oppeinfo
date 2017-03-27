@@ -28,6 +28,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
+import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
 @RestController
 @RequestMapping("/autocomplete")
@@ -90,7 +91,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/studentgroups")
-    public Page<AutocompleteResult> studentGroups(HoisUserDetails user) {
+    public Page<StudentGroupResult> studentGroups(HoisUserDetails user) {
         return asPage(autocompleteService.studentGroups(user.getSchoolId()));
     }
 

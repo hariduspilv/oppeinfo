@@ -7,7 +7,7 @@ angular.module('hitsaOis').controller('ReceptionSaisAdmissionListController', fu
 
   var SaisAdmissionsEndpoint = QueryUtils.endpoint('/autocomplete/saisAdmissionCodes');
   SaisAdmissionsEndpoint.query({}, function(result) {
-    $scope.saisAdmissions = result;
+    $scope.saisAdmissionCodes = result;
   });
 
 

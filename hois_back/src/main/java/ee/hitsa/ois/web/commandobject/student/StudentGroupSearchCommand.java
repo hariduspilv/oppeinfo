@@ -7,6 +7,8 @@ import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 public class StudentGroupSearchCommand {
 
     private String code;
+    private EntityConnectionCommand curriculum;
+    private List<Long> curriculums;
     private List<Long> curriculumVersion;
     private List<String> studyForm;
     private EntityConnectionCommand teacher;
@@ -19,12 +21,28 @@ public class StudentGroupSearchCommand {
         this.code = code;
     }
 
-    public List<Long> getCurriculumVersion() {
-        return curriculumVersion;
+    public EntityConnectionCommand getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(EntityConnectionCommand curriculum) {
+        this.curriculum = curriculum;
+    }
+
+    public void setCurriculums(List<Long> curriculums) {
+        this.curriculums = curriculums;
     }
 
     public void setCurriculumVersion(List<Long> curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
+    }
+
+    public List<Long> getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public List<Long> getCurriculums() {
+        return curriculums;
     }
 
     public List<String> getStudyForm() {

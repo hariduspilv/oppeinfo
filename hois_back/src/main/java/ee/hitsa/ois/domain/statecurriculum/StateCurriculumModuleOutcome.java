@@ -16,7 +16,7 @@ public class StateCurriculumModuleOutcome extends BaseEntityWithId {
 	private String outcomesEn;
 	
 	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "state_curriculum_module_id", nullable=false, updatable = false, insertable = true)
+	@JoinColumn(name = "state_curriculum_module_id", nullable = false, updatable = false)
 	private StateCurriculumModule module;
 
 	public StateCurriculumModuleOutcome() {

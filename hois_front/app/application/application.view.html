@@ -2,8 +2,6 @@
 
   <div flex>
     <form layout="column">
-
-
       <div style="padding-top: 1em">
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
@@ -183,7 +181,7 @@
           </div>
         </div>
 
-        <div ng-if="application.type === 'AVALDUS_LIIK_KYLALIS'">
+        <div ng-if="application.type === 'AVALDUS_LIIK_VALIS'">
           <div layout="row">
             <md-input-container flex="20" flex-xs="100">
               <label class="md-required common-label">{{'main.abroadStudies' | translate}}</label>
@@ -242,7 +240,7 @@
           </md-input-container>
         </div>
 
-        <div ng-if="application.type === 'AVALDUS_LIIK_KYLALIS'">
+        <div ng-if="application.type === 'AVALDUS_LIIK_VALIS'">
           <div layout="column" flex>
             <div layout="row" class="top-margin">
               <h2>{{'main.subjects' | translate}} </h2>
@@ -302,10 +300,10 @@
 
 
       <div layout="row">
-        <md-button ng-href="#/applications/{{application.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+        <md-button ng-if="application.status === 'AVALDUS_STAATUS_KOOST' || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())" ng-href="#/applications/{{application.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
         <div ng-include="'application/templates/action.buttons.html'"></div>
+        <md-button ng-click="back('#/applications/'+ (auth.isStudent() ? 'student': ''))" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
-
     </form>
   </div>
 </div>

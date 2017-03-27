@@ -16,10 +16,11 @@ public class MessageReceiver extends BaseEntityWithId {
     private Classifier status;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)    
+    @JoinColumn(nullable = false, updatable = false)
     private Message message;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private Person person;
 
     public LocalDateTime getRead() {

@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Transient;
@@ -21,6 +22,9 @@ public class CurriculumSpeciality extends BaseEntityWithId {
 
 	private static final long serialVersionUID = 8173305313184771116L;
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
+    private Curriculum curriculum;
 	@NotBlank
 	@Size(max=100)
 	private String nameEt;
@@ -55,11 +59,20 @@ public class CurriculumSpeciality extends BaseEntityWithId {
     }
 
     public Long getReferenceNumber() {
-        return referenceNumber;
+        assert referenceNumber != null || this.getId() != null : "Speciality should whether be saved before or have a reference number!";
+        return referenceNumber != null ? referenceNumber : this.getId();
     }
 
     public void setReferenceNumber(Long referenceNumber) {
         this.referenceNumber = referenceNumber;
+    }
+        
+    public Curriculum getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(Curriculum curriculum) {
+        this.curriculum = curriculum;
     }
 
     public String getNameEt() {

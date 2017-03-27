@@ -11,8 +11,6 @@ public class StudentGroupStudentDto {
     private String fullname;
     private String idcode;
     private AutocompleteResult curriculumVersion;
-    private String studyForm;
-    private String studyLevel;
 
     public Long getId() {
         return id;
@@ -46,28 +44,11 @@ public class StudentGroupStudentDto {
         this.curriculumVersion = curriculumVersion;
     }
 
-    public String getStudyForm() {
-        return studyForm;
-    }
-
-    public void setStudyForm(String studyForm) {
-        this.studyForm = studyForm;
-    }
-
-    public String getStudyLevel() {
-        return studyLevel;
-    }
-
-    public void setStudyLevel(String studyLevel) {
-        this.studyLevel = studyLevel;
-    }
-
     public static StudentGroupStudentDto of(Student student) {
         StudentGroupStudentDto dto = EntityUtil.bindToDto(student, new StudentGroupStudentDto());
         Person p = student.getPerson();
         dto.setFullname(p.getFullname());
         dto.setIdcode(p.getIdcode());
-        dto.setStudyLevel(EntityUtil.getCode(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel()));
         return dto;
     }
 }

@@ -1,12 +1,22 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.enums.DirectiveType.*;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import java.util.AbstractMap;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 import org.springframework.beans.PropertyAccessor;
@@ -15,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
@@ -22,12 +33,15 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 
 @Transactional
 @Service
@@ -40,6 +54,8 @@ public class DirectiveConfirmService {
     @Autowired
     private DirectiveRepository directiveRepository;
     @Autowired
+    private EntityManager em;
+    @Autowired
     private StudentService studentService;
     @Autowired
     private Validator validator;
@@ -49,11 +65,33 @@ public class DirectiveConfirmService {
             throw new AssertionFailedException("Inalid directive status");
         }
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
+        List<Map.Entry<String, String>> allErrors = new ArrayList<>();
+        Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
         // validate each student's data for given directive
+        long rowNum = 0;
         for(DirectiveStudent ds : directive.getStudents()) {
-            validator.validate(ds, directiveType.validationGroup());
+            Set<ConstraintViolation<DirectiveStudent>> errors = validator.validate(ds, directiveType.validationGroup());
+            if(!errors.isEmpty()) {
+                for(ConstraintViolation<DirectiveStudent> e : errors) {
+                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, e.getPropertyPath().toString()), e.getMessage()));
+                }
+            }
+            if(DirectiveType.KASKKIRI_AKADK.equals(directiveType)) {
+                // check that cancel date is inside academic leave period
+                DirectiveStudent academicLeave = academicLeaves.get(EntityUtil.getId(ds.getStudent()));
+                LocalDate leaveCancel = ds.getStartDate();
+                if(leaveCancel.isBefore(periodStart(academicLeave)) || !leaveCancel.isBefore(periodEnd(academicLeave))) {
+                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "startDate"), "InvalidValue"));
+                }
+            }
+            rowNum++;
         }
 
+        if(!allErrors.isEmpty()) {
+            throw new ValidationFailedException(allErrors);
+        }
+
+        // TODO send to sais, if service returns no errors then update wdId with service return value and set status to kinnitamisel
         directive.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name()));
         directiveRepository.save(directive);
     }
@@ -72,48 +110,50 @@ public class DirectiveConfirmService {
             cancelDirective(directive);
         } else {
             Classifier studentStatus = directiveType.studentStatus() != null ? classifierRepository.getOne(directiveType.studentStatus().name()) : null;
+            Classifier applicationStatus = classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
+            Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
             for(DirectiveStudent ds : directive.getStudents()) {
                 // TODO put changes which should occur in future, into task queue
                 // store student version for undo
                 ds.setStudentHistory(ds.getStudent().getStudentHistory());
-                updateStudentApplicationStatus(ds, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD);
-                updateStudentData(directiveType, ds, studentStatus);
+                updateApplicationStatus(ds, applicationStatus);
+                updateStudentData(directiveType, ds, studentStatus, academicLeaves.get(EntityUtil.getId(ds.getStudent())));
             }
         }
         directiveRepository.save(directive);
     }
 
-    private void updateStudentData(DirectiveType directiveType, DirectiveStudent directive, Classifier studentStatus) {
+    private void updateStudentData(DirectiveType directiveType, DirectiveStudent directive, Classifier studentStatus, DirectiveStudent academicLeave) {
         Student student = directive.getStudent();
+        LocalDate confirmDate = directive.getDirective().getConfirmDate();
+        User user;
+        long duration;
 
         switch(directiveType) {
         case KASKKIRI_AKAD:
-            // Akadeemilisele puhkusele lubamise käskkiri
-            // TODO Õppuri eeldatav nominaalaja lõppkuupäev ==  „õppuri eeldatav nominaalaja lõppkuupäev“ + „akadeemilise puhkuse pikkus“.
+            duration = ChronoUnit.DAYS.between(periodStart(directive), periodEnd(directive).plusDays(1));
+            student.setNominalStudyEnd(student.getNominalStudyEnd().plusDays(duration));
             break;
         case KASKKIRI_AKADK:
-            // Akadeemilise puhkuse katkestamise käskkiri
-            // TODO Õppuri eeldatav nominaalaja lõppkuupäev ==  „õppuri eeldatav nominaalaja lõppkuupäev“ – „päevade arv, mis jäi akadeemilise puhkuse lõppkuupäeva ja akadeemilise puhkuse katkestamise kuupäeva vahele“.
-            // startDate - katkestamise kuupäev
+            duration = ChronoUnit.DAYS.between(periodStart(academicLeave), directive.getStartDate());
+            student.setNominalStudyEnd(student.getNominalStudyEnd().minusDays(duration));
             break;
         case KASKKIRI_EKSMAT:
-            // Eksmatrikuleerimise käskkiri
-            // TODO Õppuri eksmatrikuleerimise kuupäev == käskkirja EKIS-es kinnitamise kuupäev
-            // TODO Õppuri rollile ’õppur’ märgitakse kehtivuse lõppkuupäevaks käskkirja kinnitamise kuupäev
+            // FIXME correct field for Õppuri eksmatrikuleerimise kuupäev?
+            student.setStudyEnd(confirmDate);
+            user = userForStudent(student);
+            user.setValidThru(confirmDate);
             break;
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
-            // Immatrikuleerimise käskkiri
             student = createStudent(directive);
             break;
         case KASKKIRI_ENNIST:
-            // Ennistamise käskkiri
-            // TODO Ennistamise kuupäev == käskkirjal olev väärtus;
-            // TODO Õppuri roll ’õppur’ muudetakse käskkirja kinnitamise kuupäevast alates kehtivaks;
-            break;
-        case KASKKIRI_KYLALIS:
-            // Külalisõpilaseks vormistamise käskkiri
-            // TODO Õppuri eeldatav nominaalaja lõppkuupäev ==  õppuri eeldatav nominaalaja lõppkuupäev + „nominaalaega pikendatakse“ väljale valitud semestrite arvu alusel kas ühe lisanduva semestri pikkus või kahe lisanduva semestri kogupikkus
+            // FIXME correct field for Ennistamise kuupäev?
+            student.setStudyStart(directive.getStartDate());
+            user = userForStudent(student);
+            user.setValidFrom(confirmDate);
+            // FIXME update also validThru?
             break;
         default:
             break;
@@ -146,22 +186,66 @@ public class DirectiveConfirmService {
         }
     }
 
-    private void updateStudentApplicationStatus(DirectiveStudent directive, ApplicationStatus status) {
+    private void updateApplicationStatus(DirectiveStudent directive, Classifier applicationStatus) {
         Application application = directive.getApplication();
         if(application != null) {
-            application.setStatus(classifierRepository.getOne(status.name()));
+            application.setStatus(applicationStatus);
             applicationRepository.save(application);
         }
     }
 
-    private static Student createStudent(DirectiveStudent directive) {
+    private Map<Long, DirectiveStudent> findAcademicLeaves(Directive directive) {
+        if(!DirectiveType.KASKKIRI_AKADK.name().equals(directive.getType())) {
+            return Collections.emptyMap();
+        }
+
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_student ds "+
+                "left outer join study_period sps on ds.study_period_start_id = sps.id "+
+                "left outer join study_period spe on ds.study_period_end_id = sps.id");
+
+        List<Long> studentIds = directive.getStudents().stream().map(DirectiveStudent::getId).collect(Collectors.toList());
+        qb.requiredCriteria("ds.student_history_id in "+
+                "(select max(sh.id) from student_history sh where sh.student_id in (:studentIds) and sh.status_code = 'OPPURSTAATUS_A' group by sh.student_id)", "studentIds", studentIds);
+
+        List<?> data = qb.select("ds.student_id, case when ds.is_period then sps.start_date else ds.start_date end, "+
+                  "case when ds.is_period then spe.end_date else ds.end_date end", em).getResultList();
+
+        return data.stream().map(r -> {
+            DirectiveStudent ds = new DirectiveStudent();
+            ds.setStudent(em.getReference(Student.class, resultAsLong(r, 0)));
+            ds.setIsPeriod(Boolean.FALSE);
+            ds.setStartDate(resultAsLocalDate(r, 1));
+            ds.setEndDate(resultAsLocalDate(r, 2));
+            return ds;
+        }).collect(Collectors.toMap(ds -> EntityUtil.getId(ds.getStudent()), ds -> ds));
+    }
+
+    private static User userForStudent(Student student) {
+        Long studentId = student.getId();
+        return student.getPerson().getUsers().stream().filter(u -> studentId.equals(EntityUtil.getNullableId(u.getStudent()))).findFirst().orElse(null);        
+    }
+
+    private static LocalDate periodStart(DirectiveStudent directive) {
+        return Boolean.TRUE.equals(directive.getIsPeriod()) ? directive.getStudyPeriodStart().getStartDate() : directive.getStartDate();
+    }
+
+    private static LocalDate periodEnd(DirectiveStudent directive) {
+        return Boolean.TRUE.equals(directive.getIsPeriod()) ? directive.getStudyPeriodEnd().getEndDate() : directive.getEndDate();
+    }
+
+    private Student createStudent(DirectiveStudent directive) {
         Student student = new Student();
         student.setPerson(directive.getPerson());
         student.setSchool(directive.getDirective().getSchool());
-        // TODO Õppima asumise kuupäev == käskkirjal olev väärtus
+        student.setStudyStart(directive.getStartDate());
         // TODO Kursus == käskkirjal olev väärtus
-        // TODO „Aktiivne == „jah“
-        // TODO Õppurile omistatakse roll ’õppur’ alates käskkirja kinnitamise kuupäevast
+        // new role for student
+        User user = new User();
+        user.setPerson(directive.getPerson());
+        user.setSchool(student.getSchool());
+        user.setRole(em.getReference(Classifier.class, Role.ROLL_T.name()));
+        user.setValidFrom(directive.getDirective().getConfirmDate());
+        em.persist(user);
         return student;
     }
 
@@ -181,5 +265,10 @@ public class DirectiveConfirmService {
                 writer.setPropertyValue("status", status);
             }
         }
+    }
+
+    private static String propertyPath(long rowNum, String property) {
+        String pathPrefix = String.format("students[%s]", Long.valueOf(rowNum));
+        return property.isEmpty() ? pathPrefix : pathPrefix + "." + property;
     }
 }

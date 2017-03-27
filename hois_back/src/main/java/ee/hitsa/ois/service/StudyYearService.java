@@ -10,6 +10,7 @@ import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.StudyYearRepository;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
 import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.StudyYearForm;
@@ -18,7 +19,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -36,6 +39,8 @@ public class StudyYearService {
 
     @Autowired
     private StudyPeriodEventRepository studyPeriodEventRepository;
+
+    private static final String[] STUDY_PERIOD_EVENTS = {"SYNDMUS_AVES", "SYNDMUS_DEKP", "SYNDMUS_VOTA"};
 
     public List<StudyYearsSearchDto> getStudyYears(Long schoolId) {
         return studyYearRepository.findStudyYearsBySchool(schoolId).stream().map(StudyYearsSearchDto::new).collect(Collectors.toList());
@@ -78,6 +83,15 @@ public class StudyYearService {
     public StudyPeriodEvent save(StudyYear studyYear, StudyPeriodEvent studyPeriodEvent, StudyPeriodEventForm request) {
         EntityUtil.bindToEntity(request, studyPeriodEvent, classifierRepository, "studyPeriod");
         EntityUtil.setEntityFromRepository(request, studyPeriodEvent, studyPeriodRepository, "studyPeriod");
+        String eventType = EntityUtil.getCode(studyPeriodEvent.getEventType());
+
+        if (Arrays.asList(STUDY_PERIOD_EVENTS).contains(eventType)) {
+            Set<StudyPeriodEvent> events = studyPeriodEventRepository.findAllByStudyYearAndStudyPeriodAndEventType(studyYear, studyPeriodEvent.getStudyPeriod(), studyPeriodEvent.getEventType());
+            if (events.stream().anyMatch(it -> !studyPeriodEvent.getId().equals(it.getId()))){
+                throw new ValidationFailedException("eventType", "duplicate-found");
+            }
+        }
+
         if (studyPeriodEvent.getId() != null) {
             if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriodEvent.getStudyYear())) ||
                     studyPeriodEvent.getStudyPeriod() != null && !EntityUtil.getId(studyPeriodEvent.getStudyPeriod().getStudyYear()).equals(EntityUtil.getId(studyYear))) {

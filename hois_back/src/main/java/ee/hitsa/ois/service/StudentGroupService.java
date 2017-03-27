@@ -7,8 +7,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +29,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
@@ -35,6 +38,7 @@ import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -59,11 +63,11 @@ public class StudentGroupService {
             "inner join classifier study_form on sg.study_form_code=study_form.code";
 
     @Autowired
-    private EntityManager em;
-    @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private CurriculumRepository curriculumRepository;
+    @Autowired
+    private EntityManager em;
     @Autowired
     private SchoolRepository schoolRepository;
     @Autowired
@@ -79,6 +83,8 @@ public class StudentGroupService {
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
 
         qb.optionalContains("sg.code", "code", criteria.getCode());
+        qb.optionalCriteria("curriculum.id = :curriculum", "curriculum", criteria.getCurriculum());
+        qb.optionalCriteria("curriculum.id in (:curriculums)", "curriculums", criteria.getCurriculums());
         qb.optionalCriteria("sg.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalCriteria("sg.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("sg.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
@@ -186,8 +192,25 @@ public class StudentGroupService {
         }).stream().map(StudentGroupStudentDto::of).collect(Collectors.toList());
     }
 
+    public Map<String, ?> curriculumData(Curriculum curriculum) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("curriculumVersions", curriculum.getVersions().stream().map(AutocompleteResult::of).collect(Collectors.toList()));
+        data.put("languages", curriculum.getStudyLanguages().stream().map(r -> EntityUtil.getCode(r.getStudyLang())).collect(Collectors.toList()));
+        List<String> studyForms;
+        if(CurriculumUtil.isHigher(curriculum.getOrigStudyLevel())) {
+            studyForms = classifierRepository.findAllCodesByMainClassCode(MainClassCode.OPPEVORM.name());
+        } else {
+            studyForms = curriculum.getStudyForms().stream().map(r -> EntityUtil.getCode(r.getStudyForm())).collect(Collectors.toList());
+        }
+        data.put("studyForms", studyForms);
+        data.put("origStudyLevel", EntityUtil.getCode(curriculum.getOrigStudyLevel()));
+        data.put("specialities", findSpecialities(curriculum));
+        data.put("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(curriculum.getOrigStudyLevel())));
+        return data;
+    }
+
     @SuppressWarnings("unchecked")
-    public List<String> findSpecialities(Curriculum curriculum) {
+    private List<String> findSpecialities(Curriculum curriculum) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum_occupation_speciality s inner join curriculum_occupation co on s.curriculum_occupation_id = co.id");
         qb.requiredCriteria("co.curriculum_id = :curriculumId", "curriculumId", EntityUtil.getId(curriculum));
 

@@ -9,8 +9,12 @@
           </md-input-container>
 
           <md-input-container>
-            <label>{{'studentGroup.curriculum' | translate}}</label>
-            <hois-select type="curriculumversion" ng-model="criteria.curriculumVersion" name="curriculumVersion" multiple></hois-select>
+            <hois-autocomplete ng-model="criteria.curriculum" method="curriculums" name="curriculum" label="studentGroup.curriculum" md-selected-item-change="curriculumChanged()"></hois-autocomplete>
+          </md-input-container>
+
+          <md-input-container>
+            <label>{{formState.curriculumVersionLabel | translate}}</label>
+            <hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions" name="curriculumVersion" multiple></hois-select>
           </md-input-container>
 
           <md-input-container>

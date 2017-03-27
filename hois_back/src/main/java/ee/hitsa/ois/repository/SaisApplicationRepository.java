@@ -7,4 +7,6 @@ import ee.hitsa.ois.domain.SaisApplication;
 
 public interface SaisApplicationRepository extends JpaRepository<SaisApplication, Long>, JpaSpecificationExecutor<SaisApplication> {
 
+    SaisApplication findByApplicationNr(String applicationNr);
+
 }

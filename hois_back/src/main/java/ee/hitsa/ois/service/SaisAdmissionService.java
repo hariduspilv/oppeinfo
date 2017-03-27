@@ -17,9 +17,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.SaisAdmission;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.SaisAdmissionSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -72,6 +74,10 @@ public class SaisAdmissionService {
             String code = resultAsString(r, 1);
             return new AutocompleteResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)), CurriculumUtil.versionName(code, resultAsString(r, 3)));
         }).collect(Collectors.toList());
+    }
+
+    public void delete(SaisAdmission saisAdmission) {
+        EntityUtil.deleteEntity(saisAdmissionRepository, saisAdmission);
     }
 
 }

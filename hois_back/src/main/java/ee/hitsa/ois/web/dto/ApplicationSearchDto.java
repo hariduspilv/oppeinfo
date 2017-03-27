@@ -10,6 +10,7 @@ public class ApplicationSearchDto {
     private Long id;
     private AutocompleteResult student;
     private String status;
+    private String rejectReason;
     private String type;
     private LocalDateTime inserted;
     private LocalDateTime submitted;
@@ -36,6 +37,12 @@ public class ApplicationSearchDto {
     }
     public void setStatus(String status) {
         this.status = status;
+    }
+    public String getRejectReason() {
+        return rejectReason;
+    }
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
     public String getType() {
         return type;

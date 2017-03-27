@@ -30,7 +30,7 @@ public class StateCurriculumModule extends BaseEntityWithId {
 	private String assessmentsEn;
 
 	@OneToMany(cascade=CascadeType.ALL, orphanRemoval=true)
-	@JoinColumn(name = "state_curriculum_module_id", nullable=false, updatable = false, insertable = true)
+	@JoinColumn(name = "state_curriculum_module_id", nullable=false, updatable = false)
 	private Set<StateCurriculumModuleOccupation> moduleOccupations = new HashSet<>();
 
 	@JsonManagedReference

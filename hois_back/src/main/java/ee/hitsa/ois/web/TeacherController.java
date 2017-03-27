@@ -30,7 +30,9 @@ public class TeacherController {
 
     @GetMapping("")
     public Page<TeacherDto> search(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
-        command.setSchool(user.getSchoolId());
+        if (!user.isExternalExpert()) {
+            command.setSchool(user.getSchoolId());
+        }
         return teacherService.search(command, pageable);
     }
 

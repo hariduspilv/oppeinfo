@@ -56,6 +56,7 @@ import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -128,17 +129,13 @@ public class DirectiveService {
         qb.optionalCriteria("d.confirm_date >= :confirmDateFrom", "confirmDateFrom", criteria.getConfirmDateFrom());
         qb.optionalCriteria("d.confirm_date <= :confirmDateThru", "confirmDateThru", criteria.getConfirmDateThru());
         qb.optionalCriteria("d.status_code in (:status)", "status", criteria.getStatus());
-        if(criteria.getInsertedFrom() != null) {
-            qb.requiredCriteria("d.inserted >= :insertedFrom", "insertedFrom", DateUtils.firstMomentOfDay(criteria.getInsertedFrom()));
-        }
-        if(criteria.getInsertedThru() != null) {
-            qb.requiredCriteria("d.inserted <= :insertedThru", "insertedThru", DateUtils.lastMomentOfDay(criteria.getInsertedThru()));
-        }
-        if(StringUtils.hasText(criteria.getStudentGroup())) {
-            qb.requiredCriteria("d.id in (select ds.directive_id from directive_student ds inner join student_group sg on ds.student_group_id=sg.id where upper(sg.code) like :studentGroup)", "studentGroup", "%"+criteria.getStudentGroup().toUpperCase()+"%");
-        }
 
-        return JpaQueryUtil.pagingResult(qb.select(DIRECTIVE_LIST_SELECT, em), pageable, () -> qb.count(em)).map(r -> {
+        qb.optionalCriteria("d.inserted >= :insertedFrom", "insertedFrom", criteria.getInsertedFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("d.inserted <= :insertedThru", "insertedThru", criteria.getInsertedThru(), DateUtils::lastMomentOfDay);
+
+        qb.optionalCriteria("d.id in (select ds.directive_id from directive_student ds inner join student_group sg on ds.student_group_id=sg.id where upper(sg.code) like :studentGroup)", "studentGroup", criteria.getStudentGroup(), SearchUtil::toContains);
+
+        return JpaQueryUtil.pagingResult(qb, DIRECTIVE_LIST_SELECT, em, pageable).map(r -> {
             DirectiveSearchDto dto = new DirectiveSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setHeadline(resultAsString(r, 1));
@@ -237,6 +234,11 @@ public class DirectiveService {
     }
 
     public List<DirectiveStudentDto> loadStudents(Long schoolId, DirectiveDataCommand cmd) {
+        if(isSais(cmd.getType())) {
+            // TODO if type is immat (vastuvõtt), use sais application for filling student data
+            return Collections.emptyList();
+        }
+
         List<Long> studentIds = cmd.getStudents();
         if(studentIds == null || studentIds.isEmpty()) {
             return Collections.emptyList();
@@ -279,10 +281,16 @@ public class DirectiveService {
     }
 
     public List<DirectiveStudentSearchDto> searchStudents(Long schoolId, DirectiveStudentSearchCommand criteria) {
+        if(isSais(criteria.getType())) {
+            // if type is immat (vastuvõtt), use sais application for filling student data
+            return saisSearchStudents(schoolId, criteria);
+        }
+
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from student s inner join person person on s.person_id = person.id "+
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id inner join curriculum c on cv.curriculum_id = c.id "+
                 "left outer join student_group sg on s.student_group_id = sg.id", new Sort("person.lastname", "person.firstname"));
+
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains("person.firstname", "firstname", criteria.getFirstname());
         qb.optionalContains("person.lastname", "lastname", criteria.getLastname());
@@ -335,11 +343,35 @@ public class DirectiveService {
         }).collect(Collectors.toList());
     }
 
+    private List<DirectiveStudentSearchDto> saisSearchStudents(Long schoolId, DirectiveStudentSearchCommand criteria) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+                "from sais_application sa inner join sais_admission ad on sa.sais_admission_id = ad.id "+
+                "inner join curriculum_version cv on ad.curriculum_version_id = cv.id inner join curriculum c on cv.curriculum_id = c.id",
+                new Sort("sa.lastname", "sa.firstname"));
+
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalContains("sa.firstname", "firstname", criteria.getFirstname());
+        qb.optionalContains("sa.lastname", "lastname", criteria.getLastname());
+        qb.optionalCriteria("sa.idcode = :idcode", "idcode", criteria.getIdcode());
+        qb.optionalCriteria("sa.idcode not in (select ds.idcode from directive_student ds where ds.directive_id = :directiveId)", "directiveId", criteria.getDirective());
+
+        // TODO application status
+
+        List<?> data = qb.select("sa.id, sa.firstname, sa.lastname, sa.idcode", em).setMaxResults(STUDENTS_MAX).getResultList();
+        return data.stream().map(r -> {
+            DirectiveStudentSearchDto dto = new DirectiveStudentSearchDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setIdcode(resultAsString(r, 3));
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
     public Page<DirectiveCoordinatorDto> search(Long schoolId, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator dc", pageable);
         qb.requiredCriteria("dc.school_id = :schoolId", "schoolId", schoolId);
 
-        return JpaQueryUtil.pagingResult(qb.select("dc.id, dc.name, dc.idcode, dc.version, dc.is_directive, dc.is_certificate, dc.is_certificate_default", em), pageable, () -> qb.count(em)).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, "dc.id, dc.name, dc.idcode, dc.version, dc.is_directive, dc.is_certificate, dc.is_certificate_default", em, pageable).map(r -> {
             DirectiveCoordinatorDto dto = new DirectiveCoordinatorDto();
             dto.setId(resultAsLong(r, 0));
             dto.setName(resultAsString(r, 1));
@@ -442,6 +474,10 @@ public class DirectiveService {
             student.setStudyPeriodStart(null);
             student.setStudyPeriodEnd(null);
         }
+    }
+
+    private static boolean isSais(String directiveType) {
+        return DirectiveType.KASKKIRI_IMMATV.name().equals(directiveType);
     }
 
     private static void assertModifyable(Directive directive) {

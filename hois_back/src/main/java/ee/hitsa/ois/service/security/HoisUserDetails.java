@@ -56,6 +56,10 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
         return schoolId != null && Role.ROLL_A.name().equals(role);
     }
 
+    public boolean isExternalExpert() {
+        return Role.ROLL_V.name().equals(role);
+    }
+
     public boolean isMainAdmin() {
         return Role.ROLL_P.name().equals(role);
     }

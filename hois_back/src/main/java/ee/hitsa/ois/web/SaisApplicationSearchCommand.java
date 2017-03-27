@@ -2,9 +2,14 @@ package ee.hitsa.ois.web;
 
 import java.util.List;
 
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
+
 public class SaisApplicationSearchCommand {
 
     private List<String> code;
+
+    @ClassifierRestriction(MainClassCode.SAIS_AVALDUSESTAATUS)
     private List<String> status;
     private String name;
     private String idcode;
