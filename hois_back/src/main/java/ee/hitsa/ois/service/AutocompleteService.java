@@ -46,6 +46,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
 @Transactional
@@ -113,8 +114,10 @@ public class AutocompleteService {
         return curriculumRepository.findAllBySchool_id(schoolId);
     }
 
-    public List<AutocompleteResult> curriculumVersions(Long schoolId, Boolean valid) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id");
+    public List<CurriculumVersionResult> curriculumVersions(Long schoolId, Boolean valid) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+                "from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id "+
+                "left outer join curriculum_study_form sf on cv.curriculum_study_form_id = sf.id");
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         if(Boolean.TRUE.equals(valid)) {
             // only valid ones
@@ -122,10 +125,11 @@ public class AutocompleteService {
             qb.requiredCriteria("c.valid_from <= :currentDate and (c.valid_thru is null or c.valid_thru >= :currentDate)", "currentDate", LocalDate.now());
         }
 
-        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en", em).getResultList();
+        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, sf.study_form_code", em).getResultList();
         return data.stream().map(r -> {
             String code = resultAsString(r, 1);
-            return new AutocompleteResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)), CurriculumUtil.versionName(code, resultAsString(r, 3)));
+            return new CurriculumVersionResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)),
+                    CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsString(r, 4));
         }).collect(Collectors.toList());
     }
 

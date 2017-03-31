@@ -61,7 +61,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   };
 
   $scope.subjectsListView = function(plannedSubject) {
-    if (angular.isDefined(plannedSubject) && angular.isArray(plannedSubject.subjectsSelected)) {
+    if (angular.isDefined(plannedSubject) && angular.isArray(plannedSubject.subjectsSelected) && angular.isArray($scope.studentSubjects)) {
       var subjects = [];
       $scope.studentSubjects.forEach(function(it) {
         if (plannedSubject.subjectsSelected.indexOf(it.id) !== -1) {
@@ -170,36 +170,46 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
   $scope.$watch('application.student', function(student) {
     if (angular.isObject(student)) {
-      if (['AVALDUS_LIIK_FINM', 'AVALDUS_LIIK_OVORM', 'AVALDUS_LIIK_OKAVA'].indexOf($scope.application.type) !== -1) {
-        var StudentEndpoint = QueryUtils.endpoint('/students');
-        StudentEndpoint.get({id: student.id}, function(student) {
-          if ($scope.application.type === 'AVALDUS_LIIK_FINM') {
-            financialSourceChange(student);
-          } else if ($scope.application.type === 'AVALDUS_LIIK_OVORM') {
-            $scope.application.oldStudyForm = student.studyForm;
+
+      QueryUtils.endpoint('/applications/student/'+student.id+'/applicable').get({}, function(result) {
+          if(result[$scope.application.type] === false && !angular.isNumber($scope.application.id) ) {
+            message.error('application.messages.applicationAlreadyExists');
+          } else {
+              if (['AVALDUS_LIIK_FINM', 'AVALDUS_LIIK_OVORM', 'AVALDUS_LIIK_OKAVA'].indexOf($scope.application.type) !== -1) {
+              var StudentEndpoint = QueryUtils.endpoint('/students');
+              StudentEndpoint.get({id: student.id}, function(student) {
+                if ($scope.application.type === 'AVALDUS_LIIK_FINM') {
+                  financialSourceChange(student);
+                } else if ($scope.application.type === 'AVALDUS_LIIK_OVORM') {
+                  $scope.application.oldStudyForm = student.studyForm;
+                }
+                else if ($scope.application.type === 'AVALDUS_LIIK_OKAVA') {
+                  curriculumVersionChange(student);
+                }
+                $scope.applicationEditView = true;
+              });
+            } else if(['AVALDUS_LIIK_AKAD', 'AVALDUS_LIIK_AKADK'].indexOf($scope.application.type) !== -1) {
+                if($scope.application.type === 'AVALDUS_LIIK_AKAD') {
+                  academicLeave(false);
+                } else if ($scope.application.type === 'AVALDUS_LIIK_AKADK') {
+                  var AcademicLeaveApplicationsEndpoint = QueryUtils.endpoint('/applications/student/'+$scope.application.student.id+'/validAcademicLeave');
+                  AcademicLeaveApplicationsEndpoint.get({}, function(academicLeaveApplication) {
+                    var hasAcademicLeaveApplication = angular.isNumber(academicLeaveApplication.id) && academicLeaveApplication.id > 0;
+                    academicLeaveRevocation(hasAcademicLeaveApplication, academicLeaveApplication);
+                  });
+                }
+            } else if ($scope.application.type === 'AVALDUS_LIIK_VALIS') {
+              abroadStudentApplication();
+              $scope.applicationEditView = true;
+            }
+            else {
+              $scope.applicationEditView = true;
+            }
           }
-          else if ($scope.application.type === 'AVALDUS_LIIK_OKAVA') {
-            curriculumVersionChange(student);
-          }
-          $scope.applicationEditView = true;
-        });
-      } else if(['AVALDUS_LIIK_AKAD', 'AVALDUS_LIIK_AKADK'].indexOf($scope.application.type) !== -1) {
-        var AcademicLeaveApplicationsEndpoint = QueryUtils.endpoint('/applications/student/'+$scope.application.student.id+'/validAcademicLeave');
-        AcademicLeaveApplicationsEndpoint.get({}, function(academicLeaveApplication) {
-          var hasAcademicLeaveApplication = angular.isNumber(academicLeaveApplication.id) && academicLeaveApplication.id > 0;
-          if($scope.application.type === 'AVALDUS_LIIK_AKAD') {
-            academicLeave(hasAcademicLeaveApplication);
-          } else if ($scope.application.type === 'AVALDUS_LIIK_AKADK') {
-            academicLeaveRevocation(hasAcademicLeaveApplication, academicLeaveApplication);
-          }
-        });
-      } else if ($scope.application.type === 'AVALDUS_LIIK_VALIS') {
-        abroadStudentApplication();
-        $scope.applicationEditView = true;
-      }
-      else {
-        $scope.applicationEditView = true;
-      }
+
+      });
+
+
     }
   });
 
@@ -218,7 +228,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   };
 
   $scope.isStudentRepresentative = function() {
-    return angular.isDefined($scope.auth.student) && angular.isDefined($scope.application.student) &&
+    return angular.isObject($scope.auth) && angular.isObject($scope.application.student) &&
       $scope.auth.student === $scope.application.student.id && $scope.auth.isParent();
   };
 
@@ -264,7 +274,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         var application = new ApplicationsEndpoint($scope.application);
         application.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path('/applications/search');
+          if ($scope.auth.isStudent()) {
+            $location.path('/applications/student');
+          } else {
+            $location.path('/applications');
+          }
         });
       });
     };

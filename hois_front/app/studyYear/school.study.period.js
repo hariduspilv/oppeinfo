@@ -30,13 +30,14 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     $scope.endpoint = QueryUtils.endpoint('/school/studyYears');
     $scope.tabledata = $scope.endpoint.query();
   }])
-  .controller('StudyYearsEditController', ['$location', '$mdDialog', '$route', '$scope', 'Classifier', 'dialogService', 'message', 'DataUtils','QueryUtils', function ($location, $mdDialog, $route, $scope, Classifier, dialogService, message, DataUtils, QueryUtils) {
+  .controller('StudyYearsEditController', ['$location', '$mdDialog', '$route', '$scope', '$translate', 'Classifier', 'dialogService', 'message', 'DataUtils','QueryUtils', function ($location, $mdDialog, $route, $scope, $translate, Classifier, dialogService, message, DataUtils, QueryUtils) {
     var id = $route.current.params.id;
     var code = $route.current.params.code;
 
     var Endpoint = QueryUtils.endpoint('/school/studyYears');
 
-    var periodTypes = Classifier.valuemapper({type: "OPPEPERIOOD"});
+    var periodTypes = Classifier.valuemapper({type: 'OPPEPERIOOD'});
+    var events = Classifier.valuemapper({eventType: 'SYNDMUS'});
 
     function afterLoad() {
       DataUtils.convertStringToDates($scope.studyYear, ['startDate', 'endDate']);
@@ -134,6 +135,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     };
 
     $scope.openStudyPeriodEventDialog = function (item) {
+      var uniqueEvent = ['SYNDMUS_AVES', 'SYNDMUS_DEKP', 'SYNDMUS_VOTA'];
       var StudyPeriodEventEndpoint = QueryUtils.endpoint('/school/studyYears/'+$scope.studyYear.id+'/studyPeriodEvents');
       var parentScope = $scope;
       var DialogController = function ($scope) {
@@ -170,9 +172,36 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         };
 
         $scope.submit = function () {
+          // kalendri-sündmus peab olema unikaalne õppeperioodis
           $scope.dialogForm.$setSubmitted();
 
-          if ($scope.dialogForm.$valid) {
+          var errors = false;
+
+          if (uniqueEvent.indexOf($scope.studyPeriodEvent.eventType) !== -1) {
+
+            if (angular.isUndefined($scope.studyPeriodEvent.studyPeriod)) {
+              $scope.studyPeriodEvent.studyPeriod = null;
+            }
+
+            var inSamePeriod = parentScope.studyPeriodEvents.filter(function (it) {
+              if ($scope.studyPeriodEvent.studyPeriod === it.studyPeriod &&
+                  $scope.studyPeriodEvent.id !== it.id &&
+                  it.eventType === $scope.studyPeriodEvent.eventType) {
+                return true;
+              }
+            });
+            if (inSamePeriod.length > 0) {
+              errors = true;
+
+              $translate('studyYear.studyPeriodEvent.uniqueInPeriod').then(function (text) {
+                var error = text;
+                error = '"' + parentScope.currentLanguageNameField(events.objectmapper({eventType: $scope.studyPeriodEvent.eventType}).eventType) + '" ' + error;
+                message.error(error);
+              });
+            }
+          }
+
+          if ($scope.dialogForm.$valid && !errors) {
             var studyPeriodEvent = $scope.studyPeriodEvent;
             if (studyPeriodEvent.id) {
               studyPeriodEvent.$update().then(afterSave);

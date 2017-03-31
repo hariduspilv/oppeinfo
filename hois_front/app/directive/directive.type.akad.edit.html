@@ -24,15 +24,15 @@
           </md-radio-group>
         </td>
         <td md-cell>
-          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodStart" values="formState.studyPeriods"></hois-select>
+          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodStart" values="formState.studyPeriods" aria-label="{{'directive.student.akadStartDate' | translate}}"></hois-select>
           <md-datepicker ng-if="!row.isPeriod" ng-model="row.startDate" md-placeholder="{{'directive.student.akadEndDate' | translate}}"></md-datepicker>
         </td>
         <td md-cell>
-          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodEnd" values="formState.studyPeriods"></hois-select>
+          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodEnd" values="formState.studyPeriods" aria-label="{{'directive.student.akadEndDate' | translate}}"></hois-select>
           <md-datepicker ng-if="!row.isPeriod" ng-model="row.endDate" md-placeholder="{{'directive.student.akadEndDate' | translate}}"></md-datepicker>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.reason" model-value-attr="code" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.reason" model-value-attr="code" main-classifier-code="AKADPUHKUS_POHJUS" aria-label="{{'directive.student.reason' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
           <div ng-if="row.applicationIsPeriod">{{currentLanguageNameField(row.studyPeriodStart)}}</div>

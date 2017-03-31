@@ -15,7 +15,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 @Configuration
 public class TestConfiguration {
 
-    public static final String USER_ID = "test1";
+    public static final String USER_ID = "48403150000";
 
     @Autowired
     ObjectMapper objectMapper;

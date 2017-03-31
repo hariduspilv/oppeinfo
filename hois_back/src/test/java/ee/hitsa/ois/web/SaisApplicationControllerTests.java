@@ -30,7 +30,7 @@ public class SaisApplicationControllerTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
-    
+
     @Autowired
     private SaisAdmissionRepository saisAdmissionRepository;
 
@@ -66,12 +66,12 @@ public class SaisApplicationControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(0, responseEntity.getBody().getFailed().size());
         Assert.assertEquals(3, responseEntity.getBody().getSuccessful().size());
-        
+
         SaisAdmission saisAdmission = saisAdmissionRepository.findByCode("FIL12/12");
         if (saisAdmission != null) {
             delete(saisAdmission);
         }
-        
+
         saisAdmission = saisAdmissionRepository.findByCode("MAT15/16");
         if (saisAdmission != null) {
             delete(saisAdmission);
@@ -79,12 +79,12 @@ public class SaisApplicationControllerTests {
     }
 
     private static byte[] getCsvFile() {
-        return new String("KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;Oppekava/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;EelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp\n"+
-"FIL12/12;Nr123;Mari;Maasikas;47810010009;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012\n"+
-"MAT15/16;Nr456;Tõnu;Kuut;37810010008;FIN;REV;3.03.2012;T;first;OSA;P;I;411;1.01.2012;3.04.2012\n"+
-"MAT15/16;Nr321;Tiiu;Kask;37810019886;EST;RE;12.02.2012;T;first;OSA;K;E;411;1.01.2012;3.04.2012").getBytes(StandardCharsets.UTF_8);
+        return new String("KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;Oppekava/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;EelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp\n"+
+"FIL12/12;Nr123;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012\n"+
+"MAT15/16;Nr456;Tõnu;Kuut;37810010008;FIN;FIN;REV;3.03.2012;T;first;OSA;P;I;411;1.01.2012;3.04.2012\n"+
+"MAT15/16;Nr321;Tiiu;Kask;37810019886;EST;EST;RE;12.02.2012;T;first;OSA;K;E;411;1.01.2012;3.04.2012").getBytes(StandardCharsets.UTF_8);
     }
-    
+
     private void delete(SaisAdmission saisAdmission) {
         Long id = saisAdmission.getId();
         Long version = saisAdmission.getVersion();

@@ -66,6 +66,9 @@ public class DirectiveConfirmService {
         }
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         List<Map.Entry<String, String>> allErrors = new ArrayList<>();
+        if(directive.getDirectiveCoordinator() == null) {
+            allErrors.add(new AbstractMap.SimpleImmutableEntry<>("directiveCoordinator", "NotNull"));
+        }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
         // validate each student's data for given directive
         long rowNum = 0;
@@ -80,7 +83,7 @@ public class DirectiveConfirmService {
                 // check that cancel date is inside academic leave period
                 DirectiveStudent academicLeave = academicLeaves.get(EntityUtil.getId(ds.getStudent()));
                 LocalDate leaveCancel = ds.getStartDate();
-                if(leaveCancel.isBefore(periodStart(academicLeave)) || !leaveCancel.isBefore(periodEnd(academicLeave))) {
+                if(academicLeave == null || leaveCancel.isBefore(periodStart(academicLeave)) || leaveCancel.isAfter(periodEnd(academicLeave))) {
                     allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "startDate"), "InvalidValue"));
                 }
             }
@@ -115,51 +118,59 @@ public class DirectiveConfirmService {
             for(DirectiveStudent ds : directive.getStudents()) {
                 // TODO put changes which should occur in future, into task queue
                 // store student version for undo
-                ds.setStudentHistory(ds.getStudent().getStudentHistory());
+                Student student = ds.getStudent();
+                ds.setStudentHistory(student != null ? student.getStudentHistory() : null);
                 updateApplicationStatus(ds, applicationStatus);
-                updateStudentData(directiveType, ds, studentStatus, academicLeaves.get(EntityUtil.getId(ds.getStudent())));
+                updateStudentData(directiveType, ds, studentStatus, student != null ? academicLeaves.get(EntityUtil.getId(student)) : null);
             }
         }
         directiveRepository.save(directive);
     }
 
-    private void updateStudentData(DirectiveType directiveType, DirectiveStudent directive, Classifier studentStatus, DirectiveStudent academicLeave) {
-        Student student = directive.getStudent();
-        LocalDate confirmDate = directive.getDirective().getConfirmDate();
+    private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent, Classifier studentStatus, DirectiveStudent academicLeave) {
+        Student student = directiveStudent.getStudent();
+        LocalDate confirmDate = directiveStudent.getDirective().getConfirmDate();
         User user;
         long duration;
 
         switch(directiveType) {
         case KASKKIRI_AKAD:
-            duration = ChronoUnit.DAYS.between(periodStart(directive), periodEnd(directive).plusDays(1));
+            duration = ChronoUnit.DAYS.between(periodStart(directiveStudent), periodEnd(directiveStudent).plusDays(1));
             student.setNominalStudyEnd(student.getNominalStudyEnd().plusDays(duration));
             break;
         case KASKKIRI_AKADK:
-            duration = ChronoUnit.DAYS.between(periodStart(academicLeave), directive.getStartDate());
+            duration = ChronoUnit.DAYS.between(periodStart(academicLeave), directiveStudent.getStartDate());
             student.setNominalStudyEnd(student.getNominalStudyEnd().minusDays(duration));
             break;
         case KASKKIRI_EKSMAT:
             // FIXME correct field for Õppuri eksmatrikuleerimise kuupäev?
             student.setStudyEnd(confirmDate);
             user = userForStudent(student);
-            user.setValidThru(confirmDate);
+            if(user != null) {
+                user.setValidThru(confirmDate);
+            }
+            break;
+        case KASKKIRI_ENNIST:
+            student.setStudyStart(confirmDate);
+            user = userForStudent(student);
+            // FIXME can user be null?
+            if(user == null) {
+                createUser(student, confirmDate);
+            } else {
+                user.setValidFrom(confirmDate);
+                user.setValidThru(null);
+            }
             break;
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
-            student = createStudent(directive);
-            break;
-        case KASKKIRI_ENNIST:
-            // FIXME correct field for Ennistamise kuupäev?
-            student.setStudyStart(directive.getStartDate());
-            user = userForStudent(student);
-            user.setValidFrom(confirmDate);
-            // FIXME update also validThru?
+            student = createStudent(directiveStudent);
+            student.setStudyStart(confirmDate);
             break;
         default:
             break;
         }
 
-        copyDirectiveProperties(directiveType, directive, student, false);
+        copyDirectiveProperties(directiveType, directiveStudent, student, false);
 
         // optional new status
         if(studentStatus != null) {
@@ -195,16 +206,17 @@ public class DirectiveConfirmService {
     }
 
     private Map<Long, DirectiveStudent> findAcademicLeaves(Directive directive) {
-        if(!DirectiveType.KASKKIRI_AKADK.name().equals(directive.getType())) {
+        if(!DirectiveType.KASKKIRI_AKADK.name().equals(EntityUtil.getCode(directive.getType()))) {
             return Collections.emptyMap();
         }
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_student ds "+
+                "inner join student_history dsh on ds.student_history_id = dsh.prev_student_history_id and ds.student_id = dsh.student_id "+
                 "left outer join study_period sps on ds.study_period_start_id = sps.id "+
-                "left outer join study_period spe on ds.study_period_end_id = sps.id");
+                "left outer join study_period spe on ds.study_period_end_id = spe.id");
 
-        List<Long> studentIds = directive.getStudents().stream().map(DirectiveStudent::getId).collect(Collectors.toList());
-        qb.requiredCriteria("ds.student_history_id in "+
+        List<Long> studentIds = directive.getStudents().stream().map(r -> EntityUtil.getId(r.getStudent())).collect(Collectors.toList());
+        qb.requiredCriteria("dsh.id in "+
                 "(select max(sh.id) from student_history sh where sh.student_id in (:studentIds) and sh.status_code = 'OPPURSTAATUS_A' group by sh.student_id)", "studentIds", studentIds);
 
         List<?> data = qb.select("ds.student_id, case when ds.is_period then sps.start_date else ds.start_date end, "+
@@ -233,20 +245,27 @@ public class DirectiveConfirmService {
         return Boolean.TRUE.equals(directive.getIsPeriod()) ? directive.getStudyPeriodEnd().getEndDate() : directive.getEndDate();
     }
 
-    private Student createStudent(DirectiveStudent directive) {
+    private Student createStudent(DirectiveStudent directiveStudent) {
         Student student = new Student();
-        student.setPerson(directive.getPerson());
-        student.setSchool(directive.getDirective().getSchool());
-        student.setStudyStart(directive.getStartDate());
-        // TODO Kursus == käskkirjal olev väärtus
+        student.setPerson(directiveStudent.getPerson());
+        student.setSchool(directiveStudent.getDirective().getSchool());
+        student.setStudyStart(directiveStudent.getStartDate());
+        student.setIsRepresentativeMandatory(Boolean.FALSE);
+        student.setIsSpecialNeed(Boolean.FALSE);
         // new role for student
+        createUser(student, directiveStudent.getDirective().getConfirmDate());
+        return student;
+    }
+
+    private User createUser(Student student, LocalDate validFrom) {
         User user = new User();
-        user.setPerson(directive.getPerson());
+        user.setPerson(student.getPerson());
         user.setSchool(student.getSchool());
         user.setRole(em.getReference(Classifier.class, Role.ROLL_T.name()));
-        user.setValidFrom(directive.getDirective().getConfirmDate());
+        user.setStudent(student);
+        user.setValidFrom(validFrom);
         em.persist(user);
-        return student;
+        return user;
     }
 
     private static void copyDirectiveProperties(DirectiveType directiveType, Object source, Student student, boolean cancellation) {

@@ -3,16 +3,22 @@
 angular.module('hitsaOis').controller('DirectiveSearchController', ['$location', '$q', '$scope', 'Classifier', 'QueryUtils',
   function ($location, $q, $scope, Classifier, QueryUtils) {
     var clMapper = Classifier.valuemapper({type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'});
-    QueryUtils.createQueryForm($scope, '/directives', {order: 'headline'}, clMapper.objectmapper);
+    QueryUtils.createQueryForm($scope, '/directives', {order: '-inserted'}, clMapper.objectmapper);
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('DirectiveEditController', ['$location', '$mdDialog', '$route', '$scope', 'dialogService', 'message', 'Curriculum', 'DataUtils', 'QueryUtils',
-  function ($location, $mdDialog, $route, $scope, dialogService, message, Curriculum, DataUtils, QueryUtils) {
+]).controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Curriculum', 'DataUtils', 'QueryUtils', 'Session',
+  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Curriculum, DataUtils, QueryUtils, Session) {
     var id = $route.current.params.id;
     var baseUrl = '/directives';
 
-    $scope.formState = {state: (id ? 'EDIT' : 'CHOOSETYPE'), students: undefined, selectedStudents: []};
+    $scope.formState = {state: (id ? 'EDIT' : 'CHOOSETYPE'), students: undefined, selectedStudents: [],
+                        excludedTypes: ['KASKKIRI_TYHIST', 'KASKKIRI_KYLALIS', 'KASKKIRI_IMMATV']};
+
+    var school = Session.school || {};
+    if(!school.higher) {
+      $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
+    }
 
     function setTemplateUrl() {
       var templateId = $scope.record.type ? $scope.record.type.substr(9).toLowerCase() : 'unknown';
@@ -129,23 +135,33 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
 
     $scope.addStudents = function() {
       var directiveType = $scope.record.type;
+      var students = $scope.record.students;
       if(directiveType === 'KASKKIRI_IMMAT') {
-        $scope.record.students.push({startDate: null});
+        students.push({startDate: null});
         return;
       }
       var data = {type: directiveType, directive: id};
       $mdDialog.show({
         controller: function($scope) {
+          var baseUrl = '/directives/findstudents';
           $scope.formState = {selectedStudents: [], type: data.type};
 
-          QueryUtils.createQueryForm($scope, '/directives/findstudents');
-          $scope.getCriteria = function() {
-            return angular.extend(QueryUtils.getQueryParams($scope.criteria), data);
-          };
+          QueryUtils.createQueryForm($scope, baseUrl);
+
           $scope.cancel = $mdDialog.hide;
           $scope.select = function() {
             storeStudents($scope.formState.selectedStudents);
             $mdDialog.hide();
+          };
+
+          students = students.map(function(s) { return s.student; });
+          $scope.loadData = function() {
+            var query = angular.extend(QueryUtils.getQueryParams($scope.criteria), data);
+            $scope.tabledata.$promise = QueryUtils.endpoint(baseUrl).search(query, function(resultData) {
+              // filter these already on directive
+              resultData.content = resultData.content.filter(function(r) { return students.indexOf(r.id) === -1;});
+              $scope.afterLoadData(resultData);
+            });
           };
 
           $scope.loadData();
@@ -155,17 +171,23 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       });
     };
 
-    $scope.lookupStudent = function(row, result) {
-      row._found = true;
-      row.firstname = result.firstname;
-      row.lastname = result.lastname;
-    };
-
-    $scope.lookupFailed = function(row) {
-      row._found = false;
+    $scope.lookupStudent = function(row) {
+      var idcode = row.idcode;
+      if(idcode && idcode.length === 11 && idcode !== row._idcode) {
+        row._idcode = idcode;
+        QueryUtils.endpoint('/autocomplete/persons').search({idcode: idcode, role: 'person'}).$promise.then(function(response) {
+          row._found = true;
+          row.firstname = response.firstname;
+          row.lastname = response.lastname;
+        }).catch(function(response) {
+          row._found = false;
+          return $q.reject(response);
+        });
+      }
     };
 
     $scope.sendToConfirm = function() {
+      $scope.directiveForm.directiveCoordinator.$setValidity('required', !!$scope.record.directiveCoordinator);
       if(!formIsValid()) {
         return;
       }
@@ -202,6 +224,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       dialogService.confirmDialog({prompt: 'directive.confirmconfirm'}, function() {
         QueryUtils.endpoint(baseUrl + '/confirm').update($scope.record).$promise.then(function() {
           message.info('directive.confirmed');
+          $route.reload();
         });
       });
     };

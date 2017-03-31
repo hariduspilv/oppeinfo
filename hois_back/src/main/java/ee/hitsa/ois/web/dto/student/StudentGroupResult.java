@@ -4,6 +4,9 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
+/**
+ * Variant of AutocompleteResult with additional fields for filtering in frontend
+ */
 public class StudentGroupResult extends AutocompleteResult {
 
     private Long curriculum;

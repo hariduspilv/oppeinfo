@@ -22,10 +22,9 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.oxm.ValidationFailureException;
 import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.application.ApplicationFile;
@@ -65,7 +64,7 @@ public class ApplicationService {
             "a.submitted, a.student_id, person.firstname, person.lastname, a.reject_reason";
 
     private static final List<String> VALID_APPLICATION_STATUSES = Arrays.asList(ApplicationStatus.AVALDUS_STAATUS_KOOST.name(), ApplicationStatus.AVALDUS_STAATUS_ESIT.name(),
-            ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
+            ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name());
 
     @Autowired
     private ApplicationRepository applicationRepository;
@@ -116,20 +115,15 @@ public class ApplicationService {
         });
     }
 
-    public Application create(HoisUserDetails user, ApplicationForm applicationForm) {
-        Classifier ehisSchool = schoolRepository.getOne(user.getSchoolId()).getEhisSchool();
-        if (ApplicationType.AVALDUS_LIIK_AKAD.name().equals(applicationForm.getType())
-                && existsValidAcademicLeaveApplication(applicationForm.getStudent().getId(), ehisSchool)) {
-            throw new ValidationFailureException("Student already has valid academic leave application");
-        } else if (ApplicationType.AVALDUS_LIIK_AKADK.name().equals(applicationForm.getType())
-                && !existsValidAcademicLeaveApplication(applicationForm.getStudent().getId(),ehisSchool)) {
-            throw new ValidationFailureException("Student has no valid academic leave application");
-        }
-
-        Application application = new Application();
-        application.setEhisSchool(ehisSchool);
-
-        return save(application, applicationForm);
+    public Application create(ApplicationForm applicationForm) {
+//        if (ApplicationType.AVALDUS_LIIK_AKAD.name().equals(applicationForm.getType())
+//                && existsValidAcademicLeaveApplication(applicationForm.getStudent().getId())) {
+//            throw new ValidationFailureException("Student already has valid academic leave application");
+//        } else if (ApplicationType.AVALDUS_LIIK_AKADK.name().equals(applicationForm.getType())
+//                && !existsValidAcademicLeaveApplication(applicationForm.getStudent().getId())) {
+//            throw new ValidationFailureException("Student has no valid academic leave application");
+//        }
+        return save(new Application(), applicationForm);
     }
 
     public Application save(Application application, ApplicationForm applicationForm) {
@@ -181,8 +175,8 @@ public class ApplicationService {
         plannedSubject.getEquivalents().addAll(newPlannedSubjectEquivalents);
     }
 
-    private boolean existsValidAcademicLeaveApplication(Long studentId, Classifier ehisSchool) {
-        return findValidAcademicLeave(studentId, EntityUtil.getNullableCode(ehisSchool)) != null;
+    private boolean existsValidAcademicLeaveApplication(Long studentId) {
+        return findValidAcademicLeave(studentId) != null;
     }
 
     private static void updateFiles(Application application, ApplicationForm applicationForm) {
@@ -205,13 +199,16 @@ public class ApplicationService {
         EntityUtil.deleteEntity(applicationRepository, application);
     }
 
-    public Application findValidAcademicLeave(Long student, String ehisSchool) {
-        return applicationRepository.findOne((root, query, cb) -> {
+    //TODO: rewrite this
+    public Application findValidAcademicLeave(Long student) {
+        List<Application> validAcademicLeaves =  applicationRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("ehisSchool").get("code"), ehisSchool));
             filters.add(cb.equal(root.get("student").get("id"), student));
             filters.add(cb.equal(root.get("type").get("code"), ApplicationType.AVALDUS_LIIK_AKAD.name()));
-            filters.add(root.get("status").get("code").in(VALID_APPLICATION_STATUSES));
+
+            filters.add(cb.equal(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name()));
+
+
 
             root.join("studyPeriodEnd", JoinType.LEFT);
             filters.add(cb.or(
@@ -220,13 +217,30 @@ public class ApplicationService {
             ));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
+
+        if (CollectionUtils.isEmpty(validAcademicLeaves)) {
+            return null;
+        }
+
+        Application academicLeaveWithoutRevocation = null;
+        for (Application application : validAcademicLeaves) {
+            Application validAcademicLeaveRevocation = findValidAcademicLeaveRevocation(application.getId());
+            if(validAcademicLeaveRevocation == null) {
+                academicLeaveWithoutRevocation = application;
+            }
+        }
+
+        return academicLeaveWithoutRevocation;
+
+
     }
 
     public Application findValidAcademicLeaveRevocation(Long applicationId) {
         return applicationRepository.findOne((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("academicApplication"), applicationId));
-            filters.add(root.get("status").get("code").in(VALID_APPLICATION_STATUSES));
+            //filters.add(root.get("status").get("code").in(VALID_APPLICATION_STATUSES));
+            filters.add(cb.equal(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name()));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
     }
@@ -244,9 +258,8 @@ public class ApplicationService {
         }
 
         //Kui õppur ei viibi akadeemilisel puhkusel, siis ei ole tal võimalik esitada taotlust „akadeemilise puhkuse katkestamiseks“;
-        String ehisSchoolCode = EntityUtil.getNullableCode(schoolRepository.getOne(schoolId).getEhisSchool());
-        boolean studentOnAcademicLeave = findValidAcademicLeave(studentId, ehisSchoolCode) != null;
-        result.put(ApplicationType.AVALDUS_LIIK_AKADK, Boolean.valueOf(studentOnAcademicLeave));
+        //boolean studentOnAcademicLeave = findValidAcademicLeave(studentId) != null;
+        //result.put(ApplicationType.AVALDUS_LIIK_AKADK, Boolean.valueOf(studentOnAcademicLeave));
 
         return result;
     }

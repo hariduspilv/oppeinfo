@@ -87,7 +87,7 @@ public class StudyYearService {
 
         if (Arrays.asList(STUDY_PERIOD_EVENTS).contains(eventType)) {
             Set<StudyPeriodEvent> events = studyPeriodEventRepository.findAllByStudyYearAndStudyPeriodAndEventType(studyYear, studyPeriodEvent.getStudyPeriod(), studyPeriodEvent.getEventType());
-            if (events.stream().anyMatch(it -> !studyPeriodEvent.getId().equals(it.getId()))){
+            if (events.stream().anyMatch(it -> !it.getId().equals(studyPeriodEvent.getId()))) {
                 throw new ValidationFailedException("eventType", "duplicate-found");
             }
         }

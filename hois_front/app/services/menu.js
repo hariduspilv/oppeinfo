@@ -163,16 +163,6 @@ angular.module('hitsaOis')
       type: 'toggle',
       pages: [
         {
-          name: 'main.menu.study.subjectTeacher',
-          id: 'subjectTeacher',
-          url: "/subjectTeacher"
-        },
-        {
-          name: 'main.menu.study.declaration',
-          id: 'declaration',
-          url: "/declaration"
-        },
-        {
           name: 'main.menu.certificates.label',
           url: "/certificate?_menu"
         },
@@ -188,11 +178,6 @@ angular.module('hitsaOis')
       name: 'main.menu.reception.label',
       type: 'toggle',
       pages: [
-        {
-          name: 'main.menu.reception.import',
-          id: 'receptionImport',
-          url: "/reception/import?_menu"
-        },
         {
           name: 'main.menu.reception.saisAdmissionSearch',
           id: 'receptionSaisAdmissionSearch',

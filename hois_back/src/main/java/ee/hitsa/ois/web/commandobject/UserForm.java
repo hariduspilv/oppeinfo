@@ -33,6 +33,12 @@ public class UserForm extends VersionedCommand {
         private Boolean oigusM = Boolean.FALSE;
         //private Boolean OIGUS_D = Boolean.FALSE;
 
+        public static UserRight of(String object) {
+            UserRight dto = new UserRight();
+            dto.object = object;
+            return dto;
+        }
+
         public String getObject() {
             return object;
         }

@@ -84,6 +84,7 @@ public class Application extends BaseEntityWithId {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier country;
 
+    //Kasutatakse ainult välisõpilaseks vormistamise puhul, kui valitakse Eesti kool
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(nullable = true)
     private Classifier ehisSchool;

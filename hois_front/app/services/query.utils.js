@@ -11,7 +11,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
 
   function (config, $resource, $route, $translate, message, resourceErrorHandler, $sessionStorage) {
 
-    var defaultPagingParams = {size: 5, page: 1};
+    var defaultPagingParams = {size: 20, page: 1};
 
     var getQueryParams = function (params) {
       var queryParams = angular.copy(params, {});

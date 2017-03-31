@@ -130,10 +130,10 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       }
     }
   };
-}]).controller('TeacherListController', ['$scope', 'AuthService', 'QueryUtils', function ($scope, AuthService, QueryUtils) {
+}]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', function ($scope, $route, QueryUtils) {
   QueryUtils.createQueryForm($scope, '/teachers', {order: 'person.lastname,person.firstname'});
 
-  $scope.showSchool = AuthService.matchesRole('ROLL_V');
+  $scope.showSchool = $route.current.locals.auth.isExternalExpert();
   $scope.loadData();
 }]);
 

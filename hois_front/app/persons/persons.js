@@ -1,18 +1,19 @@
 'use strict';
 
-angular.module('hitsaOis').controller('UsersSearchController', ['$scope', 'AuthService', 'Classifier', 'QueryUtils', function ($scope, AuthService, Classifier, QueryUtils) {
+angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$route','Classifier', 'QueryUtils', function ($scope, $route, Classifier, QueryUtils) {
   var clMapper = Classifier.valuemapper({role: 'ROLL'});
   QueryUtils.createQueryForm($scope, '/users', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
 
-  $scope.showSchool = AuthService.matchesRole('ROLL_P');
+  $scope.showSchool = $route.current.locals.auth.isMainAdmin();
 
   $scope.loadData();
 }])
-  .controller('PersonsEditController', ['$location', '$route', '$scope', 'AuthService', 'Classifier', 'DataUtils', 'message', 'QueryUtils', function ($location, $route, $scope, AuthService, Classifier, DataUtils, message, QueryUtils) {
+  .controller('PersonsEditController', ['$location', '$route', '$scope', 'dialogService', 'Classifier', 'DataUtils', 'message', 'QueryUtils', function ($location, $route, $scope, dialogService, Classifier, DataUtils, message, QueryUtils) {
     var id = $route.current.params.id;
-    var Endpoint = QueryUtils.endpoint('/persons');
+    var baseUrl = '/persons';
+    var Endpoint = QueryUtils.endpoint(baseUrl);
     var clMapper = Classifier.valuemapper({role: "ROLL"});
-    $scope.showSchool = AuthService.matchesRole('ROLL_P');
+    $scope.showSchool = $route.current.locals.auth.isMainAdmin();
 
     function afterLoad() {
 
@@ -40,7 +41,14 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', 'AuthS
     }
 
     $scope.lookupPerson = function (response) {
-      $scope.person = Endpoint.get({id: response.id}, afterLoad);
+      $location.path(baseUrl + '/' + response.id + '/edit');
+      message.info('person.exists');
+    };
+
+    $scope.lookupFailure = function () {
+      if (!$scope.person.sex) {
+        $scope.person.sex = DataUtils.sexFromIdcode($scope.person.idcode);
+      }
     };
 
     if (id) {
@@ -49,6 +57,10 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', 'AuthS
       $scope.person = new Endpoint();
     }
 
+    $scope.orderValue = function (item) {
+      return $scope.currentLanguageNameField(item.role);
+    };
+
     $scope.update = function () {
       $scope.personForm.$setSubmitted();
       if ($scope.personForm.$valid) {
@@ -56,10 +68,19 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', 'AuthS
           $scope.person.$update().then(message.updateSuccess);
         } else {
           $scope.person.$save().then(function (response) {
-            $location.path('/persons/' + response.id + '/edit');
+            $location.path(baseUrl + '/' + response.id + '/edit');
             message.info('main.messages.create.success');
           });
         }
       }
+    };
+
+    $scope.delete = function () {
+      dialogService.confirmDialog({prompt: 'person.deleteconfirm'}, function () {
+        $scope.person.$delete().then(function () {
+          message.info('main.messages.delete.success');
+          $location.path(baseUrl);
+        });
+      });
     };
   }]);

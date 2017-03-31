@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web;
 
+import ee.hitsa.ois.domain.UserRoleDefault;
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.UserRolesDefaultRepository;
 import ee.hitsa.ois.service.PersonService;
@@ -16,12 +19,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 @RestController
 @RequestMapping("/users")
 public class UsersController {
+
+    @Autowired
+    private ClassifierRepository classifierRepository;
 
     @Autowired
     private SchoolRepository schoolRepository;
@@ -40,14 +44,11 @@ public class UsersController {
         return personService.search(command, pageable);
     }
 
-    @GetMapping("/list")
-    public List<UsersSearchDto> searchList(HoisUserDetails user, UsersSeachCommand command, Pageable pageable) {
-        List<UsersSearchDto> list = search(user, command, pageable).getContent();
-        return list;
-    }
-
     @GetMapping("/rolesDefaults")
-    public List<UserRolesDto> allUserRoles() {
-        return StreamSupport.stream(userRolesDefaultRepository.findAll().spliterator(), false).map(UserRolesDto::of).collect(Collectors.toList());
+    public UserRolesDto allUserRoles() {
+        Iterable<UserRoleDefault> userRoleDefaults = userRolesDefaultRepository.findAll();
+        List<String> objects = classifierRepository.findAllCodesByMainClassCode(MainClassCode.TEEMAOIGUS.name());
+        UserRolesDto result = UserRolesDto.of(objects, userRoleDefaults);
+        return result;
     }
 }

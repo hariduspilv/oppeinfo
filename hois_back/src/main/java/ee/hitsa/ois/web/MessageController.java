@@ -21,8 +21,12 @@ import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
+import ee.hitsa.ois.web.commandobject.UsersSeachCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.MessageDto;
+import ee.hitsa.ois.web.dto.MessageReceiverSearchDto;
 import ee.hitsa.ois.web.dto.MessageSearchDto;
+import ee.hitsa.ois.web.dto.UsersSearchDto;
 
 @RestController
 @RequestMapping("/message")
@@ -45,6 +49,14 @@ public class MessageController {
     public Page<MessageSearchDto> searchReceivedForMainPage(HoisUserDetails user, Pageable pageable) {
         return messageService.show(user, pageable);
     }
+    
+    /**
+     * UsersController.search() is not used as school should not always be set as parameter
+     */
+    @GetMapping("/persons")
+    public Page<UsersSearchDto> search(UsersSeachCommand command, Pageable pageable) {
+        return messageService.searchPersons(command, pageable);
+    }
 
     @GetMapping("/{id:\\d+}")
     public MessageDto get(HoisUserDetails user, @WithEntity("id") Message message) {
@@ -66,5 +78,10 @@ public class MessageController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Message message, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         messageService.delete(message);
+    }
+    
+    @GetMapping("/parents")
+    public Page<MessageReceiverSearchDto> getParents(StudentSearchCommand criteria, Pageable pageable) {
+        return messageService.getStudentRepresentatives(criteria, pageable);
     }
 }

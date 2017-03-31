@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.application.Application;
@@ -22,7 +23,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.exceptions.HoisBusinessRuleException;
-import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -42,7 +43,7 @@ public class ApplicationController {
     @Autowired
     private ApplicationService applicationService;
     @Autowired
-    private SchoolRepository schoolRepository;
+    private StudentRepository studentRepository;
 
     @GetMapping("/{id:\\d+}")
     public ApplicationDto get(HoisUserDetails user, @WithEntity("id") Application application) {
@@ -57,7 +58,12 @@ public class ApplicationController {
 
     @PostMapping("")
     public ApplicationDto create(@Valid @RequestBody ApplicationForm applicationForm, HoisUserDetails user) {
-        return get(user, applicationService.create(user, applicationForm));
+        Student student = studentRepository.getOne(applicationForm.getStudent().getId());
+        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
+            throw new HoisBusinessRuleException(String.format("user %s is not allowed to create application", user.getUsername()));
+        }
+
+        return get(user, applicationService.create( applicationForm));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -66,12 +72,13 @@ public class ApplicationController {
         return get(user, applicationService.save(application, applicationForm));
     }
 
+
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Application application, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         Student student = application.getStudent();
         School school = application.getStudent().getSchool();
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
-        if((UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, school)) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)) {
+        if(((UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, school)) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status))) {
             applicationService.delete(application);
         } else {
             throw new HoisBusinessRuleException(String.format("user %s is not allowed to delete application %d with status %s", user.getUsername(), application.getId(), status.name()));
@@ -80,7 +87,7 @@ public class ApplicationController {
 
     @GetMapping("/student/{id:\\d+}/validAcademicLeave")
     public ApplicationDto academicLeave(HoisUserDetails user, @WithEntity(value = "id") Student student) {
-        return ApplicationDto.of(applicationService.findValidAcademicLeave(EntityUtil.getId(student), EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool())));
+        return ApplicationDto.of(applicationService.findValidAcademicLeave(EntityUtil.getId(student)));
     }
 
     @GetMapping("student/{id:\\d+}/applicable")
@@ -115,7 +122,8 @@ public class ApplicationController {
         Student student = application.getStudent();
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
 
-        if (UserUtil.isStudentRepresentative(user, student) && ApplicationStatus.AVALDUS_STAATUS_ESIT.equals(status)) {
+        if (UserUtil.isStudentRepresentative(user, student) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)
+                && Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm())) {
             applicationService.reject(application, applicationRejectForm);
         } else if (UserUtil.isSchoolAdmin(user, student.getSchool()) && ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.equals(status)) {
             applicationService.reject(application, applicationRejectForm);

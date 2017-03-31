@@ -12,7 +12,6 @@
         <th md-column>{{'directive.student.finSpecific' | translate}}</th>
         <th md-column>{{'directive.student.language' | translate}}</th>
         <th md-column>{{'directive.student.studentGroup' | translate}}</th>
-        <th md-column>{{'directive.student.studyStartDate' | translate}}</th>
         <th md-column>{{'directive.student.previousStudyLevel' | translate}}</th>
         <th md-column>{{'directive.student.schoolEmail' | translate}}</th>
       </tr>
@@ -39,7 +38,6 @@
           <hois-classifier-value ng-model="row.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>
         </td>
         <td md-cell>{{::row.studentGroup}}</td>
-        <td md-cell>{{'main.formattedDate' | translate: {date: row.startDate} }}</td>
         <td md-cell>
           <hois-classifier-value ng-model="row.previousStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
         </td>

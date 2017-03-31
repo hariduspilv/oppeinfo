@@ -35,7 +35,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       },
       data: authorizedRoles
     })
-    .when('/persons/:person/users/:user', {
+    .when('/persons/:person/users/:user/edit', {
       templateUrl: 'persons/users.html',
       controller: 'UsersEditController',
       controllerAs: 'controller',

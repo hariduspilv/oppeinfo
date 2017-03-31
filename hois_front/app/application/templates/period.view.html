@@ -7,23 +7,23 @@
 
 <div ng-show="!application.isPeriod" layout="row" layout-xs="column">
   <md-input-container  flex>
-    <label>{{'application.academicLeaveStart' | translate}}</label>
+    <label>{{labelStart | translate}}</label>
     <hois-value value="'main.formattedDate' | translate: {date: application.startDate}"></hois-value>
   </md-input-container>
 
   <md-input-container style="margin-left: 0px" flex flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-    <label>{{'application.academicLeaveEnd' | translate}}</label>
+    <label>{{labelEnd | translate}}</label>
     <hois-value value="'main.formattedDate' | translate: {date: application.endDate}"></hois-value>
   </md-input-container>
 </div>
 
 <div ng-show="application.isPeriod" layout="row" layout-xs="column">
   <md-input-container  flex>
-    <label>{{'application.academicLeaveStart' | translate}}</label>
+    <label>{{labelStart | translate}}</label>
     <hois-value value="studyPeriodView(application.studyPeriodStart)"></hois-value>
   </md-input-container>
   <md-input-container  flex>
-    <label>{{'application.academicLeaveEnd' | translate}}</label>
+    <label>{{labelEnd | translate}}</label>
     <hois-value value="studyPeriodView(application.studyPeriodEnd)"></hois-value>
   </md-input-container>
 </div>

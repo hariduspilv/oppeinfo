@@ -5,7 +5,7 @@ angular.module('hitsaOis')
 
     return {
       templateUrl: function (elem, attr) {
-        if (attr.multiple) {
+        if (angular.isDefined(attr.multiple)) {
           return 'components/hois.chip.autocomplete.html';
         } else {
           return 'components/hois.autocomplete.html';
@@ -26,7 +26,7 @@ angular.module('hitsaOis')
         post: function(scope, element, attrs) {
           var lookup = QueryUtils.endpoint('/autocomplete/'+scope.method);
 
-          if (attrs.multiple && !angular.isArray(scope.ngModel)) {
+          if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngModel)) {
             scope.ngModel = [];
           }
 

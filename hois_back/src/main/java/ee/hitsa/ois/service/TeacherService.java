@@ -1,5 +1,25 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.persistence.criteria.Predicate;
+import javax.transaction.Transactional;
+
+import ee.hitsa.ois.web.dto.TeacherSearchDto;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
@@ -17,28 +37,11 @@ import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.TeacherForm;
 import ee.hitsa.ois.web.commandobject.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherDto;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
-
-import javax.persistence.criteria.Predicate;
-import javax.transaction.Transactional;
-
-import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 @Transactional
 @Service
@@ -236,7 +239,7 @@ public class TeacherService {
         }
     }
 
-    public Page<TeacherDto> search(TeacherSearchCommand criteria, Pageable pageable) {
+    public Page<TeacherSearchDto> search(TeacherSearchCommand criteria, Pageable pageable) {
         return teacherRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
@@ -248,16 +251,18 @@ public class TeacherService {
                 filters.add(cb.equal(root.get("person").get("idcode"), criteria.getIdcode()));
             }
 
-            List<Predicate> name = new ArrayList<>();
-            propertyContains(() -> root.get("person").get("firstname"), cb, criteria.getName(), name::add);
-            propertyContains(() -> root.get("person").get("lastname"), cb, criteria.getName(), name::add);
-            if(!name.isEmpty()) {
-                filters.add(cb.or(name.toArray(new Predicate[name.size()])));
+            if(!StringUtils.isEmpty(criteria.getName())) {
+                List<Predicate> name = new ArrayList<>();
+                propertyContains(() -> root.get("person").get("firstname"), cb, criteria.getName(), name::add);
+                propertyContains(() -> root.get("person").get("lastname"), cb, criteria.getName(), name::add);
+                name.add(cb.like(cb.concat(cb.upper(root.get("person").get("firstname")), cb.concat(" ", cb.upper(root.get("person").get("lastname")))), SearchUtil.toContains(criteria.getName())));
+                if(!name.isEmpty()) {
+                    filters.add(cb.or(name.toArray(new Predicate[name.size()])));
+                }
             }
 
-
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(TeacherDto::of);
+        }, pageable).map(TeacherSearchDto::of);
     }
 
     public void delete(Teacher teacher) {

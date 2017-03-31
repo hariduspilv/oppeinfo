@@ -1,28 +1,51 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('UsersEditController', ['$scope', '$location', '$route', 'AuthService', 'DataUtils', 'message', 'QueryUtils', function ($scope, $location,  $route, AuthService, DataUtils, message, QueryUtils) {
+  .controller('UsersEditController', ['$scope', '$location', '$route', 'dialogService', 'Classifier', 'DataUtils', 'message', 'QueryUtils', 'Session', function ($scope, $location, $route, dialogService, Classifier, DataUtils, message, QueryUtils, Session) {
     var id = $route.current.params.person;
     var code = $route.current.params.user;
 
+    $scope.noSchool = ['ROLL_P', 'ROLL_V'];
+    $scope.showSchool = $route.current.locals.auth.isMainAdmin();
+
     var Endpoint = QueryUtils.endpoint('/persons/'+id+'/users');
+    var clMapper = Classifier.valuemapper({object: 'TEEMAOIGUS'});
+
+    function loadDefaults(action) {
+      QueryUtils.endpoint('/users/rolesDefaults').get().$promise.then(function (response) {
+        $scope.userRoleDefaults = response;
+        if (action) {
+          action(response);
+        }
+      });
+    }
 
     function afterLoad() {
       DataUtils.convertStringToDates($scope.user, ['validFrom', 'validThru']);
+      if ($scope.user.school) {
+        $scope.user.school = Session.school.id.toString();
+      }
+      loadDefaults();
     }
 
     function afterNewLoad() {
       $scope.user.validFrom = new Date();
+      loadDefaults(function (response) {
+        $scope.user.rights = response.userRoles;
+      });
+      if (!$scope.showSchool) {
+        $scope.user.school = (Session.school.id.toString());
+      }
     }
 
-    $scope.showSchool = AuthService.matchesRole('ROLL_P');
-
-    $scope.userRoleDefaults = QueryUtils.endpoint('/users/rolesDefaults').query();
-
-    $scope.filterValues = [];
+    $scope.filterValues = ['ROLL_T', 'ROLL_L'];
 
     if (!$scope.showSchool) {
-      $scope.filterValues = ['ROLL_P'];
+      $scope.filterValues.push('ROLL_P');
+    }
+
+    if ($route.current.locals.auth.isAdmin()) {
+      $scope.filterValues.push('ROLL_V');
     }
 
     if (code) {
@@ -32,17 +55,42 @@ angular.module('hitsaOis')
     }
 
     $scope.roleChange = function () {
-      if ($scope.user.role === 'ROLL_P') {
+      if ($scope.noSchool.indexOf($scope.user.role) !== -1) {
         $scope.user.school = null;
       }
-      if (!$scope.user.id) {
-        var rights = $scope.userRoleDefaults.filter(function (it) {
+      if ($scope.userRoleDefaults) {
+        var rights = $scope.userRoleDefaults.defaultRights.filter(function (it) {
           return it.roleCode === $scope.user.role;
         });
         if (rights && rights.length) {
-          $scope.user.rights = JSON.parse(rights[0].data);
+          var map = JSON.parse(rights[0].data).reduce(function (map, obj) {
+            map[obj.object] = {oigusM: obj.oigusM, oigusK: obj.oigusK, oigusV: obj.oigusV};
+            return map;
+          }, {});
+          for (var i = 0; i < $scope.user.rights.length; i++) {
+            var key = $scope.user.rights[i].object;
+            var values = map[key];
+            if (values) {
+              $scope.user.rights[i].oigusM = (values.oigusM || false);
+              $scope.user.rights[i].oigusK = (values.oigusK || false);
+              $scope.user.rights[i].oigusV = (values.oigusV || false);
+            }
+          }
         }
       }
+    };
+
+    $scope.orderValue = function (item) {
+      return $scope.currentLanguageNameField(clMapper.objectmapper({object: item.object}).object);
+    };
+
+    $scope.delete = function () {
+      dialogService.confirmDialog({prompt: 'user.deleteconfirm'}, function () {
+        $scope.user.$delete().then(function () {
+          message.info('main.messages.delete.success');
+          $location.path('/persons/' + id + '/edit');
+        });
+      });
     };
 
     $scope.update = function () {
@@ -52,7 +100,7 @@ angular.module('hitsaOis')
           $scope.user.$update().then(message.updateSuccess);
         } else {
           $scope.user.$save().then(function (response) {
-            $location.path('/persons/' + response.person.id + '/users/' + response.id);
+            $location.path('/persons/' + response.person.id + '/users/' + response.id + '/edit');
             message.info('main.messages.create.success');
           });
         }

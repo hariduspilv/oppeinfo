@@ -17,8 +17,11 @@ public class DirectiveViewStudentDto {
     private String firstname;
     private String lastname;
     private String fullname;
+    private Boolean isPeriod;
     private LocalDate startDate;
     private LocalDate endDate;
+    private AutocompleteResult studyPeriodStart;
+    private AutocompleteResult studyPeriodEnd;
     private String reason;
     private String addInfo;
     private String fin;
@@ -85,6 +88,14 @@ public class DirectiveViewStudentDto {
         this.fullname = fullname;
     }
 
+    public Boolean getIsPeriod() {
+        return isPeriod;
+    }
+
+    public void setIsPeriod(Boolean isPeriod) {
+        this.isPeriod = isPeriod;
+    }
+
     public LocalDate getStartDate() {
         return startDate;
     }
@@ -99,6 +110,22 @@ public class DirectiveViewStudentDto {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public AutocompleteResult getStudyPeriodStart() {
+        return studyPeriodStart;
+    }
+
+    public void setStudyPeriodStart(AutocompleteResult studyPeriodStart) {
+        this.studyPeriodStart = studyPeriodStart;
+    }
+
+    public AutocompleteResult getStudyPeriodEnd() {
+        return studyPeriodEnd;
+    }
+
+    public void setStudyPeriodEnd(AutocompleteResult studyPeriodEnd) {
+        this.studyPeriodEnd = studyPeriodEnd;
     }
 
     public String getReason() {

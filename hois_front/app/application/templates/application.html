@@ -80,7 +80,7 @@
 
         <div ng-if="application.type === 'AVALDUS_LIIK_AKAD'" layout="row" layout-sm="column" layout-xs="column">
           <div flex="60" flex-sm="100" flex-xs="100" ng-include="'application/templates/period.html'"
-            ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_AKAD')"></div>
+            ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_AKAD');labelStart='application.academicLeaveStart';labelEnd='application.academicLeaveEnd'"></div>
         </div>
 
         <div ng-if="application.type === 'AVALDUS_LIIK_AKADK'">
@@ -193,7 +193,7 @@
 
           <div layout="row" layout-sm="column" layout-xs="column">
             <div flex="60" flex-sm="100" flex-xs="100" ng-include="'application/templates/period.html'"
-              ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_VALIS')"></div>
+              ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_VALIS');labelStart='application.abroadStudiesStart';labelEnd='application.abroadStudiesEnd'"></div>
           </div>
 
           <div layout="row" layout-sm="column" layout-xs="column" >

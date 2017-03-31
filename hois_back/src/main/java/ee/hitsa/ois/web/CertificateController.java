@@ -35,7 +35,7 @@ public class CertificateController {
 
     @GetMapping
     public Page<CertificateSearchDto> search(HoisUserDetails user, @Valid CertificateSearchCommand criteria, Pageable pageable) {
-        return certificateService.search(user.getSchoolId(), criteria, pageable);
+        return certificateService.search(user, criteria, pageable);
     }
 
     @GetMapping("/{id:\\d+}")

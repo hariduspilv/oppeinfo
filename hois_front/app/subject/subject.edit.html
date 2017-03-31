@@ -76,9 +76,9 @@
       <label>{{'subject.additionalInfo' | translate}}</label>
       <textarea ng-model="subject.additionalInfo" md-maxlength="4000" max-rows="2" md-select-on-focus></textarea>
     </md-input-container>
-    <hois-autocomplete ng-model="subject.mandatoryPrerequisiteSubjects" label="subject.mandatoryPrerequisiteSubjects" method="subjects" multiple="true"></hois-autocomplete>
-    <hois-autocomplete ng-model="subject.recommendedPrerequisiteSubjects" label='subject.recommendedPrerequisiteSubjects' method="subjects" multiple="true"></hois-autocomplete>
-    <hois-autocomplete ng-model="subject.substituteSubjects" label='subject.substituteSubjects' method="subjects" multiple="true"></hois-autocomplete>
+    <hois-autocomplete ng-model="subject.mandatoryPrerequisiteSubjects" label="subject.mandatoryPrerequisiteSubjects" method="subjects" multiple></hois-autocomplete>
+    <hois-autocomplete ng-model="subject.recommendedPrerequisiteSubjects" label='subject.recommendedPrerequisiteSubjects' method="subjects" multiple></hois-autocomplete>
+    <hois-autocomplete ng-model="subject.substituteSubjects" label='subject.substituteSubjects' method="subjects" multiple></hois-autocomplete>
     <br>
     <md-input-container flex>
       <label>{{'subject.linkDepartment' | translate}}</label>

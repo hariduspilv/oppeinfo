@@ -107,7 +107,7 @@ angular.module('hitsaOis')
       if (angular.isArray(item)) {
         return item.map(function (it) {
           return _currentLanguageNameField(nameField, it);
-        }).join(', ');
+        }).join('; ');
       }
       return _currentLanguageNameField(nameField, item);
     };
@@ -241,7 +241,7 @@ angular.module('hitsaOis')
     $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
       //console.log(history, newUrl, oldUrl, isBack)
       if (newUrl !== oldUrl && !isBack) {
-        pushHistoryState(oldUrl, newUrl);
+        pushHistoryState(oldUrl.replace(/(\?_menu)$/, ''), newUrl.replace(/(\?_menu)$/, ''));
       }
       isBack = false;
     });

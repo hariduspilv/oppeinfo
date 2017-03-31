@@ -2,29 +2,63 @@ package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.UserRoleDefault;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.web.commandobject.UserForm;
+
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 public class UserRolesDto {
-    private String roleCode;
-    private String data;
 
-    public static UserRolesDto of(UserRoleDefault userRoleDefault) {
-        UserRolesDto dto = EntityUtil.bindToDto(userRoleDefault, new UserRolesDto());
+    private List<UserForm.UserRight> userRoles;
+    private List<UserRoleRightDefaultDto> defaultRights;
+
+    public static UserRolesDto of(List<String> objects, Iterable<UserRoleDefault> userRoleDefaults) {
+        UserRolesDto dto = new UserRolesDto();
+        dto.userRoles = objects.stream().map(UserForm.UserRight::of).collect(Collectors.toList());
+        dto.defaultRights = StreamSupport.stream(userRoleDefaults.spliterator(), false).map(UserRoleRightDefaultDto::of).collect(Collectors.toList());
         return dto;
     }
 
-    public String getData() {
-        return data;
+    public List<UserForm.UserRight> getUserRoles() {
+        return userRoles;
     }
 
-    public void setData(String data) {
-        this.data = data;
+    public void setUserRoles(List<UserForm.UserRight> userRoles) {
+        this.userRoles = userRoles;
     }
 
-    public String getRoleCode() {
-        return roleCode;
+    public List<UserRoleRightDefaultDto> getDefaultRights() {
+        return defaultRights;
     }
 
-    public void setRoleCode(String roleCode) {
-        this.roleCode = roleCode;
+    public void setDefaultRights(List<UserRoleRightDefaultDto> defaultRights) {
+        this.defaultRights = defaultRights;
+    }
+
+    public static class UserRoleRightDefaultDto {
+        private String roleCode;
+        private String data;
+
+        public static UserRoleRightDefaultDto of(UserRoleDefault userRoleDefaults) {
+            UserRoleRightDefaultDto dto = EntityUtil.bindToDto(userRoleDefaults, new UserRoleRightDefaultDto());
+            return dto;
+        }
+
+        public String getData() {
+            return data;
+        }
+
+        public void setData(String data) {
+            this.data = data;
+        }
+
+        public String getRoleCode() {
+            return roleCode;
+        }
+
+        public void setRoleCode(String roleCode) {
+            this.roleCode = roleCode;
+        }
     }
 }

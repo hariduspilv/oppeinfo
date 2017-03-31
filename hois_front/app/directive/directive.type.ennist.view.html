@@ -4,7 +4,6 @@
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
-        <th md-column>{{'directive.student.ennistStartDate' | translate}}</th>
         <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
         <th md-column>{{'directive.student.studentGroup' | translate}}</th>
         <th md-column>{{'directive.student.studyLoad' | translate}}</th>
@@ -18,9 +17,6 @@
       <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
-        <td md-cell>
-          <hois-value value="'main.formattedDate' | translate: {date: row.startDate}"></hois-value>
-        </td>
         <td md-cell>{{currentLanguageNameField(row.oldCurriculumVersion)}}</td>
         <td md-cell>{{::row.studentGroup}}</td>
         <td md-cell>

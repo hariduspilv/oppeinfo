@@ -8,6 +8,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -65,6 +66,7 @@ import ee.hitsa.ois.web.commandobject.directive.DirectiveStudentSearchCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm.DirectiveFormStudent;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
+import ee.hitsa.ois.web.dto.directive.DirectiveDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveSearchDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveStudentDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveStudentSearchDto;
@@ -85,13 +87,14 @@ public class DirectiveService {
     static {
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_AKAD, Arrays.asList(OPPURSTAATUS_O.name()));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_AKADK, Arrays.asList(OPPURSTAATUS_A.name()));
-        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OKAVA, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_EKSMAT, Arrays.asList(OPPURSTAATUS_O.name(), OPPURSTAATUS_V.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_ENNIST, Arrays.asList(OPPURSTAATUS_K.name()));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_FINM, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_LOPET, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OKAVA, Arrays.asList(OPPURSTAATUS_O.name()));
+        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OKOORM, Arrays.asList(OPPURSTAATUS_O.name()));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_OVORM, Arrays.asList(OPPURSTAATUS_O.name()));
         STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_VALIS, Arrays.asList(OPPURSTAATUS_O.name()));
-        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_EKSMAT, Arrays.asList(OPPURSTAATUS_O.name(), OPPURSTAATUS_A.name(), OPPURSTAATUS_V.name()));
-        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_LOPET, Arrays.asList(OPPURSTAATUS_O.name()));
-        STUDENT_STATUS_FOR_DIRECTIVE_TYPE.put(KASKKIRI_ENNIST, Arrays.asList(OPPURSTAATUS_K.name()));
     }
 
     // application statuses which can added to directive
@@ -203,7 +206,7 @@ public class DirectiveService {
                     break;
                 case KASKKIRI_LOPET:
                     // TODO copy from student data
-                    // student.setIsCumLaude(isCumLaude);
+                    student.setIsCumLaude(Boolean.FALSE);
                     // student.setCurriculumGrade(curriculumGrade);
                     student.setCurriculumVersion(student.getStudent().getCurriculumVersion());
                     break;
@@ -231,6 +234,19 @@ public class DirectiveService {
         // update possible applications as free for directives
         directive.getStudents().forEach(this::studentRemovedFromDirective);
         EntityUtil.deleteEntity(directiveRepository, directive);
+    }
+
+    public DirectiveDto directivedata(HoisUserDetails user, DirectiveDataCommand cmd) {
+        // fetch all data for selected students and given directive type
+        DirectiveDto dto = EntityUtil.bindToDto(cmd, new DirectiveDto(), "students");
+        dto.setStatus(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name());
+        dto.setInserted(LocalDateTime.now());
+        dto.setInsertedBy(user.getUsername());
+        // directive type as default headline
+        Classifier type = classifierRepository.findOne(cmd.getType());
+        dto.setHeadline(type != null ? type.getNameEt() : null);
+        dto.setStudents(loadStudents(user.getSchoolId(), cmd));
+        return dto;
     }
 
     public List<DirectiveStudentDto> loadStudents(Long schoolId, DirectiveDataCommand cmd) {
@@ -324,6 +340,9 @@ public class DirectiveService {
         case KASKKIRI_AKAD:
             // nominal study end not passed
             qb.requiredCriteria("s.nominal_study_end > :now", "now", LocalDate.now());
+            break;
+        case KASKKIRI_OKOORM:
+            qb.filter("c.is_higher = true");
             break;
         default:
             break;

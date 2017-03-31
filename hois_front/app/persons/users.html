@@ -13,11 +13,11 @@
       </div>
       <md-input-container flex>
         <label>{{'school.label' | translate}}</label>
-        <hois-school-select ng-disabled="user.role === 'ROLL_P'" ng-model="user.school"></hois-school-select>
+        <hois-school-select ng-disabled="noSchool.indexOf(user.role) !== -1 || !showSchool" ng-model="user.school" ng-required="noSchool.indexOf(user.role) === -1"></hois-school-select>
       </md-input-container>
       <md-input-container flex>
         <label>{{'user.role' | translate}}</label>
-        <hois-classifier-select ng-model="user.role" filter-values="filterValues" ng-change="roleChange();" main-classifier-code="ROLL" model-value-attr="code"></hois-classifier-select>
+        <hois-classifier-select ng-model="user.role" filter-values="filterValues" ng-change="roleChange();" main-classifier-code="ROLL" model-value-attr="code" required></hois-classifier-select>
       </md-input-container>
       <md-input-container flex>
         <label>{{'user.validFrom' | translate}}</label>
@@ -31,7 +31,7 @@
     <div layout-padding>
       <div flex>
         <md-table-container>
-          <table md-table>
+          <table md-table ng-show="user.role">
             <thead md-head>
               <tr md-row>
                 <th md-column>{{'user.rights.right' | translate}}</th>
@@ -43,7 +43,7 @@
               </tr>
             </thead>
             <tbody md-body>
-              <tr md-row ng-repeat="right in user.rights" ng-class-odd="'odd'" ng-class-even="'even'">
+              <tr md-row ng-repeat="right in user.rights | orderBy: orderValue" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell><hois-classifier-value ng-model="right.object" main-classifier-code="TEEMAOIGUS"></hois-classifier-value></td>
                 <td md-cell><md-checkbox ng-model="right.oigusM" flex></md-checkbox></td>
                 <td md-cell><md-checkbox ng-model="right.oigusK" flex></md-checkbox></td>
@@ -57,6 +57,7 @@
       </div>
     </div>
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-if="user.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
     <md-button ng-href="#/persons/{{::user.person.id}}/edit" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </form>
 </div>

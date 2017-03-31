@@ -14,7 +14,7 @@
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.reason" model-value-attr="code" main-classifier-code="EKSMAT_POHJUS"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.reason" model-value-attr="code" main-classifier-code="EKSMAT_POHJUS" aria-label="{{'directive.student.reason' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>{{::row.addInfo}}</td>
         <td md-cell>

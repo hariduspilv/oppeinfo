@@ -1,6 +1,7 @@
 package ee.hitsa.ois.domain;
 
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -46,7 +47,7 @@ public class User extends BaseEntityWithId {
     }
 
     public Set<UserRights> getUserRights() {
-        return userRights;
+        return userRights == null ? (userRights = new HashSet<>()) : userRights;
     }
 
     public void setUserRights(Set<UserRights> userRights) {

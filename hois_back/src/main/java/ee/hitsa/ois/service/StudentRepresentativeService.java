@@ -1,6 +1,8 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.*;
+import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_E;
+import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_K;
+import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_T;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.util.ArrayList;
@@ -31,6 +33,7 @@ import ee.hitsa.ois.repository.StudentRepresentativeRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationDeclineForm;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationForm;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationSearchCommand;
@@ -106,12 +109,17 @@ public class StudentRepresentativeService {
             if(!StringUtils.isEmpty(criteria.getIdcode())) {
                 filters.add(cb.equal(root.get("person").get("idcode"), criteria.getIdcode()));
             }
-            List<Predicate> name = new ArrayList<>();
-            propertyContains(() -> root.get("person").get("firstname"), cb, criteria.getName(), name::add);
-            propertyContains(() -> root.get("person").get("lastname"), cb, criteria.getName(), name::add);
-            if(!name.isEmpty()) {
-                filters.add(cb.or(name.toArray(new Predicate[name.size()])));
+
+            if(!StringUtils.isEmpty(criteria.getName())) {
+                List<Predicate> name = new ArrayList<>();
+                propertyContains(() -> root.get("person").get("firstname"), cb, criteria.getName(), name::add);
+                propertyContains(() -> root.get("person").get("lastname"), cb, criteria.getName(), name::add);
+                name.add(cb.like(cb.concat(cb.upper(root.get("person").get("firstname")), cb.concat(" ", cb.upper(root.get("person").get("lastname")))), SearchUtil.toContains(criteria.getName())));
+                if(!name.isEmpty()) {
+                    filters.add(cb.or(name.toArray(new Predicate[name.size()])));
+                }
             }
+
             if(StringUtils.hasText(criteria.getStatus())) {
                 filters.add(cb.equal(root.get("status").get("code"), criteria.getStatus()));
             }

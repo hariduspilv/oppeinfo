@@ -21,7 +21,6 @@
         <td md-cell>{{row.isAbroad ? 'directive.student.foreignEducationalInstitute' : 'directive.student.estonianEducationalInstitute' | translate}}</td>
         <td md-cell>
           <hois-classifier-value ng-if="!row.isAbroad" ng-model="row.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value>
-          <hois-classifier-select ng-model="row.ehisSchool" main-classifier-code="EHIS_KOOL" model-value-attr="code"></hois-classifier-select>
           <div ng-if="row.isAbroad">{{row.abroadSchool}}</div>
         </td>
         <td md-cell>

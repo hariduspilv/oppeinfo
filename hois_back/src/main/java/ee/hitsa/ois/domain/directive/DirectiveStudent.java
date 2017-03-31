@@ -28,11 +28,11 @@ public class DirectiveStudent extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private Directive directive;
-    @NotNull(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Lopet.class, Valis.class})
+    @NotNull(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Valis.class})
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(updatable = false)
     private Student student;
-    @NotNull(groups = {Akadk.class, Ennist.class, Immat.class})
+    @NotNull(groups = {Akadk.class})
     private LocalDate startDate;
     private LocalDate endDate;
     @NotNull(groups = {Akad.class, Eksmat.class})
@@ -47,7 +47,7 @@ public class DirectiveStudent extends BaseEntityWithId {
     @NotNull(groups = {Immat.class, Okava.class, Ovorm.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyForm;
-    @NotNull(groups = {Ennist.class, Immat.class, Okava.class, Ovorm.class})
+    @NotNull(groups = {Ennist.class, Immat.class, Okava.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private StudentGroup studentGroup;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -59,7 +59,8 @@ public class DirectiveStudent extends BaseEntityWithId {
     @NotNull(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier language;
-    @NotNull(groups = Lopet.class)
+    // temporary switched off
+    // @NotNull(groups = Lopet.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumGrade curriculumGrade;
     private Boolean isPeriod;

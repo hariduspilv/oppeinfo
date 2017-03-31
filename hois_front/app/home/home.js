@@ -45,7 +45,10 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
       $scope.loadUnreadMessages();
     }
 
-    $scope.$on(AUTH_EVENTS.loginSuccess, $scope.loadGeneralMessages, $scope.loadUnreadMessages);
-    $scope.$on(AUTH_EVENTS.userChanged, $scope.loadGeneralMessages, $scope.loadUnreadMessages);
+    $scope.$on(AUTH_EVENTS.loginSuccess, $scope.loadGeneralMessages);
+    $scope.$on(AUTH_EVENTS.userChanged, $scope.loadGeneralMessages);
+
+    $scope.$on(AUTH_EVENTS.loginSuccess, $scope.loadUnreadMessages);
+    $scope.$on(AUTH_EVENTS.userChanged, $scope.loadUnreadMessages);
   }
 ]);

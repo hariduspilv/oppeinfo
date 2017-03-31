@@ -41,7 +41,6 @@ public class CertificateControllerTest {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL);
-        uriBuilder.queryParam("student.person.name", "test1");
         uriBuilder.queryParam("certificateNr", "123");
         uriBuilder.queryParam("idcode", "39008114578");
         uriBuilder.queryParam("name", "Alice");
@@ -49,7 +48,7 @@ public class CertificateControllerTest {
         uriBuilder.queryParam("type", Arrays.asList("TOEND_LIIK_OPI", "TOEND_LIIK_LOPET"));
         uriBuilder.queryParam("insertedFrom", "2016-12-31T22:00:00.000Z");
         uriBuilder.queryParam("insertedThru", "2017-01-31T22:00:00.000Z");
-        uriBuilder.queryParam("sort", "student.person.lastname,student.person.firstname,asc");
+        uriBuilder.queryParam("sort", "c.type_code,asc");
         url = uriBuilder.build().toUriString();
         responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

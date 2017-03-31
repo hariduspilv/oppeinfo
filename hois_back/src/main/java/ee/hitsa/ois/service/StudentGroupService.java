@@ -46,6 +46,7 @@ import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchStudentsCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
 
@@ -194,7 +195,7 @@ public class StudentGroupService {
 
     public Map<String, ?> curriculumData(Curriculum curriculum) {
         Map<String, Object> data = new HashMap<>();
-        data.put("curriculumVersions", curriculum.getVersions().stream().map(AutocompleteResult::of).collect(Collectors.toList()));
+        data.put("curriculumVersions", curriculum.getVersions().stream().map(CurriculumVersionResult::of).collect(Collectors.toList()));
         data.put("languages", curriculum.getStudyLanguages().stream().map(r -> EntityUtil.getCode(r.getStudyLang())).collect(Collectors.toList()));
         List<String> studyForms;
         if(CurriculumUtil.isHigher(curriculum.getOrigStudyLevel())) {

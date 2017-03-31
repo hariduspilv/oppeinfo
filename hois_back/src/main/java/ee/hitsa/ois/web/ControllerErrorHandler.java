@@ -155,6 +155,7 @@ public class ControllerErrorHandler {
     static {
         UNIQUE_VIOLATION_MESSAGES.put("building", "building.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("directive_coordinator", "directive.coordinator.alreadyexist");
+        UNIQUE_VIOLATION_MESSAGES.put("directive_student", "directive.student.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("room", "room.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative", "student.representative.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative_application", "student.representative.application.alreadyexist");

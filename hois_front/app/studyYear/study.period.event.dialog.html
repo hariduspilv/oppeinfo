@@ -16,7 +16,7 @@
           <md-input-container flex>
             <label class="label">{{'studyYear.studyPeriodEvent.period' | translate}}</label>
             <md-select ng-model="studyPeriodEvent.studyPeriod">
-              <md-option md-option-empty></md-option>
+              <md-option md-option-empty ng-value="null"></md-option>
               <md-option ng-repeat="option in studyPeriods" ng-value="option" aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-option>
             </md-select>
           </md-input-container>
@@ -38,7 +38,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'studyYear.studyPeriodEvent.startDate' | translate}}</label>
-            <md-datepicker ng-model="studyPeriodEvent.start" md-max-date="studyPeriodEvent.endDate" required md-open-on-focus></md-datepicker>
+            <md-datepicker ng-model="studyPeriodEvent.start" md-max-date="studyPeriodEvent.end" required md-open-on-focus></md-datepicker>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'studyYear.studyPeriodEvent.startTime' | translate}}</label>
@@ -48,7 +48,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'studyYear.studyPeriodEvent.endDate' | translate}}</label>
-            <md-datepicker ng-model="studyPeriodEvent.end" md-min-date="studyPeriodEvent.startDate" ng-model-options="{ getterSetter: true }" md-open-on-focus></md-datepicker>
+            <md-datepicker ng-model="studyPeriodEvent.end" md-min-date="studyPeriodEvent.start" ng-model-options="{ getterSetter: true }" md-open-on-focus></md-datepicker>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'studyYear.studyPeriodEvent.endTime' | translate}}</label>

@@ -28,6 +28,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
 @RestController
@@ -65,7 +66,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/curriculumversions")
-    public Page<AutocompleteResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
+    public Page<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
         return asPage(autocompleteService.curriculumVersions(user.getSchoolId(), valid));
     }
 

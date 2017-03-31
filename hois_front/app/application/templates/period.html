@@ -15,23 +15,23 @@
 
 <div ng-show="!application.isPeriod" layout="row" layout-xs="column">
   <md-input-container  flex>
-    <label>{{'application.academicLeaveStart' | translate}}</label>
+    <label>{{labelStart | translate}}</label>
     <md-datepicker ng-model="application.startDate" md-open-on-focus ng-required="isPeriodRequired && !application.isPeriod"></md-datepicker>
   </md-input-container>
 
   <md-input-container style="margin-left: 0px" flex flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-    <label>{{'application.academicLeaveEnd' | translate}}</label>
+    <label>{{labelEnd | translate}}</label>
     <md-datepicker ng-model="application.endDate" md-min-date="application.startDate" md-open-on-focus ng-required="isPeriodRequired && !application.isPeriod"></md-datepicker>
   </md-input-container>
 </div>
 
 <div ng-show="application.isPeriod" layout="row" layout-xs="column">
   <md-input-container  flex>
-    <label>{{'application.academicLeaveStart' | translate}}</label>
+    <label>{{labelStart | translate}}</label>
     <hois-select ng-model="application.studyPeriodStart" values="studyPeriods" ng-required="isPeriodRequired && application.isPeriod"></hois-select>
   </md-input-container>
   <md-input-container  flex>
-    <label>{{'application.academicLeaveEnd' | translate}}</label>
+    <label>{{labelEnd | translate}}</label>
     <hois-select ng-model="application.studyPeriodEnd" values="studyPeriods" ng-required="isPeriodRequired && application.isPeriod"></hois-select>
   </md-input-container>
 </div>

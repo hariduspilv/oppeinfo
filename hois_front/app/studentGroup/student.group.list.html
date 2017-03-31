@@ -22,7 +22,7 @@
             <hois-classifier-select ng-model="criteria.studyForm" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
           </md-input-container>
 
-          <hois-autocomplete label="studentGroup.teacher" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
+          <hois-autocomplete label="studentGroup.teacher" ng-if="!formState.onlyhigher" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
 
           <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
@@ -63,7 +63,7 @@
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>

@@ -76,6 +76,9 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     @Size(max = 255)
     private String abroadSchool;
 
+    @ClassifierRestriction(MainClassCode.EHIS_KOOL)
+    private String ehisSchool;
+
     @ClassifierRestriction(MainClassCode.RIIK)
     private String country;
 
@@ -272,6 +275,14 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setAbroadSchool(String abroadSchool) {
         this.abroadSchool = abroadSchool;
+    }
+
+    public String getEhisSchool() {
+        return ehisSchool;
+    }
+
+    public void setEhisSchool(String ehisSchool) {
+        this.ehisSchool = ehisSchool;
     }
 
     public String getCountry() {

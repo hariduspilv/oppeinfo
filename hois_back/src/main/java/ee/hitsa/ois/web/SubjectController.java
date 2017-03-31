@@ -84,5 +84,5 @@ public class SubjectController {
 
 class SubjectSearchFormData {
     public List<AutocompleteResult> departments;
-    public List<AutocompleteResult> curricula;
+    public List<? extends AutocompleteResult> curricula;
 }

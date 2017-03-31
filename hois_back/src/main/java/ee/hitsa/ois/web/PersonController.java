@@ -11,6 +11,7 @@ import ee.hitsa.ois.service.PersonService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.PersonForm;
@@ -19,6 +20,7 @@ import ee.hitsa.ois.web.dto.PersonWithUsersDto;
 import ee.hitsa.ois.web.dto.UserDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -74,6 +76,9 @@ public class PersonController {
 
     @PostMapping("/{person:\\d+}/users")
     public UserDto createUser(HoisUserDetails userDetails, @WithEntity("person") Person person, @Valid @RequestBody UserForm userForm) {
+        if (!userDetails.isMainAdmin()) {
+            userForm.setSchool(userDetails.getSchoolId());
+        }
         return getUser(userDetails, person, personService.createUser(userForm, person));
     }
 
@@ -82,6 +87,24 @@ public class PersonController {
         if (!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson()))) {
             throw new AssertionFailedException("Person and user don't match");
         }
+        if (!userDetails.isMainAdmin()) {
+            UserUtil.assertSameSchool(userDetails, user.getSchool());
+            userForm.setSchool(EntityUtil.getId(user.getSchool()));
+        }
         return getUser(userDetails, person, personService.saveUser(userForm, user));
+    }
+
+    @DeleteMapping("/{id:\\d+}")
+    public void deletePerson(@WithEntity("id") Person person) {
+        personService.delete(person);
+    }
+
+    @DeleteMapping("/{person:\\d+}/users/{id:\\d+}")
+    public void deleteUser(@WithEntity("person") Person person, @WithEntity("id") User user) {
+        // todo add extra limitations based on roles
+        if (!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson()))) {
+            throw new AssertionFailedException("Person and user don't match");
+        }
+        personService.deleteUser(user);
     }
 }

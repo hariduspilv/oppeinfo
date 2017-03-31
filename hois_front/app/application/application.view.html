@@ -10,39 +10,36 @@
             </md-input-container>
         </div>
 
-        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.isStudent()">
+        <div ng-if="!auth.isStudent()" layout="row" layout-sm="column" layout-xs="column">
             <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
               <label>{{'student.label' | translate}}</label>
               <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
             </md-input-container>
         </div>
 
-        <div ng-if="auth.isStudent()">
-          <div layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
-                <label>{{'main.status' | translate}}</label>
-                <hois-classifier-value ng-model="application.status" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-value>
-              </md-input-container>
-          </div>
-          <div ng-if="application.needsRepresentativeConfirm === true && application.status === 'AVALDUS_STAATUS_ESIT'" layout="row" layout-sm="column" layout-xs="column">
-              <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
-                <label>{{'application.confirmedByRepresentative' | translate}}</label>
-                <hois-value value="'main.yes' | translate"></hois-value>
-              </md-input-container>
-          </div>
-          <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
-              <label>{{'main.createdBy' | translate}}</label>
-              <hois-value value="application.insertedBy"></hois-value>
+              <label>{{'main.status' | translate}}</label>
+              <hois-classifier-value ng-model="application.status" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-value>
             </md-input-container>
-          </div>
-          <div layout="row" layout-sm="column" layout-xs="column">
+        </div>
+        <div ng-if="application.needsRepresentativeConfirm === true && application.status === 'AVALDUS_STAATUS_ESIT'" layout="row" layout-sm="column" layout-xs="column">
             <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
-              <label>{{'application.submissionDate' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: application.submitted}"></hois-value>
+              <label>{{'application.confirmedByRepresentative' | translate}}</label>
+              <hois-value value="'main.yes' | translate"></hois-value>
             </md-input-container>
-          </div>
-
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+            <label>{{'main.createdBy' | translate}}</label>
+            <hois-value value="application.insertedBy"></hois-value>
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+            <label>{{'application.submissionDate' | translate}}</label>
+            <hois-value value="'main.formattedDate' | translate: {date: application.submitted}"></hois-value>
+          </md-input-container>
         </div>
 
         <div ng-if="application.type === 'AVALDUS_LIIK_AKAD'" layout="row" layout-sm="column" layout-xs="column">
@@ -111,7 +108,7 @@
 
         <div ng-if="application.type === 'AVALDUS_LIIK_AKAD'" layout="row" layout-sm="column" layout-xs="column">
           <div flex="60" flex-sm="100" flex-xs="100" ng-include="'application/templates/period.view.html'"
-            ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_AKAD')"></div>
+            ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_AKAD');labelStart='application.academicLeaveStart';labelEnd='application.academicLeaveEnd'"></div>
         </div>
 
         <div ng-if="application.type === 'AVALDUS_LIIK_AKADK'">
@@ -184,7 +181,7 @@
         <div ng-if="application.type === 'AVALDUS_LIIK_VALIS'">
           <div layout="row">
             <md-input-container flex="20" flex-xs="100">
-              <label class="md-required common-label">{{'main.abroadStudies' | translate}}</label>
+              <label>{{'main.abroadStudies' | translate}}</label>
               <hois-value value="application.isAbroad ? ('main.yes' | translate) : ('main.no' | translate)"></hois-value>
             </md-input-container>
           </div>
@@ -212,7 +209,7 @@
 
           <div layout="row" layout-sm="column" layout-xs="column">
             <div flex="60" flex-sm="100" flex-xs="100" ng-include="'application/templates/period.view.html'"
-              ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_AKAD')"></div>
+              ng-init="isPeriodRequired=(application.type === 'AVALDUS_LIIK_VALIS');labelStart='application.abroadStudiesStart';labelEnd='application.abroadStudiesEnd'"></div>
           </div>
 
           <div layout="row" layout-sm="column" layout-xs="column" >
@@ -300,9 +297,11 @@
 
 
       <div layout="row">
-        <md-button ng-if="application.status === 'AVALDUS_STAATUS_KOOST' || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())" ng-href="#/applications/{{application.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+        <md-button ng-if="(application.status === 'AVALDUS_STAATUS_KOOST' && (auth.isAdmin() || auth.isStudent())) || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
+          ng-href="#/applications/{{application.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
         <div ng-include="'application/templates/action.buttons.html'"></div>
-        <md-button ng-click="back('#/applications/'+ (auth.isStudent() ? 'student': ''))" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="auth.isStudent()" ng-href="#/applications/student" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="!auth.isStudent()" ng-click="back('#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

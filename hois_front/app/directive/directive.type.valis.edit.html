@@ -26,11 +26,11 @@
           </md-radio-group>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-if="!row.isAbroad" ng-model="row.ehisSchool" main-classifier-code="EHIS_KOOL" model-value-attr="code"></hois-classifier-select>
+          <hois-classifier-select ng-if="!row.isAbroad" ng-model="row.ehisSchool" main-classifier-code="EHIS_KOOL" model-value-attr="code" aria-label="{{'directive.student.school' | translate}}"></hois-classifier-select>
           <input type="text" ng-if="row.isAbroad" ng-model="row.abroadSchool"></input>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.country" model-value-attr="code" filtered-value="['EST']" main-classifier-code="RIIK"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.country" model-value-attr="code" filtered-value="['EST']" main-classifier-code="RIIK" aria-label="{{'directive.student.country' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
           <md-radio-group name="isPeriod" ng-model="row.isPeriod" layout="row">
@@ -39,18 +39,18 @@
           </md-radio-group>
         </td>
         <td md-cell>
-          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodStart" values="formState.studyPeriods"></hois-select>
-          <md-datepicker ng-if="!row.isPeriod" ng-model="row.startDate" md-placeholder="{{'directive.student.akadEndDate' | translate}}"></md-datepicker>
+          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodStart" values="formState.studyPeriods" aria-label="{{'directive.student.valisStartDate' | translate}}"></hois-select>
+          <md-datepicker ng-if="!row.isPeriod" ng-model="row.startDate" md-placeholder="{{'directive.student.valisStartDate' | translate}}"></md-datepicker>
         </td>
         <td md-cell>
-          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodEnd" values="formState.studyPeriods"></hois-select>
-          <md-datepicker ng-if="!row.isPeriod" ng-model="row.endDate" md-placeholder="{{'directive.student.akadEndDate' | translate}}"></md-datepicker>
+          <hois-select ng-if="row.isPeriod" ng-model="row.studyPeriodEnd" values="formState.studyPeriods" aria-label="{{'directive.student.valisEndDate' | translate}}"></hois-select>
+          <md-datepicker ng-if="!row.isPeriod" ng-model="row.endDate" md-placeholder="{{'directive.student.valisEndDate' | translate}}"></md-datepicker>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.abroadPurpose" model-value-attr="code" main-classifier-code="VALISOPE_EESMARK"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.abroadPurpose" model-value-attr="code" main-classifier-code="VALISOPE_EESMARK" aria-label="{{'directive.student.abroadPurpose' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.abroadProgramme" model-value-attr="code" main-classifier-code="VALISKOOL_PROGRAMM"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.abroadProgramme" model-value-attr="code" main-classifier-code="VALISKOOL_PROGRAMM" aria-label="{{'directive.student.abroadProgramme' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
           <md-button ng-click="deleteStudent(row.idcode)" md-no-ink class="md-primary change-button">{{'main.button.delete' | translate}}</md-button>

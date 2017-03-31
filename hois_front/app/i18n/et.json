@@ -430,13 +430,13 @@
       "akadCancelDate": "Akadeemilise puhkuse katkestamise kuupäev",
       "akadEndDate": "Akadeemilise puhkuse lõpp",
       "akadStartDate": "Akadeemilise puhkuse algus",
+      "alreadyexist": "Õppur on juba käskkirjal",
       "applicationAkadEndDate": "Akadeemilise puhkuse lõpp avaldusel",
       "applicationAkadStartDate": "Akadeemilise puhkuse algus avaldusel",
       "country": "Riik",
       "curriculum": "Õppekava",
       "curriculumGrade": "Omistatav kraad",
       "curriculumVersion": "Õppekava",
-      "ennistStartDate": "Ennistamise kuupäev",
       "estonianEducationalInstitute": "Eesti õppeasutus",
       "foreignEducationalInstitute": "Välismaa õppeasutus",
       "fin": "Finantseerimise allikas",
@@ -465,7 +465,6 @@
       "studyLoad": "Õppekoormus",
       "studyLoadOPPEKOORMUS_OSA": "Täiskoormuselt osakoormusele",
       "studyLoadOPPEKOORMUS_TAIS": "Osakoormuselt täiskoormusele",
-      "studyStartDate": "Õppima asumise kuupäev",
       "valisEndDate": "Välisõppe lõpp",
       "valisStartDate": "Välisõppe algus"
     }
@@ -499,7 +498,8 @@
     "targetGroup": "Sihtgrupp",
     "curriculumStudents": "Õppekava õppurid",
     "studyGroupStudents": "Õpperühma õppurid",
-    "studyFormStudents": "Õppevormi õppurid"
+    "studyFormStudents": "Õppevormi õppurid",
+    "studyGroupStudentsParents": "Õpperühma õppurite lapsevanemad"
   },
   "messageTemplate": {
     "messageTemplate": "Teate mall",
@@ -839,6 +839,8 @@
     "role": "Kasutajaroll",
     "validFrom": "Kasutajarolli kehtivuse alguskuupäev",
     "validThru": "Kasutajarolli kehtivuse lõppkuupäev",
+    "deleteconfirm": "Kas oled kindel, et soovid kasutajarolli kustutada?",
+    "roleNoRights": "Kasutajarollil puudub õigus",
     "rights": {
       "right": "Kasutajaõigused",
       "insertModify": "Sisestamine / Muutmine",
@@ -853,7 +855,9 @@
     "lastname": "Perekonnanimi",
     "sex": "Sugu",
     "phone": "Isiklik kontakttelefon",
-    "email": "Isiklik e-posti aadress"
+    "email": "Isiklik e-posti aadress",
+    "exists": "Isik juba eksisteerib",
+    "deleteconfirm": "Kas oled kindel, et soovid isikut kustutada?"
   },
   "occupation": {
     "addAquiredOccupation": "Omandatava kutse lisamine",
@@ -986,7 +990,8 @@
       "startDate": "Alguskuupäev",
       "endDate": "Lõppkuupäev",
       "startTime": "Alguse kellaaeg",
-      "endTime": "Lõpu kellaaeg"
+      "endTime": "Lõpu kellaaeg",
+      "uniqueInPeriod": "kalendri-sündmus peab olema unikaalne õppeperioodis"
     }
   },
   "ehis": {
@@ -1077,8 +1082,11 @@
     "confirmedByRepresentative": "Lapsevanema/esindaja poolt kinnitatud",
     "inEstonianEducationalInstitution": "Eesti õppeasutuses",
     "inAbroadEducationalInstitution": "Välismaa õppeasutuses",
+    "abroadStudiesStart": "Välisõpingute algus",
+    "abroadStudiesEnd": "Välisõpingute lõpp",
     "deleteconfirm": "Kas oled kindel, et soovid avalduse kustutada?",
     "messages": {
+      "applicationAlreadyExists": "Avaldus juba eksisteerib",
       "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
       "validAcademicLeaveApplicationExists": "Akadeemilise puhkuse avaldus juba eksisteerib",
       "validAcademicLeaveRevocationApplicationExists": "Akadeemilise puhkuse katkestamise avaldus juba eksisteerib",
@@ -1102,6 +1110,7 @@
       "addedToDirective":"Avaldus on lisatud käskkirjale",
       "importFromCsvFile":"Avalduste lisamine csv failiga",
       "added":"Lisatud avaldusi",
+      "failed":"Ebaõnnestunud avalduste lisamine",
       "csvFileRowNr": "csv faili rea nr"
     }
   }

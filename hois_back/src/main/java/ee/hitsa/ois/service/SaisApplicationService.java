@@ -1,4 +1,8 @@
-package ee.hitsa.ois.service;import java.nio.charset.StandardCharsets;
+package ee.hitsa.ois.service;
+
+import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -45,7 +49,7 @@ public class SaisApplicationService {
             Arrays.asList(SaisApplicationStatus.SAIS_AVALDUSESTAATUS_AL.name(), SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TL.name(), SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TYH.name());
 
     private static final DateTimeFormatter CSV_DATE_FORMATTER = DateTimeFormatter.ofPattern("d.M.yyyy");
-    
+
     @Autowired
     private SaisApplicationRepository saisApplicationRepository;
 
@@ -78,8 +82,9 @@ public class SaisApplicationService {
 
             if(!StringUtils.isEmpty(criteria.getName())) {
                 List<Predicate> name = new ArrayList<>();
-                SearchUtil.propertyContains(() -> root.get("firstname"), cb, criteria.getName(), name::add);
-                SearchUtil.propertyContains(() -> root.get("lastname"), cb, criteria.getName(), name::add);
+                propertyContains(() -> root.get("firstname"), cb, criteria.getName(), name::add);
+                propertyContains(() -> root.get("lastname"), cb, criteria.getName(), name::add);
+                name.add(cb.like(cb.concat(cb.upper(root.get("firstname")), cb.concat(" ", cb.upper(root.get("lastname")))), SearchUtil.toContains(criteria.getName())));
                 if(!name.isEmpty()) {
                     filters.add(cb.or(name.toArray(new Predicate[name.size()])));
                 }
@@ -117,166 +122,242 @@ public class SaisApplicationService {
         ClassifierCache classifiers = new ClassifierCache(classifierRepository);
         for (int rowNr = 1; rowNr < lines.length; rowNr++) {
             helper.initForRow(rowNr);
-
-            String applicationNr = helper.get("AvalduseNr");
-            if (!StringUtils.hasText(applicationNr)) {
-                // TODO missing application nr?
-            }
-            SaisApplication existingSaisApplication = saisApplicationRepository.findByApplicationNr(applicationNr);
-            SaisApplication saisApplication = existingSaisApplication == null ? new SaisApplication() : existingSaisApplication;
-
-            String messageForMissing = String.format("Avaldus nr. %s-l puudub ", applicationNr);
-            String messageForOther = String.format("Avaldus nr. %s-ga ", applicationNr);
-
-            String firstname = helper.get("Eesnimi");
-            if (!StringUtils.hasText(firstname)) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"kandideerija eesnimi."));
+            try {
+                proccessRow(helper, classifiers, idCodeValidator, failed, rowNr, dto);
+            } catch (@SuppressWarnings("unused") Exception e) {
+                failed.add(new SaisApplicationImportedRowDto(rowNr, "Viga rea töötlemisel"));
                 continue;
             }
-
-            String lastname = helper.get("Perekonnanimi");
-            if (!StringUtils.hasText(lastname)) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"kandideerija perekonnanimi."));
-                continue;
-            }
-
-            String idcode = helper.get("Isikukood");
-            if (!idCodeValidator.isValid(idcode, null)) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+" seotud isiku isikukood ei ole korrektne."));
-                continue;
-            }
-
-            LocalDate saisChanged = parseCsvDate(helper.get("AvalduseMuutmiseKp"));
-            // TODO parse error handling?
-            if (saisChanged == null) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"muutmise kuupäev."));
-                continue;
-            }
-
-            String statusValue = helper.get("AvalduseStaatus");
-            Classifier status = classifiers.get(statusValue, MainClassCode.SAIS_AVALDUSESTAATUS);
-            if (status == null) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"avalduse staatus."));
-                continue;
-            }
-
-            String citicenshipValue = helper.get("Kodakondsus");
-            Classifier citicenship = classifiers.get(citicenshipValue, MainClassCode.RIIK);
-            if (citicenship == null) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"kodakondsus."));
-                continue;
-            }
-
-            String finValue = helper.get("Finantseerimisallikas");
-            Classifier fin = classifiers.get(finValue, MainClassCode.FINALLIKAS);
-            if (fin == null) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"finantseerimisallikas."));
-                continue;
-            }
-
-            String code = helper.get("KonkursiKood");
-            String curriculumVersionCode = helper.get("Oppekava/RakenduskavaKood");
-            // TODO missing/empty value?
-            CurriculumVersion curriculumVersion = curriculumVersionRepository.findByCode(curriculumVersionCode);
-            SaisAdmission existingSaisAdmission = null;
-
-            if (StringUtils.isEmpty(code)) {
-                if (curriculumVersion == null) {
-                    failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+" ei ole seotud õppekava/rakenduskava."));
-                    continue;
-                }
-                existingSaisAdmission = saisAdmissionRepository.findByCurriculumVersionId(EntityUtil.getId(curriculumVersion));
-            } else {
-                existingSaisAdmission = saisAdmissionRepository.findByCode(code);
-            }
-            SaisAdmission saisAdmission = existingSaisAdmission == null ? new SaisAdmission() : existingSaisAdmission;
-            saisAdmission.setCurriculumVersion(curriculumVersion);
-
-            if (StringUtils.isEmpty(code) && StringUtils.isEmpty(saisAdmission.getCode())) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+"seotud konkursil puudub konkursi kood."));
-                continue;
-            }
-
-
-            String studyLoadValue = helper.get("Oppekoormus");
-            Classifier studyLoad = classifiers.get(studyLoadValue, MainClassCode.OPPEKOORMUS);
-            if (studyLoad == null) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"õppekoormus."));
-                continue;
-            }
-
-            String studyFormValue = helper.get("Oppevorm");
-            Classifier studyForm = classifiers.get(studyFormValue, MainClassCode.OPPEVORM);
-            if (studyForm == null) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"õppevorm."));
-                continue;
-            }
-
-            String languageValue = helper.get("Oppekeel");
-            Classifier language = classifiers.get(languageValue, MainClassCode.OPPEKEEL);
-            if (language == null) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"õppekeel."));
-                continue;
-            }
-
-            String previousStudyLevelValue = helper.get("EelnevOppetase");
-            Classifier previousStudyLevel = classifiers.get(previousStudyLevelValue, MainClassCode.OPPEASTE);
-            if (previousStudyLevel == null) {
-                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"eelmine õppetase."));
-                continue;
-            }
-
-            List<SaisApplicationGraduatedSchool> existing = saisApplication.getGraduatedSchools().stream()
-                    .filter(it -> EntityUtil.getCode(previousStudyLevel).equals(EntityUtil.getNullableCode(it.getStudyLevel()))).collect(Collectors.toList());
-
-            if(CollectionUtils.isEmpty(existing)) {
-                SaisApplicationGraduatedSchool sags = new SaisApplicationGraduatedSchool();
-                sags.setStudyLevel(previousStudyLevel);
-                saisApplication.getGraduatedSchools().add(sags);
-            } else {
-                existing.get(0).setStudyLevel(previousStudyLevel);
-            }
-
-            saisApplication.setApplicationNr(applicationNr);
-            saisApplication.setFirstname(firstname);
-            saisApplication.setLastname(lastname);
-            saisApplication.setIdcode(idcode);
-            saisApplication.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
-            saisApplication.setCitizenship(citicenship);
-            saisApplication.setResidenceCountry(citicenship);
-            saisApplication.setFin(fin);
-            saisApplication.setSaisChanged(saisChanged);
-            saisApplication.setStatus(status);
-            saisApplication.setStudyLoad(studyLoad);
-            saisApplication.setStudyForm(studyForm);
-            saisApplication.setLanguage(language);
-            saisApplication.setSubmitted(saisChanged);
-
-
-            saisAdmission.setCode(code);
-            saisAdmission.setName(code);
-            saisAdmission.setSaisId(code);
-            saisAdmission.setFin(fin);
-            saisAdmission.setCurriculumVersion(curriculumVersion);
-            saisAdmission.setStudyLoad(studyLoad);
-            saisAdmission.setStudyForm(studyForm);
-            saisAdmission.setLanguage(language);
-            // TODO date parse errors?
-            saisAdmission.setPeriodStart(parseCsvDate(helper.get("KonkursiAlgusKp")));
-            saisAdmission.setPeriodEnd(parseCsvDate(helper.get("KonkursiLõppKp")));
-
-            if(EntityUtil.getNullableId(saisApplication) == null) {
-                saisAdmission.getApplications().add(saisApplication);
-            }
-            saisAdmissionRepository.save(saisAdmission);
-
-            dto.getSuccessful().add(new SaisApplicationImportedRowDto(rowNr, applicationNr));
         }
         return dto;
     }
-    
+
+    private void proccessRow(CsvFileReaderHelper helper, ClassifierCache classifiers, EstonianIdCodeValidator idCodeValidator, List<SaisApplicationImportedRowDto> failed, int rowNr,SaisApplicationImportResultDto dto) {
+        String applicationNr = helper.get("AvalduseNr");
+        if (!StringUtils.hasText(applicationNr)) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, "Puudub avalduse number"));
+            return;
+        }
+        SaisApplication existingSaisApplication = saisApplicationRepository.findByApplicationNr(applicationNr);
+        SaisApplication saisApplication = existingSaisApplication == null ? new SaisApplication() : existingSaisApplication;
+
+        String messageForMissing = String.format("Avaldus nr. %s-l puudub ", applicationNr);
+        String messageForOther = String.format("Avaldus nr. %s-ga ", applicationNr);
+
+        String firstname = helper.get("Eesnimi");
+        if (!StringUtils.hasText(firstname)) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"kandideerija eesnimi."));
+            return;
+        }
+
+        String lastname = helper.get("Perekonnanimi");
+        if (!StringUtils.hasText(lastname)) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"kandideerija perekonnanimi."));
+            return;
+        }
+
+        String idcode = helper.get("Isikukood");
+        if (!idCodeValidator.isValid(idcode, null)) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+" seotud isiku isikukood ei ole korrektne."));
+            return;
+        }
+
+        LocalDate saisChanged = parseCsvDate(helper.get("AvalduseMuutmiseKp"));
+        if (StringUtils.isEmpty(helper.get("AvalduseMuutmiseKp"))) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"muutmise kuupäev."));
+            return;
+        } else if (saisChanged == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+" seotud muutmise kuupäev on vigane."));
+            return;
+        }
+
+        String statusValue = helper.get("AvalduseStaatus");
+        Classifier status = classifiers.get(statusValue, MainClassCode.SAIS_AVALDUSESTAATUS);
+        if (status == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"avalduse staatus."));
+            return;
+        }
+
+        String citicenshipValue = helper.get("Kodakondsus");
+        Classifier citicenship = classifiers.get(citicenshipValue, MainClassCode.RIIK);
+        if (citicenship == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"kodakondsus."));
+            return;
+        }
+
+        String residenceCountryValue = helper.get("Elukohariik");
+        Classifier residenceCountry = classifiers.get(residenceCountryValue, MainClassCode.RIIK);
+        if (residenceCountry == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"elukohariik."));
+            return;
+        }
+
+        String finValue = helper.get("Finantseerimisallikas");
+        Classifier fin = classifiers.get(finValue, MainClassCode.FINALLIKAS);
+        if (fin == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"finantseerimisallikas."));
+            return;
+        }
+
+        String code = helper.get("KonkursiKood");
+        String curriculumVersionCode = helper.get("Oppekava/RakenduskavaKood");
+        if (StringUtils.isEmpty(code) && StringUtils.isEmpty(curriculumVersionCode)) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+"seotud konkursil puudub konkursi kood."));
+            return;
+        }
+
+        CurriculumVersion curriculumVersion = curriculumVersionRepository.findByCode(curriculumVersionCode);
+        SaisAdmission existingSaisAdmission = null;
+
+        if (StringUtils.isEmpty(code)) {
+            if (curriculumVersion == null) {
+                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+" ei ole seotud õppekava/rakenduskava."));
+                return;
+            }
+            existingSaisAdmission = saisAdmissionRepository.findByCurriculumVersionId(EntityUtil.getId(curriculumVersion));
+        } else {
+            existingSaisAdmission = saisAdmissionRepository.findByCode(code);
+        }
+        SaisAdmission saisAdmission = existingSaisAdmission == null ? new SaisAdmission() : existingSaisAdmission;
+        if (existingSaisAdmission == null) {
+            saisAdmission.setCurriculumVersion(curriculumVersion);
+        }
+
+        if (saisAdmission.getCurriculumVersion() == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+" seotud õppekava versioonile/rakenduskavale ei leitud vastet."));
+            return;
+        } else if (curriculumVersion == null){
+            curriculumVersion = saisAdmission.getCurriculumVersion();
+        }
+
+        if (StringUtils.isEmpty(code) && StringUtils.isEmpty(saisAdmission.getCode())) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+"seotud konkursil puudub konkursi kood."));
+            return;
+        }
+
+
+        String studyLoadValue = helper.get("Oppekoormus");
+        Classifier studyLoad = classifiers.get(studyLoadValue, MainClassCode.OPPEKOORMUS);
+        if (studyLoad == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"õppekoormus."));
+            return;
+        }
+
+        String studyFormValue = helper.get("Oppevorm");
+        Classifier studyForm = classifiers.get(studyFormValue, MainClassCode.OPPEVORM);
+        if (studyForm == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"õppevorm."));
+            return;
+        }
+
+        String languageValue = helper.get("Oppekeel");
+        Classifier language = classifiers.get(languageValue, MainClassCode.OPPEKEEL);
+        if (language == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"õppekeel."));
+            return;
+        }
+
+        String previousStudyLevelValue = helper.get("EelnevOppetase");
+        Classifier previousStudyLevel = classifiers.get(previousStudyLevelValue, MainClassCode.OPPEASTE);
+        if (previousStudyLevel == null) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"eelmine õppetase."));
+            return;
+        }
+
+        List<SaisApplicationGraduatedSchool> existing = saisApplication.getGraduatedSchools().stream()
+                .filter(it -> EntityUtil.getCode(previousStudyLevel).equals(EntityUtil.getNullableCode(it.getStudyLevel()))).collect(Collectors.toList());
+
+        if(CollectionUtils.isEmpty(existing)) {
+            SaisApplicationGraduatedSchool sags = new SaisApplicationGraduatedSchool();
+            sags.setStudyLevel(previousStudyLevel);
+            saisApplication.getGraduatedSchools().add(sags);
+        } else {
+            existing.get(0).setStudyLevel(previousStudyLevel);
+        }
+
+        saisApplication.setApplicationNr(applicationNr);
+        saisApplication.setFirstname(firstname);
+        saisApplication.setLastname(lastname);
+        saisApplication.setIdcode(idcode);
+        saisApplication.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
+        saisApplication.setCitizenship(citicenship);
+        saisApplication.setResidenceCountry(residenceCountry);
+        saisApplication.setFin(fin);
+        saisApplication.setSaisChanged(saisChanged);
+        saisApplication.setStatus(status);
+        saisApplication.setStudyLoad(studyLoad);
+        saisApplication.setStudyForm(studyForm);
+        saisApplication.setLanguage(language);
+        if (saisApplication.getSubmitted() == null) {
+            saisApplication.setSubmitted(saisChanged);
+        }
+
+
+        if (saisAdmission.getCode() == null) {
+            saisAdmission.setCode(code);
+            saisAdmission.setName(code);
+            saisAdmission.setSaisId(code);
+        }
+        if (saisAdmission.getFin() == null) {
+            saisAdmission.setFin(fin);
+        }
+        if (saisAdmission.getCurriculumVersion() == null) {
+            saisAdmission.setCurriculumVersion(curriculumVersion);
+        }
+        if (saisAdmission.getStudyLoad() == null) {
+            saisAdmission.setStudyLoad(studyLoad);
+        }
+        if (saisAdmission.getStudyLevel() == null && curriculumVersion != null && curriculumVersion.getCurriculum() != null) {
+            saisAdmission.setStudyLevel(curriculumVersion.getCurriculum().getOrigStudyLevel());
+        }
+        if (saisAdmission.getStudyForm() == null) {
+            saisAdmission.setStudyForm(studyForm);
+        }
+        if(saisAdmission.getLanguage() == null) {
+            saisAdmission.setLanguage(language);
+        }
+        if (saisAdmission.getPeriodStart() == null) {
+            LocalDate periodStart = parseCsvDate(helper.get("KonkursiAlgusKp"));
+            if (StringUtils.isEmpty(helper.get("KonkursiAlgusKp"))) {
+                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"konkursi alguse kuupäev."));
+                return;
+            } else if (periodStart == null) {
+                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+" seotud konkursi alguse kuupäev on vigane."));
+                return;
+            }
+            saisAdmission.setPeriodStart(periodStart);
+        }
+        if(saisAdmission.getPeriodEnd() == null) {
+            LocalDate periodEnd = parseCsvDate(helper.get("KonkursiLõppKp"));
+            if (StringUtils.isEmpty(helper.get("KonkursiLõppKp"))) {
+                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing+"konkursi lõpu kuupäev."));
+                return;
+            } else if (periodEnd == null) {
+                failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther+" seotud konkursi lõpu kuupäev on vigane."));
+                return;
+            }
+            saisAdmission.setPeriodEnd(periodEnd);
+        }
+
+
+
+        if(EntityUtil.getNullableId(saisApplication) == null) {
+            saisAdmission.getApplications().add(saisApplication);
+        }
+        saisAdmissionRepository.save(saisAdmission);
+
+        dto.getSuccessful().add(new SaisApplicationImportedRowDto(rowNr, applicationNr));
+
+    }
+
+
+
     private static LocalDate parseCsvDate(String dateString) {
-        return LocalDate.parse(dateString, CSV_DATE_FORMATTER);
+        try {
+            return LocalDate.parse(dateString, CSV_DATE_FORMATTER);
+        } catch (@SuppressWarnings("unused") Exception e) {
+            return null;
+        }
     }
 
     private static class ClassifierCache {

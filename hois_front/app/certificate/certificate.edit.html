@@ -1,13 +1,17 @@
 <div layout="column" layout-padding>
     <form name="certificateEditForm">
         <div layout="column">
-            <md-input-container>
+            <md-input-container ng-if="auth.isStudent()">
+                <label>{{'certificate.type' | translate}}</label>
+                <hois-classifier-select filter-values="['TOEND_LIIK_MUU']"ng-model="record.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" required></hois-classifier-select>
+            </md-input-container>
+            <md-input-container ng-if="!auth.isStudent()">
                 <label>{{'certificate.type' | translate}}</label>
                 <hois-classifier-select ng-model="record.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" required></hois-classifier-select>
             </md-input-container>
 
             <!--<hois-autocomplete ng-show="record.type !== 'TOEND_LIIK_MUU'" label="certificate.student" ng-model="student" method="students" md-selected-item-change="studentChanged()" required></hois-autocomplete>-->
-            <div ng-show="record.type !== 'TOEND_LIIK_MUU'">
+            <div ng-show="record.type !== 'TOEND_LIIK_MUU' && !auth.isStudent()">
                 <md-autocomplete
                     md-input-minlength="2"
                     name="student"
@@ -20,7 +24,7 @@
                     md-no-cache
                     class="small-margin"
                     md-selected-item-change="studentChanged()"
-                    ng-required="record.type !== 'TOEND_LIIK_MUU'"
+                    ng-required="record.type !== 'TOEND_LIIK_MUU' && !auth.isStudent()"
                     >
 
                     <md-item-template>
@@ -34,10 +38,10 @@
                 </md-autocomplete>
             </div>
 
-            <div ng-if="record.type === 'TOEND_LIIK_MUU'">
+            <div ng-if="record.type === 'TOEND_LIIK_MUU'" ng-if="!auth.isStudent()">
                 <md-input-container class="md-block">
                     <label>{{'certificate.otherIdcode' | translate}}</label>
-                    <input type="text" ng-model="record.otherIdcode" name="idcode" required ng-pattern="idcodePattern" ng-readonly="otherFound" md-maxlength="11">
+                    <input type="text" ng-model="record.otherIdcode" name="idcode" required ng-pattern="idcodePattern" md-maxlength="11">
                     <div ng-messages="certificateEditForm.idcode.$error" ng-show="certificateEditForm.idcode.$dirty">
                         <div ng-message="pattern">
                             {{'certificate.invalidIdcode' | translate}}
@@ -46,13 +50,12 @@
                 </md-input-container>
                 <md-input-container class="md-block">
                     <label>{{'certificate.otherName' | translate}}</label>
-                    <input type="text" ng-model="record.otherName" required md-maxlength="255" ng-readonly="otherFound">
+                    <input type="text" ng-model="record.otherName" required md-maxlength="255">
                 </md-input-container>
-                <md-button  ng-if="otherFound" ng-click="clearOther()">{{'certificate.clearOther' | translate}}</md-button>
             </div>
             <md-input-container>
                 <label>{{'certificate.headline' | translate}}</label>
-                <textarea ng-model="record.headline" required md-maxlength="1000" max-rows="2"></textarea>
+                <textarea ng-model="record.headline" required md-maxlength="1000" max-rows="2" ng-readonly="auth.isStudent()"></textarea>
             </md-input-container>
             <md-input-container>
                 <label>{{'certificate.whom' | translate}}</label>
@@ -67,7 +70,7 @@
                  </md-option>
                 </md-select>
             </md-input-container>
-            <md-input-container>
+            <md-input-container ng-if="!auth.isStudent()">
                 <label>{{'certificate.content' | translate}}</label>
                 <textarea ng-model="record.content" required md-maxlength="2000" max-rows="2" ng-readonly="record.type !== 'TOEND_LIIK_MUU'"></textarea>
             </md-input-container>

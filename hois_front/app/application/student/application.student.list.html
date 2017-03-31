@@ -21,7 +21,7 @@
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>
@@ -41,7 +41,7 @@
         <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell>{{currentLanguageNameField(row)}}</td>
           <td md-cell>
-            <div ng-if="applicationTypesApplicable[row.code] === true" layout="row" layout-align="end end">
+            <div ng-if="applicationTypesApplicable[row.code] === true && auth.isStudent()" layout="row" layout-align="end end">
               <a class="md-button md-primary" ng-href="#/applications/student/new/{{row.code}}">{{'main.button.apply' | translate}}</a>
             </div>
           </td>
