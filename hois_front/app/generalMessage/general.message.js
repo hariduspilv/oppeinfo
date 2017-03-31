@@ -14,7 +14,6 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
     var roleMapper = function(i) { return $scope.roleDefs[i]; };
     for(var rowNo = 0; rowNo < rows.length; rowNo++) {
       var row = rows[rowNo];
-      DataUtils.convertStringToDates(row, ['validFrom', 'validThru']);
       row.targets = (row.targets || []).map(roleMapper);
     }
   });
@@ -25,6 +24,7 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
   });
 }]).controller('GeneralMessageEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'DataUtils', 'QueryUtils',
   function ($location, $route, $scope, dialogService, message, Classifier, DataUtils, QueryUtils) {
+    var id = $route.current.params.id;
     var baseUrl = '/generalmessages';
 
     function afterLoad() {
@@ -36,7 +36,6 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       $scope.roleDefs = $scope.roleDefs.filter(function(i) { return i.code !== 'ROLL_H'; });
 
       var Endpoint = QueryUtils.endpoint(baseUrl);
-      var id = $route.current.params.id;
       if(id) {
         $scope.record = Endpoint.get({id: id}, afterLoad);
       } else {
@@ -52,10 +51,6 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       return $scope.generalMessageForm.$valid;
     };
 
-    $scope.beforeSave = function() {
-      $scope.record.targets = Classifier.getSelectedCodes($scope.roleDefs);
-    };
-
     $scope.update = function() {
       $scope.generalMessageForm.$setSubmitted();
       if(!$scope.isFormValid()) {
@@ -63,16 +58,15 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
         return;
       }
 
-      $scope.beforeSave();
+      $scope.record.targets = Classifier.getSelectedCodes($scope.roleDefs);
 
-      var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
-      function afterSave() {
-        message.info(msg);
-      }
       if($scope.record.id) {
-        $scope.record.$update(afterLoad).then(afterSave);
+        $scope.record.$update(afterLoad).then(message.updateSuccess);
       }else{
-        $scope.record.$save(afterLoad).then(afterSave);
+        $scope.record.$save(afterLoad).then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+        });
       }
     };
 
@@ -84,5 +78,11 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
         });
       });
     };
+  }
+]).controller('GeneralMessageViewController', ['$route', '$scope', 'QueryUtils',
+  function ($route, $scope, QueryUtils) {
+    var id = $route.current.params.id;
+
+    $scope.record = QueryUtils.endpoint('/generalmessages').get({id: id});
   }
 ]);

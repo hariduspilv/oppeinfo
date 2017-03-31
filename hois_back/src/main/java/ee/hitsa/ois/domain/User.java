@@ -1,5 +1,10 @@
 package ee.hitsa.ois.domain;
 
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -8,8 +13,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.school.School;
-
-import java.util.Set;
+import ee.hitsa.ois.domain.student.Student;
 
 @Entity
 @Table(name = "user_")
@@ -18,7 +22,7 @@ public class User extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier role;
 
-    @OneToMany(mappedBy = "user")
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval=true)
     private Set<UserRights> userRights;
 
     @ManyToOne(optional = false)
@@ -27,6 +31,12 @@ public class User extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private School school;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Student student;
+
+    private LocalDate validFrom;
+    private LocalDate validThru;
 
     public Classifier getRole() {
         return role;
@@ -37,7 +47,7 @@ public class User extends BaseEntityWithId {
     }
 
     public Set<UserRights> getUserRights() {
-        return userRights;
+        return userRights == null ? (userRights = new HashSet<>()) : userRights;
     }
 
     public void setUserRights(Set<UserRights> userRights) {
@@ -58,5 +68,29 @@ public class User extends BaseEntityWithId {
 
     public void setSchool(School school) {
         this.school = school;
+    }
+
+    public Student getStudent() {
+        return student;
+    }
+
+    public void setStudent(Student student) {
+        this.student = student;
+    }
+
+    public LocalDate getValidThru() {
+        return validThru;
+    }
+
+    public void setValidThru(LocalDate validThru) {
+        this.validThru = validThru;
+    }
+
+    public LocalDate getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
     }
 }

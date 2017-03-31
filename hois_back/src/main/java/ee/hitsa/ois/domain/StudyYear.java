@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -23,8 +22,10 @@ public class StudyYear extends BaseEntityWithId {
     private LocalDate endDate;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier year;
-    @OneToMany(mappedBy = "studyYear",cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "studyYear")
     private Set<StudyPeriod> studyPeriods;
+    @OneToMany(mappedBy = "studyYear")
+    private Set<StudyPeriodEvent> studyPeriodEvents;
 
     public School getSchool() {
         return school;
@@ -64,5 +65,13 @@ public class StudyYear extends BaseEntityWithId {
 
     public void setStudyPeriods(Set<StudyPeriod> studyPeriods) {
         this.studyPeriods = studyPeriods;
+    }
+
+    public Set<StudyPeriodEvent> getStudyPeriodEvents() {
+        return studyPeriodEvents == null ? (studyPeriodEvents = new HashSet<>()): studyPeriodEvents;
+    }
+
+    public void setStudyPeriodEvents(Set<StudyPeriodEvent> studyPeriodEvents) {
+        this.studyPeriodEvents = studyPeriodEvents;
     }
 }

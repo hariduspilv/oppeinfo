@@ -7,7 +7,7 @@ angular.module('hitsaOis')
     var newUser = function (response) {
       Menu.setMenu(response.data);
       if (response.data && response.data.user) {
-        Session.create(response.data.user, response.data.authorizedRoles, response.data.school);
+        Session.create(response.data.user, response.data.authorizedRoles, response.data.school, response.data.roleCode);
         return response.data;
       } else {
         Session.destroy();
@@ -54,6 +54,20 @@ angular.module('hitsaOis')
       return false;
     };
 
+    authService.matchesRole = function (roles) {
+      if (!angular.isArray(roles)) {
+        roles = [roles];
+      }
+      if (authService.isAuthenticated()) {
+        for (var index = (roles.length - 1); index > -1; index--) {
+          if (Session.roleCode === roles[index]) {
+            return true;
+          }
+        }
+      }
+      return false;
+    };
+
     return authService;
   })
   .factory('AuthInterceptor', function ($rootScope, $q, AUTH_EVENTS) {
@@ -71,13 +85,25 @@ angular.module('hitsaOis')
   })
 
   .factory('AuthResolver', function ($q, $rootScope) {
+    function isUserInRole(currentUser, roleIn) {
+      return function() {
+        return angular.isString(currentUser.roleCode) && angular.isString(roleIn) && currentUser.roleCode === roleIn;
+      };
+    }
     return {
       resolve: function () {
         var deferred = $q.defer();
         var unwatch = $rootScope.$watch('currentUser', function (currentUser) {
           if (angular.isDefined(currentUser)) {
             if (currentUser) {
-              deferred.resolve(currentUser);
+              var authObject = angular.extend({}, currentUser);
+              authObject.isMainAdmin = isUserInRole(currentUser, 'ROLL_P');
+              authObject.isAdmin = isUserInRole(currentUser, 'ROLL_A');
+              authObject.isTeacher = isUserInRole(currentUser, 'ROLL_O');
+              authObject.isStudent = isUserInRole(currentUser, 'ROLL_T');
+              authObject.isParent = isUserInRole(currentUser, 'ROLL_L');
+              authObject.isExternalExpert = isUserInRole(currentUser, 'ROLL_V');
+              deferred.resolve(authObject);
             } else {
               deferred.reject();
             }
@@ -118,15 +144,17 @@ angular.module('hitsaOis')
     reAuthenticate: 'auth-re'
   })
   .service('Session', function () {
-    this.create = function (userId, authorizedRoles, school) {
+    this.create = function (userId, authorizedRoles, school, roleCode) {
       this.userId = userId;
       this.authorizedRoles = authorizedRoles;
       this.school = school;
+      this.roleCode = roleCode;
     };
     this.destroy = function () {
       this.userId = null;
       this.authorizedRoles = [];
       this.school = {};
+      this.roleCode = null;
     };
   })
   .constant('USER_ROLES', {

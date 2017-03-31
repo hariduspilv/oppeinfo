@@ -80,9 +80,9 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
-          <th md-column md-order-by="student.person.lastname,student.person.firstname">{{'application.student' | translate}}</th>
-          <th md-column md-order-by="type">{{'application.type' | translate}}</th>
-          <th md-column md-order-by="status">{{'main.status' | translate}}</th>
+          <th md-column md-order-by="person.lastname,person.firstname">{{'application.student' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'application.type' | translate}}</th>
+          <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'main.status' | translate}}</th>
           <th md-column md-order-by="inserted">{{'application.insertionDate' | translate}}</th>
           <th md-column md-order-by="submitted">{{'application.submissionDate' | translate}}</th>
           <th md-column></th>
@@ -90,17 +90,23 @@
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>{{::row.student.nameEt}}</td>
-          <td md-cell>{{currentLanguageNameField(row.type)}}</td>
-          <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+          <td md-cell><a ng-href="/#/students/{{::row.student.id}}/main">{{::row.student.nameEt}}</a></td>
+          <td md-cell><a ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
+          <td md-cell>
+            {{currentLanguageNameField(row.status)}}
+            <md-tooltip ng-if="row.status.code === 'AVALDUS_STAATUS_TAGASI'">{{row.rejectReason}}</md-tooltip>
+          </td>
           <td md-cell>{{'main.formattedDateTime' | translate: {date: row.inserted} }}</td>
           <td md-cell>{{'main.formattedDateTime' | translate: {date: row.submitted} }}</td>
-          <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
+          <td md-cell>
+            <md-button ng-if="(row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
+              md-no-ink class="md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+          </td>
         </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>

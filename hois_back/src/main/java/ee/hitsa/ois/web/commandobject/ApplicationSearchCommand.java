@@ -18,7 +18,6 @@ public class ApplicationSearchCommand {
     private Long student;
     private String studentName;
     private String studentIdCode;
-    private String ehisSchool;
 
 
     public List<String> getType() {
@@ -74,12 +73,6 @@ public class ApplicationSearchCommand {
     }
     public void setStudentIdCode(String studentIdCode) {
         this.studentIdCode = studentIdCode;
-    }
-    public String getEhisSchool() {
-        return ehisSchool;
-    }
-    public void setEhisSchool(String ehisSchool) {
-        this.ehisSchool = ehisSchool;
     }
 
 }

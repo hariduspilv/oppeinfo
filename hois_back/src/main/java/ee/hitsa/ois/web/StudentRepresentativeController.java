@@ -21,6 +21,7 @@ import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.student.StudentRepresentativeApplication;
 import ee.hitsa.ois.service.StudentRepresentativeService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -54,23 +55,21 @@ public class StudentRepresentativeController {
     }
 
     @PostMapping("/{studentId:\\d+}")
-    public StudentRepresentativeDto create(HoisUserDetails user, @WithEntity("studentId") Student student, @Valid @RequestBody StudentRepresentativeForm form) {
+    public void create(HoisUserDetails user, @WithEntity("studentId") Student student, @Valid @RequestBody StudentRepresentativeForm form) {
         if(!UserUtil.canAddStudentRepresentative(user, student)) {
-            // TODO
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("User cannot add student representative");
         }
         // verify it's not the same person as student
         if(Objects.equals(student.getPerson().getIdcode(), form.getPerson().getIdcode())) {
             throw new ValidationFailedException("person.idcode", "representative-and-student-are-same");
         }
-        return get(user, studentRepresentativeService.create(student, form));
+        studentRepresentativeService.create(student, form);
     }
 
     @PutMapping("/{studentId:\\d+}/{id:\\d+}")
     public StudentRepresentativeDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentRepresentative representative, @Valid @RequestBody StudentRepresentativeForm form) {
         if(!UserUtil.canEditStudentRepresentative(user, representative)) {
-            // TODO
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("User cannot edit student representative");
         }
         return get(user, studentRepresentativeService.save(representative, form));
     }
@@ -78,8 +77,7 @@ public class StudentRepresentativeController {
     @DeleteMapping("/{studentId:\\d+}/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudentRepresentative representative, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         if(!UserUtil.canEditStudentRepresentative(user, representative)) {
-            // TODO
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("User cannot delete student representative");
         }
         studentRepresentativeService.delete(representative);
     }
@@ -108,13 +106,11 @@ public class StudentRepresentativeController {
 
     private static void assertCanView(HoisUserDetails user, Student student) {
         if(!UserUtil.canViewStudent(user, student)) {
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("User cannot view student data");
         }
     }
 
     private static void assertCanEdit(HoisUserDetails user, StudentRepresentativeApplication application) {
-        if(!UserUtil.isSchoolAdmin(user, application.getStudent().getSchool())) {
-            throw new IllegalArgumentException();
-        }
+        UserUtil.assertIsSchoolAdmin(user, application.getStudent().getSchool());
     }
 }

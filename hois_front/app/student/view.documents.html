@@ -12,7 +12,7 @@
         <thead md-head md-order="applicationsCriteria.order" md-on-reorder="loadApplications">
           <tr md-row>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'student.application.type' | translate}}</th>
-            <th md-column md-order-by="inserted">{{'student.application.created' | translate}}</th>
+            <th md-column md-order-by="submitted">{{'student.application.created' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'student.application.status' | translate}}</th>
             <th md-column md-order-by="confirmDate">{{'student.application.confirmDate' | translate}}</th>
           </tr>
@@ -20,14 +20,14 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in applications.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.submitted} }}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination ng-if="applications.totalElements > applicationsCriteria.size" md-limit="applicationsCriteria.size" md-limit-options="[5, 10, 15]"
+    <md-table-pagination ng-if="applications.totalElements > applicationsCriteria.size" md-limit="applicationsCriteria.size" md-limit-options="[10, 20, 50]"
                          md-page="applicationsCriteria.page" md-total="{{applications.totalElements}}" md-on-paginate="loadApplications"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
@@ -39,15 +39,19 @@
             <th md-column md-order-by="headline">{{'student.directive.headline' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'student.directive.type' | translate}}</th>
             <th md-column md-order-by="directiveNr">{{'student.directive.directiveNr' | translate}}</th>
-            <th md-column md-order-by="createdBy">{{'student.directive.createdBy' | translate}}</th>
+            <th md-column md-order-by="confirmDate">{{'student.directive.confirmDate' | translate}}</th>
+            <th md-column md-order-by="insertedBy">{{'student.directive.createdBy' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in directives.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{::row.headline}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/view?backUrl={{'#/students/'+studentId+'/documents' | encodeURIComponent}}">{{::row.headline}}</md-button>
+            </td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
             <td md-cell>{{::row.directiveNr}}</td>
-            <td md-cell>{{::row.createdBy}}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
+            <td md-cell>{{::row.insertedBy}}</td>
           </tr>
         </tbody>
       </table>

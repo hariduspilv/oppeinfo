@@ -24,7 +24,7 @@ public class CurriculumOccupation extends BaseEntityWithId {
     private Boolean occupationGrant = Boolean.FALSE;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_occupation_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_occupation_id", nullable = false, updatable = false)
     private Set<CurriculumOccupationSpeciality> specialities;
 
     public Classifier getOccupation() {

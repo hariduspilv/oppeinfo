@@ -58,7 +58,7 @@ public class BuildingControllerTests {
         form.setAddress("Hoone aadress (test)");
         ResponseEntity<BuildingDto> responseEntity = restTemplate.postForEntity(uriBuilder.build().toUriString(), form, BuildingDto.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         Long buildingId = responseEntity.getBody().getId();
         Assert.assertNotNull(buildingId);
@@ -98,7 +98,7 @@ public class BuildingControllerTests {
         room.setCode("Ruumi kood");
         ResponseEntity<RoomDto> roomResponse = restTemplate.postForEntity(uriBuilder.build().toUriString(), room, RoomDto.class);
         Assert.assertNotNull(roomResponse);
-        Assert.assertEquals(HttpStatus.OK, roomResponse.getStatusCode());
+        Assert.assertEquals(HttpStatus.CREATED, roomResponse.getStatusCode());
         Assert.assertNotNull(roomResponse.getBody());
         Long roomId = roomResponse.getBody().getId();
         Assert.assertNotNull(roomId);

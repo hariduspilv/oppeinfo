@@ -1,0 +1,21 @@
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <form layout="column" name="messageRespondForm" novalidate>
+        <div layout="row">
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                <label class="textInput">{{'message.subject' | translate}}</label>
+                <input ng-model="record.subject" type="text" md-maxlength="1000" required>
+            </md-input-container>
+        </div>
+        <div layout="row">
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                <label class="textInput">{{'message.content' | translate}}</label>
+                <textarea ng-model="record.content" max-rows="20" md-maxlength="2000" required id="content"></textarea>
+            </md-input-container>
+        </div>
+        <div layout="row">
+            <md-button class="md-raised md-primary" ng-click="send()">{{'main.button.send' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="{{::formState.backUrl}}">{{'main.button.back' | translate}}</md-button>
+        </div>
+    </form>
+</div>

@@ -8,11 +8,11 @@
             <label class="textInput">{{'certificate.headline' | translate}}</label>
             <input ng-model="criteria.headline" type="text">
         </md-input-container>
-        <md-input-container>
+        <md-input-container ng-if="!auth.isStudent()">
             <label class="textInput">{{'certificate.studentName' | translate}}</label>
             <input ng-model="criteria.name" type="text">
         </md-input-container>
-        <md-input-container>
+        <md-input-container ng-if="!auth.isStudent()">
             <label class="textInput">{{'certificate.idcode' | translate}}</label>
             <input ng-model="criteria.idcode" type="text" md-minlength="11" md-maxlength="11">
         </md-input-container>
@@ -51,11 +51,11 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="type.{{currentLanguageNameField()}}">{{'certificate.type' | translate}}</th>
-            <th md-column md-order-by="certificateNr">{{'certificate.nr' | translate}}</th>
-            <th md-column md-order-by="headline">{{'certificate.headline' | translate}}</th>
-            <th md-column md-order-by="whom">{{'certificate.whom' | translate}}</th>
-            <th md-column md-order-by="inserted">{{'certificate.inserted' | translate}}</th>
-            <th md-column md-order-by="">{{'certificate.studentName' | translate}}</th>
+            <th md-column md-order-by="c.certificateNr">{{'certificate.nr' | translate}}</th>
+            <th md-column md-order-by="c.headline">{{'certificate.headline' | translate}}</th>
+            <th md-column md-order-by="c.whom">{{'certificate.whom' | translate}}</th>
+            <th md-column md-order-by="c.inserted">{{'certificate.inserted' | translate}}</th>
+            <th md-column md-order-by="" ng-if="!auth.isStudent()">{{'certificate.studentName' | translate}}</th>
             <th md-column></th>
             <!--    student.person.lastname,student.person.firstname     -->
           </tr>
@@ -68,7 +68,7 @@
             <td md-cell>{{::row.whom}}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
 
-            <td md-cell>
+            <td md-cell ng-if="!auth.isStudent()">
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{row.studentId}}/main" ng-disabled="!row.studentId">{{::row.studentFullname}}</md-button>
             </td>
 
@@ -86,7 +86,7 @@
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>

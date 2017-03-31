@@ -1,15 +1,14 @@
 package ee.hitsa.ois.web;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -23,15 +22,13 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.service.StudentGroupService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.CurriculumUtil;
-import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchStudentsCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
@@ -55,8 +52,8 @@ public class StudentGroupController {
     }
 
     @PostMapping
-    public StudentGroupDto create(HoisUserDetails user, @Valid @RequestBody StudentGroupForm form) {
-        return get(user, studentGroupService.create(user, form));
+    public ResponseEntity<Map<String, ?>> create(HoisUserDetails user, @Valid @RequestBody StudentGroupForm form) {
+        return HttpUtil.created(studentGroupService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -72,16 +69,9 @@ public class StudentGroupController {
     }
 
     @GetMapping("/curriculumdata/{id:\\d+}")
-    public Map<String, Object> curriculumRelatedData(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
+    public Map<String, ?> curriculumRelatedData(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
         UserUtil.assertSameSchool(user, curriculum.getSchool());
-        Map<String, Object> data = new HashMap<>();
-        data.put("curriculumVersions", curriculum.getVersions().stream().map(AutocompleteResult::of).collect(Collectors.toList()));
-        data.put("languages", curriculum.getStudyLanguages().stream().map(r -> EntityUtil.getCode(r.getStudyLang())).collect(Collectors.toList()));
-        data.put("studyForms", curriculum.getStudyForms().stream().map(r -> EntityUtil.getCode(r.getStudyForm())).collect(Collectors.toList()));
-        data.put("origStudyLevel", EntityUtil.getCode(curriculum.getOrigStudyLevel()));
-        data.put("specialities", studentGroupService.findSpecialities(curriculum));
-        data.put("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(curriculum.getOrigStudyLevel())));
-        return data;
+        return studentGroupService.curriculumData(curriculum);
     }
 
     @GetMapping("/findstudents")

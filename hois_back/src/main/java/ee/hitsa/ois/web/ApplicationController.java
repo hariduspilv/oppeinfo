@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import java.util.Map;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,15 +19,22 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.exceptions.HoisBusinessRuleException;
+import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
+import ee.hitsa.ois.web.commandobject.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.ApplicationDto;
+import ee.hitsa.ois.web.dto.ApplicationSearchDto;
 
 @RestController
 @RequestMapping("/applications")
@@ -34,55 +43,134 @@ public class ApplicationController {
     @Autowired
     private ApplicationService applicationService;
     @Autowired
-    private SchoolRepository schoolRepository;
+    private StudentRepository studentRepository;
 
     @GetMapping("/{id:\\d+}")
-    public ApplicationDto get(@WithEntity("id") Application application) {
-        return ApplicationDto.of(application);
+    public ApplicationDto get(HoisUserDetails user, @WithEntity("id") Application application) {
+        UserUtil.assertSameSchool(user, application.getStudent().getSchool());
+        return applicationService.get(user, application);
     }
 
     @GetMapping("")
-    public Page<ApplicationDto> search(ApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
+    public Page<ApplicationSearchDto> search(ApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
         return applicationService.search(user, command, pageable);
     }
 
     @PostMapping("")
     public ApplicationDto create(@Valid @RequestBody ApplicationForm applicationForm, HoisUserDetails user) {
-        return get(applicationService.create(user, applicationForm));
+        Student student = studentRepository.getOne(applicationForm.getStudent().getId());
+        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
+            throw new HoisBusinessRuleException(String.format("user %s is not allowed to create application", user.getUsername()));
+        }
+
+        return get(user, applicationService.create( applicationForm));
     }
 
     @PutMapping("/{id:\\d+}")
-    public ApplicationDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application,
-            @Valid @RequestBody ApplicationForm applicationForm) {
-        assertSameSchool(user, application);
-        return get(applicationService.save(user, application, applicationForm));
+    public ApplicationDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application, @Valid @RequestBody ApplicationForm applicationForm) {
+        checkUpdateBusinessRules(user, application, applicationForm);
+        return get(user, applicationService.save(application, applicationForm));
     }
+
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application) {
-        assertSameSchool(user, application);
-        applicationService.delete(application);
+    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Application application, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        Student student = application.getStudent();
+        School school = application.getStudent().getSchool();
+        ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
+        if(((UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, school)) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status))) {
+            applicationService.delete(application);
+        } else {
+            throw new HoisBusinessRuleException(String.format("user %s is not allowed to delete application %d with status %s", user.getUsername(), application.getId(), status.name()));
+        }
     }
 
-    @GetMapping("/academicLeave")
-    public ApplicationDto academicLeave(HoisUserDetails user, @RequestParam Long student) {
-        return ApplicationDto.of(applicationService.findValidAcademicLeave(student, EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool())));
+    @GetMapping("/student/{id:\\d+}/validAcademicLeave")
+    public ApplicationDto academicLeave(HoisUserDetails user, @WithEntity(value = "id") Student student) {
+        return ApplicationDto.of(applicationService.findValidAcademicLeave(EntityUtil.getId(student)));
     }
 
-    @GetMapping("/{id:\\d+}/academicLeaveRevocation")
+    @GetMapping("student/{id:\\d+}/applicable")
+    public Map<ApplicationType, Boolean> applicableApplications(HoisUserDetails user, @WithEntity(value = "id") Student student) {
+        return applicationService.applicableApplications(EntityUtil.getId(student), user.getSchoolId());
+    }
+
+    @GetMapping("/{id:\\d+}/validAcademicLeaveRevocation")
     public ApplicationDto academicLeaveRevocation(@PathVariable("id") Long applicationId) {
         return ApplicationDto.of(applicationService.findValidAcademicLeaveRevocation(applicationId));
     }
 
-    private void assertSameSchool(HoisUserDetails user, Application application) {
-        Long schoolId = user.getSchoolId();
-        if (schoolId == null) {
-            throw new IllegalArgumentException();
+    @PutMapping("/{id:\\d+}/submit")
+    public ApplicationDto submit(HoisUserDetails user, @WithEntity(value = "id") Application application) {
+        Student student = application.getStudent();
+        ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
+
+        if (UserUtil.isStudentRepresentative(user, student) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)) {
+            applicationService.submit(user, application);
+        } else if (UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)) {
+            applicationService.submit(user, application);
+        } else {
+            throw new HoisBusinessRuleException(String.format("User %s is not allowed to submit application %d with status %s", user.getUsername(), application.getId(), status));
         }
-        School school = schoolRepository.getOne(schoolId);
-        String code = EntityUtil.getNullableCode(application.getEhisSchool());
-        if (school == null || school.getEhisSchool() == null || !school.getEhisSchool().getCode().equals(code)) {
-            throw new IllegalArgumentException();
+
+        return get(user, application);
+    }
+
+    @PutMapping("/{id:\\d+}/reject")
+    public ApplicationDto reject(HoisUserDetails user, @WithEntity(value = "id") Application application,
+            @Valid @RequestBody ApplicationRejectForm applicationRejectForm) {
+        Student student = application.getStudent();
+        ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
+
+        if (UserUtil.isStudentRepresentative(user, student) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)
+                && Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm())) {
+            applicationService.reject(application, applicationRejectForm);
+        } else if (UserUtil.isSchoolAdmin(user, student.getSchool()) && ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.equals(status)) {
+            applicationService.reject(application, applicationRejectForm);
+        } else {
+            throw new HoisBusinessRuleException(String.format("user %s is not allowed to reject application %d with status %s", user.getUsername(), application.getId(), status));
+        }
+
+        return get(user, application);
+    }
+
+    private static void checkUpdateBusinessRules(HoisUserDetails user, Application application, ApplicationForm applicationForm) {
+        UserUtil.assertSameSchool(user, application.getStudent().getSchool());
+
+        Student student = application.getStudent();
+        School school = application.getStudent().getSchool();
+        ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
+
+
+        switch (status) {
+        case AVALDUS_STAATUS_KOOST:
+            if ((UserUtil.isAdultStudent(user, student) || UserUtil.isSchoolAdmin(user, school)) && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_KOOST.name())
+                    || applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()))) {
+                break;
+            } else if (!UserUtil.isAdultStudent(user, student) && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_KOOST.name()))) {
+                break;
+            } else if (UserUtil.isStudentRepresentative(user, student) && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()) ||
+                    applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name()))) {
+                break;
+            }
+        case AVALDUS_STAATUS_ESIT:
+            //fallthrough
+        case AVALDUS_STAATUS_YLEVAAT:
+            if(UserUtil.isSchoolAdmin(user, school)
+                    && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name())) || applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name())) {
+                break;
+            }
+            //fallthrough
+        case AVALDUS_STAATUS_KINNITAM:
+            //fallthrough
+        case AVALDUS_STAATUS_KINNITATUD:
+            //fallthrough
+        case AVALDUS_STAATUS_TAGASI:
+            throw new HoisBusinessRuleException(String.format("user %s is not allowed to update application %d with status %s", user.getUsername(), application.getId(), status.name()));
+        default:
+            break;
         }
     }
+
+
 }

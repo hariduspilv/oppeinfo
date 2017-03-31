@@ -26,6 +26,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.CurriculumService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -55,8 +56,8 @@ public class CurriculumController {
     }
 
     @GetMapping("")
-    public Page<CurriculumSearchDto> search(CurriculumSearchCommand curriculumSearchCommand, Pageable pageable) {
-        return curriculumService.search(curriculumSearchCommand, pageable);
+    public Page<CurriculumSearchDto> search(HoisUserDetails user, CurriculumSearchCommand curriculumSearchCommand, Pageable pageable) {
+        return curriculumService.search(user.getSchoolId(), curriculumSearchCommand, pageable);
     }
     // TODO: use dto or AutocompleteResult
     @GetMapping("/departments")
@@ -112,8 +113,15 @@ public class CurriculumController {
     public CurriculumVersionDto updateVersion(HoisUserDetails user, @WithEntity(value = "id") CurriculumVersion curriculumVersion,
             @Valid @RequestBody CurriculumVersionDto curriculumVersionDto) {
         assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
-        return curriculumService.save(curriculumVersion, curriculumVersionDto);
+        return curriculumService.saveVersion(curriculumVersion, curriculumVersionDto);
     }
+    
+    @DeleteMapping("/{curriculumId:\\d+}/versions/{id:\\d+}")
+    public void deleteVersion(HoisUserDetails user, @WithEntity(value = "id") CurriculumVersion curriculumVersion) {
+        assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
+        curriculumService.deleteVersion(curriculumVersion);
+    }
+
 
     /**
      * TODO: test
@@ -133,7 +141,7 @@ public class CurriculumController {
                 .map(it -> EntityUtil.getCode(it.getEhisSchool())).collect(Collectors.toList()));
 
         if (!ehisSchools.contains(EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool()))) {
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("EHIS school mismatch");
         }
     }
 }

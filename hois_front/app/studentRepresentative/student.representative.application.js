@@ -1,17 +1,11 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentRepresentativeApplicationSearchController', ['$mdDialog', '$q', '$scope', 'dialogService', 'message', 'Classifier', 'DataUtils', 'QueryUtils',
-  function ($mdDialog, $q, $scope, dialogService, message, Classifier, DataUtils, QueryUtils) {
+angular.module('hitsaOis').controller('StudentRepresentativeApplicationSearchController', ['$mdDialog', '$q', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
+  function ($mdDialog, $q, $scope, dialogService, message, Classifier, QueryUtils) {
 
     $scope.formState = {status: 'AVALDUS_ESINDAJA_STAATUS_E'};
     var clMapper = Classifier.valuemapper({relation: 'OPPURESINDAJA', status: 'AVALDUS_ESINDAJA_STAATUS'});
-    QueryUtils.createQueryForm($scope, '/studentrepresentatives/applications', {order: 'student.person.lastname,student.person.firstname', status: $scope.formState.status}, function(rows) {
-      for(var row_no = 0, row_cnt = rows.length;row_no < row_cnt;row_no++) {
-        var row = rows[row_no];
-        clMapper.objectmapper(row);
-        DataUtils.convertStringToDates(row, ['inserted']);
-      }
-    });
+    QueryUtils.createQueryForm($scope, '/studentrepresentatives/applications', {order: 'student.person.lastname,student.person.firstname', status: $scope.formState.status}, clMapper.objectmapper);
 
     var refreshApplications = $scope.loadData;
     $scope.loadData = function() {

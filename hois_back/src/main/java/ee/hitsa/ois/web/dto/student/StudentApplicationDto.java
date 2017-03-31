@@ -1,17 +1,19 @@
 package ee.hitsa.ois.web.dto.student;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class StudentApplicationDto {
 
     private Long id;
     private String type;
-    private LocalDate inserted;
+    private LocalDateTime inserted;
     private String status;
-    private LocalDate confirmDate;
+    private LocalDateTime confirmDate;
+    private LocalDateTime submitted;
 
     public Long getId() {
         return id;
@@ -29,11 +31,11 @@ public class StudentApplicationDto {
         this.type = type;
     }
 
-    public LocalDate getInserted() {
+    public LocalDateTime getInserted() {
         return inserted;
     }
 
-    public void setInserted(LocalDate inserted) {
+    public void setInserted(LocalDateTime inserted) {
         this.inserted = inserted;
     }
 
@@ -45,15 +47,27 @@ public class StudentApplicationDto {
         this.status = status;
     }
 
-    public LocalDate getConfirmDate() {
+    public LocalDateTime getConfirmDate() {
         return confirmDate;
     }
 
-    public void setConfirmDate(LocalDate confirmDate) {
+    public void setConfirmDate(LocalDateTime confirmDate) {
         this.confirmDate = confirmDate;
     }
 
+    public LocalDateTime getSubmitted() {
+        return submitted;
+    }
+
+    public void setSubmitted(LocalDateTime submitted) {
+        this.submitted = submitted;
+    }
+
     public static StudentApplicationDto of(Application application) {
-        return EntityUtil.bindToDto(application, new StudentApplicationDto());
+        StudentApplicationDto dto = EntityUtil.bindToDto(application, new StudentApplicationDto());
+        if (EntityUtil.getCode(application.getStatus()).equals(ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name())) {
+            dto.setConfirmDate(application.getChanged());
+        }
+        return dto;
     }
 }

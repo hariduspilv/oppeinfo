@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web;
 
+import java.util.EnumSet;
+import java.util.Set;
+
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,6 +19,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
 
 @RunWith(SpringRunner.class)
@@ -24,6 +28,27 @@ public class DirectiveControllerTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
+
+    @Test
+    public void directivedata() {
+        String url = "/directives/directivedata";
+        Set<DirectiveType> excluded = EnumSet.of(DirectiveType.KASKKIRI_TYHIST);
+
+        ResponseEntity<Object> responseEntity = restTemplate.postForEntity(url, new DirectiveDataCommand(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
+
+        for(DirectiveType type : DirectiveType.values()) {
+            if(excluded.contains(type)) {
+                continue;
+            }
+            DirectiveDataCommand cmd = new DirectiveDataCommand();
+            cmd.setType(type.name());
+            responseEntity = restTemplate.postForEntity(url, cmd, Object.class);
+            Assert.assertNotNull(responseEntity);
+            Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        }
+    }
 
     @Test
     public void search() {
@@ -130,7 +155,7 @@ public class DirectiveControllerTests {
         form.setIdcode("48908209998");
         ResponseEntity<DirectiveCoordinatorDto> responseEntity = restTemplate.postForEntity(uri, form, DirectiveCoordinatorDto.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         Long id = responseEntity.getBody().getId();
         Assert.assertNotNull(id);

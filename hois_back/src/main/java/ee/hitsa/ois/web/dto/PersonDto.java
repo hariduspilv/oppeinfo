@@ -18,6 +18,7 @@ public class PersonDto {
     private String nativeLanguage;
     private LocalDate birthdate;
     private String sex;
+    private Long id;
 
     public String getFirstname() {
         return firstname;
@@ -110,5 +111,13 @@ public class PersonDto {
 
     public void setSex(String sex) {
         this.sex = sex;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 }

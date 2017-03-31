@@ -46,7 +46,9 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{::row.title}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/generalmessages/{{::row.id}}/view">{{::row.title}}</md-button>
+            </td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.validFrom} }}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
             <td md-cell>
@@ -57,13 +59,13 @@
               </table>
             </td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/generalmessages/{{::row.id}}">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/generalmessages/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>

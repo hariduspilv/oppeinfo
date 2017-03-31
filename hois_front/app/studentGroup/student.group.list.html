@@ -9,8 +9,12 @@
           </md-input-container>
 
           <md-input-container>
-            <label>{{'studentGroup.curriculum' | translate}}</label>
-            <hois-select type="curriculumversion" ng-model="criteria.curriculumVersion" name="curriculumVersion" multiple></hois-select>
+            <hois-autocomplete ng-model="criteria.curriculum" method="curriculums" name="curriculum" label="studentGroup.curriculum" md-selected-item-change="curriculumChanged()"></hois-autocomplete>
+          </md-input-container>
+
+          <md-input-container>
+            <label>{{formState.curriculumVersionLabel | translate}}</label>
+            <hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions" name="curriculumVersion" multiple></hois-select>
           </md-input-container>
 
           <md-input-container>
@@ -18,7 +22,7 @@
             <hois-classifier-select ng-model="criteria.studyForm" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
           </md-input-container>
 
-          <hois-autocomplete label="studentGroup.teacher" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
+          <hois-autocomplete label="studentGroup.teacher" ng-if="!formState.onlyhigher" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
 
           <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
@@ -53,13 +57,13 @@
             <td md-cell>{{::row.course}}</td>
             <td md-cell>{{::row.studentCount}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/studentgroups/{{::row.id}}">{{'main.button.change' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/studentgroups/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>

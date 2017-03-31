@@ -4,25 +4,29 @@
       <div layout="column">
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.type' | translate}}</label>
-          <hois-classifier-select ng-model="record.type" name="type" ng-change="directiveTypeChanged()" ng-disabled="formState.state !== 'CHOOSETYPE'" model-value-attr="code" main-classifier-code="KASKKIRI" required autofocus></hois-classifier-select>
+          <hois-classifier-select ng-model="record.type" name="type" ng-change="directiveTypeChanged()" ng-disabled="formState.state !== 'CHOOSETYPE'" model-value-attr="code" main-classifier-code="KASKKIRI" filter-values="formState.excludedTypes" required autofocus></hois-classifier-select>
         </md-input-container>
       </div>
 
-      <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students">
+      <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students && record.type !== 'KASKKIRI_IMMAT'">
         <md-table-container>
           <table md-table md-row-select multiple ng-model="formState.selectedStudents">
             <thead md-head>
               <tr md-row>
                 <th md-column>{{'directive.student.fullname' | translate}}</th>
                 <th md-column>{{'directive.student.idcode' | translate}}</th>
+                <th md-column ng-show="record.type === 'KASKKIRI_LOPET'">{{'directive.student.curriculum' | translate}}</th>
+                <th md-column ng-show="record.type === 'KASKKIRI_LOPET'">{{'directive.student.studentGroup' | translate}}</th>
               </tr>
             </thead>
             <tbody md-body>
-              <tr md-row md-select="row" md-select-id="id" ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <tr md-row md-select="row" md-select-id="id" ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>
                   <md-button md-no-ink class="md-primary change-button" ng-href="#/student/{{::row.id}}/main?backUrl=directive">{{::row.fullname}}</md-button>
                 </td>
                 <td md-cell>{{::row.idcode}}</td>
+                <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{currentLanguageNameField(row.curriculum)}}</td>
+                <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{::row.studentGroup}}</td>
               </tr>
             </tbody>
           </table>
@@ -38,7 +42,7 @@
       <div flex ng-if="formState.state === 'EDIT'">
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.headline' | translate}}</label>
-          <input type="text" ng-model="record.headline" name="headline" required></input>
+          <input type="text" ng-model="record.headline" name="headline" required md-maxlength="500"></input>
         </md-input-container>
 
         <md-input-container class="md-block">
@@ -61,10 +65,16 @@
           <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator"></hois-value>
         </md-input-container>
 
+        <div layout="row">
+          <h3>{{'directive.studentList' | translate}}</h3>
+          <md-button class="md-raised" ng-click="addStudents()">{{'directive.addStudents' | translate}}</md-button>
+        </div>
+
         <div ng-include="formState.templateUrl"></div>
 
         <div layout="row">
           <md-button class="md-raised" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm()">{{'directive.sendToConfirm' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
           <md-button ng-href="#/directives" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.repository;
 
 import java.util.List;
+import java.util.Set;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -48,7 +49,10 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 	@Query(value = "select * from classifier as c inner join classifier_connect as cc on c.code = cc.connect_classifier_code where cc.classifier_code = ?1 and main_class_code = ?2", nativeQuery = true)
 	List<Classifier> findParentsByMainClassifier(String code, String parentsMainClassifierCode);
 
-	@Query(value = "select * from classifier where code in(select classifier_code from classifier_connect where connect_classifier_code = ?1) order by name_et", nativeQuery = true)
+	@Query(value = "select code from classifier where code in (select classifier_code from classifier_connect where connect_classifier_code in ?1) and main_class_code = ?2", nativeQuery = true)
+	List<String> findChildrenByMainClassifier(List<String> code, String parentsMainClassifierCode);
+
+	@Query(value = "select * from classifier where code in (select classifier_code from classifier_connect where connect_classifier_code = ?1) order by name_et", nativeQuery = true)
 	List<Classifier> findChildren(String code);
 
 	@Query(value =
@@ -61,4 +65,12 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 
     Classifier findOneByCodeAndMainClassCode(String code, String mainClassCode);
 
+    @Query("select c.code from Classifier c where c.mainClassCode = ?1")
+    List<String> findAllCodesByMainClassCode(String mainClassCode);
+
+    Set<Classifier> findAllByMainClassCode(String mainClassCode);
+
+    //Classifier findByCodeAndMainClassCode(String code, String mainClassCode);
+
+    Classifier findByValueAndMainClassCode(String value, String mainClassCode);
 }

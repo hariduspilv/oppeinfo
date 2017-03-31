@@ -23,14 +23,14 @@ import ee.hitsa.ois.domain.student.Student;
 public class Application extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)
+    @JoinColumn(nullable = false, updatable = false)
     private Student student;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier type;
 
     private LocalDateTime submitted;
@@ -48,6 +48,9 @@ public class Application extends BaseEntityWithId {
 
     @Size(max = 4000)
     private String addInfo;
+
+    @Size(max = 4000)
+    private String rejectReason;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier reason;
@@ -81,8 +84,9 @@ public class Application extends BaseEntityWithId {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private Classifier country;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false, insertable = true)
+    //Kasutatakse ainult välisõpilaseks vormistamise puhul, kui valitakse Eesti kool
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = true)
     private Classifier ehisSchool;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
@@ -100,11 +104,11 @@ public class Application extends BaseEntityWithId {
     private Application academicApplication;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "application_id", nullable = false, updatable = false)
     private Set<ApplicationFile> files = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "application_id", nullable = false, updatable = false)
     private Set<ApplicationPlannedSubject> plannedSubjects = new HashSet<>();
 
     public Student getStudent() {
@@ -201,6 +205,14 @@ public class Application extends BaseEntityWithId {
 
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 
     public Classifier getReason() {

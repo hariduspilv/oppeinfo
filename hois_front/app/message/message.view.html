@@ -1,0 +1,40 @@
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <form layout="column" novalidate>
+        <div layout="row">
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                <label class="textInput">{{'message.subject' | translate}}</label>
+                <input ng-model="record.subject" type="text" readonly>
+            </md-input-container>
+        </div>
+        <div layout="row">
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                <label class="textInput">{{'message.content' | translate}}</label>
+                <textarea ng-model="record.content" max-rows="20" readonly></textarea>
+            </md-input-container>
+        </div>
+        <div layout="row" ng-show="!isSent">
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                <label class="textInput">{{'message.sender' | translate}}</label>
+                <input ng-model="record.sendersName" type="text" readonly>
+            </md-input-container>
+        </div>
+        <div layout="row" ng-show="isSent">
+            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+                <label class="textInput">{{'message.receiver' | translate}}</label>
+                <input ng-model="record.receivers" type="text" readonly>
+            </md-input-container>
+        </div>
+        <div layout="row">
+                <md-input-container flex>
+                    <label>{{'message.dateSent' | translate}}</label>
+                    <md-datepicker ng-model="record.inserted" disabled></md-datepicker>
+                </md-input-container>
+        </div>
+        <div layout="row">
+            <md-button class="md-raised md-primary" ng-show="!isSent" ng-href="/#/message/{{record.id}}/respond">{{'message.respond' | translate}}</md-button>
+            <!--<md-button class="md-raised">{{'main.button.delete' | translate}}</md-button>-->
+            <md-button class="md-raised" ng-href="{{::formState.backUrl}}">{{'main.button.back' | translate}}</md-button>
+        </div>
+    </form>
+</div>

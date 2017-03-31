@@ -13,11 +13,11 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 public class CurriculumVersionHigherModuleSpeciality extends BaseEntityWithId {
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "curriculum_version_speciality_id", referencedColumnName = "id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_version_speciality_id", referencedColumnName = "id", nullable = false, updatable = false)
     private CurriculumVersionSpeciality speciality;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "curriculum_version_hmodule_id", referencedColumnName = "id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_version_hmodule_id", referencedColumnName = "id", nullable = false, updatable = false)
     private CurriculumVersionHigherModule module;
 
     public CurriculumVersionSpeciality getSpeciality() {

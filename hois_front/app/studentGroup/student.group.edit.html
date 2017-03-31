@@ -22,7 +22,7 @@
         </div>
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="textInput">{{'studentGroup.curriculumVersion' | translate}}</label>
+          <label class="textInput">{{formState.curriculumVersionLabel | translate}}</label>
           <hois-select ng-model="record.curriculumVersion" name="curriculumVersion" ng-disabled="record.id" values="formState.curriculumVersions"></hois-select>
         </md-input-container>
       </div>
@@ -43,7 +43,7 @@
         </md-input-container>
       </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column" ng-if="!formState.isVocational">
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="formState.onlyvocational || formState.isVocational">
         <div flex="45" flex-sm="100" flex-xs="100">
           <hois-autocomplete ng-model="record.teacher" method="teachers" name="teacher" ng-disabled="record.id" label="studentGroup.teacher"></hois-autocomplete>
         </div>
@@ -62,9 +62,7 @@
           <tr md-row>
             <th md-column>{{'studentGroup.studentname' | translate}}</th>
             <th md-column>{{'studentGroup.idcode' | translate}}</th>
-            <th md-column>{{'studentGroup.curriculum' | translate}}</th>
-            <th md-column>{{'studentGroup.studyForm' | translate}}</th>
-            <th md-column>{{'studentGroup.studyLevel' | translate}}</th>
+            <th md-column>{{formState.curriculumVersionLabel | translate}}</th>
             <th></th>
           </tr>
         </thead>
@@ -73,8 +71,6 @@
             <td md-cell>{{::row.fullname}}</td>
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
-            <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
-            <td md-cell>{{currentLanguageNameField(row.studyLevel)}}</td>
             <td md-cell>
               <md-button ng-if="record.id" md-no-ink class="md-primary change-button" ng-click="removeStudent(row.id)">{{'main.button.delete' | translate}}</md-button>
             </td>

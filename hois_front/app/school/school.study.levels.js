@@ -12,7 +12,7 @@ angular.module('hitsaOis').controller('SchoolStudyLevelsController', ['$q', '$sc
       $scope.studyLevels.studyLevels = Classifier.getSelectedCodes($scope.studyLevelDefs);
 
       $scope.studyLevels.$put().then(function() {
-        message.info('main.messages.update.success');
+        message.updateSuccess();
         $rootScope.$broadcast(AUTH_EVENTS.reAuthenticate);
       });
     };

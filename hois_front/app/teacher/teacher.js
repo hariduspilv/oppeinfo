@@ -2,7 +2,8 @@
 
 angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$route', '$location','message', 'DataUtils', 'dialogService', 'QueryUtils', function ($scope, $route, $location, message, DataUtils, dialogService,QueryUtils) {
   var id = $route.current.params.id;
-  var Endpoint = QueryUtils.endpoint('/teachers');
+  var baseUrl = '/teachers';
+  var Endpoint = QueryUtils.endpoint(baseUrl);
 
   QueryUtils.endpoint('/school/teacheroccupations/all').query().$promise.then(function (response) {
     $scope.occupations = response;
@@ -106,7 +107,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     dialogService.confirmDialog({prompt: 'teacher.deleteConfirm'}, function() {
       $scope.teacher.$delete().then(function () {
         message.info('main.messages.delete.success');
-        $location.path('/teachers');
+        $location.path(baseUrl);
       });
     });
   };
@@ -118,25 +119,21 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       message.error('teacher.teacherPositionEhis.error');
       errors = true;
     }
-    console.log($scope.teacherForm.$valid);
     if($scope.teacherForm.$valid && !errors) {
       if($scope.teacher.id) {
-        $scope.teacher.$update().then(function() {
-          message.info('main.messages.update.success');
-          afterLoad();
-        });
+        $scope.teacher.$update().then(afterLoad).then(message.updateSuccess);
       } else {
         $scope.teacher.$save().then(function(response) {
-          $location.path('/teachers/'+ response.id +'/edit');
           message.info('main.messages.create.success');
+          $location.path(baseUrl+ response.id +'/edit');
         });
       }
     }
   };
-}]).controller('TeacherListController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
+}]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', function ($scope, $route, QueryUtils) {
   QueryUtils.createQueryForm($scope, '/teachers', {order: 'person.lastname,person.firstname'});
 
+  $scope.showSchool = $route.current.locals.auth.isExternalExpert();
   $scope.loadData();
-
 }]);
 

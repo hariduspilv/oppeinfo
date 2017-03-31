@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.commandobject;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 public class CertificateSearchCommand {
@@ -11,8 +11,8 @@ public class CertificateSearchCommand {
 //    @EstonianIdCode
     private String idcode;
     private String certificateNr;
-    private LocalDateTime insertedFrom;
-    private LocalDateTime insertedThru;
+    private LocalDate insertedFrom;
+    private LocalDate insertedThru;
 
     public List<String> getType() {
         return type;
@@ -38,16 +38,16 @@ public class CertificateSearchCommand {
     public void setCertificateNr(String certificateNr) {
         this.certificateNr = certificateNr;
     }
-    public LocalDateTime getInsertedFrom() {
+    public LocalDate getInsertedFrom() {
         return insertedFrom;
     }
-    public void setInsertedFrom(LocalDateTime insertedFrom) {
+    public void setInsertedFrom(LocalDate insertedFrom) {
         this.insertedFrom = insertedFrom;
     }
-    public LocalDateTime getInsertedThru() {
+    public LocalDate getInsertedThru() {
         return insertedThru;
     }
-    public void setInsertedThru(LocalDateTime insertedThru) {
+    public void setInsertedThru(LocalDate insertedThru) {
         this.insertedThru = insertedThru;
     }
     public String getName() {

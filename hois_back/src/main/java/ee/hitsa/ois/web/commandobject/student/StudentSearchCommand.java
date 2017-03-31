@@ -12,11 +12,29 @@ public class StudentSearchCommand {
     private String name;
     @EstonianIdCode
     private String idcode;
+    private List<Long> curriculum;
     private List<Long> curriculumVersion;
     @Size(max = 100)
     private String studentGroup;
+    private List<Long> studentGroupId;
     private List<String> studyForm;
     private List<String> status;
+
+    public List<Long> getStudentGroupId() {
+        return studentGroupId;
+    }
+
+    public void setStudentGroupId(List<Long> studentGroupId) {
+        this.studentGroupId = studentGroupId;
+    }
+
+    public List<Long> getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(List<Long> curriculum) {
+        this.curriculum = curriculum;
+    }
 
     public String getName() {
         return name;

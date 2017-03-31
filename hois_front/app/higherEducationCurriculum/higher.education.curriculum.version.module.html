@@ -13,7 +13,6 @@
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
         <div layout="row">
-            <!--TODO: alert when no specialities yet are added to version-->
             <md-input-container flex="70" flex-sm="100" flex-xs="100">
                 <label>{{'curriculum.specialty.specialty' | translate}}</label>
                 <md-select multiple ng-model="data.specialitiesReferenceNumbers" required>
@@ -106,7 +105,7 @@
                 <md-select ng-model="data.selectedSubject" ng-change="addSubject()">
                     <md-option ng-repeat="option in subjects | orderBy: currentLanguageNameField()" ng-value="option">
                          {{option[currentLanguageNameField()]}} ({{option.code}}) 
-                         <span ng-if="myEhisSchool !== option.ehisSchoolCode">{{option.schoolCode}}</span>
+                         <!--<span ng-if="myEhisSchool !== option.ehisSchoolCode">{{option.schoolCode}}</span>-->
                     </md-option>
                 </md-select>
             </md-input-container>

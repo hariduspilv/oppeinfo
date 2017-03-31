@@ -21,13 +21,13 @@
             <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.fieldOfStudy' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" criteria="{vocational: true}" watch-model="criteria.iscedVald"
-                                    search-from-connect connect-main-classifier-code="ISCED_VALD"></hois-classifier-select>
+                                    search-from-connect connect-main-classifier-code="ISCED_VALD" multiple></hois-classifier-select>
             </md-input-container>
 
             <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.group' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.iscedClass" model-value-attr="code" main-classifier-code="ISCED_RYHM" criteria="{vocational: true}" watch-model="criteria.iscedSuun"
-                                    search-from-connect connect-main-classifier-code="ISCED_SUUN"></hois-classifier-select>
+                                    search-from-connect connect-main-classifier-code="ISCED_SUUN" multiple></hois-classifier-select>
             </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
@@ -83,6 +83,6 @@
     </tbody>
     </table>
 </md-table-container>
-<md-table-pagination  md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+<md-table-pagination  md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }"  md-page-select></md-table-pagination>

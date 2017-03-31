@@ -10,7 +10,7 @@ angular.module('hitsaOis')
       pages: [
         {
           name: 'main.menu.curriculum.label',
-          url: "/curriculum"
+          url: "/curriculum?_menu"
         },
         //{name: 'Õppejõud'},
         {
@@ -118,7 +118,7 @@ angular.module('hitsaOis')
         },
         {
           name: 'main.menu.fixData.messageTemplates',
-          url: "/messageTemplate"
+          url: "/messageTemplate?_menu"
         },
         {
           name: 'main.menu.fixData.studyLevels',
@@ -136,7 +136,7 @@ angular.module('hitsaOis')
         {
           name: 'main.menu.fixData.users',
           id: 'users',
-          url: "/users"
+          url: "/persons?_menu"
         }
       ]
     });
@@ -149,6 +149,11 @@ angular.module('hitsaOis')
           name: 'main.menu.applications.search',
           id: 'applications',
           url: "/applications?_menu"
+        },
+        {
+          name: 'main.menu.applications.student.list',
+          id: 'studentApplicationsList',
+          url: "/applications/student?_menu"
         }
       ]
     });
@@ -158,22 +163,12 @@ angular.module('hitsaOis')
       type: 'toggle',
       pages: [
         {
-          name: 'main.menu.study.subjectTeacher',
-          id: 'subjectTeacher',
-          url: "/subjectTeacher"
-        },
-        {
-          name: 'main.menu.study.declaration',
-          id: 'declaration',
-          url: "/declaration"
-        },
-        {
           name: 'main.menu.certificates.label',
           url: "/certificate?_menu"
         },
         {
           name: 'main.menu.study.notifications',
-          url: "/notifications"
+          url: "/messages/received?_menu"
         },
       ]
     });
@@ -184,9 +179,14 @@ angular.module('hitsaOis')
       type: 'toggle',
       pages: [
         {
-          name: 'main.menu.reception.import',
-          id: 'receptionImport',
-          url: "/receptionImport"
+          name: 'main.menu.reception.saisAdmissionSearch',
+          id: 'receptionSaisAdmissionSearch',
+          url: "/reception/saisAdmission/search?_menu"
+        },
+        {
+          name: 'main.menu.reception.saisApplicationSearch',
+          id: 'receptionSaisApplicationSearch',
+          url: "/reception/saisApplication/search?_menu"
         }
       ]
     });

@@ -11,11 +11,14 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.dto.ApplicationFileDto;
+import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
 
 @DateRange(from = "startDate", thru = "endDate")
+@StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
 public class ApplicationForm extends InsertedChangedVersionDto {
 
     @NotNull
@@ -31,6 +34,9 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     @ClassifierRestriction({MainClassCode.AKADPUHKUS_POHJUS, MainClassCode.EKSMAT_POHJUS})
     private String reason;
+
+    @Size(max = 4000)
+    private String rejectReason;
 
     @Size(max = 4000)
     private String addInfo;
@@ -65,7 +71,26 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     private LocalDateTime submitted;
 
+    private Boolean isAbroad;
+
+    @Size(max = 255)
+    private String abroadSchool;
+
+    @ClassifierRestriction(MainClassCode.EHIS_KOOL)
+    private String ehisSchool;
+
+    @ClassifierRestriction(MainClassCode.RIIK)
+    private String country;
+
+    @ClassifierRestriction(MainClassCode.VALISOPE_EESMARK)
+    private String abroadPurpose;
+
+    @ClassifierRestriction(MainClassCode.VALISKOOL_PROGRAMM)
+    private String abroadProgramme;
+
     private Set<ApplicationFileDto> files;
+
+    private Set<ApplicationPlannedSubjectDto> plannedSubjects;
 
 
     public AutocompleteResult getStudent() {
@@ -98,6 +123,14 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 
     public String getAddInfo() {
@@ -226,6 +259,62 @@ public class ApplicationForm extends InsertedChangedVersionDto {
 
     public void setSubmitted(LocalDateTime submitted) {
         this.submitted = submitted;
+    }
+
+    public Boolean getIsAbroad() {
+        return isAbroad;
+    }
+
+    public void setIsAbroad(Boolean isAbroad) {
+        this.isAbroad = isAbroad;
+    }
+
+    public String getAbroadSchool() {
+        return abroadSchool;
+    }
+
+    public void setAbroadSchool(String abroadSchool) {
+        this.abroadSchool = abroadSchool;
+    }
+
+    public String getEhisSchool() {
+        return ehisSchool;
+    }
+
+    public void setEhisSchool(String ehisSchool) {
+        this.ehisSchool = ehisSchool;
+    }
+
+    public String getCountry() {
+        return country;
+    }
+
+    public void setCountry(String country) {
+        this.country = country;
+    }
+
+    public String getAbroadPurpose() {
+        return abroadPurpose;
+    }
+
+    public void setAbroadPurpose(String abroadPurpose) {
+        this.abroadPurpose = abroadPurpose;
+    }
+
+    public String getAbroadProgramme() {
+        return abroadProgramme;
+    }
+
+    public void setAbroadProgramme(String abroadProgramme) {
+        this.abroadProgramme = abroadProgramme;
+    }
+
+    public Set<ApplicationPlannedSubjectDto> getPlannedSubjects() {
+        return plannedSubjects;
+    }
+
+    public void setPlannedSubjects(Set<ApplicationPlannedSubjectDto> plannedSubjects) {
+        this.plannedSubjects = plannedSubjects;
     }
 
     public Set<ApplicationFileDto> getFiles() {

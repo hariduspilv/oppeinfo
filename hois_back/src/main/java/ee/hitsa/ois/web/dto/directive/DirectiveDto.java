@@ -48,7 +48,7 @@ public class DirectiveDto extends DirectiveForm {
 
     public static DirectiveDto of(Directive directive) {
         DirectiveDto dto = EntityUtil.bindToDto(directive, new DirectiveDto(), "students");
-        dto.setStudents(directive.getStudents().stream().map(DirectiveFormStudent::of).collect(Collectors.toList()));
+        dto.setStudents(directive.getStudents().stream().map(DirectiveStudentDto::of).collect(Collectors.toList()));
         return dto;
     }
 }

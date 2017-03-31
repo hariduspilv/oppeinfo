@@ -673,6 +673,7 @@
 
   <div layout="row">
     <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-show="curriculum.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
     <md-button class="md-raised md-default" ng-href="/#/curriculum">{{'main.button.back' | translate}}</md-button>
 	<md-button ng-show="curriculum.status.code === 'OPPEKAVA_STAATUS_S' && curriculum.versions.length != 0" ng-click="curriculum.status = {code: 'OPPEKAVA_STAATUS_M'}" class="md-raised">{{'main.button.status.approving' | translate}}</md-button>
     <md-button ng-hide="curriculum.status.code === 'OPPEKAVA_STAATUS_C' || !(curriculum.id > 0)" ng-click="curriculum.status = {code: 'OPPEKAVA_STAATUS_C'}" class="md-raised">{{'main.button.status.close' | translate}}</md-button>

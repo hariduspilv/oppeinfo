@@ -191,7 +191,7 @@ angular.module('hitsaOis')
     }
 
     $scope.draftOptions = {};
-    QueryUtils.endpoint('/autocomplete/classifiers').query({mainClassCode: 'OPPEKAVA_LOOMISE_VIIS'}).$promise.then(function(response) {
+    Classifier.queryForDropdown({mainClassCode: 'OPPEKAVA_LOOMISE_VIIS'}, function(response) {
       response.forEach(function(it) {
         $scope.draftOptions[it.code] = it;
       });
@@ -216,7 +216,7 @@ angular.module('hitsaOis')
           dialogScope.selectedStateCurriculumOccupations = {};
           dialogScope.selectedStateCurriculumPartOccupations = {};
           dialogScope.selectedStateCurriculumSpecialities = {};
-          QueryUtils.endpoint('/stateCurriculum/all').query({sort: $scope.currentLanguageNameField()+',asc'}).$promise
+          QueryUtils.endpoint('/stateCurriculum/all').query({sort: $scope.currentLanguageNameField()+',asc', expired: false, status: ['OPPEKAVA_STAATUS_K']}).$promise
             .then(function(response) {
               dialogScope.stateCurriculums = response;
             });
@@ -331,6 +331,7 @@ angular.module('hitsaOis')
             delete submittedDialogScope.stateCurriculum[property];
           });
           submittedDialogScope.stateCurriculum.draft = $scope.curriculum.draft;
+          submittedDialogScope.stateCurriculum.status = 'OPPEKAVA_STAATUS_K';
           mapDtoToModel(submittedDialogScope.stateCurriculum, $scope);
         }, function() {
           $scope.curriculum.draft = undefined;
@@ -374,6 +375,7 @@ angular.module('hitsaOis')
 
                 sanitizeDraftEntity(response);
                 response.draft = $scope.curriculum.draft;
+                response.status = 'OPPEKAVA_STAATUS_K';
                 mapDtoToModel(response, $scope);
               });
         }, function() {
@@ -739,6 +741,16 @@ angular.module('hitsaOis')
       } else {
           console.log($scope.vocationalCurriculumForm.$error);
       }
+    };
+
+    $scope.delete = function() {
+      dialogService.confirmDialog({prompt: 'curriculum.deleteconfirm'}, function() {
+        var curriculum = new CurriculumEndpoint(mapModelToDto($scope.curriculum));
+        curriculum.$delete().then(function() {
+          message.info('main.messages.delete.success');
+          $location.path('/curriculum');
+        });
+      });
     };
 
   });

@@ -15,6 +15,9 @@ public class StudentHistory extends StudentBase {
     private Student student;
     private LocalDateTime validFrom;
     private LocalDateTime validThru;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
+    private StudentHistory prevStudentHistory;
 
     public Student getStudent() {
         return student;
@@ -38,5 +41,13 @@ public class StudentHistory extends StudentBase {
 
     public void setValidThru(LocalDateTime validThru) {
         this.validThru = validThru;
+    }
+
+    public StudentHistory getPrevStudentHistory() {
+        return prevStudentHistory;
+    }
+
+    public void setPrevStudentHistory(StudentHistory prevStudentHistory) {
+        this.prevStudentHistory = prevStudentHistory;
     }
 }

@@ -63,7 +63,7 @@ public class SubjectController {
         Long schoolId = user.getSchoolId();
         SubjectSearchFormData searchFormData = new SubjectSearchFormData();
         searchFormData.departments = autocompleteService.schoolDepartments(schoolId, new SchoolDepartmentAutocompleteCommand());
-        searchFormData.curricula = autocompleteService.curriculums(schoolId);
+        searchFormData.curricula = autocompleteService.curriculumVersions(schoolId, false);
         return searchFormData;
     }
 
@@ -84,5 +84,5 @@ public class SubjectController {
 
 class SubjectSearchFormData {
     public List<AutocompleteResult> departments;
-    public List<AutocompleteResult> curricula;
+    public List<? extends AutocompleteResult> curricula;
 }

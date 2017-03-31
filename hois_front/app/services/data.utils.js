@@ -7,8 +7,23 @@
  * # DataUtils
  * Factory in the hitsaOis.
  */
-angular.module('hitsaOis')
-  .factory('DataUtils', function () {
+angular.module('hitsaOis').factory('DataUtils',
+  function () {
+
+    function convertStringToDates(object, dateProperties) {
+      if (angular.isArray(object)) {
+        return object.map(function (it) { return convertStringToDates(it, dateProperties); });
+      }
+
+      for(var i = 0, cnt = dateProperties.length; i < cnt; i++) {
+        var property = dateProperties[i];
+        if(object.hasOwnProperty(property) && typeof object[property] === 'string') {
+          object[property] = moment(object[property], "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'").toDate();
+        }
+      }
+      return object;
+    }
+
     return {
       assign: function( path, obj, value ) {
         return path.split('.').reduce( function( prev, curr, currentIndex, array ) {
@@ -20,14 +35,7 @@ angular.module('hitsaOis')
           return prev[curr];
         }, obj || {} );
       },
-      convertStringToDates : function(object, dateProperties) {
-        for(var i = 0, cnt = dateProperties.length; i < cnt; i++) {
-          var property = dateProperties[i];
-          if(object.hasOwnProperty(property) && typeof object[property] === 'string') {
-            object[property] = moment(object[property], "YYYY-MM-DD'T'hh:mm:ss.SSS'Z'").toDate();
-          }
-        }
-      },
+      convertStringToDates: convertStringToDates,
 
       sexFromIdcode : function (idcode) {
         if (idcode.length !== 11  || isNaN(idcode)) {
@@ -45,4 +53,5 @@ angular.module('hitsaOis')
         return moment(date).toDate();
       }
     };
-  });
+  }
+);

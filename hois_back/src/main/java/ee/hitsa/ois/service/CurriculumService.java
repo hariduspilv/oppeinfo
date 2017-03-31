@@ -61,6 +61,7 @@ import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumDepartmentRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
+import ee.hitsa.ois.repository.CurriculumSpecialityRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
@@ -111,6 +112,8 @@ public class CurriculumService {
 	private SubjectRepository subjectRepository;
     @Autowired
     private SchoolRepository schoolRepository;
+    @Autowired
+    private CurriculumSpecialityRepository curriculumSpecialityRepository;
 
 	public List<CurriculumDepartment> findAllDepartments() {
 		return curriculumDepartmentRepository.findAll();
@@ -125,7 +128,7 @@ public class CurriculumService {
     }
 
     @SuppressWarnings("unchecked")
-    public Page<CurriculumSearchDto> search(CurriculumSearchCommand criteria, Pageable pageable) {
+    public Page<CurriculumSearchDto> search(Long schoolId, CurriculumSearchCommand criteria, Pageable pageable) {
         return JpaQueryUtil.query(CurriculumSearchDto.class, Curriculum.class, (root, query, cb) -> {
             ((CriteriaQuery<CurriculumSearchDto>)query).select(cb.construct(CurriculumSearchDto.class,
                 root.get("id"), root.get("nameEt"), root.get("nameEn"),
@@ -161,9 +164,12 @@ public class CurriculumService {
             propertyContains(() -> root.get("code"), cb, criteria.getCode(), filters::add);
             propertyContains(() -> root.get("merCode"), cb, criteria.getMerCode(), filters::add);
 
-            if(!CollectionUtils.isEmpty(criteria.getSchool())) {
-                filters.add(root.get("school").get("id").in(criteria.getSchool()));
+            if(schoolId != null) {
+                filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }
+//            else if(!CollectionUtils.isEmpty(criteria.getSchool())) {
+//                filters.add(root.get("school").get("id").in(criteria.getSchool()));
+//            }
             if(!CollectionUtils.isEmpty(criteria.getStatus())) {
                 filters.add(root.get("status").get("code").in(criteria.getStatus()));
             }
@@ -259,6 +265,7 @@ public class CurriculumService {
       updateJointPartners(curriculum, curriculumForm.getJointPartners());
       updateOccupations(curriculum, curriculumForm.getOccupations());
       updateModules(curriculum, curriculumForm.getModules());
+      // Versions are now saved on separate form
       updateVersions(curriculum, curriculumForm.getVersions());
 
       return curriculumRepository.save(curriculum);
@@ -280,12 +287,38 @@ public class CurriculumService {
     private CurriculumVersion updateVersion(Curriculum curriculum, CurriculumVersion version, CurriculumVersionDto dto) {
         CurriculumVersion updatedVersion = EntityUtil.bindToEntity(dto, version, classifierRepository, "curriculumStudyForm", "modules",
                 "specialities", "schoolDepartment", "occupationModules");
-        updateCurriculumVersionSpecialities(curriculum, updatedVersion, dto.getSpecialitiesReferenceNumbers());
+        saveNewlyAddedSpecialities(curriculum, version, dto);
+        updateCurriculumVersionSpecialities(curriculum.getSpecialities(), updatedVersion, dto.getSpecialitiesReferenceNumbers());
         updateCurriculumVersionModules(updatedVersion, dto.getModules());
         updateCurriculumVersionOccupationalModules(updatedVersion, dto.getOccupationModules());
         updateVersionStudyForm(curriculum, updatedVersion, dto);
         updateSchoolDepartment(updatedVersion, dto);
         return updatedVersion;
+    }
+
+    private void saveNewlyAddedSpecialities(Curriculum curriculum, CurriculumVersion version,
+            CurriculumVersionDto dto) {
+        Set<CurriculumSpecialityDto> newSpecs = dto.getNewCurriculumSpecialities();
+        if(!CollectionUtils.isEmpty(newSpecs)) {
+            Set<CurriculumSpeciality> newSavedSpecs = new HashSet<>();
+            
+            for(CurriculumSpecialityDto ns : newSpecs) {
+              Long oldRefNum = ns.getReferenceNumber();
+              CurriculumSpeciality newSpec = EntityUtil.bindToEntity(ns, new CurriculumSpeciality(), classifierRepository);
+              newSpec.setCurriculum(curriculum);
+              newSpec = curriculumSpecialityRepository.save(newSpec);
+              newSpec.setReferenceNumber(oldRefNum);
+              newSavedSpecs.add(newSpec);
+              
+//              Long newRefNum = newSpec.getReferenceNumber();
+//              if(dto.getSpecialitiesReferenceNumbers().contains(oldRefNum)) {
+//                  dto.getSpecialitiesReferenceNumbers().remove(oldRefNum);
+//                  dto.getSpecialitiesReferenceNumbers().add(newRefNum);
+//              }
+            }
+            curriculum.getSpecialities().addAll(newSavedSpecs);
+//            curriculum = curriculumRepository.save(curriculum);
+        }
     }
 
     private void updateSchoolDepartment(CurriculumVersion version, CurriculumVersionDto dto) {
@@ -311,30 +344,35 @@ public class CurriculumService {
           version.setCurriculumStudyForm(null);
         }
     }
+    
 
-    private static void updateCurriculumVersionSpecialities(Curriculum curriculum, CurriculumVersion version, Set<Long> specialities) {
-      Set<CurriculumVersionSpeciality> newSpecialities = new HashSet<>();
-      if(specialities != null) {
-        Map<Long, CurriculumVersionSpeciality> oldSpecs = version.getSpecialities().stream()
-                  .collect(Collectors.toMap(s -> EntityUtil.getId(s.getCurriculumSpeciality()), s -> s));
-        Map<Long, CurriculumSpeciality> selectedSpecs = curriculum.getSpecialities().stream()
-                .collect(Collectors.toMap(s -> s.getReferenceNumber(), s -> s));
-        specialities.forEach(s -> {
-            if(s.longValue() > 0 && oldSpecs.keySet().contains(s)) {
-                newSpecialities.add(oldSpecs.get(s));
-            } else {
-              CurriculumVersionSpeciality newSpec = new CurriculumVersionSpeciality();
-              CurriculumSpeciality curriculumSpeciality = selectedSpecs.get(s);
-              newSpec.setCurriculumSpeciality(curriculumSpeciality);
-              newSpec.setCurriculumVersion(version);
-              version.getSpecialities().add(newSpec);
-              curriculumSpeciality.getCurriculumVersionSpecialities().add(newSpec);
-              newSpecialities.add(newSpec);
-            }
-        });
+    private static void updateCurriculumVersionSpecialities(Set<CurriculumSpeciality> curricSpecs, CurriculumVersion version, Set<Long> specRefNums) {
+        Set<CurriculumVersionSpeciality> newSpecialities = new HashSet<>();
+        if(specRefNums != null) {
+            List<Long> oldSpecsNums = version.getSpecialities().stream().map(s -> s.getCurriculumSpeciality().getId()).collect(Collectors.toList());
+            List<Long> newSpecsNums = curricSpecs.stream().map(s -> s.getReferenceNumber()).collect(Collectors.toList());
+
+          Map<Long, CurriculumVersionSpeciality> oldSpecsMap = version.getSpecialities().stream()
+                    .collect(Collectors.toMap(s -> EntityUtil.getId(s.getCurriculumSpeciality()), s -> s));
+          Map<Long, CurriculumSpeciality> curricSpecsMap = curricSpecs.stream()
+                  .collect(Collectors.toMap(s -> s.getReferenceNumber(), s -> s));
+          specRefNums.forEach(s -> {
+              if(s.longValue() > 0 && oldSpecsMap.keySet().contains(s)) {
+                  newSpecialities.add(oldSpecsMap.get(s));
+              } else {
+                CurriculumVersionSpeciality newSpec = new CurriculumVersionSpeciality();
+                assert curricSpecsMap.keySet().contains(s) : "Curriculum speciality must be added to Curriculum before adding to Curriculum version!";
+                CurriculumSpeciality curriculumSpeciality = curricSpecsMap.get(s);
+                newSpec.setCurriculumSpeciality(curriculumSpeciality);
+                newSpec.setCurriculumVersion(version);
+//                version.getSpecialities().add(newSpec);
+//                curriculumSpeciality.getCurriculumVersionSpecialities().add(newSpec);
+                newSpecialities.add(newSpec);
+              }
+          });
+        }
+        version.setSpecialities(newSpecialities);
       }
-      version.setSpecialities(newSpecialities);
-    }
 
     private void updateCurriculumVersionModules(CurriculumVersion version,
             Set<CurriculumVersionHigherModuleDto> modules) {
@@ -565,11 +603,7 @@ public class CurriculumService {
                 oldSet = module.getCompetences();
             }
             EntityUtil.bindClassifierCollection(oldSet, c -> EntityUtil.getCode(c.getCompetence()), competences, competenceCode -> {
-                Classifier c = classifierRepository.getOne(competenceCode);
-                if(!MainClassCode.KOMPETENTS.name().equals(c.getMainClassCode())) {
-                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                }
-                return new CurriculumModuleCompetence(c);
+                return new CurriculumModuleCompetence(EntityUtil.validateClassifier(classifierRepository.getOne(competenceCode), MainClassCode.KOMPETENTS));
             });
         } else {
             module.setCompetences(new HashSet<>());
@@ -584,12 +618,8 @@ public class CurriculumService {
                 oldSet = module.getOccupations();
             }
             EntityUtil.bindClassifierCollection(oldSet, o -> EntityUtil.getCode(o.getOccupation()), occupations, occupaionCode -> {
-              Classifier c = classifierRepository.getOne(occupaionCode);
-              if(!MainClassCode.OSAKUTSE.name().equals(c.getMainClassCode()) &&
-                      !MainClassCode.KUTSE.name().equals(c.getMainClassCode()) &&
-                      !MainClassCode.SPETSKUTSE.name().equals(c.getMainClassCode())) {
-                  throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-              }
+              Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupaionCode),
+                      MainClassCode.OSAKUTSE, MainClassCode.KUTSE, MainClassCode.SPETSKUTSE);
               return new CurriculumModuleOccupation(c);
             });
         } else {
@@ -618,10 +648,7 @@ public class CurriculumService {
                 occupation.setSpecialities(new HashSet<>());
             }
             EntityUtil.bindClassifierCollection(oldList, s -> EntityUtil.getCode(s.getSpeciality()), specialities, specialityCode -> {
-                Classifier c = classifierRepository.getOne(specialityCode);
-                if(!MainClassCode.SPETSKUTSE.name().equals(c.getMainClassCode())) {
-                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                }
+                Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(specialityCode), MainClassCode.SPETSKUTSE);
                 return new CurriculumOccupationSpeciality(c);
             });
         } else {
@@ -647,7 +674,9 @@ public class CurriculumService {
             specialities.forEach(dto -> {
                 CurriculumSpeciality speciality = dto.getId() == null ? new CurriculumSpeciality() :
                     curriculum.getSpecialities().stream().filter(s -> s.getId().equals(dto.getId())).findFirst().get();
-                newSpecialities.add(EntityUtil.bindToEntity(dto, speciality, classifierRepository));
+                CurriculumSpeciality updatedSpeciality = EntityUtil.bindToEntity(dto, speciality, classifierRepository);
+                updatedSpeciality.setCurriculum(curriculum);
+                newSpecialities.add(updatedSpeciality);
             });
         }
         curriculum.setSpecialities(newSpecialities);
@@ -699,12 +728,7 @@ public class CurriculumService {
             }
             EntityUtil.bindClassifierCollection(storedStudyForms, sf -> EntityUtil.getCode(sf.getStudyForm()), studyForms, studyForm -> {
                 // add new link
-                Classifier c = classifierRepository.getOne(studyForm);
-             // verify that domain code is from OPPEVORM and raise IllegalArgumentException if wrong
-                if(!MainClassCode.OPPEVORM.name().equals(c.getMainClassCode())) {
-                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                }
-//                return new CurriculumStudyForm(c, curriculum);
+                Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(studyForm), MainClassCode.OPPEVORM);
                 return new CurriculumStudyForm(c);
             });
         } else {
@@ -741,9 +765,30 @@ public class CurriculumService {
         return originalSet;
     }
 
-    public CurriculumVersionDto save(CurriculumVersion curriculumVersion, CurriculumVersionDto curriculumVersionDto) {
+    public CurriculumVersionDto saveVersion(CurriculumVersion curriculumVersion, CurriculumVersionDto curriculumVersionDto) {
         CurriculumVersion updatedCurriculumVersion = updateVersion(curriculumVersion.getCurriculum(), curriculumVersion, curriculumVersionDto);
-        return CurriculumVersionDto.of(curriculumVersionRepository.save(updatedCurriculumVersion));
+        
+        
+        updatedCurriculumVersion.getCurriculum().getVersions().forEach(v -> {
+            System.out.println(v.getSpecialities());
+        });
+        System.out.println(updatedCurriculumVersion.getSpecialities());
+        CurriculumVersion c = curriculumVersionRepository.save(updatedCurriculumVersion);
+        
+        c.getCurriculum().getVersions().forEach(v -> {
+            System.out.println(v.getSpecialities());
+        });
+        System.out.println(c.getSpecialities());
+        
+        CurriculumVersion cDb = curriculumVersionRepository.getOne(c.getId());
+        
+        cDb.getCurriculum().getVersions().forEach(v -> {
+            System.out.println(v.getSpecialities());
+        });
+        System.out.println(cDb.getSpecialities());
+        
+        
+        return CurriculumVersionDto.of(c);
     }
 
     public CurriculumVersionDto create(Curriculum curriculum, CurriculumVersionDto dto) {
@@ -766,5 +811,9 @@ public class CurriculumService {
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(CurriculumVersionHigherModuleSubjectDto::of);
+    }
+
+    public void deleteVersion(CurriculumVersion curriculumVersion) {
+        EntityUtil.deleteEntity(curriculumVersionRepository, curriculumVersion);
     }
 }

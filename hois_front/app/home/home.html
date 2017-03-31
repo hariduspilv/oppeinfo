@@ -5,16 +5,37 @@
     <md-table-container>
       <table md-table md-progress="generalmessages.$promise">
         <tbody md-body>
-          <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="openCloseDetails(row)">
             <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
-            <td md-cell>{{::row.title}}</td>
+            <td md-cell><h4>{{::row.title}}</h4><pre ng-show="row.clicked">{{::row.content}}</pre></td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]" ng-if="generalmessages.totalElements > criteria.size"
                          md-page="criteria.page" md-total="{{generalmessages.totalElements}}" md-on-paginate="loadGeneralMessages"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+    
+    <h3>{{'message.messages' | translate}}</h3>
+    <h5 ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5>
+    <md-table-container>
+      <table md-table md-progress="unreadMessages.$promise">
+        <tbody md-body>
+          <tr md-row ng-repeat="row in unreadMessages.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="readMessage(row)">
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.dateSent} }}</td>
+            <td md-cell><h4>{{::row.subject}}</h4>
+                <div ng-show="row.clicked">
+                    <pre>{{row.content}}</pre>
+                    <p>{{'message.messageSender' | translate}}: {{row.sender}}</p>
+                </div>
+            </td>
+            <td md-cell><md-button class="md-primary" ng-href="/#/message/{{row.id}}/respond?backUrl=home" ng-click="readMessage()">{{'message.respond' | translate}}</md-button></td>
+            <!--<td md-cell><md-button>{{'main.button.delete' | translate}}</md-button></td>-->
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    
   </div>
   <div ng-if="!currentUser">
     <span>{{ 'home.joinedSchools' | translate }}</span>

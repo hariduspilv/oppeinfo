@@ -75,7 +75,7 @@ public class TeacherOccupationControllerTests {
         teacherOccupationForm.setIsValid(Boolean.TRUE);
         ResponseEntity<TeacherOccupation> responseEntity = restTemplate.postForEntity(uri, teacherOccupationForm, TeacherOccupation.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         Long occupationId = responseEntity.getBody().getId();
         Assert.assertNotNull(occupationId);

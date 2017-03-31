@@ -24,7 +24,7 @@ public class ApplicationPlannedSubject extends BaseEntityWithId {
     private String name;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "application_planned_subject_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "application_planned_subject_id", nullable = false, updatable = false)
     private Set<ApplicationPlannedSubjectEquivalent> equivalents = new HashSet<>();
 
     public Application getApplication() {

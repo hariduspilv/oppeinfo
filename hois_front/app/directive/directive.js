@@ -1,52 +1,82 @@
 'use strict';
 
-angular.module('hitsaOis').controller('DirectiveSearchController', ['$q', '$scope', 'Classifier', 'QueryUtils',
-  function ($q, $scope, Classifier, QueryUtils) {
+angular.module('hitsaOis').controller('DirectiveSearchController', ['$location', '$q', '$scope', 'Classifier', 'QueryUtils',
+  function ($location, $q, $scope, Classifier, QueryUtils) {
     var clMapper = Classifier.valuemapper({type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'});
-    QueryUtils.createQueryForm($scope, '/directives', {order: 'headline'}, clMapper.objectmapper);
+    QueryUtils.createQueryForm($scope, '/directives', {order: '-inserted'}, clMapper.objectmapper);
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('DirectiveEditController', ['$location', '$mdDialog', '$route', '$scope', 'dialogService', 'message', 'QueryUtils',
-  function ($location, $mdDialog, $route, $scope, dialogService, message, QueryUtils) {
+]).controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Curriculum', 'DataUtils', 'QueryUtils', 'Session',
+  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Curriculum, DataUtils, QueryUtils, Session) {
     var id = $route.current.params.id;
     var baseUrl = '/directives';
 
-    $scope.formState = {state: (id ? 'EDIT' : 'CHOOSETYPE'), students: undefined, selectedStudents: []};
+    $scope.formState = {state: (id ? 'EDIT' : 'CHOOSETYPE'), students: undefined, selectedStudents: [],
+                        excludedTypes: ['KASKKIRI_TYHIST', 'KASKKIRI_KYLALIS', 'KASKKIRI_IMMATV']};
+
+    var school = Session.school || {};
+    if(!school.higher) {
+      $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
+    }
 
     function setTemplateUrl() {
-      // TODO use $scope.record.type
-      $scope.formState.templateUrl = 'directive/directive.type.'+'okoorm'+'.html';
+      var templateId = $scope.record.type ? $scope.record.type.substr(9).toLowerCase() : 'unknown';
+      $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.edit.html';
+    }
+
+    function studentConverter(student) {
+      return DataUtils.convertStringToDates(student, ['startDate', 'endDate']);
     }
 
     function afterLoad() {
       setTemplateUrl();
+      $scope.record.students = studentConverter($scope.record.students);
+    }
+
+    function loadFormData() {
+      var type = $scope.record.type;
+      if(type === 'KASKKIRI_OKAVA' || type === 'KASKKIRI_IMMAT') {
+        $scope.formState.curriculumVersions = Curriculum.queryVersions();
+      }
+      if(type === 'KASKKIRI_ENNIST' || type === 'KASKKIRI_IMMAT' || type === 'KASKKIRI_OKAVA' || type === 'KASKKIRI_OVORM') {
+        $scope.formState.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').search();
+      }
+      if(type === 'KASKKIRI_AKAD') {
+        $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+      }
     }
 
     var Endpoint = QueryUtils.endpoint(baseUrl);
     if(id) {
-      $scope.record = Endpoint.get({id: id}, afterLoad);
+      $scope.record = Endpoint.get({id: id});
+      $scope.record.$promise.then(afterLoad).then(loadFormData);
     } else {
-      $scope.record = new Endpoint();
+      $scope.record = new Endpoint({students: []});
       afterLoad();
     }
 
-    $scope.update = function() {
+    function formIsValid() {
       $scope.directiveForm.$setSubmitted();
       if(!$scope.directiveForm.$valid) {
         message.error('main.messages.form-has-errors');
+        return false;
+      }
+      return true;
+    }
+
+    $scope.update = function() {
+      if(!formIsValid()) {
         return;
       }
-      var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
-      function afterSave() {
-        message.info(msg);
-        afterLoad();
-      }
-      $scope.record.students = $scope.formState.selectedStudents.map(function(item) { return item.id; });
+
       if($scope.record.id) {
-        $scope.record.$update().then(afterSave);
+        $scope.record.$update().then(afterLoad).then(message.updateSuccess);
       }else{
-        $scope.record.$save().then(afterSave);
+        $scope.record.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+        });
       }
     };
 
@@ -61,35 +91,62 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$q', '$scop
 
     $scope.directiveTypeChanged = function() {
       var data = {type: $scope.record.type};
-      QueryUtils.endpoint(baseUrl+'/findstudents').query(data, function(result) {
-        $scope.formState.students = result;
+      QueryUtils.endpoint(baseUrl+'/findstudents').search(data, function(result) {
+        $scope.formState.students = result.content;
         $scope.formState.selectedStudents = [];
-        if(!result.length) {
-          message('directive.nostudentsfound');
+        if(!$scope.formState.students.length) {
+          message.info('directive.nostudentsfound');
         }
       });
       setTemplateUrl();
     };
 
-    $scope.addDirective = function() {
-      $scope.formState.state = 'EDIT';
-      var data = {type: $scope.record.type, students: $scope.formState.selectedStudents.map(function(i) { return i.id; })};
-      QueryUtils.endpoint(baseUrl+'/directivedata').save(data, function(result) {
-        angular.copy(result.toJSON(), $scope.record);
-        $scope.formState.students = result.students;
-      });
-    };
-
-    function storeStudents() {
+    function studentsToDirective(students, callback) {
+      var data = {type: $scope.record.type, students: students.map(function(i) { return i.id; })};
+      QueryUtils.endpoint(baseUrl+'/directivedata').save(data, callback);
     }
 
+    $scope.addDirective = function() {
+      $scope.formState.state = 'EDIT';
+      studentsToDirective($scope.formState.selectedStudents, function(result) {
+        angular.copy(result.toJSON(), $scope.record);
+        $scope.record.students = studentConverter(result.students);
+      });
+      loadFormData();
+    };
+
+    function storeStudents(students) {
+      studentsToDirective(students, function(result) {
+        for(var i = 0, cnt = result.students.length; i < cnt; i++) {
+          $scope.record.students.push(studentConverter(result.students[i]));
+        }
+      });
+    }
+
+    $scope.deleteStudent = function(idcode) {
+      var rows = $scope.record.students;
+      for(var i = 0, cnt = rows.length; i < cnt; i++) {
+        if(rows[i].idcode === idcode) {
+          rows.splice(i, 1);
+          break;
+        }
+      }
+    };
+
     $scope.addStudents = function() {
-      var data = {type: $scope.record.type, directive: id};
+      var directiveType = $scope.record.type;
+      var students = $scope.record.students;
+      if(directiveType === 'KASKKIRI_IMMAT') {
+        students.push({startDate: null});
+        return;
+      }
+      var data = {type: directiveType, directive: id};
       $mdDialog.show({
         controller: function($scope) {
-          $scope.formState = {selectedStudents: []};
+          var baseUrl = '/directives/findstudents';
+          $scope.formState = {selectedStudents: [], type: data.type};
 
-          QueryUtils.createQueryForm($scope, '/directives/findstudents', data);
+          QueryUtils.createQueryForm($scope, baseUrl);
 
           $scope.cancel = $mdDialog.hide;
           $scope.select = function() {
@@ -97,10 +154,78 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$q', '$scop
             $mdDialog.hide();
           };
 
+          students = students.map(function(s) { return s.student; });
+          $scope.loadData = function() {
+            var query = angular.extend(QueryUtils.getQueryParams($scope.criteria), data);
+            $scope.tabledata.$promise = QueryUtils.endpoint(baseUrl).search(query, function(resultData) {
+              // filter these already on directive
+              resultData.content = resultData.content.filter(function(r) { return students.indexOf(r.id) === -1;});
+              $scope.afterLoadData(resultData);
+            });
+          };
+
           $scope.loadData();
         },
         templateUrl: 'directive/student.select.dialog.html',
         clickOutsideToClose: true
+      });
+    };
+
+    $scope.lookupStudent = function(row) {
+      var idcode = row.idcode;
+      if(idcode && idcode.length === 11 && idcode !== row._idcode) {
+        row._idcode = idcode;
+        QueryUtils.endpoint('/autocomplete/persons').search({idcode: idcode, role: 'person'}).$promise.then(function(response) {
+          row._found = true;
+          row.firstname = response.firstname;
+          row.lastname = response.lastname;
+        }).catch(function(response) {
+          row._found = false;
+          return $q.reject(response);
+        });
+      }
+    };
+
+    $scope.sendToConfirm = function() {
+      $scope.directiveForm.directiveCoordinator.$setValidity('required', !!$scope.record.directiveCoordinator);
+      if(!formIsValid()) {
+        return;
+      }
+
+      // save first
+      $scope.record.$update().then(afterLoad).then(function() {
+        QueryUtils.endpoint(baseUrl + '/sendtoconfirm').update({id: $scope.record.id}).$promise.then(function() {
+          message.info('directive.sentToConfirm');
+          $location.path(baseUrl + '/' + $scope.record.id + '/view');
+        });
+      });
+    };
+  }
+]).controller('DirectiveViewController', ['$route', '$scope', 'dialogService', 'message', 'QueryUtils',
+  function ($route, $scope, dialogService, message, QueryUtils) {
+    var id = $route.current.params.id;
+    var baseUrl = '/directives';
+
+    $scope.formState = {backUrl: $route.current.params.backUrl};
+    $scope.record = QueryUtils.endpoint(baseUrl + '/:id/view').search({id: id});
+
+    $scope.record.$promise.then(function() {
+      var templateId = $scope.record.type ? $scope.record.type.substr(9).toLowerCase() : 'unknown';
+      $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.view.html';
+    });
+
+    $scope.cancelDirective = function() {
+      dialogService.confirmDialog({prompt: 'directive.cancelconfirm'}, function() {
+      });
+    };
+
+    // for testing only
+    $scope.confirmDirective = function() {
+      dialogService.confirmDialog({prompt: 'directive.confirmconfirm'}, function() {
+        QueryUtils.endpoint(baseUrl + '/confirm').update($scope.record).$promise.then(function() {
+          message.info('directive.confirmed');
+          $route.reload();
+        });
       });
     };
   }

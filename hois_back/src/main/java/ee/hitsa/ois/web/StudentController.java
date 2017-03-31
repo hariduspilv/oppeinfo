@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import javax.validation.Valid;
@@ -23,6 +24,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.service.StudentService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -31,6 +33,7 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
@@ -57,7 +60,7 @@ public class StudentController {
         dto.setUserCanEditStudent(Boolean.valueOf(UserUtil.canEditStudent(user, student)));
         dto.setUserCanAddRepresentative(Boolean.valueOf(UserUtil.canAddStudentRepresentative(user, student)));
         dto.setUserIsSchoolAdmin(Boolean.valueOf(UserUtil.isSchoolAdmin(user, student.getSchool())));
-        if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isStudent(user, student) || UserUtil.isStudentRepresentative(user, student))) {
+        if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isSame(user, student) || UserUtil.isStudentRepresentative(user, student))) {
             dto.setSpecialNeed(null);
             dto.setIsRepresentativeMandatory(null);
         }
@@ -67,7 +70,7 @@ public class StudentController {
     @PutMapping("/{id:\\d+}")
     public StudentViewDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Student student, @Valid @RequestBody StudentForm form) {
         if(!UserUtil.canEditStudent(user, student)) {
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("User cannot edit student data");
         }
         return get(user, studentService.save(user, student, form));
     }
@@ -124,24 +127,30 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/directives")
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
         assertCanView(user, student);
-        return studentService.directives(EntityUtil.getId(student), pageable);
+        return studentService.directives(user, student, pageable);
+    }
+
+    @GetMapping("/{id:\\d+}/subjects")
+    public List<AutocompleteResult> subjects(HoisUserDetails user, @WithEntity("id") Student student) {
+        assertCanView(user, student);
+        return studentService.subjects(student);
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {
         if(!UserUtil.canViewStudent(user, student)) {
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("User cannot view student data");
         }
     }
 
     private static void assertCanCreateAbsence(HoisUserDetails user, Student student) {
         if(!UserUtil.canAddStudentAbsence(user, student)) {
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("User cannot add student absence");
         }
     }
 
     private static void assertCanEditAbsence(HoisUserDetails user, StudentAbsence absence) {
         if(!UserUtil.canEditStudentAbsence(user, absence)) {
-            throw new IllegalArgumentException();
+            throw new AssertionFailedException("User cannot edit student absence");
         }
     }
 }

@@ -9,6 +9,7 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.TeacherForm;
 import ee.hitsa.ois.web.commandobject.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherDto;
+import ee.hitsa.ois.web.dto.TeacherSearchDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,8 +30,10 @@ public class TeacherController {
     }
 
     @GetMapping("")
-    public Page<TeacherDto> search(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
-        command.setSchool(user.getSchoolId());
+    public Page<TeacherSearchDto> search(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
+        if (!user.isExternalExpert()) {
+            command.setSchool(user.getSchoolId());
+        }
         return teacherService.search(command, pageable);
     }
 

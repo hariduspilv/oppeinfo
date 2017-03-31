@@ -86,7 +86,7 @@ public class SchoolDepartmentControllerTests {
         Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
         schoolDepartmentForm.setCode("Kood");
         responseEntity = restTemplate.postForEntity(uri, schoolDepartmentForm, SchoolDepartment.class);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         Long schoolDepartmentId = responseEntity.getBody().getId();
         Assert.assertNotNull(schoolDepartmentId);

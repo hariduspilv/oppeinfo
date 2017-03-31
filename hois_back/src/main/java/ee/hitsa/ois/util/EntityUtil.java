@@ -2,7 +2,6 @@ package ee.hitsa.ois.util;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
@@ -19,6 +18,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
 
@@ -40,6 +40,7 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public abstract class EntityUtil {
@@ -218,62 +219,43 @@ public abstract class EntityUtil {
                 if(classCode == null || classCode.isEmpty()) {
                     c = null;
                 } else {
-                    c = loader.getOne(classCode);
-                    if(!Arrays.stream(t).anyMatch(cc -> cc.name().equals(c.getMainClassCode()))) {
-                        throw new IllegalArgumentException();
-                    }
+                    c = validateClassifier(loader.getOne(classCode), t);
                 }
                 destination.setPropertyValue(p, c);
             }
         });
     }
 
-    public static void setEntityFromRepository(Object command, Object entity,
-            JpaRepository<?, Long> repository, String...fields) {
-        List<String> fieldsList = Arrays.asList(fields);
-        for(PropertyDescriptor spd : BeanUtils.getPropertyDescriptors(command.getClass())) {
-            Method readMethod = spd.getReadMethod();
-            String propertyName = spd.getName();
-            if(readMethod != null && fieldsList.contains(propertyName) && Modifier.isPublic(readMethod.getDeclaringClass().getModifiers())) {
-                PropertyDescriptor tpd = BeanUtils.getPropertyDescriptor(entity.getClass(), propertyName);
-                if(tpd == null) {
-                    continue;
-                }
-                Method writeMethod = tpd.getWriteMethod();
-                if (writeMethod != null && Modifier.isPublic(writeMethod.getDeclaringClass().getModifiers())) {
-                    try {
-                        Long id = null;
-                        //usually Long is used in DTO classes to have references to other objects, but
-                        //sometimes ee.hitsa.ois.web.dto.AutoCompleteResult is also used.
-                        Object wrapper = readMethod.invoke(command);
-                        if (wrapper != null) {
-                            if (wrapper instanceof Long) {
-                                id = (Long) wrapper;
-                            } else {
-                                id = getIdFromWrapper(wrapper);
-                            }
-                        }
-
-                        if (id != null) {
-                            writeMethod.invoke(entity, repository.getOne(id));
-                        }
-                    } catch (Throwable e) {
-                        throw new FatalBeanException("Could not copy property '" + propertyName + "' from command to entity", e);
-                    }
-                }
+    public static Classifier validateClassifier(Classifier c, MainClassCode... domains) {
+        String mainClassCode = c.getMainClassCode();
+        for(MainClassCode domain : domains) {
+            if(domain.name().equals(mainClassCode)) {
+                return c;
             }
+        }
+        throw new AssertionFailedException("Wrong classifier main class code: " + mainClassCode);
+    }
+
+    public static void setEntityFromRepository(Object command, Object entity,
+            JpaRepository<?, Long> repository, String... properties) {
+        PropertyAccessor source = PropertyAccessorFactory.forBeanPropertyAccess(command);
+        PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);
+        for(String property : properties) {
+            //usually Long is used in DTO classes to have references to other objects, but
+            //sometimes ee.hitsa.ois.web.dto.AutoCompleteResult is also used.
+            Long id = getIdFromValue(source.getPropertyValue(property));
+            destination.setPropertyValue(property, id != null ? repository.getOne(id) : null);
         }
     }
 
-    private static Long getIdFromWrapper(Object wrapper)
-            throws IllegalAccessException, InvocationTargetException {
-        Long id = null;
-        Method getIdMethod = BeanUtils.findMethod(wrapper.getClass(), "getId");
-        if(getIdMethod != null && Modifier.isPublic(getIdMethod.getDeclaringClass().getModifiers())
-                && getIdMethod.getReturnType() == Long.class) {
-            id = (Long) getIdMethod.invoke(wrapper);
+    private static Long getIdFromValue(Object value) {
+        if(value instanceof Long || value == null) {
+            return (Long)value;
         }
-        return id;
+        if(value instanceof EntityConnectionCommand) {
+            return ((EntityConnectionCommand)value).getId();
+        }
+        throw new FatalBeanException("Unknown value type: " + value.getClass().getName());
     }
 
     /**
@@ -388,6 +370,17 @@ public abstract class EntityUtil {
             }
         }
         return entity.getCode();
+    }
+
+    /**
+     * Return reference to entity of given class or null
+     * @param entityClass
+     * @param id
+     * @param em
+     * @return null if id is null
+     */
+    public static <T extends BaseEntityWithId> T getOptionalOne(Class<T> entityClass, Long id, EntityManager em) {
+        return id != null ? em.getReference(entityClass, id) : null;
     }
 
     /**

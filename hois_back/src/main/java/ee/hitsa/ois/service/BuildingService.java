@@ -27,12 +27,13 @@ import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.RoomEquipment;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.BuildingRepository;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.RoomRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.BuildingForm;
 import ee.hitsa.ois.web.commandobject.RoomForm;
 import ee.hitsa.ois.web.commandobject.RoomSearchCommand;
@@ -45,9 +46,7 @@ public class BuildingService {
     @Autowired
     private BuildingRepository buildingRepository;
     @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
-    private EntityManager entityManager;
+    private EntityManager em;
     @Autowired
     private RoomRepository roomRepository;
     @Autowired
@@ -83,30 +82,32 @@ public class BuildingService {
             propertyContains(() -> root.get("code"), cb, criteria.getBuildingCode(), filters::add);
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable, entityManager);
+        }, pageable, em);
 
         // load room equipment with single query
         List<Long> roomIds = data.getContent().stream().filter(r -> r[1] != null).map(r -> ((Room)r[1]).getId()).collect(Collectors.toList());
-        Map<Long, List<RoomEquipment>> equipment = JpaQueryUtil.loadRelationChilds(RoomEquipment.class, roomIds, entityManager, "room", "id").stream().collect(Collectors.groupingBy(re -> EntityUtil.getId(re.getRoom())));
+        Map<Long, List<RoomEquipment>> equipment = JpaQueryUtil.loadRelationChilds(RoomEquipment.class, roomIds, em, "room", "id").stream().collect(Collectors.groupingBy(re -> EntityUtil.getId(re.getRoom())));
 
         return data.map(r -> RoomSearchDto.of((Building)r[0], (Room)r[1], equipment.get(EntityUtil.getNullableId((Room)r[1]))));
     }
 
-    public Room create(RoomForm form) {
-        return save(new Room(), form);
+    public Room create(HoisUserDetails user, RoomForm form) {
+        return save(user, new Room(), form);
     }
 
-    public Room save(Room room, RoomForm form) {
+    public Room save(HoisUserDetails user, Room room, RoomForm form) {
         EntityUtil.bindToEntity(form, room, "roomEquipment");
         if(!Objects.equals(form.getBuilding(), EntityUtil.getNullableId(room.getBuilding()))) {
-            room.setBuilding(buildingRepository.getOne(form.getBuilding()));
+            Building building = buildingRepository.getOne(form.getBuilding());
+            UserUtil.assertSameSchool(user, building.getSchool());
+            room.setBuilding(building);
         }
 
         List<RoomForm.RoomEquipmentCommand> newRoomEquipment = form.getRoomEquipment();
         if(newRoomEquipment != null) {
             // check for duplicate rows
             if(newRoomEquipment.stream().map(RoomForm.RoomEquipmentCommand::getEquipment).collect(Collectors.toSet()).size() != newRoomEquipment.size()) {
-                throw new IllegalArgumentException("Duplicate values in equipment list");
+                throw new AssertionFailedException("Duplicate values in equipment list");
             }
 
             List<RoomEquipment> storedRoomEquipment = room.getRoomEquipment();
@@ -120,14 +121,9 @@ public class BuildingService {
                 RoomEquipment re = roomEquipmentCodes.remove(roomEquipmentCode);
                 if(re == null) {
                     // add new equipment to room
-                    Classifier c = classifierRepository.getOne(roomEquipmentCode);
-                    // verify that domain code is from SEADMED and raise IllegalArgumentException if wrong
-                    if(!MainClassCode.SEADMED.name().equals(c.getMainClassCode())) {
-                        throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                    }
                     re = new RoomEquipment();
                     re.setRoom(room);
-                    re.setEquipment(c);
+                    re.setEquipment(EntityUtil.validateClassifier(em.getReference(Classifier.class, roomEquipmentCode), MainClassCode.SEADMED));
                     re.setEquipmentCount(roomEquipment.getEquipmentCount());
                     storedRoomEquipment.add(re);
                 } else if(!re.getEquipmentCount().equals(roomEquipment.getEquipmentCount())) {

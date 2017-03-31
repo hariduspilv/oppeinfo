@@ -5,8 +5,8 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
     $scope.schools = School.getAll();
 
   }
-]).controller('AuthenticatedHomeController', ['$scope', 'AUTH_EVENTS', 'AuthService', 'QueryUtils',
-  function ($scope, AUTH_EVENTS, AuthService, QueryUtils) {
+]).controller('AuthenticatedHomeController', ['$scope', 'AUTH_EVENTS', 'AuthService', 'QueryUtils', '$resource', 'config', 
+  function ($scope, AUTH_EVENTS, AuthService, QueryUtils, $resource, config) {
 
     $scope.criteria = {size: 5, page: 1, order: 'inserted, title, id'};
     $scope.generalmessages = {};
@@ -17,12 +17,38 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
         $scope.generalmessages.totalElements = result.totalElements;
       });
     };
+    $scope.unreadMessageCriteria = {size: 5, page: 1, order: '-inserted'};
+    $scope.unreadMessages = {};
+    $scope.loadUnreadMessages = function() {
+      var query = QueryUtils.getQueryParams($scope.unreadMessageCriteria);
+      $scope.unreadMessages.$promise = QueryUtils.endpoint('/message/received/mainPage').search(query, function(result) {
+        $scope.unreadMessages.content = result.content;
+        $scope.unreadMessages.totalElements = result.totalElements;
+      });
+    };
+
+    $scope.readMessage = function(message) {
+        message.clicked = !message.clicked;
+        if(!message.isRead) {
+            $resource(config.apiUrl + '/message/' + message.id).update(null).$promise.then(function(){
+                message.isRead = true;
+            });
+        }
+    };
+
+    $scope.openCloseDetails = function(message) {
+      message.clicked = !message.clicked;
+    };
 
     if (AuthService.isAuthenticated()) {
       $scope.loadGeneralMessages();
+      $scope.loadUnreadMessages();
     }
 
     $scope.$on(AUTH_EVENTS.loginSuccess, $scope.loadGeneralMessages);
     $scope.$on(AUTH_EVENTS.userChanged, $scope.loadGeneralMessages);
+
+    $scope.$on(AUTH_EVENTS.loginSuccess, $scope.loadUnreadMessages);
+    $scope.$on(AUTH_EVENTS.userChanged, $scope.loadUnreadMessages);
   }
 ]);

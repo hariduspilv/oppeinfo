@@ -1,0 +1,65 @@
+<md-dialog aria-label="import csv result dialog">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"reception.application.importFromCsvFile" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div ng-show="!result">
+          <p>{{"main.proccessingFile" | translate}}</p>
+          <md-progress-linear md-mode="indeterminate"></md-progress-linear>
+        </div>
+        <div ng-show="result">
+          <h2>{{'reception.application.added' | translate}}</h2>
+          <md-table-container>
+            <table md-table>
+              <thead md-head>
+              <tr md-row>
+                <th md-column>{{'reception.application.csvFileRowNr' | translate}}</th>
+                <th md-column>{{'reception.application.nr' | translate}}</th>
+              </tr>
+              </thead>
+              <tbody md-body>
+              <tr md-row ng-repeat="row in result.successful" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{::row.rowNr}}</td>
+                <td md-cell>{{::row.message}}</td>
+              </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+          <span flex></span>
+          <h2>{{'reception.application.failed' | translate}}</h2>
+          <md-table-container>
+            <table md-table>
+              <thead md-head>
+              <tr md-row>
+                <th md-column>{{'reception.application.csvFileRowNr' | translate}}</th>
+                <th md-column>{{'message.label' | translate}}</th>
+              </tr>
+              </thead>
+              <tbody md-body>
+              <tr md-row ng-repeat="row in result.failed" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{::row.rowNr}}</td>
+                <td md-cell>{{::row.message}}</td>
+              </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+      </div>
+    </md-dialog-content>
+    <span flex></span>
+
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

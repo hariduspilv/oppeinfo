@@ -28,6 +28,8 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
 @RestController
 @RequestMapping("/autocomplete")
@@ -37,8 +39,8 @@ public class AutocompleteController {
     private AutocompleteService autocompleteService;
 
     @GetMapping("/buildings")
-    public List<AutocompleteResult> buildings(HoisUserDetails user) {
-        return autocompleteService.buildings(user.getSchoolId());
+    public Page<AutocompleteResult> buildings(HoisUserDetails user) {
+        return asPage(autocompleteService.buildings(user.getSchoolId()));
     }
 
     @GetMapping("/classifiers")
@@ -64,7 +66,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/curriculumversions")
-    public Page<AutocompleteResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
+    public Page<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
         return asPage(autocompleteService.curriculumVersions(user.getSchoolId(), valid));
     }
 
@@ -89,6 +91,11 @@ public class AutocompleteController {
         return asPage(autocompleteService.schoolDepartments(user.getSchoolId(), criteria));
     }
 
+    @GetMapping("/studentgroups")
+    public Page<StudentGroupResult> studentGroups(HoisUserDetails user) {
+        return asPage(autocompleteService.studentGroups(user.getSchoolId()));
+    }
+
     @GetMapping("/subjects")
     public Page<AutocompleteResult> subjects(HoisUserDetails user, AutocompleteCommand command) {
         return autocompleteService.subjects(user.getSchoolId(), command).map(AutocompleteResult::of);
@@ -107,6 +114,11 @@ public class AutocompleteController {
     @GetMapping("/studyPeriods")
     public List<AutocompleteResult> studyPeriods(HoisUserDetails user) {
         return autocompleteService.studyPeriods(user.getSchoolId());
+    }
+
+    @GetMapping("/saisAdmissionCodes")
+    public List<AutocompleteResult> saisAdmissionCodes(HoisUserDetails user) {
+        return autocompleteService.saisAdmissionCodes(user.getSchoolId());
     }
 
     private static <R> Page<R> asPage(List<R> data) {

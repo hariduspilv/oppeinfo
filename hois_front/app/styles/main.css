@@ -628,3 +628,7 @@ hois-created-modified table.md-table thead.md-head > tr.md-row {
 hois-created-modified {
 	padding-bottom: 20px;
 }
+
+.bold {
+    font-weight: bold;
+}

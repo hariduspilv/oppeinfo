@@ -630,6 +630,82 @@ public class CurriculumControllerTests {
         Assert.assertEquals("themeNameEt", updatedOccupationModule.getThemes().stream().findFirst().get().getNameEt());
         Assert.assertNotNull(updatedOccupationModule.getThemes().stream().findFirst().get().getId());
     }
+    
+    /**
+     * New requirement: versions must be handled on their own form. 
+     * Managing list of CurriculumVersionSpecialities now causes an exception.
+     */
+    @Test
+    public void saveVersion() {
+        CurriculumForm curriculumForm = getForm(LocalDate.now());
+
+        curriculumForm.setSpecialities(new HashSet<>());
+        CurriculumSpecialityDto spec1 = getCurriculumSpecialityDto();
+        curriculumForm.getSpecialities().add(spec1);
+        
+        /*
+         * Curriculum must be saved before
+         */
+        ResponseEntity<CurriculumDto> curriculumResponse = this.restTemplate.postForEntity("/curriculum", curriculumForm,
+                CurriculumDto.class);
+        Assert.assertEquals(HttpStatus.OK, curriculumResponse.getStatusCode());
+        Assert.assertNotNull(curriculumResponse);
+        testCurriculum = curriculumRepository.getOne(curriculumResponse.getBody().getId());
+        CurriculumDto curriculumDto = curriculumResponse.getBody();
+        CurriculumSpecialityDto specDto = curriculumDto.getSpecialities().stream().findFirst().get();
+        
+        CurriculumVersionDto versionDto = getCurriculumVersionDto();
+        versionDto.setSpecialitiesReferenceNumbers(new HashSet<>());
+        versionDto.getSpecialitiesReferenceNumbers().add(specDto.getReferenceNumber());
+        
+        /*
+         * Save Curriculum version with speciality
+         */
+        ResponseEntity<CurriculumVersionDto> versionResponse = this.restTemplate.postForEntity("/curriculum/" + testCurriculum.getId() + "/versions", versionDto,
+                CurriculumVersionDto.class);
+        Assert.assertEquals(HttpStatus.OK, versionResponse.getStatusCode());
+        Assert.assertNotNull(versionResponse.getBody().getId());
+    }
+    
+    @Test
+    public void saveVersionWithNewSpeciality() {
+        /*
+         * Curriculum must be saved before
+         */
+        CurriculumForm curriculumForm = getForm(LocalDate.now());
+        CurriculumVersionDto versionDto = getCurriculumVersionDto();
+        curriculumForm.getVersions().add(versionDto);
+        
+        ResponseEntity<CurriculumDto> curriculumResponse = this.restTemplate.postForEntity("/curriculum", curriculumForm,
+                CurriculumDto.class);
+        Assert.assertEquals(HttpStatus.OK, curriculumResponse.getStatusCode());
+        Assert.assertNotNull(curriculumResponse);
+        testCurriculum = curriculumRepository.getOne(curriculumResponse.getBody().getId());
+        
+        
+        versionDto = curriculumResponse.getBody().getVersions().stream().findFirst().get();
+        
+        
+        CurriculumSpecialityDto spec = getCurriculumSpecialityDto();
+        versionDto.getSpecialitiesReferenceNumbers().add(spec.getReferenceNumber());
+        versionDto.setNewCurriculumSpecialities(new HashSet<>());
+        versionDto.getNewCurriculumSpecialities().add(spec);
+        
+        ResponseEntity<CurriculumVersionDto> versionResponse = restTemplate.exchange("/curriculum/" + testCurriculum.getId() + "/versions/" + versionDto.getId(), HttpMethod.PUT,
+                new HttpEntity<>(versionDto), CurriculumVersionDto.class);
+
+        Assert.assertEquals(HttpStatus.OK, versionResponse.getStatusCode());
+        versionDto = versionResponse.getBody();
+        Assert.assertNotNull(versionDto.getId());
+        
+        
+        // update without changes
+        versionResponse = restTemplate.exchange("/curriculum/" + testCurriculum.getId() + "/versions/" + versionDto.getId(), HttpMethod.PUT,
+                new HttpEntity<>(versionDto), CurriculumVersionDto.class);
+        Assert.assertEquals(HttpStatus.OK, versionResponse.getStatusCode());
+        Assert.assertNotNull(versionResponse.getBody().getId());
+        
+    }
 
     private static CurriculumVersionOccupationModuleDto getCurriculumVersionOccupationModuleDto(CurriculumModuleDto curriculumModuleDto) {
         CurriculumVersionOccupationModuleDto dto = new CurriculumVersionOccupationModuleDto();

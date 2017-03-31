@@ -68,7 +68,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}">{{::row.headline}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/view">{{::row.headline}}</md-button>
             </td>
             <td md-cell>{{::row.directiveNr}}</td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
@@ -76,13 +76,13 @@
             <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
             <td md-cell>
-              <md-button ng-if="row.status === 'KASKKIRI_STAATUS_KOOSTAMISEL'" md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}">{{'main.button.change' | translate}}</md-button>
+              <md-button ng-if="row.status.code === 'KASKKIRI_STAATUS_KOOSTAMISEL'" md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]"
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>

@@ -3,6 +3,7 @@ package ee.hitsa.ois.domain.directive;
 import java.time.LocalDate;
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -38,7 +39,7 @@ public class Directive extends BaseEntityWithId {
     private Directive canceledDirective;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier cancelType;
-    @OneToMany(mappedBy = "directive", orphanRemoval = true)
+    @OneToMany(mappedBy = "directive", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DirectiveStudent> students;
 
     public School getSchool() {

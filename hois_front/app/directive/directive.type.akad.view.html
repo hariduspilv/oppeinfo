@@ -1,0 +1,42 @@
+<md-table-container>
+  <table md-table>
+    <thead md-head>
+      <tr md-row>
+        <th md-column>{{'directive.student.fullname' | translate}}</th>
+        <th md-column>{{'directive.student.idcode' | translate}}</th>
+        <th md-column>{{'directive.student.isPeriod' | translate}}</th>
+        <th md-column>{{'directive.student.akadStartDate' | translate}}</th>
+        <th md-column>{{'directive.student.akadEndDate' | translate}}</th>
+        <th md-column>{{'directive.student.reason' | translate}}</th>
+        <th md-column>{{'directive.student.applicationAkadStartDate' | translate}}</th>
+        <th md-column>{{'directive.student.applicationAkadEndDate' | translate}}</th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{::row.fullname}}</td>
+        <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{row.isPeriod ? 'main.period' : 'main.date' | translate}}</td>
+        <td md-cell>
+          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodStart)}}></div>
+          <hois-value ng-if="!row.isPeriod" value="'main.formattedDate' | translate: {date: row.startDate}"></hois-value>
+        </td>
+        <td md-cell>
+          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodEnd)}}></div>
+          <hois-value ng-if="!row.isPeriod" value="'main.formattedDate' | translate: {date: row.endDate}"></hois-value>
+        </td>
+        <td md-cell>
+          <hois-classifier-value ng-model="row.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+        </td>
+        <td md-cell>
+          <div ng-if="row.applicationIsPeriod">{{currentLanguageNameField(row.studyPeriodStart)}}</div>
+          <hois-value ng-if="!row.applicationIsPeriod" value="'main.formattedDate' | translate: {date: row.applicationStartDate}"></hois-value>
+        </td>
+        <td md-cell>
+          <div ng-if="row.applicationIsPeriod">{{currentLanguageNameField(row.studyPeriodEnd)}}</div>
+          <hois-value ng-if="!row.applicationIsPeriod" value="'main.formattedDate' | translate: {date: row.applicationEndDate}"></hois-value>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</md-table-container>

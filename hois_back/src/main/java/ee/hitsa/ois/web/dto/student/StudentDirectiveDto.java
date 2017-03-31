@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.student;
 
+import java.time.LocalDate;
+
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.util.EntityUtil;
 
@@ -9,7 +11,9 @@ public class StudentDirectiveDto {
     private String headline;
     private String type;
     private String directiveNr;
-    private String createdBy;
+    private LocalDate confirmDate;
+    private String insertedBy;
+    private Boolean userCanEdit;
 
     public Long getId() {
         return id;
@@ -43,12 +47,28 @@ public class StudentDirectiveDto {
         this.directiveNr = directiveNr;
     }
 
-    public String getCreatedBy() {
-        return createdBy;
+    public LocalDate getConfirmDate() {
+        return confirmDate;
     }
 
-    public void setCreatedBy(String createdBy) {
-        this.createdBy = createdBy;
+    public void setConfirmDate(LocalDate confirmDate) {
+        this.confirmDate = confirmDate;
+    }
+
+    public String getInsertedBy() {
+        return insertedBy;
+    }
+
+    public void setInsertedBy(String insertedBy) {
+        this.insertedBy = insertedBy;
+    }
+
+    public Boolean getUserCanEdit() {
+        return userCanEdit;
+    }
+
+    public void setUserCanEdit(Boolean userCanEdit) {
+        this.userCanEdit = userCanEdit;
     }
 
     public static StudentDirectiveDto of(Directive directive) {

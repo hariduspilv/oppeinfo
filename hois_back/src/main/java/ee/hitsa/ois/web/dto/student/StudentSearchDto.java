@@ -12,9 +12,11 @@ public class StudentSearchDto {
     private String fullname;
     private String idcode;
     private AutocompleteResult curriculumVersion;
-    private String studentGroup;
+    private AutocompleteResult curriculum;
+    private AutocompleteResult studentGroup;
     private String studyForm;
     private String status;
+    private Long personId;
 
     public Long getId() {
         return id;
@@ -47,12 +49,20 @@ public class StudentSearchDto {
     public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
     }
+    
+    public AutocompleteResult getCurriculum() {
+        return curriculum;
+    }
 
-    public String getStudentGroup() {
+    public void setCurriculum(AutocompleteResult curriculum) {
+        this.curriculum = curriculum;
+    }
+
+    public AutocompleteResult getStudentGroup() {
         return studentGroup;
     }
 
-    public void setStudentGroup(String studentGroup) {
+    public void setStudentGroup(AutocompleteResult studentGroup) {
         this.studentGroup = studentGroup;
     }
 
@@ -71,6 +81,14 @@ public class StudentSearchDto {
     public void setStatus(String status) {
         this.status = status;
     }
+    
+    public Long getPersonId() {
+        return personId;
+    }
+
+    public void setPersonId(Long personId) {
+        this.personId = personId;
+    }
 
     public static StudentSearchDto of(Student student) {
         StudentSearchDto dto = EntityUtil.bindToDto(student, new StudentSearchDto());
@@ -78,7 +96,7 @@ public class StudentSearchDto {
         dto.setFullname(p.getFullname());
         dto.setIdcode(p.getIdcode());
         StudentGroup sg = student.getStudentGroup();
-        dto.setStudentGroup(sg != null ? sg.getCode() : null);
+        dto.setStudentGroup(sg != null ? new AutocompleteResult(sg.getId(), sg.getCode(), sg.getCode()) : null);
         return dto;
     }
 }

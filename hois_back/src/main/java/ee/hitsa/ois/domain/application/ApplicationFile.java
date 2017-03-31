@@ -17,7 +17,7 @@ public class ApplicationFile extends BaseEntityWithId {
     private Application application;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)
+    @JoinColumn(nullable = false, updatable = false)
     private OisFile oisFile;
 
     public Application getApplication() {

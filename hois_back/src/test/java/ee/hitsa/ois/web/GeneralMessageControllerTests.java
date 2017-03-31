@@ -16,6 +16,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.GeneralMessageForm;
 import ee.hitsa.ois.web.dto.GeneralMessageDto;
 
@@ -67,10 +68,10 @@ public class GeneralMessageControllerTests {
         GeneralMessageForm form = new GeneralMessageForm();
         form.setTitle("Üldteade");
         form.setContent("Üldteate sisu");
-        form.setTargets(Arrays.asList("ROLL_P"));
+        form.setTargets(Arrays.asList(Role.ROLL_P.name()));
         ResponseEntity<GeneralMessageDto> responseEntity = restTemplate.postForEntity(uri, form, GeneralMessageDto.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         Long id = responseEntity.getBody().getId();
         Assert.assertNotNull(id);

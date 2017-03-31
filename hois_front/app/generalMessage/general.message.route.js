@@ -18,9 +18,17 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
     })
-    .when('/generalmessages/:id', {
+    .when('/generalmessages/:id/edit', {
       templateUrl: 'generalMessage/general.message.edit.html',
       controller: 'GeneralMessageEditController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/generalmessages/:id/view', {
+      templateUrl: 'generalMessage/general.message.view.html',
+      controller: 'GeneralMessageViewController',
       controllerAs: 'controller',
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

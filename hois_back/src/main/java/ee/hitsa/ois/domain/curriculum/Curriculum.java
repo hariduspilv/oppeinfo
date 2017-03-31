@@ -176,39 +176,38 @@ public class Curriculum extends BaseEntityWithId {
     private Classifier draft;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumStudyLanguage> studyLanguages = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumDepartment> departments = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumFile> files = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumGrade> grades = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumJointPartner> jointPartners = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false, insertable = true)
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumSpeciality> specialities = new HashSet<>();
     
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumStudyForm> studyForms = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumModule> modules = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumOccupation> occupations = new HashSet<>();
 
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)

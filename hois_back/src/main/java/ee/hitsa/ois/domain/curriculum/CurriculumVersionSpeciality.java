@@ -16,11 +16,11 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 public class CurriculumVersionSpeciality extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)
+    @JoinColumn(nullable = false, updatable = false)
     private CurriculumSpeciality curriculumSpeciality;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = true)
+    @JoinColumn(nullable = false, updatable = false)
     private CurriculumVersion curriculumVersion;
     
     @OneToMany(mappedBy = "speciality", cascade = CascadeType.ALL, orphanRemoval = true)

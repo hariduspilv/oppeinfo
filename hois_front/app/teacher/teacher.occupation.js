@@ -4,8 +4,8 @@ angular.module('hitsaOis').controller('TeacherOccupationEditController', ['$loca
 
   function ($location, $route, $scope, dialogService, message, QueryUtils) {
     var id = $route.current.params.id;
-
     var baseUrl = '/school/teacheroccupations';
+
     var Endpoint = QueryUtils.endpoint(baseUrl);
     if(id) {
       $scope.teacherOccupation = Endpoint.get({id: id});
@@ -19,14 +19,14 @@ angular.module('hitsaOis').controller('TeacherOccupationEditController', ['$loca
         message.error('main.messages.form-has-errors');
         return;
       }
-      var msg = $scope.teacherOccupation.id ? 'main.messages.update.success' : 'main.messages.create.success';
-      function afterSave() {
-        message.info(msg);
-      }
+
       if($scope.teacherOccupation.id) {
-        $scope.teacherOccupation.$update().then(afterSave);
+        $scope.teacherOccupation.$update().then(message.updateSuccess);
       }else{
-        $scope.teacherOccupation.$save().then(afterSave);
+        $scope.teacherOccupation.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.teacherOccupation.id + '/edit');
+        });
       }
     };
 

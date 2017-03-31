@@ -1,4 +1,4 @@
-VERSIOON: 0.2.0/20170310
+VERSIOON: 0.2.1/20170331
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -37,6 +37,7 @@ DOK3 - HOIS_analyys_opilased_liikumised.docx
 		2.2	Õppuri andmete vaatamine (va välisõppes viibimine ja dokumendid)
 		2.3	Õppuri andmete muutmine
 		2.4	Õppuri esindaja andmete muutmine
+		2.5	Õpperühma/grupi moodustamine
 		2.6	Õpperühma/grupi otsing ja muutmine
 		2.7	Õppuri puudumise tõendi sisestamine
 		3.1	Õppurile uue esindaja lisamine
@@ -50,30 +51,73 @@ DOK4 - HOIS_analyys_opetajad_materjalid.docx
 DOK5 - HOIS_analyys_avaldused_kaskkirjad.docx
 	    2.1	Avalduste otsing
 		2.2	Avalduse koostamine
+		2.3	Õppuri avalduste nimekirja vaatamine
 		2.4	Akadeemilise puhkuse taotlemine
 		2.5	Akadeemilise puhkuse katkestamise taotlemine
 		2.6	Õppekava vahetamise taotlemine
 		2.7	Õppevormi vahetamise taotlemine
 		2.8	Finantseerimisallika muutmise taotlemine
+		2.9	Välisõpilaseks vormistamise taotlmine
 		2.10 Eksmatrikuleerimise taotlemine
 		2.11	Avaldusele faili lisamine
+		2.12	Avalduse andmete vaatamine
 		2.13	Avalduse andmete muutmine
+		2.14	Avalduse tagasilükkamine
+		2.15	Alaealise või erivajadusega õppuri koostatud avalduse esitamine
 		3.1	Käskkirjade otsing
+		3.2	Õppuri otsimine
+		3.3	Akadeemilisele puhkusele lubamise käskkirja koostamine
+		3.4	Akadeemilise puhkuse katkestamise käskkirja koostamine
+		3.5	Õppekoormuse muutmise käskkirja koostamine
+		3.6	Õppekava vahetamise käskkirja koostamine
+		3.7	Finantseerimisallika muutmise käskkirja koostamine
+		3.8	Õppevormi vahetamise käskkirja koostamine
+		3.9	Välisõpilaseks vormistamise käskkirja koostamine
+		3.10	Eksmatrikuleerimise käskkirja koostamine
+		3.11	Immatrikuleerimise käskkirja koostamine
+		3.12	Lõpetamise käskkirja koostamine
+		3.13	Ennistamise käskkirja koostamine 
+		3.17	Käskkirja andmete vaatamine
+		3.18	Käskkirja andmete muutmine
 		4.1	Tõendite otsing
 		4.3	Tõendi tellimine (admin. töötaja töökohal, ilma reaalse sisuta)
 
+DOK6 - HOIS_analyys_vastuvott.docx
+		2.3	Konkursi otsing
+		2.4	Konkursi andmete vaatamine
+		2.6	Vastuvõtu avalduste otsing
+		2.8	Vastuvõtu avalduse laadimine csv failist
+
+DOK7 - HOIS_analyys_kasutajaoigused.docx
+		2.1	Kasutaja otsing
+		2.2	Kasutaja andmete sisestamine ja kasutajarolli haldamine
+		
+DOK8 - HOIS_analyys_teated.docx
+		2.1	Üldteate otsing
+		2.2	Üldteate lisamine ja muutmine
+		2.3	Üldteate vaatamine avalehel
+		3.1	Teate otsing
+		3.2	Teate saatmine
+		3.3	Teate vaatamine ja teatele vastamine
 	   
 Testisikute kasutajanimed, kellena saab ÕISi sisse logida ja süsteemi testida (kasutajanimi - isiku nimi, rollid):
-test1 - Test1 Kasutaja1, peaadministraator, administratiivne töötaja Tallinna Polütehnikumis ja EBS-s
-test2 - Test2 Kasutaja2, administratiivne töötaja Tallinna Tehnikakõrgkoolis ja Tallinna Tervishoiu Kõrgkoolis, õpetaja Tallinna Tervishoiu Kõrgkoolis
-test3 - Test3 Kasutaja3, administratiivne töötaja Tallinna Polütehnikumis
-test4 - Test4 Kasutaja4, administratiivne töötaja Tallinna Tervishoiu Kõrgkoolis
-test5 - Test5 Kasutaja5, õpetaja Tallinna Tehnikakõrgkoolis
+37101010003 - Test1 Kasutaja1, peaadministraator, administratiivne töötaja Tallinna Polütehnikumis, Tallinna Tervishoiu Kõrgkoolis ja EBS-s
+37201010002 - Test2 Kasutaja2, administratiivne töötaja Tallinna Tehnikakõrgkoolis ja Tallinna Tervishoiu Kõrgkoolis, õpetaja Tallinna Tervishoiu Kõrgkoolis
+37301010005 - Test3 Kasutaja3, administratiivne töötaja Tallinna Polütehnikumis
+37401010008 - Test4 Kasutaja4, administratiivne töötaja Tallinna Tervishoiu Kõrgkoolis
+37501010000 - Test5 Kasutaja5, õpetaja Tallinna Tehnikakõrgkoolis, lapsevanem (Jüri Õppur1)
+50101010009 - Jüri Õppur1, õppur Tallinna Polütehnikumis
+60101010006 - Mari Õppur2, õppur Tallinna Polütehnikumis
+39001010000 - Juku Õppur3, õppur Tallinna Polütehnikumis
+49001010001 - Säde Õppur4, õppur Tallinna Polütehnikum
+48001010005 - Mari-Marie Õppur5, õppur Tallinna Tervishoiu Kõrgkoolis
+38001010009 - Mikk-Mihkel Õppur6, õppur Tallinna Tervishoiu Kõrgkoolis
 
-TPÜs on olemas 2 õppekava ja 4 õppuri testandmed.
+Tallinna Polütehnikumis on olemas üks kutseõppe õppekava
+Tallinna Tervishoiu Kõrgkoolis on olemas üks kõrgharidusõppe õppekava
 	   
 
-EELDUS: 2. tarne 20170215
+EELDUS: ver. 0.2.0/20170310
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x
@@ -180,6 +224,27 @@ EELDUS:
 				proxy_cache_valid 10m;
 				proxy_pass http://backend/hois_back/autocomplete/classifiers;
 				}
+			location = /hois_back/autocomplete/schools {
+				add_header X-Cache-Status $upstream_cache_status;
+				proxy_ignore_headers Cache-Control;
+				proxy_ignore_headers Expires;
+				proxy_cache classifier_cache;
+				proxy_cache_lock on;
+				proxy_cache_use_stale updating;
+				proxy_cache_valid 10m;
+				proxy_pass http://backend/hois_back/autocomplete/schools;
+			}
+
+			location ~ ^/hois_back/school/[0-9]+/logo$ {
+				add_header X-Cache-Status $upstream_cache_status;
+				proxy_ignore_headers Cache-Control;
+				proxy_ignore_headers Expires;
+				proxy_cache classifier_cache;
+				proxy_cache_lock on;
+				proxy_cache_use_stale updating;
+				proxy_cache_valid 10m;
+				proxy_pass http://backend/$uri;
+			}
 
 
 

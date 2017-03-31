@@ -1,0 +1,90 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="loadData()" layout="column">
+      <div layout="row" layout-sm="column" layout-xs="column"  >
+          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+            <label>{{'reception.contest.code' | translate}}</label>
+            <hois-select ng-model="criteria.code" values="saisAdmissionCodes" value-property="nameEt" multiple></hois-select>
+          </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column"  >
+          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+            <label>{{'reception.application.status' | translate}}</label>
+            <hois-classifier-select ng-model="criteria.status" model-value-attr="code"
+                main-classifier-code="SAIS_AVALDUSESTAATUS" multiple></hois-classifier-select>
+          </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column"  >
+          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'reception.application.candidateName' | translate}}</label>
+            <input ng-model="criteria.name" type="text">
+          </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column"  >
+          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'reception.application.candidateIdCode' | translate}}</label>
+            <input ng-model="criteria.idcode" type="text">
+          </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="30" flex-sm="100" flex-xs="100">
+          <md-checkbox ng-model="criteria.showRevoked" aria-label="show revoked">
+            {{'reception.application.showRevoked' | translate}}
+          </md-checkbox>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-xs="100">
+          <md-checkbox ng-model="criteria.addedToDirective" aria-label="added to directive">
+            {{'reception.application.addedToDirective' | translate}}
+          </md-checkbox>
+        </md-input-container>
+      </div>
+
+
+      <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="importFromCsvFile()">{{'main.button.loadCsvFile' | translate}}</md-button>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+        <tr md-row>
+          <th md-column md-order-by="applicationNr">{{'reception.application.nr' | translate}}</th>
+          <th md-column md-order-by="idcode">{{'student.idcode' | translate}}</th>
+          <th md-column md-order-by="firstname">{{'student.firstname' | translate}}</th>
+          <th md-column md-order-by="lastname">{{'student.lastname' | translate}}</th>
+          <th md-column md-order-by="saisAdmission.code">{{'reception.contest.code' | translate}}</th>
+          <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'reception.application.status' | translate}}</th>
+          <th md-column>{{'reception.application.addedToDirective' | translate}}</th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <!--<td md-cell><a ng-href="/#/reception/saisApplication/{{::row.id}}/view">{{::row.applicationNr}}</a></td>-->
+          <td md-cell>{{::row.applicationNr}}</td>
+          <td md-cell>{{::row.idcode}}</td>
+          <td md-cell>{{::row.firstname}}</td>
+          <td md-cell>{{::row.lastname}}</td>
+          <td md-cell>{{::row.saisAdmissionCode}}</td>
+          <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+          <td md-cell>{{(row.addedToDirective ? 'main.yes' : 'main.no') | translate}}</td>
+        </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

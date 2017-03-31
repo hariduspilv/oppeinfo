@@ -4,7 +4,6 @@ import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.StudyYearForm;
 
-import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -16,8 +15,8 @@ public class StudyYearDto extends StudyYearForm {
     private Set<StudyPeriodEventDto> studyPeriodEvents;
 
     public static StudyYearDto of(StudyYear studyYear) {
-        StudyYearDto dto = EntityUtil.bindToDto(studyYear, new StudyYearDto(), "studyPeriods");
-        dto.setStudyPeriodEvents(new HashSet<>());
+        StudyYearDto dto = EntityUtil.bindToDto(studyYear, new StudyYearDto(), "studyPeriods", "studyPeriodEvents");
+        dto.setStudyPeriodEvents(studyYear.getStudyPeriodEvents().stream().map(StudyPeriodEventDto::of).collect(Collectors.toSet()));
         dto.setStudyPeriods(studyYear.getStudyPeriods().stream().map(StudyPeriodDto::of).collect(Collectors.toSet()));
         return dto;
     }

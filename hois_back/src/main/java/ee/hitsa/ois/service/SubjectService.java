@@ -77,13 +77,9 @@ public class SubjectService {
         }
         subject.setSchoolDepartment(schoolDepartment);
         EntityUtil.bindClassifierCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {
-            Classifier language = classifierRepository.getOne(code);
-            if (!MainClassCode.OPPEKEEL.name().equals(language.getMainClassCode())) {
-                throw new IllegalArgumentException("Wrong classifier code: " + language.getMainClassCode());
-            }
             SubjectLanguage subjectLanguage = new SubjectLanguage();
             subjectLanguage.setSubject(subject);
-            subjectLanguage.setLanguage(language);
+            subjectLanguage.setLanguage(EntityUtil.validateClassifier(classifierRepository.getOne(code), MainClassCode.OPPEKEEL));
             return subjectLanguage;
         });
         bindConnections(subject, newSubject);

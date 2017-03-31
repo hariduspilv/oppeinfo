@@ -35,15 +35,15 @@ public class CurriculumModule extends BaseEntityWithId {
 	private Boolean practice;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-	@JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false, insertable = true)
+	@JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false)
 	private Set<CurriculumModuleOccupation> occupations = new HashSet<>();
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false)
     private Set<CurriculumModuleCompetence> competences = new HashSet<>();
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false, insertable = true)
+    @JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false)
     private Set<CurriculumModuleOutcome> outcomes = new HashSet<>();
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)

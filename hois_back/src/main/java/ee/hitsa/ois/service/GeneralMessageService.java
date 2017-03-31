@@ -2,6 +2,7 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
@@ -19,7 +20,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.GeneralMessage;
 import ee.hitsa.ois.domain.GeneralMessageTarget;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -39,7 +39,6 @@ public class GeneralMessageService {
     private static final String SHOW_MESSAGES_FROM = "from general_message g where g.school_id=:schoolId "+
         "and (g.valid_from is null or g.valid_from <= now()) and (g.valid_thru is null or g.valid_thru >= cast(now() as date)) "+
         "and g.id in (select gt.general_message_id from general_message_target gt where gt.role_code in (select u.role_code from user_ u where u.id=:userId))";
-    private static final String SHOW_MESSAGES_SELECT = "g.id, g.title, g.inserted";
 
     @Autowired
     private EntityManager em;
@@ -54,8 +53,8 @@ public class GeneralMessageService {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SHOW_MESSAGES_FROM, pageable);
         qb.parameter("schoolId", user.getSchoolId());
         qb.parameter("userId", user.getUserId());
-        Page<Object[]> messages = JpaQueryUtil.pagingResult(qb.select(SHOW_MESSAGES_SELECT, em), pageable, () -> qb.count(em));
-        return messages.map(d -> new GeneralMessageDto(resultAsLong(d, 0), (String)d[1], resultAsLocalDateTime(d, 2)));
+        Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, "g.id, g.title, g.content, g.inserted", em, pageable);
+        return messages.map(d -> new GeneralMessageDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 3)));
     }
 
     public Page<GeneralMessageDto> search(Long schoolId, GeneralMessageSearchCommand criteria, Pageable pageable) {
@@ -102,14 +101,9 @@ public class GeneralMessageService {
             }
             EntityUtil.bindClassifierCollection(storedTargets, gmt -> EntityUtil.getCode(gmt.getRole()),targetCodes, roleCode -> {
                 // add new link
-                Classifier c = classifierRepository.getOne(roleCode);
-                // verify that domain code is from ROLL and raise IllegalArgumentException if wrong
-                if(!MainClassCode.ROLL.name().equals(c.getMainClassCode())) {
-                    throw new IllegalArgumentException("Wrong classifier code: "+c.getMainClassCode());
-                }
                 GeneralMessageTarget sl = new GeneralMessageTarget();
                 sl.setGeneralMessage(generalMessage);
-                sl.setRole(c);
+                sl.setRole(EntityUtil.validateClassifier(classifierRepository.getOne(roleCode), MainClassCode.ROLL));
                 return sl;
             });
         }

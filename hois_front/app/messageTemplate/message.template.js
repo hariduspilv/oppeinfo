@@ -55,14 +55,12 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
             message.error('main.messages.form-has-errors');
             return;
         }
-        var msg = $scope.record.id ? 'main.messages.update.success' : 'main.messages.create.success';
-        function afterSave() {
-            message.info(msg);
-        }
+
         if($scope.record.id) {
-            $scope.record.$update(afterLoad).then(afterSave);
+            $scope.record.$update(afterLoad).then(message.updateSuccess);
         }else{
-            $scope.record.$save(afterSave).then(function(){
+            $scope.record.$save().then(function() {
+                message.info('main.messages.create.success');
                 $location.path(baseUrl + "/" + $scope.record.id + "/edit");
             });
         }

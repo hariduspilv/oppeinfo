@@ -16,7 +16,9 @@
           <label>{{'studyYear.endDate' | translate}}</label>
           <md-datepicker ng-model="studyYear.endDate" md-min-date="studyYear.startDate" required md-open-on-focus></md-datepicker>
         </md-input-container>
-        <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+        <div>
+          <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+        </div>
       </div>
     </div>
     <div ng-if="studyYear.id" layout="column" flex>
@@ -65,10 +67,10 @@
             </thead>
             <tbody md-body>
             <tr md-row ng-repeat="item in studyPeriodEvents" ng-class-odd="'odd'" ng-class-even="'even'">
-              <td md-cell>{{item.descriptionEn}}</td>
-              <td md-cell>{{item.studyPeriod.nameEn}}</td>
-              <td md-cell>{{item.startDate}}</td>
-              <td md-cell>{{item.endDate}}</td>
+              <td md-cell>{{currentLanguage()==='en' ?(item.descriptionEn || item.descriptionEt) : item.descriptionEt}}</td>
+              <td md-cell>{{currentLanguageNameField(item.studyPeriod)}}</td>
+              <td md-cell>{{'main.formattedDateMinTime' | translate: {date: item.start} }}</td>
+              <td md-cell>{{'main.formattedDateMinTime' | translate: {date: item.end} }}</td>
               <td md-cell ><md-button ng-click="openStudyPeriodEventDialog(item)">{{'main.button.change' | translate}}</md-button></td>
             </tr>
             </tbody>

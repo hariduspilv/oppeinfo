@@ -1,10 +1,13 @@
 package ee.hitsa.ois.web;
 
+import java.util.Map;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +20,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.GeneralMessage;
 import ee.hitsa.ois.service.GeneralMessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -48,8 +52,8 @@ public class GeneralMessageController {
     }
 
     @PostMapping
-    public GeneralMessageDto createGeneralMessage(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
-        return getGeneralMessage(user, generalMessageService.create(user, form));
+    public ResponseEntity<Map<String, ?>> createGeneralMessage(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
+        return HttpUtil.created(generalMessageService.create(user, form));
     }
 
     @PutMapping("/{id:\\d+}")

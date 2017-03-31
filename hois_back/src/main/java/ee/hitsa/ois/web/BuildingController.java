@@ -1,10 +1,13 @@
 package ee.hitsa.ois.web;
 
+import java.util.Map;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -17,6 +20,7 @@ import ee.hitsa.ois.domain.Building;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.service.BuildingService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -41,8 +45,8 @@ public class BuildingController {
     }
 
     @PostMapping("/buildings")
-    public BuildingDto createBuilding(HoisUserDetails user, @Valid @RequestBody BuildingForm form) {
-        return getBuilding(user, buildingService.create(user, form));
+    public ResponseEntity<Map<String, ?>> createBuilding(HoisUserDetails user, @Valid @RequestBody BuildingForm form) {
+        return HttpUtil.created(buildingService.create(user, form));
     }
 
     @PutMapping("/buildings/{id:\\d+}")
@@ -70,14 +74,14 @@ public class BuildingController {
     }
 
     @PostMapping("/rooms")
-    public RoomDto createRoom(HoisUserDetails user, @Valid @RequestBody RoomForm form) {
-        return getRoom(user, buildingService.create(form));
+    public ResponseEntity<Map<String, ?>> createRoom(HoisUserDetails user, @Valid @RequestBody RoomForm form) {
+        return HttpUtil.created(buildingService.create(user, form));
     }
 
     @PutMapping("/rooms/{id:\\d+}")
     public RoomDto updateRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Room room, @Valid @RequestBody RoomForm form) {
         UserUtil.assertSameSchool(user, room.getBuilding().getSchool());
-        return getRoom(user, buildingService.save(room, form));
+        return getRoom(user, buildingService.save(user, room, form));
     }
 
     @DeleteMapping("/rooms/{id:\\d+}")

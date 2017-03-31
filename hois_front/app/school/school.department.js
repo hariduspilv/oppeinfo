@@ -4,10 +4,11 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$locat
 
   function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
     var id = $route.current.params.id;
+    var baseUrl = '/school/departments';
     function afterLoad() {
       DataUtils.convertStringToDates($scope.schoolDepartment, ['validFrom', 'validThru']);
     }
-    var Endpoint = QueryUtils.endpoint('/school/departments');
+    var Endpoint = QueryUtils.endpoint(baseUrl);
     if(id) {
       $scope.schoolDepartment = Endpoint.get({id: id});
       $scope.schoolDepartment.$promise.then(afterLoad);
@@ -24,15 +25,14 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$locat
         message.error('main.messages.form-has-errors');
         return;
       }
-      var msg = $scope.schoolDepartment.id ? 'main.messages.update.success' : 'main.messages.create.success';
-      function afterSave() {
-        message.info(msg);
-        afterLoad();
-      }
+
       if($scope.schoolDepartment.id) {
-        $scope.schoolDepartment.$update().then(afterSave);
+        $scope.schoolDepartment.$update().then(afterLoad).then(message.updateSuccess);
       } else {
-        $scope.schoolDepartment.$save().then(afterSave);
+        $scope.schoolDepartment.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl + '/' + $scope.schoolDepartment.id + '/edit');
+        });
       }
     };
 

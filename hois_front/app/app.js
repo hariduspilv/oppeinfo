@@ -72,5 +72,5 @@ angular
     }
   ]);
 }).config(function (CacheFactoryProvider) {
-  angular.extend(CacheFactoryProvider.defaults, { maxAge: 15 * 60 * 1000, cacheFlushInterval: 60 * 60 * 1000, deleteOnExpire: 'aggressive'});
+  angular.extend(CacheFactoryProvider.defaults, { maxAge: 60 * 60 * 1000, deleteOnExpire: 'passive'});
 });
