@@ -14,6 +14,7 @@ import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.PersonForm;
 import ee.hitsa.ois.web.commandobject.UserForm;
@@ -70,13 +71,13 @@ public class PersonService {
     public Page<UsersSearchDto> search(UsersSeachCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(PERSON_FROM, pageable);
 
-        searchParameters(criteria, qb);
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname","p.firstname || ' ' || p.lastname"), "name", criteria.getName());
 
-        JpaQueryUtil.NativeQueryBuilder count = new JpaQueryUtil.NativeQueryBuilder(PERSON_FROM);
+        qb.optionalCriteria("p.idcode = :idcode", "idcode", criteria.getIdcode());
+        qb.optionalCriteria("roles.ehiscode = :ehiscode", "ehiscode", criteria.getSchool());
+        qb.optionalCriteria(":roll = ANY(roles.roll)", "roll", criteria.getRole());
 
-        searchParameters(criteria, count);
-
-        Page<Object[]> result =  JpaQueryUtil.pagingResult(qb.select(PERSON_SELECT, em), pageable, () -> (Number) count.select(PERSON_COUNT_SELECT,em).getSingleResult());
+        Page<Object[]> result = JpaQueryUtil.pagingResult(qb.select(PERSON_SELECT, em), pageable, () -> qb.count(PERSON_COUNT_SELECT, em));
 
         Set<Long> schoolIds = result.getContent().stream().filter(s -> s[3] != null).map(s -> resultAsLong(s,3)).collect(Collectors.toSet());
 
@@ -97,20 +98,13 @@ public class PersonService {
         });
     }
 
-    private void searchParameters(UsersSeachCommand criteria, JpaQueryUtil.NativeQueryBuilder qb) {
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname","p.firstname || ' ' || p.lastname"), "name", criteria.getName());
-
-        qb.optionalCriteria("p.idcode = :idcode", "idcode", criteria.getIdcode());
-        qb.optionalCriteria("roles.ehiscode = :ehiscode", "ehiscode", criteria.getSchool());
-        qb.optionalCriteria(":roll = ANY(roles.roll)", "roll", criteria.getRole());
-    }
-
     public Person create(PersonForm personForm) {
         return save(personForm, new Person());
     }
 
     public Person save(PersonForm personForm, Person person) {
         EntityUtil.bindToEntity(personForm, person, classifierRepository);
+        person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(personForm.getIdcode()));
         return personRepository.save(person);
     }
 

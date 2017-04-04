@@ -102,36 +102,24 @@ public class ApplicationController {
 
     @PutMapping("/{id:\\d+}/submit")
     public ApplicationDto submit(HoisUserDetails user, @WithEntity(value = "id") Application application) {
-        Student student = application.getStudent();
-        ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
-
-        if (UserUtil.isStudentRepresentative(user, student) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)) {
-            applicationService.submit(user, application);
-        } else if (UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)) {
-            applicationService.submit(user, application);
-        } else {
+        if (!UserUtil.canSubmitApplication(user, application)) {
+            String status = EntityUtil.getCode(application.getStatus());
             throw new HoisBusinessRuleException(String.format("User %s is not allowed to submit application %d with status %s", user.getUsername(), application.getId(), status));
         }
 
-        return get(user, application);
+        return get(user, applicationService.submit(user, application));
     }
 
     @PutMapping("/{id:\\d+}/reject")
     public ApplicationDto reject(HoisUserDetails user, @WithEntity(value = "id") Application application,
             @Valid @RequestBody ApplicationRejectForm applicationRejectForm) {
-        Student student = application.getStudent();
-        ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
 
-        if (UserUtil.isStudentRepresentative(user, student) && ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status)
-                && Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm())) {
-            applicationService.reject(application, applicationRejectForm);
-        } else if (UserUtil.isSchoolAdmin(user, student.getSchool()) && ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.equals(status)) {
-            applicationService.reject(application, applicationRejectForm);
-        } else {
+        if(!UserUtil.canRejectApplication(user, application)) {
+            String status = EntityUtil.getCode(application.getStatus());
             throw new HoisBusinessRuleException(String.format("user %s is not allowed to reject application %d with status %s", user.getUsername(), application.getId(), status));
         }
 
-        return get(user, application);
+        return get(user, applicationService.reject(application, applicationRejectForm));
     }
 
     private static void checkUpdateBusinessRules(HoisUserDetails user, Application application, ApplicationForm applicationForm) {

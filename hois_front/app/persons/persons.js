@@ -61,6 +61,20 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
       return $scope.currentLanguageNameField(item.role);
     };
 
+    var back = function () {
+      $location.path(baseUrl);
+    };
+
+    $scope.personBack = function () {
+      if ($scope.users.length > 0 || $scope.showSchool || !$scope.person.id) {
+        back();
+      } else {
+        dialogService.confirmDialog({prompt: 'person.back'}, function () {
+          back();
+        })
+      }
+    };
+
     $scope.update = function () {
       $scope.personForm.$setSubmitted();
       if ($scope.personForm.$valid) {

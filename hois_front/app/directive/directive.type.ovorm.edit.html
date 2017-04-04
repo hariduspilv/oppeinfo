@@ -21,7 +21,7 @@
           <hois-classifier-select ng-model="row.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" aria-label="{{'directive.student.newStudyForm' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
-          <hois-select ng-model="row.studentGroup" values="formState.studentGroups.content" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <hois-select ng-model="row.studentGroup" values="formState.studentGroups" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
         </td>
         <td md-cell>
           <md-button ng-click="deleteStudent(row.idcode)" md-no-ink class="md-primary change-button">{{'main.button.delete' | translate}}</md-button>

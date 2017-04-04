@@ -51,7 +51,10 @@ public class CurriculumController {
 
 	@GetMapping("/{id:\\d+}")
     public CurriculumDto get(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
-        assertSameOrJoinSchool(user, curriculum);
+	    // External expert can watch curriculum 
+	    if(!user.isExternalExpert()) {
+	        assertSameOrJoinSchool(user, curriculum);
+	    }
         return CurriculumDto.of(curriculum);
     }
 
@@ -143,5 +146,10 @@ public class CurriculumController {
         if (!ehisSchools.contains(EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool()))) {
             throw new AssertionFailedException("EHIS school mismatch");
         }
+    }
+    
+    @GetMapping("/schoolDepartments")
+    public Object getSchoolDepartments(HoisUserDetails user) {
+        return curriculumService.getSchoolDepdartments(user.getSchoolId());
     }
 }

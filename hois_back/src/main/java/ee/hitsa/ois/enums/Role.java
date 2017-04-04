@@ -10,5 +10,7 @@ public enum Role {
     /** student */
     ROLL_T,
     /** External expert */
-    ROLL_V
+    ROLL_V, 
+    /** Teacher */
+    ROLL_O
 }

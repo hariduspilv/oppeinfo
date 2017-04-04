@@ -52,12 +52,6 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
       return resource.get(queryParams, successCallback);
     };
 
-    Classifier.queryAll = function(params, successCallback) {
-      var resource = $resource(config.apiUrl+'/classifier/all');
-      var queryParams = QueryUtils.getQueryParams(params);
-      return resource.query(queryParams, successCallback);
-    };
-
     Classifier.queryForAutocomplete = function(params, successCallback) {
       var resource = $resource(config.apiUrl + '/classifier/getPossibleParentClassifiers');
       var queryParams = QueryUtils.getQueryParams(params);
@@ -81,6 +75,13 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
       function resolve(data) {
         // make copy to avoid modifying cached value
         for(var i = 0, cnt = data.length;i < cnt;i ++)  {
+          // filter data by optional parameters
+          if(params.higher !== undefined && params.higher !== data[i].higher) {
+            continue;
+          }
+          if(params.vocational !== undefined && params.vocational !== data[i].vocational) {
+            continue;
+          }
           result.push(angular.copy(data[i]));
         }
         var order = params.order;

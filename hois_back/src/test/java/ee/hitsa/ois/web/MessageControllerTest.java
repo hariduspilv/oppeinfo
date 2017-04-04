@@ -90,6 +90,8 @@ public class MessageControllerTest {
         Assert.assertNotNull(response.getBody());
         Assert.assertNotNull(response.getBody().getId());
         
+        // TODO: Set read
+        
         // There is no need to test update as we do not edit sent messages
         
         // delete
@@ -97,6 +99,31 @@ public class MessageControllerTest {
         uriBuilder.queryParam("version", version);
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);
+    }
+    
+    @Test
+    public void getParents() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/parents");
+        uriBuilder.queryParam("studentGroupId", Long.valueOf(39));
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void getStudentGroups() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/studentgroups");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void searchPersons() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/persons");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     private MessageForm getForm() {

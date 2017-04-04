@@ -53,7 +53,7 @@ angular.module('hitsaOis')
     };
 
     Curriculum.queryVersions = function() {
-      return QueryUtils.endpoint('/autocomplete/curriculumversions').get();
+      return QueryUtils.endpoint('/autocomplete/curriculumversions').query();
     };
 
     return Curriculum;

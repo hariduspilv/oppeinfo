@@ -57,7 +57,7 @@ public class DirectiveController {
     @GetMapping("/{id:\\d+}/view")
     public DirectiveViewDto getForView(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertSameSchool(user, directive.getSchool());
-        // TODO calculate filter: for admin none, for student itself, for representative all students of same school
+        // TODO calculate filter: for admin none, for student itself, for representative all represented students of same school
         return DirectiveViewDto.of(directive, null);
     }
 

@@ -1,14 +1,12 @@
 package ee.hitsa.ois.web;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -67,12 +65,6 @@ public class ClassifierController {
     @GetMapping("")
     public Page<ClassifierSelection> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
         return classifierService.search(classifierSearchCommand, pageable);
-    }
-
-    @GetMapping("/all")
-    public List<ClassifierSelection> searchAll(ClassifierSearchCommand classifierSearchCommand, Sort sort) {
-        return classifierService.searchAll(classifierSearchCommand, sort)
-                .stream().map(ClassifierSelection::of).collect(Collectors.toList());
     }
 
     @GetMapping("/heads")

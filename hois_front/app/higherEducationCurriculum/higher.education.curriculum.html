@@ -149,11 +149,14 @@
               <textarea ng-model="curriculum.addInfo"  md-maxlength="20000" max-rows="2"></textarea>
             </md-input-container>
 
-            <md-input-container flex>
+            <md-input-container flex ng-if="auth.school">
                 <label>{{'curriculum.structuralUnitResponsible' | translate}}</label>
                 <hois-school-department-select ng-model="curriculum.schoolDepartments" multiple required></hois-school-department-select>
             </md-input-container>
-			
+			<md-input-container flex ng-if="!auth.school">
+                <label>{{'curriculum.structuralUnitResponsible' | translate}}</label>
+                <hois-select ng-model="curriculum.schoolDepartments" multiple values="schoolDepartments"></hois-select>
+            </md-input-container>
 			<div layout="row" class="top-margin">
                 <md-input-container flex>
                     <label>{{'stateCurriculum.enter.comment' | translate}}</label>

@@ -12,6 +12,15 @@ public class StudentGroupSearchCommand {
     private List<Long> curriculumVersion;
     private List<String> studyForm;
     private EntityConnectionCommand teacher;
+    private List<Long> teachers;
+    
+    public List<Long> getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(List<Long> teachers) {
+        this.teachers = teachers;
+    }
 
     public String getCode() {
         return code;

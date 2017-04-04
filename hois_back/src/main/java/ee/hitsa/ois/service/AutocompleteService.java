@@ -7,6 +7,7 @@ import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -27,16 +28,15 @@ import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
@@ -60,8 +60,6 @@ public class AutocompleteService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private CurriculumRepository curriculumRepository;
-    @Autowired
     private PersonRepository personRepository;
     @Autowired
     private SchoolRepository schoolRepository;
@@ -72,14 +70,13 @@ public class AutocompleteService {
     @Autowired
     private StudentGroupRepository studentGroupRepository;
     @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
     private StudyPeriodRepository studyPeriodRepository;
     @Autowired
     private SaisAdmissionRepository saisAdmissionRepository;
 
     public List<AutocompleteResult> buildings(Long schoolId) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from building b");
+
         qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
 
         List<?> data = qb.select("b.id, b.name", em).getResultList();
@@ -101,6 +98,7 @@ public class AutocompleteService {
 
     public List<ClassifierSelection> classifiers(List<String> mainClassCodes) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from classifier c");
+
         qb.requiredCriteria("c.main_class_code in :mainClassCodes", "mainClassCodes", mainClassCodes);
 
         List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value", em).getResultList();
@@ -110,14 +108,21 @@ public class AutocompleteService {
                     resultAsString(r, 7), resultAsString(r, 8))).collect(Collectors.toList());
     }
 
-    public List<AutocompleteResult> curriculums(Long schoolId) {
-        return curriculumRepository.findAllBySchool_id(schoolId);
+    public List<AutocompleteResult> curriculums(Long schoolId, AutocompleteCommand term) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum c");
+
+        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalContains(Language.EN.equals(term.getLang()) ? "c.name_en" : "c.name_et", "name", term.getName());
+
+        List<?> data = qb.select("c.id, c.name_et, c.name_en", em).getResultList();
+        return data.stream().map(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2))).collect(Collectors.toList());
     }
 
     public List<CurriculumVersionResult> curriculumVersions(Long schoolId, Boolean valid) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id "+
                 "left outer join curriculum_study_form sf on cv.curriculum_study_form_id = sf.id");
+
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         if(Boolean.TRUE.equals(valid)) {
             // only valid ones
@@ -135,6 +140,7 @@ public class AutocompleteService {
 
     public List<AutocompleteResult> directiveCoordinators(Long schoolId) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator dc");
+
         qb.requiredCriteria("dc.school_id = :schoolId", "schoolId", schoolId);
 
         List<?> data = qb.select("dc.id, dc.name", em).getResultList();
@@ -157,22 +163,6 @@ public class AutocompleteService {
         return schoolRepository.findAllSchools();
     }
 
-    public Page<AutocompleteResult> teachers(Long schoolId, AutocompleteCommand lookup) {
-        return teacherRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
-
-            List<Predicate> name = new ArrayList<>();
-            propertyContains(() -> root.get("person").get("firstname"), cb, lookup.getName(), name::add);
-            propertyContains(() -> root.get("person").get("lastname"), cb, lookup.getName(), name::add);
-            if(!name.isEmpty()) {
-                filters.add(cb.or(name.toArray(new Predicate[name.size()])));
-            }
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, sortAndLimit("person.lastname", "person.firstname")).map(AutocompleteResult::of);
-    }
-
     /**
      * Values for selecting department. All departments of given school are returned ordered by name(Et|En) field
      * @param schoolId
@@ -181,6 +171,7 @@ public class AutocompleteService {
      */
     public List<AutocompleteResult> schoolDepartments(Long schoolId, SchoolDepartmentAutocompleteCommand criteria) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd");
+
         qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("sd.id != :excludedId", "excludedId", criteria.getExcludedId());
 
@@ -193,6 +184,20 @@ public class AutocompleteService {
         return studentGroupRepository.findAllBySchool_id(schoolId).stream().map(StudentGroupResult::of).collect(Collectors.toList());
     }
 
+    public List<AutocompleteResult> students(Long schoolId, AutocompleteCommand lookup) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+                "from student s inner join person p on s.person_id = p.id", new Sort("p.lastname", "p.firstname"));
+
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname"), "name", lookup.getName());
+
+        List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
+        return data.stream().map(r -> {
+            String name = PersonUtil.fullnameAndIdcode(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }).collect(Collectors.toList());
+    }
+
     public Page<SubjectSearchDto> subjects(Long schoolId, AutocompleteCommand command) {
         SubjectSearchCommand subjectSearchCommand = new SubjectSearchCommand();
         subjectSearchCommand.setName(command.getName());
@@ -200,12 +205,8 @@ public class AutocompleteService {
         return subjectService.search(schoolId, subjectSearchCommand, new PageRequest(0, MAX_ITEM_COUNT));
     }
 
-    private static PageRequest sortAndLimit(String... sortFields) {
-        return new PageRequest(0, MAX_ITEM_COUNT, new Sort(sortFields));
-    }
-
-    public Page<AutocompleteResult> students(Long schoolId, AutocompleteCommand lookup) {
-        return studentRepository.findAll((root, query, cb) -> {
+    public Page<AutocompleteResult> teachers(Long schoolId, AutocompleteCommand lookup) {
+        return teacherRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
 
@@ -231,4 +232,7 @@ public class AutocompleteService {
                 .stream().map(AutocompleteResult::of).collect(Collectors.toList());
     }
 
+    private static PageRequest sortAndLimit(String... sortFields) {
+        return new PageRequest(0, MAX_ITEM_COUNT, new Sort(sortFields));
+    }
 }

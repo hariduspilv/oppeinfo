@@ -264,7 +264,7 @@ public class ApplicationService {
         return result;
     }
 
-    public void submit(HoisUserDetails user, Application application) {
+    public Application submit(HoisUserDetails user, Application application) {
         Student student = application.getStudent();
         if(UserUtil.isSchoolAdmin(user, student.getSchool())) {
             application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
@@ -275,13 +275,13 @@ public class ApplicationService {
         } else {
             application.setNeedsRepresentativeConfirm(Boolean.TRUE);
         }
-        applicationRepository.save(application);
+        return applicationRepository.save(application);
     }
 
-    public void reject(Application application, ApplicationRejectForm applicationRejectForm) {
+    public Application reject(Application application, ApplicationRejectForm applicationRejectForm) {
         application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name()));
         application.setRejectReason(applicationRejectForm.getReason());
-        applicationRepository.save(application);
+        return applicationRepository.save(application);
     }
 
     public ApplicationDto get(HoisUserDetails user, Application application) {

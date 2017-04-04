@@ -38,7 +38,6 @@
             </md-autocomplete>
 
             <!--  view for school admin   -->
-
             <div ng-show="targetGroup && targetGroup === 'ROLL_T' && auth.isAdmin()" layout="column">
                 <md-input-container flex="50" flex-sm="100" flex-xs="100">
                     <label>{{'message.curriculumStudents' | translate}}</label>
@@ -60,15 +59,15 @@
             <md-input-container flex="50" flex-sm="100" flex-xs="100"
             ng-show="targetGroup && targetGroup === 'ROLL_T' && auth.isTeacher()">
                 <label>{{'message.studyGroupStudents' | translate}}</label>
-                <hois-select multiple ng-model="studentGroup" type="studentgroups"></hois-select>
+                <hois-select multiple ng-model="studentGroup" values="studentGroups"></hois-select>
             </md-input-container>
 
             <md-input-container flex="50" flex-sm="100" flex-xs="100"
             ng-show="targetGroup && targetGroup === 'ROLL_L' && auth.isTeacher()">
                 <label>{{'message.studyGroupStudentsParents' | translate}}</label>
-                <hois-select multiple ng-model="studyGroupStudentsParents" type="studentgroups"></hois-select>
-                <!--   values = ...      -->
+                <hois-select multiple ng-model="studyGroupStudentsParents" values="studentGroups"></hois-select>
             </md-input-container>
+            
 
             <h2 ng-class="{invalid: messageNewForm.$submitted && receivers.length === 0}">{{'message.messageReceiver' | translate}} *</h2>
             <table md-table class="secondary-table">

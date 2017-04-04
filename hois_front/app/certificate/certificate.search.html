@@ -55,9 +55,8 @@
             <th md-column md-order-by="c.headline">{{'certificate.headline' | translate}}</th>
             <th md-column md-order-by="c.whom">{{'certificate.whom' | translate}}</th>
             <th md-column md-order-by="c.inserted">{{'certificate.inserted' | translate}}</th>
-            <th md-column md-order-by="" ng-if="!auth.isStudent()">{{'certificate.studentName' | translate}}</th>
+            <th md-column md-order-by="sortablename" ng-if="!auth.isStudent()">{{'certificate.studentName' | translate}}</th>
             <th md-column></th>
-            <!--    student.person.lastname,student.person.firstname     -->
           </tr>
         </thead>
         <tbody md-body>
@@ -69,19 +68,11 @@
             <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
 
             <td md-cell ng-if="!auth.isStudent()">
-                <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{row.studentId}}/main" ng-disabled="!row.studentId">{{::row.studentFullname}}</md-button>
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{row.studentId}}/main?backUrl=certificate" ng-disabled="!row.studentId">{{::row.studentFullname}}</md-button>
             </td>
-
-            <!--<td md-cell>
-                <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.student.id}}/main">{{::row.student.fullname}}</md-button>
-            </td>-->
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
-
-
-
-
           </tr>
         </tbody>
       </table>

@@ -3,7 +3,6 @@ package ee.hitsa.ois.web.commandobject;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.EstonianIdCode;
-import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.validation.NotEmpty;
 
 import javax.validation.constraints.Size;
@@ -39,7 +38,6 @@ public class PersonForm extends VersionedCommand {
 
     public void setIdcode(String idcode) {
         this.idcode = idcode;
-        birthdate = EstonianIdCodeValidator.birthdateFromIdcode(idcode);
     }
 
     public String getFirstname() {

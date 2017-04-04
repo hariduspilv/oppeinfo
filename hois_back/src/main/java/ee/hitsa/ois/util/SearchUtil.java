@@ -57,6 +57,6 @@ public class SearchUtil {
 	}
 
 	public static String toContains(String value) {
-	    return "%" + value.toUpperCase() + "%";
+	    return "%" + value.trim().toUpperCase() + "%";
 	}
 }

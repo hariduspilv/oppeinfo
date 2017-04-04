@@ -35,7 +35,7 @@
     </div>
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
     <md-button ng-if="person.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-    <md-button ng-href="#/persons" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-click="personBack()" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </form>
   <div ng-if="person.id">
     <div layout="row" class="align-center">

@@ -53,8 +53,6 @@ public class CurriculumServiceTest {
     @Autowired
     private CurriculumRepository curriculumRepository;
     @Autowired
-    private CurriculumService curriculumService;
-    @Autowired
     private SchoolRepository schoolRepository;
 
     @BeforeClass
@@ -75,7 +73,7 @@ public class CurriculumServiceTest {
         studyLanguages.add(getValidCurriculumStudyLang(classifierRepository.getOne(LANGUAGES.get(1))));
         c.setStudyLanguages(studyLanguages);
 
-        c = curriculumService.save(c);
+        c = curriculumRepository.save(c);
         Assert.assertNotNull(c);
         Assert.assertNotNull(c.getId());
         Assert.assertNotNull(c.getInserted());
@@ -83,7 +81,7 @@ public class CurriculumServiceTest {
         // update field
         String newName = NAME.concat(NAME);
         c.setNameEt(newName);
-        c = curriculumService.save(c);
+        c = curriculumRepository.save(c);
         Assert.assertEquals(newName, c.getNameEt());
 
         // ....update list of languages
@@ -107,7 +105,7 @@ public class CurriculumServiceTest {
 
 
         // check
-        c = curriculumService.save(c);
+        c = curriculumRepository.save(c);
         Assert.assertEquals(2, c.getStudyLanguages().size());
 
         i = c.getStudyLanguages().iterator();

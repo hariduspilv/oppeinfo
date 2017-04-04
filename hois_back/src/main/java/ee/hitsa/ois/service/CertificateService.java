@@ -57,7 +57,10 @@ public class CertificateService {
 
     private static final String CERTIFICATE_SELECT = "c.id, c.type_code, c.certificate_nr, c.headline, c.whom, c.inserted, "
             + "case when c.student_id is not null then p.firstname || ' ' || p.lastname "
-            + "else c.other_name end as name, c.student_id";
+            + "else c.other_name end as name, c.student_id, "
+            + "case when c.student_id is not null then p.lastname || ' ' || p.firstname "
+            + "else split_part(c.other_name, ' ', 2) || ' ' || split_part(c.other_name, ' ', 1) "
+            + "end as sortablename ";
 
     public Page<CertificateSearchDto> search(HoisUserDetails user, CertificateSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(CERTIFICATE_FROM, pageable);

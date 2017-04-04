@@ -1,6 +1,7 @@
 package ee.hitsa.ois.repository;
 
 import java.math.BigInteger;
+import java.util.List;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -20,4 +21,8 @@ public interface MessageRepository  extends JpaRepository<Message, Long>, JpaSpe
             + "OR s.special_need_code is not null) "
             + "AND  p.id in ?1")
     public Set<BigInteger> getRepresentativePersonIds(Set<Long> receiversIds);
+    
+    @Query(nativeQuery = true, value = ""
+            + "select t.id from teacher t where person_id = ?1 and school_id = ?2")
+    public List<Long> getTeacherIdByPersonAndSchool(Long personId, Long schoolId);
 }

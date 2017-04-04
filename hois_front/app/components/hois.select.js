@@ -34,17 +34,17 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
 
       if(angular.isDefined(attrs.type)) {
         if(attrs.type === 'building') {
-          QueryUtils.endpoint('/autocomplete/buildings').search(afterLoad);
+          scope.options = QueryUtils.endpoint('/autocomplete/buildings').query();
         } else if(attrs.type === 'curriculumversion') {
-          Curriculum.queryVersions().$promise.then(afterLoad);
+          scope.options = Curriculum.queryVersions();
         } else if(attrs.type === 'directivecoordinator') {
-          QueryUtils.endpoint('/autocomplete/directivecoordinators').search(afterLoad);
+          scope.options = QueryUtils.endpoint('/autocomplete/directivecoordinators').query();
         } else if(attrs.type === 'school') {
           scope.options = School.getAll();
         } else if(attrs.type === 'curriculum') {
           QueryUtils.endpoint('/autocomplete/curriculums').search(afterLoad);
         } else if(attrs.type === 'studentgroups') {
-          QueryUtils.endpoint('/autocomplete/studentgroups').search(afterLoad);
+          scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query();
         }
       } else if(angular.isDefined(scope.values)) {
         scope.$parent.$watchCollection(scope.values, function(values) {

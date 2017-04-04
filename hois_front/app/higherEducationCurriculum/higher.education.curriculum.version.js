@@ -6,7 +6,7 @@ angular.module('hitsaOis')
     $scope.removeFromArray = ArrayUtils.remove;
     var baseUrl = '/curriculum';
     $scope.curriculum = $route.current.locals.curriculum;
-    $scope.myEhisSchool = $rootScope.currentUser.school.ehisSchool;
+    $scope.myEhisSchool = $rootScope.currentUser.school ? $rootScope.currentUser.school.ehisSchool : null;
     $scope.ehisSchools = $scope.curriculum.jointPartners.map(function(p){return p.ehisSchool;});
     $scope.ehisSchools.push($scope.myEhisSchool);
 

@@ -34,8 +34,8 @@ angular.module('hitsaOis').directive('hoisSchoolDepartmentSelect', function (Que
           scope.options = scope.optionValues;
         }
       };
-      QueryUtils.endpoint('/autocomplete/schooldepartments').search({}, function(result) {
-        scope.optionValues = result.content.sort(function(a, b) {
+      QueryUtils.endpoint('/autocomplete/schooldepartments').query(function(result) {
+        scope.optionValues = result.sort(function(a, b) {
           var aProp = a.nameEt, bProp = b.nameEt;
           if (aProp < bProp) {
             return -1;

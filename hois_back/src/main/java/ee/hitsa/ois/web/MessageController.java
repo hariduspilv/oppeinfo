@@ -22,11 +22,13 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSeachCommand;
+import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.MessageDto;
 import ee.hitsa.ois.web.dto.MessageReceiverSearchDto;
 import ee.hitsa.ois.web.dto.MessageSearchDto;
 import ee.hitsa.ois.web.dto.UsersSearchDto;
+import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 
 @RestController
 @RequestMapping("/message")
@@ -34,6 +36,12 @@ public class MessageController {
     
     @Autowired
     private MessageService messageService;
+    
+    
+    @GetMapping("/received/mainPage")
+    public Page<MessageSearchDto> searchReceivedForMainPage(HoisUserDetails user, Pageable pageable) {
+        return messageService.show(user, pageable);
+    }
     
     @GetMapping("/sent")
     public Page<MessageSearchDto> searchSent(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
@@ -45,19 +53,6 @@ public class MessageController {
         return messageService.searchReceived(user, criteria, pageable);
     }
     
-    @GetMapping("/received/mainPage")
-    public Page<MessageSearchDto> searchReceivedForMainPage(HoisUserDetails user, Pageable pageable) {
-        return messageService.show(user, pageable);
-    }
-    
-    /**
-     * UsersController.search() is not used as school should not always be set as parameter
-     */
-    @GetMapping("/persons")
-    public Page<UsersSearchDto> search(UsersSeachCommand command, Pageable pageable) {
-        return messageService.searchPersons(command, pageable);
-    }
-
     @GetMapping("/{id:\\d+}")
     public MessageDto get(HoisUserDetails user, @WithEntity("id") Message message) {
         MessageDto dto = MessageDto.of(message);
@@ -83,5 +78,19 @@ public class MessageController {
     @GetMapping("/parents")
     public Page<MessageReceiverSearchDto> getParents(StudentSearchCommand criteria, Pageable pageable) {
         return messageService.getStudentRepresentatives(criteria, pageable);
+    }
+    
+    @GetMapping("/studentgroups")
+    public Page<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, StudentGroupSearchCommand criteria, Pageable pageable) {
+        Page<StudentGroupSearchDto> page = messageService.getStudentGroupsByTeacher(user, criteria, pageable);
+        return page;
+    }
+    
+    /**
+     * UsersController.search() is not used as school should not always be set as parameter
+     */
+    @GetMapping("/persons")
+    public Page<UsersSearchDto> searchPersons(HoisUserDetails user, UsersSeachCommand command, Pageable pageable) {
+        return messageService.searchPersons(user, command, pageable);
     }
 }

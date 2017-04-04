@@ -95,8 +95,11 @@ public abstract class EntityUtil {
                         if(ClassUtils.isAssignable(writeMethod.getParameterTypes()[0], readMethod.getReturnType())) {
                             Object value = readMethod.invoke(command);
                             // FIXME check for CharSequence?
-                            if (value instanceof String && ((String)value).isEmpty()) {
-                                value = null;
+                            if (value instanceof String) {
+                                value = ((String) value).trim();
+                                if(((String)value).isEmpty()) {
+                                    value = null;
+                                }
                             } else if(Boolean.class.equals(tpd.getPropertyType()) && value == null) {
                                 // convert null Booleans to false
                                 value = Boolean.FALSE;

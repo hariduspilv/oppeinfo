@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.EntityUtil.propertyName;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.util.ArrayList;
@@ -18,14 +19,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.repository.ClassifierConnectRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.specification.ClassifierSpecification;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -65,12 +65,37 @@ public class ClassifierService {
         }, pageable, em);
     }
 
-    public Page<ClassifierSelection> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
-        return classifierRepository.findAll(new ClassifierSpecification(classifierSearchCommand), pageable).map(ClassifierSelection::of);
-    }
+    public Page<ClassifierSelection> search(ClassifierSearchCommand cmd, Pageable pageable) {
+        return classifierRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
 
-    public List<Classifier> searchAll(ClassifierSearchCommand classifierSearchCommand, Sort sort) {
-        return classifierRepository.findAll(new ClassifierSpecification(classifierSearchCommand), sort);
+            if(StringUtils.hasText(cmd.getCode())) {
+                filters.add(cb.equal(root.get("code"), cmd.getCode()));
+            }
+
+            propertyContains(() -> root.get("value"), cb, cmd.getValue(), filters::add);
+
+            if(cmd.isHigher() != null) {
+                filters.add(cb.equal(root.get("higher"), cmd.isHigher()));
+            }
+
+            if(cmd.isVocational() != null) {
+                filters.add(cb.equal(root.get("vocational"), cmd.isVocational()));
+            }
+
+            //This must be exact equal for dropdown's
+            if(cmd.getMainClassCode() != null) {
+                filters.add(cb.equal(root.get("mainClassCode"), cmd.getMainClassCode()));
+            }
+
+            if(cmd.getMainClassCodes() != null) {
+                filters.add(root.get("mainClassCode").in(cmd.getMainClassCodes()));
+            }
+
+            propertyContains(() -> root.get(propertyName("name", cmd.getLang())), cb, cmd.getName(), filters::add);
+
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }, pageable).map(ClassifierSelection::of);
     }
 
     public void delete(String code) {

@@ -271,7 +271,11 @@ public abstract class JpaQueryUtil {
         }
 
         public Number count(EntityManager em) {
-            return (Number)buildQuery("count(*)", em, false, null).getSingleResult();
+            return count("count(*)", em);
+        }
+
+        public Number count(String expression, EntityManager em) {
+            return (Number)buildQuery(expression, em, false, null).getSingleResult();
         }
 
         private Query buildQuery(String projection, EntityManager em, boolean ordered, Map<String, Object> additionalParameters) {

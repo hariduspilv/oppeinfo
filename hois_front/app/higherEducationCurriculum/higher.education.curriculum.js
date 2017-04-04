@@ -2,6 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('HigherEducationCurriculumController', function ($scope, Classifier, Curriculum, Session, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, $translate, DataUtils, $rootScope) {
+    $scope.auth = $route.current.locals.auth;
 
     $scope.formView = {
         curriculum: "curriculum",
@@ -37,18 +38,26 @@ angular.module('hitsaOis')
       optionalStudyCredits: 0   //TODO: which version to take when calculating this value? (probably current)
     };
 
+    if(!$scope.auth.school) {
+        QueryUtils.endpoint('/curriculum/schoolDepartments').query().$promise.then(function(response){
+            $scope.schoolDepartments = response;
+        });
+    }
+
     // --- Get and Set Data
     $scope.studyLevels = [];
     function getAllowedStudyLevels() {
-        QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
-            var studyLevelCodes = response.studyLevels;
+        if($scope.auth.school) {
+            QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
+                var studyLevelCodes = response.studyLevels;
 
-            studyLevelCodes.forEach(function(it) {
-                if(isHigherStudyLevel(it)) {
-                    $scope.studyLevels.push({code: it});
-                }
+                studyLevelCodes.forEach(function(it) {
+                    if(isHigherStudyLevel(it)) {
+                        $scope.studyLevels.push({code: it});
+                    }
+                });
             });
-        });
+        }
     }
     getAllowedStudyLevels();
 
@@ -300,8 +309,8 @@ angular.module('hitsaOis')
 
     function getEhisSchoolsSelection() {
         $scope.jointPartnersEhisSchools = [];
-        $scope.myEhisSchool = $rootScope.currentUser.school.ehisSchool;
-        $scope.jointPartnersEhisSchools.push($rootScope.currentUser.school.ehisSchool);
+        $scope.myEhisSchool = $rootScope.currentUser.school ? $rootScope.currentUser.school.ehisSchool : null;
+        $scope.jointPartnersEhisSchools.push($scope.myEhisSchool);
         $scope.curriculum.jointPartners.forEach(function(e){
             if(e.ehisSchool) {
                 $scope.jointPartnersEhisSchools.push(e.ehisSchool);

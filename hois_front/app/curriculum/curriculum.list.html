@@ -1,7 +1,7 @@
 <div class="ois-form-layout-padding">
   <div flex>
   <form layout="column" ng-cloak  ng-submit="loadData()" 	class="nomargin" >
-      <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!disableSchoolSelection">
+      <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!auth.school">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'school.label' | translate}}</label>
               <hois-school-select ng-model="criteria.school" multiple></hois-school-select>
@@ -11,7 +11,7 @@
             <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code" show-only-values="studyLevelCodes" ></hois-classifier-select>
           </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column"  ng-if="disableSchoolSelection">
+      <div layout="row" layout-sm="column" layout-xs="column"  ng-if="auth.school">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'curriculum.studyLevel' | translate}}</label>
             <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code" show-only-values="studyLevelCodes" ></hois-classifier-select>
@@ -102,10 +102,20 @@
                 </md-input-container>
           </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin">
+      <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin" ng-if="auth.school">
           <md-input-container flex="100" flex-sm="100" flex-xs="100">
               <label>{{'school.department.department' | translate}}</label>
               <hois-school-department-select ng-model="criteria.department" multiple></hois-school-department-select>
+          </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin" ng-if="!auth.school">
+          <md-input-container flex="100" flex-sm="100" flex-xs="100">
+              <label>{{'school.department.department' | translate}}</label>
+              <md-select ng-model="criteria.department" multiple>
+                    <md-option ng-repeat="option in schoolDepartments | orderBy: currentLanguageNameField()" ng-value="option.id">
+                        {{currentLanguageNameField(option)}}
+                    </md-option>
+              </md-select>
           </md-input-container>
       </div>
 	  <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin">
@@ -127,7 +137,7 @@
     <table md-table md-progress="tabledata.$promise">
     <thead md-head md-order="criteria.order" md-on-reorder="loadData">
     <tr md-row>
-        <th md-column md-order-by="schoolName" ng-if="!disableSchoolSelection">{{'school.label' | translate}}</th>
+        <th md-column md-order-by="school.{{currentLanguageNameField()}}" ng-if="!auth.school">{{'school.label' | translate}}</th>
         <th md-column md-order-by="{{currentLanguageNameField()}}">{{'curriculum.name' | translate}}</th>
         <th md-column md-order-by="origStudyLevel">{{'curriculum.studyLevel' | translate}}</th>
         <th md-column md-order-by="credits">{{'curriculum.creditsEapEkap' | translate}}</th>
@@ -139,7 +149,7 @@
     </thead>
     <tbody md-body>
     <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell ng-if="!disableSchoolSelection">{{row.school.nameEt}}</td>
+        <td md-cell ng-if="!auth.school">{{row.school.nameEt}}</td>
         <td md-cell><a href="" ng-click="view(row)">{{currentLanguageNameField(row)}}</a></td>
         <td md-cell>{{currentLanguageNameField(row.origStudyLevel)}}</td>
         <td md-cell>{{::row.credits}}</td>

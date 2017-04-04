@@ -857,7 +857,8 @@
     "phone": "Isiklik kontakttelefon",
     "email": "Isiklik e-posti aadress",
     "exists": "Isik juba eksisteerib",
-    "deleteconfirm": "Kas oled kindel, et soovid isikut kustutada?"
+    "deleteconfirm": "Kas oled kindel, et soovid isikut kustutada?",
+    "back": "Isik ei ole leitav kasutajana kui tal ei ole kasutajarolli, kas soovite jätkata?"
   },
   "occupation": {
     "addAquiredOccupation": "Omandatava kutse lisamine",

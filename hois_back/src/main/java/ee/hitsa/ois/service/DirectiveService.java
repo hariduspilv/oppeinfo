@@ -42,6 +42,7 @@ import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.SaisApplicationStatus;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
@@ -58,6 +59,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.SearchUtil;
+import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -251,8 +253,8 @@ public class DirectiveService {
 
     public List<DirectiveStudentDto> loadStudents(Long schoolId, DirectiveDataCommand cmd) {
         if(isSais(cmd.getType())) {
-            // TODO if type is immat (vastuvõtt), use sais application for filling student data
-            return Collections.emptyList();
+            // if type is immat (vastuvõtt), use sais application for filling student data
+            return saisLoadStudents(schoolId, cmd);
         }
 
         List<Long> studentIds = cmd.getStudents();
@@ -298,8 +300,8 @@ public class DirectiveService {
 
     public List<DirectiveStudentSearchDto> searchStudents(Long schoolId, DirectiveStudentSearchCommand criteria) {
         if(isSais(criteria.getType())) {
-            // if type is immat (vastuvõtt), use sais application for filling student data
-            return saisSearchStudents(schoolId, criteria);
+            // if type is immat (vastuvõtt), then there is no persion selection
+            return Collections.emptyList();
         }
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
@@ -362,23 +364,22 @@ public class DirectiveService {
         }).collect(Collectors.toList());
     }
 
-    private List<DirectiveStudentSearchDto> saisSearchStudents(Long schoolId, DirectiveStudentSearchCommand criteria) {
+    private List<DirectiveStudentDto> saisLoadStudents(Long schoolId, DirectiveDataCommand cmd) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from sais_application sa inner join sais_admission ad on sa.sais_admission_id = ad.id "+
                 "inner join curriculum_version cv on ad.curriculum_version_id = cv.id inner join curriculum c on cv.curriculum_id = c.id",
                 new Sort("sa.lastname", "sa.firstname"));
 
+        // TODO criteria (curriculum, studyLevel)
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
-        qb.optionalContains("sa.firstname", "firstname", criteria.getFirstname());
-        qb.optionalContains("sa.lastname", "lastname", criteria.getLastname());
-        qb.optionalCriteria("sa.idcode = :idcode", "idcode", criteria.getIdcode());
-        qb.optionalCriteria("sa.idcode not in (select ds.idcode from directive_student ds where ds.directive_id = :directiveId)", "directiveId", criteria.getDirective());
+        // qb.optionalCriteria("sa.idcode not in (select ds.idcode from directive_student ds where ds.directive_id = :directiveId)", "directiveId", criteria.getDirective());
 
-        // TODO application status
+        // application status
+        qb.requiredCriteria("sa.status_code = : status", "status", SaisApplicationStatus.SAIS_AVALDUSESTAATUS_T.name());
 
         List<?> data = qb.select("sa.id, sa.firstname, sa.lastname, sa.idcode", em).setMaxResults(STUDENTS_MAX).getResultList();
         return data.stream().map(r -> {
-            DirectiveStudentSearchDto dto = new DirectiveStudentSearchDto();
+            DirectiveStudentDto dto = new DirectiveStudentDto();
             dto.setId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             dto.setIdcode(resultAsString(r, 3));
@@ -450,6 +451,7 @@ public class DirectiveService {
                 person.setIdcode(idcode);
                 person.setFirstname(formStudent.getFirstname());
                 person.setLastname(formStudent.getLastname());
+                person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
                 person = personRepository.save(person);
             }
             student.setPerson(person);

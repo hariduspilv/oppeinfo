@@ -1,11 +1,14 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -73,6 +76,7 @@ import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
@@ -119,10 +123,6 @@ public class CurriculumService {
 		return curriculumDepartmentRepository.findAll();
 	}
 
-    public Curriculum save(Curriculum curriculum) {
-        return curriculumRepository.save(curriculum);
-    }
-
     public void delete(Curriculum curriculum) {
         EntityUtil.deleteEntity(curriculumRepository, curriculum);
     }
@@ -167,9 +167,9 @@ public class CurriculumService {
             if(schoolId != null) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }
-//            else if(!CollectionUtils.isEmpty(criteria.getSchool())) {
-//                filters.add(root.get("school").get("id").in(criteria.getSchool()));
-//            }
+            else if(!CollectionUtils.isEmpty(criteria.getSchool())) {
+                filters.add(root.get("school").get("id").in(criteria.getSchool()));
+            }
             if(!CollectionUtils.isEmpty(criteria.getStatus())) {
                 filters.add(root.get("status").get("code").in(criteria.getStatus()));
             }
@@ -309,15 +309,8 @@ public class CurriculumService {
               newSpec = curriculumSpecialityRepository.save(newSpec);
               newSpec.setReferenceNumber(oldRefNum);
               newSavedSpecs.add(newSpec);
-              
-//              Long newRefNum = newSpec.getReferenceNumber();
-//              if(dto.getSpecialitiesReferenceNumbers().contains(oldRefNum)) {
-//                  dto.getSpecialitiesReferenceNumbers().remove(oldRefNum);
-//                  dto.getSpecialitiesReferenceNumbers().add(newRefNum);
-//              }
             }
             curriculum.getSpecialities().addAll(newSavedSpecs);
-//            curriculum = curriculumRepository.save(curriculum);
         }
     }
 
@@ -816,4 +809,66 @@ public class CurriculumService {
     public void deleteVersion(CurriculumVersion curriculumVersion) {
         EntityUtil.deleteEntity(curriculumVersionRepository, curriculumVersion);
     }
+    
+    /**
+     * TODO: Used in curriculum search & curriculum view for external expert. 
+     * Front-end filtering by schoolId is not yet implemented.
+     */
+    @SuppressWarnings("unchecked")
+    public Object getSchoolDepdartments(Long schoolId) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder
+                ("from school_department sd inner join school s on s.id = sd.school_id");
+        qb.optionalCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
+        return qb.select("sd.id, sd.name_et, sd.name_en, sd.school_id, s.code", em).getResultList()
+                .stream().map(r -> {
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", resultAsLong(r, 0));
+            response.put("nameEt", resultAsString(r, 1));
+            response.put("nameEn", resultAsString(r, 2));
+            response.put("schoolId", resultAsLong(r, 3));
+            response.put("schoolCode", resultAsString(r, 4));
+            return response;
+        }).collect(Collectors.toList());
+    }
+    
+    /**
+     * TODO: possible solution in case filtering by school will be required. 
+     * When schools' selection changes, new query for schoolDepts is made
+     * 
+     * Currently not used
+     */
+    @SuppressWarnings("unchecked")
+    public Object getAllSchoolDepartments(Long schoolId) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder
+                ("from school_department sd");
+        qb.optionalCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
+        return qb.select("sd.id, sd.name_et, sd.name_en", em).getResultList()
+                .stream().map(r -> {
+            return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1),resultAsString(r, 2));
+        }).collect(Collectors.toList());
+    }
+    
+    /**
+     * Not currently used.
+     * May be required later in case study levels should be filtered by school 
+     */
+    @SuppressWarnings("unchecked")
+    public Object getStudyLevels() {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder
+                (" from school_study_level ssl "
+                        + "inner join classifier c on c.code = ssl.study_level_code "
+                        + " group by ssl.study_level_code, c.name_et, c.name_en ");
+        return qb.select(" ssl.study_level_code, c.name_et, c.name_en, array_to_string(array_agg(ssl.school_id), ',', '*')", em).getResultList()
+                .stream().map(r -> {
+            Map<String, Object> response = new HashMap<>();
+            response.put("code", resultAsString(r, 0));
+            response.put("nameEt", resultAsString(r, 1));
+            response.put("nameEn", resultAsString(r, 2));
+            List<Integer> schools = Arrays.asList(resultAsString(r, 3).split(",")).stream().map(v -> {
+                return Integer.parseInt(v);
+            }).collect(Collectors.toList());
+            response.put("schools", schools);
+            return response;
+        }).collect(Collectors.toList());    
+   }
 }

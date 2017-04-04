@@ -89,6 +89,7 @@ public class StudentGroupService {
         qb.optionalCriteria("sg.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalCriteria("sg.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("sg.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
+        qb.optionalCriteria("sg.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeachers());
 
         return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();

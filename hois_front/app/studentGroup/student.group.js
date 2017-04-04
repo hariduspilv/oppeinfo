@@ -8,16 +8,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
 
     var school = Session.school || {};
     var onlyhigher = school.higher && !school.vocational;
-    $scope.formState = {allCurriculumVersions: [], curriculumVersions: [],
+    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions(), curriculumVersions: [],
                         studyForms: [], curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyhigher: onlyhigher};
-
-    Curriculum.queryVersions().$promise.then(function(result) {
-      var data = result.content;
-      var curriculums = $scope.formState.allCurriculumVersions;
-      for(var i = 0, cnt = data.length; i < cnt; i++)  {
-        curriculums.push(data[i]);
-      }
-    });
 
     if(onlyhigher) {
       $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionHigher';

@@ -25,7 +25,7 @@
         <td md-cell><input type="text" ng-readonly="row._found" ng-model="row.firstname"></td>
         <td md-cell><input type="text" ng-readonly="row._found" ng-model="row.lastname"></td>
         <td md-cell>
-          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersions.content" aria-label="{{'directive.student.curriculumVersion' | translate}}"></hois-select>
+          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersions" aria-label="{{'directive.student.curriculumVersion' | translate}}"></hois-select>
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS" aria-label="{{'directive.student.studyLoad' | translate}}"></hois-classifier-select>
@@ -43,7 +43,7 @@
           <hois-classifier-select ng-model="row.language" model-value-attr="code" main-classifier-code="OPPEKEEL" aria-label="{{'directive.student.language' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
-          <hois-select ng-model="row.studentGroup" values="formState.studentGroups.content" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <hois-select ng-model="row.studentGroup" values="formState.studentGroups" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.previousStudyLevel" model-value-attr="code" main-classifier-code="OPPEASTE" aria-label="{{'directive.student.previousStudyLevel' | translate}}"></hois-classifier-select>

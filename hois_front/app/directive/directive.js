@@ -40,7 +40,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
         $scope.formState.curriculumVersions = Curriculum.queryVersions();
       }
       if(type === 'KASKKIRI_ENNIST' || type === 'KASKKIRI_IMMAT' || type === 'KASKKIRI_OKAVA' || type === 'KASKKIRI_OVORM') {
-        $scope.formState.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').search();
+        $scope.formState.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').query();
       }
       if(type === 'KASKKIRI_AKAD') {
         $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();

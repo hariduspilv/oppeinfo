@@ -94,7 +94,7 @@ public class ClassifierControllerTests {
 		Assert.assertNotNull(updatedClassifier.getChanged());
 		Assert.assertNotEquals(updatedClassifier.getInserted(), updatedClassifier.getChanged());
 	}
-	
+
 	@Test
 	public void testSearch() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier").build().toUriString();
@@ -102,15 +102,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
-	@Test
-	public void testSearchAll() {
-    	String uri = UriComponentsBuilder.fromUriString("/classifier/all").build().toUriString();
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-	}
-	
+
 	@Test
 	public void testSearchTables() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier/heads").build().toUriString();
@@ -118,7 +110,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
+
 	@Test
 	public void testGetPossibleParentClassifiers() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/classifier/getPossibleParentClassifiers");
@@ -139,7 +131,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
+
 	@Test
 	public void testGetParents() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier/parents/ISCED_SUUN_018").build().toUriString();
@@ -147,7 +139,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
+
 	@Test
 	public void testGetChildren() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier/children/ISCED_SUUN_018").build().toUriString();
@@ -163,7 +155,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
+
 	@Test
 	public void testGetPossibleConnections() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier/connections/OPPEASTE").build().toUriString();

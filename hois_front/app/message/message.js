@@ -26,7 +26,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         resolve: {translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
         }
       }).when('/message/:id/respond', {
         templateUrl: 'message/message.respond.html',
@@ -35,7 +35,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         resolve: {translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
         }
       }).when('/message/new', {
         templateUrl: 'message/message.new.html',
@@ -168,8 +168,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     $scope.curriculum = [];
     $scope.studyGroupStudentsParents = [];
 
+    var studentGroupSearchUrl = $scope.auth.isAdmin() ? '/studentgroups' : '/message/studentgroups';
+
     function getStudentGroups() {
-        $resource(config.apiUrl + '/studentgroups', {curriculums: $scope.curriculum, studyForm: $scope.studyForm, size: 1000, sort: 'code'}).get().$promise.then(function(response){
+        $resource(config.apiUrl + studentGroupSearchUrl, {curriculums: $scope.curriculum, studyForm: $scope.studyForm, size: 1000, sort: 'code'}).get().$promise.then(function(response){
             $scope.studentGroups = response.content.map(function(sg){
                 return {
                     id: sg.id,
@@ -343,7 +345,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     }
 
     $scope.querySearch = function (text) {
-        var lookup = QueryUtils.endpoint('/message/persons');
+        var url = '/message/persons';
+        var lookup = QueryUtils.endpoint(url);
         var deferred = $q.defer();
         lookup.search({
             role: $scope.targetGroup,

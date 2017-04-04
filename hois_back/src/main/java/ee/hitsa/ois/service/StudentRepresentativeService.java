@@ -34,6 +34,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SearchUtil;
+import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationDeclineForm;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationForm;
 import ee.hitsa.ois.web.commandobject.student.StudentRepresentativeApplicationSearchCommand;
@@ -88,6 +89,7 @@ public class StudentRepresentativeService {
         } else {
             // add new person
             p = EntityUtil.bindToEntity(personForm, new Person());
+            p.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(p.getIdcode()));
         }
         p = personRepository.save(p);
         if(representative.getPerson() != p) {

@@ -43,9 +43,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   function curriculumVersionChange(student) {
     var CurriculumVersionsEndpoint = QueryUtils.endpoint('/autocomplete/curriculumversions');
     //TODO: valid to true
-    CurriculumVersionsEndpoint.get({valid: false}, function(result) {
-      $scope.curriculumVersions = result.content;
-    });
+    $scope.curriculumVersions = CurriculumVersionsEndpoint.query({valid: false});
     $scope.application.oldStudyForm = student.studyForm;
     $scope.application.oldCurriculumVersion = student.curriculumVersion;
   }

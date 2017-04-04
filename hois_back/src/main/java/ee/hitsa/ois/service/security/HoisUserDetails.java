@@ -67,6 +67,14 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     public boolean isMainAdmin() {
         return Role.ROLL_P.name().equals(role);
     }
+    
+    public boolean isParent() {
+        return Role.ROLL_L.name().equals(role);
+    }
+    
+    public boolean isTeacher() {
+        return Role.ROLL_O.name().equals(role);
+    }
 
     public String getRole() {
         return role;

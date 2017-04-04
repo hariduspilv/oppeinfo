@@ -2,7 +2,6 @@ package ee.hitsa.ois.web;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -11,14 +10,12 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
@@ -39,8 +36,8 @@ public class AutocompleteController {
     private AutocompleteService autocompleteService;
 
     @GetMapping("/buildings")
-    public Page<AutocompleteResult> buildings(HoisUserDetails user) {
-        return asPage(autocompleteService.buildings(user.getSchoolId()));
+    public List<AutocompleteResult> buildings(HoisUserDetails user) {
+        return autocompleteService.buildings(user.getSchoolId());
     }
 
     @GetMapping("/classifiers")
@@ -55,24 +52,17 @@ public class AutocompleteController {
 
     @GetMapping("/curriculums")
     public Page<AutocompleteResult> curriculums(HoisUserDetails user, AutocompleteCommand term) {
-        // TODO do filtering in query
-        List<AutocompleteResult> curriculums = autocompleteService.curriculums(user.getSchoolId());
-        if(StringUtils.hasText(term.getName())) {
-            String searchTerm = term.getName().toUpperCase();
-            Language lang = term.getLang();
-            curriculums = curriculums.stream().filter(r -> (Language.EN.equals(lang) ? r.getNameEn() : r.getNameEt()).toUpperCase().contains(searchTerm)).collect(Collectors.toList());
-        }
-        return asPage(curriculums);
+        return asPage(autocompleteService.curriculums(user.getSchoolId(), term));
     }
 
     @GetMapping("/curriculumversions")
-    public Page<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
-        return asPage(autocompleteService.curriculumVersions(user.getSchoolId(), valid));
+    public List<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
+        return autocompleteService.curriculumVersions(user.getSchoolId(), valid);
     }
 
     @GetMapping("/directivecoordinators")
-    public Page<AutocompleteResult> directiveCoordinators(HoisUserDetails user) {
-        return asPage(autocompleteService.directiveCoordinators(user.getSchoolId()));
+    public List<AutocompleteResult> directiveCoordinators(HoisUserDetails user) {
+        return autocompleteService.directiveCoordinators(user.getSchoolId());
     }
 
     @GetMapping("/persons")
@@ -87,13 +77,13 @@ public class AutocompleteController {
     }
 
     @GetMapping("/schooldepartments")
-    public Page<AutocompleteResult> schoolDepartments(HoisUserDetails user, SchoolDepartmentAutocompleteCommand criteria) {
-        return asPage(autocompleteService.schoolDepartments(user.getSchoolId(), criteria));
+    public List<AutocompleteResult> schoolDepartments(HoisUserDetails user, SchoolDepartmentAutocompleteCommand criteria) {
+        return autocompleteService.schoolDepartments(user.getSchoolId(), criteria);
     }
 
     @GetMapping("/studentgroups")
-    public Page<StudentGroupResult> studentGroups(HoisUserDetails user) {
-        return asPage(autocompleteService.studentGroups(user.getSchoolId()));
+    public List<StudentGroupResult> studentGroups(HoisUserDetails user) {
+        return autocompleteService.studentGroups(user.getSchoolId());
     }
 
     @GetMapping("/subjects")
@@ -108,7 +98,7 @@ public class AutocompleteController {
 
     @GetMapping("/students")
     public Page<AutocompleteResult> students(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
-        return autocompleteService.students(user.getSchoolId(), lookup);
+        return asPage(autocompleteService.students(user.getSchoolId(), lookup));
     }
 
     @GetMapping("/studyPeriods")

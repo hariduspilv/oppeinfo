@@ -268,9 +268,7 @@ angular.module('hitsaOis')
     };
 
     if(params.mainClassCode || params.mainClassCodes) {
-      var paramsCount = Object.keys(params).length;
-      var query = paramsCount === 1 || (paramsCount === 2 && params.order) ? Classifier.queryForDropdown : Classifier.queryAll;
-      query(params, function(arrayResult) {
+      Classifier.queryForDropdown(params, function(arrayResult) {
         arrayResult.forEach(function(classifier) {
           var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
           optionsByCode[option.code] = option;

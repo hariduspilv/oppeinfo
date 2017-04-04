@@ -20,7 +20,7 @@
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{currentLanguageNameField(row.oldCurriculumVersion)}}</td>
         <td md-cell>
-          <hois-select ng-model="row.studentGroup" values="formState.studentGroups.content" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <hois-select ng-model="row.studentGroup" values="formState.studentGroups" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.oldStudyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
