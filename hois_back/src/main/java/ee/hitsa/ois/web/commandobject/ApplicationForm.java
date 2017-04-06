@@ -12,6 +12,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.validation.StudyPeriodRange;
+import ee.hitsa.ois.web.dto.ApplicationDto;
 import ee.hitsa.ois.web.dto.ApplicationFileDto;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -67,7 +68,7 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     private LocalDate endDate;
     private Long studyPeriodStart;
     private Long studyPeriodEnd;
-    private Long academicApplication;
+    private ApplicationDto academicApplication;
 
     private LocalDateTime submitted;
 
@@ -245,11 +246,11 @@ public class ApplicationForm extends InsertedChangedVersionDto {
         this.studyPeriodEnd = studyPeriodEnd;
     }
 
-    public Long getAcademicApplication() {
+    public ApplicationDto getAcademicApplication() {
         return academicApplication;
     }
 
-    public void setAcademicApplication(Long academicApplication) {
+    public void setAcademicApplication(ApplicationDto academicApplication) {
         this.academicApplication = academicApplication;
     }
 

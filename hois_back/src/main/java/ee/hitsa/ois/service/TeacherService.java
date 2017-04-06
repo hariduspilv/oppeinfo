@@ -13,7 +13,6 @@ import java.util.stream.Collectors;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
-import ee.hitsa.ois.web.dto.TeacherSearchDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -42,6 +41,7 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.TeacherForm;
 import ee.hitsa.ois.web.commandobject.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherDto;
+import ee.hitsa.ois.web.dto.TeacherSearchDto;
 
 @Transactional
 @Service
@@ -66,7 +66,7 @@ public class TeacherService {
 
     public TeacherDto save(HoisUserDetails user, Teacher teacher, TeacherForm teacherForm) {
         if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
-            throw new ValidationFailedException(null, "teacher-vocational-higher");
+            throw new ValidationFailedException("teacher-vocational-higher");
         }
         String nativeLanguage = teacherForm.getPerson().getNativeLanguage();
         if (Boolean.TRUE.equals(teacherForm.getIsVocational()) && !StringUtils.hasText(nativeLanguage)) {

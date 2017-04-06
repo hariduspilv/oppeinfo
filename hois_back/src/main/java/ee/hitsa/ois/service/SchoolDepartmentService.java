@@ -54,10 +54,8 @@ public class SchoolDepartmentService {
         LocalDate now = LocalDate.now();
         Set<Long> filtered = structure.stream().filter(sdt -> {
             String code = criteria.getCode();
-            if(StringUtils.hasText(code)) {
-                if(!code.equalsIgnoreCase(sdt.getCode())) {
-                    return false;
-                }
+            if(StringUtils.hasText(code) && !code.equalsIgnoreCase(sdt.getCode())) {
+                return false;
             }
             String name = criteria.getName();
             if(StringUtils.hasText(name)) {

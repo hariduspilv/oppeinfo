@@ -13,4 +13,5 @@ public interface DirectiveRepository extends JpaRepository<Directive, Long>, Jpa
     @Query("select d from Directive d join d.students s where s.student.id=?1")
     Page<Directive> findAllByStudent_id(Long studentId, Pageable pageable);
 
+    Boolean existsByCanceledDirectiveId(Long canceledDirectiveId);
 }

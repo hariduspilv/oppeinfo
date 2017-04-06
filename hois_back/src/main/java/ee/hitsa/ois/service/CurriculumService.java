@@ -2,7 +2,6 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -70,6 +69,7 @@ import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
@@ -96,6 +96,12 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeCap
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleYearCapacityDto;
 
+import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+
+
 @Transactional
 @Service
 public class CurriculumService {
@@ -119,13 +125,79 @@ public class CurriculumService {
     @Autowired
     private CurriculumSpecialityRepository curriculumSpecialityRepository;
 
-	public List<CurriculumDepartment> findAllDepartments() {
-		return curriculumDepartmentRepository.findAll();
-	}
-
-    public void delete(Curriculum curriculum) {
-        EntityUtil.deleteEntity(curriculumRepository, curriculum);
-    }
+    /*
+     * Left joins should be removed and corresponding conditions moved to where clause
+     */
+//    private static String CURRICULUM_FROM = ""
+//            + "from curriculum c "
+//            + "inner join school on school.id = c.school_id "
+//            + "left join classifier_connect cc1 on cc1.classifier_code = c.orig_study_level_code "
+//            + "inner join classifier orig_study_level on orig_study_level.code = c.orig_study_level_code "
+//            + "inner join classifier status on status.code = c.status_code "
+//            + "left join classifier_connect cc2 on cc2.classifier_code = c.isced_class_code "
+//            + "left join classifier_connect cc3 on cc3.classifier_code = cc2.connect_classifier_code"
+//            ;
+//    private static String CURRICULUM_SELECT = 
+//            "distinct c.id, c.name_et, c.name_en, "
+//            + "c.orig_study_level_code, c.credits, c.valid_from, c.valid_thru, "
+//            + "c.status_code, c.is_higher, "
+//            + "school.id as schoolId, school.name_et as schoolNameEt, school.name_en as schoolNameEn,"
+//            + "orig_study_level.name_et as stLevNameEt, orig_study_level.name_en as stLevNameEn, "
+//            + "status.name_et as statusNameEt, status.name_en as statusNameEn ";
+    
+//    public Page<CurriculumSearchDto> search(Long schoolId, CurriculumSearchCommand criteria, Pageable pageable) {
+//        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(CURRICULUM_FROM, pageable);
+//        qb.optionalContains(Arrays.asList("c.name_et", "c.name_en"), "name", criteria.getName());
+//        qb.optionalCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+//        qb.optionalCriteria("c.credits >= :creditsMin", "creditsMin", criteria.getCreditsMin());
+//        qb.optionalCriteria("c.credits <= :creditsMax", "creditsMax", criteria.getCreditsMax());
+//        qb.optionalCriteria("c.school_id in (:schoolIds)", "schoolIds", criteria.getSchool());
+//        qb.optionalCriteria("c.status_code in (:statusCodes)", "statusCodes", criteria.getStatus());
+//        qb.optionalCriteria("c.ehis_status_code in (:ehisStatusCodes)", "ehisStatusCodes", criteria.getEhisStatus());
+//        qb.optionalCriteria("c.orig_study_level_code in (:studyLevel)", "studyLevel", criteria.getStudyLevel());
+//        qb.optionalCriteria("cc1.connect_classifier_code in (:ektLevel)", "ektLevel", criteria.getEkrLevel());
+//        qb.optionalContains("c.code", "code", criteria.getCode());
+//        qb.optionalContains("c.mer_code", "merCode", criteria.getMerCode());
+//        qb.optionalCriteria("c.valid_from >= :validFrom", "validFrom", criteria.getValidFrom(), DateUtils::firstMomentOfDay);
+//        qb.optionalCriteria("c.valid_thru <= :validThru", "validThru", criteria.getValidThru(), DateUtils::lastMomentOfDay);
+//        qb.optionalCriteria("c.isced_class_code in (:iscedClass)", "iscedClass", criteria.getIscedClassCode());
+//        qb.optionalCriteria("c.group_code in (:curriculumGroup)", "curriculumGroup", criteria.getCurriculumGroup());
+//        /**
+//         * While in vocational curriculum in isced_class_code column are only saved 
+//         * classifiers with main_class_code = 'ISCED_RYHM', in case higher education curriculum it may be whether 
+//         * 'ISCED_SUUN' or 'ISCED_VALD' (or empty).
+//         * Thus isced_suun may be isced_class or it's parent
+//         * and isced_vald may be isced_class, it's parent or grand parent
+//         *  
+//         * PS: Parents are classifiers connected to classifier with classifier_connect table 
+//         * and referenced by connect_classifier_code column.
+//         */
+//        qb.optionalCriteria("(cc2.connect_classifier_code in (:iscedSuun) OR c.isced_class_code in (:iscedSuun))", "iscedSuun", criteria.getIscedSuun());
+//        qb.optionalCriteria("(cc3.connect_classifier_code = :iscedVald OR c.isced_class_code = :iscedVald OR cc2.connect_classifier_code = :iscedVald)", "iscedVald", criteria.getIscedVald());
+//        
+//        qb.optionalCriteria("exists (select id from curriculum_department where curriculum_id = c.id and school_department_id in(:departments))", "departments", criteria.getDepartment());
+//        qb.optionalCriteria("exists (select id from curriculum_study_lang where curriculum_id = c.id and study_lang_code in(:studyLangs))", "studyLangs", criteria.getStudyLanguage());
+//        
+//        if(criteria.getIsJoint() != null && criteria.getIsJoint().equals(Boolean.TRUE)) {
+//            qb.filter("c.is_joint");
+//        }
+//        Page<Object[]> curriculums = JpaQueryUtil.pagingResult(qb, CURRICULUM_SELECT, em, pageable);
+//        return curriculums.map(c -> {
+//            CurriculumSearchDto dto = new CurriculumSearchDto();
+//            dto.setId(resultAsLong(c, 0));
+//            dto.setNameEt(resultAsString(c, 1));
+//            dto.setNameEn(resultAsString(c, 2));
+//            dto.setOrigStudyLevel(resultAsString(c, 3));
+//            dto.setCredits(resultAsLong(c, 4));
+//            dto.setValidFrom(resultAsLocalDate(c,  5));
+//            dto.setValidThru(resultAsLocalDate(c,  6));
+//            dto.setStatus(resultAsString(c, 7));
+//            dto.setHigher(resultAsBoolean(c, 8));
+//            AutocompleteResult school = new AutocompleteResult(resultAsLong(c, 9), resultAsString(c, 10), resultAsString(c, 11));
+//            dto.setSchool(school);
+//            return dto;
+//        });
+//    }
 
     @SuppressWarnings("unchecked")
     public Page<CurriculumSearchDto> search(Long schoolId, CurriculumSearchCommand criteria, Pageable pageable) {
@@ -182,11 +254,46 @@ public class CurriculumService {
             if(!CollectionUtils.isEmpty(criteria.getStudyLevel())) {
                 filters.add(root.get("origStudyLevel").get("code").in(criteria.getStudyLevel()));
             }
+            if(!CollectionUtils.isEmpty(criteria.getCurriculumGroup())) {
+                filters.add(root.get("group").get("code").in(criteria.getCurriculumGroup()));
+            }
             if(!CollectionUtils.isEmpty(criteria.getEkrLevel())) {
                 Subquery<String> targetQuery = query.subquery(String.class);
                 Root<ClassifierConnect> targetRoot = targetQuery.from(ClassifierConnect.class);
                 targetQuery = targetQuery.select(targetRoot.get("classifier").get("code")).where(targetRoot.get("connectClassifier").get("code").in(criteria.getEkrLevel()));
                 filters.add(root.get("origStudyLevel").get("code").in(targetQuery));
+            }
+            if(!CollectionUtils.isEmpty(criteria.getIscedSuun())) {
+                Subquery<String> targetQuery = query.subquery(String.class);
+                Root<ClassifierConnect> targetRoot = targetQuery.from(ClassifierConnect.class);
+                targetQuery = targetQuery.select(targetRoot.get("classifier").get("code")).where(targetRoot.get("connectClassifier").get("code").in(criteria.getIscedSuun()));
+                /*In case ISCED_RYHM classifier is saved in isced_class_code column (vocational curriculum)*/
+                Predicate forVocational = root.get("iscedClass").get("code").in(targetQuery);
+                /*In case ISCED_SUUN classifier is saved in isced_class_code column (higher curriculum)*/
+                Predicate forHigher = root.get("iscedClass").get("code").in(criteria.getIscedSuun());
+                filters.add(cb.or(forVocational, forHigher));
+            }
+            
+            if(criteria.getIscedVald() != null) {
+                // get ISCED_SUUN classifier from isced_class (vocational curriculum)
+                // or ISCED_VALD (higher curriculum)
+                Subquery<String> getIscedSuun = query.subquery(String.class);
+                Root<ClassifierConnect> iscedSuun = getIscedSuun.from(ClassifierConnect.class);
+                getIscedSuun = getIscedSuun.select(iscedSuun.get("classifier")
+                        .get("code")).where(cb.equal(iscedSuun.get("connectClassifier").get("code"), criteria.getIscedVald()));
+
+                // get ISCED_RYHM classifier from ISCED_SUUN (vocational curriculum)
+                Subquery<String> getIscedRyhm = getIscedSuun.subquery(String.class);
+                Root<ClassifierConnect> iscedRyhm = getIscedRyhm.from(ClassifierConnect.class);
+                getIscedRyhm = getIscedRyhm.select(iscedRyhm.get("classifier")
+                        .get("code")).where(iscedRyhm.get("connectClassifier").get("code").in(getIscedSuun));
+                /*In case ISCED_RYHM classifier is saved in isced_class_code column (vocational curriculum)*/
+                Predicate forVocational = root.get("iscedClass").get("code").in(getIscedRyhm);
+                /*In case ISCED_VALD classifier is saved in isced_class_code column (higher curriculum)*/
+                Predicate forHigher1 = cb.equal(root.get("iscedClass").get("code"), criteria.getIscedVald());     
+                /*In case ISCED_SUUN classifier is saved in isced_class_code column (higher curriculum)*/
+                Predicate forHigher2 = root.get("iscedClass").get("code").in(getIscedSuun);
+                filters.add(cb.or(forVocational, forHigher1, forHigher2));
             }
             if(!CollectionUtils.isEmpty(criteria.getStudyLanguage())) {
                 Subquery<Long> targetQuery = query.subquery(Long.class);
@@ -202,7 +309,15 @@ public class CurriculumService {
             }
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-	    }, pageable, em);
+        }, pageable, em);
+    }
+
+    public List<CurriculumDepartment> findAllDepartments() {
+        return curriculumDepartmentRepository.findAll();
+    }
+    
+    public void delete(Curriculum curriculum) {
+        EntityUtil.deleteEntity(curriculumRepository, curriculum);
     }
 
 	public boolean isUnique(Long schoolId, UniqueCommand command) {
@@ -287,7 +402,7 @@ public class CurriculumService {
     private CurriculumVersion updateVersion(Curriculum curriculum, CurriculumVersion version, CurriculumVersionDto dto) {
         CurriculumVersion updatedVersion = EntityUtil.bindToEntity(dto, version, classifierRepository, "curriculumStudyForm", "modules",
                 "specialities", "schoolDepartment", "occupationModules");
-        saveNewlyAddedSpecialities(curriculum, version, dto);
+        saveNewlyAddedSpecialities(curriculum, dto);
         updateCurriculumVersionSpecialities(curriculum.getSpecialities(), updatedVersion, dto.getSpecialitiesReferenceNumbers());
         updateCurriculumVersionModules(updatedVersion, dto.getModules());
         updateCurriculumVersionOccupationalModules(updatedVersion, dto.getOccupationModules());
@@ -296,8 +411,7 @@ public class CurriculumService {
         return updatedVersion;
     }
 
-    private void saveNewlyAddedSpecialities(Curriculum curriculum, CurriculumVersion version,
-            CurriculumVersionDto dto) {
+    private void saveNewlyAddedSpecialities(Curriculum curriculum, CurriculumVersionDto dto) {
         Set<CurriculumSpecialityDto> newSpecs = dto.getNewCurriculumSpecialities();
         if(!CollectionUtils.isEmpty(newSpecs)) {
             Set<CurriculumSpeciality> newSavedSpecs = new HashSet<>();
@@ -342,8 +456,6 @@ public class CurriculumService {
     private static void updateCurriculumVersionSpecialities(Set<CurriculumSpeciality> curricSpecs, CurriculumVersion version, Set<Long> specRefNums) {
         Set<CurriculumVersionSpeciality> newSpecialities = new HashSet<>();
         if(specRefNums != null) {
-            List<Long> oldSpecsNums = version.getSpecialities().stream().map(s -> s.getCurriculumSpeciality().getId()).collect(Collectors.toList());
-            List<Long> newSpecsNums = curricSpecs.stream().map(s -> s.getReferenceNumber()).collect(Collectors.toList());
 
           Map<Long, CurriculumVersionSpeciality> oldSpecsMap = version.getSpecialities().stream()
                     .collect(Collectors.toMap(s -> EntityUtil.getId(s.getCurriculumSpeciality()), s -> s));
@@ -591,10 +703,6 @@ public class CurriculumService {
     private void updateCurriculumModuleCompetences(CurriculumModule module, Set<String> competences) {
         if(competences != null) {
             Set<CurriculumModuleCompetence> oldSet = module.getCompetences();
-            if(oldSet == null) {
-                module.setCompetences(new HashSet<>());
-                oldSet = module.getCompetences();
-            }
             EntityUtil.bindClassifierCollection(oldSet, c -> EntityUtil.getCode(c.getCompetence()), competences, competenceCode -> {
                 return new CurriculumModuleCompetence(EntityUtil.validateClassifier(classifierRepository.getOne(competenceCode), MainClassCode.KOMPETENTS));
             });
@@ -606,10 +714,6 @@ public class CurriculumService {
     private void updateCurriculumModuleOccupations(CurriculumModule module, Set<String> occupations) {
         if(occupations != null) {
             Set<CurriculumModuleOccupation> oldSet = module.getOccupations();
-            if(oldSet == null) {
-                module.setOccupations(new HashSet<>());
-                oldSet = module.getOccupations();
-            }
             EntityUtil.bindClassifierCollection(oldSet, o -> EntityUtil.getCode(o.getOccupation()), occupations, occupaionCode -> {
               Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupaionCode),
                       MainClassCode.OSAKUTSE, MainClassCode.KUTSE, MainClassCode.SPETSKUTSE);
@@ -637,9 +741,6 @@ public class CurriculumService {
     private void updateCurriculumOccupationSpecialities(CurriculumOccupation occupation, Set<String> specialities) {
         if(specialities != null) {
             Set<CurriculumOccupationSpeciality> oldList = occupation.getSpecialities();
-            if(oldList == null) {
-                occupation.setSpecialities(new HashSet<>());
-            }
             EntityUtil.bindClassifierCollection(oldList, s -> EntityUtil.getCode(s.getSpeciality()), specialities, specialityCode -> {
                 Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(specialityCode), MainClassCode.SPETSKUTSE);
                 return new CurriculumOccupationSpeciality(c);
@@ -716,9 +817,6 @@ public class CurriculumService {
     public void updateStudyForms(Curriculum curriculum, Set<String> studyForms) {
         if(studyForms != null) {
             Set<CurriculumStudyForm> storedStudyForms = curriculum.getStudyForms();
-            if(storedStudyForms == null) {
-                curriculum.setStudyForms(new HashSet<>());
-            }
             EntityUtil.bindClassifierCollection(storedStudyForms, sf -> EntityUtil.getCode(sf.getStudyForm()), studyForms, studyForm -> {
                 // add new link
                 Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(studyForm), MainClassCode.OPPEVORM);
@@ -809,66 +907,4 @@ public class CurriculumService {
     public void deleteVersion(CurriculumVersion curriculumVersion) {
         EntityUtil.deleteEntity(curriculumVersionRepository, curriculumVersion);
     }
-    
-    /**
-     * TODO: Used in curriculum search & curriculum view for external expert. 
-     * Front-end filtering by schoolId is not yet implemented.
-     */
-    @SuppressWarnings("unchecked")
-    public Object getSchoolDepdartments(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder
-                ("from school_department sd inner join school s on s.id = sd.school_id");
-        qb.optionalCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
-        return qb.select("sd.id, sd.name_et, sd.name_en, sd.school_id, s.code", em).getResultList()
-                .stream().map(r -> {
-            Map<String, Object> response = new HashMap<>();
-            response.put("id", resultAsLong(r, 0));
-            response.put("nameEt", resultAsString(r, 1));
-            response.put("nameEn", resultAsString(r, 2));
-            response.put("schoolId", resultAsLong(r, 3));
-            response.put("schoolCode", resultAsString(r, 4));
-            return response;
-        }).collect(Collectors.toList());
-    }
-    
-    /**
-     * TODO: possible solution in case filtering by school will be required. 
-     * When schools' selection changes, new query for schoolDepts is made
-     * 
-     * Currently not used
-     */
-    @SuppressWarnings("unchecked")
-    public Object getAllSchoolDepartments(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder
-                ("from school_department sd");
-        qb.optionalCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
-        return qb.select("sd.id, sd.name_et, sd.name_en", em).getResultList()
-                .stream().map(r -> {
-            return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1),resultAsString(r, 2));
-        }).collect(Collectors.toList());
-    }
-    
-    /**
-     * Not currently used.
-     * May be required later in case study levels should be filtered by school 
-     */
-    @SuppressWarnings("unchecked")
-    public Object getStudyLevels() {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder
-                (" from school_study_level ssl "
-                        + "inner join classifier c on c.code = ssl.study_level_code "
-                        + " group by ssl.study_level_code, c.name_et, c.name_en ");
-        return qb.select(" ssl.study_level_code, c.name_et, c.name_en, array_to_string(array_agg(ssl.school_id), ',', '*')", em).getResultList()
-                .stream().map(r -> {
-            Map<String, Object> response = new HashMap<>();
-            response.put("code", resultAsString(r, 0));
-            response.put("nameEt", resultAsString(r, 1));
-            response.put("nameEn", resultAsString(r, 2));
-            List<Integer> schools = Arrays.asList(resultAsString(r, 3).split(",")).stream().map(v -> {
-                return Integer.parseInt(v);
-            }).collect(Collectors.toList());
-            response.put("schools", schools);
-            return response;
-        }).collect(Collectors.toList());    
-   }
 }

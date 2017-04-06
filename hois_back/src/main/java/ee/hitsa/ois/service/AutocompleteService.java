@@ -40,10 +40,10 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
-import ee.hitsa.ois.web.commandobject.SchoolDepartmentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
+import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
@@ -114,7 +114,7 @@ public class AutocompleteService {
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Language.EN.equals(term.getLang()) ? "c.name_en" : "c.name_et", "name", term.getName());
 
-        List<?> data = qb.select("c.id, c.name_et, c.name_en", em).getResultList();
+        List<?> data = qb.select("c.id, c.name_et, c.name_en", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
         return data.stream().map(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2))).collect(Collectors.toList());
     }
 
@@ -164,19 +164,17 @@ public class AutocompleteService {
     }
 
     /**
-     * Values for selecting department. All departments of given school are returned ordered by name(Et|En) field
+     * Values for selecting department.
      * @param schoolId
-     * @param criteria
      * @return
      */
-    public List<AutocompleteResult> schoolDepartments(Long schoolId, SchoolDepartmentAutocompleteCommand criteria) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd");
+    public List<SchoolDepartmentResult> schoolDepartments(Long schoolId) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd inner join school s on s.id = sd.school_id");
 
         qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
-        qb.optionalCriteria("sd.id != :excludedId", "excludedId", criteria.getExcludedId());
 
-        List<?> data = qb.select("sd.id, sd.name_et, sd.name_en", em).getResultList();
-        return data.stream().map(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2))).collect(Collectors.toList());
+        List<?> data = qb.select("sd.id, sd.name_et, sd.name_en, sd.school_id, s.code", em).getResultList();
+        return data.stream().map(r -> new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4))).collect(Collectors.toList());
     }
 
     public List<StudentGroupResult> studentGroups(Long schoolId) {
@@ -189,7 +187,7 @@ public class AutocompleteService {
                 "from student s inner join person p on s.person_id = p.id", new Sort("p.lastname", "p.firstname"));
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname"), "name", lookup.getName());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", lookup.getName());
 
         List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
         return data.stream().map(r -> {

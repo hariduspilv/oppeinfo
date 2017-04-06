@@ -15,6 +15,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.repository.ClassifierConnectRepository;
 import ee.hitsa.ois.repository.specification.ClassifierConnectSpecification;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.ClassifierConnectSearchCommand;
 
 
@@ -40,7 +41,7 @@ public class ClassifierConnectService {
 
         List<ClassifierConnect> oldParents = repository.findAllByClassifierCode(code);
         deleteConnections(newParents, oldParents, code);
-        removeUnchangedConnections(newParents, oldParents, code);
+        removeUnchangedConnections(newParents, oldParents);
         addNewConnections(newParents, code);
     }
 
@@ -51,18 +52,17 @@ public class ClassifierConnectService {
 		while(iterator.hasNext()) {
 			ClassifierConnect oldParent = iterator.next();
 			if(notInNewParents(oldParent, newParents)) {
-				repository.removeAllByClassifierCodeAndConnectClassifierCode(code, oldParent.getConnectClassifier().getCode());
+				repository.removeAllByClassifierCodeAndConnectClassifierCode(code, EntityUtil.getCode(oldParent.getConnectClassifier()));
 				iterator.remove();
 			}
 		}
 	}
 
 	private static boolean notInNewParents(ClassifierConnect oldParent, List<Classifier> newParents) {
-	    return !newParents.stream().anyMatch(newParent -> newParent.getCode().equals(oldParent.getConnectClassifier().getCode()));
+	    return !newParents.stream().anyMatch(newParent -> newParent.getCode().equals(EntityUtil.getCode(oldParent.getConnectClassifier())));
 	}
 
-	private static void removeUnchangedConnections(List<Classifier> newParents, List<ClassifierConnect> oldParents,
-			String code) {
+	private static void removeUnchangedConnections(List<Classifier> newParents, List<ClassifierConnect> oldParents) {
 
 		newParents.removeIf(newParent -> inOldParents(newParent, oldParents));
 	}
@@ -78,7 +78,7 @@ public class ClassifierConnectService {
 	}
 
 	private static boolean inOldParents(Classifier newParent, List<ClassifierConnect> oldParents) {
-		return oldParents.stream().anyMatch(oldParent -> newParent.getCode().equals(oldParent.getConnectClassifier().getCode()));
+		return oldParents.stream().anyMatch(oldParent -> newParent.getCode().equals(EntityUtil.getCode(oldParent.getConnectClassifier())));
 	}
 
 	public List<ClassifierConnect> searchAll(ClassifierConnectSearchCommand classifierConnectSearchCommand, Sort sort) {

@@ -97,6 +97,15 @@ public class EstonianIdCodeValidator implements ConstraintValidator<EstonianIdCo
         return SEX.get(m.group(1));
     }
 
+    public static String sexFromIdcode(String value) {
+        if (value == null) {
+            return null;
+        }
+
+        Matcher m = PATTERN.matcher(value);
+        return m.matches() ? sexFromIdcode(m) : null;
+    }
+
     /**
      * Validator for object where idcode, birthdate and sex properties are defined.
      * Validator checks that all three fields match based on birthdate and sex information in idcode

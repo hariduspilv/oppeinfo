@@ -33,59 +33,66 @@ import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 @RestController
 @RequestMapping("/message")
 public class MessageController {
-    
+
     @Autowired
     private MessageService messageService;
-    
-    
+
+
     @GetMapping("/received/mainPage")
     public Page<MessageSearchDto> searchReceivedForMainPage(HoisUserDetails user, Pageable pageable) {
         return messageService.show(user, pageable);
     }
-    
+
     @GetMapping("/sent")
     public Page<MessageSearchDto> searchSent(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
         return messageService.searchSent(user, criteria, pageable);
     }
     
+    @GetMapping("/sent/automatic")
+    public Page<MessageSearchDto> searchAutomaticSent(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
+        return messageService.searchSentAutomatic(user.getSchoolId(), criteria, pageable);
+    }
+
     @GetMapping("/received")
     public Page<MessageSearchDto> searchReceived(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
         return messageService.searchReceived(user, criteria, pageable);
     }
-    
+
     @GetMapping("/{id:\\d+}")
     public MessageDto get(HoisUserDetails user, @WithEntity("id") Message message) {
         MessageDto dto = MessageDto.of(message);
         dto.setIsRead(message.isReadBy(user.getPersonId()));
         return dto;
     }
-    
+
+    //TODO: add checks to forbid replying for automatic messages
     @PostMapping
     public MessageDto create(HoisUserDetails user, @Valid @RequestBody MessageForm form) {
         return get(user, messageService.create(user, form));
     }
-    
+
     @PutMapping("/{id:\\d+}")
     public void setRead(HoisUserDetails user, @WithEntity("id") Message message) {
         messageService.setRead(user.getPersonId(), message);
     }
-    
+
     @DeleteMapping("/{id:\\d+}")
+    //TODO: permission checks
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Message message, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         messageService.delete(message);
     }
-    
+
     @GetMapping("/parents")
     public Page<MessageReceiverSearchDto> getParents(StudentSearchCommand criteria, Pageable pageable) {
         return messageService.getStudentRepresentatives(criteria, pageable);
     }
-    
+
     @GetMapping("/studentgroups")
     public Page<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, StudentGroupSearchCommand criteria, Pageable pageable) {
         Page<StudentGroupSearchDto> page = messageService.getStudentGroupsByTeacher(user, criteria, pageable);
         return page;
     }
-    
+
     /**
      * UsersController.search() is not used as school should not always be set as parameter
      */

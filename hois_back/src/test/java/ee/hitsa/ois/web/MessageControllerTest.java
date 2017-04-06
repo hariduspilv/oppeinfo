@@ -42,6 +42,19 @@ public class MessageControllerTest {
     }
     
     @Test
+    public void searchSentAutomatic() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/sent/automatic");
+        uriBuilder.queryParam("subject", Boolean.TRUE);
+        uriBuilder.queryParam("sender", "3211212");
+        uriBuilder.queryParam("sentFrom", "2016-12-31T22:00:00.000Z");
+        uriBuilder.queryParam("sentThru", "2017-01-31T22:00:00.000Z");
+        uriBuilder.queryParam("sort", "sender.lastname,sender.firstname,asc");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
     public void searchReceived() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/received");
         uriBuilder.queryParam("subject", Boolean.TRUE);

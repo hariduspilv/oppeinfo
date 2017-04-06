@@ -20,7 +20,7 @@
     <!-- endbuild -->
   </head>
   <body ng-app="hitsaOis" layout="row" ng-controller="MainController" ng-cloak>
-    <md-sidenav md-colors="{background: 'primary-800'}" class="site-sidenav md-sidenav-left md-whiteframe-z2"
+    <!--md-sidenav md-colors="{background: 'primary-800'}" class="site-sidenav md-sidenav-left md-whiteframe-z2"
                 md-component-id="left" md-is-locked-open="$mdMedia('gt-xs')" md-whiteframe="1">
 
       <header class="nav-header" layout="column">
@@ -57,29 +57,46 @@
           </li>
         </ul>
       </md-content>
-      0.2.0/20170310
+      <!--0.2.0/20170310-->
       <!-- todo: move to config -->
-    </md-sidenav>
+    <!--md-sidenav-->   
 
     <div layout="column" tabIndex="-1" role="main" flex>
-      <md-toolbar class="md-whiteframe-glow-z1 site-content-toolbar" layout="row" layout-align="start center" style="background-color: rgb(252, 252,252); color: #202020">
-        <div class="docs-toolbar-tools" tabIndex="-1">
-          <div hide-gt-xs>
-            <md-button ng-click="leftSideNavToggle()" class="md-icon-button" aria-label="Toggle Menu">
-              <md-icon md-font-set="material-icons md-dark">menu</md-icon>
+      <md-toolbar class="md-whiteframe-glow-z1 hois_header" layout="row" layout-align="start center">
+	    <!--header class="nav-header" layout="column"-->
+        <div layout="row">
+		  <div layout="column" layout-align="center center">
+            <md-button ng-click="toggleLeft()" class="md-icon-button" aria-label="Toggle Menu">
+              <md-icon md-colors="{color: 'primary-800'}" style="margin-top: -2px">menu</md-icon>
             </md-button>
           </div>
+          <div layout="column" layout-align="none">
+            <img class="logo" ng-src="{{logo ? logo : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/>
+          </div>
+		  <!--div layout="column" layout-align="end">
+			<div layout="row" layout-align="end">
+				<a ng-href="#/" class="md-subhead">{{ 'main.applicationTitle' | translate }}</a>
+			</div>
+			<div layout="row" layout-align="space-around end">
+				<md-button ng-class="{'md-accent': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="language et">{{ 'main.language.et' | translate }}</md-button>
+				<md-button ng-class="{'md-accent': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="language en">{{ 'main.language.en' | translate }}</md-button>
+			</div>
+		  </div-->
+        </div>
+      <!--/header-->
+        <div class="docs-toolbar-tools" tabIndex="-1" >
+          
           <div class="md-toolbar-tools fill-height" layout="row" flex>
-            <h2 class="md-toolbar-item md-breadcrumb md-headline">
+            <h1 md-colors="{color: 'background-900'}" style="margin-top: -2px" class="md-display-2">
               <span ng-if="Menu.currentPage.name !== Menu.currentSection.name">
                 <span hide-sm hide-md>{{Menu.currentSection.name | translate}}</span>
-                <span class="docs-menu-separator-icon" hide-sm hide-md style="transform: translate3d(0, 1px, 0)">
+                <span class="docs-menu-separator-icon" hide-sm hide-md>
                   <span class="md-visually-hidden">-</span>
-                  <md-icon md-font-set="material-icons md-dark" style="margin-top: -2px">chevron_right</md-icon>
+                  <md-icon md-colors="{color: 'background-900'}" style="margin-top: -2px">chevron_right</md-icon>
                 </span>
               </span>
               <span class="md-breadcrumb-page">{{Menu.currentPage.name | translate}}</span>
-            </h2>
+            </h1>
           </div>
         </div>
 
@@ -92,7 +109,7 @@
                 <md-tooltip>
                   {{ 'main.logOut' | translate }}
                 </md-tooltip>
-                <md-icon class="material-icons md-dark">lock</md-icon>
+                <md-icon md-colors="{color: 'primary-800'}">lock</md-icon>
               </md-button>
 
             </div>
@@ -106,15 +123,61 @@
           </div>
           </div>
 
-      </md-toolbar>
+      </md-toolbar>   
+	 <div style="height:2px">&nbsp;</div>
+	  <!--div flex layout="row" class="height100"-->
+	  <md-content layout="row" flex>
+		 <md-sidenav md-colors="{background: 'background-100'}" class="site-sidenav" md-is-locked-open="isLeftOpen()" md-component-id="left" md-whiteframe="1" md-is-open="shouldLeftBeOpen" >		 
+		 <!--md-sidenav-left md-whiteframe-z2-->
+<!--md-is-locked-open="isLeftOpen()" -->
+      <!--header class="nav-header" layout="column">
+        <div layout="row" layout-padding>
+          <div layout="column" layout-align="none">
+            <img class="logo" ng-src="{{logo ? logo : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/>
+          </div>
+		  <div layout="column" layout-align="end">
+			<div layout="row" layout-align="end">
+				<a ng-href="#/" class="md-subhead">{{ 'main.applicationTitle' | translate }}</a>
+			</div>
+			<div layout="row" layout-align="space-around end">
+				<md-button ng-class="{'md-accent': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="language et">{{ 'main.language.et' | translate }}</md-button>
+				<md-button ng-class="{'md-accent': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="language en">{{ 'main.language.en' | translate }}</md-button>
+			</div>
+		  </div>
+        </div>
+      </header-->
 
-      <div layout="row" class="hoisbody" flex>
+      <md-content role="navigation" flex>
+        <ul class="docs-menu">
+          <li ng-repeat="section in Menu.sections" class="parent-list-item {{section.className || ''}}" ng-class="{'parentActive' : isSectionSelected(section)}">
+            <h2 class="menu-heading md-subhead" ng-if="section.type === 'heading'" id="heading_{{ section.name | nospace }}">
+              {{section.name}}
+            </h2>
+            <menu-link section="section" ng-if="section.type === 'link' && !section.hidden""></menu-link>
+            <menu-toggle section="section" ng-if="section.type === 'toggle' && !section.hidden" md-colors="{color: 'primary-900'}"></menu-toggle>
+            <ul ng-if="section.children" class="menu-nested-list">
+              <li ng-repeat="child in section.children" ng-class="{'childActive' : isSectionSelected(child)}">
+                <menu-link section="child" ng-if="child.type === 'link'"></menu-link>
+                <menu-toggle section="child" ng-if="child.type === 'toggle'" ></menu-toggle>
+              </li>
+            </ul>
+          </li>
+        </ul>
+		<div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="md-caption">Versioon 0.2.0/20170310</span></div>
+      </md-content>
+      
+      <!-- todo: move to config -->
+    </md-sidenav>
 
-        <md-content md-scroll-y flex>
-          <div ng-view=""></div>
-        </md-content>
-      </div>
-    </div>
+		  
+		  <div layout="row" flex>
+			<md-content md-scroll-y flex>
+			  <div ng-view=""></div>
+			</md-content>
+		  </div>
+	   <!--/div-->	  
+	   </md-content>
+    <!/div>
 
 
     <!-- build:js(.) scripts/vendor.js -->

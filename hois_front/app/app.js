@@ -61,9 +61,10 @@ angular
   }])
   .config(function($mdThemingProvider) {
     $mdThemingProvider.theme('default')
-      .primaryPalette('blue', {
-        'default': '900'
-      });
+      .primaryPalette('blue', {'default': '900'})
+	  .accentPalette('pink')
+	  .backgroundPalette('grey')
+	  ;
   }).config(function ($httpProvider) {
   $httpProvider.interceptors.push([
     '$injector',

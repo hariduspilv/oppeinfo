@@ -11,18 +11,26 @@ import java.util.stream.Collectors;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.expression.EvaluationException;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.common.TemplateParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.MessageTemplate;
+import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.MessageTemplateRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.MessageTemplateForm;
 import ee.hitsa.ois.web.commandobject.MessageTemplateSearchCommand;
 import ee.hitsa.ois.web.dto.MessageTemplateDto;
@@ -30,6 +38,8 @@ import ee.hitsa.ois.web.dto.MessageTemplateDto;
 @Transactional
 @Service
 public class MessageTemplateService {
+
+    private static final Logger log = LoggerFactory.getLogger(MessageTemplateService.class);
 
     @Autowired
     private MessageTemplateRepository messageTemplateRepository;
@@ -46,6 +56,7 @@ public class MessageTemplateService {
 
     public MessageTemplate save(MessageTemplate messageTemplate, MessageTemplateForm form) {
         EntityUtil.bindToEntity(form, messageTemplate, classifierRepository);
+        validateTemplateContent(messageTemplate);
         return messageTemplateRepository.save(messageTemplate);
     }
 
@@ -56,7 +67,7 @@ public class MessageTemplateService {
     public Page<MessageTemplateDto> search(Long schoolId, MessageTemplateSearchCommand criteria, Pageable pageable) {
         return messageTemplateRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            
+
             if (schoolId != null) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }
@@ -73,7 +84,7 @@ public class MessageTemplateService {
                 filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
                 filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
             }
-            if(!CollectionUtils.isEmpty(criteria.getType())) {
+            if(criteria.getType() != null && !criteria.getType().isEmpty()) {
                 filters.add(root.get("type").get("code").in(criteria.getType()));
             }
             propertyContains(() -> root.get("headline"), cb, criteria.getHeadline(), filters::add);
@@ -81,15 +92,35 @@ public class MessageTemplateService {
         }, pageable).map(MessageTemplateDto::of);
     }
 
+    public MessageTemplate findValidTemplate(MessageType type, Long schoolId) {
+        List<MessageTemplate> templates = messageTemplateRepository.findAll((root, query, cb) -> {
+            LocalDate now = LocalDate.now();
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+            filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
+            filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
+            filters.add(cb.equal(root.get("type").get("code"), type.name()));
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        });
+
+        if (templates.isEmpty()) {
+            log.error(String.format("no %s templates found for school %d", type.name(), schoolId));
+        } else if (templates.size() > 1) {
+            log.error(String.format("Multiple %s templates found for school %d", type.name(), schoolId));
+        }
+
+        return templates.isEmpty() ? null : templates.get(0);
+    }
+
     public Set<String> getUsedTypeCodes(Long schoolId, String code) {
         Set<String> set = messageTemplateRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            
+
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
             if(code != null) {
                 filters.add(cb.notEqual(root.get("type").get("code"), code));
             }
-            
+
             LocalDate now = LocalDate.now();
             filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
             filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
@@ -97,5 +128,16 @@ public class MessageTemplateService {
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }).stream().map(mt -> EntityUtil.getCode(mt.getType())).collect(Collectors.toSet());
         return set;
+    }
+
+    private static void validateTemplateContent(MessageTemplate messageTemplate) {
+        MessageType type = MessageType.valueOf(EntityUtil.getCode(messageTemplate.getType()));
+        Object data = type.getDataBean() != null ? BeanUtils.instantiateClass(type.getDataBean()) : null;
+        ExpressionParser spelParser = new SpelExpressionParser();
+        try {
+            spelParser.parseExpression(messageTemplate.getContent(), new TemplateParserContext()).getValue(data, String.class);
+        } catch(@SuppressWarnings("unused") EvaluationException e) {
+            throw new ValidationFailedException("content", "messageTemplate.invalidcontent");
+        }
     }
 }

@@ -21,11 +21,6 @@ public class PersonUtilTests {
         person.setBirthdate(LocalDate.now().minusYears(19));
         Assert.assertTrue(PersonUtil.isAdult(person));
 
-        //test birthdate from idcode is checked first
-        person.setBirthdate(LocalDate.now().minusYears(1));
-        person.setIdcode("47101010033");
-        Assert.assertTrue(PersonUtil.isAdult(person));
-
         //test extracting birth date from idcode
         person.setBirthdate(null);
         person.setIdcode("47101010033");

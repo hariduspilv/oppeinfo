@@ -16,7 +16,7 @@ public abstract class PersonUtil {
             birthdate = EstonianIdCodeValidator.birthdateFromIdcode(person.getIdcode());
         }
         // if information about birth date is missing then person is considered as an adult
-        return birthdate == null ? true : Period.between(birthdate, LocalDate.now()).getYears() >= ADULT_YEARS;
+        return birthdate == null || Period.between(birthdate, LocalDate.now()).getYears() >= ADULT_YEARS;
     }
 
     public static String fullname(String firstname, String lastname) {

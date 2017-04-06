@@ -16,7 +16,7 @@ public class MessageReceiver extends BaseEntityWithId {
     private Classifier status;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Message message;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

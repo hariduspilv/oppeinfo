@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService) {
+  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav, $mdMedia, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService) {
 
     var self = this;
 
@@ -27,7 +27,7 @@ angular.module('hitsaOis')
     }
 
     function openPage() {
-      $scope.closeMenu();
+      //$scope.closeMenu();
 
       if (self.autoFocusContent) {
         focusMainContent();
@@ -48,6 +48,49 @@ angular.module('hitsaOis')
     function isSelected(page) {
       return Menu.isPageSelected(page);
     }
+	
+	$scope.isLeftOpen = function () {
+		return $mdSidenav('left').isOpen();
+	} 
+
+	$scope.$mdMedia = $mdMedia;
+
+/**************************************/
+
+	$scope.toggleLeft = buildToggler('left');
+	$scope.lockLeft = true;
+	$scope.isLeftOpen = function() {
+		return $mdSidenav('left').isOpen();
+	}
+    
+
+    function buildToggler(navID) {
+      var debounceFn = $mdUtil.debounce(function() {
+        /*$mdSidenav(navID)
+          .toggle()
+          .then(function() {
+          });*/
+		  if($mdSidenav('left').isOpen())
+			$mdSidenav('left').close();
+	      else
+            $mdSidenav('left').open();		  
+      }, 300);
+
+      return debounceFn;
+    }
+$scope.shouldLeftBeOpen = $mdMedia('gt-sm');
+  
+/*  .controller('LeftCtrl', function($scope, $timeout, $mdSidenav, $log) {
+    $scope.close = function() {
+      $mdSidenav('left').close()
+        .then(function() {
+          $log.debug("close LEFT is done");
+        });
+
+    };
+  })*/;
+
+/**************************************/
 
     function isSectionSelected(section) {
       var selected = false;
@@ -115,14 +158,15 @@ angular.module('hitsaOis')
     $rootScope.currentLanguageNameField = $scope.currentLanguageNameField;
 
     $scope.leftSideNavToggle = function() {
-      $mdSidenav('left').open();
+      //$mdSidenav('left').isLockedOpen=true;//open();
+	  $mdSidenav('left').toggle();
     };
 
     $scope.leftSideNavSelect = function(path) {
       $location.path( path );
-      if(!$mdSidenav('left').isLockedOpen()) {
+      //if(!$mdSidenav('left').isLockedOpen()) {
         $mdSidenav('left').close();
-      }
+      //}
     };
 
     $scope.Menu = Menu;

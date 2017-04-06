@@ -12,31 +12,27 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.web.commandobject.UsersSeachCommand;
 import ee.hitsa.ois.web.dto.UsersSearchDto;
 
 /**
  * Different queries are run depending on user's role.
- * The goal of these tests is to check whether these queries work at all 
+ * The goal of these tests is to check whether these queries work at all
  */
 @Transactional
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class MessageServiceTest {
-    
+
     @Autowired
     MessageService messageService;
-    
-    @Autowired
-    private UserRepository userRepository;
-    
+
     @Test
     public void searchAllUsers() {
         Page<UsersSearchDto> page = messageService.searchAllUsers(new UsersSeachCommand(), new PageRequest(0, 10));
         Assert.assertNotNull(page);
     }
-      
+
     /**
      * TODO: set different users for different tests
      * In this case MessageController may be tested, not MessageService

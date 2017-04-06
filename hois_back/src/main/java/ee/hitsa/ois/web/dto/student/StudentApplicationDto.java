@@ -14,6 +14,7 @@ public class StudentApplicationDto {
     private String status;
     private LocalDateTime confirmDate;
     private LocalDateTime submitted;
+    private String rejectReason;
 
     public Long getId() {
         return id;
@@ -61,6 +62,14 @@ public class StudentApplicationDto {
 
     public void setSubmitted(LocalDateTime submitted) {
         this.submitted = submitted;
+    }
+
+    public String getRejectReason() {
+        return rejectReason;
+    }
+
+    public void setRejectReason(String rejectReason) {
+        this.rejectReason = rejectReason;
     }
 
     public static StudentApplicationDto of(Application application) {

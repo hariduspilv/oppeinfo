@@ -11,6 +11,8 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
@@ -18,25 +20,42 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.validation.ApplicationValidation.Akad;
+import ee.hitsa.ois.validation.ApplicationValidation.Akadk;
+import ee.hitsa.ois.validation.ApplicationValidation.Eksmat;
+import ee.hitsa.ois.validation.ApplicationValidation.Finm;
+import ee.hitsa.ois.validation.ApplicationValidation.Okava;
+import ee.hitsa.ois.validation.ApplicationValidation.Ovorm;
+import ee.hitsa.ois.validation.ApplicationValidation.Valis;
+import ee.hitsa.ois.validation.DateRange;
+import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.StudyPeriodRange;
 
 @Entity
+@DateRange(from = "startDate", thru = "endDate", groups = {Akad.class})
+@StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd", groups = {Akad.class})
 public class Application extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
+    @NotNull(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class})
     private Student student;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @NotNull(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class})
     private Classifier status;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
+    @NotNull(groups = {Akad.class, Akadk.class, Okava.class, Ovorm.class, Finm.class, Valis.class, Eksmat.class})
     private Classifier type;
 
     private LocalDateTime submitted;
 
+    @NotNull(groups = {Akad.class, Valis.class})
     private Boolean isPeriod;
 
+    @NotNull(groups = {Akadk.class})
     private LocalDate startDate;
     private LocalDate endDate;
 
@@ -53,32 +72,42 @@ public class Application extends BaseEntityWithId {
     private String rejectReason;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Akad.class, Eksmat.class})
     private Classifier reason;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @NotNull(groups = {Okava.class})
     private CurriculumVersion oldCurriculumVersion;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @NotNull(groups = {Okava.class})
     private CurriculumVersion newCurriculumVersion;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Okava.class, Ovorm.class})
     private Classifier oldStudyForm;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Okava.class, Ovorm.class})
     private Classifier newStudyForm;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Finm.class})
     private Classifier oldFin;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Finm.class})
     private Classifier newFin;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Finm.class})
     private Classifier oldFinSpecific;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Finm.class})
     private Classifier newFinSpecific;
 
+    @NotNull(groups = {Valis.class})
     private Boolean isAbroad;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
@@ -90,9 +119,11 @@ public class Application extends BaseEntityWithId {
     private Classifier ehisSchool;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Valis.class})
     private Classifier abroadPurpose;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Valis.class})
     private Classifier abroadProgramme;
 
     private Boolean needsRepresentativeConfirm = Boolean.FALSE;
@@ -101,14 +132,21 @@ public class Application extends BaseEntityWithId {
     private String abroadSchool;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @NotNull(groups = {Akadk.class})
     private Application academicApplication;
+
+//    @OneToMany
+//    @JoinColumn(name = "academic_application_id", nullable = false, updatable = false, insertable = false)
+//    private Set<Application> academicApplicationRevocations = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "application_id", nullable = false, updatable = false)
     private Set<ApplicationFile> files = new HashSet<>();
 
+    @Valid
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "application_id", nullable = false, updatable = false)
+    @NotEmpty(groups = {Valis.class})
     private Set<ApplicationPlannedSubject> plannedSubjects = new HashSet<>();
 
     public Student getStudent() {

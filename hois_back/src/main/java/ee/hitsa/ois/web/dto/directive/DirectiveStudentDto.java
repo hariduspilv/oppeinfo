@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.directive;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.SaisApplication;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
@@ -223,6 +224,10 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             }
         }
         return EntityUtil.bindToDto(directiveStudent, dto);
+    }
+
+    public static DirectiveStudentDto of(SaisApplication application) {
+        return EntityUtil.bindToDto(application, new DirectiveStudentDto());
     }
 
     public static DirectiveStudentDto of(Student student, DirectiveType directiveType) {

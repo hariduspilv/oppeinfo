@@ -15,23 +15,18 @@ public class MessageSearchDto {
     private String sender;
     private Set<String> receivers;
     private Boolean isRead;
-    
+
     public MessageSearchDto(Message message) {
-        this.subject = message.getSubject();
-        this.dateSent = message.getInserted().toLocalDate();
-        this.id = message.getId();
+        this(message.getId(), message.getSubject(), message.getInserted().toLocalDate(), null, null);
     }
-    
+
     public MessageSearchDto(Long id, String subject, String content, LocalDate dateSent, String sender,
             Boolean isRead) {
-        this.id = id;
-        this.subject = subject;
+        this(id, subject, dateSent, sender, isRead);
+
         this.content = content;
-        this.dateSent = dateSent;
-        this.sender = sender;
-        this.isRead = isRead;
     }
-    
+
     public MessageSearchDto(Long id, String subject, LocalDate dateSent, String sender,
             Boolean isRead) {
         this.id = id;
@@ -40,13 +35,13 @@ public class MessageSearchDto {
         this.sender = sender;
         this.isRead = isRead;
     }
-    
+
     public static MessageSearchDto ofSent(Message message) {
         MessageSearchDto dto = new MessageSearchDto(message);
         dto.setReceivers(message.getReceivers().stream().map(m -> m.getPerson().getFullname()).collect(Collectors.toSet()));
         return dto;
     }
-        
+
     public String getContent() {
         return content;
     }

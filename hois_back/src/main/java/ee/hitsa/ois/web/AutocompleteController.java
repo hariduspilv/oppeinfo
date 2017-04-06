@@ -20,10 +20,10 @@ import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
-import ee.hitsa.ois.web.commandobject.SchoolDepartmentAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.PersonDto;
+import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
@@ -77,8 +77,8 @@ public class AutocompleteController {
     }
 
     @GetMapping("/schooldepartments")
-    public List<AutocompleteResult> schoolDepartments(HoisUserDetails user, SchoolDepartmentAutocompleteCommand criteria) {
-        return autocompleteService.schoolDepartments(user.getSchoolId(), criteria);
+    public List<SchoolDepartmentResult> schoolDepartments(HoisUserDetails user) {
+        return autocompleteService.schoolDepartments(user.getSchoolId());
     }
 
     @GetMapping("/studentgroups")

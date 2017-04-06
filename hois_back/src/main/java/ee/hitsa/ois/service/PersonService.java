@@ -1,5 +1,23 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import javax.persistence.EntityManager;
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
@@ -22,24 +40,9 @@ import ee.hitsa.ois.web.commandobject.UsersSeachCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.UsersSearchDto;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-
-import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
-
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-
+/*
+ * TODO: extra checks for Hois Automaatteade person with id = -1
+ */
 @Transactional
 @Service
 public class PersonService {
@@ -105,6 +108,7 @@ public class PersonService {
     public Person save(PersonForm personForm, Person person) {
         EntityUtil.bindToEntity(personForm, person, classifierRepository);
         person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(personForm.getIdcode()));
+        person.setSex(classifierRepository.getOne(EstonianIdCodeValidator.sexFromIdcode(personForm.getIdcode())));
         return personRepository.save(person);
     }
 
@@ -175,7 +179,7 @@ public class PersonService {
         user.getUserRights().addAll(result);
 
         if (user.getUserRights().isEmpty()) {
-            throw new ValidationFailedException(null, "user.roleNoRights");
+            throw new ValidationFailedException("user.roleNoRights");
         }
         return userRepository.save(user);
     }

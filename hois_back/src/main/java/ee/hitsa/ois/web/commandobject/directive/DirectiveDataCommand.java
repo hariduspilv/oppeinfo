@@ -11,6 +11,7 @@ public class DirectiveDataCommand {
     @NotEmpty
     @ClassifierRestriction(MainClassCode.KASKKIRI)
     private String type;
+    private Long canceledDirective;
     private List<Long> students;
 
     public String getType() {
@@ -19,6 +20,14 @@ public class DirectiveDataCommand {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public Long getCanceledDirective() {
+        return canceledDirective;
+    }
+
+    public void setCanceledDirective(Long canceledDirective) {
+        this.canceledDirective = canceledDirective;
     }
 
     public List<Long> getStudents() {

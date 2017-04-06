@@ -25,6 +25,9 @@ public class DirectiveForm extends VersionedCommand {
     @Size(max = 4000)
     private String addInfo;
     private Long directiveCoordinator;
+    private Long canceledDirective;
+    @ClassifierRestriction(MainClassCode.KASKKIRI_TYHISTAMISE_VIIS)
+    private String cancelType;
     @Valid
     private List<? extends DirectiveFormStudent> students;
 
@@ -58,6 +61,22 @@ public class DirectiveForm extends VersionedCommand {
 
     public void setDirectiveCoordinator(Long directiveCoordinator) {
         this.directiveCoordinator = directiveCoordinator;
+    }
+
+    public Long getCanceledDirective() {
+        return canceledDirective;
+    }
+
+    public void setCanceledDirective(Long canceledDirective) {
+        this.canceledDirective = canceledDirective;
+    }
+
+    public String getCancelType() {
+        return cancelType;
+    }
+
+    public void setCancelType(String cancelType) {
+        this.cancelType = cancelType;
     }
 
     public List<? extends DirectiveFormStudent> getStudents() {

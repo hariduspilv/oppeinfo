@@ -12,6 +12,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
@@ -52,12 +53,12 @@ import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 @Service
 public class MessageService {
 
-    private static final String RECEIVED_MESSAGES_FROM = 
+    private static final String RECEIVED_MESSAGES_FROM =
             " from message m inner join message_receiver mr on m.id = mr.message_id inner join person p on m.person_id = p.id ";
-    private static final String RECEIVED_MESSAGES_SELECT = 
+    private static final String RECEIVED_MESSAGES_SELECT =
             " m.id, m.subject, m.content, m.inserted, mr.read is not null as isRead, "
             + "p.firstname || ' ' || p.lastname as sendersName ";
-    private static final String STUDENT_PARENTS_FROM = 
+    private static final String STUDENT_PARENTS_FROM =
               " from student s "
             + "inner join student_group sg on s.student_group_id = sg.id "
             + "inner join student_representative sr on s.id = sr.student_id "
@@ -65,13 +66,13 @@ public class MessageService {
     private static final String STUDENT_PARENTS_SELECT =
             " sg.id as studentGroupId, sg.code, s.id as studentId, sr.person_id as representativesId, "
             + "p.firstname, p.lastname, p.idcode ";
-    private static final String PERSON_FROM = 
+    private static final String PERSON_FROM =
              " from user_ u "
             + "left outer join person p on u.person_id = p.id "
             + "left join school s on s.id = u.school_id ";
-    private static final String PERSON_SELECT = 
+    private static final String PERSON_SELECT =
             " distinct u.id, p.id as personId, p.firstname, p.lastname, p.idcode, u.role_code, s.ehis_school_code ";
-    private static final String STUDENT_PERSON_TEACHER_FROM = 
+    private static final String STUDENT_PERSON_TEACHER_FROM =
             " from student s "
             + "left join person p1 on s.person_id = p1.id "
             + "left join student_group sg on sg.id = s.student_group_id "
@@ -98,12 +99,17 @@ public class MessageService {
     private EntityManager em;
     @Autowired
     private StudentGroupService studentGroupService;
-    
+
     public Page<MessageSearchDto> show(HoisUserDetails user, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM, pageable);
         qb.requiredCriteria("mr.person_id = :personId", "personId", user.getPersonId());
+        /**
+         * Usually users can only view messages sent by others from the same school.
+         * However, they also need to have possibility to see messages from users with no school,
+         * such as main administrator.
+         */
         if(!user.isMainAdmin()) {
-            qb.optionalCriteria("(m.role_code = 'ROLL_P' OR m.school_id = :schoolId)", "schoolId", user.getSchoolId());
+            qb.requiredCriteria("(m.school_id is null OR m.school_id = :schoolId)", "schoolId", user.getSchoolId());
         }
         qb.filter("mr.read is null");
         Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, RECEIVED_MESSAGES_SELECT, em, pageable);
@@ -132,12 +138,36 @@ public class MessageService {
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(MessageSearchDto::ofSent);
     }
+    
+    public Page<MessageSearchDto> searchSentAutomatic(Long schoolId, MessageSearchCommand criteria, Pageable pageable) {
+        return messageRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("sender").get("id"), -1));
+            filters.add(cb.equal(root.get("sendersSchool").get("id"), schoolId));
+            LocalDate sentFrom = criteria.getSentFrom();
+            if(sentFrom != null) {
+              filters.add(cb.greaterThanOrEqualTo(root.get("inserted"), DateUtils.firstMomentOfDay(sentFrom)));
+            }
+            LocalDate sentThru = criteria.getSentThru();
+            if(sentThru != null) {
+              filters.add(cb.lessThanOrEqualTo(root.get("inserted"), DateUtils.lastMomentOfDay(sentThru)));
+            }
+            SearchUtil.propertyContains(() -> root.get("subject"), cb, criteria.getSubject(), filters::add);
+
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }, pageable).map(MessageSearchDto::ofSent);
+    }
 
     public Page<MessageSearchDto> searchReceived(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM, pageable);
         qb.requiredCriteria("mr.person_id = :personId", "personId", user.getPersonId());
+        /**
+         * Usually users can only view messages sent by others from the same school.
+         * However, they also need to have possibility to see messages from users with no school,
+         * such as main administrator.
+         */
         if(!user.isMainAdmin()) {
-            qb.optionalCriteria("(m.role_code = 'ROLL_P' OR m.school_id = :schoolId)", "schoolId", user.getSchoolId());
+            qb.requiredCriteria("(m.school_id is null OR m.school_id = :schoolId)", "schoolId", user.getSchoolId());
         }
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getSender());
         qb.optionalContains("m.subject", "subject", criteria.getSubject());
@@ -149,18 +179,18 @@ public class MessageService {
 
     public Message create(HoisUserDetails user, MessageForm form) {
         Message message = new Message();
-        EntityUtil.bindToEntity(form, message, classifierRepository, 
+        EntityUtil.bindToEntity(form, message, classifierRepository,
                 "sender", "sendersSchool", "responseTo", "receivers");
         if(user.getSchoolId() != null) {
-            message.setSendersSchool(schoolRepository.findOne(user.getSchoolId()));
+            message.setSendersSchool(schoolRepository.getOne(user.getSchoolId()));
         }
-        message.setSender(personRepository.findOne(user.getPersonId()));
-        message.setSendersRole(classifierRepository.findOne(user.getRole()));
+        message.setSender(personRepository.getOne(user.getPersonId()));
+        message.setSendersRole(classifierRepository.getOne(user.getRole()));
 
         if(form.getResponseTo() != null) {
-            Message responseTo = messageRepository.findOne(form.getResponseTo());
+            Message responseTo = messageRepository.getOne(form.getResponseTo());
             responseTo.getResponses().add(message);
-            message.setResponseTo(responseTo);   
+            message.setResponseTo(responseTo);
         }
         saveReceivers(message, form.getReceivers());
 
@@ -172,17 +202,16 @@ public class MessageService {
             Set<BigInteger> representatives = messageRepository.getRepresentativePersonIds(receivers);
             if(!CollectionUtils.isEmpty(representatives)) {
                 representatives.forEach(r -> {
-                    receivers.add(r.longValue());
+                    receivers.add(Long.valueOf(r.longValue()));
                 });
             }
-            Classifier statusNew = classifierRepository.findOne(MessageStatus.TEATESTAATUS_U.name());
-            receivers.forEach(r -> {
+            Classifier statusNew = classifierRepository.getOne(MessageStatus.TEATESTAATUS_U.name());
+            message.getReceivers().addAll(receivers.stream().map(r -> {
                 MessageReceiver receiver = new MessageReceiver();
                 receiver.setStatus(statusNew);
-                receiver.setPerson(personRepository.findOne(r));
-                receiver.setMessage(message);
-                message.getReceivers().add(receiver);
-            });
+                receiver.setPerson(personRepository.getOne(r));
+                return receiver;
+            }).collect(Collectors.toList()));
         }
     }
 
@@ -193,7 +222,7 @@ public class MessageService {
     public void setRead(Long personId, Message message) {
         MessageReceiver receiver = message.getReceivers().stream().filter(r -> EntityUtil.getId(r.getPerson()).equals(personId)).findFirst().get();
         receiver.setRead(LocalDateTime.now());
-        receiver.setStatus(classifierRepository.findOne(MessageStatus.TEATESTAATUS_L.name()));
+        receiver.setStatus(classifierRepository.getOne(MessageStatus.TEATESTAATUS_L.name()));
         messageRepository.save(message);
     }
 
@@ -237,8 +266,8 @@ public class MessageService {
     }
 
     /**
-     * TODO: 
-     * The only difference between this method and PersonService.search() 
+     * TODO:
+     * The only difference between this method and PersonService.search()
      * is that this one does not require wanted person to have school_id
      */
     public Page<UsersSearchDto> searchAllUsers(UsersSeachCommand criteria, Pageable pageable) {
@@ -297,7 +326,7 @@ public class MessageService {
         return mapUserSearchDtoPage(result, Role.ROLL_L);
     }
 
-    private Page<UsersSearchDto> mapUserSearchDtoPage(Page<Object[]> result, Role role) {
+    private static Page<UsersSearchDto> mapUserSearchDtoPage(Page<Object[]> result, Role role) {
         return result.map(r -> {
             UsersSearchDto dto = new UsersSearchDto();
             dto.setId(resultAsLong(r, 0));

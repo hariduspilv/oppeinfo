@@ -9,7 +9,7 @@ public class CurriculumSearchDto {
     private Long id;
     private String nameEt;
     private String nameEn;
-    private Integer credits;
+    private Long credits;
     private LocalDate validFrom;
     private LocalDate validThru;
     private Boolean higher;
@@ -26,8 +26,7 @@ public class CurriculumSearchDto {
         this.id = id;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
-        // FIXME why integer?
-        this.credits = credits != null ? Integer.valueOf(credits.intValue()) : null;
+        this.credits = credits != null ? Long.valueOf(credits.longValue()) : null;
         this.validFrom = validFrom;
         this.validThru = validThru;
         this.higher = higher;
@@ -60,11 +59,11 @@ public class CurriculumSearchDto {
         this.nameEn = nameEn;
     }
 
-    public Integer getCredits() {
+    public Long getCredits() {
         return credits;
     }
 
-    public void setCredits(Integer credits) {
+    public void setCredits(Long credits) {
         this.credits = credits;
     }
 

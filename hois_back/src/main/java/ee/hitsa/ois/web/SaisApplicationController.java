@@ -27,6 +27,7 @@ public class SaisApplicationController {
     }
 
     @PostMapping("importCsv")
+    //TODO: permission checks
     public SaisApplicationImportResultDto importCsv(@RequestBody SaisApplicationImportCsvCommand command, HoisUserDetails user) {
         return saisApplicationService.importCsv(command.getFile().getFdata());
     }

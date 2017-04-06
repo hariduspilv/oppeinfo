@@ -9,6 +9,10 @@ public class ValidationFailedException extends RuntimeException {
 
     private final ErrorInfo errorInfo;
 
+    public ValidationFailedException(String message) {
+        this.errorInfo = ErrorInfo.of(message);
+    }
+
     public ValidationFailedException(String field, String message) {
         this.errorInfo = ErrorInfo.of(message, field);
     }

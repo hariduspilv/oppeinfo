@@ -1,81 +1,73 @@
 package ee.hitsa.ois.repository.specification;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.CollectionUtils;
 
+import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.enums.Language;
-import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 
 public class StateCurriculumSpecification implements Specification<StateCurriculum> {
 
-	StateCurriculumSearchCommand searchCommand;
-	ClassifierRepository classifierRepository;
+	StateCurriculumSearchCommand criteria;
 
-	public StateCurriculumSpecification(StateCurriculumSearchCommand stateCurriculumSearchCommand, ClassifierRepository classifierRepository) {
-		this.searchCommand = stateCurriculumSearchCommand;
-		this.classifierRepository = classifierRepository;
+	public StateCurriculumSpecification(StateCurriculumSearchCommand stateCurriculumSearchCommand) {
+		this.criteria = stateCurriculumSearchCommand;
 	}
 
 	@Override
 	public Predicate toPredicate(Root<StateCurriculum> root, CriteriaQuery<?> query, CriteriaBuilder cb) {
 		List<Predicate> filters = new ArrayList<>();
 
-		String nameField = searchCommand.getLang() == Language.EN ? "nameEn" : "nameEt";
-		SearchUtil.propertyContains(() -> root.get(nameField), cb, searchCommand.getName(), filters::add);
+		String nameField = criteria.getLang() == Language.EN ? "nameEn" : "nameEt";
+		SearchUtil.propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
 
-		if(!CollectionUtils.isEmpty(searchCommand.getStatus())) {
-			filters.add(root.get("status").get("code").in(searchCommand.getStatus()));
+		if(!CollectionUtils.isEmpty(criteria.getStatus())) {
+			filters.add(root.get("status").get("code").in(criteria.getStatus()));
 		}
-		if(searchCommand.getValidFrom() != null) {
-			filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), searchCommand.getValidFrom()));
+		if(criteria.getValidFrom() != null) {
+			filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), criteria.getValidFrom()));
 		}
-		if(searchCommand.getValidThru() != null) {
-			filters.add(cb.lessThanOrEqualTo(root.get("validThru"), searchCommand.getValidThru()));
+		if(criteria.getValidThru() != null) {
+			filters.add(cb.lessThanOrEqualTo(root.get("validThru"), criteria.getValidThru()));
 		}
 		
-		if(!CollectionUtils.isEmpty(searchCommand.getIscedClass()) || 
-		        !CollectionUtils.isEmpty(searchCommand.getIscedSuun()) || 
-		        searchCommand.getIscedVald() != null) {
-	        List<String> icsedRyhms = new ArrayList<>();
-	        
-	        if(!CollectionUtils.isEmpty(searchCommand.getIscedClass())) {
-	            icsedRyhms.addAll(searchCommand.getIscedClass());
-	        } else if(!CollectionUtils.isEmpty(searchCommand.getIscedSuun())) {
-	            icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(searchCommand.getIscedSuun(), 
-	                    MainClassCode.ISCED_RYHM.name()));
-	        } else if(searchCommand.getIscedVald() != null) {
-	            List<String> iscedSuuns = classifierRepository.findChildrenByMainClassifier(
-	                    Arrays.asList(searchCommand.getIscedVald()), MainClassCode.ISCED_SUUN.name());
-	              if(!CollectionUtils.isEmpty(iscedSuuns)) {
-	                   icsedRyhms.addAll(classifierRepository.findChildrenByMainClassifier(iscedSuuns, 
-	                           MainClassCode.ISCED_RYHM.name()));
-	              }
-	        }
-	        /*
-	         * There may be situations, when user selects isced_vald or isced_suun
-	         * and no isced_ryhm corresponds for them.
-	         * In this case search result must be empty.
-	         */
-	        if(!CollectionUtils.isEmpty(icsedRyhms)) {
-	            filters.add(root.get("iscedClass").get("code").in(icsedRyhms));
-	        } else {
-//	            condition which is always false
-	            filters.add(cb.isNull(root.get("id")));
-	        }
-		}
+        if(!CollectionUtils.isEmpty(criteria.getIscedClass())) {
+            filters.add(root.get("iscedClass").get("code").in(criteria.getIscedClass()));
+        }
+        
+        if(!CollectionUtils.isEmpty(criteria.getIscedSuun())) {
+            Subquery<String> targetQuery = query.subquery(String.class);
+            Root<ClassifierConnect> targetRoot = targetQuery.from(ClassifierConnect.class);
+            targetQuery = targetQuery.select(targetRoot.get("classifier").get("code")).where(targetRoot.get("connectClassifier").get("code").in(criteria.getIscedSuun()));
+            filters.add(root.get("iscedClass").get("code").in(targetQuery));
+        }
+        
+        if(criteria.getIscedVald() != null) {
+            // get ISCED_SUUN classifier from isced_class
+            Subquery<String> getIscedSuun = query.subquery(String.class);
+            Root<ClassifierConnect> iscedSuun = getIscedSuun.from(ClassifierConnect.class);
+            getIscedSuun = getIscedSuun.select(iscedSuun.get("classifier")
+                    .get("code")).where(cb.equal(iscedSuun.get("connectClassifier").get("code"), criteria.getIscedVald()));
+
+            // get ISCED_RYHM classifier from ISCED_SUUN
+            Subquery<String> getIscedRyhm = getIscedSuun.subquery(String.class);
+            Root<ClassifierConnect> iscedRyhm = getIscedRyhm.from(ClassifierConnect.class);
+            getIscedRyhm = getIscedRyhm.select(iscedRyhm.get("classifier")
+                    .get("code")).where(iscedRyhm.get("connectClassifier").get("code").in(getIscedSuun));
+            filters.add(root.get("iscedClass").get("code").in(getIscedRyhm));
+        }
 		return cb.and(filters.toArray(new Predicate[filters.size()]));
 	}
 }

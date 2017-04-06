@@ -89,7 +89,7 @@ public abstract class UserUtil {
     }
 
     public static boolean isAdultStudent(HoisUserDetails user, Student student) {
-        return isSame(user, student) && PersonUtil.isAdult(student.getPerson()) && Boolean.FALSE.equals(student.getIsRepresentativeMandatory());
+        return isSame(user, student) && StudentUtil.isAdult(student);
     }
 
     public static boolean isSame(HoisUserDetails user, Student student) {

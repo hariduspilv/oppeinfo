@@ -57,4 +57,5 @@ public class Student extends StudentBase {
     public void setRepresentatives(List<StudentRepresentative> representatives) {
         this.representatives = representatives;
     }
+
 }

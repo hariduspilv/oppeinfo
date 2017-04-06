@@ -33,7 +33,9 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
@@ -49,6 +51,8 @@ public class DirectiveConfirmService {
 
     @Autowired
     private ApplicationRepository applicationRepository;
+    @Autowired
+    private AutomaticMessageService automaticMessageService;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
@@ -116,9 +120,8 @@ public class DirectiveConfirmService {
             Classifier applicationStatus = classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
             Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
             for(DirectiveStudent ds : directive.getStudents()) {
-                // TODO put changes which should occur in future, into task queue
-                // store student version for undo
                 Student student = ds.getStudent();
+                // store student version for undo
                 ds.setStudentHistory(student != null ? student.getStudentHistory() : null);
                 updateApplicationStatus(ds, applicationStatus);
                 updateStudentData(directiveType, ds, studentStatus, student != null ? academicLeaves.get(EntityUtil.getId(student)) : null);
@@ -133,6 +136,7 @@ public class DirectiveConfirmService {
         User user;
         long duration;
 
+        // TODO put changes which should occur in future, into task queue
         switch(directiveType) {
         case KASKKIRI_AKAD:
             duration = ChronoUnit.DAYS.between(periodStart(directiveStudent), periodEnd(directiveStudent).plusDays(1));
@@ -177,6 +181,10 @@ public class DirectiveConfirmService {
             student.setStatus(studentStatus);
         }
         studentService.saveWithHistory(student);
+
+        // inform student about new directive
+        StudentDirectiveCreated data = new StudentDirectiveCreated(directiveStudent);
+        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_UUS_KK, student, data);
     }
 
     private static void cancelDirective(Directive directive) {

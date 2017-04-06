@@ -45,6 +45,6 @@ public enum DirectiveType {
     }
 
     // these types require always application
-    public static EnumSet<DirectiveType> ONLY_FROM_APPLICATION = EnumSet.of(
+    public static final EnumSet<DirectiveType> ONLY_FROM_APPLICATION = EnumSet.of(
             KASKKIRI_AKAD, KASKKIRI_AKADK, KASKKIRI_OKAVA, KASKKIRI_FINM, KASKKIRI_OVORM, KASKKIRI_VALIS);
 }

@@ -6,6 +6,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -13,17 +14,23 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.application.Application;
@@ -33,22 +40,29 @@ import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.message.ConfirmationNeededMessage;
+import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.repository.StudentRepresentativeRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ApplicationUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
+import ee.hitsa.ois.web.dto.ApplicationApplicableDto;
 import ee.hitsa.ois.web.dto.ApplicationDto;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.ApplicationSearchDto;
@@ -57,15 +71,17 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 @Transactional
 @Service
 public class ApplicationService {
+    @SuppressWarnings("unused")
+    private static final Logger log = LoggerFactory.getLogger(ApplicationService.class);
+
     private static final String APPLICATION_FROM = "from application a inner join student student on a.student_id = student.id "+
             "inner join person person on student.person_id = person.id inner join classifier type on a.type_code = type.code "+
             "inner join classifier status on a.status_code = status.code";
     private static final String APPLICATION_SELECT = "a.id, a.type_code, a.status_code, a.inserted, "+
             "a.submitted, a.student_id, person.firstname, person.lastname, a.reject_reason";
 
-    private static final List<String> VALID_APPLICATION_STATUSES = Arrays.asList(ApplicationStatus.AVALDUS_STAATUS_KOOST.name(), ApplicationStatus.AVALDUS_STAATUS_ESIT.name(),
-            ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name());
-
+    @Autowired
+    private AutomaticMessageService automaticMessageService;
     @Autowired
     private ApplicationRepository applicationRepository;
     @Autowired
@@ -75,13 +91,15 @@ public class ApplicationService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
     private StudentRepository studentRepository;
     @Autowired
     private StudyPeriodRepository studyPeriodRepository;
     @Autowired
     private SubjectRepository subjectRepository;
+    @Autowired
+    private StudentRepresentativeRepository studentRepresentativeRepository;
+    @Autowired
+    private Validator validator;
 
     public Page<ApplicationSearchDto> search(HoisUserDetails user, ApplicationSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(APPLICATION_FROM, pageable);
@@ -115,14 +133,13 @@ public class ApplicationService {
         });
     }
 
-    public Application create(ApplicationForm applicationForm) {
-//        if (ApplicationType.AVALDUS_LIIK_AKAD.name().equals(applicationForm.getType())
-//                && existsValidAcademicLeaveApplication(applicationForm.getStudent().getId())) {
-//            throw new ValidationFailureException("Student already has valid academic leave application");
-//        } else if (ApplicationType.AVALDUS_LIIK_AKADK.name().equals(applicationForm.getType())
-//                && !existsValidAcademicLeaveApplication(applicationForm.getStudent().getId())) {
-//            throw new ValidationFailureException("Student has no valid academic leave application");
-//        }
+    public Application create(Student student, ApplicationForm applicationForm) {
+        Map<ApplicationType, ApplicationApplicableDto> applicable = applicableApplicationTypes(student);
+        ApplicationType type = ApplicationType.valueOf(applicationForm.getType());
+        if (Boolean.FALSE.equals(applicable.get(type).getIsAllowed())) {
+            throw new ValidationFailedException(applicable.get(type).getReason());
+        }
+
         return save(new Application(), applicationForm);
     }
 
@@ -134,12 +151,42 @@ public class ApplicationService {
         EntityUtil.setEntityFromRepository(applicationForm, application, studentRepository, "student");
 
         if (applicationForm.getAcademicApplication() != null) {
-            application.setAcademicApplication(applicationRepository.getOne(applicationForm.getAcademicApplication()));
+            application.setAcademicApplication(applicationRepository.getOne(applicationForm.getAcademicApplication().getId()));
         }
         updateFiles(application, applicationForm);
         updatePlannedSubjects(application, applicationForm);
-
+        validateEntity(application);
+        assertConstriants(application);
         return applicationRepository.save(application);
+    }
+
+    private void validateEntity(Application application) {
+        ApplicationType applicationType = ApplicationType.valueOf(EntityUtil.getCode(application.getType()));
+        Set<ConstraintViolation<Application>> errors = validator.validate(application, applicationType.validationGroup());
+        if(!errors.isEmpty()) {
+            List<Map.Entry<String, String>> allErrors = new ArrayList<>();
+            for(ConstraintViolation<Application> e : errors) {
+                allErrors.add(new AbstractMap.SimpleImmutableEntry<>(e.getPropertyPath().toString(), e.getMessage()));
+            }
+            throw new ValidationFailedException(allErrors);
+        }
+    }
+
+    private void assertConstriants(Application application) {
+        ApplicationType type = ApplicationType.valueOf(EntityUtil.getCode(application.getType()));
+        switch (type) {
+        case AVALDUS_LIIK_AKAD:
+            ApplicationUtil.assertAkadConstraints(application, applicationRepository);
+            break;
+        case AVALDUS_LIIK_AKADK:
+            ApplicationUtil.assertAkadkConstraints(application);
+            break;
+        case AVALDUS_LIIK_VALIS:
+            ApplicationUtil.assertValisConstraints(application);
+            break;
+        default:
+            break;
+        }
     }
 
     private void updatePlannedSubjects(Application application, ApplicationForm applicationForm) {
@@ -175,10 +222,6 @@ public class ApplicationService {
         plannedSubject.getEquivalents().addAll(newPlannedSubjectEquivalents);
     }
 
-    private boolean existsValidAcademicLeaveApplication(Long studentId) {
-        return findValidAcademicLeave(studentId) != null;
-    }
-
     private static void updateFiles(Application application, ApplicationForm applicationForm) {
         Set<ApplicationFile> newFiles = new HashSet<>();
         if(applicationForm.getFiles() != null) {
@@ -199,78 +242,21 @@ public class ApplicationService {
         EntityUtil.deleteEntity(applicationRepository, application);
     }
 
-    //TODO: rewrite this
-    public Application findValidAcademicLeave(Long student) {
-        List<Application> validAcademicLeaves =  applicationRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("student").get("id"), student));
-            filters.add(cb.equal(root.get("type").get("code"), ApplicationType.AVALDUS_LIIK_AKAD.name()));
-
-            filters.add(cb.equal(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name()));
-
-
-
-            root.join("studyPeriodEnd", JoinType.LEFT);
-            filters.add(cb.or(
-                cb.and(cb.equal(root.get("isPeriod"), Boolean.FALSE), cb.greaterThanOrEqualTo(root.get("endDate"), LocalDate.now())),
-                cb.and(cb.equal(root.get("isPeriod"), Boolean.TRUE), cb.greaterThanOrEqualTo(root.get("studyPeriodEnd").get("endDate"), LocalDate.now()))
-            ));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        });
-
-        if (CollectionUtils.isEmpty(validAcademicLeaves)) {
-            return null;
-        }
-
-        Application academicLeaveWithoutRevocation = null;
-        for (Application application : validAcademicLeaves) {
-            Application validAcademicLeaveRevocation = findValidAcademicLeaveRevocation(application.getId());
-            if(validAcademicLeaveRevocation == null) {
-                academicLeaveWithoutRevocation = application;
-            }
-        }
-
-        return academicLeaveWithoutRevocation;
-
-
-    }
-
-    public Application findValidAcademicLeaveRevocation(Long applicationId) {
-        return applicationRepository.findOne((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("academicApplication"), applicationId));
-            //filters.add(root.get("status").get("code").in(VALID_APPLICATION_STATUSES));
-            filters.add(cb.equal(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name()));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        });
-    }
-
-    public Map<ApplicationType, Boolean> applicableApplications(Long studentId, Long schoolId) {
-        Map<ApplicationType, Boolean> result = new HashMap<>();
-        for (ApplicationType type : ApplicationType.values()) {
-            result.put(type, Boolean.TRUE);
-        }
-        //Kui õppur on juba koostanud seda liiki avalduse, mille staatus on „Koostamisel“, „Esitatud“, „Ülevaatamisel“ või „Kinnitamisel“;
-        List<Application> existingApplications = applicationRepository.findDistinctTypeByStudentIdAndStatusCodeIn(studentId, VALID_APPLICATION_STATUSES);
-
-        for (Application application : existingApplications) {
-            result.put(ApplicationType.valueOf(EntityUtil.getNullableCode(application.getType())), Boolean.FALSE);
-        }
-
-        //Kui õppur ei viibi akadeemilisel puhkusel, siis ei ole tal võimalik esitada taotlust „akadeemilise puhkuse katkestamiseks“;
-        //boolean studentOnAcademicLeave = findValidAcademicLeave(studentId) != null;
-        //result.put(ApplicationType.AVALDUS_LIIK_AKADK, Boolean.valueOf(studentOnAcademicLeave));
-
-        return result;
+    public List<ApplicationType> existingApplicationsTypes(Long studentId) {
+        List<Application> existingApplications = applicationRepository.findDistinctTypeByStudentIdAndStatusCodeIn(studentId,
+                Arrays.asList(ApplicationStatus.AVALDUS_STAATUS_KOOST.name(), ApplicationStatus.AVALDUS_STAATUS_ESIT.name(),
+                        ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name()));
+        return existingApplications.stream()
+                .map(application -> ApplicationType.valueOf(EntityUtil.getCode(application.getType()))).collect(Collectors.toList());
     }
 
     public Application submit(HoisUserDetails user, Application application) {
         Student student = application.getStudent();
         if(UserUtil.isSchoolAdmin(user, student.getSchool())) {
-            application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
+            application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
             application.setSubmitted(LocalDateTime.now());
         } if (UserUtil.isAdultStudent(user, student) || UserUtil.isStudentRepresentative(user, student)) {
-            application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()));
+            application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()));
             application.setSubmitted(LocalDateTime.now());
         } else {
             application.setNeedsRepresentativeConfirm(Boolean.TRUE);
@@ -279,7 +265,7 @@ public class ApplicationService {
     }
 
     public Application reject(Application application, ApplicationRejectForm applicationRejectForm) {
-        application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name()));
+        application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name()));
         application.setRejectReason(applicationRejectForm.getReason());
         return applicationRepository.save(application);
     }
@@ -292,8 +278,89 @@ public class ApplicationService {
     private void setSeenBySchoolAdmin(HoisUserDetails user, Application application) {
         if (UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) &&
                 EntityUtil.getCode(application.getStatus()).equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.name())) {
-            application.setStatus(classifierRepository.findOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
+            application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
             applicationRepository.save(application);
         }
+    }
+
+    public Application findLastValidAcademicLeaveWithoutRevocation(Long studentId) {
+      List<Application> validAcademicLeaves = applicationRepository.findAll((root, query, cb) -> {
+          List<Predicate> filters = new ArrayList<>();
+          filters.add(cb.equal(root.get("student").get("id"), studentId));
+          filters.add(cb.equal(root.get("type").get("code"), ApplicationType.AVALDUS_LIIK_AKAD.name()));
+          filters.add(cb.equal(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name()));
+
+          Subquery<Long> revocationQuery = query.subquery(Long.class);
+          Root<Application> applicationRoot = revocationQuery.from(Application.class);
+          revocationQuery
+              .select(applicationRoot.get("id"))
+              .where(cb.equal(applicationRoot.get("id"), root.get("id")));
+          filters.add(cb.exists(revocationQuery));
+
+          root.join("studyPeriodEnd", JoinType.LEFT);
+          filters.add(cb.or(
+              cb.and(cb.equal(root.get("isPeriod"), Boolean.FALSE), cb.greaterThanOrEqualTo(root.get("endDate"), LocalDate.now())),
+              cb.and(cb.equal(root.get("isPeriod"), Boolean.TRUE), cb.greaterThanOrEqualTo(root.get("studyPeriodEnd").get("endDate"), LocalDate.now()))
+          ));
+          return cb.and(filters.toArray(new Predicate[filters.size()]));
+      });
+
+      Application validAcademicLeave = null;
+      if (validAcademicLeaves.size() == 1) {
+          validAcademicLeaves.get(0);
+      } else if (validAcademicLeaves.size() > 1) {
+          validAcademicLeave = validAcademicLeaves.stream()
+                  .sorted((application, other) -> other.getChanged().compareTo(application.getChanged())).findFirst().get();
+      }
+      return validAcademicLeave;
+    }
+
+    public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
+        List<ApplicationType> existingApplications = existingApplicationsTypes(EntityUtil.getId(student));
+
+        Map<ApplicationType, ApplicationApplicableDto> result = new HashMap<>();
+        for (ApplicationType type : ApplicationType.values()) {
+            if (existingApplications.contains(type)) {
+                result.put(type, new ApplicationApplicableDto("application.messages.applicationAlreadyExists"));
+            } else {
+                if (type == ApplicationType.AVALDUS_LIIK_AKAD) {
+                    if (!StudentUtil.isActive(student)) {
+                        result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
+                    } else if (!StudentUtil.isNominalStudy(student)) {
+                        result.put(type, new ApplicationApplicableDto("application.messages.studentNotNominalStudy"));
+                    }
+                } else if (type == ApplicationType.AVALDUS_LIIK_AKADK) {
+                    if (!StudentUtil.isActive(student)) {
+                        result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
+                    } else if (!StudentUtil.isOnAcademicLeave(student)) {
+                        result.put(type, new ApplicationApplicableDto("application.messages.studentNotOnAcademicLeave"));
+                    }
+                    findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student));
+                } else {
+                    if (!StudentUtil.isStudying(student)) {
+                        result.put(type, new ApplicationApplicableDto("application.messages.studentNotStudying"));
+                    }
+                }
+                result.put(type, new ApplicationApplicableDto());
+            }
+        }
+
+        return result;
+    }
+
+    public void sendConfirmNeededNotificationMessage(Application application) {
+        Student student = application.getStudent();
+        Boolean hasRepresentatives = studentRepresentativeRepository.existsByStudentId(EntityUtil.getId(student));
+        ConfirmationNeededMessage data = new ConfirmationNeededMessage(application);
+        if (Boolean.TRUE.equals(hasRepresentatives)) {
+            automaticMessageService.sendMessageToStudentRepresentatives(MessageType.TEATE_LIIK_AV_KINNIT, student, data);
+        } else {
+            automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, student.getSchool(), data);
+        }
+    }
+
+    public void sendRejectionNotificationMessage(Application application) {
+        StudentApplicationRejectedMessage data = new StudentApplicationRejectedMessage(application);
+        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data);
     }
 }

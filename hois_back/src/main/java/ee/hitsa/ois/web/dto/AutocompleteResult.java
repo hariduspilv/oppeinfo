@@ -42,10 +42,6 @@ public class AutocompleteResult extends EntityConnectionCommand {
         return nameEn;
     }
 
-    public static AutocompleteResult of(DirectiveCoordinator coordinator) {
-        return new AutocompleteResult(coordinator.getId(), coordinator.getName(), coordinator.getName());
-    }
-
     public static AutocompleteResult of(Curriculum curriculum) {
         return new AutocompleteResult(curriculum.getId(), curriculum.getNameEt(), curriculum.getNameEn());
     }
@@ -57,6 +53,14 @@ public class AutocompleteResult extends EntityConnectionCommand {
     public static AutocompleteResult of(CurriculumVersion curriculumVersion) {
         Curriculum curriculum = curriculumVersion.getCurriculum();
         return new AutocompleteResult(curriculumVersion.getId(), CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEt()), CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEn()));
+    }
+
+    public static AutocompleteResult of(DirectiveCoordinator coordinator) {
+        return new AutocompleteResult(coordinator.getId(), coordinator.getName(), coordinator.getName());
+    }
+
+    public static AutocompleteResult of(SaisAdmission saisAdmission) {
+        return new AutocompleteResult(saisAdmission.getId(), saisAdmission.getCode(), saisAdmission.getCode());
     }
 
     public static AutocompleteResult of(School school) {
@@ -85,20 +89,16 @@ public class AutocompleteResult extends EntityConnectionCommand {
         return new AutocompleteResult(studyPeriod.getId(), studyPeriod.getNameEt(), studyPeriod.getNameEn());
     }
 
-    public static AutocompleteResult of(SubjectAutocompleteResult subject) {
-        return new AutocompleteResult(subject.getId(), SubjectUtil.subjectName(subject.getCode(), subject.getNameEt()), SubjectUtil.subjectName(subject.getCode(), subject.getNameEn()));
-    }
-
     public static AutocompleteResult of(Subject subject) {
         return new AutocompleteResult(subject.getId(), SubjectUtil.subjectName(subject.getCode(), subject.getNameEt(), subject.getCredits()), SubjectUtil.subjectName(subject.getCode(), subject.getNameEn(), subject.getCredits()));
+    }
+
+    public static AutocompleteResult of(SubjectAutocompleteResult subject) {
+        return new AutocompleteResult(subject.getId(), SubjectUtil.subjectName(subject.getCode(), subject.getNameEt()), SubjectUtil.subjectName(subject.getCode(), subject.getNameEn()));
     }
 
     public static AutocompleteResult of(Teacher teacher) {
         String name = teacher.getPerson().getFullname();
         return new AutocompleteResult(teacher.getId(), name, name);
-    }
-
-    public static AutocompleteResult of(SaisAdmission saisAdmission) {
-        return new AutocompleteResult(saisAdmission.getId(), saisAdmission.getCode(), saisAdmission.getCode());
     }
 }

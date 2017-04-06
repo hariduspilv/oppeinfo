@@ -59,7 +59,7 @@ public class StateCurriculumService {
 
         if(stateCurriculumSearchCommand.getEkrLevel() != null && !stateCurriculumSearchCommand.getEkrLevel().isEmpty() || pageable.getSort() != null && (
                 pageable.getSort().toString().equals("ekrLevel: DESC") || pageable.getSort().toString().equals("ekrLevel: ASC"))) {
-            List<StateCurriculum> theBestList = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand, classifierRepository));
+            List<StateCurriculum> theBestList = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand));
             setEkrLevels(theBestList);
 
             if(stateCurriculumSearchCommand.getEkrLevel() != null && !stateCurriculumSearchCommand.getEkrLevel().isEmpty()) {
@@ -70,7 +70,7 @@ public class StateCurriculumService {
             Page<StateCurriculum> page = sortList(theBestList, pageable);
             return page.map(StateCurriculumSearchDto::of);
         }
-        Page<StateCurriculum> page = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand, classifierRepository), pageable);
+        Page<StateCurriculum> page = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand), pageable);
         setEkrLevels(page);
         return page.map(StateCurriculumSearchDto::of);
     }

@@ -16,7 +16,6 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.domain.SaisAdmission;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
-import ee.hitsa.ois.service.security.HoisUserDetailsService;
 import ee.hitsa.ois.web.dto.SaisAdmissionDto;
 import ee.hitsa.ois.web.dto.SaisAdmissionSearchDto;
 
@@ -26,9 +25,8 @@ import ee.hitsa.ois.web.dto.SaisAdmissionSearchDto;
 public class SaisAdmissionControllerTests {
 
     @Autowired
-    private HoisUserDetailsService hoisUserDetailsService;
-    @Autowired
     private TestRestTemplate restTemplate;
+
     @Autowired
     private SaisAdmissionRepository saisAdmissionRepository;
 

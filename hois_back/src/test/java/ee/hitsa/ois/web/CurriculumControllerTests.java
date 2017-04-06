@@ -110,8 +110,8 @@ public class CurriculumControllerTests {
         uriBuilder.queryParam("merCode", "code");
         uriBuilder.queryParam("validFrom", "2016-12-31T22:00:00.000Z");
         uriBuilder.queryParam("validThru", "2017-01-31T22:00:00.000Z");
-        uriBuilder.queryParam("creditsMin", "0.0");
-        uriBuilder.queryParam("creditsMax", "100.0");
+        uriBuilder.queryParam("creditsMin", "0");
+        uriBuilder.queryParam("creditsMax", "100");
         uriBuilder.queryParam("isJoint", Boolean.TRUE);
         uriBuilder.queryParam("school", "1", "2", "3");
         uriBuilder.queryParam("status", "S1", "S2");

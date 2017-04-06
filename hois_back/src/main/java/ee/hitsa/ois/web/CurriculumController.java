@@ -147,9 +147,4 @@ public class CurriculumController {
             throw new AssertionFailedException("EHIS school mismatch");
         }
     }
-    
-    @GetMapping("/schoolDepartments")
-    public Object getSchoolDepartments(HoisUserDetails user) {
-        return curriculumService.getSchoolDepdartments(user.getSchoolId());
-    }
 }

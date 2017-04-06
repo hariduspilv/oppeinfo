@@ -28,6 +28,7 @@ public enum MainClassCode {
     ISCED_VALD,
     ISCED_SUUN,
     KASKKIRI,
+    KASKKIRI_TYHISTAMISE_VIIS,
     KOMPETENTS,
     KORGMOODUL,
     KUTSE,

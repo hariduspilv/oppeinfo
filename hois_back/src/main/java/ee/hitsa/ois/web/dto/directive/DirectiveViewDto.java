@@ -20,6 +20,7 @@ public class DirectiveViewDto {
     private String status;
     private AutocompleteResult directiveCoordinator;
     private String preamble;
+    private AutocompleteResult canceledDirective;
     private LocalDateTime inserted;
     private List<DirectiveViewStudentDto> students;
 
@@ -95,6 +96,14 @@ public class DirectiveViewDto {
         this.preamble = preamble;
     }
 
+    public AutocompleteResult getCanceledDirective() {
+        return canceledDirective;
+    }
+
+    public void setCanceledDirective(AutocompleteResult canceledDirective) {
+        this.canceledDirective = canceledDirective;
+    }
+
     public LocalDateTime getInserted() {
         return inserted;
     }
@@ -115,6 +124,10 @@ public class DirectiveViewDto {
         DirectiveViewDto dto = EntityUtil.bindToDto(directive, new DirectiveViewDto());
         if(directive.getDirectiveCoordinator() != null) {
             dto.setDirectiveCoordinator(AutocompleteResult.of(directive.getDirectiveCoordinator()));
+        }
+        Directive canceled = directive.getCanceledDirective();
+        if(canceled != null) {
+            dto.setCanceledDirective(new AutocompleteResult(canceled.getId(), canceled.getHeadline(), null));
         }
         dto.setStudents(directive.getStudents().stream().filter(r -> filteredStudentId == null || filteredStudentId.equals(EntityUtil.getId(r.getStudent()))).map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
         return dto;

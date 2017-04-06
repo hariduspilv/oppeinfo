@@ -25,6 +25,7 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -49,6 +50,7 @@ import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.DirectiveCoordinatorRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.repository.SaisApplicationRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
@@ -60,6 +62,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -72,6 +75,7 @@ import ee.hitsa.ois.web.dto.directive.DirectiveDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveSearchDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveStudentDto;
 import ee.hitsa.ois.web.dto.directive.DirectiveStudentSearchDto;
+import ee.hitsa.ois.web.dto.directive.DirectiveViewStudentDto;
 
 @Transactional
 @Service
@@ -116,6 +120,8 @@ public class DirectiveService {
     private DirectiveCoordinatorRepository directiveCoordinatorRepository;
     @Autowired
     private PersonRepository personRepository;
+    @Autowired
+    private SaisApplicationRepository saisApplicationRepository;
     @Autowired
     private StudentGroupRepository studentGroupRepository;
     @Autowired
@@ -170,6 +176,19 @@ public class DirectiveService {
         assertSameSchool(directive, coordinator != null ? coordinator.getSchool() : null);
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
+        if(KASKKIRI_TYHIST.equals(directiveType) && directive.getId() == null) {
+            // canceled directive can added only during directive create, check for same school
+            EntityUtil.setEntityFromRepository(form, directive, directiveRepository, "canceledDirective");
+            Directive canceledDirective = directive.getCanceledDirective();
+            if(canceledDirective == null) {
+                throw new AssertionFailedException("Canceled directive is missing");
+            }
+            assertSameSchool(directive, canceledDirective.getSchool());
+            // check that there is no cancel directive already
+            if(Boolean.TRUE.equals(directiveRepository.existsByCanceledDirectiveId(canceledDirective.getId()))) {
+                throw new ValidationFailedException("directive.duplicatecancel");
+            }
+        }
 
         if(form.getStudents() != null) {
             List<DirectiveStudent> students = directive.getStudents();
@@ -178,6 +197,10 @@ public class DirectiveService {
             }
             Map<Long, DirectiveStudent> studentMapping = students.stream().collect(Collectors.toMap(DirectiveStudent::getId, ds -> ds));
             for(DirectiveFormStudent formStudent : form.getStudents()) {
+                if(KASKKIRI_TYHIST.equals(directiveType)) {
+                    // TODO set/remove checkbox
+                    continue;
+                }
                 Long directiveStudentId = formStudent.getId();
                 DirectiveStudent student = directiveStudentId != null ? studentMapping.remove(directiveStudentId) : null;
                 if(student == null) {
@@ -238,16 +261,38 @@ public class DirectiveService {
         EntityUtil.deleteEntity(directiveRepository, directive);
     }
 
+    /**
+     * Fetch initial data for given directive type and for selected students
+     *
+     * @param user
+     * @param cmd
+     * @return
+     */
     public DirectiveDto directivedata(HoisUserDetails user, DirectiveDataCommand cmd) {
-        // fetch all data for selected students and given directive type
-        DirectiveDto dto = EntityUtil.bindToDto(cmd, new DirectiveDto(), "students");
+        if(KASKKIRI_TYHIST.name().equals(cmd.getType())) {
+            Directive canceled = directiveRepository.getOne(cmd.getCanceledDirective());
+            assertSameSchool(canceled, em.getReference(School.class, user.getSchoolId()));
+            DirectiveDto.DirectiveCancelDto dto = directiveInitialValues(new DirectiveDto.DirectiveCancelDto(), user, cmd);
+            dto.setCanceledDirectiveType(EntityUtil.getCode(canceled.getType()));
+            dto.setCanceledStudents(canceled.getStudents().stream().map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
+            // TODO fetch list of students which cannot canceled
+            // dto.setChangedStudents()
+            return dto;
+        }
+
+        DirectiveDto dto = directiveInitialValues(new DirectiveDto(), user, cmd);
+        dto.setStudents(loadStudents(user.getSchoolId(), cmd));
+        return dto;
+    }
+
+    private <T extends DirectiveDto> T directiveInitialValues(T dto, HoisUserDetails user, DirectiveDataCommand cmd) {
+        EntityUtil.bindToDto(cmd, dto, "students");
         dto.setStatus(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name());
         dto.setInserted(LocalDateTime.now());
         dto.setInsertedBy(user.getUsername());
         // directive type as default headline
         Classifier type = classifierRepository.findOne(cmd.getType());
         dto.setHeadline(type != null ? type.getNameEt() : null);
-        dto.setStudents(loadStudents(user.getSchoolId(), cmd));
         return dto;
     }
 
@@ -261,10 +306,12 @@ public class DirectiveService {
         if(studentIds == null || studentIds.isEmpty()) {
             return Collections.emptyList();
         }
+
         DirectiveType directiveType = DirectiveType.valueOf(cmd.getType());
         if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_IMMATV.equals(directiveType)) {
             return Collections.emptyList();
         }
+
         Map<Long, Application> applications = Collections.emptyMap();
         Optional<ApplicationType> applicationType = applicationType(directiveType);
         if(applicationType.isPresent()) {
@@ -365,26 +412,16 @@ public class DirectiveService {
     }
 
     private List<DirectiveStudentDto> saisLoadStudents(Long schoolId, DirectiveDataCommand cmd) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
-                "from sais_application sa inner join sais_admission ad on sa.sais_admission_id = ad.id "+
-                "inner join curriculum_version cv on ad.curriculum_version_id = cv.id inner join curriculum c on cv.curriculum_id = c.id",
-                new Sort("sa.lastname", "sa.firstname"));
+        return saisApplicationRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
 
-        // TODO criteria (curriculum, studyLevel)
-        qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
-        // qb.optionalCriteria("sa.idcode not in (select ds.idcode from directive_student ds where ds.directive_id = :directiveId)", "directiveId", criteria.getDirective());
+            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+            filters.add(cb.equal(root.get("status").get("code"), SaisApplicationStatus.SAIS_AVALDUSESTAATUS_T.name()));
+            // TODO criteria (curriculum, studyLevel)
+            // qb.optionalCriteria("sa.idcode not in (select ds.idcode from directive_student ds where ds.directive_id = :directiveId)", "directiveId", criteria.getDirective());
 
-        // application status
-        qb.requiredCriteria("sa.status_code = : status", "status", SaisApplicationStatus.SAIS_AVALDUSESTAATUS_T.name());
-
-        List<?> data = qb.select("sa.id, sa.firstname, sa.lastname, sa.idcode", em).setMaxResults(STUDENTS_MAX).getResultList();
-        return data.stream().map(r -> {
-            DirectiveStudentDto dto = new DirectiveStudentDto();
-            dto.setId(resultAsLong(r, 0));
-            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
-            dto.setIdcode(resultAsString(r, 3));
-            return dto;
-        }).collect(Collectors.toList());
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }, new PageRequest(0, STUDENTS_MAX, new Sort("lastname", "firstname"))).map(DirectiveStudentDto::of).getContent();
     }
 
     public Page<DirectiveCoordinatorDto> search(Long schoolId, Pageable pageable) {
@@ -452,6 +489,7 @@ public class DirectiveService {
                 person.setFirstname(formStudent.getFirstname());
                 person.setLastname(formStudent.getLastname());
                 person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
+                person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(idcode)));
                 person = personRepository.save(person);
             }
             student.setPerson(person);
