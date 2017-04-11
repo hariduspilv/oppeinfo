@@ -40,6 +40,7 @@ public class StudyYearService {
     @Autowired
     private StudyPeriodEventRepository studyPeriodEventRepository;
 
+    // TODO use enum for classifier
     private static final String[] STUDY_PERIOD_EVENTS = {"SYNDMUS_AVES", "SYNDMUS_DEKP", "SYNDMUS_VOTA"};
 
     public List<StudyYearsSearchDto> getStudyYears(Long schoolId) {

@@ -41,6 +41,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -87,7 +88,7 @@ public class DirectiveConfirmService {
                 // check that cancel date is inside academic leave period
                 DirectiveStudent academicLeave = academicLeaves.get(EntityUtil.getId(ds.getStudent()));
                 LocalDate leaveCancel = ds.getStartDate();
-                if(academicLeave == null || leaveCancel.isBefore(periodStart(academicLeave)) || leaveCancel.isAfter(periodEnd(academicLeave))) {
+                if(academicLeave == null || leaveCancel.isBefore(DateUtils.periodStart(academicLeave)) || leaveCancel.isAfter(DateUtils.periodEnd(academicLeave))) {
                     allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "startDate"), "InvalidValue"));
                 }
             }
@@ -139,11 +140,11 @@ public class DirectiveConfirmService {
         // TODO put changes which should occur in future, into task queue
         switch(directiveType) {
         case KASKKIRI_AKAD:
-            duration = ChronoUnit.DAYS.between(periodStart(directiveStudent), periodEnd(directiveStudent).plusDays(1));
+            duration = ChronoUnit.DAYS.between(DateUtils.periodStart(directiveStudent), DateUtils.periodEnd(directiveStudent).plusDays(1));
             student.setNominalStudyEnd(student.getNominalStudyEnd().plusDays(duration));
             break;
         case KASKKIRI_AKADK:
-            duration = ChronoUnit.DAYS.between(periodStart(academicLeave), directiveStudent.getStartDate());
+            duration = ChronoUnit.DAYS.between(DateUtils.periodStart(academicLeave), directiveStudent.getStartDate());
             student.setNominalStudyEnd(student.getNominalStudyEnd().minusDays(duration));
             break;
         case KASKKIRI_EKSMAT:
@@ -243,14 +244,6 @@ public class DirectiveConfirmService {
     private static User userForStudent(Student student) {
         Long studentId = student.getId();
         return student.getPerson().getUsers().stream().filter(u -> studentId.equals(EntityUtil.getNullableId(u.getStudent()))).findFirst().orElse(null);        
-    }
-
-    private static LocalDate periodStart(DirectiveStudent directive) {
-        return Boolean.TRUE.equals(directive.getIsPeriod()) ? directive.getStudyPeriodStart().getStartDate() : directive.getStartDate();
-    }
-
-    private static LocalDate periodEnd(DirectiveStudent directive) {
-        return Boolean.TRUE.equals(directive.getIsPeriod()) ? directive.getStudyPeriodEnd().getEndDate() : directive.getEndDate();
     }
 
     private Student createStudent(DirectiveStudent directiveStudent) {

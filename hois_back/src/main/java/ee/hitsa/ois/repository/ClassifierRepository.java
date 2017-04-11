@@ -1,7 +1,6 @@
 package ee.hitsa.ois.repository;
 
 import java.util.List;
-import java.util.Set;
 
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
@@ -68,7 +67,7 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
     @Query("select c.code from Classifier c where c.mainClassCode = ?1")
     List<String> findAllCodesByMainClassCode(String mainClassCode);
 
-    Set<Classifier> findAllByMainClassCode(String mainClassCode);
+    List<Classifier> findAllByMainClassCode(String mainClassCode);
 
     //Classifier findByCodeAndMainClassCode(String code, String mainClassCode);
 

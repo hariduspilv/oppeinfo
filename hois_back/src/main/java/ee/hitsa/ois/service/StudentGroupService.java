@@ -42,11 +42,11 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchStudentsCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
 
@@ -90,6 +90,7 @@ public class StudentGroupService {
         qb.optionalCriteria("sg.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("sg.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
         qb.optionalCriteria("sg.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeachers());
+        qb.optionalCriteria("sg.teacher_id in (select t.id from teacher t where t.person_id = :teacherPerson and t.school_id = :schoolId)", "teacherPerson", criteria.getTeacherPerson());
 
         return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
@@ -164,6 +165,10 @@ public class StudentGroupService {
         } else {
             studentGroup.setStudents(added);
         }
+        Integer places = studentGroup.getPlaces();
+        if(places != null && places.intValue() < studentGroup.getStudents().size()) {
+            throw new ValidationFailedException("studentGroup.too-many-students");
+        }
         return studentGroup;
     }
 
@@ -196,7 +201,6 @@ public class StudentGroupService {
 
     public Map<String, ?> curriculumData(Curriculum curriculum) {
         Map<String, Object> data = new HashMap<>();
-        data.put("curriculumVersions", curriculum.getVersions().stream().map(CurriculumVersionResult::of).collect(Collectors.toList()));
         data.put("languages", curriculum.getStudyLanguages().stream().map(r -> EntityUtil.getCode(r.getStudyLang())).collect(Collectors.toList()));
         List<String> studyForms;
         if(CurriculumUtil.isHigher(curriculum.getOrigStudyLevel())) {

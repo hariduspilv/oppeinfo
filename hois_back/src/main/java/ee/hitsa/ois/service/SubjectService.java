@@ -118,12 +118,14 @@ public class SubjectService {
     }
 
     private static void bindSubjectConnect(Subject primarySubject, Classifier connectionType, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Collection<Subject> connectSubjects) {
+        // TODO use EntityUtil.bindClassifierCollection
         Map<Long, SubjectConnect> m = connections.stream()
                 .filter(it -> Objects.equals(EntityUtil.getCode(it.getConnection()), EntityUtil.getCode(connectionType)))
-                .collect(Collectors.toMap(k -> k.getConnectSubject().getId(), v -> v));
+                .collect(Collectors.toMap(k -> EntityUtil.getId(k.getConnectSubject()), v -> v));
         for (Subject connected : connectSubjects) {
-            if (m.keySet().contains(connected.getId())) {
-                newConnections.add(m.get(connected.getId()));
+            SubjectConnect sc = m.get(connected.getId());
+            if (sc != null) {
+                newConnections.add(sc);
             } else {
                 newConnections.add(new SubjectConnect(primarySubject, connected, connectionType));
             }

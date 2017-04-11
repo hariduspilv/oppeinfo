@@ -20,6 +20,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.util.Period;
 import ee.hitsa.ois.validation.ApplicationValidation.Akad;
 import ee.hitsa.ois.validation.ApplicationValidation.Akadk;
 import ee.hitsa.ois.validation.ApplicationValidation.Eksmat;
@@ -29,12 +30,14 @@ import ee.hitsa.ois.validation.ApplicationValidation.Ovorm;
 import ee.hitsa.ois.validation.ApplicationValidation.Valis;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.PeriodRange;
 import ee.hitsa.ois.validation.StudyPeriodRange;
 
 @Entity
+@PeriodRange(groups = {Akad.class, Valis.class})
 @DateRange(from = "startDate", thru = "endDate", groups = {Akad.class})
 @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd", groups = {Akad.class})
-public class Application extends BaseEntityWithId {
+public class Application extends BaseEntityWithId implements Period {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
@@ -189,6 +192,7 @@ public class Application extends BaseEntityWithId {
         this.country = country;
     }
 
+    @Override
     public Boolean getIsPeriod() {
         return isPeriod;
     }
@@ -205,6 +209,7 @@ public class Application extends BaseEntityWithId {
         this.isAbroad = isAbroad;
     }
 
+    @Override
     public LocalDate getStartDate() {
         return startDate;
     }
@@ -213,6 +218,7 @@ public class Application extends BaseEntityWithId {
         this.startDate = startDate;
     }
 
+    @Override
     public LocalDate getEndDate() {
         return endDate;
     }
@@ -221,6 +227,7 @@ public class Application extends BaseEntityWithId {
         this.endDate = endDate;
     }
 
+    @Override
     public StudyPeriod getStudyPeriodStart() {
         return studyPeriodStart;
     }
@@ -229,6 +236,7 @@ public class Application extends BaseEntityWithId {
         this.studyPeriodStart = studyPeriodStart;
     }
 
+    @Override
     public StudyPeriod getStudyPeriodEnd() {
         return studyPeriodEnd;
     }

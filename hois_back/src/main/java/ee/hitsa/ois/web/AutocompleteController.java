@@ -56,8 +56,8 @@ public class AutocompleteController {
     }
 
     @GetMapping("/curriculumversions")
-    public List<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
-        return autocompleteService.curriculumVersions(user.getSchoolId(), valid);
+    public List<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid, @RequestParam(name = "sais", required = false) Boolean sais) {
+        return autocompleteService.curriculumVersions(user.getSchoolId(), valid, sais);
     }
 
     @GetMapping("/directivecoordinators")

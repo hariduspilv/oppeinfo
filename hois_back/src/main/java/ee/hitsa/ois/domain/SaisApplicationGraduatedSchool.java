@@ -13,8 +13,7 @@ import javax.validation.constraints.Size;
 public class SaisApplicationGraduatedSchool extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    //TODO: fix name in DB
-    @JoinColumn(name="sais_applucation_id", nullable = false, insertable = false, updatable = false)
+    @JoinColumn(nullable = false, insertable = false, updatable = false)
     private SaisApplication saisApplication;
 
     @Size(max = 255)

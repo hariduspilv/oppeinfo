@@ -62,7 +62,7 @@ public class SubjectController {
         Long schoolId = user.getSchoolId();
         Map<String, List<? extends AutocompleteResult>> result = new HashMap<>();
         result.put("departments", autocompleteService.schoolDepartments(schoolId));
-        result.put("curricula", autocompleteService.curriculumVersions(schoolId, null));
+        result.put("curricula", autocompleteService.curriculumVersions(schoolId, null, null));
         return result;
     }
 

@@ -5,11 +5,14 @@ import java.time.LocalDate;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.SaisApplication;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.FinSource;
+import ee.hitsa.ois.enums.FinSpecific;
 import ee.hitsa.ois.enums.StudyLoad;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -227,7 +230,24 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     }
 
     public static DirectiveStudentDto of(SaisApplication application) {
-        return EntityUtil.bindToDto(application, new DirectiveStudentDto());
+        DirectiveStudentDto dto = EntityUtil.bindToDto(application, new DirectiveStudentDto());
+        CurriculumVersion cv = application.getSaisAdmission().getCurriculumVersion();
+        dto.setCurriculumVersion(cv.getId());
+        if(!application.getGraduatedSchools().isEmpty()) {
+            dto.setPreviousStudyLevel(EntityUtil.getCode(application.getGraduatedSchools().stream().findFirst().get().getStudyLevel()));
+        }
+        dto.setSaisApplication(application.getId());
+
+        // finSpecific default value
+        boolean higher = CurriculumUtil.isHigher(application.getSaisAdmission().getStudyLevel());
+        FinSpecific s;
+        if(FinSource.isFree(dto.getFin())) {
+            s = higher ? FinSpecific.FINTAPSUSTUS_Y : FinSpecific.FINTAPSUSTUS_R;
+        } else {
+            s = higher ? FinSpecific.FINTAPSUSTUS_X : FinSpecific.FINTAPSUSTUS_T;
+        }
+        dto.setFinSpecific(s.name());
+        return dto;
     }
 
     public static DirectiveStudentDto of(Student student, DirectiveType directiveType) {
@@ -247,8 +267,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_FINM:
             dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
-            boolean free = FinSource.FINALLIKAS_RE.name().equals(EntityUtil.getNullableCode(student.getFin()));
-            dto.setFin(free ? FinSource.FINALLIKAS_REV.name() : FinSource.FINALLIKAS_RE.name());
+            dto.setFin(FinSource.isFree(EntityUtil.getNullableCode(student.getFin())) ? FinSource.FINALLIKAS_REV.name() : FinSource.FINALLIKAS_RE.name());
             break;
         case KASKKIRI_LOPET:
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));

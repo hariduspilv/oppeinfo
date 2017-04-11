@@ -11,6 +11,8 @@ public class DirectiveDataCommand {
     @NotEmpty
     @ClassifierRestriction(MainClassCode.KASKKIRI)
     private String type;
+    private List<Long> curriculumVersion;
+    private List<String> studyLevel;
     private Long canceledDirective;
     private List<Long> students;
 
@@ -20,6 +22,22 @@ public class DirectiveDataCommand {
 
     public void setType(String type) {
         this.type = type;
+    }
+
+    public List<Long> getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(List<Long> curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
+    }
+
+    public List<String> getStudyLevel() {
+        return studyLevel;
+    }
+
+    public void setStudyLevel(List<String> studyLevel) {
+        this.studyLevel = studyLevel;
     }
 
     public Long getCanceledDirective() {

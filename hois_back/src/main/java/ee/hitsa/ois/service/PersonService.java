@@ -32,6 +32,7 @@ import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.PersonForm;
@@ -74,7 +75,7 @@ public class PersonService {
     public Page<UsersSearchDto> search(UsersSeachCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(PERSON_FROM, pageable);
 
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname","p.firstname || ' ' || p.lastname"), "name", criteria.getName());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
 
         qb.optionalCriteria("p.idcode = :idcode", "idcode", criteria.getIdcode());
         qb.optionalCriteria("roles.ehiscode = :ehiscode", "ehiscode", criteria.getSchool());
@@ -84,7 +85,7 @@ public class PersonService {
 
         Set<Long> schoolIds = result.getContent().stream().filter(s -> s[3] != null).map(s -> resultAsLong(s,3)).collect(Collectors.toSet());
 
-        Map<Long, AutocompleteResult> schools =  schoolRepository.findAll(schoolIds).stream().collect(Collectors.toMap(School::getId, AutocompleteResult::of));
+        Map<Long, AutocompleteResult> schools = schoolRepository.findAll(schoolIds).stream().collect(Collectors.toMap(School::getId, AutocompleteResult::of));
 
         return result.map(r -> {
             UsersSearchDto dto = new UsersSearchDto();
@@ -113,18 +114,14 @@ public class PersonService {
     }
 
     public User saveUser(UserForm userForm, User user) {
-        EntityUtil.bindToEntity(userForm, user, classifierRepository, "userRights");
-        if (userForm.getSchool() != null) {
-            user.setSchool(schoolRepository.getOne(userForm.getSchool()));
-        } else {
-            user.setSchool(null);
-        }
-        Map<String, List<UserRights>> oldRights = user.getUserRights().stream().collect(Collectors.groupingBy(it -> it.getObject().getCode()));
+        EntityUtil.bindToEntity(userForm, user, classifierRepository, "school", "userRights");
+        user.setSchool(userForm.getSchool() != null ? schoolRepository.getOne(userForm.getSchool()) : null);
 
+        Map<String, List<UserRights>> oldRights = user.getUserRights().stream().collect(Collectors.groupingBy(it -> it.getObject().getCode()));
         Set<UserRights> result = new HashSet<>();
 
-        Map<String, Classifier> oigused = classifierRepository.findAllByMainClassCode(MainClassCode.OIGUS.name()).stream().collect(Collectors.toMap(Classifier::getCode, it -> it));
-        Map<String, Classifier> teemaoigused = classifierRepository.findAllByMainClassCode(MainClassCode.TEEMAOIGUS.name()).stream().collect(Collectors.toMap(Classifier::getCode, it -> it));
+        Map<String, Classifier> oigused = StreamUtil.toMap(Classifier::getCode, classifierRepository.findAllByMainClassCode(MainClassCode.OIGUS.name()));
+        Map<String, Classifier> teemaoigused = StreamUtil.toMap(Classifier::getCode, classifierRepository.findAllByMainClassCode(MainClassCode.TEEMAOIGUS.name()));
 
         userForm.getRights().forEach(it -> {
             List<UserRights> objectRights = oldRights.get(it.getObject());

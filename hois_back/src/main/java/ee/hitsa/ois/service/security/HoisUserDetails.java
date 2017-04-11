@@ -52,14 +52,6 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
         return schoolId;
     }
 
-    public boolean isSchoolAdmin() {
-        return schoolId != null && Role.ROLL_A.name().equals(role);
-    }
-    
-    public boolean isStudent() {
-        return schoolId != null && Role.ROLL_T.name().equals(role) && studentId != null;
-    }
-
     public boolean isExternalExpert() {
         return Role.ROLL_V.name().equals(role);
     }
@@ -67,11 +59,19 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     public boolean isMainAdmin() {
         return Role.ROLL_P.name().equals(role);
     }
-    
-    public boolean isParent() {
+
+    public boolean isRepresentative() {
         return Role.ROLL_L.name().equals(role);
     }
-    
+
+    public boolean isSchoolAdmin() {
+        return schoolId != null && Role.ROLL_A.name().equals(role);
+    }
+
+    public boolean isStudent() {
+        return schoolId != null && Role.ROLL_T.name().equals(role) && studentId != null;
+    }
+
     public boolean isTeacher() {
         return Role.ROLL_O.name().equals(role);
     }

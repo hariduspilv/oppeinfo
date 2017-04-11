@@ -46,7 +46,7 @@ public class UsersController {
 
     @GetMapping("/rolesDefaults")
     public UserRolesDto allUserRoles() {
-        Iterable<UserRoleDefault> userRoleDefaults = userRolesDefaultRepository.findAll();
+        List<UserRoleDefault> userRoleDefaults = userRolesDefaultRepository.findAll();
         List<String> objects = classifierRepository.findAllCodesByMainClassCode(MainClassCode.TEEMAOIGUS.name());
         UserRolesDto result = UserRolesDto.of(objects, userRoleDefaults);
         return result;

@@ -3,28 +3,26 @@ package ee.hitsa.ois.validation;
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
 
-import org.springframework.beans.PropertyAccessor;
-import org.springframework.beans.PropertyAccessorFactory;
+import ee.hitsa.ois.util.Period;
 
-public class PeriodRangeValidator implements ConstraintValidator<PeriodRange, Object> {
+public class PeriodRangeValidator implements ConstraintValidator<PeriodRange, Period> {
 
     @Override
     public void initialize(PeriodRange constraintAnnotation) {
     }
 
     @Override
-    public boolean isValid(Object value, ConstraintValidatorContext context) {
-        PropertyAccessor reader = PropertyAccessorFactory.forBeanPropertyAccess(value);
-        Boolean isPeriod = (Boolean)reader.getPropertyValue("isPeriod");
+    public boolean isValid(Period value, ConstraintValidatorContext context) {
+        Boolean isPeriod = value.getIsPeriod();
         if(isPeriod == null) {
             return false;
         }
         if(Boolean.TRUE.equals(isPeriod)) {
-            if(reader.getPropertyValue("studyPeriodStart") == null || reader.getPropertyValue("studyPeriodEnd") == null) {
+            if(value.getStudyPeriodStart() == null || value.getStudyPeriodEnd() == null) {
                 return false;
             }
         } else {
-            if(reader.getPropertyValue("startDate") == null || reader.getPropertyValue("endDate") == null) {
+            if(value.getStartDate() == null || value.getEndDate() == null) {
                 return false;
             }
         }

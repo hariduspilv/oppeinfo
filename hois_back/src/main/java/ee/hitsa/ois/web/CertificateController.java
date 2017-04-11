@@ -19,7 +19,6 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.CertificateService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -71,6 +70,7 @@ public class CertificateController {
 
     @GetMapping("/otherStudent")
     public StudentSearchDto getOtherPerson(HoisUserDetails user, String idcode) {
+        // TODO validation of idcode
         return certificateService.getOtherPerson(user.getSchoolId(), idcode);
     }
     
@@ -78,6 +78,7 @@ public class CertificateController {
     public AutocompleteResult getStudent(HoisUserDetails user) {
         if(user.getStudentId() != null) {
             Student s = studentRepository.findOne(user.getStudentId());
+            // FIXME maybe should use AutocompleteResult.of(s) ?
             String name = s.getPerson().getFullname();
             return new AutocompleteResult(s.getId(), name, name);
         }

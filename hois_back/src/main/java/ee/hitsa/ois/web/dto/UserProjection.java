@@ -1,9 +1,11 @@
 package ee.hitsa.ois.web.dto;
 
 
+import java.io.Serializable;
+
 import org.springframework.beans.factory.annotation.Value;
 
-public interface UserProjection {
+public interface UserProjection extends Serializable {
 
     Long getId();
 

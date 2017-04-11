@@ -47,12 +47,12 @@ public class StateCurriculumController {
         return get(stateCurriculumService.create(stateCurriculumForm));
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{id:\\d+}")
     public StateCurriculumDto update(@Valid @RequestBody StateCurriculumForm stateCurriculumForm, @WithEntity("id") StateCurriculum stateCurriculum) {
        return get(stateCurriculumService.save(stateCurriculum, stateCurriculumForm));
     }
 
-    @DeleteMapping("/{id}")
+    @DeleteMapping("/{id:\\d+}")
     public void delete(@WithEntity("id") StateCurriculum curriculum) {
         stateCurriculumService.delete(curriculum);
     }
@@ -62,7 +62,7 @@ public class StateCurriculumController {
         return stateCurriculumService.search(stateCurriculumSearchCommand, pageable);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{id:\\d+}")
     public StateCurriculumDto get(@WithEntity("id") StateCurriculum curriculum) {
         return StateCurriculumDto.of(curriculum);
     }

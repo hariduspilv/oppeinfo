@@ -1,7 +1,5 @@
 package ee.hitsa.ois.web;
 
-import java.util.List;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,10 +12,10 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.SaisAdmission;
 import ee.hitsa.ois.service.SaisAdmissionService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.SaisAdmissionSearchCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SaisAdmissionDto;
 import ee.hitsa.ois.web.dto.SaisAdmissionSearchDto;
 
@@ -34,18 +32,14 @@ public class SaisAdmissionController {
     }
 
     @GetMapping("/{id:\\d+}")
-    public SaisAdmissionDto get(@WithEntity("id") SaisAdmission saisAdmission) {
+    public SaisAdmissionDto get(@WithEntity("id") SaisAdmission saisAdmission, HoisUserDetails user) {
+        UserUtil.assertSameSchool(user, saisAdmission.getCurriculumVersion().getCurriculum().getSchool());
         return SaisAdmissionDto.of(saisAdmission);
     }
-    
+
     @DeleteMapping("/{id:\\d+}")
-    public void delete(@WithVersionedEntity(value = "id", versionRequestParam = "version") SaisAdmission saisAdmission, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(@WithVersionedEntity(value = "id", versionRequestParam = "version") SaisAdmission saisAdmission, @SuppressWarnings("unused") @RequestParam("version") Long version, HoisUserDetails user) {
+        UserUtil.assertSameSchool(user, saisAdmission.getCurriculumVersion().getCurriculum().getSchool());
         saisAdmissionService.delete(saisAdmission);
     }
-
-    @GetMapping("/curriculumVersions")
-    public List<AutocompleteResult> curriculumVersions(HoisUserDetails user) {
-        return saisAdmissionService.curriculumVersionsinUsedInSaisAdmissions(user);
-    }
-
 }

@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.Map;
+import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -57,8 +59,14 @@ public class DirectiveController {
     @GetMapping("/{id:\\d+}/view")
     public DirectiveViewDto getForView(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertSameSchool(user, directive.getSchool());
-        // TODO calculate filter: for admin none, for student itself, for representative all represented students of same school
-        return DirectiveViewDto.of(directive, null);
+        // filter for visible students: for school admin none, for student only itself
+        Set<Long> filtered = null;
+        if(user.isStudent()) {
+            filtered = Collections.singleton(user.getStudentId());
+        } else if(user.isRepresentative()) {
+            // TODO for representative all represented students of same school
+        }
+        return DirectiveViewDto.of(directive, filtered);
     }
 
     @GetMapping("/{id:\\d+}")

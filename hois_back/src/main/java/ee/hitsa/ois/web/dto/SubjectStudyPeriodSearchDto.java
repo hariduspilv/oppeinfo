@@ -1,9 +1,11 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.List;
+
 public class SubjectStudyPeriodSearchDto {
     private Long id;
     private Long studentsNumber;
-    private AutocompleteResult teacher;
+    private List<String> teachers;
     private AutocompleteResult subject;
     private AutocompleteResult studyPeriod;
     
@@ -13,14 +15,14 @@ public class SubjectStudyPeriodSearchDto {
     public void setId(Long id) {
         this.id = id;
     }
-    public AutocompleteResult getTeacher() {
-        return teacher;
-    }
-    public void setTeacher(AutocompleteResult teacher) {
-        this.teacher = teacher;
-    }
     public AutocompleteResult getSubject() {
         return subject;
+    }
+    public List<String> getTeachers() {
+        return teachers;
+    }
+    public void setTeachers(List<String> teachers) {
+        this.teachers = teachers;
     }
     public void setSubject(AutocompleteResult subject) {
         this.subject = subject;

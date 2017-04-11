@@ -12,6 +12,6 @@ public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificat
 
     List<UserProjection> findDistinctByPerson_IdAndUserRightsIsNotNull(Long id);
 
+    // TODO remove if not used
     UserProjection findOneById(long id);
-
 }

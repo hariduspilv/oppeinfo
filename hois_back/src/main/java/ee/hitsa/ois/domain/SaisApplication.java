@@ -38,7 +38,6 @@ public class SaisApplication extends BaseEntityWithId {
     @Column(nullable = false)
     private LocalDate birthdate;
 
-    // TODO in DB size is 20?
     @Size(max = 11)
     private String idcode;
 
@@ -89,9 +88,16 @@ public class SaisApplication extends BaseEntityWithId {
 
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    //TODO: fix spelling mistake in DB
-    @JoinColumn(name = "sais_applucation_id", nullable = false, updatable = false)
+    @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
     private Set<SaisApplicationGraduatedSchool> graduatedSchools = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
+    private Set<SaisApplicationGrade> grades = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
+    private Set<SaisApplicationOtherData> otherData = new HashSet<>();
 
 
     public SaisAdmission getSaisAdmission() {
@@ -323,5 +329,24 @@ public class SaisApplication extends BaseEntityWithId {
         this.graduatedSchools = graduatedSchools;
     }
 
-   
+
+    public Set<SaisApplicationGrade> getGrades() {
+        return grades;
+    }
+
+
+    public void setGrades(Set<SaisApplicationGrade> grades) {
+        this.grades = grades;
+    }
+
+
+    public Set<SaisApplicationOtherData> getOtherData() {
+        return otherData;
+    }
+
+
+    public void setOtherData(Set<SaisApplicationOtherData> otherData) {
+        this.otherData = otherData;
+    }
+
 }

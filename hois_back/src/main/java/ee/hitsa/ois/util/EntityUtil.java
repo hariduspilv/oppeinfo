@@ -80,7 +80,7 @@ public abstract class EntityUtil {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <E> E bindToEntity(Object command, E entity, ClassifierRepository repository, String...ignoredProperties) {
         List<String> ignored = Arrays.asList(ignoredProperties);
-        Map<String, MainClassCode[]> classifierProperties = new HashMap<>();
+        Map<String, ClassifierRestriction> classifierProperties = new HashMap<>();
         for(PropertyDescriptor spd : BeanUtils.getPropertyDescriptors(command.getClass())) {
             Method readMethod = spd.getReadMethod();
             String propertyName = spd.getName();
@@ -124,7 +124,7 @@ public abstract class EntityUtil {
                             Field propertyField = spd.getReadMethod().getDeclaringClass().getDeclaredField(propertyName);
                             ClassifierRestriction restriction = propertyField.getAnnotation(ClassifierRestriction.class);
                             if(restriction != null) {
-                                classifierProperties.put(propertyName, restriction.value());
+                                classifierProperties.put(propertyName, restriction);
                             }
                         }
                     } catch (Throwable e) {
@@ -211,18 +211,35 @@ public abstract class EntityUtil {
         storedValues.removeIf(t -> !newIds.contains(idExtractor.apply(t)));
     }
 
-    public static void bindClassifiers(Object command, Object entity, Map<String, MainClassCode[]> properties, ClassifierRepository loader) {
+    public static void bindClassifiers(Object command, Object entity, Map<String, ClassifierRestriction> properties, ClassifierRepository loader) {
         PropertyAccessor source = PropertyAccessorFactory.forBeanPropertyAccess(command);
         PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);
-        properties.forEach((p, t) -> {
-            String classCode = (String)source.getPropertyValue(p);
+        properties.forEach((p, r) -> {
+            MainClassCode[] t = r.value();
+
+            String classCodeOrValue = (String)source.getPropertyValue(p);
             Classifier current = (Classifier)destination.getPropertyValue(p);
-            if(!Objects.equals(classCode, current != null ? EntityUtil.getCode(current) : null)) {
+
+            String currentClassCodeOrValue = null;
+            if (current != null) {
+                currentClassCodeOrValue = r.useClassifierValue() ? current.getValue() : getCode(current);
+            }
+
+            if(!Objects.equals(classCodeOrValue, currentClassCodeOrValue)) {
                 Classifier c;
-                if(classCode == null || classCode.isEmpty()) {
+                if(classCodeOrValue == null || classCodeOrValue.isEmpty()) {
                     c = null;
                 } else {
-                    c = validateClassifier(loader.getOne(classCode), t);
+                    if (r.useClassifierValue()) {
+                        if (t.length != 1) {
+                            throw new RuntimeException("only one mainClassCode is allowed, when useClassifierValue=true.");
+                        }
+                        c = loader.findByValueAndMainClassCode(classCodeOrValue, t[0].name());
+                    } else {
+                        c = loader.getOne(classCodeOrValue);
+                    }
+                    validateClassifier(c, t);
+
                 }
                 destination.setPropertyValue(p, c);
             }
@@ -230,6 +247,10 @@ public abstract class EntityUtil {
     }
 
     public static Classifier validateClassifier(Classifier c, MainClassCode... domains) {
+        if (c == null) {
+            return null;
+        }
+
         String mainClassCode = c.getMainClassCode();
         for(MainClassCode domain : domains) {
             if(domain.name().equals(mainClassCode)) {
@@ -245,7 +266,7 @@ public abstract class EntityUtil {
         PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);
         for(String property : properties) {
             //usually Long is used in DTO classes to have references to other objects, but
-            //sometimes ee.hitsa.ois.web.dto.AutoCompleteResult is also used.
+            //sometimes ee.hitsa.ois.web.dto.AutocompleteResult is also used.
             Long id = getIdFromValue(source.getPropertyValue(property));
             destination.setPropertyValue(property, id != null ? repository.getOne(id) : null);
         }

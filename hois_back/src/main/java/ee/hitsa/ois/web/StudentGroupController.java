@@ -22,6 +22,7 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.service.StudentGroupService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -42,6 +43,14 @@ public class StudentGroupController {
 
     @GetMapping
     public Page<StudentGroupSearchDto> search(HoisUserDetails user, @Valid StudentGroupSearchCommand criteria, Pageable pageable) {
+        // school admin or teacher
+        if(user.isTeacher()) {
+            // TODO change frontend, make message compose form to use endpoint /autocomplete/studentgroups
+            // message receivers
+            criteria.setTeacherPerson(user.getPersonId());
+        } else if(!user.isSchoolAdmin()) {
+            throw new AssertionFailedException("User cannot search student groups");
+        }
         return studentGroupService.search(user.getSchoolId(), criteria, pageable);
     }
 

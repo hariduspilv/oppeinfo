@@ -36,6 +36,7 @@ import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.repository.specification.StateCurriculumSpecification;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SearchUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
@@ -201,11 +202,12 @@ public class StateCurriculumService {
         Set<StateCurriculumModuleOccupation> newSet = new HashSet<>();
 
         if(moduleOccupations != null && !moduleOccupations.isEmpty()) {
-            Map<String, StateCurriculumModuleOccupation> occupations = module.getModuleOccupations().stream()
-                    .collect(Collectors.toMap(o -> EntityUtil.getCode(o.getOccupation()), e -> e));
+            // TODO use EntityUtil.bindClassifierCollection
+            Map<String, StateCurriculumModuleOccupation> occupations = StreamUtil.toMap(o -> EntityUtil.getCode(o.getOccupation()), module.getModuleOccupations());
             for(String occupation : moduleOccupations) {
-                if(occupations.keySet().contains(occupation)) {
-                    newSet.add(occupations.get(occupation));
+                StateCurriculumModuleOccupation scmo = occupations.get(occupation);
+                if(scmo != null) {
+                    newSet.add(scmo);
                 } else {
                   Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupation),
                           MainClassCode.KUTSE, MainClassCode.OSAKUTSE, MainClassCode.SPETSKUTSE);

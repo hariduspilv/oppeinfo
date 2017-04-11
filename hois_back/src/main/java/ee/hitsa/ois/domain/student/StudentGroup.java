@@ -35,6 +35,7 @@ public class StudentGroup extends BaseEntityWithId {
     private Teacher teacher;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier speciality;
+    private Integer places;
     @OneToMany(mappedBy = "studentGroup")
     private List<Student> students;
 
@@ -108,6 +109,14 @@ public class StudentGroup extends BaseEntityWithId {
 
     public void setSpeciality(Classifier speciality) {
         this.speciality = speciality;
+    }
+
+    public Integer getPlaces() {
+        return places;
+    }
+
+    public void setPlaces(Integer places) {
+        this.places = places;
     }
 
     public List<Student> getStudents() {

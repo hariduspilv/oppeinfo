@@ -10,5 +10,6 @@ import java.util.List;
 
 public interface SubjectRepository extends JpaRepository<Subject, Long>, JpaSpecificationExecutor<Subject> {
 
+    // TODO remove if not used
     List<AutocompleteResult> findAllBySchool_idAndStatus_code(Long schoolId, String status);
 }

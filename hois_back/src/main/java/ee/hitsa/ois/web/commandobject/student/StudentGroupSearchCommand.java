@@ -13,6 +13,8 @@ public class StudentGroupSearchCommand {
     private List<String> studyForm;
     private EntityConnectionCommand teacher;
     private List<Long> teachers;
+    // for MessageController.getStudentGroups
+    private Long teacherPerson;
     
     public List<Long> getTeachers() {
         return teachers;
@@ -68,5 +70,13 @@ public class StudentGroupSearchCommand {
 
     public void setTeacher(EntityConnectionCommand teacher) {
         this.teacher = teacher;
+    }
+
+    public Long getTeacherPerson() {
+        return teacherPerson;
+    }
+
+    public void setTeacherPerson(Long teacherPerson) {
+        this.teacherPerson = teacherPerson;
     }
 }

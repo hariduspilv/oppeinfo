@@ -1,0 +1,12 @@
+{"properties": [
+  {
+    "name": "hois.mail.receivers",
+    "type": "java.lang.String",
+    "description": "if this is set e-mails are only sent to these addresses. E-mails are sepparated by ','"
+  },
+  {
+    "name": "hois.mail.disable",
+    "type": "java.lang.Boolean",
+    "description": "property to disable mail service"
+  }
+]}

@@ -13,22 +13,22 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
-    
+
     private Long id;
-    
+
     private Long referenceNumber;
-    
+
     @NotBlank
     @Size(max=255)
     private String nameEt;
     @NotBlank
     @Size(max=255)
     private String nameEn;
-    
+
     private Set<Long> subjects;
-    
+
     public static CurriculumVersionElectiveModuleDto of(CurriculumVersionElectiveModule electiveModule) {
-        CurriculumVersionElectiveModuleDto dto = EntityUtil.bindToDto(electiveModule, new CurriculumVersionElectiveModuleDto(), 
+        CurriculumVersionElectiveModuleDto dto = EntityUtil.bindToDto(electiveModule, new CurriculumVersionElectiveModuleDto(),
                 "subjects");
         if(electiveModule.getSubjects() != null) {
             Set<Long> subjects = electiveModule.getSubjects().stream().map(em -> em.getSubject().getId()).collect(Collectors.toSet());
@@ -37,7 +37,7 @@ public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
         }
         return dto;
     }
-    
+
     public Long getReferenceNumber() {
         return referenceNumber;
     }
@@ -71,7 +71,7 @@ public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
     }
 
     public Set<Long> getSubjects() {
-        return subjects != null ? subjects : (new HashSet<>());
+        return subjects != null ? subjects : new HashSet<>();
     }
 
     public void setSubjects(Set<Long> subjects) {

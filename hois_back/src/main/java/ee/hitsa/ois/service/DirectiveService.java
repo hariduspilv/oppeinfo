@@ -21,6 +21,8 @@ import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,6 +35,7 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.SaisApplication;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
@@ -61,6 +64,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.SearchUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
@@ -195,57 +199,60 @@ public class DirectiveService {
             if(students == null) {
                 directive.setStudents(students = new ArrayList<>());
             }
-            Map<Long, DirectiveStudent> studentMapping = students.stream().collect(Collectors.toMap(DirectiveStudent::getId, ds -> ds));
+            Map<Long, DirectiveStudent> studentMapping = StreamUtil.toMap(DirectiveStudent::getId, students);
             for(DirectiveFormStudent formStudent : form.getStudents()) {
+                Long directiveStudentId = formStudent.getId();
+                DirectiveStudent directiveStudent = directiveStudentId != null ? studentMapping.remove(directiveStudentId) : null;
                 if(KASKKIRI_TYHIST.equals(directiveType)) {
-                    // TODO set/remove checkbox
                     continue;
                 }
-                Long directiveStudentId = formStudent.getId();
-                DirectiveStudent student = directiveStudentId != null ? studentMapping.remove(directiveStudentId) : null;
-                if(student == null) {
-                    student = new DirectiveStudent();
-                    student.setDirective(directive);
+                if(directiveStudent == null) {
+                    directiveStudent = new DirectiveStudent();
+                    directiveStudent.setDirective(directive);
 
                     Long studentId = formStudent.getStudent();
-                    setStudent(studentId, student);
-                    setApplication(studentId, formStudent.getApplication(), student);
-
-                    students.add(student);
+                    setStudent(studentId, directiveStudent);
+                    setApplication(studentId, formStudent.getApplication(), directiveStudent);
+                    if(KASKKIRI_IMMATV.equals(directiveType)) {
+                        SaisApplication sais = em.getReference(SaisApplication.class, formStudent.getSaisApplication());
+                        assertSameSchool(directive, sais.getSaisAdmission().getCurriculumVersion().getCurriculum().getSchool());
+                        directiveStudent.setSaisApplication(sais);
+                    }
+                    students.add(directiveStudent);
                 }
 
                 if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_IMMATV.equals(directiveType)) {
                     // directive type can add new persons (and later students) to the system
-                    setPerson(formStudent, student);
+                    setPerson(formStudent, directiveStudent);
                 }
 
-                EntityUtil.bindToEntity(formStudent, student, classifierRepository, "application", "directive", "person", "student");
+                EntityUtil.bindToEntity(formStudent, directiveStudent, classifierRepository, "application", "directive", "person", "student");
 
-                EntityUtil.setEntityFromRepository(formStudent, student, studentGroupRepository, "studentGroup");
-                EntityUtil.setEntityFromRepository(formStudent, student, curriculumVersionRepository, "curriculumVersion");
-                EntityUtil.setEntityFromRepository(formStudent, student, studyPeriodRepository, "studyPeriodStart", "studyPeriodEnd");
+                EntityUtil.setEntityFromRepository(formStudent, directiveStudent, studentGroupRepository, "studentGroup");
+                EntityUtil.setEntityFromRepository(formStudent, directiveStudent, curriculumVersionRepository, "curriculumVersion");
+                EntityUtil.setEntityFromRepository(formStudent, directiveStudent, studyPeriodRepository, "studyPeriodStart", "studyPeriodEnd");
 
                 switch(directiveType) {
                 case KASKKIRI_AKAD:
-                    adjustPeriod(student);
+                    adjustPeriod(directiveStudent);
                     break;
                 case KASKKIRI_LOPET:
                     // TODO copy from student data
-                    student.setIsCumLaude(Boolean.FALSE);
+                    directiveStudent.setIsCumLaude(Boolean.FALSE);
                     // student.setCurriculumGrade(curriculumGrade);
-                    student.setCurriculumVersion(student.getStudent().getCurriculumVersion());
+                    directiveStudent.setCurriculumVersion(directiveStudent.getStudent().getCurriculumVersion());
                     break;
                 case KASKKIRI_VALIS:
-                    adjustPeriod(student);
+                    adjustPeriod(directiveStudent);
                     break;
                 default:
                     break;
                 }
 
-                assertSameSchool(directive, student.getStudentGroup() != null ? student.getStudentGroup().getSchool() : null);
-                assertSameSchool(directive, student.getCurriculumVersion() != null ? student.getCurriculumVersion().getCurriculum().getSchool() : null);
-                assertSameSchool(directive, student.getStudyPeriodStart() != null ? student.getStudyPeriodStart().getStudyYear().getSchool() : null);
-                assertSameSchool(directive, student.getStudyPeriodEnd() != null ? student.getStudyPeriodEnd().getStudyYear().getSchool() : null);
+                assertSameSchool(directive, directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getSchool() : null);
+                assertSameSchool(directive, directiveStudent.getCurriculumVersion() != null ? directiveStudent.getCurriculumVersion().getCurriculum().getSchool() : null);
+                assertSameSchool(directive, directiveStudent.getStudyPeriodStart() != null ? directiveStudent.getStudyPeriodStart().getStudyYear().getSchool() : null);
+                assertSameSchool(directive, directiveStudent.getStudyPeriodEnd() != null ? directiveStudent.getStudyPeriodEnd().getStudyYear().getSchool() : null);
             }
             // remove possible existing directive students not included in update command
             students.removeAll(studentMapping.values());
@@ -412,16 +419,29 @@ public class DirectiveService {
     }
 
     private List<DirectiveStudentDto> saisLoadStudents(Long schoolId, DirectiveDataCommand cmd) {
-        return saisApplicationRepository.findAll((root, query, cb) -> {
+        List<DirectiveStudentDto> students = saisApplicationRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+            filters.add(cb.equal(root.get("saisAdmission").get("curriculumVersion").get("curriculum").get("school").get("id"), schoolId));
             filters.add(cb.equal(root.get("status").get("code"), SaisApplicationStatus.SAIS_AVALDUSESTAATUS_T.name()));
-            // TODO criteria (curriculum, studyLevel)
-            // qb.optionalCriteria("sa.idcode not in (select ds.idcode from directive_student ds where ds.directive_id = :directiveId)", "directiveId", criteria.getDirective());
+            if(cmd.getCurriculumVersion() != null && !cmd.getCurriculumVersion().isEmpty()) {
+                filters.add(root.get("saisAdmission").get("curriculumVersion").get("id").in(cmd.getCurriculumVersion()));
+            }
+            if(cmd.getStudyLevel() != null && !cmd.getStudyLevel().isEmpty()) {
+                filters.add(root.get("saisAdmission").get("studyLevel").get("code").in(cmd.getStudyLevel()));
+            }
+
+            // not on directive
+            Subquery<Long> directiveQuery = query.subquery(Long.class);
+            Root<DirectiveStudent> directiveRoot = directiveQuery.from(DirectiveStudent.class);
+            directiveQuery = directiveQuery.select(directiveRoot.get("id")).where(cb.equal(directiveRoot.get("saisApplication").get("id"), root.get("id")));
+            filters.add(cb.not(cb.exists(directiveQuery)));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, new PageRequest(0, STUDENTS_MAX, new Sort("lastname", "firstname"))).map(DirectiveStudentDto::of).getContent();
+
+        // TODO autofill studentGroup
+        return students;
     }
 
     public Page<DirectiveCoordinatorDto> search(Long schoolId, Pageable pageable) {
@@ -490,6 +510,16 @@ public class DirectiveService {
                 person.setLastname(formStudent.getLastname());
                 person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
                 person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(idcode)));
+                SaisApplication sais = student.getSaisApplication();
+                if(sais != null) {
+                    // can copy additional fields from sais application
+                    person.setForeignIdcode(sais.getForeignIdcode());
+                    person.setAddress(sais.getAddress());
+                    person.setPhone(sais.getPhone());
+                    person.setEmail(sais.getEmail());
+                    person.setCitizenship(sais.getCitizenship());
+                    person.setResidenceCountry(sais.getResidenceCountry());
+                }
                 person = personRepository.save(person);
             }
             student.setPerson(person);

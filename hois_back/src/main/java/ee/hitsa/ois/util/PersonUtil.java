@@ -8,7 +8,8 @@ import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 
 public abstract class PersonUtil {
 
-    private static final int ADULT_YEARS = 18;
+    public static final Long AUTOMATIC_SENDER_ID = Long.valueOf(-1L);
+    public static final int ADULT_YEARS = 18;
 
     public static boolean isAdult(Person person) {
         LocalDate birthdate = person.getBirthdate();

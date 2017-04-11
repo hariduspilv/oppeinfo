@@ -8,7 +8,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -37,6 +36,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SearchUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.TeacherForm;
 import ee.hitsa.ois.web.commandobject.TeacherSearchCommand;
@@ -98,23 +98,24 @@ public class TeacherService {
     }
 
     private void bindOldPerson(TeacherForm teacherForm, Person person) {
-        person.setEmail(teacherForm.getPerson().getEmail());
-        person.setPhone(teacherForm.getPerson().getPhone());
-        person.setNativeLanguage(teacherForm.getPerson().getNativeLanguage());
-        Classifier citizenship = classifierRepository.getOne(teacherForm.getPerson().getCitizenship());
+        TeacherForm.TeacherPersonForm personForm = teacherForm.getPerson();
+        person.setEmail(personForm.getEmail());
+        person.setPhone(personForm.getPhone());
+        person.setNativeLanguage(personForm.getNativeLanguage());
+        Classifier citizenship = classifierRepository.getOne(personForm.getCitizenship());
         if (citizenship == null || !MainClassCode.RIIK.name().equals(citizenship.getMainClassCode())) {
             throw new ValidationFailedException("person.citizenship", "null");
         }
         person.setCitizenship(citizenship);
         // TODO: generate from idcode
         if (person.getSex() == null) {
-            person.setSex(classifierRepository.findOneByCodeAndMainClassCode(teacherForm.getPerson().getSex(), MainClassCode.SUGU.name()));
+            person.setSex(classifierRepository.findOneByCodeAndMainClassCode(personForm.getSex(), MainClassCode.SUGU.name()));
         }
         // TODO: generate from idcode
         if (person.getBirthdate() == null) {
-            if (teacherForm.getPerson().getBirthdate() != null ) {
-                if (LocalDate.now().isAfter(teacherForm.getPerson().getBirthdate())) {
-                    person.setBirthdate(teacherForm.getPerson().getBirthdate());
+            if (personForm.getBirthdate() != null ) {
+                if (LocalDate.now().isAfter(personForm.getBirthdate())) {
+                    person.setBirthdate(personForm.getBirthdate());
                 } else {
                     throw new ValidationFailedException("person.birthdate", "future");
                 }
@@ -128,8 +129,7 @@ public class TeacherService {
         Set<TeacherMobility> teacherMobilities = teacher.getTeacherMobility();
         Set<TeacherMobility> result = new HashSet<>();
         if (Boolean.TRUE.equals(teacher.getIsHigher())) {
-            Map<Long, TeacherMobility> mobilityMap = teacherMobilities
-                    .stream().collect(Collectors.toMap(TeacherMobility::getId, v -> v));
+            Map<Long, TeacherMobility> mobilityMap = StreamUtil.toMap(TeacherMobility::getId, teacherMobilities);
             for (TeacherForm.TeacherMobilityForm mobilityForm : teacherForm.getTeacherMobility()) {
                 Long id = mobilityForm.getId();
                 TeacherMobility teacherMobility;
@@ -161,8 +161,7 @@ public class TeacherService {
         Set<TeacherQualification> teacherQualifications = teacher.getTeacherQualification();
         Set<TeacherQualification> result = new HashSet<>();
         if (Boolean.TRUE.equals(teacher.getIsHigher())) {
-            Map<Long, TeacherQualification> qualifications = teacherQualifications
-                    .stream().collect(Collectors.toMap(TeacherQualification::getId, v -> v));
+            Map<Long, TeacherQualification> qualifications = StreamUtil.toMap(TeacherQualification::getId, teacherQualifications);
             for (TeacherForm.TeacherQualificationFrom teacherQualificationFrom : teacherForm.getTeacherQualifications()) {
                 Long id = teacherQualificationFrom.getId();
                 TeacherQualification teacherQualification;
@@ -192,10 +191,9 @@ public class TeacherService {
 
     private void bindTeacherPositionEhisForm(Teacher teacher, TeacherForm teacherForm) {
         Set<TeacherPositionEhis> oldTeacherPositions = teacher.getTeacherPositionEhis();
-        Map<Long, TeacherPositionEhis> teacherPositions = oldTeacherPositions
-                .stream().collect(Collectors.toMap(TeacherPositionEhis::getId, v -> v));
+        Map<Long, TeacherPositionEhis> teacherPositions = StreamUtil.toMap(TeacherPositionEhis::getId, oldTeacherPositions);
         Set<TeacherPositionEhis> result = new HashSet<>();
-        for (TeacherForm.TeacherPositionEhisForm positionEhis: teacherForm.getTeacherPositionEhis()) {
+        for (TeacherForm.TeacherPositionEhisForm positionEhis : teacherForm.getTeacherPositionEhis()) {
             clearConflictingFields(positionEhis);
             Long id = positionEhis.getId();
             if (id == null) {

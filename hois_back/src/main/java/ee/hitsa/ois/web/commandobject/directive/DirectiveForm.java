@@ -131,6 +131,7 @@ public class DirectiveForm extends VersionedCommand {
 
         private Long application;
         private Long student;
+        private Long saisApplication;
 
         public Long getId() {
             return id;
@@ -284,22 +285,6 @@ public class DirectiveForm extends VersionedCommand {
             this.studyPeriodEnd = studyPeriodEnd;
         }
 
-        public Long getApplication() {
-            return application;
-        }
-
-        public void setApplication(Long application) {
-            this.application = application;
-        }
-
-        public Long getStudent() {
-            return student;
-        }
-
-        public void setStudent(Long student) {
-            this.student = student;
-        }
-
         public Boolean getIsAbroad() {
             return isAbroad;
         }
@@ -346,6 +331,30 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setAbroadProgramme(String abroadProgramme) {
             this.abroadProgramme = abroadProgramme;
+        }
+
+        public Long getApplication() {
+            return application;
+        }
+
+        public void setApplication(Long application) {
+            this.application = application;
+        }
+
+        public Long getStudent() {
+            return student;
+        }
+
+        public void setStudent(Long student) {
+            this.student = student;
+        }
+
+        public Long getSaisApplication() {
+            return saisApplication;
+        }
+
+        public void setSaisApplication(Long saisApplication) {
+            this.saisApplication = saisApplication;
         }
     }
 }

@@ -32,6 +32,8 @@ public class StudentGroupForm extends VersionedCommand {
     private AutocompleteResult teacher;
     @ClassifierRestriction(MainClassCode.SPETSKUTSE)
     private String speciality;
+    @Min(1)
+    private Integer places;
     private List<Long> students;
 
     public String getCode() {
@@ -96,6 +98,14 @@ public class StudentGroupForm extends VersionedCommand {
 
     public void setSpeciality(String speciality) {
         this.speciality = speciality;
+    }
+
+    public Integer getPlaces() {
+        return places;
+    }
+
+    public void setPlaces(Integer places) {
+        this.places = places;
     }
 
     public List<Long> getStudents() {

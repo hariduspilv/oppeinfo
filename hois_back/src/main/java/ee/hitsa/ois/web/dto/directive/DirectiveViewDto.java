@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.directive;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.directive.Directive;
@@ -120,7 +121,7 @@ public class DirectiveViewDto {
         this.students = students;
     }
 
-    public static DirectiveViewDto of(Directive directive, Long filteredStudentId) {
+    public static DirectiveViewDto of(Directive directive, Set<Long> filteredStudentId) {
         DirectiveViewDto dto = EntityUtil.bindToDto(directive, new DirectiveViewDto());
         if(directive.getDirectiveCoordinator() != null) {
             dto.setDirectiveCoordinator(AutocompleteResult.of(directive.getDirectiveCoordinator()));
@@ -129,7 +130,7 @@ public class DirectiveViewDto {
         if(canceled != null) {
             dto.setCanceledDirective(new AutocompleteResult(canceled.getId(), canceled.getHeadline(), null));
         }
-        dto.setStudents(directive.getStudents().stream().filter(r -> filteredStudentId == null || filteredStudentId.equals(EntityUtil.getId(r.getStudent()))).map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
+        dto.setStudents(directive.getStudents().stream().filter(r -> filteredStudentId == null || filteredStudentId.contains(EntityUtil.getId(r.getStudent()))).map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
         return dto;
     }
 }

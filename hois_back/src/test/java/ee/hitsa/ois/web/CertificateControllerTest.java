@@ -105,7 +105,7 @@ public class CertificateControllerTest {
         final String METHOD_URL = "/otherStudent";
         // get student
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
-        uriBuilder.queryParam("idcode", "123667");
+        uriBuilder.queryParam("idcode", "50112090825");
         String uri = uriBuilder.build().toUriString();
         ResponseEntity<StudentSearchDto> response = restTemplate.getForEntity(uri, StudentSearchDto.class);
         Assert.assertNotNull(response);

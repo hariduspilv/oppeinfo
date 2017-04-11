@@ -33,6 +33,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.BuildingForm;
 import ee.hitsa.ois.web.commandobject.RoomForm;
@@ -114,7 +115,7 @@ public class BuildingService {
             if(storedRoomEquipment == null) {
                 room.setRoomEquipment(storedRoomEquipment = new ArrayList<>());
             }
-            Map<String, RoomEquipment> roomEquipmentCodes = storedRoomEquipment.stream().collect(Collectors.toMap(re -> EntityUtil.getCode(re.getEquipment()), re -> re));
+            Map<String, RoomEquipment> roomEquipmentCodes = StreamUtil.toMap(re -> EntityUtil.getCode(re.getEquipment()), storedRoomEquipment);
 
             for(RoomForm.RoomEquipmentCommand roomEquipment : newRoomEquipment) {
                 String roomEquipmentCode = roomEquipment.getEquipment();

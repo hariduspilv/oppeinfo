@@ -6,17 +6,16 @@ import ee.hitsa.ois.web.commandobject.UserForm;
 
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.StreamSupport;
 
 public class UserRolesDto {
 
     private List<UserForm.UserRight> userRoles;
     private List<UserRoleRightDefaultDto> defaultRights;
 
-    public static UserRolesDto of(List<String> objects, Iterable<UserRoleDefault> userRoleDefaults) {
+    public static UserRolesDto of(List<String> objects, List<UserRoleDefault> userRoleDefaults) {
         UserRolesDto dto = new UserRolesDto();
         dto.userRoles = objects.stream().map(UserForm.UserRight::of).collect(Collectors.toList());
-        dto.defaultRights = StreamSupport.stream(userRoleDefaults.spliterator(), false).map(UserRoleRightDefaultDto::of).collect(Collectors.toList());
+        dto.defaultRights = userRoleDefaults.stream().map(UserRoleRightDefaultDto::of).collect(Collectors.toList());
         return dto;
     }
 

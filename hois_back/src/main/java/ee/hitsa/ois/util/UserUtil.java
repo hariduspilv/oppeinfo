@@ -32,8 +32,7 @@ public abstract class UserUtil {
     }
 
     public static boolean canViewStudent(HoisUserDetails user, Student student) {
-        // TODO add teacher
-        return isSchoolAdmin(user, student.getSchool()) || isSame(user, student) || isStudentRepresentative(user, student);
+        return isSchoolAdmin(user, student.getSchool()) || isSame(user, student) || isStudentRepresentative(user, student) || isTeacher(user, student.getSchool());
     }
 
     public static boolean canEditStudent(HoisUserDetails user, Student student) {
@@ -98,6 +97,16 @@ public abstract class UserUtil {
 
     public static boolean isStudentRepresentative(HoisUserDetails user, Student student) {
         return student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
+    }
+
+    /**
+     * Is given user teacher in given school?
+     * @param user
+     * @param school
+     * @return
+     */
+    public static boolean isTeacher(HoisUserDetails user, School school) {
+        return user.isTeacher() && EntityUtil.getId(school).equals(user.getSchoolId());
     }
 
     public static void assertSameSchool(HoisUserDetails user, School school) {

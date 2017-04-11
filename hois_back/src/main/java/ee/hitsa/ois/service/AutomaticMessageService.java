@@ -1,0 +1,159 @@
+package ee.hitsa.ois.service;
+
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+import javax.transaction.Transactional;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.common.TemplateParserContext;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.stereotype.Service;
+
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Message;
+import ee.hitsa.ois.domain.MessageReceiver;
+import ee.hitsa.ois.domain.MessageTemplate;
+import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.enums.MessageStatus;
+import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.MessageRepository;
+import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StudentUtil;
+
+@Transactional
+@Service
+public class AutomaticMessageService {
+
+    private static final Logger log = LoggerFactory.getLogger(AutomaticMessageService.class);
+
+    private final ExpressionParser spelParser = new SpelExpressionParser();
+
+    @Autowired
+    private ClassifierRepository classifierRepository;
+    @Autowired
+    private MessageRepository messageRepository;
+    @Autowired
+    private MessageTemplateService messageTemplateService;
+    @Autowired
+    private PersonRepository personRepository;
+    @Autowired
+    private UserService userService;
+    @Autowired
+    private MailService mailService;
+
+    public void sendMessageToSchoolAdmins(MessageType type, School school, Object dataBean) {
+        Role role = Role.ROLL_A;
+        List<Person> persons = userService.findAllValidSchoolUsersByRole(school, role)
+                .stream().map(User::getPerson).collect(Collectors.toList());
+
+        Message message = sendMessageToPersons(type, school, persons, role, dataBean);
+
+        if(message != null) {
+            List<String> receivers = persons.stream().map(Person::getEmail).collect(Collectors.toList());
+            mailService.sendMail(message.getSender().getEmail(), receivers, message.getSubject(), message.getContent());
+        }
+
+    }
+
+    public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {
+        Message message = sendMessageToPersons(type, student.getSchool(), Collections.singletonList(student.getPerson()), Role.ROLL_T, dataBean);
+        if(message != null) {
+            mailService.sendMail(message.getSender().getEmail(), student.getEmail(), message.getSubject(), message.getContent());
+        }
+
+        if (!StudentUtil.isAdult(student)) {
+            sendMessageToStudentRepresentatives(type, student, dataBean);
+        }
+    }
+
+    public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean) {
+        List<Person> persons = student.getRepresentatives().stream().map(StudentRepresentative::getPerson).collect(Collectors.toList());
+
+        Message message = sendMessageToPersons(type, student.getSchool(), persons, Role.ROLL_L, dataBean);
+        if(message != null) {
+            List<String> receivers = persons.stream().map(Person::getEmail).collect(Collectors.toList());
+            mailService.sendMail(message.getSender().getEmail(), receivers, message.getSubject(), message.getContent());
+        }
+    }
+
+    public void sendMessageToPerson(MessageType type, School school, Person person, Role role, Object data) {
+        Message message = sendMessageToPersons(type, school, Collections.singletonList(person), role, data);
+
+        if (message != null) {
+            mailService.sendMail(message.getSender().getEmail(), person.getEmail(), message.getSubject(), message.getContent());
+        }
+    }
+
+    private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Role role, Object dataBean) {
+        Classifier status = classifierRepository.getOne(MessageStatus.TEATESTAATUS_U.name());
+        List<MessageReceiver> messageReceivers = persons.stream().map(person -> {
+            MessageReceiver messageReceiver = new MessageReceiver();
+            messageReceiver.setPerson(person);
+            messageReceiver.setStatus(status);
+            return messageReceiver;
+        }).collect(Collectors.toList());
+
+        Person automaticSender = personRepository.getOne(PersonUtil.AUTOMATIC_SENDER_ID);
+        return sendTemplateMessage(type, school, automaticSender, messageReceivers, role, dataBean);
+    }
+
+    private Message getMessage(MessageType type, School school, Object dataBean) {
+        if (!type.validBean(dataBean)) {
+            throw new RuntimeException(String.format("invalid data bean for template %s", type.name()));
+        }
+
+        Long schoolId = EntityUtil.getId(school);
+        MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
+        if (template == null) {
+            throw new RuntimeException(String.format("no message template %s found for school %d", type.name(), schoolId));
+        }
+
+        try {
+            String content = spelParser.parseExpression(template.getContent(), new TemplateParserContext()).getValue(dataBean, String.class);
+            Message message = new Message();
+            message.setSubject(template.getHeadline());
+            message.setContent(content);
+            return message;
+        } catch (Exception e) {
+            log.error(String.format("message %s could not be sent for school %d", type.name(), schoolId), e);
+        }
+        return null;
+    }
+
+    private Message sendTemplateMessage(MessageType type, School school, Person sender, List<MessageReceiver> messageReceivers, Role role, Object dataBean) {
+        if (!type.validBean(dataBean)) {
+            throw new RuntimeException(String.format("invalid data bean for template %s", type.name()));
+        }
+
+        Long schoolId = EntityUtil.getId(school);
+        MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
+        if (template == null) {
+            throw new RuntimeException(String.format("no message template %s found for school %d", type.name(), schoolId));
+        }
+
+        Message message = getMessage(type, school, dataBean);
+        if (message != null) {
+            message.setSendersSchool(school);
+            message.setSender(sender);
+            message.setSendersRole(classifierRepository.getOne(role.name()));
+            message.getReceivers().addAll(messageReceivers);
+            messageRepository.save(message);
+        }
+        return message;
+    }
+
+
+}

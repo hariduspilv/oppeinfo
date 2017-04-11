@@ -21,13 +21,13 @@ import ee.hitsa.ois.web.dto.MessageDto;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class MessageControllerTest {
-    
+
+    private static final String BASE_URL = "/message";
+    private static final String TEXT = "MessageControllerTest";
+
     @Autowired
     private TestRestTemplate restTemplate;
-    
-    private final String BASE_URL = "/message";
-    private final String TEXT = "MessageControllerTest";
-    
+
     @Test
     public void searchSent() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/sent");
@@ -40,7 +40,7 @@ public class MessageControllerTest {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void searchSentAutomatic() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/sent/automatic");
@@ -53,7 +53,7 @@ public class MessageControllerTest {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void searchReceived() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/received");
@@ -66,7 +66,7 @@ public class MessageControllerTest {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void searchReceivedForMainPage() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/received/mainPage");
@@ -76,7 +76,7 @@ public class MessageControllerTest {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void crud() {
         // create
@@ -122,15 +122,7 @@ public class MessageControllerTest {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
-    @Test
-    public void getStudentGroups() {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/studentgroups");
-        String url = uriBuilder.build().toUriString();
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-    
+
     @Test
     public void searchPersons() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/persons");
@@ -139,7 +131,7 @@ public class MessageControllerTest {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
-    private MessageForm getForm() {
+    private static MessageForm getForm() {
         MessageForm form = new MessageForm();
         form.setSubject(TEXT);
         form.setContent(TEXT);

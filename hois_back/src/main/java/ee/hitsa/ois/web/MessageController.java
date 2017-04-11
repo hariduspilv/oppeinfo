@@ -22,13 +22,11 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSeachCommand;
-import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.MessageDto;
 import ee.hitsa.ois.web.dto.MessageReceiverSearchDto;
 import ee.hitsa.ois.web.dto.MessageSearchDto;
 import ee.hitsa.ois.web.dto.UsersSearchDto;
-import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 
 @RestController
 @RequestMapping("/message")
@@ -36,7 +34,6 @@ public class MessageController {
 
     @Autowired
     private MessageService messageService;
-
 
     @GetMapping("/received/mainPage")
     public Page<MessageSearchDto> searchReceivedForMainPage(HoisUserDetails user, Pageable pageable) {
@@ -85,12 +82,6 @@ public class MessageController {
     @GetMapping("/parents")
     public Page<MessageReceiverSearchDto> getParents(StudentSearchCommand criteria, Pageable pageable) {
         return messageService.getStudentRepresentatives(criteria, pageable);
-    }
-
-    @GetMapping("/studentgroups")
-    public Page<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user, StudentGroupSearchCommand criteria, Pageable pageable) {
-        Page<StudentGroupSearchDto> page = messageService.getStudentGroupsByTeacher(user, criteria, pageable);
-        return page;
     }
 
     /**

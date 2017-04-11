@@ -9,6 +9,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 
 public interface CurriculumVersionRepository extends JpaRepository<CurriculumVersion, Long> {
 
+    // TODO check uniqueness with "exists" pattern
     @Query(nativeQuery = true, value =
             "select count(*) from curriculum_version "
             + "where curriculum_id in (select id from curriculum where school_id = ?1) "

@@ -5,7 +5,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -22,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Message;
@@ -42,12 +40,10 @@ import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSeachCommand;
-import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.MessageReceiverSearchDto;
 import ee.hitsa.ois.web.dto.MessageSearchDto;
 import ee.hitsa.ois.web.dto.UsersSearchDto;
-import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 
 @Transactional
 @Service
@@ -97,8 +93,6 @@ public class MessageService {
     private PersonRepository personRepository;
     @Autowired
     private EntityManager em;
-    @Autowired
-    private StudentGroupService studentGroupService;
 
     public Page<MessageSearchDto> show(HoisUserDetails user, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM, pageable);
@@ -142,7 +136,7 @@ public class MessageService {
     public Page<MessageSearchDto> searchSentAutomatic(Long schoolId, MessageSearchCommand criteria, Pageable pageable) {
         return messageRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("sender").get("id"), -1));
+            filters.add(cb.equal(root.get("sender").get("id"), PersonUtil.AUTOMATIC_SENDER_ID));
             filters.add(cb.equal(root.get("sendersSchool").get("id"), schoolId));
             LocalDate sentFrom = criteria.getSentFrom();
             if(sentFrom != null) {
@@ -199,12 +193,8 @@ public class MessageService {
 
     private void saveReceivers(Message message, Set<Long> receivers) {
         if(receivers != null) {
-            Set<BigInteger> representatives = messageRepository.getRepresentativePersonIds(receivers);
-            if(!CollectionUtils.isEmpty(representatives)) {
-                representatives.forEach(r -> {
-                    receivers.add(Long.valueOf(r.longValue()));
-                });
-            }
+            receivers.addAll(getRepresentativePersonIds(receivers));
+
             Classifier statusNew = classifierRepository.getOne(MessageStatus.TEATESTAATUS_U.name());
             message.getReceivers().addAll(receivers.stream().map(r -> {
                 MessageReceiver receiver = new MessageReceiver();
@@ -228,8 +218,9 @@ public class MessageService {
 
     public Page<MessageReceiverSearchDto> getStudentRepresentatives(StudentSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PARENTS_FROM, pageable);
-        qb.optionalCriteria("sg.id in :group", "group", criteria.getStudentGroupId());
-        qb.filter(" sr.relation_code = 'OPPURESINDAJA_L' ");
+        qb.optionalCriteria("sg.id in (:group)", "group", criteria.getStudentGroupId());
+        // TODO use enum for classifier constant
+        qb.filter("sr.relation_code = 'OPPURESINDAJA_L'");
         Page<Object[]> result = JpaQueryUtil.pagingResult(qb, STUDENT_PARENTS_SELECT, em, pageable);
         return result.map(r -> {
             Long id = resultAsLong(r, 3);
@@ -240,24 +231,19 @@ public class MessageService {
         });
     }
 
-    public Page<StudentGroupSearchDto> getStudentGroupsByTeacher(HoisUserDetails user,
-            StudentGroupSearchCommand criteria, Pageable pageable) {
-        List<Long> teachersIds = messageRepository.getTeacherIdByPersonAndSchool(user.getPersonId(), user.getSchoolId());
-        criteria.setTeachers(teachersIds);
-        return studentGroupService.search(user.getSchoolId(), criteria, pageable);
-    }
-
     public Page<UsersSearchDto> searchPersons(HoisUserDetails user, UsersSeachCommand criteria,
             Pageable pageable) {
         if(user.isSchoolAdmin()) {
             return searchAllUsers(criteria, pageable);
-        } else if (user.isTeacher()) {
-            if(criteria.getRole().equals(Role.ROLL_T.name())) {
+        }
+        if (user.isTeacher()) {
+            if(Role.ROLL_T.name().equals(criteria.getRole())) {
                 return searchTeachersStudents(user, criteria, pageable);
-            } else if (criteria.getRole().equals(Role.ROLL_L.name())) {
+            }
+            if (Role.ROLL_L.name().equals(criteria.getRole())) {
                 return searchTeachersParents(user, criteria, pageable);
             }
-        } else if (user.isParent()) {
+        } else if (user.isRepresentative()) {
             return searchParentsTeachers(user, criteria, pageable);
         } else if(user.isStudent()) {
             return searchStudentsTeachers(user, criteria, pageable);
@@ -272,10 +258,10 @@ public class MessageService {
      */
     public Page<UsersSearchDto> searchAllUsers(UsersSeachCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(PERSON_FROM, pageable);
-        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname","p.firstname || ' ' || p.lastname"), "name", criteria.getName());
+        qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
         qb.optionalCriteria("s.ehis_school_code = :ehiscode", "ehiscode", criteria.getSchool());
         qb.optionalCriteria("u.role_code = :role", "role", criteria.getRole());
-        Page<Object[]> result =  JpaQueryUtil.pagingResult(qb, PERSON_SELECT, em, pageable);
+        Page<Object[]> result = JpaQueryUtil.pagingResult(qb, PERSON_SELECT, em, pageable);
         return result.map(r -> {
             UsersSearchDto dto = new UsersSearchDto();
             dto.setId(resultAsLong(r, 1));
@@ -289,41 +275,48 @@ public class MessageService {
     public Page<UsersSearchDto> searchParentsTeachers(HoisUserDetails user, UsersSeachCommand criteria,
             Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM, pageable);
-        qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname","p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
+        qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname", "p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
         qb.requiredCriteria("p2.id = :parentsPersonId", "parentsPersonId", user.getPersonId());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
-        Page<Object[]> result =  JpaQueryUtil.pagingResult(qb, SELECT_TEACHERS, em, pageable);
+        Page<Object[]> result = JpaQueryUtil.pagingResult(qb, SELECT_TEACHERS, em, pageable);
         return mapUserSearchDtoPage(result, Role.ROLL_O);
     }
 
-    public Page<UsersSearchDto> searchStudentsTeachers(HoisUserDetails user, UsersSeachCommand criteria,
-            Pageable pageable) {
+    public Page<UsersSearchDto> searchStudentsTeachers(HoisUserDetails user, UsersSeachCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM, pageable);
-        qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname","p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
+        qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname", "p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
         qb.requiredCriteria("p1.id = :studentsPersonId", "studentsPersonId", user.getPersonId());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
-        Page<Object[]> result =  JpaQueryUtil.pagingResult(qb, SELECT_TEACHERS, em, pageable);
+        Page<Object[]> result = JpaQueryUtil.pagingResult(qb, SELECT_TEACHERS, em, pageable);
         return mapUserSearchDtoPage(result, Role.ROLL_O);
     }
 
-    public Page<UsersSearchDto> searchTeachersStudents(HoisUserDetails user, UsersSeachCommand criteria,
-            Pageable pageable) {
+    public Page<UsersSearchDto> searchTeachersStudents(HoisUserDetails user, UsersSeachCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM, pageable);
-        qb.optionalContains(Arrays.asList("p1.firstname", "p1.lastname","p1.firstname || ' ' || p1.lastname"), "name", criteria.getName());
+        qb.optionalContains(Arrays.asList("p1.firstname", "p1.lastname", "p1.firstname || ' ' || p1.lastname"), "name", criteria.getName());
         qb.requiredCriteria("p3.id = :teachersPersonId", "teachersPersonId", user.getPersonId());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
-        Page<Object[]> result =  JpaQueryUtil.pagingResult(qb, SELECT_STUDENTS, em, pageable);
+        Page<Object[]> result = JpaQueryUtil.pagingResult(qb, SELECT_STUDENTS, em, pageable);
         return mapUserSearchDtoPage(result, Role.ROLL_T);
     }
 
-    public Page<UsersSearchDto> searchTeachersParents(HoisUserDetails user, UsersSeachCommand criteria,
-            Pageable pageable) {
+    public Page<UsersSearchDto> searchTeachersParents(HoisUserDetails user, UsersSeachCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM, pageable);
-        qb.optionalContains(Arrays.asList("p2.firstname", "p2.lastname","p2.firstname || ' ' || p2.lastname"), "name", criteria.getName());
+        qb.optionalContains(Arrays.asList("p2.firstname", "p2.lastname", "p2.firstname || ' ' || p2.lastname"), "name", criteria.getName());
         qb.requiredCriteria("p3.id = :teachersPersonId", "teachersPersonId", user.getPersonId());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
-        Page<Object[]> result =  JpaQueryUtil.pagingResult(qb, SELECT_PARENTS, em, pageable);
+        Page<Object[]> result = JpaQueryUtil.pagingResult(qb, SELECT_PARENTS, em, pageable);
         return mapUserSearchDtoPage(result, Role.ROLL_L);
+    }
+
+    public Set<Long> getRepresentativePersonIds(Set<Long> receiversIds) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student s " +
+                "inner join person p on p.id = s.person_id " +
+                "inner join student_representative sr on sr.student_id = s.id");
+        qb.filter(String.format("(date_part('year', age(p.birthdate)) < %d OR s.special_need_code is not null)", Integer.valueOf(PersonUtil.ADULT_YEARS)));
+        qb.requiredCriteria("p.id in (:personId)", "personId", receiversIds);
+        List<?> data = qb.select("distinct sr.person_id", em).getResultList();
+        return data.stream().map(r -> Long.valueOf(((Number)r).longValue())).collect(Collectors.toSet());
     }
 
     private static Page<UsersSearchDto> mapUserSearchDtoPage(Page<Object[]> result, Role role) {

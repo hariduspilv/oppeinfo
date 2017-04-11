@@ -47,7 +47,6 @@ import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.StudentRepresentativeRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -97,8 +96,6 @@ public class ApplicationService {
     @Autowired
     private SubjectRepository subjectRepository;
     @Autowired
-    private StudentRepresentativeRepository studentRepresentativeRepository;
-    @Autowired
     private Validator validator;
 
     public Page<ApplicationSearchDto> search(HoisUserDetails user, ApplicationSearchCommand criteria, Pageable pageable) {
@@ -133,7 +130,12 @@ public class ApplicationService {
         });
     }
 
-    public Application create(Student student, ApplicationForm applicationForm) {
+    public Application create(HoisUserDetails user, ApplicationForm applicationForm) {
+        Student student = studentRepository.getOne(applicationForm.getStudent().getId());
+        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
+            throw new ValidationFailedException(String.format("user %s is not allowed to create application", user.getUsername()));
+        }
+
         Map<ApplicationType, ApplicationApplicableDto> applicable = applicableApplicationTypes(student);
         ApplicationType type = ApplicationType.valueOf(applicationForm.getType());
         if (Boolean.FALSE.equals(applicable.get(type).getIsAllowed())) {
@@ -334,8 +336,12 @@ public class ApplicationService {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
                     } else if (!StudentUtil.isOnAcademicLeave(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotOnAcademicLeave"));
+                    } else {
+                        Application academicLeaveApplication = findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student));
+                        if (academicLeaveApplication == null) {
+                            result.put(type, new ApplicationApplicableDto("application.messages.noValidAcademicLeaveApplicationFound"));
+                        }
                     }
-                    findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student));
                 } else {
                     if (!StudentUtil.isStudying(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotStudying"));
@@ -350,9 +356,8 @@ public class ApplicationService {
 
     public void sendConfirmNeededNotificationMessage(Application application) {
         Student student = application.getStudent();
-        Boolean hasRepresentatives = studentRepresentativeRepository.existsByStudentId(EntityUtil.getId(student));
         ConfirmationNeededMessage data = new ConfirmationNeededMessage(application);
-        if (Boolean.TRUE.equals(hasRepresentatives)) {
+        if (student.getRepresentatives() != null && !student.getRepresentatives().isEmpty()) {
             automaticMessageService.sendMessageToStudentRepresentatives(MessageType.TEATE_LIIK_AV_KINNIT, student, data);
         } else {
             automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, student.getSchool(), data);

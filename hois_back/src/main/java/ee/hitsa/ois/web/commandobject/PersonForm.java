@@ -1,12 +1,13 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.time.LocalDate;
+
+import javax.validation.constraints.Size;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.NotEmpty;
-
-import javax.validation.constraints.Size;
-import java.time.LocalDate;
 
 @EstonianIdCode
 public class PersonForm extends VersionedCommand {
@@ -20,7 +21,7 @@ public class PersonForm extends VersionedCommand {
     @NotEmpty
     private String lastname;
 
-    // todo is this correct thing todo?
+    //TODO: is this correct thing todo? - findbugs Unwritten field: ee.hitsa.ois.web.commandobject.PersonForm.birthdate
     private LocalDate birthdate;
 
     @NotEmpty

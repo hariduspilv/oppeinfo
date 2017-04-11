@@ -329,7 +329,7 @@ public class DirectiveViewStudentDto {
     }
 
     public static DirectiveViewStudentDto of(DirectiveStudent directiveStudent) {
-        DirectiveViewStudentDto dto = new DirectiveViewStudentDto();
+        DirectiveViewStudentDto dto = EntityUtil.bindToDto(directiveStudent, new DirectiveViewStudentDto());
         Student student = directiveStudent.getStudent();
         Person person;
         if(student != null) {
@@ -344,6 +344,7 @@ public class DirectiveViewStudentDto {
             dto.setLastname(person.getLastname());
             dto.setFullname(person.getFullname());
         }
+
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directiveStudent.getDirective().getType()));
         if(student != null) {        
             Application application = directiveStudent.getApplication();
@@ -355,6 +356,14 @@ public class DirectiveViewStudentDto {
                 dto.setApplicationStudyPeriodStart(application != null && application.getStudyPeriodStart() != null ? AutocompleteResult.of(application.getStudyPeriodStart()) : null);
                 dto.setApplicationStudyPeriodEnd(application != null && application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
                 break;
+            case KASKKIRI_ENNIST:
+                dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+                dto.setStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+                dto.setStudyLoad(EntityUtil.getNullableCode(student.getStudyLoad()));
+                dto.setFin(EntityUtil.getNullableCode(student.getFin()));
+                dto.setFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
+                dto.setLanguage(EntityUtil.getNullableCode(student.getLanguage()));
+                break;
             case KASKKIRI_EKSMAT:
                 if(application != null) {
                     dto.setAddInfo(application.getAddInfo());
@@ -364,7 +373,7 @@ public class DirectiveViewStudentDto {
                 dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
                 break;
             case KASKKIRI_LOPET:
-                dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+                dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
                 // TODO
                 // dto.setIsCumLaude(isCumLaude);
                 // dto.setCurriculumGrade(curriculumGrade);
@@ -386,6 +395,6 @@ public class DirectiveViewStudentDto {
             dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
         }
 
-        return EntityUtil.bindToDto(directiveStudent, dto);
+        return dto;
     }
 }    

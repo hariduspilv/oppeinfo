@@ -13,7 +13,7 @@ import org.springframework.data.jpa.domain.Specification;
 import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.web.commandobject.ClassifierConnectSearchCommand;
 
-public class ClassifierConnectSpecification  implements Specification<ClassifierConnect> {
+public class ClassifierConnectSpecification implements Specification<ClassifierConnect> {
 
     private ClassifierConnectSearchCommand searchCommand;
 
@@ -39,5 +39,4 @@ public class ClassifierConnectSpecification  implements Specification<Classifier
 
         return cb.and(filters.toArray(new Predicate[filters.size()]));
     }
-
 }

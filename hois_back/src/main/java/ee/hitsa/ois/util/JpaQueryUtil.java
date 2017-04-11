@@ -154,6 +154,13 @@ public abstract class JpaQueryUtil {
             }
         }
 
+        public void optionalCriteria(String criteria, String name, Boolean value) {
+            if(value != null) {
+                filter(criteria, name, value);
+            }
+
+        }
+
         public void optionalCriteria(String criteria, String name, String value, Function<String, String> adjuster) {
             if(StringUtils.hasText(value)) {
                 filter(criteria, name, adjuster.apply(value));
@@ -330,20 +337,21 @@ public abstract class JpaQueryUtil {
             }
             return sb.toString();
         }
+
     }
 
     public static Boolean resultAsBoolean(Object value, int index) {
-        value = (((Object[])value)[index]);
+        value = ((Object[])value)[index];
         return (Boolean)value;
     }
 
     public static Integer resultAsInteger(Object value, int index) {
-        value = (((Object[])value)[index]);
+        value = ((Object[])value)[index];
         return value != null ? Integer.valueOf(((Number)value).intValue()) : null;
     }
 
     public static LocalDate resultAsLocalDate(Object value, int index) {
-        value = (((Object[])value)[index]);
+        value = ((Object[])value)[index];
         if(value instanceof java.sql.Date) {
             return ((java.sql.Date)value).toLocalDate();
         }
@@ -351,12 +359,12 @@ public abstract class JpaQueryUtil {
     }
 
     public static LocalDateTime resultAsLocalDateTime(Object value, int index) {
-        value = (((Object[])value)[index]);
+        value = ((Object[])value)[index];
         return value != null ? ((java.sql.Timestamp)value).toLocalDateTime() : null;
     }
 
     public static Long resultAsLong(Object value, int index) {
-        value = (((Object[])value)[index]);
+        value = ((Object[])value)[index];
         return value != null ? Long.valueOf(((Number)value).longValue()) : null;
     }
 

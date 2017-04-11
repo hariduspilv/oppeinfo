@@ -1,5 +1,7 @@
 package ee.hitsa.ois.service;
 
+import java.util.Collections;
+
 import javax.transaction.Transactional;
 
 import org.junit.Assert;
@@ -25,12 +27,17 @@ import ee.hitsa.ois.web.dto.UsersSearchDto;
 public class MessageServiceTest {
 
     @Autowired
-    MessageService messageService;
+    private MessageService messageService;
 
     @Test
     public void searchAllUsers() {
         Page<UsersSearchDto> page = messageService.searchAllUsers(new UsersSeachCommand(), new PageRequest(0, 10));
         Assert.assertNotNull(page);
+    }
+
+    @Test
+    public void getRepresentativePersonIds() {
+        messageService.getRepresentativePersonIds(Collections.singleton(Long.valueOf(10)));
     }
 
     /**

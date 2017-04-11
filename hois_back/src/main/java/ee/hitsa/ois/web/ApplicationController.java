@@ -17,11 +17,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.application.Application;
-import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.ApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -42,8 +40,6 @@ public class ApplicationController {
 
     @Autowired
     private ApplicationService applicationService;
-    @Autowired
-    private StudentRepository studentRepository;
 
     @GetMapping("/{id:\\d+}")
     public ApplicationDto get(HoisUserDetails user, @WithEntity("id") Application application) {
@@ -58,11 +54,7 @@ public class ApplicationController {
 
     @PostMapping("")
     public ApplicationDto create(@Valid @RequestBody ApplicationForm applicationForm, HoisUserDetails user) {
-        Student student = studentRepository.getOne(applicationForm.getStudent().getId());
-        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
-            throw new ValidationFailedException(String.format("user %s is not allowed to create application", user.getUsername()));
-        }
-        return get(user, applicationService.create(student, applicationForm));
+        return get(user, applicationService.create(user, applicationForm));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -75,9 +67,8 @@ public class ApplicationController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Application application, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         Student student = application.getStudent();
-        School school = application.getStudent().getSchool();
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
-        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, school)) || !ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status) ||
+        if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) || !ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status) ||
                 ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status) && Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm())) {
             throw new ValidationFailedException(String.format("user %s is not allowed to delete application %d with status %s", user.getUsername(), application.getId(), status.name()));
         }
@@ -122,13 +113,11 @@ public class ApplicationController {
             @Valid @RequestBody ApplicationRejectForm applicationRejectForm) {
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
 
-        Application rejectedApplication = null;
-        if (UserUtil.canRejectApplication(user, application)) {
-            rejectedApplication = applicationService.reject(application, applicationRejectForm);
-            applicationService.sendRejectionNotificationMessage(rejectedApplication);
-        } else {
+        if (!UserUtil.canRejectApplication(user, application)) {
             throw new ValidationFailedException(String.format("user %s is not allowed to reject application %d with status %s", user.getUsername(), application.getId(), status));
         }
+        Application rejectedApplication = applicationService.reject(application, applicationRejectForm);
+        applicationService.sendRejectionNotificationMessage(rejectedApplication);
 
         return get(user, rejectedApplication);
     }
@@ -138,13 +127,11 @@ public class ApplicationController {
         UserUtil.assertSameSchool(user, application.getStudent().getSchool());
 
         Student student = application.getStudent();
-        School school = application.getStudent().getSchool();
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
-
 
         switch (status) {
         case AVALDUS_STAATUS_KOOST:
-            if ((UserUtil.isAdultStudent(user, student) || UserUtil.isSchoolAdmin(user, school)) && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_KOOST.name())
+            if ((UserUtil.isAdultStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_KOOST.name())
                     || applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()))) {
                 break;
             } else if (!UserUtil.isAdultStudent(user, student) && applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_KOOST.name())) {
@@ -156,7 +143,7 @@ public class ApplicationController {
         case AVALDUS_STAATUS_ESIT:
             //fallthrough
         case AVALDUS_STAATUS_YLEVAAT:
-            if(UserUtil.isSchoolAdmin(user, school)
+            if(UserUtil.isSchoolAdmin(user, student.getSchool())
                     && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name())) || applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name())) {
                 break;
             }
@@ -171,6 +158,4 @@ public class ApplicationController {
             break;
         }
     }
-
-
 }

@@ -5,6 +5,7 @@ import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.UserForm;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -15,7 +16,7 @@ public class UserDto extends UserForm {
 
     private Long id;
 
-    public static UserDto of(User user, Set<Classifier> allByMainClassCode) {
+    public static UserDto of(User user, Collection<Classifier> allByMainClassCode) {
         UserDto dto = EntityUtil.bindToDto(user, new UserDto());
         dto.person = EntityUtil.bindToDto(user.getPerson(), new PersonMinDto());
         if (allByMainClassCode != null) {

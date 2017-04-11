@@ -12,6 +12,7 @@ import javax.validation.constraints.NotNull;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.SaisApplication;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
@@ -19,11 +20,12 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentHistory;
+import ee.hitsa.ois.util.Period;
 import ee.hitsa.ois.validation.PeriodRange;
 
 @PeriodRange(groups = {Akad.class, Valis.class})
 @Entity
-public class DirectiveStudent extends BaseEntityWithId {
+public class DirectiveStudent extends BaseEntityWithId implements Period {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
@@ -98,6 +100,9 @@ public class DirectiveStudent extends BaseEntityWithId {
     private Person person;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudentHistory studentHistory;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
+    private SaisApplication saisApplication;
 
     public Directive getDirective() {
         return directive;
@@ -115,6 +120,7 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.student = student;
     }
 
+    @Override
     public LocalDate getStartDate() {
         return startDate;
     }
@@ -123,6 +129,7 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.startDate = startDate;
     }
 
+    @Override
     public LocalDate getEndDate() {
         return endDate;
     }
@@ -203,6 +210,7 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.curriculumGrade = curriculumGrade;
     }
 
+    @Override
     public Boolean getIsPeriod() {
         return isPeriod;
     }
@@ -211,6 +219,7 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.isPeriod = isPeriod;
     }
 
+    @Override
     public StudyPeriod getStudyPeriodStart() {
         return studyPeriodStart;
     }
@@ -219,6 +228,7 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.studyPeriodStart = studyPeriodStart;
     }
 
+    @Override
     public StudyPeriod getStudyPeriodEnd() {
         return studyPeriodEnd;
     }
@@ -337,5 +347,13 @@ public class DirectiveStudent extends BaseEntityWithId {
 
     public void setStudentHistory(StudentHistory studentHistory) {
         this.studentHistory = studentHistory;
+    }
+
+    public SaisApplication getSaisApplication() {
+        return saisApplication;
+    }
+
+    public void setSaisApplication(SaisApplication saisApplication) {
+        this.saisApplication = saisApplication;
     }
 }

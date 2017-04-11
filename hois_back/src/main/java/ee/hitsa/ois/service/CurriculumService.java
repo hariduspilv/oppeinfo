@@ -1,13 +1,11 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -69,14 +67,13 @@ import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
@@ -95,11 +92,6 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleOutcomeD
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeCapacityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleYearCapacityDto;
-
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
-
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 
 
 @Transactional
@@ -456,17 +448,15 @@ public class CurriculumService {
     private static void updateCurriculumVersionSpecialities(Set<CurriculumSpeciality> curricSpecs, CurriculumVersion version, Set<Long> specRefNums) {
         Set<CurriculumVersionSpeciality> newSpecialities = new HashSet<>();
         if(specRefNums != null) {
+          Map<Long, CurriculumVersionSpeciality> oldSpecsMap = StreamUtil.toMap(s -> EntityUtil.getId(s.getCurriculumSpeciality()), version.getSpecialities());
+          Map<Long, CurriculumSpeciality> curricSpecsMap = StreamUtil.toMap(CurriculumSpeciality::getReferenceNumber, curricSpecs);
 
-          Map<Long, CurriculumVersionSpeciality> oldSpecsMap = version.getSpecialities().stream()
-                    .collect(Collectors.toMap(s -> EntityUtil.getId(s.getCurriculumSpeciality()), s -> s));
-          Map<Long, CurriculumSpeciality> curricSpecsMap = curricSpecs.stream()
-                  .collect(Collectors.toMap(s -> s.getReferenceNumber(), s -> s));
           specRefNums.forEach(s -> {
-              if(s.longValue() > 0 && oldSpecsMap.keySet().contains(s)) {
+              if(s.longValue() > 0 && oldSpecsMap.containsKey(s)) {
                   newSpecialities.add(oldSpecsMap.get(s));
               } else {
                 CurriculumVersionSpeciality newSpec = new CurriculumVersionSpeciality();
-                assert curricSpecsMap.keySet().contains(s) : "Curriculum speciality must be added to Curriculum before adding to Curriculum version!";
+                assert curricSpecsMap.containsKey(s) : "Curriculum speciality must be added to Curriculum before adding to Curriculum version!";
                 CurriculumSpeciality curriculumSpeciality = curricSpecsMap.get(s);
                 newSpec.setCurriculumSpeciality(curriculumSpeciality);
                 newSpec.setCurriculumVersion(version);
@@ -601,17 +591,13 @@ public class CurriculumService {
     private static void updateVersionModuleSpecialities(CurriculumVersion version,
             CurriculumVersionHigherModule module, Set<Long> specsRefNums) {
         Set<CurriculumVersionHigherModuleSpeciality> newSpecs = new HashSet<>();
-        
+
         if(specsRefNums != null && !specsRefNums.isEmpty()) {
-            
-            Map<Long, CurriculumVersionHigherModuleSpeciality> oldSpecs = module.getSpecialities().stream()
-                    .collect(Collectors.toMap(s -> EntityUtil.getId(s.getSpeciality().getCurriculumSpeciality()), s -> s));
-            
-            Map<Long, CurriculumVersionSpeciality> selectedSpecs = version.getSpecialities().stream().collect(Collectors
-                    .toMap(s -> s.getCurriculumSpeciality().getReferenceNumber(), s -> s));
-          
+            Map<Long, CurriculumVersionHigherModuleSpeciality> oldSpecs = StreamUtil.toMap(s -> EntityUtil.getId(s.getSpeciality().getCurriculumSpeciality()), module.getSpecialities());
+            Map<Long, CurriculumVersionSpeciality> selectedSpecs = StreamUtil.toMap(s -> s.getCurriculumSpeciality().getReferenceNumber(), version.getSpecialities());
+
             specsRefNums.forEach(s -> {
-                if(s.longValue() > 0 && oldSpecs.keySet().contains(s)) {
+                if(s.longValue() > 0 && oldSpecs.containsKey(s)) {
                     newSpecs.add(oldSpecs.get(s));
                 } else {
                   CurriculumVersionSpeciality versionSpeciality = selectedSpecs.get(s);
@@ -829,12 +815,14 @@ public class CurriculumService {
 
     private void updateLanguages(Curriculum target, Set<String> languageCodes) {
         if(languageCodes != null && !languageCodes.isEmpty()) {
-          Map<String, CurriculumStudyLanguage> langs = target.getStudyLanguages().stream()
-                  .collect(Collectors.toMap(e -> EntityUtil.getCode(e.getStudyLang()), e -> e));
+          // TODO use EntityUtil.bindClassifierCollection
+          Map<String, CurriculumStudyLanguage> langs = StreamUtil.toMap(e -> EntityUtil.getCode(e.getStudyLang()), target.getStudyLanguages());
+
           Set<CurriculumStudyLanguage> newSet = new HashSet<>();
           for(String lang : languageCodes) {
-              if(langs.keySet().contains(lang)) {
-                  newSet.add(langs.get(lang));
+              CurriculumStudyLanguage csl = langs.get(lang);
+              if(csl != null) {
+                  newSet.add(csl);
               } else {
                   newSet.add(new CurriculumStudyLanguage(classifierRepository.getOne(lang)));
               }
@@ -858,27 +846,9 @@ public class CurriculumService {
 
     public CurriculumVersionDto saveVersion(CurriculumVersion curriculumVersion, CurriculumVersionDto curriculumVersionDto) {
         CurriculumVersion updatedCurriculumVersion = updateVersion(curriculumVersion.getCurriculum(), curriculumVersion, curriculumVersionDto);
-        
-        
-        updatedCurriculumVersion.getCurriculum().getVersions().forEach(v -> {
-            System.out.println(v.getSpecialities());
-        });
-        System.out.println(updatedCurriculumVersion.getSpecialities());
+
         CurriculumVersion c = curriculumVersionRepository.save(updatedCurriculumVersion);
-        
-        c.getCurriculum().getVersions().forEach(v -> {
-            System.out.println(v.getSpecialities());
-        });
-        System.out.println(c.getSpecialities());
-        
-        CurriculumVersion cDb = curriculumVersionRepository.getOne(c.getId());
-        
-        cDb.getCurriculum().getVersions().forEach(v -> {
-            System.out.println(v.getSpecialities());
-        });
-        System.out.println(cDb.getSpecialities());
-        
-        
+
         return CurriculumVersionDto.of(c);
     }
 

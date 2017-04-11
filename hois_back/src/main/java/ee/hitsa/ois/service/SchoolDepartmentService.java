@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -31,6 +30,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentSearchCommand;
 import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
@@ -49,7 +49,7 @@ public class SchoolDepartmentService {
     public Page<SchoolDepartmentDto> findAll(Long schoolId, SchoolDepartmentSearchCommand criteria, Pageable pageable) {
         // load full structure for given school, already sorted
         List<SchoolDepartmentDto> structure = findForTree(schoolId, pageable);
-        Map<Long, SchoolDepartmentDto> mappedStructure = structure.stream().collect(Collectors.toMap(SchoolDepartmentDto::getId, Function.identity()));
+        Map<Long, SchoolDepartmentDto> mappedStructure = StreamUtil.toMap(SchoolDepartmentDto::getId, structure);
         // filter out matched departments and their parents
         LocalDate now = LocalDate.now();
         Set<Long> filtered = structure.stream().filter(sdt -> {

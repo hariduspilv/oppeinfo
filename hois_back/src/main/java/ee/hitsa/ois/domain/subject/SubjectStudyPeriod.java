@@ -1,13 +1,17 @@
 package ee.hitsa.ois.domain.subject;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.StudyPeriod;
-import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
 public class SubjectStudyPeriod extends BaseEntityWithId {
@@ -19,11 +23,10 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
-    private Teacher teacher;
-
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(updatable = false, nullable = false)
     private StudyPeriod studyPeriod;
+    
+    @OneToMany(mappedBy = "subjectStudyPeriod", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<SubjectStudyPeriodTeacher> teachers;
 
     public Subject getSubject() {
         return subject;
@@ -31,16 +34,19 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
     public void setSubject(Subject subject) {
         this.subject = subject;
     }
-    public Teacher getTeacher() {
-        return teacher;
-    }
-    public void setTeacher(Teacher teacher) {
-        this.teacher = teacher;
-    }
     public StudyPeriod getStudyPeriod() {
         return studyPeriod;
     }
     public void setStudyPeriod(StudyPeriod studyPeriod) {
         this.studyPeriod = studyPeriod;
+    }
+    public List<SubjectStudyPeriodTeacher> getTeachers() {
+        return teachers != null ? teachers : (teachers = new ArrayList<>());
+    }
+    public void setTeachers(List<SubjectStudyPeriodTeacher> teachers) {
+        getTeachers().clear();
+        if(teachers != null) {
+            getTeachers().addAll(teachers);
+        }
     }
 }

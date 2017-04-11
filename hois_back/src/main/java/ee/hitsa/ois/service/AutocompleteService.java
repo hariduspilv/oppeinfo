@@ -97,9 +97,10 @@ public class AutocompleteService {
     }
 
     public List<ClassifierSelection> classifiers(List<String> mainClassCodes) {
+        // ClassifierSelection includes attributes for filtering in frontend
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from classifier c");
 
-        qb.requiredCriteria("c.main_class_code in :mainClassCodes", "mainClassCodes", mainClassCodes);
+        qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
         List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value", em).getResultList();
         return data.stream().map(r -> new ClassifierSelection(resultAsString(r, 0),
@@ -118,10 +119,11 @@ public class AutocompleteService {
         return data.stream().map(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2))).collect(Collectors.toList());
     }
 
-    public List<CurriculumVersionResult> curriculumVersions(Long schoolId, Boolean valid) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
-                "from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id "+
-                "left outer join curriculum_study_form sf on cv.curriculum_study_form_id = sf.id");
+    public List<CurriculumVersionResult> curriculumVersions(Long schoolId, Boolean valid, Boolean sais) {
+        String from = "from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id "+
+            "left outer join curriculum_study_form sf on cv.curriculum_study_form_id = sf.id";
+
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         if(Boolean.TRUE.equals(valid)) {
@@ -129,12 +131,15 @@ public class AutocompleteService {
             qb.requiredCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K.name());
             qb.requiredCriteria("c.valid_from <= :currentDate and (c.valid_thru is null or c.valid_thru >= :currentDate)", "currentDate", LocalDate.now());
         }
+        if(Boolean.TRUE.equals(sais)) {
+            qb.filter("exists(select sa.id from sais_admission sa where sa.curriculum_version_id = cv.id)");
+        }
 
-        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, sf.study_form_code", em).getResultList();
+        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, sf.study_form_code", em).getResultList();
         return data.stream().map(r -> {
             String code = resultAsString(r, 1);
             return new CurriculumVersionResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)),
-                    CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsString(r, 4));
+                    CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsLong(r, 4), resultAsString(r, 5));
         }).collect(Collectors.toList());
     }
 
@@ -178,7 +183,7 @@ public class AutocompleteService {
     }
 
     public List<StudentGroupResult> studentGroups(Long schoolId) {
-        // StudentGroupResult includes attributes for filtering
+        // StudentGroupResult includes attributes for filtering in frontend
         return studentGroupRepository.findAllBySchool_id(schoolId).stream().map(StudentGroupResult::of).collect(Collectors.toList());
     }
 
