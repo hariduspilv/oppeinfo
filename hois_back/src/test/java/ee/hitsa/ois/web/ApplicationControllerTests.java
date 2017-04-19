@@ -6,6 +6,7 @@ import java.util.List;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,20 +15,26 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfiguration;
+import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.ExmatriculationReason;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.dto.ApplicationDto;
 import ee.hitsa.ois.web.dto.ApplicationSearchDto;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 @Transactional
 @RunWith(SpringRunner.class)
@@ -40,17 +47,24 @@ public class ApplicationControllerTests {
     private TestRestTemplate restTemplate;
     @Autowired
     private StudentRepository studentRepository;
+    @Autowired
+    private TestConfigurationService testConfigurationService;
 
     private Student student;
 
     @Before
     public void setUp() {
-        Long schoolId = hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId();
         student = studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+            filters.add(cb.equal(root.get("school").get("id"), hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId()));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }).stream().findFirst().get();
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
     }
 
     @Test
@@ -85,37 +99,38 @@ public class ApplicationControllerTests {
 
         ResponseEntity<ApplicationDto> responseEntity = restTemplate.postForEntity(uriBuilder.build().toUriString(), form, ApplicationDto.class);
         Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
-//FIXME: select school ADMIN ROLE
-//        AutocompleteResult studentAutocomplete = new AutocompleteResult(student.getId(), "nameEt", "nameEn");
-//        form.setStudent(studentAutocomplete);
-//
-//        responseEntity = restTemplate.postForEntity(uriBuilder.build().toUriString(), form, ApplicationDto.class);
-//        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-//
-//        Long applicationId = responseEntity.getBody().getId();
-//
-//        //read
-//        uriBuilder = UriComponentsBuilder.fromUriString("/applications").pathSegment(applicationId.toString());
-//        String uri = uriBuilder.build().toUriString();
-//        ResponseEntity<ApplicationDto> response = restTemplate.getForEntity(uri, ApplicationDto.class);
-//        Assert.assertNotNull(response);
-//        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
-//
-//        //update
-//        form = responseEntity.getBody();
-//        form.setAddInfo("additional info update");
-//        uriBuilder = UriComponentsBuilder.fromUriString("/applications").pathSegment(applicationId.toString());
-//        uri = uriBuilder.build().toUriString();
-//        responseEntity = restTemplate.exchange(uri, HttpMethod.PUT, new HttpEntity<>(form), ApplicationDto.class);
-//        Assert.assertNotNull(responseEntity);
-//        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-//
-//        //delete
-//        Long version = responseEntity.getBody().getVersion();
-//        uriBuilder = UriComponentsBuilder.fromUriString("/applications").pathSegment(applicationId.toString());
-//        uriBuilder.queryParam("version", version);
-//        uri = uriBuilder.build().toUriString();
-//        restTemplate.delete(uri);
+
+        AutocompleteResult studentAutocomplete = new AutocompleteResult(student.getId(), "nameEt", "nameEn");
+        form.setStudent(studentAutocomplete);
+        form.setReason(ExmatriculationReason.EKSMAT_POHJUS_A.name());
+
+        responseEntity = restTemplate.postForEntity(uriBuilder.build().toUriString(), form, ApplicationDto.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        Long applicationId = responseEntity.getBody().getId();
+
+        //read
+        uriBuilder = UriComponentsBuilder.fromUriString("/applications").pathSegment(applicationId.toString());
+        String uri = uriBuilder.build().toUriString();
+        ResponseEntity<ApplicationDto> response = restTemplate.getForEntity(uri, ApplicationDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        //update
+        form = responseEntity.getBody();
+        form.setAddInfo("additional info update");
+        uriBuilder = UriComponentsBuilder.fromUriString("/applications").pathSegment(applicationId.toString());
+        uri = uriBuilder.build().toUriString();
+        responseEntity = restTemplate.exchange(uri, HttpMethod.PUT, new HttpEntity<>(form), ApplicationDto.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        //delete
+        Long version = responseEntity.getBody().getVersion();
+        uriBuilder = UriComponentsBuilder.fromUriString("/applications").pathSegment(applicationId.toString());
+        uriBuilder.queryParam("version", version);
+        uri = uriBuilder.build().toUriString();
+        restTemplate.delete(uri);
     }
 
 }

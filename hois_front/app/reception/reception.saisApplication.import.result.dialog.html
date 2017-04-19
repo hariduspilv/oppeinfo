@@ -3,10 +3,6 @@
     <md-toolbar>
       <div class="md-toolbar-tools">
         <h2>{{"reception.application.importFromCsvFile" | translate}}</h2>
-        <span flex></span>
-        <md-button class="md-icon-button" ng-click="cancel()">
-          <md-icon md-font-set="material-icons">close</md-icon>
-        </md-button>
       </div>
     </md-toolbar>
 
@@ -15,7 +11,9 @@
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
         <div ng-show="!result">
           <p>{{"main.proccessingFile" | translate}}</p>
-          <md-progress-linear md-mode="indeterminate"></md-progress-linear>
+          <div layout="row" layout-align="space-around">
+            <md-progress-circular md-mode="indeterminate"></md-progress-circular>
+          </div>
         </div>
         <div ng-show="result">
           <h2>{{'reception.application.added' | translate}}</h2>
@@ -59,7 +57,7 @@
     <span flex></span>
 
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+      <md-button ng-if="result" class="md-raised md-primary" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>
 </md-dialog>

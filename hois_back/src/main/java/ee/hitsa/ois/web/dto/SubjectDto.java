@@ -4,7 +4,9 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
 import ee.hitsa.ois.enums.SubjectConnection;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
@@ -41,20 +43,18 @@ public class SubjectDto extends SubjectForm {
 
     public static SubjectDto of(Subject subject, List<CurriculumVersion> curriculumVersions) {
         SubjectDto dto = EntityUtil.bindToDto(subject, new SubjectDto(), "languages", "schoolDepartment", "curriculumVersions");
-        dto.setLanguages(SubjectUtil.getLanguages(subject).stream().map(EntityUtil::getCode).collect(Collectors.toSet()));
+        dto.setLanguages(StreamUtil.toMappedSet(EntityUtil::getCode, SubjectUtil.getLanguages(subject)));
         dto.setSchoolDepartment(EntityUtil.getNullableId(subject.getSchoolDepartment()));
-        dto.setCurriculumVersions(curriculumVersions.stream().map(AutocompleteResult::of).collect(Collectors.toSet()));
+        dto.setCurriculumVersions(StreamUtil.toMappedSet(AutocompleteResult::of, curriculumVersions));
 
         dto.setPrimarySubjects(
                 subject.getParentConnections().stream()
-                        .filter(it -> SubjectConnection.AINESEOS_EK.name().equals(EntityUtil.getCode(it.getConnection())))
+                        .filter(it -> ClassifierUtil.equals(SubjectConnection.AINESEOS_EK, it.getConnection()))
                         .map(it -> AutocompleteResult.of(it.getPrimarySubject()))
                         .collect(Collectors.toSet()));
 
         Set<EntityConnectionCommand> mandatoryPrerequisiteSubjects = new HashSet<>();
-
         Set<EntityConnectionCommand> recommendedPrerequisiteSubjects = new HashSet<>();
-
         Set<EntityConnectionCommand> substituteSubjects = new HashSet<>();
 
         for (SubjectConnect connetion: subject.getSubjectConnections()) {

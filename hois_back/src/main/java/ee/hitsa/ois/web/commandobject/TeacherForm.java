@@ -5,6 +5,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 import javax.validation.Valid;
 import javax.validation.constraints.DecimalMin;
@@ -30,7 +31,9 @@ public class TeacherForm extends VersionedCommand {
     private Boolean isVocational = Boolean.FALSE;
     private Boolean isHigher = Boolean.FALSE;
 
-    private Long teacherOccupation;
+    private AutocompleteResult teacherOccupation;
+
+    private Boolean isStudyPeriodScheduleLoad = Boolean.FALSE;
 
     @NotEmpty
     @Size(max = 100)
@@ -42,6 +45,14 @@ public class TeacherForm extends VersionedCommand {
 
     @NotNull
     private Short scheduleLoad;
+
+    public Boolean getIsStudyPeriodScheduleLoad() {
+        return isStudyPeriodScheduleLoad;
+    }
+
+    public void setIsStudyPeriodScheduleLoad(Boolean studyPeriodScheduleLoad) {
+        isStudyPeriodScheduleLoad = studyPeriodScheduleLoad;
+    }
 
     @EstonianIdCode
     public static class TeacherPersonForm {
@@ -437,6 +448,7 @@ public class TeacherForm extends VersionedCommand {
         }
     }
 
+    @DateRange(from = "start", thru = "end")
     public static class TeacherMobilityForm {
         private Long id;
         @NotNull
@@ -526,11 +538,11 @@ public class TeacherForm extends VersionedCommand {
         isHigher = higher;
     }
 
-    public Long getTeacherOccupation() {
+    public AutocompleteResult getTeacherOccupation() {
         return teacherOccupation;
     }
 
-    public void setTeacherOccupation(Long teacherOccupation) {
+    public void setTeacherOccupation(AutocompleteResult teacherOccupation) {
         this.teacherOccupation = teacherOccupation;
     }
 

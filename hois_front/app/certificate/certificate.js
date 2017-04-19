@@ -1,51 +1,70 @@
 'use strict';
 
-angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
-  $routeProvider
-    .when('/certificate', {
-        templateUrl: 'certificate/certificate.search.html',
-        controller: 'CertificateSearchController',
-        controllerAs: 'controller',
-        resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); },
-            auth: function (AuthResolver) { return AuthResolver.resolve(); }
-        },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      })
-      .when('/certificate/new', {
-        templateUrl: 'certificate/certificate.edit.html',
-        controller: 'CertificateEditController',
-        controllerAs: 'controller',
-        resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); },
-            auth: function (AuthResolver) { return AuthResolver.resolve(); }
-        },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      })
-      .when('/certificate/:id/edit', {
-        templateUrl: 'certificate/certificate.edit.html',
-        controller: 'CertificateEditController',
-        controllerAs: 'controller',
-        resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); },
-            auth: function (AuthResolver) { return AuthResolver.resolve(); }
-        },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      });
-}]).controller('CertificateSearchController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$route', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, $route) {
+angular.module('hitsaOis')
+.controller('CertificateSearchController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$route', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, $route) {
     $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({type: 'TOEND_LIIK'});
     QueryUtils.createQueryForm($scope, '/certificate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
+    DataUtils.convertStringToDates($scope.criteria, ['insertedFrom', 'insertedThru']);
     $q.all(clMapper.promises).then($scope.loadData);
+
+    if($scope.auth.isStudent()) {
+        QueryUtils.endpoint('/classifier').get({mainClassCode: 'TOEND_LIIK'}, function(result) {
+            $scope.types = result.content.filter(function(t){return t.code !== 'TOEND_LIIK_MUU';});
+        });
+    }
+}]).controller('CertificateStudentOrderController', ['$scope', 'QueryUtils', '$route', '$location', 'message', function ($scope, QueryUtils, $route, $location, message) {
+
+    var baseUrl = '/certificate';
+    var Endpoint = QueryUtils.endpoint(baseUrl);
+    var id = $route.current.params.id;
+
+    if(id) {
+        $scope.record = Endpoint.get({id: id});
+    } else {
+        $scope.record = new Endpoint();
+        $scope.record.status = "TOEND_STAATUS_T";
+        $scope.record.content = "sisu...";
+        $scope.record.type = $route.current.params.typeCode;
+
+        QueryUtils.endpoint("/classifier/" + $scope.record.type).get().$promise.then(function(response){
+            $scope.record.headline = response.nameEt;
+        });
+
+        QueryUtils.endpoint("/directives/coordinators").get().$promise.then(function(response){
+            $scope.signatories = response.content.filter(function(s){return s.isCertificateDefault;});
+            if($scope.signatories.length > 0) {
+                $scope.record.signatoryIdcode = $scope.signatories[0].idcode;
+                $scope.record.signatoryName = $scope.signatories[0].name;
+            } else {
+                message.error('certificate.signatoriesMissing');
+            }
+        });
+    }
+
+    QueryUtils.endpoint("/certificate/student").get().$promise.then(function(response){
+        $scope.student = response;
+    });
+
+    $scope.signatories = [];
+
+    $scope.save = function() {
+        $scope.certificateEditForm.$setSubmitted();
+        if(!$scope.certificateEditForm.$valid && !$scope.record.signatoryIdcode) {
+            message.error('main.messages.form-has-errors');
+            return;
+        }
+        if($scope.record.id) {
+            $scope.record.$update().then(message.updateSuccess);
+        }else{
+            $scope.record.$save().then(function() {
+                message.info('main.messages.create.success');
+                $location.path(baseUrl + "/" + $scope.record.type + "/" + $scope.record.id + "/edit");
+            });
+        }
+    };
 }]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', '$translate', '$q', function ($scope, QueryUtils, $route, $location, dialogService, message, $resource, config, $translate, $q) {
 
-    $scope.auth = $route.current.locals.auth;
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
@@ -65,20 +84,6 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         $scope.otherFound = true;
     }
 
-    $scope.setHeadline = function() {
-        if(!$scope.auth.isStudent() || !$scope.record.type) {
-            return;
-        }
-        QueryUtils.endpoint("/classifier/" + $scope.record.type).get().$promise.then(function(response){
-            $scope.record.headline = response.nameEt;
-        });
-    };
-
-    $scope.$watch('record.type', function() {
-            $scope.setHeadline();
-        }
-    );
-
     function getFullname(person) {
         return person.firstname + ' ' + person.lastname;
     }
@@ -93,7 +98,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     }
 
     function getStudent() {
-        return QueryUtils.endpoint("/students/" + $scope.record.student).get().$promise.then(function(response){
+        return QueryUtils.endpoint('/students').get({id: $scope.record.student}).$promise.then(function(response) {
             var name = getFullname(response.person);
             $scope.record.otherName = name;
             $scope.record.otherIdcode = response.person.idcode;
@@ -104,7 +109,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
 
     $scope.signatories = [];
 
-    QueryUtils.endpoint("/directives/coordinators").get().$promise.then(function(response){
+    QueryUtils.endpoint("/directives/coordinators").search().$promise.then(function(response){
         $scope.signatories = response.content;
     });
 
@@ -187,12 +192,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     );
     $scope.idcodePattern = "^[1-6][0-9]{2}[0-1][0-9][0-3][0-9][0-9]{4}";
 
-    $scope.lookupStudent = function() {
-        console.log("student found!");
-    };
-
     $scope.getNameByIdcode = function() {
-        $resource(config.apiUrl + baseUrl + '/otherStudent').get({idcode: $scope.record.otherIdcode})
+        $resource(config.apiUrl + baseUrl + '/otherStudent').search({idcode: $scope.record.otherIdcode})
         .$promise.then(function(result){
             if(result.id) {
                 $scope.record.student = result.id;

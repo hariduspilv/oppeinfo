@@ -40,6 +40,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     $scope.teacher = Endpoint.get({id: id}, afterLoad);
   } else {
     $scope.teacher = new Endpoint();
+    $scope.teacher.isStudyPeriodScheduleLoad = true;
     $scope.teacher.person = {citizenship: 'RIIK_EST'};
   }
 
@@ -119,13 +120,15 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       message.error('teacher.teacherPositionEhis.error');
       errors = true;
     }
+    // console.log($scope.teacherForm.$valid);
+    // console.log($scope.teacherForm);
     if($scope.teacherForm.$valid && !errors) {
       if($scope.teacher.id) {
         $scope.teacher.$update().then(afterLoad).then(message.updateSuccess);
       } else {
         $scope.teacher.$save().then(function(response) {
           message.info('main.messages.create.success');
-          $location.path(baseUrl+ response.id +'/edit');
+          $location.path(baseUrl + '/' + response.id +'/edit');
         });
       }
     }
@@ -135,5 +138,10 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
 
   $scope.showSchool = $route.current.locals.auth.isExternalExpert();
   $scope.loadData();
+}]).controller('TeacherViewController', ['$scope', '$route', 'QueryUtils', function ($scope, $route, QueryUtils) {
+  var id = $route.current.params.id;
+  var Endpoint = QueryUtils.endpoint('/teachers');
+
+  $scope.teacher = Endpoint.get({id: id}/*, afterLoad*/);
 }]);
 

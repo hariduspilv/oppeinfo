@@ -3,6 +3,13 @@
 
     <div layout="row" layout-xs="column" flex>
       <div flex="70">
+        <div layout="row" layout-sm="column" layout-xs="column" ng-if="record.type === 'KASKKIRI_TYHIST'">
+          <md-input-container flex="100" flex-sm="100" flex-xs="100">
+            <label class="textInput">{{'directive.canceledDirective' | translate}}</label>
+            <hois-value value="record.canceledDirective.nameEt" href-value="'#/directives/' + record.canceledDirective.id + '/view'"></hois-value>
+          </md-input-container>
+        </div>
+
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'directive.headline' | translate}}</label>
@@ -53,5 +60,6 @@
 
     <md-button ng-href="{{formState.backUrl || '#/directives'}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
     <md-button ng-click="confirmDirective()" ng-if="record.status === 'KASKKIRI_STAATUS_KINNITAMISEL'" class="md-raised">{{'directive.confirmDuringTest' | translate}}</md-button>
+    <md-button ng-click="cancelDirective()" ng-if="record.status === 'KASKKIRI_STAATUS_KINNITATUD' && record.type !== 'KASKKIRI_TYHIST'" class="md-raised">{{'directive.cancel' | translate}}</md-button>
   </div>
 </div>

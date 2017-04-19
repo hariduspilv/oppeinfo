@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.school;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
@@ -54,7 +55,11 @@ public class School extends BaseEntityWithId {
     private Classifier ehisSchool;
     private String address;
     private String phone;
-
+    @JsonIgnore
+    @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<StudyYearScheduleLegend> studyYearScheduleLegends;
+    
+    
     public String getNameEt() {
         return nameEt;
     }
@@ -125,5 +130,24 @@ public class School extends BaseEntityWithId {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public List<SchoolDepartment> getSchoolDepartments() {
+        return schoolDepartments;
+    }
+
+    public void setSchoolDepartments(List<SchoolDepartment> schoolDepartments) {
+        this.schoolDepartments = schoolDepartments;
+    }
+
+    public List<StudyYearScheduleLegend> getStudyYearScheduleLegends() {
+        return studyYearScheduleLegends != null ? studyYearScheduleLegends : (studyYearScheduleLegends = new ArrayList<>());
+    }
+
+    public void setStudyYearScheduleLegends(List<StudyYearScheduleLegend> studyYearScheduleLegends) {
+        getStudyYearScheduleLegends().clear();
+        if(studyYearScheduleLegends != null) {
+            getStudyYearScheduleLegends().addAll(studyYearScheduleLegends);
+        }
     }
 }

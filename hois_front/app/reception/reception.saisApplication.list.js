@@ -1,12 +1,11 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ReceptionSaisApplicationListController', function ($scope, QueryUtils, Classifier, dialogService, oisFileService) {
+angular.module('hitsaOis').controller('ReceptionSaisApplicationListController', function ($scope, QueryUtils, Classifier, dialogService, oisFileService, config) {
   var clMapper = Classifier.valuemapper({status: 'SAIS_AVALDUSESTAATUS'});
   QueryUtils.createQueryForm($scope, '/saisApplications', {order: 'applicationNr'}, clMapper.objectmapper);
   $scope.loadData();
 
-  var SaisAdmissionsEndpoint = QueryUtils.endpoint('/autocomplete/saisAdmissionCodes');
-  SaisAdmissionsEndpoint.query({}, function(result) {
+  QueryUtils.endpoint('/autocomplete/saisAdmissionCodes').query(function(result) {
     $scope.saisAdmissionCodes = result;
   });
 
@@ -15,7 +14,7 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationListController', 
       QueryUtils.endpoint('/saisApplications/importCsv').save({file: file}, function(result) {
         dialogScope.result = result;
       });
-    }, null);
+    }, null, null, {clickOutsideToClose: false});
   }
 
   $scope.importFromCsvFile = function() {
@@ -27,4 +26,7 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationListController', 
       });
     });
   };
+
+  $scope.csvSampleFileUrl = config.apiUrl + '/saisApplications/sample.csv';
+  $scope.classifiersFileUrl = config.apiUrl + '/saisApplications/classifiers.csv';
 });

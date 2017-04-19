@@ -628,7 +628,6 @@ public class Curriculum extends BaseEntityWithId {
     public void setStudyLanguages(Set<CurriculumStudyLanguage> studyLanguages) {
         getStudyLanguages().clear();
         getStudyLanguages().addAll(studyLanguages);
-        getStudyLanguages().forEach(l -> l.setCurriculum(this));
     }
 
     public Set<CurriculumDepartment> getDepartments() {
@@ -638,7 +637,6 @@ public class Curriculum extends BaseEntityWithId {
     public void setDepartments(Set<CurriculumDepartment> departments) {
         getDepartments().clear();
         getDepartments().addAll(departments); 
-        getDepartments().forEach(d -> d.setCurriculum(this));
     }
 
     public Set<CurriculumFile> getFiles() {

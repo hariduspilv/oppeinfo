@@ -3,7 +3,8 @@
     <label class="md-required common-label">{{'application.periodType' | translate}}</label>
   </md-input-container>
   <md-input-container layout="row" layout-align="start center" flex="20">
-    <md-radio-group name="isPeriod" ng-model="application.isPeriod" ng-required="isPeriodRequired" layout="row">
+    <md-radio-group name="isPeriod" ng-model="application.isPeriod" ng-required="isPeriodRequired"
+      ng-change="application.startDate=undefined;application.endDate=undefined;application.studyPeriodStart=undefined;application.studyPeriodEnd=undefined" layout="row">
       <md-radio-button ng-value="true" aria-label="period">{{ 'main.period' | translate }}</md-radio-button>
       <md-radio-button ng-value="false" aria-label="date">{{ 'main.date' | translate }}</md-radio-button>
     </md-radio-group>
@@ -16,7 +17,7 @@
 <div ng-show="!application.isPeriod" layout="row" layout-xs="column">
   <md-input-container  flex>
     <label>{{labelStart | translate}}</label>
-    <md-datepicker ng-model="application.startDate" md-open-on-focus ng-required="isPeriodRequired && !application.isPeriod"></md-datepicker>
+    <md-datepicker ng-model="application.startDate" md-min-date="now" md-open-on-focus ng-required="isPeriodRequired && !application.isPeriod"></md-datepicker>
   </md-input-container>
 
   <md-input-container style="margin-left: 0px" flex flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">

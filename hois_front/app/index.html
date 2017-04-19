@@ -20,47 +20,6 @@
     <!-- endbuild -->
   </head>
   <body ng-app="hitsaOis" layout="row" ng-controller="MainController" ng-cloak>
-    <!--md-sidenav md-colors="{background: 'primary-800'}" class="site-sidenav md-sidenav-left md-whiteframe-z2"
-                md-component-id="left" md-is-locked-open="$mdMedia('gt-xs')" md-whiteframe="1">
-
-      <header class="nav-header" layout="column">
-        <div layout="row" layout-padding>
-          <div layout="column" layout-align="none">
-            <img class="logo" ng-src="{{logo ? logo : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/>
-          </div>
-		  <div layout="column" layout-align="end">
-			<div layout="row" layout-align="end">
-				<a ng-href="#/" class="md-subhead">{{ 'main.applicationTitle' | translate }}</a>
-			</div>
-			<div layout="row" layout-align="space-around end">
-				<md-button ng-class="{'md-accent': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="language et">{{ 'main.language.et' | translate }}</md-button>
-				<md-button ng-class="{'md-accent': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="language en">{{ 'main.language.en' | translate }}</md-button>
-			</div>
-		  </div>
-        </div>
-      </header>
-
-      <md-content role="navigation" flex>
-        <ul class="docs-menu">
-          <li ng-repeat="section in Menu.sections" class="parent-list-item {{section.className || ''}}" ng-class="{'parentActive' : isSectionSelected(section)}">
-            <h2 class="menu-heading md-subhead" ng-if="section.type === 'heading'" id="heading_{{ section.name | nospace }}">
-              {{section.name}}
-            </h2>
-            <menu-link section="section" ng-if="section.type === 'link' && !section.hidden"></menu-link>
-            <menu-toggle section="section" ng-if="section.type === 'toggle' && !section.hidden"></menu-toggle>
-            <ul ng-if="section.children" class="menu-nested-list">
-              <li ng-repeat="child in section.children" ng-class="{'childActive' : isSectionSelected(child)}">
-                <menu-link section="child" ng-if="child.type === 'link'"></menu-link>
-                <menu-toggle section="child" ng-if="child.type === 'toggle'"></menu-toggle>
-              </li>
-            </ul>
-          </li>
-        </ul>
-      </md-content>
-      <!--0.2.0/20170310-->
-      <!-- todo: move to config -->
-    <!--md-sidenav-->   
-
     <div layout="column" tabIndex="-1" role="main" flex>
       <md-toolbar class="md-whiteframe-glow-z1 hois_header" layout="row" layout-align="start center">
 	    <!--header class="nav-header" layout="column"-->
@@ -83,9 +42,7 @@
 			</div>
 		  </div-->
         </div>
-      <!--/header-->
         <div class="docs-toolbar-tools" tabIndex="-1" >
-          
           <div class="md-toolbar-tools fill-height" layout="row" flex>
             <h1 md-colors="{color: 'background-900'}" style="margin-top: -2px" class="md-display-2">
               <span ng-if="Menu.currentPage.name !== Menu.currentSection.name">
@@ -111,73 +68,48 @@
                 </md-tooltip>
                 <md-icon md-colors="{color: 'primary-800'}">lock</md-icon>
               </md-button>
-
             </div>
             <div layout="row" layout-align="end" flex>
               <md-select ng-show="currentUser" ng-model="userWork" ng-change="changeUser();" aria-label="change user">
                 <md-option ng-repeat="user in currentUser.users" value="{{user.id}}" style="font-size: medium;">
-                  {{user.roleEt}}
+                  {{currentLanguageNameField(user)}}
                 </md-option>
               </md-select>
             </div>
           </div>
-          </div>
-
+        </div>
       </md-toolbar>   
-	 <div style="height:2px">&nbsp;</div>
+	  <div style="height:2px">&nbsp;</div>
 	  <!--div flex layout="row" class="height100"-->
 	  <md-content layout="row" flex>
-		 <md-sidenav md-colors="{background: 'background-100'}" class="site-sidenav" md-is-locked-open="isLeftOpen()" md-component-id="left" md-whiteframe="1" md-is-open="shouldLeftBeOpen" >		 
-		 <!--md-sidenav-left md-whiteframe-z2-->
-<!--md-is-locked-open="isLeftOpen()" -->
-      <!--header class="nav-header" layout="column">
-        <div layout="row" layout-padding>
-          <div layout="column" layout-align="none">
-            <img class="logo" ng-src="{{logo ? logo : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/>
-          </div>
-		  <div layout="column" layout-align="end">
-			<div layout="row" layout-align="end">
-				<a ng-href="#/" class="md-subhead">{{ 'main.applicationTitle' | translate }}</a>
+			<md-sidenav md-colors="{background: 'background-100'}" class="site-sidenav" md-is-locked-open="isLeftOpen()" md-component-id="left" md-whiteframe="1" md-is-open="shouldLeftBeOpen" >		 
+			  <md-content role="navigation" flex>
+				<ul class="docs-menu">
+				  <li ng-repeat="section in Menu.sections" class="parent-list-item {{section.className || ''}}" ng-class="{'parentActive' : isSectionSelected(section)}">
+					<h2 class="menu-heading md-subhead" ng-if="section.type === 'heading'" id="heading_{{ section.name | nospace }}">
+					  {{section.name}}
+					</h2>
+					<menu-link section="section" ng-if="section.type === 'link' && !section.hidden"></menu-link>
+					<menu-toggle section="section" ng-if="section.type === 'toggle' && !section.hidden" md-colors="{color: 'primary-900'}"></menu-toggle>
+					<ul ng-if="section.children" class="menu-nested-list">
+					  <li ng-repeat="child in section.children" ng-class="{'childActive' : isSectionSelected(child)}">
+						<menu-link section="child" ng-if="child.type === 'link'"></menu-link>
+						<menu-toggle section="child" ng-if="child.type === 'toggle'" ></menu-toggle>
+					  </li>
+					</ul>
+				  </li>
+				</ul>
+				<div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="md-caption">Versioon 0.2.0/20170310</span></div>
+			  </md-content>
+			</md-sidenav>
+			<div layout="row" flex>
+				<md-content md-scroll-y flex>
+					<div ng-view=""></div>
+				</md-content>
 			</div>
-			<div layout="row" layout-align="space-around end">
-				<md-button ng-class="{'md-accent': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="language et">{{ 'main.language.et' | translate }}</md-button>
-				<md-button ng-class="{'md-accent': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="language en">{{ 'main.language.en' | translate }}</md-button>
-			</div>
-		  </div>
-        </div>
-      </header-->
-
-      <md-content role="navigation" flex>
-        <ul class="docs-menu">
-          <li ng-repeat="section in Menu.sections" class="parent-list-item {{section.className || ''}}" ng-class="{'parentActive' : isSectionSelected(section)}">
-            <h2 class="menu-heading md-subhead" ng-if="section.type === 'heading'" id="heading_{{ section.name | nospace }}">
-              {{section.name}}
-            </h2>
-            <menu-link section="section" ng-if="section.type === 'link' && !section.hidden""></menu-link>
-            <menu-toggle section="section" ng-if="section.type === 'toggle' && !section.hidden" md-colors="{color: 'primary-900'}"></menu-toggle>
-            <ul ng-if="section.children" class="menu-nested-list">
-              <li ng-repeat="child in section.children" ng-class="{'childActive' : isSectionSelected(child)}">
-                <menu-link section="child" ng-if="child.type === 'link'"></menu-link>
-                <menu-toggle section="child" ng-if="child.type === 'toggle'" ></menu-toggle>
-              </li>
-            </ul>
-          </li>
-        </ul>
-		<div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="md-caption">Versioon 0.2.0/20170310</span></div>
-      </md-content>
-      
-      <!-- todo: move to config -->
-    </md-sidenav>
-
-		  
-		  <div layout="row" flex>
-			<md-content md-scroll-y flex>
-			  <div ng-view=""></div>
-			</md-content>
-		  </div>
 	   <!--/div-->	  
 	   </md-content>
-    <!/div>
+    </div>
 
 
     <!-- build:js(.) scripts/vendor.js -->
@@ -221,6 +153,7 @@
     <script src="login/login.js"></script>
 
     <script src="certificate/certificate.js"></script>
+    <script src="certificate/certificate.route.js"></script>
 
     <script src="classifier/classifier.js"></script>
     <script src="classifier/classifier.autocomplete.js"></script>
@@ -230,9 +163,10 @@
     <script src="classifier/classifier.list.js"></script>
     <script src="classifier/classifier.route.js"></script>
 
+    <script src="components/error.source.attr.js"></script>
+    <script src="components/disallow.same.file.attr.js"></script>
     <script src="components/unique.attr.js"></script>
     <script src="components/hois.menu.js"></script>
-    <script src="components/error.source.attr.js"></script>
     <script src="components/hois.autocomplete.js"></script>
     <script src="components/hois.created.modified.js"></script>
     <script src="components/hois.classifier.autocomplete.js"></script>
@@ -266,6 +200,7 @@
     <script src="higherEducationCurriculum/hois.curriculum.version.code.validator.js"></script>
 
     <script src="message/message.js"></script>
+    <script src="message/message.route.js"></script>
 
     <script src="messageTemplate/message.template.js"></script>
     <script src="messageTemplate/message.template.route.js"></script>
@@ -275,8 +210,8 @@
 
     <script src="reception/reception.saisAdmission.js"></script>
     <script src="reception/reception.saisAdmission.list.js"></script>
+    <script src="reception/reception.saisApplication.js"></script>
     <script src="reception/reception.saisApplication.list.js"></script>
-    <script src="reception/reception.import.js"></script>
     <script src="reception/reception.route.js"></script>
 
     <script src="services/array.utils.js"></script>
@@ -312,9 +247,17 @@
     <script src="studentRepresentative/student.representative.application.js"></script>
     <script src="studentRepresentative/student.representative.route.js"></script>
 
-    <script src="subject/subject.list.js"></script>
-    <script src="subject/subject.edit.js"></script>
+    <script src="studyYearSchedule/studyYearSchedule.js"></script>
+    <script src="studyYearSchedule/studyYearSchedule.route.js"></script>
+    <script src="studyYearSchedule/studyYearScheduleLegend.js"></script>
+
+    <script src="subject/subject.js"></script>
     <script src="subject/subject.route.js"></script>
+
+    <script src="subjectStudyPeriod/subjectStudyPeriod.js"></script>
+
+    <script src="timetable/timetable.route.js"></script>
+    <script src="timetable/timetable.lessonTime.list.js"></script>
 
     <script src="teacher/teacher.js"></script>
     <script src="teacher/teacher.occupation.js"></script>

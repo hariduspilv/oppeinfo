@@ -14,11 +14,17 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var clMapper = Classifier.valuemapper({role: "ROLL"});
     $scope.showSchool = $route.current.locals.auth.isMainAdmin();
+    $scope.maxDate = new Date();
 
     function afterLoad() {
 
       $scope.users = $scope.person.users;
       $scope.person.users = null;
+      if ($scope.person.idcode && $scope.person.idcode.length === 11) {
+        $scope.person.sex = DataUtils.sexFromIdcode($scope.person.idcode);
+        $scope.person.birthdate = DataUtils.birthdayFromIdcode($scope.person.idcode);
+        $scope.idcodeReadonly = true;
+      }
       if ($scope.users) {
         clMapper.objectmapper($scope.users);
         $scope.users.forEach(function (it) {
@@ -45,10 +51,23 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
       message.info('person.exists');
     };
 
+    function clearData() {
+      $scope.person.firstname = '';
+      $scope.person.lastname = '';
+      $scope.person.email = '';
+      $scope.person.phone = '';
+    }
+
     $scope.lookupFailure = function () {
-      if (!$scope.person.sex) {
-        $scope.person.sex = DataUtils.sexFromIdcode($scope.person.idcode);
-      }
+      $scope.person.sex = DataUtils.sexFromIdcode($scope.person.idcode);
+      $scope.person.birthdate = DataUtils.birthdayFromIdcode($scope.person.idcode);
+      clearData();
+    };
+
+    $scope.cleanReadOnly = function () {
+      clearData();
+      $scope.person.sex = undefined;
+      $scope.person.birthdate = undefined;
     };
 
     if (id) {
@@ -66,7 +85,7 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
     };
 
     $scope.personBack = function () {
-      if ($scope.users.length > 0 || $scope.showSchool || !$scope.person.id) {
+      if (($scope.users && $scope.users.length > 0) || $scope.showSchool || !$scope.person.id) {
         back();
       } else {
         dialogService.confirmDialog({prompt: 'person.back'}, function () {

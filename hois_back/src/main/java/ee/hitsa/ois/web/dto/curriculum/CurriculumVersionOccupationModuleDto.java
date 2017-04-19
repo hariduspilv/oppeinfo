@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.dto.curriculum;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -14,6 +13,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
@@ -61,26 +61,12 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     public static CurriculumVersionOccupationModuleDto of(CurriculumVersionOccupationModule module) {
         CurriculumVersionOccupationModuleDto dto = EntityUtil.bindToDto(module, new CurriculumVersionOccupationModuleDto(),
                 "curriculumModule", "capacities", "themes", "yearCapacities");
+
         dto.setCurriculumModule(EntityUtil.getId(module.getCurriculumModule()));
-
-        if (module.getCapacities() != null) {
-            Set<CurriculumVersionOccupationModuleCapacityDto> capacities = module.getCapacities().stream().
-                    map(c -> CurriculumVersionOccupationModuleCapacityDto.of(c)).collect(Collectors.toSet());
-            dto.setCapacities(capacities);
-        }
-
-        if (module.getThemes() != null) {
-            Set<CurriculumVersionOccupationModuleThemeDto> themes = module.getThemes().stream().
-                    map(t -> CurriculumVersionOccupationModuleThemeDto.of(t)).collect(Collectors.toSet());
-            dto.setThemes(themes);
-        }
-
-        if (module.getYearCapacities() != null) {
-            Set<CurriculumVersionOccupationModuleYearCapacityDto> yearCapacities = module.getYearCapacities().stream().
-                    map(c -> CurriculumVersionOccupationModuleYearCapacityDto.of(c)).collect(Collectors.toSet());
-            dto.setYearCapacities(yearCapacities);
-        }
-
+        dto.setCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleCapacityDto::of, module.getCapacities()));
+        dto.setThemes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeDto::of, module.getThemes()));
+        dto.setYearCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleYearCapacityDto::of, module.getYearCapacities()));
+ 
         return dto;
     }
 
@@ -227,7 +213,4 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     public void setYearCapacities(Set<CurriculumVersionOccupationModuleYearCapacityDto> yearCapacities) {
         this.yearCapacities = yearCapacities;
     }
-
-
-
 }

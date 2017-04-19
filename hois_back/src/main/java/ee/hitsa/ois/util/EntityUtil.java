@@ -14,9 +14,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -198,17 +198,61 @@ public abstract class EntityUtil {
         return dto;
     }
 
-    public static <SV, ID> void bindClassifierCollection(Collection<SV> storedValues, Function<SV, ID> idExtractor, Collection<ID> newIds, Function<ID, SV> newValueFactory) {
-        Set<ID> storedIds = storedValues.stream().map(idExtractor).collect(Collectors.toSet());
+    /**
+     * child collection binding when only id is required to set (typically classifier reference).
+     *
+     * @param storedValues
+     * @param idExtractor
+     * @param newIds
+     * @param newValueFactory
+     */
+    public static <SV, ID> void bindEntityCollection(Collection<SV> storedValues, Function<SV, ID> idExtractor, Collection<ID> newIds, Function<ID, SV> newValueFactory) {
+        Set<ID> storedIds = StreamUtil.toMappedSet(idExtractor, storedValues);
 
-        for(ID id : newIds) {
-            if(!storedIds.remove(id)) {
-                storedValues.add(newValueFactory.apply(id));
+        if(newIds != null) {
+            for(ID id : newIds) {
+                if(!storedIds.remove(id)) {
+                    storedValues.add(newValueFactory.apply(id));
+                }
             }
         }
 
-        // remove possible letfovers
-        storedValues.removeIf(t -> !newIds.contains(idExtractor.apply(t)));
+        // remove possible leftovers
+        storedValues.removeIf(t -> storedIds.contains(idExtractor.apply(t)));
+    }
+
+    /**
+     * child collection binding with create, update and remove operations.
+     *
+     * @param storedValues
+     * @param storedIdExtractor
+     * @param newValues
+     * @param newIdExtractor
+     * @param newValueFactory
+     * @param updater
+     */
+    public static <SV, ID, NV> void bindEntityCollection(Collection<SV> storedValues, Function<SV, ID> storedIdExtractor, Collection<NV> newValues, Function<NV, ID> newIdExtractor, Function<NV, SV> newValueFactory, BiConsumer<NV, SV> updater) {
+        Map<ID, SV> mappedStoredValues = StreamUtil.toMap(storedIdExtractor, storedValues);
+
+        if(newValues != null) {
+            for(NV newValue : newValues) {
+                ID id = newIdExtractor.apply(newValue);
+                if(id == null) {
+                    storedValues.add(newValueFactory.apply(newValue));
+                } else {
+                    SV storedValue = mappedStoredValues.remove(id);
+                    if(storedValue == null) {
+                        throw new AssertionFailedException("Cannot find existing entity with id: " + id);
+                    }
+                    if(updater != null) {
+                        updater.accept(newValue, storedValue);
+                    }
+                }
+            }
+        }
+
+        // remove possible leftovers
+        storedValues.removeAll(mappedStoredValues.values());
     }
 
     public static void bindClassifiers(Object command, Object entity, Map<String, ClassifierRestriction> properties, ClassifierRepository loader) {

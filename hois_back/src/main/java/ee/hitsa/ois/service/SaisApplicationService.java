@@ -11,6 +11,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -32,6 +33,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.MappingIterator;
 import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
@@ -50,9 +52,12 @@ import ee.hitsa.ois.repository.SaisApplicationRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
+import ee.hitsa.ois.web.commandobject.SaisApplicationClassifiersCsv;
 import ee.hitsa.ois.web.commandobject.SaisApplicationCsvRow;
 import ee.hitsa.ois.web.commandobject.SaisApplicationSearchCommand;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.SaisApplicationImportResultDto;
 import ee.hitsa.ois.web.dto.SaisApplicationImportedRowDto;
 import ee.hitsa.ois.web.dto.SaisApplicationSearchDto;
@@ -64,6 +69,9 @@ public class SaisApplicationService {
 
     private static final List<String> REVOKED_APPLICATION_STATUSES = Arrays.asList(SaisApplicationStatus.SAIS_AVALDUSESTAATUS_AL.name(),
             SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TL.name(), SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TYH.name());
+
+    private static final List<String> CLASSIFIERS_LIST = Arrays.asList(MainClassCode.FINALLIKAS.name(), MainClassCode.RIIK.name(),
+            MainClassCode.SAIS_AVALDUSESTAATUS.name(), MainClassCode.OPPEASTE.name(), MainClassCode.OPPEKEEL.name(), MainClassCode.OPPEKOORMUS.name(), MainClassCode.OPPEVORM.name());
 
     private static final String SAIS_APPLICATION_FROM = "from (select a.id, a.application_nr, a.idcode, a.firstname, a.lastname, a.status_code,"+
             "sais_admission.code as sais_admission_code, (exists (select id from directive_student where directive_student.sais_application_id = a.id)) as added_to_directive, curriculum.school_id as school_id from sais_application a "+
@@ -86,6 +94,9 @@ public class SaisApplicationService {
     private ClassifierRepository classifierRepository;
 
     @Autowired
+    private AutocompleteService autocompleteService;
+
+    @Autowired
     private CurriculumVersionRepository curriculumVersionRepository;
 
     @Autowired
@@ -100,7 +111,7 @@ public class SaisApplicationService {
         qb.requiredCriteria("school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("sais_admission_code in (:code)", "code", criteria.getCode());
         if (Boolean.TRUE.equals(criteria.getAddedToDirective())) {
-            qb.optionalCriteria("added_to_directive = :added_to_directive", "added_to_directive", criteria.getAddedToDirective());
+            qb.filter("added_to_directive = true");
         }
 
         qb.optionalContains(Arrays.asList("firstname", "lastname", "firstname || ' ' || lastname"), "name", criteria.getName());
@@ -112,7 +123,7 @@ public class SaisApplicationService {
         if (!CollectionUtils.isEmpty(criteria.getStatus())) {
             revokedStatuses.removeAll(criteria.getStatus());
         }
-        if (criteria.getShowRevoked() == null || Boolean.FALSE.equals(criteria.getShowRevoked())) {
+        if (!Boolean.TRUE.equals(criteria.getShowRevoked())) {
           qb.optionalCriteria("status_code not in (:revokedStatus)", "revokedStatus", revokedStatuses);
         }
 
@@ -186,8 +197,8 @@ public class SaisApplicationService {
             return;
         }
 
-        String messageForMissing = String.format("Avaldus nr. %s-l puudub ", applicationNr);
-        String messageForOther = String.format("Avaldus nr. %s-ga ", applicationNr);
+        String messageForMissing = String.format("Avaldusel nr %s puudub ", applicationNr);
+        String messageForOther = String.format("Avaldusega nr %s ", applicationNr);
 
         String code = row.getCode();
         String curriculumVersionCode = row.getCurriculumVersionCode();
@@ -196,8 +207,7 @@ public class SaisApplicationService {
             return;
         }
 
-        // FIXME should add school as search parameter?
-        CurriculumVersion curriculumVersion = curriculumVersionRepository.findByCode(curriculumVersionCode);
+        CurriculumVersion curriculumVersion = curriculumVersionRepository.findByCodeAndCurriculumSchoolId(curriculumVersionCode, schoolId);
         SaisAdmission existingSaisAdmission = null;
 
         if (StringUtils.isEmpty(code)) {
@@ -208,10 +218,10 @@ public class SaisApplicationService {
             // FIXME which one gets used from possible multiple admissions linked to given curriculum version?
             existingSaisAdmission = saisAdmissionRepository.findByCurriculumVersionId(EntityUtil.getId(curriculumVersion));
         } else {
-            // FIXME should add also school to search parameters?
-            existingSaisAdmission = saisAdmissionRepository.findByCode(code);
+            existingSaisAdmission = saisAdmissionRepository.findByCodeAndCurriculumVersionCurriculumSchoolId(code, schoolId);
         }
 
+        //FIXME: only one SaisAdmission should be generated per file.
         SaisAdmission saisAdmission = existingSaisAdmission == null ? new SaisAdmission() : existingSaisAdmission;
         if (existingSaisAdmission == null) {
             saisAdmission.setCurriculumVersion(curriculumVersion);
@@ -224,7 +234,6 @@ public class SaisApplicationService {
             curriculumVersion = saisAdmission.getCurriculumVersion();
         }
 
-        // FIXME should use also school as search parameter?
         SaisApplication existingSaisApplication = saisApplicationRepository.findByApplicationNrAndSaisAdmissionCode(applicationNr, saisAdmission.getCode());
         SaisApplication saisApplication = existingSaisApplication == null ? new SaisApplication() : existingSaisApplication;
 
@@ -251,6 +260,10 @@ public class SaisApplicationService {
         if (!idCodeValidator.isValid(saisApplication.getIdcode(), null)) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther + "seotud isiku isikukood ei ole korrektne."));
             return;
+        }
+        String sexCode = EstonianIdCodeValidator.sexFromIdcode(saisApplication.getIdcode());
+        if (StringUtils.hasText(sexCode)) {
+            saisApplication.setSex(classifiers.getByCode(sexCode, MainClassCode.SUGU));
         }
 
         if (saisApplication.getSaisChanged() == null) {
@@ -369,7 +382,7 @@ public class SaisApplicationService {
         if (existingSaisApplication == null) {
             Set<ConstraintViolation<SaisApplication>> saisApplicationErrors = validator.validate(saisApplication, Default.class);
             if (!saisApplicationErrors.isEmpty()) {
-                log.error("sais application validation failed: ["+ String.join("; ", saisApplicationErrors.stream().map(error -> error.getPropertyPath() + ": " + error.getMessage()).collect(Collectors.toList())) + "]");
+                log.error("sais application validation failed: ["+ String.join("; ", StreamUtil.toMappedList(error -> error.getPropertyPath() + ": " + error.getMessage(), saisApplicationErrors)) + "]");
                 failed.add(new SaisApplicationImportedRowDto(rowNr, "avalduse andmed on puudulikud salvestamiseks."));
                 return;
             }
@@ -378,7 +391,7 @@ public class SaisApplicationService {
         if (existingSaisAdmission == null) {
             Set<ConstraintViolation<SaisAdmission>> saisAdmissionErrors = validator.validate(saisAdmission, Default.class);
             if (!saisAdmissionErrors.isEmpty()) {
-                log.error("sais admission validation failed: ["+ String.join("; ", saisAdmissionErrors.stream().map(error -> error.getPropertyPath() + ": " + error.getMessage()).collect(Collectors.toList())) + "]");
+                log.error("sais admission validation failed: ["+ String.join("; ", StreamUtil.toMappedList(error -> error.getPropertyPath() + ": " + error.getMessage(), saisAdmissionErrors)) + "]");
                 failed.add(new SaisApplicationImportedRowDto(rowNr, "konkursi andmed on puudulikud salvestamiseks."));
                 return;
             }
@@ -394,6 +407,28 @@ public class SaisApplicationService {
 
     }
 
+    public String getSampleCsvFile() {
+        return "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;OppekavaVersioon/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;OppuriEelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp\n"+
+               "FIL12/12;Nr123;Mari;Maasikas;49011112345;EST;EST;RE;1.01.2012;T;FIL12/12;TAIS;P;E;411;1.12.2011;1.02.2012\n"+
+               "MAT15/16;Nr456;Tõnu;Kuut;39311112312;FIN;EST;REV;3.03.2012;T;MAT15/16;OSA;P;I;411;1.01.2012;3.04.2012\n"+
+               "MAT15/16;Nr321;Tiiu;Kask;49302052312;EST;EST;RE;12.02.2012;T;MAT15/16;OSA;K;E;411;1.01.2012;3.04.2012";
+    }
+
+    public String classifiersFile() {
+        List<ClassifierSelection> classifiers = autocompleteService.classifiers(CLASSIFIERS_LIST);
+        classifiers.sort(Comparator.comparing(ClassifierSelection::getMainClassCode).thenComparing(Comparator.comparing(ClassifierSelection::getValue)));
+
+        CsvSchema schema = csvMapper.schemaFor(SaisApplicationClassifiersCsv.class).withHeader().withColumnSeparator(';');
+        try {
+            return csvMapper.writer().with(schema).writeValueAsString(StreamUtil.toMappedList(SaisApplicationClassifiersCsv::of, classifiers));
+        } catch (JsonProcessingException e) {
+            log.error(e.getMessage(), e);
+        }
+
+        return null;
+
+    }
+
 }
 
 class ClassifierCache {
@@ -404,7 +439,7 @@ class ClassifierCache {
         this.repository = repository;
     }
 
-    public Classifier get(String value, MainClassCode mainClassCode) {
+    public Classifier get(String value, MainClassCode mainClassCode, Boolean isCode) {
         // FIXME should fetch all values by mainClassCode with single query?
         Map<String, Classifier> cache = classifiers.computeIfAbsent(mainClassCode, key -> new HashMap<>());
         Classifier c = cache.get(value);
@@ -412,10 +447,24 @@ class ClassifierCache {
             if(cache.containsKey(value)) {
                 return null;
             }
-            c = StringUtils.hasText(value) ? repository.findByValueAndMainClassCode(value, mainClassCode.name()) : null;
+            c = StringUtils.hasText(value) ? getClassifier(value, mainClassCode, isCode) : null;
             cache.put(value, c);
         }
         return c;
     }
-}
 
+    private Classifier getClassifier(String valueOrCode, MainClassCode mainClassCode, Boolean isCode) {
+        if (Boolean.TRUE.equals(isCode)) {
+            return repository.getOne(valueOrCode);
+        }
+        return repository.findByValueAndMainClassCode(valueOrCode, mainClassCode.name());
+    }
+
+    public Classifier get(String value, MainClassCode mainClassCode) {
+        return get(value, mainClassCode, Boolean.FALSE);
+    }
+
+    public Classifier getByCode(String value, MainClassCode mainClassCode) {
+        return get(value, mainClassCode, Boolean.TRUE);
+    }
+}

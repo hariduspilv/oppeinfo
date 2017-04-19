@@ -15,6 +15,7 @@ import java.lang.annotation.Target;
 public @interface DateTimeRange {
     String from() default "validFrom";
     String thru() default "validThru";
+    boolean allowPast() default true;
 
     String message() default "InvalidDateRange";
     Class<?>[] groups() default {};

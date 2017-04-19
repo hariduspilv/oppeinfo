@@ -107,7 +107,7 @@
     <div layout="row">
       <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
       <md-button ng-if="subject.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-      <md-button ng-href="#/subject" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>

@@ -1,11 +1,13 @@
 'use strict';
 
 
-angular.module('hitsaOis').controller('ApplicationController', function ($scope, dialogService, oisFileService, QueryUtils, message, $location, $route, DataUtils, ArrayUtils) {
+angular.module('hitsaOis').controller('ApplicationController', function ($scope, dialogService, oisFileService, QueryUtils, message, $location, $route, DataUtils, ArrayUtils, $q, Curriculum) {
   var ApplicationsEndpoint = QueryUtils.endpoint('/applications');
 
   $scope.removeFromArray = ArrayUtils.remove;
   $scope.auth = $route.current.locals.auth;
+  $scope.isCreate = $route.current.locals.isCreate;
+  $scope.now = new Date();
 
   function entityToForm(savedApplication) {
     DataUtils.convertStringToDates(savedApplication, ["startDate", "endDate"]);
@@ -19,9 +21,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     angular.extend($scope.application, savedApplication);
   }
 
-  function isEdit() {
-    return angular.isNumber($scope.application.id);
-  }
 
   $scope.applicationEditView = false;
   $scope.application = {
@@ -34,19 +33,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     entityToForm(entity);
   }
 
-  function financialSourceChange(student) {
-    $scope.application.oldFin = student.fin;
-    $scope.application.oldFinSpecific = student.finSpecific;
-    $scope.application.newFin = student.fin === "FINALLIKAS_RE" ? "FINALLIKAS_REV" : "FINALLIKAS_RE";
-  }
 
-  function curriculumVersionChange(student) {
-    var CurriculumVersionsEndpoint = QueryUtils.endpoint('/autocomplete/curriculumversions');
-    //TODO: valid to true
-    $scope.curriculumVersions = CurriculumVersionsEndpoint.query({valid: false});
-    $scope.application.oldStudyForm = student.studyForm;
-    $scope.application.oldCurriculumVersion = student.curriculumVersion;
-  }
 
   $scope.studyPeriodView = function(studyPeriodId) {
     if (angular.isArray($scope.studyPeriods) && angular.isNumber(studyPeriodId)) {
@@ -72,46 +59,56 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     }
   };
 
-  function academicLeave(hasAcademicLeaveApplication) {
-    if (!isEdit() && hasAcademicLeaveApplication) {
-        $scope.applicationEditView = false;
-        message.error('application.messages.validAcademicLeaveApplicationExists');
-      } else {
-        if (!isEdit()) {
+
+  function applicationFinm(student, loadFormDeferred) {
+    $scope.application.oldFin = student.fin;
+    $scope.application.oldFinSpecific = student.finSpecific;
+    $scope.application.newFin = student.fin === "FINALLIKAS_RE" ? "FINALLIKAS_REV" : "FINALLIKAS_RE";
+    loadFormDeferred.resolve();
+  }
+
+  function applicationOvorm(student, loadFormDeferred) {
+    $scope.application.oldStudyForm = student.studyForm;
+    loadFormDeferred.resolve();
+  }
+
+  function applicationOkava(student, loadFormDeferred) {
+    //TODO: valid to true
+    Curriculum.queryVersions({valid: false}).$promise.then(function(result) {
+      $scope.curriculumVersions = result.filter(function(it) { return it.id !== student.curriculumVersion.id;});
+      loadFormDeferred.resolve();
+    });
+    $scope.application.oldStudyForm = student.studyForm;
+    $scope.application.oldCurriculumVersion = student.curriculumVersion;
+  }
+
+  function applicationAkad(loadFormDeferred) {
+        if ($scope.isCreate === true) {
           $scope.application.isPeriod = true;
         }
         QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
           $scope.studyPeriods = result;
-          $scope.applicationEditView = true;
+          loadFormDeferred.resolve();
         });
+  }
+
+  function applicationAkadk(loadFormDeferred, academicLeaveApplication) {
+    if ($scope.isCreate === true) {
+      if (!angular.isObject(academicLeaveApplication) || !angular.isNumber(academicLeaveApplication.id)) {
+        loadFormDeferred.reject('application.messages.academicLeaveApplicationNotfound');
+      } else {
+        DataUtils.convertStringToDates(academicLeaveApplication, ["startDate", "endDate"]);
+        $scope.application.academicApplication = academicLeaveApplication;
       }
-  }
-
-  function academicLeaveRevocation(hasAcademicLeaveApplication, academicLeaveApplication) {
-    if (!hasAcademicLeaveApplication) {
-      $scope.applicationEditView = false;
-      message.error('application.messages.academicLeaveApplicationNotfound');
-    } else {
-      var AcademicLeaveApplicationRevocationsEndpoint = QueryUtils.endpoint('/applications/' + academicLeaveApplication.id + '/validAcademicLeaveRevocation');
-      AcademicLeaveApplicationRevocationsEndpoint.get({}, function(revocation) {
-        var hasAcademicLeaveRevocationApplication = angular.isNumber(revocation.id) && revocation.id > 0;
-        if (!isEdit() && hasAcademicLeaveRevocationApplication) {
-          $scope.applicationEditView = false;
-          message.error('application.messages.validAcademicLeaveRevocationApplicationExists');
-        } else {
-          DataUtils.convertStringToDates(academicLeaveApplication, ["startDate", "endDate"]);
-          $scope.academicLeaveApplication = academicLeaveApplication;
-          $scope.application.academicApplication = academicLeaveApplication.id;
-          QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
-            $scope.studyPeriods = result;
-            $scope.applicationEditView = true;
-          });
-        }
-      });
     }
+
+    QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
+      $scope.studyPeriods = result;
+      loadFormDeferred.resolve();
+    });
   }
 
-  function abroadStudentApplication() {
+  function applicationValis(loadFormDeferred) {
     $scope.isAbroadChanged = function() {
       if ($scope.application.isAbroad) {
         $scope.application.ehisSchool = undefined;
@@ -120,6 +117,15 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         $scope.application.country = undefined;
       }
     };
+
+    $scope.plannedSubjectLenght = 0;
+    $scope.$watchCollection('application.plannedSubjects', function(val) {
+      if (angular.isArray(val)) {
+        $scope.plannedSubjectLenght = val.length;
+      } else {
+        $scope.plannedSubjectLenght = 0;
+      }
+    });
 
     $scope.addPlannedSubjectRow = function() {
       if (!angular.isArray($scope.application.plannedSubjects)) {
@@ -151,68 +157,91 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     };
 
     $scope.studentEhisSchool = $route.current.locals.auth.school.ehisSchool;
-    if (!isEdit()) {
+    if ($scope.isCreate === true) {
       $scope.application.isPeriod = true;
       $scope.application.isAbroad = false;
     }
-    QueryUtils.endpoint('/students/' + $scope.application.student.id + '/subjects').query({}, function(result) {
-      $scope.studentSubjects = result;
-    });
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
-      $scope.studyPeriods = result;
-    });
 
-    $scope.applicationEditView = true;
+    var promises = [];
+    var subjectsPromise = QueryUtils.endpoint('/students/' + $scope.application.student.id + '/subjects').query({}, function(result) {
+      $scope.studentSubjects = result;
+    }).$promise;
+    promises.push(subjectsPromise);
+
+    var periodsPromise = QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function(result) {
+      $scope.studyPeriods = result;
+    }).$promise;
+    promises.push(periodsPromise);
+
+    $q.all(promises).then(function() {
+      loadFormDeferred.resolve();
+    });
   }
+
+  function applicationEksmat(loadFormDeferred) {
+      loadFormDeferred.resolve();
+  }
+
+  function loadFormData(type, studentId) {
+    var loadFormDeferred = $q.defer();
+    if (type === 'AVALDUS_LIIK_FINM' || type === 'AVALDUS_LIIK_OVORM' || type === 'AVALDUS_LIIK_OKAVA') {
+      QueryUtils.endpoint('/students').get({id: studentId}, function(student) {
+        if ($scope.application.type === 'AVALDUS_LIIK_FINM') {
+          applicationFinm(student, loadFormDeferred);
+        } else if ($scope.application.type === 'AVALDUS_LIIK_OVORM') {
+          applicationOvorm(student, loadFormDeferred);
+        } else if ($scope.application.type === 'AVALDUS_LIIK_OKAVA') {
+          applicationOkava(student, loadFormDeferred);
+        }
+      });
+    } else if (type === 'AVALDUS_LIIK_AKADK') {
+      if ($scope.isCreate === true) {
+        QueryUtils.endpoint('/applications/student/'+studentId+'/validAcademicLeave').search(function(academicLeaveApplication) {
+          applicationAkadk(loadFormDeferred, academicLeaveApplication);
+        });
+      } else {
+        applicationAkadk(loadFormDeferred);
+      }
+    } else {
+      if($scope.application.type === 'AVALDUS_LIIK_AKAD') {
+        applicationAkad(loadFormDeferred);
+      }  else if ($scope.application.type === 'AVALDUS_LIIK_VALIS') {
+        applicationValis(loadFormDeferred);
+      } else if ($scope.application.type === 'AVALDUS_LIIK_EKSMAT') {
+        applicationEksmat(loadFormDeferred);
+      }
+    }
+
+    loadFormDeferred.promise.then(function() {
+      $scope.applicationEditView = true;
+    }, function(rejectMessage) {
+      message.error(rejectMessage);
+      $scope.applicationEditView = false;
+    });
+  }
+
 
 
   $scope.$watch('application.student', function(student) {
     if (angular.isObject(student)) {
-
-      QueryUtils.endpoint('/applications/student/'+student.id+'/applicable').get({}, function(result) {
-          if(result[$scope.application.type] === false && !angular.isNumber($scope.application.id) ) {
-            message.error('application.messages.applicationAlreadyExists');
+      if ($scope.isCreate === true) {
+        QueryUtils.endpoint('/applications/student/'+student.id+'/applicable').search(function(result) {
+          if(angular.isObject(result[$scope.application.type]) && result[$scope.application.type].isAllowed === true) {
+            loadFormData($scope.application.type, student.id);
           } else {
-              if (['AVALDUS_LIIK_FINM', 'AVALDUS_LIIK_OVORM', 'AVALDUS_LIIK_OKAVA'].indexOf($scope.application.type) !== -1) {
-              var StudentEndpoint = QueryUtils.endpoint('/students');
-              StudentEndpoint.get({id: student.id}, function(student) {
-                if ($scope.application.type === 'AVALDUS_LIIK_FINM') {
-                  financialSourceChange(student);
-                } else if ($scope.application.type === 'AVALDUS_LIIK_OVORM') {
-                  $scope.application.oldStudyForm = student.studyForm;
-                }
-                else if ($scope.application.type === 'AVALDUS_LIIK_OKAVA') {
-                  curriculumVersionChange(student);
-                }
-                $scope.applicationEditView = true;
-              });
-            } else if(['AVALDUS_LIIK_AKAD', 'AVALDUS_LIIK_AKADK'].indexOf($scope.application.type) !== -1) {
-                if($scope.application.type === 'AVALDUS_LIIK_AKAD') {
-                  academicLeave(false);
-                } else if ($scope.application.type === 'AVALDUS_LIIK_AKADK') {
-                  var AcademicLeaveApplicationsEndpoint = QueryUtils.endpoint('/applications/student/'+$scope.application.student.id+'/validAcademicLeave');
-                  AcademicLeaveApplicationsEndpoint.get({}, function(academicLeaveApplication) {
-                    var hasAcademicLeaveApplication = angular.isNumber(academicLeaveApplication.id) && academicLeaveApplication.id > 0;
-                    academicLeaveRevocation(hasAcademicLeaveApplication, academicLeaveApplication);
-                  });
-                }
-            } else if ($scope.application.type === 'AVALDUS_LIIK_VALIS') {
-              abroadStudentApplication();
-              $scope.applicationEditView = true;
-            }
-            else {
-              $scope.applicationEditView = true;
-            }
+            message.error('application.messages.applicationAlreadyExists');
           }
-
-      });
-
-
+        });
+      } else {
+        loadFormData($scope.application.type, student.id);
+      }
     }
   });
 
   $scope.openAddFileDialog = function() {
-    dialogService.showDialog('application/file.add.dialog.html', null, function(submittedDialogScope) {
+    dialogService.showDialog('application/file.add.dialog.html', function(dialogScope) {
+      dialogScope.addedFiles = $scope.application.files;
+    }, function(submittedDialogScope) {
       var data = submittedDialogScope.data;
       oisFileService.getFromLfFile(data.file[0], function(file) {
         data.oisFile = file;

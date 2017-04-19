@@ -93,20 +93,17 @@ public class GeneralMessageService {
 
     public GeneralMessage save(GeneralMessage generalMessage, GeneralMessageForm form) {
         EntityUtil.bindToEntity(form, generalMessage, "targets");
-        List<String> targetCodes = form.getTargets();
-        if(targetCodes != null) {
-            List<GeneralMessageTarget> storedTargets = generalMessage.getTargets();
-            if(storedTargets == null) {
-                generalMessage.setTargets(storedTargets = new ArrayList<>());
-            }
-            EntityUtil.bindClassifierCollection(storedTargets, gmt -> EntityUtil.getCode(gmt.getRole()),targetCodes, roleCode -> {
-                // add new link
-                GeneralMessageTarget sl = new GeneralMessageTarget();
-                sl.setGeneralMessage(generalMessage);
-                sl.setRole(EntityUtil.validateClassifier(classifierRepository.getOne(roleCode), MainClassCode.ROLL));
-                return sl;
-            });
+        List<GeneralMessageTarget> storedTargets = generalMessage.getTargets();
+        if(storedTargets == null) {
+            generalMessage.setTargets(storedTargets = new ArrayList<>());
         }
+        EntityUtil.bindEntityCollection(storedTargets, gmt -> EntityUtil.getCode(gmt.getRole()),form.getTargets(), roleCode -> {
+            // add new link
+            GeneralMessageTarget sl = new GeneralMessageTarget();
+            sl.setGeneralMessage(generalMessage);
+            sl.setRole(EntityUtil.validateClassifier(classifierRepository.getOne(roleCode), MainClassCode.ROLL));
+            return sl;
+        });
         return generalMessageRepository.save(generalMessage);
     }
 

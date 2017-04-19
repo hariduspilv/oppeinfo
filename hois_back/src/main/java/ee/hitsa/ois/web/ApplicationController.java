@@ -43,12 +43,15 @@ public class ApplicationController {
 
     @GetMapping("/{id:\\d+}")
     public ApplicationDto get(HoisUserDetails user, @WithEntity("id") Application application) {
-        UserUtil.assertSameSchool(user, application.getStudent().getSchool());
+        if (!UserUtil.canViewStudent(user, application.getStudent())) {
+            throw new ValidationFailedException(String.format("user %s is not allowed to view application %d", user.getUsername(), application.getId()));
+        }
         return applicationService.get(user, application);
     }
 
     @GetMapping("")
     public Page<ApplicationSearchDto> search(ApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user);
         return applicationService.search(user, command, pageable);
     }
 
@@ -59,6 +62,9 @@ public class ApplicationController {
 
     @PutMapping("/{id:\\d+}")
     public ApplicationDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application, @Valid @RequestBody ApplicationForm applicationForm) {
+        if (!UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) && !UserUtil.isSame(user, application.getStudent())) {
+            throw new ValidationFailedException(String.format("user %s is not allowed to update application %d", user.getUsername(), application.getId()));
+        }
         checkUpdateBusinessRules(user, application, applicationForm);
         return get(user, applicationService.save(application, applicationForm));
     }
@@ -69,7 +75,7 @@ public class ApplicationController {
         Student student = application.getStudent();
         ApplicationStatus status = ApplicationStatus.valueOf(EntityUtil.getCode(application.getStatus()));
         if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) || !ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status) ||
-                ApplicationStatus.AVALDUS_STAATUS_KOOST.equals(status) && Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm())) {
+                Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm())) {
             throw new ValidationFailedException(String.format("user %s is not allowed to delete application %d with status %s", user.getUsername(), application.getId(), status.name()));
         }
         applicationService.delete(application);
@@ -131,20 +137,20 @@ public class ApplicationController {
 
         switch (status) {
         case AVALDUS_STAATUS_KOOST:
-            if ((UserUtil.isAdultStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_KOOST.name())
-                    || applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()))) {
+            if ((UserUtil.isAdultStudent(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool())) && (ApplicationStatus.AVALDUS_STAATUS_KOOST.name().equals(applicationForm.getStatus())
+                    || ApplicationStatus.AVALDUS_STAATUS_ESIT.name().equals(applicationForm.getStatus()))) {
                 break;
-            } else if (!UserUtil.isAdultStudent(user, student) && applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_KOOST.name())) {
+            } else if (!UserUtil.isAdultStudent(user, student) && ApplicationStatus.AVALDUS_STAATUS_KOOST.name().equals(applicationForm.getStatus())) {
                 break;
-            } else if (UserUtil.isStudentRepresentative(user, student) && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()) ||
-                    applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name()))) {
+            } else if (UserUtil.isStudentRepresentative(user, student) && (ApplicationStatus.AVALDUS_STAATUS_ESIT.name().equals(applicationForm.getStatus()) ||
+                    ApplicationStatus.AVALDUS_STAATUS_TAGASI.name().equals(applicationForm.getStatus()))) {
                 break;
             }
         case AVALDUS_STAATUS_ESIT:
             //fallthrough
         case AVALDUS_STAATUS_YLEVAAT:
             if(UserUtil.isSchoolAdmin(user, student.getSchool())
-                    && (applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name())) || applicationForm.getStatus().equals(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name())) {
+                    && (ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(applicationForm.getStatus())) || ApplicationStatus.AVALDUS_STAATUS_TAGASI.name().equals(applicationForm.getStatus())) {
                 break;
             }
             //fallthrough

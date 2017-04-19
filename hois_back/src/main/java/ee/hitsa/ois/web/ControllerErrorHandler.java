@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
@@ -31,6 +30,7 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityRemoveException;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
 @ControllerAdvice
@@ -118,7 +118,7 @@ public class ControllerErrorHandler {
         }
 
         public static ErrorInfo of(Errors errors) {
-            List<Error> err = errors.getAllErrors().stream().map(e -> new ErrorForField(e.getCode(), e instanceof FieldError ? ((FieldError)e).getField() : null)).collect(Collectors.toList());
+            List<Error> err = StreamUtil.toMappedList(e -> new ErrorForField(e.getCode(), e instanceof FieldError ? ((FieldError)e).getField() : null), errors.getAllErrors());
             return new ErrorInfo(err);
         }
 
@@ -131,7 +131,7 @@ public class ControllerErrorHandler {
         }
 
         public static ErrorInfo of(List<Map.Entry<String, String>> errors) {
-            return new ErrorInfo(errors.stream().map(me -> new ErrorForField(me.getValue(), me.getKey())).collect(Collectors.toList()));
+            return new ErrorInfo(StreamUtil.toMappedList(me -> new ErrorForField(me.getValue(), me.getKey()), errors));
         }
 
         public static class Error {
@@ -169,8 +169,10 @@ public class ControllerErrorHandler {
         UNIQUE_VIOLATION_MESSAGES.put("directive_coordinator", "directive.coordinator.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("directive_student", "directive.student.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("room", "room.alreadyexist");
+        UNIQUE_VIOLATION_MESSAGES.put("school", "school.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative", "student.representative.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative_application", "student.representative.application.alreadyexist");
+        UNIQUE_VIOLATION_MESSAGES.put("subject", "subject.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("teacher", "teacher.person.alreadyexist");
     }
 }

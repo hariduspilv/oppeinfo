@@ -4,7 +4,7 @@
       <div layout="column" flex>
         <md-input-container flex>
           <label>{{'school.label' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.school" ng-hide="!showSchool" main-classifier-code="EHIS_KOOL" model-value-attr="code"></hois-classifier-select>
+          <hois-school-select ng-hide="!showSchool" ng-model="criteria.school"></hois-school-select>
         </md-input-container>
         <md-input-container flex>
           <label>{{'person.name' | translate}}</label>

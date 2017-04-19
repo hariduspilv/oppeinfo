@@ -3,13 +3,15 @@ package ee.hitsa.ois.service;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
-import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudyPeriodEventRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.StudyYearRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
 import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
@@ -22,7 +24,6 @@ import javax.transaction.Transactional;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -30,6 +31,9 @@ public class StudyYearService {
 
     @Autowired
     private ClassifierRepository classifierRepository;
+
+    @Autowired
+    private SchoolRepository schoolRepository;
 
     @Autowired
     private StudyYearRepository studyYearRepository;
@@ -44,16 +48,17 @@ public class StudyYearService {
     private static final String[] STUDY_PERIOD_EVENTS = {"SYNDMUS_AVES", "SYNDMUS_DEKP", "SYNDMUS_VOTA"};
 
     public List<StudyYearsSearchDto> getStudyYears(Long schoolId) {
-        return studyYearRepository.findStudyYearsBySchool(schoolId).stream().map(StudyYearsSearchDto::new).collect(Collectors.toList());
+        return StreamUtil.toMappedList(StudyYearsSearchDto::new, studyYearRepository.findStudyYearsBySchool(schoolId));
     }
 
-    public StudyYear create(School school, StudyYearForm studyYearForm) {
-        return save(school, new StudyYear(), studyYearForm);
+    public StudyYear create(HoisUserDetails user, StudyYearForm studyYearForm) {
+        StudyYear studyYear = new StudyYear();
+        studyYear.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        return save(studyYear, studyYearForm);
     }
 
-    public StudyYear save(School school, StudyYear studyYear, StudyYearForm studyYearForm) {
+    public StudyYear save(StudyYear studyYear, StudyYearForm studyYearForm) {
         EntityUtil.bindToEntity(studyYearForm, studyYear, classifierRepository);
-        studyYear.setSchool(school);
         return studyYearRepository.save(studyYear);
     }
 

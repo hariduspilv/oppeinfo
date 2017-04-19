@@ -164,7 +164,7 @@ angular.module('hitsaOis')
 
 
     $scope.schoolOrigStudyLevel = [];
-    QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
+    QueryUtils.endpoint('/school/studyLevels').search().$promise.then(function(response){
         response.studyLevels.forEach(function(it) {
             if(it.charAt(it.length - 3) < '5') {
                 $scope.schoolOrigStudyLevel.push({code: it});

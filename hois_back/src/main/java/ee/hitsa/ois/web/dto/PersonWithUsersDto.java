@@ -3,12 +3,11 @@ package ee.hitsa.ois.web.dto;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.PersonForm;
 
 import java.time.LocalDate;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class PersonWithUsersDto extends PersonForm {
     private Long id;
@@ -17,7 +16,7 @@ public class PersonWithUsersDto extends PersonForm {
 
     public static PersonWithUsersDto of(Person person, Set<User> users) {
         PersonWithUsersDto dto = EntityUtil.bindToDto(person, new PersonWithUsersDto());
-        dto.users = users != null ? users.stream().map(PersonWithUsersDto.UsersDto::of).collect(Collectors.toSet()) : new HashSet<>();
+        dto.setUsers(StreamUtil.toMappedSet(PersonWithUsersDto.UsersDto::of, users));
         return dto;
     }
 

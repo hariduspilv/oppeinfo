@@ -3,17 +3,10 @@ package ee.hitsa.ois.web;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 
-import ee.hitsa.ois.domain.StudyPeriod;
-import ee.hitsa.ois.domain.StudyPeriodEvent;
-import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
-import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
-import ee.hitsa.ois.web.dto.StudyPeriodDto;
-import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -29,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
@@ -42,6 +37,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -50,12 +46,18 @@ import ee.hitsa.ois.web.commandobject.SchoolDepartmentSearchCommand;
 import ee.hitsa.ois.web.commandobject.SchoolForm;
 import ee.hitsa.ois.web.commandobject.SchoolSearchCommand;
 import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyLevelsCommand;
+import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyYearScheduleLegendsCommand;
+import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
+import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.StudyYearForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
 import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
 import ee.hitsa.ois.web.dto.SchoolDto;
+import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.StudyYearDto;
+import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 import ee.hitsa.ois.web.dto.StudyYearsSearchDto;
 import ee.hitsa.ois.web.dto.TeacherOccupationDto;
 
@@ -117,7 +119,7 @@ public class SchoolController {
         response.put("version", school.getVersion());
         response.put("nameEt", school.getNameEt());
         response.put("nameEn", school.getNameEn());
-        response.put("studyLevels", school.getStudyLevels().stream().map(sl -> EntityUtil.getCode(sl.getStudyLevel())).collect(Collectors.toList()));
+        response.put("studyLevels", StreamUtil.toMappedList(sl -> EntityUtil.getCode(sl.getStudyLevel()), school.getStudyLevels()));
         return response;
     }
 
@@ -125,7 +127,7 @@ public class SchoolController {
     public Map<String, ?> updateStudyLevels(HoisUserDetails user, @Valid @RequestBody SchoolUpdateStudyLevelsCommand studyLevelsCmd) {
         School school = getSchool(user);
         EntityUtil.assertEntityVersion(school, studyLevelsCmd.getVersion());
-        schoolService.updateStudyLevels(school, studyLevelsCmd.getStudyLevels());
+        schoolService.updateStudyLevels(school, studyLevelsCmd);
         return studyLevels(user);
     }
 
@@ -202,13 +204,13 @@ public class SchoolController {
 
     @PostMapping("/studyYears")
     public StudyYearDto createStudyYear(HoisUserDetails user, @Valid @RequestBody StudyYearForm studyYearForm) {
-        return getStudyYear(studyYearService.create(getSchool(user), studyYearForm));
+        return getStudyYear(studyYearService.create(user, studyYearForm));
     }
 
     @PutMapping("/studyYears/{id:\\d+}")
     public StudyYearDto updateStudyYear(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyYear studyYear, @Valid @RequestBody StudyYearForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
-        return getStudyYear(studyYearService.save(getSchool(user), studyYear, request));
+        return getStudyYear(studyYearService.save(studyYear, request));
     }
 
     private static StudyPeriodDto get(StudyPeriod studyPeriod) {
@@ -263,5 +265,20 @@ public class SchoolController {
 
     private School getSchool(HoisUserDetails user) {
         return schoolRepository.getOne(user.getSchoolId());
+    }
+    
+    @GetMapping("/studyYearScheduleLegends")
+    public Map<String, ?> studyYearScheduleLegends(HoisUserDetails user) {
+        School school = getSchool(user);
+        Map<String, Object> response = new HashMap<>();
+        response.put("legends", StreamUtil.toMappedList(StudyYearScheduleLegendDto::of, school.getStudyYearScheduleLegends()));
+        return response;
+    }
+
+    @PutMapping("/studyYearScheduleLegends")
+    public Map<String, ?> updateStudyYearScheduleLegends(HoisUserDetails user, @Valid @RequestBody SchoolUpdateStudyYearScheduleLegendsCommand legendsCmd) {
+        School school = getSchool(user);
+        schoolService.updateLegends(school, legendsCmd);
+        return studyYearScheduleLegends(user);
     }
 }

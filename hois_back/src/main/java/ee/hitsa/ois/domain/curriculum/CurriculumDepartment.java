@@ -20,16 +20,9 @@ public class CurriculumDepartment extends BaseEntityWithId {
     @JoinColumn(nullable = false, insertable = false, updatable = false)
     private Curriculum curriculum;
 
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private SchoolDepartment schoolDepartment;
-
-    public CurriculumDepartment() {
-    }
-
-    public CurriculumDepartment(SchoolDepartment schoolDepartment) {
-        this.schoolDepartment = schoolDepartment;
-    }
 
     public Curriculum getCurriculum() {
         return curriculum;
@@ -60,6 +53,7 @@ public class CurriculumDepartment extends BaseEntityWithId {
             return false;
         }
 
+        // TODO other can be any object
         CurriculumDepartment other = (CurriculumDepartment) obj;
         if (schoolDepartment == null) {
             if (other.schoolDepartment != null)

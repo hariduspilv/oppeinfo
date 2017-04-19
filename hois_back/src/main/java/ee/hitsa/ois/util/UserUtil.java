@@ -111,20 +111,14 @@ public abstract class UserUtil {
 
     public static void assertSameSchool(HoisUserDetails user, School school) {
         Long schoolId = user.getSchoolId();
-        if(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school))) {
-            throw new AssertionFailedException("School mismatch");
-        }
+        AssertionFailedException.assertTrue(schoolId != null && schoolId.equals(EntityUtil.getNullableId(school)), "School mismatch");
     }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user) {
-        if(!user.isSchoolAdmin()) {
-            throw new AssertionFailedException("User is not school admin");
-        }
+        AssertionFailedException.assertTrue(user.isSchoolAdmin(), "User is not school admin");
     }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user, School school) {
-        if(!isSchoolAdmin(user, school)) {
-            throw new AssertionFailedException("User is not school admin in given school");
-        }
+        AssertionFailedException.assertTrue(isSchoolAdmin(user, school), "User is not school admin in given school");
     }
 }

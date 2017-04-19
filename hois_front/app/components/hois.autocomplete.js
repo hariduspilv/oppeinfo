@@ -20,7 +20,8 @@ angular.module('hitsaOis')
         method: '@',
         multiple: '@',
         required: '=', // todo add chip visuals
-        mdSelectedItemChange: '&?'
+        mdSelectedItemChange: '&?',
+        readonly: '='
       },
       link: {
         post: function(scope, element, attrs) {
@@ -43,7 +44,11 @@ angular.module('hitsaOis')
 
           scope.selectedItemChange = function() {
             if(angular.isFunction(scope.mdSelectedItemChange)) {
-              scope.$$postDigest(scope.mdSelectedItemChange);
+              if (angular.isFunction(scope.mdSelectedItemChange())) {
+                scope.$$postDigest(scope.mdSelectedItemChange());
+              } else {
+                scope.$$postDigest(scope.mdSelectedItemChange);
+              }
             }
           };
 

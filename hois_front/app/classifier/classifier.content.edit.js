@@ -81,7 +81,7 @@ angular.module('hitsaOis')
     };
 
     $scope.delete = function() {
-        dialogService.confirmDialog({prompt: 'main.messages.confirm'}, function() {
+        dialogService.confirmDialog({prompt: 'classifier.deleteconfirm'}, function() {
             new Classifier($scope.classifier).delete().$promise.then(function() {
                 message.info('main.messages.delete.success');
                 $location.path( '/classifier/' + $scope.mainClassCode);

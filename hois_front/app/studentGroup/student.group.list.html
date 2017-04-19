@@ -14,12 +14,12 @@
 
           <md-input-container>
             <label>{{formState.curriculumVersionLabel | translate}}</label>
-            <hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions" name="curriculumVersion" multiple></hois-select>
+            <hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions" name="curriculumVersion" ng-change="curriculumVersionChanged()" multiple></hois-select>
           </md-input-container>
 
           <md-input-container>
             <label>{{'studentGroup.studyForm' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyForm" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.studyForm" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" filter-values="formState.hiddenStudyForms" multiple></hois-classifier-select>
           </md-input-container>
 
           <hois-autocomplete label="studentGroup.teacher" ng-if="!formState.onlyhigher" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>

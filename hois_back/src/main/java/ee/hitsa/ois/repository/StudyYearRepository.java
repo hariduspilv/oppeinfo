@@ -1,12 +1,14 @@
 package ee.hitsa.ois.repository;
 
-import ee.hitsa.ois.domain.StudyYear;
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-
 import java.util.List;
 
-public interface StudyYearRepository extends JpaRepository<StudyYear, Long> {
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+
+import ee.hitsa.ois.domain.StudyYear;
+
+public interface StudyYearRepository extends JpaRepository<StudyYear, Long>, JpaSpecificationExecutor<StudyYear> {
 
     // todo: remove nativeQuery
     @Query(value = "select c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, sy.count " +

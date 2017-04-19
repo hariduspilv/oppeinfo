@@ -145,9 +145,7 @@ angular.module('hitsaOis')
      * And these numbers should be updated in curriculum as well
      */
     function getCurriculum() {
-        QueryUtils.endpoint("/curriculum/" + $scope.curriculum.id).get().$promise.then(function(response){
-            $scope.curriculum = response;
-        });
+        $scope.curriculum = QueryUtils.endpoint('/curriculum').get({id: $scope.curriculum.id});
     }
 
     function versionFormIsValid() {
@@ -363,7 +361,7 @@ angular.module('hitsaOis')
             function getSubjects() {
                 var ehisSchools = $scope.ehisSchools;
                 QueryUtils.endpoint('/curriculum/subjects')
-                    .get({ lang: $translate.use().toUpperCase(), ehisSchools: ehisSchools}).$promise.then(function (result) {
+                    .search({ lang: $translate.use().toUpperCase(), ehisSchools: ehisSchools}).$promise.then(function (result) {
                     scope.subjectsUnfiltered = result.content.filter(function(s){
                         return $scope.filterOutSubjectsAddedToOtherModules(s, editingModule);
                     });
@@ -496,7 +494,7 @@ angular.module('hitsaOis')
             function getSubjects() {
                 var ehisSchools = $scope.ehisSchools;
                 QueryUtils.endpoint('/curriculum/subjects')
-                    .get({ lang: $translate.use().toUpperCase(), ehisSchools: ehisSchools}).$promise.then(function (result) {
+                    .search({ lang: $translate.use().toUpperCase(), ehisSchools: ehisSchools}).$promise.then(function (result) {
                     scope.subjectsUnfiltered = result.content.filter(function(s){
                         return $scope.filterOutSubjectsAddedToOtherModules(s, editingModule);
                     });

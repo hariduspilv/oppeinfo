@@ -221,17 +221,21 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, Collection<?> value) {
-            if(value == null || value.isEmpty()) {
-                throw new AssertionFailedException("Required criteria is missing");
-            }
+            AssertionFailedException.assertTrue(value != null && !value.isEmpty(), "Required criteria is missing");
+
             filter(criteria, name, value);
         }
 
         public void requiredCriteria(String criteria, String name, EntityConnectionCommand value) {
-            if(value == null || value.getId() == null) {
-                throw new AssertionFailedException("Required criteria is missing");
-            }
+            AssertionFailedException.assertTrue(value != null && value.getId() != null, "Required criteria is missing");
+
             filter(criteria, name, value.getId());
+        }
+
+        public void requiredCriteria(String criteria, String name, Enum<?> value) {
+            AssertionFailedException.assertTrue(value != null, "Required criteria is missing");
+
+            filter(criteria, name, value.name());
         }
 
         public void requiredCriteria(String criteria, String name, LocalDate value) {
@@ -247,9 +251,8 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, String value) {
-            if(!StringUtils.hasText(value)) {
-                throw new AssertionFailedException("Required criteria is missing");
-            }
+            AssertionFailedException.assertTrue(StringUtils.hasText(value), "Required criteria is missing");
+
             filter(criteria, name, value);
         }
 

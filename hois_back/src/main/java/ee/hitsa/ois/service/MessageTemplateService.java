@@ -6,7 +6,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -30,6 +29,7 @@ import ee.hitsa.ois.repository.MessageTemplateRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.MessageTemplateForm;
 import ee.hitsa.ois.web.commandobject.MessageTemplateSearchCommand;
@@ -113,7 +113,7 @@ public class MessageTemplateService {
     }
 
     public Set<String> getUsedTypeCodes(Long schoolId, String code) {
-        Set<String> set = messageTemplateRepository.findAll((root, query, cb) -> {
+        Set<String> set = StreamUtil.toMappedSet(mt -> EntityUtil.getCode(mt.getType()), messageTemplateRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
@@ -126,7 +126,7 @@ public class MessageTemplateService {
             filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().map(mt -> EntityUtil.getCode(mt.getType())).collect(Collectors.toSet());
+        }));
         return set;
     }
 

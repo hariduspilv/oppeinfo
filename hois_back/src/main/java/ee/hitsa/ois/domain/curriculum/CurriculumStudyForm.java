@@ -49,6 +49,7 @@ public class CurriculumStudyForm extends BaseEntityWithId {
             return false;
         }
 
+        // TODO other can be any object
         CurriculumStudyForm other = (CurriculumStudyForm) obj;
         if (studyForm == null) {
             if (other.studyForm != null)

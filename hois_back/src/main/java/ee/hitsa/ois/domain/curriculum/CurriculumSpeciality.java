@@ -17,6 +17,7 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.util.AssertionFailedException;
 @Entity
 public class CurriculumSpeciality extends BaseEntityWithId {
 
@@ -59,7 +60,7 @@ public class CurriculumSpeciality extends BaseEntityWithId {
     }
 
     public Long getReferenceNumber() {
-        assert referenceNumber != null || this.getId() != null : "Speciality should whether be saved before or have a reference number!";
+        AssertionFailedException.assertTrue(referenceNumber != null || this.getId() != null, "Speciality should whether be saved before or have a reference number!");
         return referenceNumber != null ? referenceNumber : this.getId();
     }
 

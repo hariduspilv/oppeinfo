@@ -12,7 +12,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Path;
@@ -41,8 +40,8 @@ import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
-import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchStudentsCommand;
@@ -165,10 +164,6 @@ public class StudentGroupService {
         } else {
             studentGroup.setStudents(added);
         }
-        Integer places = studentGroup.getPlaces();
-        if(places != null && places.intValue() < studentGroup.getStudents().size()) {
-            throw new ValidationFailedException("studentGroup.too-many-students");
-        }
         return studentGroup;
     }
 
@@ -177,7 +172,7 @@ public class StudentGroupService {
     }
 
     public List<StudentGroupStudentDto> searchStudents(Long schoolId, StudentGroupSearchStudentsCommand criteria) {
-        return studentRepository.findAll((root, query, cb) -> {
+        return StreamUtil.toMappedList(StudentGroupStudentDto::of, studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
@@ -196,17 +191,17 @@ public class StudentGroupService {
             filters.add(cb.equal(root.get("studyForm").get("code"), criteria.getStudyForm()));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().map(StudentGroupStudentDto::of).collect(Collectors.toList());
+        }));
     }
 
     public Map<String, ?> curriculumData(Curriculum curriculum) {
         Map<String, Object> data = new HashMap<>();
-        data.put("languages", curriculum.getStudyLanguages().stream().map(r -> EntityUtil.getCode(r.getStudyLang())).collect(Collectors.toList()));
+        data.put("languages", StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getStudyLang()), curriculum.getStudyLanguages()));
         List<String> studyForms;
         if(CurriculumUtil.isHigher(curriculum.getOrigStudyLevel())) {
             studyForms = classifierRepository.findAllCodesByMainClassCode(MainClassCode.OPPEVORM.name());
         } else {
-            studyForms = curriculum.getStudyForms().stream().map(r -> EntityUtil.getCode(r.getStudyForm())).collect(Collectors.toList());
+            studyForms = StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getStudyForm()), curriculum.getStudyForms());
         }
         data.put("studyForms", studyForms);
         data.put("origStudyLevel", EntityUtil.getCode(curriculum.getOrigStudyLevel()));

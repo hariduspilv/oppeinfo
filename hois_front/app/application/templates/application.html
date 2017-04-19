@@ -86,35 +86,38 @@
         <div ng-if="application.type === 'AVALDUS_LIIK_AKADK'">
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label>{{'application.reason' | translate}}</label>
-            <hois-classifier-value ng-model="academicLeaveApplication.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+            <hois-classifier-value ng-model="application.academicApplication.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
           </md-input-container>
 
-          <div ng-show="!academicLeaveApplication.isPeriod" layout="row" layout-xs="column">
+          <div ng-show="!application.academicApplication.isPeriod" layout="row" layout-xs="column">
             <md-input-container  flex="20" flex-sm="100" flex-xs="100">
               <label>{{'application.academicLeaveStart' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: academicLeaveApplication.startDate}"></hois-value>
+              <hois-value value="'main.formattedDate' | translate: {date: application.academicApplication.startDate}"></hois-value>
             </md-input-container>
 
             <md-input-container style="margin-left: 0px" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
               <label>{{'application.academicLeaveEnd' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: academicLeaveApplication.endDate}"></hois-value>
+              <hois-value value="'main.formattedDate' | translate: {date: application.academicApplication.endDate}"></hois-value>
             </md-input-container>
           </div>
 
-          <div ng-show="academicLeaveApplication.isPeriod" layout="row" layout-xs="column">
+          <div ng-show="application.academicApplication.isPeriod" layout="row" layout-xs="column">
             <md-input-container  flex="20" flex-sm="100" flex-xs="100">
               <label>{{'application.academicLeaveStart' | translate}}</label>
-              <hois-select ng-model="academicLeaveApplication.studyPeriodStart" values="studyPeriods" disabled></hois-select>
+              <hois-select ng-model="application.academicApplication.studyPeriodStart" values="studyPeriods" disabled></hois-select>
             </md-input-container>
             <md-input-container  flex="20" flex-sm="100" flex-xs="100">
               <label>{{'application.academicLeaveEnd' | translate}}</label>
-              <hois-select ng-model="academicLeaveApplication.studyPeriodEnd" values="studyPeriods" disabled></hois-select>
+              <hois-select ng-model="application.academicApplication.studyPeriodEnd" values="studyPeriods" disabled></hois-select>
             </md-input-container>
           </div>
 
           <md-input-container  flex="20" flex-sm="100" flex-xs="100">
             <label>{{'application.academicLeaveRevocationDate' | translate}}</label>
-            <md-datepicker ng-model="application.startDate" md-open-on-focus ng-required="application.type === 'AVALDUS_LIIK_AKADK'"></md-datepicker>
+            <md-datepicker ng-model="application.startDate" md-open-on-focus
+              md-min-date="application.academicApplication.isPeriod ? application.academicApplication.studyPeriodStart.startDate : application.academicApplication.startDate"
+              md-max-date="application.academicApplication.isPeriod ? application.academicApplication.studyPeriodEnd.endDate : application.academicApplication.endDate"
+              ng-required="application.type === 'AVALDUS_LIIK_AKADK'"></md-datepicker>
           </md-input-container>
         </div>
 
@@ -138,7 +141,7 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label>{{'application.newCurriculumVersion' | translate}}</label>
-              <hois-select ng-model="application.newCurriculumVersion.id" values="curriculumVersions" filter-values="[application.oldCurriculumVersion]" ng-required="application.type === 'AVALDUS_LIIK_OKAVA'"></hois-select>
+              <hois-select ng-model="application.newCurriculumVersion.id" values="curriculumVersions" ng-required="application.type === 'AVALDUS_LIIK_OKAVA'"></hois-select>
             </md-input-container>
           </div>
 
@@ -225,7 +228,13 @@
           <div layout="column" flex>
             <div layout="row" class="top-margin">
               <h2>{{'main.subjects' | translate}} </h2>
-              <a class="md-button md-primary" href="" ng-click="addPlannedSubjectRow()" ng-show="!readOnly">{{'main.button.addRow' | translate}}</a>
+              <a class="md-button md-primary" href="" ng-click="addPlannedSubjectRow()">{{'main.button.addRow' | translate}}</a>
+            </div>
+            <div layout="row" class="top-margin">
+              <input style="display:none" type="number" readonly name="plannedSubjectLenght" ng-model="plannedSubjectLenght" min="1"  />
+              <div md-colors="{color: 'warn-A400'}" ng-messages="applicationForm.plannedSubjectLenght.$error">
+                <div ng-if="applicationForm.$submitted" ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
+              </div>
             </div>
             <table md-table class="secondary-table">
               <thead md-head>
@@ -260,7 +269,7 @@
         <div layout="column" flex>
           <div layout="row" class="top-margin">
             <h2>{{'main.relatedFiles' | translate}} </h2>
-            <a class="md-button md-primary" href="" ng-click="openAddFileDialog()" ng-show="!readOnly">{{'main.button.uploadFile' | translate}}</a>
+            <a ng-if="(auth.isStudent() && application.status === 'AVALDUS_STAATUS_KOOST') || (auth.isAdmin() && ['AVALDUS_STAATUS_KOOST', 'AVALDUS_STAATUS_ESIT', 'AVALDUS_STAATUS_YLEVAAT'].indexOf(application.status) !== -1)" class="md-button md-primary" href="" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</a>
           </div>
           <table md-table class="secondary-table">
             <thead md-head>

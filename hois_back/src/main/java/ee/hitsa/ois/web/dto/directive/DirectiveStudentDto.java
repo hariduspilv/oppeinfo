@@ -12,6 +12,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.FinSource;
 import ee.hitsa.ois.enums.FinSpecific;
 import ee.hitsa.ois.enums.StudyLoad;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -281,7 +282,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_OKOORM:
             // we are adding new student to the directive, calculate new study load and fin from existing values
-            boolean partial = StudyLoad.OPPEKOORMUS_OSA.name().equals(EntityUtil.getNullableCode(student.getStudyLoad()));
+            boolean partial = ClassifierUtil.equals(StudyLoad.OPPEKOORMUS_OSA, student.getStudyLoad());
             dto.setStudyLoad(partial ? StudyLoad.OPPEKOORMUS_TAIS.name() : StudyLoad.OPPEKOORMUS_OSA.name());
             dto.setFin(partial ? FinSource.FINALLIKAS_RE.name() : FinSource.FINALLIKAS_REV.name());
             break;

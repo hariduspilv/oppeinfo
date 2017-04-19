@@ -5,36 +5,30 @@
     var clMapper = Classifier.valuemapper({origStudyLevel: 'OPPEASTE', status: 'OPPEKAVA_STAATUS'});
     QueryUtils.createQueryForm($scope, '/curriculum', {order: $scope.currentLanguageNameField()}, clMapper.objectmapper);
     $q.all(clMapper.promises).then($scope.loadData);
+    DataUtils.convertStringToDates($scope.criteria, ['validFrom', 'validThru']);
 
-    // TODO/FIXME methods?
-    if(AuthService.isAuthenticated()) {
-      // TODO: remove rolecode based filtration and use isAuthorized when roles/rights are fixed
-      $scope.loadData();
-    }
+    // FIXME: oppesuund is lost when returning to page
 
     function getListOfStudyLevels() {
         if($scope.auth.isExternalExpert()) {
-            QueryUtils.endpoint('/classifier/all').query({mainClassCode: "OPPEASTE"}).$promise.then(function(response){
-                $scope.studyLevelCodes = response;
-            });
+            $scope.school = {
+                higher: true,
+                vocational: true
+            };
         } else {
-            QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
-                $scope.studyLevelCodes = response.studyLevels;
+            // without using this temp varialbe selected studyLevels are lost after returning to search page
+            var selectedStudyLevels = $scope.criteria.studyLevel;
+            QueryUtils.endpoint('/school/studyLevels').search().$promise.then(function(response){
+                $scope.criteria.studyLevel = selectedStudyLevels;
+                $scope.studyLevelOptions = response.studyLevels;
+                $scope.school = {
+                    higher: $scope.studyLevelOptions.filter(function(s){return s.indexOf('OPPEASTE_5') !== -1;}).length > 0,
+                    vocational: $scope.studyLevelOptions.filter(function(s){return s.indexOf('OPPEASTE_4') !== -1;}).length > 0
+                };
             });
         }
     }
     getListOfStudyLevels();
-
-    function getSchoolDepartments() {
-        if($scope.auth.isExternalExpert()) {
-            QueryUtils.endpoint('/curriculum/schoolDepartments').query().$promise.then(function(response){
-                console.log("school departments: ");
-                console.log(response);
-                $scope.schoolDepartments = response;
-            });
-        }
-    }
-    getSchoolDepartments();
 
     $scope.edit = function(curriculum) {
       if(curriculum.higher) {

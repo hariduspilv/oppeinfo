@@ -1,10 +1,10 @@
 package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDateTime;
-import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.GeneralMessage;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.GeneralMessageForm;
 
 public class GeneralMessageDto extends GeneralMessageForm {
@@ -35,7 +35,7 @@ public class GeneralMessageDto extends GeneralMessageForm {
 
     public static GeneralMessageDto of(GeneralMessage generalMessage) {
         GeneralMessageDto dto = EntityUtil.bindToDto(generalMessage, new GeneralMessageDto(), "targets");
-        dto.setTargets(generalMessage.getTargets().stream().map(t -> EntityUtil.getCode(t.getRole())).collect(Collectors.toList()));
+        dto.setTargets(StreamUtil.toMappedList(t -> EntityUtil.getCode(t.getRole()), generalMessage.getTargets()));
         return dto;
     }
 }

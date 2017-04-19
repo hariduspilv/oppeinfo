@@ -5,6 +5,7 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
     var clMapper = Classifier.valuemapper({type: 'TEATE_LIIK'});
     QueryUtils.createQueryForm($scope, '/messageTemplate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
     $q.all(clMapper.promises).then($scope.loadData);
+    DataUtils.convertStringToDates($scope.criteria, ['validFrom', 'validThru']);
 
     $scope.isValid = function(record) {
         return (!record.validFrom || new Date(record.validFrom) <= new Date()) && (!record.validThru || new Date(record.validThru) >= new Date());

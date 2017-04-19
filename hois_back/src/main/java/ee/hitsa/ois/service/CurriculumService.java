@@ -67,6 +67,7 @@ import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -318,7 +319,7 @@ public class CurriculumService {
             if(command.getId() != null) {
                 filters.add(cb.notEqual(root.get("id"), command.getId()));
             }
-            if(command.getParamName().equals("code")) {
+            if("code".equals(command.getParamName())) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }
             if(Boolean.TRUE.equals(command.getCountOnlyValid())) {
@@ -381,12 +382,12 @@ public class CurriculumService {
     private void updateVersions(Curriculum curriculum, Set<CurriculumVersionDto> versions) {
         Set<CurriculumVersion> newVersions = new HashSet<>();
         if(versions != null) {
-            versions.forEach(dto -> {
+            for(CurriculumVersionDto dto : versions) {
                 CurriculumVersion version = dto.getId() == null ? new CurriculumVersion() :
                     curriculum.getVersions().stream().filter(v -> v.getId().equals(dto.getId())).findFirst().get();
                 CurriculumVersion updatedVersion = updateVersion(curriculum, version, dto);
                 newVersions.add(updatedVersion);
-            });
+            }
         }
         curriculum.setVersions(newVersions);
     }
@@ -437,11 +438,7 @@ public class CurriculumService {
         String code = dto.getCurriculumStudyForm();
         Optional<CurriculumStudyForm> studyForm = curriculum.getStudyForms().stream()
                 .filter(s -> EntityUtil.getCode(s.getStudyForm()).equals(code)).findFirst();
-        if(studyForm.isPresent()) {
-            version.setCurriculumStudyForm(studyForm.get());
-        } else {
-          version.setCurriculumStudyForm(null);
-        }
+        version.setCurriculumStudyForm(studyForm.orElse(null));
     }
     
 
@@ -451,12 +448,12 @@ public class CurriculumService {
           Map<Long, CurriculumVersionSpeciality> oldSpecsMap = StreamUtil.toMap(s -> EntityUtil.getId(s.getCurriculumSpeciality()), version.getSpecialities());
           Map<Long, CurriculumSpeciality> curricSpecsMap = StreamUtil.toMap(CurriculumSpeciality::getReferenceNumber, curricSpecs);
 
-          specRefNums.forEach(s -> {
+          for(Long s : specRefNums) {
               if(s.longValue() > 0 && oldSpecsMap.containsKey(s)) {
                   newSpecialities.add(oldSpecsMap.get(s));
               } else {
                 CurriculumVersionSpeciality newSpec = new CurriculumVersionSpeciality();
-                assert curricSpecsMap.containsKey(s) : "Curriculum speciality must be added to Curriculum before adding to Curriculum version!";
+                AssertionFailedException.assertTrue(curricSpecsMap.containsKey(s), "Curriculum speciality must be added to Curriculum before adding to Curriculum version!");
                 CurriculumSpeciality curriculumSpeciality = curricSpecsMap.get(s);
                 newSpec.setCurriculumSpeciality(curriculumSpeciality);
                 newSpec.setCurriculumVersion(version);
@@ -464,7 +461,7 @@ public class CurriculumService {
 //                curriculumSpeciality.getCurriculumVersionSpecialities().add(newSpec);
                 newSpecialities.add(newSpec);
               }
-          });
+          }
         }
         version.setSpecialities(newSpecialities);
       }
@@ -473,7 +470,7 @@ public class CurriculumService {
             Set<CurriculumVersionHigherModuleDto> modules) {
         Set<CurriculumVersionHigherModule> newModules = new HashSet<>();
         if(modules != null) {
-            modules.forEach(dto -> {
+            for(CurriculumVersionHigherModuleDto dto : modules) {
                 CurriculumVersionHigherModule module = dto.getId() == null ? new CurriculumVersionHigherModule() :
                     version.getModules().stream().filter(m -> m.getId().equals(dto.getId())).findFirst().get();
                 module = EntityUtil.bindToEntity(dto, module, classifierRepository, "subjects", "electiveModules", "specialities");
@@ -481,7 +478,7 @@ public class CurriculumService {
                 updateCurriculumVersionModuleElectiveModules(module, dto.getElectiveModules());
                 updateVersionModuleSpecialities(version, module, dto.getSpecialitiesReferenceNumbers());
                 newModules.add(module);
-            });
+            }
         }
         version.setModules(newModules);
     }
@@ -490,7 +487,7 @@ public class CurriculumService {
             Set<CurriculumVersionOccupationModuleDto> occupationModules) {
         Set<CurriculumVersionOccupationModule> newOccupationModules = new HashSet<>();
         if(occupationModules != null) {
-            occupationModules.forEach(dto -> {
+            for(CurriculumVersionOccupationModuleDto dto : occupationModules) {
                 CurriculumVersionOccupationModule occupationModule = dto.getId() == null ? new CurriculumVersionOccupationModule() :
                     updatedVersion.getOccupationModules().stream().filter(m -> m.getId().equals(dto.getId())).findFirst().get();
                 CurriculumVersionOccupationModule updatedOccupationModule = EntityUtil.bindToEntity(dto, occupationModule,
@@ -522,7 +519,7 @@ public class CurriculumService {
 
 
                 newOccupationModules.add(updatedOccupationModule);
-            });
+            }
         }
         updatedVersion.setOccupationModules(newOccupationModules);
     }
@@ -596,7 +593,7 @@ public class CurriculumService {
             Map<Long, CurriculumVersionHigherModuleSpeciality> oldSpecs = StreamUtil.toMap(s -> EntityUtil.getId(s.getSpeciality().getCurriculumSpeciality()), module.getSpecialities());
             Map<Long, CurriculumVersionSpeciality> selectedSpecs = StreamUtil.toMap(s -> s.getCurriculumSpeciality().getReferenceNumber(), version.getSpecialities());
 
-            specsRefNums.forEach(s -> {
+            for(Long s : specsRefNums) {
                 if(s.longValue() > 0 && oldSpecs.containsKey(s)) {
                     newSpecs.add(oldSpecs.get(s));
                 } else {
@@ -607,7 +604,7 @@ public class CurriculumService {
                   versionSpeciality.getModuleSpecialities().add(newSpec);
                   newSpecs.add(newSpec);
                 }
-            });
+            }
         }
         module.setSpecialities(newSpecs);
     }
@@ -616,13 +613,13 @@ public class CurriculumService {
             Set<CurriculumVersionHigherModuleSubjectDto> subjects) {
         Set<CurriculumVersionHigherModuleSubject> newSubjects = new HashSet<>();
         if(subjects != null) {
-            subjects.forEach(dto -> {
+            for(CurriculumVersionHigherModuleSubjectDto dto : subjects) {
                 CurriculumVersionHigherModuleSubject subject = dto.getId() == null ? new CurriculumVersionHigherModuleSubject() :
                     module.getSubjects().stream().filter(s -> s.getId().equals(dto.getId())).findFirst().get();
                 subject = EntityUtil.bindToEntity(dto, subject, "nameEt", "nameEt", "credits", "school", "subjectId");
                 subject.setSubject(subjectRepository.getOne(dto.getSubjectId()));
                 newSubjects.add(subject);
-            });
+            }
         }
         module.setSubjects(newSubjects);
     }
@@ -631,13 +628,13 @@ public class CurriculumService {
             Set<CurriculumVersionElectiveModuleDto> electiveModules) {
         Set<CurriculumVersionElectiveModule> newSet = new HashSet<>();
         if(electiveModules != null) {
-            electiveModules.forEach(dto -> {
+            for(CurriculumVersionElectiveModuleDto dto : electiveModules) {
                 CurriculumVersionElectiveModule newElectiveModule = dto.getId() == null ? new CurriculumVersionElectiveModule() :
                     module.getElectiveModules().stream().filter(e -> e.getId().equals(dto.getId())).findFirst().get();
                 newElectiveModule = EntityUtil.bindToEntity(dto, newElectiveModule, "subjects");
                 updateCurriculumVersionEleciveModulesSubjects(module.getSubjects(), newElectiveModule, dto.getSubjects());
                 newSet.add(newElectiveModule);
-            });
+            }
         }
         module.setElectiveModules(newSet);
     }
@@ -657,7 +654,7 @@ public class CurriculumService {
         Set<CurriculumModule> newModules = new HashSet<>();
 
         if(modules != null) {
-            modules.forEach(dto -> {
+            for(CurriculumModuleDto dto : modules) {
                 CurriculumModule module = dto.getId() == null ? new CurriculumModule() : curriculum.getModules().
                         stream().filter(a -> a.getId().equals(dto.getId())).findFirst().get();
 
@@ -666,84 +663,68 @@ public class CurriculumService {
                 updateCurriculumModuleCompetences(module, dto.getCompetences());
                 updateCurriculumModuleOutcomes(module, dto.getOutcomes());
                 newModules.add(module);
-            });
+            }
         }
         curriculum.setModules(newModules);
     }
 
-
     private static void updateCurriculumModuleOutcomes(CurriculumModule module, Set<CurriculumModuleOutcomeDto> outcomes) {
         Set<CurriculumModuleOutcome> newOutComes = new HashSet<>();
         if(outcomes != null) {
-            outcomes.forEach(dto -> {
+            for(CurriculumModuleOutcomeDto dto : outcomes) {
                 CurriculumModuleOutcome outcome = dto.getId() == null ? new CurriculumModuleOutcome() :
                     module.getOutcomes().stream().filter(o -> o.getId().equals(dto.getId())).findFirst().get();
 
                 outcome = EntityUtil.bindToEntity(dto, outcome);
                 newOutComes.add(outcome);
-            });
+            }
         }
         module.setOutcomes(newOutComes);
     }
 
     private void updateCurriculumModuleCompetences(CurriculumModule module, Set<String> competences) {
-        if(competences != null) {
-            Set<CurriculumModuleCompetence> oldSet = module.getCompetences();
-            EntityUtil.bindClassifierCollection(oldSet, c -> EntityUtil.getCode(c.getCompetence()), competences, competenceCode -> {
-                return new CurriculumModuleCompetence(EntityUtil.validateClassifier(classifierRepository.getOne(competenceCode), MainClassCode.KOMPETENTS));
-            });
-        } else {
-            module.setCompetences(new HashSet<>());
-        }
+        EntityUtil.bindEntityCollection(module.getCompetences(), c -> EntityUtil.getCode(c.getCompetence()), competences, competenceCode -> {
+            return new CurriculumModuleCompetence(EntityUtil.validateClassifier(classifierRepository.getOne(competenceCode), MainClassCode.KOMPETENTS));
+        });
     }
 
     private void updateCurriculumModuleOccupations(CurriculumModule module, Set<String> occupations) {
-        if(occupations != null) {
-            Set<CurriculumModuleOccupation> oldSet = module.getOccupations();
-            EntityUtil.bindClassifierCollection(oldSet, o -> EntityUtil.getCode(o.getOccupation()), occupations, occupaionCode -> {
-              Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupaionCode),
-                      MainClassCode.OSAKUTSE, MainClassCode.KUTSE, MainClassCode.SPETSKUTSE);
-              return new CurriculumModuleOccupation(c);
-            });
-        } else {
-            module.setOccupations(new HashSet<>());
-        }
+        EntityUtil.bindEntityCollection(module.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), occupations, occupaionCode -> {
+          Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupaionCode),
+                  MainClassCode.OSAKUTSE, MainClassCode.KUTSE, MainClassCode.SPETSKUTSE);
+          return new CurriculumModuleOccupation(c);
+        });
     }
 
     private void updateOccupations(Curriculum curriculum, Set<CurriculumOccupationDto> occupations) {
         Set<CurriculumOccupation> newOccupations = new HashSet<>();
         if(occupations != null) {
-            occupations.forEach(dto -> {
+            for(CurriculumOccupationDto dto : occupations) {
                 CurriculumOccupation occupation = dto.getId() == null ? new CurriculumOccupation() :
                     curriculum.getOccupations().stream().filter(o -> o.getId().equals(dto.getId())).findFirst().get();
                 occupation = EntityUtil.bindToEntity(dto, occupation, classifierRepository, "specialities");
                 updateCurriculumOccupationSpecialities(occupation, dto.getSpecialities());
                 newOccupations.add(occupation);
-            });
+            }
         }
         curriculum.setOccupations(newOccupations);
     }
 
     private void updateCurriculumOccupationSpecialities(CurriculumOccupation occupation, Set<String> specialities) {
-        if(specialities != null) {
-            Set<CurriculumOccupationSpeciality> oldList = occupation.getSpecialities();
-            EntityUtil.bindClassifierCollection(oldList, s -> EntityUtil.getCode(s.getSpeciality()), specialities, specialityCode -> {
-                Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(specialityCode), MainClassCode.SPETSKUTSE);
-                return new CurriculumOccupationSpeciality(c);
-            });
-        } else {
-            occupation.setSpecialities(new HashSet<>());
-        }
+        EntityUtil.bindEntityCollection(occupation.getSpecialities(), s -> EntityUtil.getCode(s.getSpeciality()), specialities, specialityCode -> {
+            Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(specialityCode), MainClassCode.SPETSKUTSE);
+            return new CurriculumOccupationSpeciality(c);
+        });
     }
 
     private void updateJointPartners(Curriculum curriculum, Set<CurriculumJointPartnerDto> jointPartners) {
         Set<CurriculumJointPartner> newJointPartners = new HashSet<>();
         if(jointPartners != null) {
-            jointPartners.forEach(dto -> {
+            for(CurriculumJointPartnerDto dto : jointPartners) {
                 CurriculumJointPartner partner = dto.getId() == null ? new CurriculumJointPartner() :
                     curriculum.getJointPartners().stream().filter(p -> p.getId().equals(dto.getId())).findFirst().get();
                 newJointPartners.add(EntityUtil.bindToEntity(dto, partner, classifierRepository));
-            });
+            }
         }
         curriculum.setJointPartners(newJointPartners);
     }
@@ -751,13 +732,13 @@ public class CurriculumService {
     private void updateCurriculumSpecialities(Curriculum curriculum, Set<CurriculumSpecialityDto> specialities) {
         Set<CurriculumSpeciality> newSpecialities = new HashSet<>();
         if(specialities != null) {
-            specialities.forEach(dto -> {
+            for(CurriculumSpecialityDto dto : specialities) {
                 CurriculumSpeciality speciality = dto.getId() == null ? new CurriculumSpeciality() :
                     curriculum.getSpecialities().stream().filter(s -> s.getId().equals(dto.getId())).findFirst().get();
                 CurriculumSpeciality updatedSpeciality = EntityUtil.bindToEntity(dto, speciality, classifierRepository);
                 updatedSpeciality.setCurriculum(curriculum);
                 newSpecialities.add(updatedSpeciality);
-            });
+            }
         }
         curriculum.setSpecialities(newSpecialities);
     }
@@ -765,83 +746,54 @@ public class CurriculumService {
     private void updateGrades(Curriculum curriculum, Set<CurriculumGradeDto> grades) {
         Set<CurriculumGrade> newGrades = new HashSet<>();
         if(grades != null) {
-            grades.forEach(dto -> {
+            for(CurriculumGradeDto dto : grades) {
                 CurriculumGrade grade = dto.getId() == null ? new CurriculumGrade() :
                     curriculum.getGrades().stream().filter(g -> g.getId().equals(dto.getId())).findFirst().get();
                 newGrades.add(EntityUtil.bindToEntity(dto, grade, classifierRepository));
-            });
+            }
         }
         curriculum.setGrades(newGrades);
     }
 
     private void updateDepartments(Curriculum curriculum, Set<Long> newDepartments) {
-        //TODO: get rid of this approach? (Requires equals() and hashCode())
-        if(newDepartments != null) {
-            Set<CurriculumDepartment> departments = newDepartments
-            .stream().map(d -> new CurriculumDepartment(schoolDepartmentRepository.getOne(d))).collect(Collectors.toSet());
-            merge(curriculum.getDepartments(), departments);
-          } else {
-              curriculum.setDepartments(new HashSet<>());
-          }
+        EntityUtil.bindEntityCollection(curriculum.getDepartments(), c -> EntityUtil.getId(c.getSchoolDepartment()), newDepartments, d -> {
+            CurriculumDepartment cd = new CurriculumDepartment();
+            cd.setCurriculum(curriculum);
+            cd.setSchoolDepartment(schoolDepartmentRepository.getOne(d));
+            return cd;
+        });
     }
 
     public void updateCurriculumFiles(Curriculum curriculum, Set<CurriculumFileDto> newFileDtos) {
           Set<CurriculumFile> newFiles = new HashSet<>();
           if(newFileDtos != null) {
-              newFileDtos.forEach(dto -> {
+              for(CurriculumFileDto dto : newFileDtos) {
                   CurriculumFile file = dto.getId() == null ? new CurriculumFile() :
                       curriculum.getFiles().stream().filter(f -> f.getId().equals(dto.getId())).findFirst().get();
                   file = EntityUtil.bindToEntity(dto, file, classifierRepository);
                   // TODO: probably it would be better not to set new oisFile if it's not changed
                   file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
                   newFiles.add(file);
-              });
+              }
           }
           curriculum.setFiles(newFiles);
     }
 
     public void updateStudyForms(Curriculum curriculum, Set<String> studyForms) {
-        if(studyForms != null) {
-            Set<CurriculumStudyForm> storedStudyForms = curriculum.getStudyForms();
-            EntityUtil.bindClassifierCollection(storedStudyForms, sf -> EntityUtil.getCode(sf.getStudyForm()), studyForms, studyForm -> {
-                // add new link
-                Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(studyForm), MainClassCode.OPPEVORM);
-                return new CurriculumStudyForm(c);
-            });
-        } else {
-            curriculum.setStudyForms(new HashSet<>());
-        }
+        EntityUtil.bindEntityCollection(curriculum.getStudyForms(), sf -> EntityUtil.getCode(sf.getStudyForm()), studyForms, studyForm -> {
+            // add new link
+            Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(studyForm), MainClassCode.OPPEVORM);
+            return new CurriculumStudyForm(c);
+        });
     }
 
     private void updateLanguages(Curriculum target, Set<String> languageCodes) {
-        if(languageCodes != null && !languageCodes.isEmpty()) {
-          // TODO use EntityUtil.bindClassifierCollection
-          Map<String, CurriculumStudyLanguage> langs = StreamUtil.toMap(e -> EntityUtil.getCode(e.getStudyLang()), target.getStudyLanguages());
-
-          Set<CurriculumStudyLanguage> newSet = new HashSet<>();
-          for(String lang : languageCodes) {
-              CurriculumStudyLanguage csl = langs.get(lang);
-              if(csl != null) {
-                  newSet.add(csl);
-              } else {
-                  newSet.add(new CurriculumStudyLanguage(classifierRepository.getOne(lang)));
-              }
-          }
-          target.setStudyLanguages(newSet);
-        } else {
-            //delete all language connections
-            target.setStudyLanguages(new HashSet<>());
-        }
-    }
-    /**
-     * Method requires hashCode() and equals() methods
-     */
-	private static <T> Set<T> merge(Set<T> originalSet, Set<T> changedSet) {
-        if(originalSet != null && changedSet != null) {
-            originalSet.addAll(changedSet);
-            originalSet.retainAll(changedSet);
-        }
-        return originalSet;
+        EntityUtil.bindEntityCollection(target.getStudyLanguages(), e -> EntityUtil.getCode(e.getStudyLang()), languageCodes, code -> {
+            CurriculumStudyLanguage csl = new CurriculumStudyLanguage();
+            csl.setCurriculum(target);
+            csl.setStudyLang(classifierRepository.getOne(code));
+            return csl;
+        });
     }
 
     public CurriculumVersionDto saveVersion(CurriculumVersion curriculumVersion, CurriculumVersionDto curriculumVersionDto) {

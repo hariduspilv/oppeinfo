@@ -8,7 +8,6 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaQuery;
@@ -27,6 +26,7 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.repository.ClassifierConnectRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.ClassifierWithCount;
@@ -130,11 +130,6 @@ public class ClassifierService {
         possibleConnections.put("KOMPETENTS", Arrays.asList("OSAKUTSE", "SPETSKUTSE", "KUTSE"));
 
         List<String> requiredCodes = possibleConnections.get(code);
-
-        if(requiredCodes == null) {
-            return new ArrayList<>();
-        }
-
-        return requiredCodes.stream().map(classifierRepository::findOne).collect(Collectors.toList());
+        return StreamUtil.toMappedList(classifierRepository::findOne, requiredCodes);
     }
 }

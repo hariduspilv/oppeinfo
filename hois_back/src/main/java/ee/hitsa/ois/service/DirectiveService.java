@@ -15,6 +15,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,11 +38,13 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.SaisApplication;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.DirectiveStatus;
@@ -59,6 +62,7 @@ import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -184,9 +188,8 @@ public class DirectiveService {
             // canceled directive can added only during directive create, check for same school
             EntityUtil.setEntityFromRepository(form, directive, directiveRepository, "canceledDirective");
             Directive canceledDirective = directive.getCanceledDirective();
-            if(canceledDirective == null) {
-                throw new AssertionFailedException("Canceled directive is missing");
-            }
+            AssertionFailedException.assertTrue(canceledDirective != null, "Canceled directive is missing");
+
             assertSameSchool(directive, canceledDirective.getSchool());
             // check that there is no cancel directive already
             if(Boolean.TRUE.equals(directiveRepository.existsByCanceledDirectiveId(canceledDirective.getId()))) {
@@ -281,7 +284,7 @@ public class DirectiveService {
             assertSameSchool(canceled, em.getReference(School.class, user.getSchoolId()));
             DirectiveDto.DirectiveCancelDto dto = directiveInitialValues(new DirectiveDto.DirectiveCancelDto(), user, cmd);
             dto.setCanceledDirectiveType(EntityUtil.getCode(canceled.getType()));
-            dto.setCanceledStudents(canceled.getStudents().stream().map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
+            dto.setCanceledStudents(StreamUtil.toMappedList(DirectiveViewStudentDto::of, canceled.getStudents()));
             // TODO fetch list of students which cannot canceled
             // dto.setChangedStudents()
             return dto;
@@ -343,13 +346,13 @@ public class DirectiveService {
     }
 
     private static List<DirectiveStudentDto> createDirectiveStudents(DirectiveType directiveType, Map<Long, Application> applications, List<Student> students) {
-        return students.stream().map(student -> {
+        return StreamUtil.toMappedList(student -> {
             Application application = applications.get(student.getId());
             if(application != null) {
                 return DirectiveStudentDto.of(application, directiveType);
             }
             return DirectiveStudentDto.of(student, directiveType);
-        }).collect(Collectors.toList());
+        }, students);
     }
 
     public List<DirectiveStudentSearchDto> searchStudents(Long schoolId, DirectiveStudentSearchCommand criteria) {
@@ -377,12 +380,12 @@ public class DirectiveService {
         if(applicationType.isPresent() && criteria.getApplication() != null) {
             boolean isApplication = Boolean.TRUE.equals(criteria.getApplication());
             String applicationSql = "select a.id from application a where a.student_id = s.id and a.type_code = :applicationType and a.status_code in (:applicationStatus)";
-            qb.requiredCriteria(String.format(isApplication ? "exists (%s)" : "not exists (%s)", applicationSql), "applicationType", applicationType.get().name());
+            qb.requiredCriteria(String.format(isApplication ? "exists (%s)" : "not exists (%s)", applicationSql), "applicationType", applicationType.get());
             qb.parameter("applicationStatus", APPLICATION_STATUS_FOR_DIRECTIVE);
         }
 
         // student has no unconfirmed directive of same type
-        qb.requiredCriteria("not exists(select ds2.id from directive_student ds2 inner join directive d2 on ds2.directive_id = d2.id where ds2.student_id = s.id and d2.type_code = :directiveType and d2.status_code in (:directiveStatus))", "directiveType", directiveType.name());
+        qb.requiredCriteria("not exists(select ds2.id from directive_student ds2 inner join directive d2 on ds2.directive_id = d2.id where ds2.student_id = s.id and d2.type_code = :directiveType and d2.status_code in (:directiveStatus))", "directiveType", directiveType);
         qb.parameter("directiveStatus", Arrays.asList(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name(), DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name()));
 
         // student has given status
@@ -405,7 +408,7 @@ public class DirectiveService {
         }
 
         List<?> data = qb.select("s.id, person.firstname, person.lastname, person.idcode, c.id as curriculum_id, c.name_et, c.name_en, sg.code", em).setMaxResults(STUDENTS_MAX).getResultList();
-        return data.stream().map(r -> {
+        return StreamUtil.toMappedList(r -> {
             DirectiveStudentSearchDto dto = new DirectiveStudentSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
@@ -415,7 +418,7 @@ public class DirectiveService {
                 dto.setStudentGroup(resultAsString(r, 7));
             }
             return dto;
-        }).collect(Collectors.toList());
+        }, data);
     }
 
     private List<DirectiveStudentDto> saisLoadStudents(Long schoolId, DirectiveDataCommand cmd) {
@@ -440,7 +443,33 @@ public class DirectiveService {
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, new PageRequest(0, STUDENTS_MAX, new Sort("lastname", "firstname"))).map(DirectiveStudentDto::of).getContent();
 
-        // TODO autofill studentGroup
+        // suggest studentGroup, if possible
+        List<StudentGroup> groups = studentGroupRepository.findAllBySchool_id(schoolId);
+        Map<Long, List<StudentGroup>> groupsByCurriculumVersion = groups.stream().filter(sg -> sg.getCurriculumVersion() != null).collect(Collectors.groupingBy(sg -> EntityUtil.getId(sg.getCurriculumVersion())));
+        Map<Long, List<StudentGroup>> groupsByCurriculum = null;
+        Map<Long, Integer> addedCount = new HashMap<>();
+        for(DirectiveStudentDto s : students) {
+            // first try to use student group with exact curriculum version
+            StudentGroup sg = findStudentGroup(s, groupsByCurriculumVersion.get(s.getCurriculumVersion()), addedCount);
+            if(sg == null) {
+                // not found, try student groups with only curriculum defined
+                if(groupsByCurriculum == null) {
+                    // initialize lazily, because in vocational study there cannot be student groups without curriculum version
+                    groupsByCurriculum = new HashMap<>();
+                    for(StudentGroup g : groups) {
+                        if(g.getCurriculumVersion() == null) {
+                            for(CurriculumVersion cv : g.getCurriculum().getVersions()) {
+                                groupsByCurriculum.computeIfAbsent(EntityUtil.getId(cv), key -> new ArrayList<>()).add(g);
+                            }
+                        }
+                    }
+                }
+                sg = findStudentGroup(s, groupsByCurriculum.get(s.getCurriculumVersion()), addedCount);
+            }
+            if(sg != null) {
+                s.setStudentGroup(sg.getId());
+            }
+        }
         return students;
     }
 
@@ -488,7 +517,7 @@ public class DirectiveService {
             }
             student.setApplication(app);
 
-            if(!ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name().equals(EntityUtil.getCode(app.getType()))) {
+            if(!ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_KINNITAM, app.getType())) {
                 // student with application is included in directive
                 // update application status to AVALDUS_STAATUS_KINNITAM
                 app.setStatus(em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name()));
@@ -547,12 +576,40 @@ public class DirectiveService {
 
     private void studentRemovedFromDirective(DirectiveStudent student) {
         Application app = student.getApplication();
-        if(app != null && !ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name().equals(EntityUtil.getCode(app.getType()))) {
+        if(app != null && !ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT, app.getType())) {
             // student with application is removed from directive
             // update application status to AVALDUS_STAATUS_YLEVAAT
             app.setStatus(em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
             applicationRepository.save(app);
         }
+    }
+
+    private static StudentGroup findStudentGroup(DirectiveStudentDto student, List<StudentGroup> groups, Map<Long, Integer> addedCount) {
+        if(groups != null && !groups.isEmpty()) {
+            // first try to use student group with limit of students
+            for(StudentGroup sg : groups) {
+                if(sg.getPlaces() != null && studentGroupMatches(student, sg)) {
+                    // check maximum number of students
+                    int added = addedCount.getOrDefault(sg.getId(), Integer.valueOf(0)).intValue();
+                    if(sg.getStudents().size() + added < sg.getPlaces().intValue()) {
+                        addedCount.put(sg.getId(), Integer.valueOf(added + 1));
+                        return sg;
+                    }
+                }
+            }
+
+            for(StudentGroup sg : groups) {
+                if(sg.getPlaces() == null && studentGroupMatches(student, sg)) {
+                    return sg;
+                }
+            }
+        }
+        return null;
+    }
+
+    private static boolean studentGroupMatches(DirectiveStudentDto student, StudentGroup group) {
+        return Objects.equals(student.getStudyForm(), EntityUtil.getCode(group.getStudyForm())) &&
+               Objects.equals(student.getLanguage(), EntityUtil.getCode(group.getLanguage()));
     }
 
     private static void adjustPeriod(DirectiveStudent student) {
@@ -570,10 +627,8 @@ public class DirectiveService {
     }
 
     private static void assertModifyable(Directive directive) {
-        // assert directive state 'KOOSTAMISEL'
-        if(!DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name().equals(EntityUtil.getNullableCode(directive.getStatus()))) {
-            throw new AssertionFailedException("Directive status mismatch");
-        }
+        // only directive state 'KOOSTAMISEL' allows modification
+        AssertionFailedException.assertTrue(ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Directive status mismatch");
     }
 
     private static Optional<ApplicationType> applicationType(DirectiveType type) {

@@ -20,17 +20,9 @@ public class CurriculumStudyLanguage extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, insertable = false, updatable = false)
     private Curriculum curriculum;
-
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier studyLang;
-
-    public CurriculumStudyLanguage() {
-    }
-
-    public CurriculumStudyLanguage(Classifier studyLang) {
-        this.studyLang = studyLang;
-    }
 
     public Curriculum getCurriculum() {
         return curriculum;
@@ -63,6 +55,7 @@ public class CurriculumStudyLanguage extends BaseEntityWithId {
             return false;
         }
 
+        // TODO other can be any object
         CurriculumStudyLanguage other = (CurriculumStudyLanguage) obj;
         if (studyLang == null) {
             if (other.studyLang != null)

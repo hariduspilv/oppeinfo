@@ -14,6 +14,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.SubjectUtil;
@@ -73,6 +74,10 @@ public class AutocompleteResult extends EntityConnectionCommand {
 
     public static AutocompleteResult of(StateCurriculum stateCurriculum) {
         return new AutocompleteResult(stateCurriculum.getId(), stateCurriculum.getNameEt(), stateCurriculum.getNameEn());
+    }
+
+    public static AutocompleteResult of(TeacherOccupation teacherOccupation) {
+        return new AutocompleteResult(teacherOccupation.getId(), teacherOccupation.getOccupationEt(), teacherOccupation.getOccupationEn());
     }
 
     public static AutocompleteResult of(Student student) {

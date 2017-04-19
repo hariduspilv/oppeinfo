@@ -21,7 +21,6 @@ public class PersonForm extends VersionedCommand {
     @NotEmpty
     private String lastname;
 
-    //TODO: is this correct thing todo? - findbugs Unwritten field: ee.hitsa.ois.web.commandobject.PersonForm.birthdate
     private LocalDate birthdate;
 
     @NotEmpty
@@ -83,5 +82,9 @@ public class PersonForm extends VersionedCommand {
 
     public LocalDate getBirthdate() {
         return birthdate;
+    }
+
+    public void setBirthdate(LocalDate birthdate) {
+        this.birthdate = birthdate;
     }
 }

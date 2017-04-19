@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.service.StateCurriculumService;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
@@ -35,12 +35,8 @@ import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
 @RequestMapping("/stateCurriculum")
 public class StateCurriculumController {
 
-    private final StateCurriculumService stateCurriculumService;
-
     @Autowired
-    public StateCurriculumController(StateCurriculumService service) {
-        this.stateCurriculumService = service;
-    }
+    private StateCurriculumService stateCurriculumService;
 
     @PostMapping("")
     public StateCurriculumDto create(@Valid @RequestBody StateCurriculumForm stateCurriculumForm) {
@@ -74,7 +70,6 @@ public class StateCurriculumController {
 
     @GetMapping("/all")
     public List<AutocompleteResult> searchAll(StateCurriculumSearchCommand stateCurriculumSearchCommand, Sort sort) {
-        return stateCurriculumService.searchAll(stateCurriculumSearchCommand, sort)
-                .stream().map(AutocompleteResult::of).collect(Collectors.toList());
+        return StreamUtil.toMappedList(AutocompleteResult::of, stateCurriculumService.searchAll(stateCurriculumSearchCommand, sort));
     }
 }

@@ -3,7 +3,7 @@
     <form ng-submit="loadData()" layout="column">
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label>{{'reception.contest.code' | translate}}</label>
+            <label>{{'reception.admission.code' | translate}}</label>
             <hois-select ng-model="criteria.code" values="saisAdmissionCodes" value-property="nameEt" multiple></hois-select>
           </md-input-container>
       </div>
@@ -39,7 +39,7 @@
 
         <md-input-container flex="30" flex-sm="100" flex-xs="100">
           <md-checkbox ng-model="criteria.addedToDirective" aria-label="added to directive">
-            {{'reception.application.addedToDirective' | translate}}
+            {{'reception.application.showAddedToDirective' | translate}}
           </md-checkbox>
         </md-input-container>
       </div>
@@ -48,7 +48,9 @@
       <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="importFromCsvFile()">{{'main.button.loadCsvFile' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="importFromCsvFile()">{{'main.button.importFromCsvFile' | translate}}</md-button>
+          <a ng-href="{{classifiersFileUrl}}" class="md-button md-raised">{{'main.button.classifiersFile' | translate}}</a>
+          <a ng-href="{{csvSampleFileUrl}}" class="md-button md-raised">{{'main.button.csvSampleFile' | translate}}</a>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>
@@ -64,15 +66,14 @@
           <th md-column md-order-by="idcode">{{'student.idcode' | translate}}</th>
           <th md-column md-order-by="firstname">{{'student.firstname' | translate}}</th>
           <th md-column md-order-by="lastname">{{'student.lastname' | translate}}</th>
-          <th md-column md-order-by="saisAdmission.code">{{'reception.contest.code' | translate}}</th>
-          <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'reception.application.status' | translate}}</th>
-          <th md-column>{{'reception.application.addedToDirective' | translate}}</th>
+          <th md-column md-order-by="saisAdmissionCode">{{'reception.admission.code' | translate}}</th>
+          <th md-column md-order-by="statusCode">{{'reception.application.status' | translate}}</th>
+          <th md-column md-order-by="addedToDirective">{{'reception.application.addedToDirective' | translate}}</th>
         </tr>
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <!--<td md-cell><a ng-href="/#/reception/saisApplication/{{::row.id}}/view">{{::row.applicationNr}}</a></td>-->
-          <td md-cell>{{::row.applicationNr}}</td>
+          <td md-cell><a ng-href="/#/reception/saisApplication/{{::row.id}}/view">{{::row.applicationNr}}</a></td>
           <td md-cell>{{::row.idcode}}</td>
           <td md-cell>{{::row.firstname}}</td>
           <td md-cell>{{::row.lastname}}</td>

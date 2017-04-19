@@ -1,9 +1,8 @@
 package ee.hitsa.ois.web.dto;
 
-import java.util.stream.Collectors;
-
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 
@@ -43,18 +42,12 @@ public class ApplicationDto extends ApplicationForm {
         }
 
         ApplicationDto dto = EntityUtil.bindToDto(application, new ApplicationDto(), "files", "plannedSubjects", "academicApplication");
-        if (application.getFiles() != null) {
-            dto.setFiles(application.getFiles().stream().map(ApplicationFileDto::of).collect(Collectors.toSet()));
-        }
-        if (application.getPlannedSubjects() != null) {
-            dto.setPlannedSubjects(application.getPlannedSubjects().stream()
-                    .map(ApplicationPlannedSubjectDto::of).collect(Collectors.toSet()));
-        }
+        dto.setFiles(StreamUtil.toMappedSet(ApplicationFileDto::of, application.getFiles()));
+        dto.setPlannedSubjects(StreamUtil.toMappedSet(ApplicationPlannedSubjectDto::of, application.getPlannedSubjects()));
         if (application.getAcademicApplication() != null) {
             dto.setAcademicApplication(ApplicationDto.of(application.getAcademicApplication()));
         }
         dto.setIsAdult(Boolean.valueOf(StudentUtil.isAdult(application.getStudent())));
         return dto;
     }
-
 }

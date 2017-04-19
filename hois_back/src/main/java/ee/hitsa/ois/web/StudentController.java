@@ -137,20 +137,14 @@ public class StudentController {
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {
-        if(!UserUtil.canViewStudent(user, student)) {
-            throw new AssertionFailedException("User cannot view student data");
-        }
+        AssertionFailedException.assertTrue(UserUtil.canViewStudent(user, student), "User cannot view student data");
     }
 
     private static void assertCanCreateAbsence(HoisUserDetails user, Student student) {
-        if(!UserUtil.canAddStudentAbsence(user, student)) {
-            throw new AssertionFailedException("User cannot add student absence");
-        }
+        AssertionFailedException.assertTrue(UserUtil.canAddStudentAbsence(user, student), "User cannot add student absence");
     }
 
     private static void assertCanEditAbsence(HoisUserDetails user, StudentAbsence absence) {
-        if(!UserUtil.canEditStudentAbsence(user, absence)) {
-            throw new AssertionFailedException("User cannot edit student absence");
-        }
+        AssertionFailedException.assertTrue(UserUtil.canEditStudentAbsence(user, absence), "User cannot edit student absence");
     }
 }

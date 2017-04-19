@@ -28,6 +28,7 @@ import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.StudentAbsenceRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -162,7 +163,7 @@ public class StudentService {
         boolean isAdmin = UserUtil.isSchoolAdmin(user, student.getSchool());
         return directiveRepository.findAllByStudent_id(EntityUtil.getId(student), pageable).map(r -> {
             StudentDirectiveDto dto = StudentDirectiveDto.of(r);
-            dto.setUserCanEdit(Boolean.valueOf(isAdmin && DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name().equals(EntityUtil.getCode(r.getStatus()))));
+            dto.setUserCanEdit(Boolean.valueOf(isAdmin && ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, r.getStatus())));
             return dto;
         });
     }

@@ -30,5 +30,8 @@ public class DateRangeValidatorTests {
 
         form.setValidFrom(form.getValidThru().plusDays(1));
         Assert.assertFalse("Thru before from does validate", validator.isValid(form, null));
+
+        form.setValidFrom(LocalDate.now().minusDays(1));
+        Assert.assertFalse("From in past does validate", validator.isValid(form, null));
     }
 }

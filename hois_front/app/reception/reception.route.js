@@ -41,11 +41,17 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       })
-      .when('/reception/import', {
-        templateUrl: 'reception/reception.import.html',
-        controller: 'ReceptionImportController',
+      .when('/reception/saisApplication/:id/view', {
+        templateUrl: 'reception/reception.saisApplication.view.html',
+        controller: 'ReceptionSaisApplicationController',
         controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          entity: function(QueryUtils, $route) {
+            return QueryUtils.endpoint('/saisApplications').get({id: $route.current.params.id}).$promise;
+          }
+        },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }

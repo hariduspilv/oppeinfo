@@ -8,7 +8,7 @@
         </md-input-container>
       </div>
 
-      <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students && record.type !== 'KASKKIRI_IMMAT'">
+      <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students && record.type !== 'KASKKIRI_IMMAT' && record.type !== 'KASKKIRI_IMMATV'">
         <md-table-container>
           <table md-table md-row-select multiple ng-model="formState.selectedStudents">
             <thead md-head>
@@ -33,6 +33,18 @@
         </md-table-container>
       </div>
 
+      <div layout="row" ng-if="formState.state === 'CHOOSETYPE' && record.type === 'KASKKIRI_IMMATV'">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'directive.student.curriculumVersion' | translate}}</label>
+          <hois-select ng-model="formState.curriculumVersion" multiple values="formState.saisCurriculumVersions"></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'directive.student.studyLevel' | translate}}</label>
+          <hois-classifier-select ng-model="formState.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+      </div>
+
       <div layout="row" ng-if="formState.state === 'CHOOSETYPE'">
         <md-button class="md-raised" ng-click="addDirective()" ng-if="formState.state === 'CHOOSETYPE' && formState.students">{{'directive.addToDirective' | translate}}</md-button>
         <md-button ng-href="#/directives" class="md-raised">{{'main.button.back' | translate}}</md-button>
@@ -40,6 +52,11 @@
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
 
       <div flex ng-if="formState.state === 'EDIT'">
+        <md-input-container class="md-block" ng-if="record.type === 'KASKKIRI_TYHIST'">
+          <label class="textInput">{{'directive.canceledDirective' | translate}}</label>
+          <hois-value value="formState.canceledDirective.nameEt" href-value="'#/directives/' + formState.canceledDirective.id + '/view'"></hois-value>
+        </md-input-container>
+
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.headline' | translate}}</label>
           <input type="text" ng-model="record.headline" name="headline" required md-maxlength="500"></input>
@@ -65,7 +82,7 @@
           <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator"></hois-value>
         </md-input-container>
 
-        <div layout="row">
+        <div layout="row" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">
           <h3>{{'directive.studentList' | translate}}</h3>
           <md-button class="md-raised" ng-click="addStudents()">{{'directive.addStudents' | translate}}</md-button>
         </div>

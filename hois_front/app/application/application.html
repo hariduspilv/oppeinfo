@@ -6,7 +6,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label>{{'application.type' | translate}}</label>
-              <hois-classifier-select ng-model="application.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
+              <hois-classifier-select ng-model="application.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK" ng-change="application.student=undefined"></hois-classifier-select>
             </md-input-container>
         </div>
 

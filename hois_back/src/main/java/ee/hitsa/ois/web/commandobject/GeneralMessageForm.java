@@ -8,7 +8,7 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
 
-@DateRange
+@DateRange(allowPast = false)
 public class GeneralMessageForm extends VersionedCommand {
 
     @NotEmpty

@@ -407,7 +407,6 @@
                     <tbody md-body>
                         <tr md-row ng-repeat="version in curriculum.versions | orderBy: 'code'" ng-class-odd="'odd'" ng-class-even="'even'">
                             <td md-cell>
-                                <!--  ng-class="{invalid: !versionIsValid(version)}"-->
                                 <a ng-if="!readOnly" ng-href="#/higherEducationCurriculum/{{curriculum.id}}/version/{{version.id}}/edit" href="">{{'main.version' | translate}} {{version.code}}</a>
                                 <a ng-if="readOnly" ng-href="#/higherEducationCurriculum/{{curriculum.id}}/version/{{version.id}}/view" href="">{{'main.version' | translate}} {{version.code}}</a>
                             </td>

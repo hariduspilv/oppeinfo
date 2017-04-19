@@ -10,9 +10,8 @@ import ee.hitsa.ois.domain.SaisAdmission;
 public interface SaisAdmissionRepository extends JpaRepository<SaisAdmission, Long>, JpaSpecificationExecutor<SaisAdmission> {
 
     List<SaisAdmission> findAllDistinctCodeByCurriculumVersionCurriculumSchoolId(Long schoolId);
-
     SaisAdmission findByCode(String code);
-
+    SaisAdmission findByCodeAndCurriculumVersionCurriculumSchoolId(String code, Long schoolId);
     SaisAdmission findByCurriculumVersionId(Long id);
 
 }

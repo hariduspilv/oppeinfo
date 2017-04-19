@@ -4,9 +4,7 @@ import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.criteria.Predicate;
@@ -36,7 +34,6 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SearchUtil;
-import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.TeacherForm;
 import ee.hitsa.ois.web.commandobject.TeacherSearchCommand;
@@ -74,7 +71,7 @@ public class TeacherService {
         }
         EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification");
         teacher.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation(), user.getSchoolId()));
+        teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation().getId(), user.getSchoolId()));
         // TODO: this logic is wrong?
         Person person = null;
         if (teacherForm.getPerson().getIdcode() != null) {
@@ -127,57 +124,30 @@ public class TeacherService {
 
     private void bindTeacherMobilityForm(Teacher teacher, TeacherForm teacherForm) {
         Set<TeacherMobility> teacherMobilities = teacher.getTeacherMobility();
-        Set<TeacherMobility> result = new HashSet<>();
         if (Boolean.TRUE.equals(teacher.getIsHigher())) {
-            Map<Long, TeacherMobility> mobilityMap = StreamUtil.toMap(TeacherMobility::getId, teacherMobilities);
-            for (TeacherForm.TeacherMobilityForm mobilityForm : teacherForm.getTeacherMobility()) {
-                Long id = mobilityForm.getId();
-                TeacherMobility teacherMobility;
-                if (id == null) {
-                    teacherMobility = new TeacherMobility();
-                } else {
-                    teacherMobility = mobilityMap.get(id);
-                    if (teacherMobility == null) {
-                        throw new ValidationFailedException("teacherMobility", "dirty-entity");
-                    }
-                }
-                result.add(createTeacherMobility(teacher, mobilityForm, teacherMobility));
-            }
+            EntityUtil.bindEntityCollection(teacherMobilities, TeacherMobility::getId, teacherForm.getTeacherMobility(), TeacherForm.TeacherMobilityForm::getId, mobilityForm -> {
+                return createTeacherMobility(teacher, mobilityForm, new TeacherMobility());
+            }, (mobilityForm, teacherMobility) -> createTeacherMobility(teacher, mobilityForm, teacherMobility));
+        } else if(!teacherMobilities.isEmpty()) {
+            teacherMobilities.clear();
         }
-        teacherMobilities.clear();
-        teacherMobilities.addAll(result);
     }
 
     private TeacherMobility createTeacherMobility(Teacher teacher, TeacherForm.TeacherMobilityForm mobilityForm, TeacherMobility teacherMobility) {
         teacherMobility = EntityUtil.bindToEntity(mobilityForm, teacherMobility, classifierRepository);
-        if (teacherMobility.getStart() != null && teacherMobility.getEnd() != null && teacherMobility.getEnd().isBefore(teacherMobility.getStart())) {
-            throw new ValidationFailedException("end", "early");
-        }
         teacherMobility.setTeacher(teacher);
         return teacherMobility;
     }
 
     private void bindTeacherQualificationForm(Teacher teacher, TeacherForm teacherForm) {
         Set<TeacherQualification> teacherQualifications = teacher.getTeacherQualification();
-        Set<TeacherQualification> result = new HashSet<>();
         if (Boolean.TRUE.equals(teacher.getIsHigher())) {
-            Map<Long, TeacherQualification> qualifications = StreamUtil.toMap(TeacherQualification::getId, teacherQualifications);
-            for (TeacherForm.TeacherQualificationFrom teacherQualificationFrom : teacherForm.getTeacherQualifications()) {
-                Long id = teacherQualificationFrom.getId();
-                TeacherQualification teacherQualification;
-                if (id == null) {
-                    teacherQualification = new TeacherQualification();
-                } else {
-                    teacherQualification = qualifications.get(id);
-                    if (teacherQualification == null) {
-                        throw new ValidationFailedException("teacherQualification", "dirty-entity");
-                    }
-                }
-                result.add(createTeacherQualification(teacher, teacherQualificationFrom, teacherQualification));
-            }
+            EntityUtil.bindEntityCollection(teacherQualifications, TeacherQualification::getId, teacherForm.getTeacherQualifications(), TeacherForm.TeacherQualificationFrom::getId, teacherQualificationFrom -> {
+                return createTeacherQualification(teacher, teacherQualificationFrom, new TeacherQualification());
+            }, (teacherQualificationFrom, teacherQualification) -> createTeacherQualification(teacher, teacherQualificationFrom, teacherQualification));
+        } else if(!teacherQualifications.isEmpty()) {
+            teacherQualifications.clear();
         }
-        teacherQualifications.clear();
-        teacherQualifications.addAll(result);
     }
 
     private TeacherQualification createTeacherQualification(Teacher teacher, TeacherForm.TeacherQualificationFrom teacherQualificationForm, TeacherQualification teacherQualification) {
@@ -190,24 +160,13 @@ public class TeacherService {
     }
 
     private void bindTeacherPositionEhisForm(Teacher teacher, TeacherForm teacherForm) {
-        Set<TeacherPositionEhis> oldTeacherPositions = teacher.getTeacherPositionEhis();
-        Map<Long, TeacherPositionEhis> teacherPositions = StreamUtil.toMap(TeacherPositionEhis::getId, oldTeacherPositions);
-        Set<TeacherPositionEhis> result = new HashSet<>();
-        for (TeacherForm.TeacherPositionEhisForm positionEhis : teacherForm.getTeacherPositionEhis()) {
+        EntityUtil.bindEntityCollection(teacher.getTeacherPositionEhis(), TeacherPositionEhis::getId, teacherForm.getTeacherPositionEhis(), TeacherForm.TeacherPositionEhisForm::getId, positionEhis -> {
             clearConflictingFields(positionEhis);
-            Long id = positionEhis.getId();
-            if (id == null) {
-                result.add(createTeacherPositionEhisForm(teacher, positionEhis, new TeacherPositionEhis()));
-            } else {
-                TeacherPositionEhis oldTeacherPositionEhis = teacherPositions.get(id);
-                if (oldTeacherPositionEhis == null) {
-                    throw new ValidationFailedException("TeacherPositionEhis", "dirty-entity");
-                }
-                result.add(createTeacherPositionEhisForm(teacher, positionEhis, oldTeacherPositionEhis));
-            }
-        }
-        oldTeacherPositions.clear();
-        oldTeacherPositions.addAll(result);
+            return createTeacherPositionEhisForm(teacher, positionEhis, new TeacherPositionEhis());
+        }, (positionEhis, oldTeacherPositionEhis) -> {
+            clearConflictingFields(positionEhis);
+            createTeacherPositionEhisForm(teacher, positionEhis, oldTeacherPositionEhis);
+        });
     }
 
     private TeacherPositionEhis createTeacherPositionEhisForm(Teacher teacher, TeacherForm.TeacherPositionEhisForm positionEhis, TeacherPositionEhis oldPositionEhis) {

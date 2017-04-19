@@ -5,14 +5,29 @@ import java.util.List;
 public class UsersSearchDto {
 
     private Long id;
-
     private String idcode;
-
     private String name;
-
     private AutocompleteResult school;
+    private AutocompleteResult curriculum;
+    private AutocompleteResult studentGroup;
     
     private List<String> role;
+
+    public AutocompleteResult getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(AutocompleteResult curriculum) {
+        this.curriculum = curriculum;
+    }
+
+    public AutocompleteResult getStudentGroup() {
+        return studentGroup;
+    }
+
+    public void setStudentGroup(AutocompleteResult studentGroup) {
+        this.studentGroup = studentGroup;
+    }
 
     public List<String> getRole() {
         return role;

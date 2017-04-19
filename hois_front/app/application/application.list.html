@@ -94,7 +94,7 @@
           <td md-cell><a ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
           <td md-cell>
             {{currentLanguageNameField(row.status)}}
-            <md-tooltip ng-if="row.status.code === 'AVALDUS_STAATUS_TAGASI'">{{row.rejectReason}}</md-tooltip>
+            <md-tooltip ng-if="row.status.code === 'AVALDUS_STAATUS_TAGASI' && row.rejectReason">{{row.rejectReason}}</md-tooltip>
           </td>
           <td md-cell>{{'main.formattedDateTime' | translate: {date: row.inserted} }}</td>
           <td md-cell>{{'main.formattedDateTime' | translate: {date: row.submitted} }}</td>

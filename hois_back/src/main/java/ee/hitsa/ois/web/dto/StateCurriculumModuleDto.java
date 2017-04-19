@@ -2,11 +2,12 @@ package ee.hitsa.ois.web.dto;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
@@ -32,16 +33,14 @@ public class StateCurriculumModuleDto extends VersionedCommand {
     public static StateCurriculumModuleDto of(StateCurriculumModule module) {
         StateCurriculumModuleDto dto = EntityUtil.bindToDto
                 (module, new StateCurriculumModuleDto(), "moduleOccupations", "outcomesEt", "outcomesEt", "outcome");
-        
-        Set<String> moduleOccupations = module.getModuleOccupations().stream().
-                map(occupation -> EntityUtil.getNullableCode(occupation.getOccupation())).collect(Collectors.toSet());
-        dto.setModuleOccupations(moduleOccupations);
-        
-        if(module.getOutcome() != null) {
-            dto.setOutcomesEt(module.getOutcome().getOutcomesEt());
-            dto.setOutcomesEn(module.getOutcome().getOutcomesEn());
+
+        dto.setModuleOccupations(StreamUtil.toMappedSet(o -> EntityUtil.getNullableCode(o.getOccupation()), module.getModuleOccupations()));
+        StateCurriculumModuleOutcome outcome = module.getOutcome();
+        if(outcome != null) {
+            dto.setOutcomesEt(outcome.getOutcomesEt());
+            dto.setOutcomesEn(outcome.getOutcomesEn());
         }
-        
+
         return dto;
     }
 

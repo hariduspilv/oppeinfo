@@ -4,7 +4,6 @@ import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -19,6 +18,7 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherOccupationDto;
@@ -46,10 +46,8 @@ public class TeacherOccupationService {
     }
 
     public List<TeacherOccupationDto> listAll(Long schoolId) {
-        return teacherOccupationRepository.findAll(
-                (root, query, cb) ->
-                        cb.and(cb.equal(root.get("school").get("id"), schoolId)))
-                .stream().map(TeacherOccupationDto::of).collect(Collectors.toList());
+        return StreamUtil.toMappedList(TeacherOccupationDto::of,
+                teacherOccupationRepository.findAll((root, query, cb) -> cb.and(cb.equal(root.get("school").get("id"), schoolId))));
     }
 
     public TeacherOccupation create(HoisUserDetails user, TeacherOccupationForm form) {

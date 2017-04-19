@@ -1,5 +1,9 @@
 package ee.hitsa.ois.web;
 
+import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
+
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,18 +19,22 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Message;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.service.MessageService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
-import ee.hitsa.ois.web.commandobject.UsersSeachCommand;
+import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.MessageDto;
-import ee.hitsa.ois.web.dto.MessageReceiverSearchDto;
+import ee.hitsa.ois.web.dto.MessageReceiverDto;
 import ee.hitsa.ois.web.dto.MessageSearchDto;
-import ee.hitsa.ois.web.dto.UsersSearchDto;
 
 @RestController
 @RequestMapping("/message")
@@ -80,15 +88,36 @@ public class MessageController {
     }
 
     @GetMapping("/parents")
-    public Page<MessageReceiverSearchDto> getParents(StudentSearchCommand criteria, Pageable pageable) {
-        return messageService.getStudentRepresentatives(criteria, pageable);
+    public List<MessageReceiverDto> getParents(StudentSearchCommand criteria) {
+        return messageService.getStudentRepresentatives(criteria);
     }
 
     /**
      * UsersController.search() is not used as school should not always be set as parameter
      */
     @GetMapping("/persons")
-    public Page<UsersSearchDto> searchPersons(HoisUserDetails user, UsersSeachCommand command, Pageable pageable) {
-        return messageService.searchPersons(user, command, pageable);
+    public List<MessageReceiverDto> searchPersons(HoisUserDetails user, UsersSearchCommand command) {
+        return messageService.searchPersons(user, command);
+    }
+    
+    @GetMapping("/students")
+    public List<MessageReceiverDto> getStudents(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
+        return messageService.getStudents(user.getSchoolId(), criteria, pageable);
+    }
+    
+    @GetMapping("/{studentId:\\d+}/parents")
+    public List<MessageReceiverDto> getStudentsParents(HoisUserDetails user, @WithEntity("studentId") Student student) {
+        UserUtil.assertSameSchool(user, student.getSchool());
+        return StreamUtil.toMappedList(r -> {
+            MessageReceiverDto dto = new MessageReceiverDto();
+            dto.setId(student.getId());
+            dto.setPersonId(r.getPerson().getId());
+            dto.setFullname(r.getPerson().getFullname());
+            dto.setStudentGroup(AutocompleteResult.of(student.getStudentGroup()));
+            dto.setCurriculum(AutocompleteResult.of(student.getStudentGroup().getCurriculum()));
+            dto.setRole(Arrays.asList(Role.ROLL_L.name()));
+            return dto;
+        }, student.getRepresentatives().stream()
+                .filter(sr -> sr.getIsStudentVisible().equals(Boolean.TRUE)).collect(Collectors.toList()));
     }
 }

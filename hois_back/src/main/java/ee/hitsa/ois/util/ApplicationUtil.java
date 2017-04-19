@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
@@ -26,7 +25,7 @@ public class ApplicationUtil {
 
     private static final Logger log = LoggerFactory.getLogger(ApplicationUtil.class);
 
-    private static long DAYS_IN_YEAR = 365L;
+    private static final long DAYS_IN_YEAR = 365L;
 
     public static void assertPeriod(Application application, int years, long daysUsed) {
         long applicationDays = ChronoUnit.DAYS.between(getStartDate(application), getEndDate(application));
@@ -121,7 +120,7 @@ public class ApplicationUtil {
                 filters.add(cb.equal(root.get("type").get("code"), ApplicationType.AVALDUS_LIIK_AKADK.name()));
                 filters.add(cb.equal(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name()));
                 filters.add(root.get("academicApplication").get("id")
-                        .in(previousSameTypeAcademicLeaves.stream().map(Application::getId).collect(Collectors.toList())));
+                        .in(StreamUtil.toMappedList(Application::getId, previousSameTypeAcademicLeaves)));
                 return cb.and(filters.toArray(new Predicate[filters.size()]));
             }));
         }
@@ -147,16 +146,16 @@ public class ApplicationUtil {
         assertOverLappingDates(application, applicationRepository);
 
         String reason = EntityUtil.getCode(application.getReason());
-        if (reason.equals(AcademicLeaveReason.AKADPUHKUS_POHJUS_T.name())) {
+        if (AcademicLeaveReason.AKADPUHKUS_POHJUS_T.name().equals(reason)) {
           long daysUsed = daysUsed(EntityUtil.getId(application.getStudent()), AcademicLeaveReason.AKADPUHKUS_POHJUS_T, applicationRepository);
           assertPeriod(application, 2, daysUsed);
-        } else if (reason.equals(AcademicLeaveReason.AKADPUHKUS_POHJUS_A.name())) {
+        } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_A.name().equals(reason)) {
             long daysUsed = daysUsed(EntityUtil.getId(application.getStudent()), AcademicLeaveReason.AKADPUHKUS_POHJUS_A, applicationRepository);
             assertPeriod(application, 1, daysUsed);
-        } else if (reason.equals(AcademicLeaveReason.AKADPUHKUS_POHJUS_L.name())) {
+        } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_L.name().equals(reason)) {
             assertPeriod(application, 3, 0);
         }
-        else if (reason.equals(AcademicLeaveReason.AKADPUHKUS_POHJUS_O.name())) {
+        else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_O.name().equals(reason)) {
             //TODO: algusega mitte varem kui esimese õppeaasta teisest semestrist);
             if (!StudentUtil.isHigher(application.getStudent())) {
                 throw new ValidationFailedException("application.messages.studentIsNotHigher");
@@ -165,7 +164,6 @@ public class ApplicationUtil {
             long daysUsed = daysUsed(EntityUtil.getId(application.getStudent()), AcademicLeaveReason.AKADPUHKUS_POHJUS_O, applicationRepository);
             assertPeriod(application, 1, daysUsed);
         }
-
     }
 
     public static void assertValisConstraints(Application application) {
@@ -174,7 +172,7 @@ public class ApplicationUtil {
 
     public static void assertAkadkConstraints(Application application) {
 
-        if (ApplicationType.valueOf(EntityUtil.getCode(application.getAcademicApplication().getType())) != ApplicationType.AVALDUS_LIIK_AKAD) {
+        if (!ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_AKAD, application.getAcademicApplication().getType())) {
             throw new ValidationFailedException("application.messages.wrongAcademicApplicationType");
         }
 
@@ -188,9 +186,7 @@ public class ApplicationUtil {
         LocalDate academicLeaveEnd = getEndDate(application.getAcademicApplication());
 
         if (revocationStart.isAfter(academicLeaveEnd)) {
-            throw new ValidationFailedException("application.messages.revocationEndDateAfterAcademicLeaveEndDate");
+            throw new ValidationFailedException("application.messages.revocationStartDateAfterAcademicLeaveEndDate");
         }
-
     }
-
 }

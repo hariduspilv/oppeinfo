@@ -41,9 +41,11 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
 @Transactional
@@ -66,9 +68,8 @@ public class DirectiveConfirmService {
     private Validator validator;
 
     public void sendToConfirm(Directive directive) {
-        if(!DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name().equals(EntityUtil.getCode(directive.getStatus()))) {
-            throw new AssertionFailedException("Inalid directive status");
-        }
+        AssertionFailedException.assertTrue(ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Invalid directive status");
+
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         List<Map.Entry<String, String>> allErrors = new ArrayList<>();
         if(directive.getDirectiveCoordinator() == null) {
@@ -105,9 +106,8 @@ public class DirectiveConfirmService {
     }
 
     public void confirm(HoisUserDetails user, Directive directive, LocalDate confirmDate) {
-        if(!DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name().equals(EntityUtil.getCode(directive.getStatus()))) {
-            throw new AssertionFailedException("Inalid directive status");
-        }
+        AssertionFailedException.assertTrue(ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus()), "Invalid directive status");
+
         // update directive fields
         directive.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name()));
         directive.setConfirmDate(confirmDate);
@@ -190,7 +190,7 @@ public class DirectiveConfirmService {
 
     private static void cancelDirective(Directive directive) {
         // cancellation may include only some students
-        Set<Long> includedStudentIds = directive.getStudents().stream().map(ds -> EntityUtil.getId(ds.getStudent())).collect(Collectors.toSet());
+        Set<Long> includedStudentIds = StreamUtil.toMappedSet(ds -> EntityUtil.getId(ds.getStudent()), directive.getStudents());
         Directive canceledDirective = directive.getCanceledDirective();
         DirectiveType canceledDirectiveType = DirectiveType.valueOf(EntityUtil.getCode(canceledDirective.getType()));
         for(DirectiveStudent ds : canceledDirective.getStudents()) {
@@ -215,7 +215,7 @@ public class DirectiveConfirmService {
     }
 
     private Map<Long, DirectiveStudent> findAcademicLeaves(Directive directive) {
-        if(!DirectiveType.KASKKIRI_AKADK.name().equals(EntityUtil.getCode(directive.getType()))) {
+        if(!ClassifierUtil.equals(DirectiveType.KASKKIRI_AKADK, directive.getType())) {
             return Collections.emptyMap();
         }
 
@@ -224,7 +224,7 @@ public class DirectiveConfirmService {
                 "left outer join study_period sps on ds.study_period_start_id = sps.id "+
                 "left outer join study_period spe on ds.study_period_end_id = spe.id");
 
-        List<Long> studentIds = directive.getStudents().stream().map(r -> EntityUtil.getId(r.getStudent())).collect(Collectors.toList());
+        List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
         qb.requiredCriteria("dsh.id in "+
                 "(select max(sh.id) from student_history sh where sh.student_id in (:studentIds) and sh.status_code = 'OPPURSTAATUS_A' group by sh.student_id)", "studentIds", studentIds);
 

@@ -2,10 +2,11 @@ package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDateTime;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Message;
+import ee.hitsa.ois.domain.MessageReceiver;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 
 public class MessageDto extends MessageForm {
@@ -20,11 +21,11 @@ public class MessageDto extends MessageForm {
         MessageDto dto = EntityUtil.bindToDto(message, new MessageDto(), "sender", "responseTo", "receivers");
         dto.setSendersId(message.getSender().getId());
         dto.setSendersName(message.getSender().getFullname());
-        dto.setReceiversNames(message.getReceivers().stream().map(m -> m.getPerson().getFullname()).collect(Collectors.toSet()));
+        dto.setReceiversNames(StreamUtil.toMappedSet(m -> m.getPerson().getFullname(), message.getReceivers()));
         if(message.getResponseTo() != null) {
             dto.setResponseTo(message.getResponseTo().getId());
         }
-        dto.setReceivers(message.getReceivers().stream().map(r -> r.getId()).collect(Collectors.toSet()));
+        dto.setReceivers(StreamUtil.toMappedSet(MessageReceiver::getId, message.getReceivers()));
         return dto;
     }
     

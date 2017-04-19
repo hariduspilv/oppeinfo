@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class StudentApplicationDto {
@@ -74,7 +75,7 @@ public class StudentApplicationDto {
 
     public static StudentApplicationDto of(Application application) {
         StudentApplicationDto dto = EntityUtil.bindToDto(application, new StudentApplicationDto());
-        if (EntityUtil.getCode(application.getStatus()).equals(ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name())) {
+        if (ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_KINNITATUD, application.getStatus())) {
             dto.setConfirmDate(application.getChanged());
         }
         return dto;

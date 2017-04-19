@@ -10,7 +10,9 @@
     </thead>
     <tbody md-body>
       <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell>{{::row.fullname}}</td>
+        <td md-cell>
+          <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</md-button>
+        </td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>
           <hois-classifier-value ng-model="row.reason" main-classifier-code="EKSMAT_POHJUS"></hois-classifier-value>

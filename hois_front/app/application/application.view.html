@@ -3,36 +3,51 @@
   <div flex>
     <form layout="column">
       <div style="padding-top: 1em">
+
+        <md-input-container ng-if="!application.isAdult && application.needsRepresentativeConfirm === true && application.status === 'AVALDUS_STAATUS_KOOST'" flex="60" flex-sm="100" flex-xs="100">
+          <b>{{'application.missingRepresentativeConfirmation' | translate}}</b>
+        </md-input-container>
+
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
               <label>{{'application.type' | translate}}</label>
               <hois-classifier-value ng-model="application.type" main-classifier-code="AVALDUS_LIIK"></hois-classifier-value>
             </md-input-container>
         </div>
-
         <div ng-if="!auth.isStudent()" layout="row" layout-sm="column" layout-xs="column">
             <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
               <label>{{'student.label' | translate}}</label>
               <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
             </md-input-container>
         </div>
-
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
               <label>{{'main.status' | translate}}</label>
               <hois-classifier-value ng-model="application.status" main-classifier-code="AVALDUS_STAATUS"></hois-classifier-value>
             </md-input-container>
         </div>
-        <div ng-if="application.needsRepresentativeConfirm === true && application.status === 'AVALDUS_STAATUS_ESIT'" layout="row" layout-sm="column" layout-xs="column">
+        <div ng-if="!application.isAdult" layout="row" layout-sm="column" layout-xs="column">
             <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
               <label>{{'application.confirmedByRepresentative' | translate}}</label>
-              <hois-value value="'main.yes' | translate"></hois-value>
+              <hois-value value="application.needsRepresentativeConfirm === true && application.status === 'AVALDUS_STAATUS_KOOST' ? 'main.no' : 'main.yes' | translate"></hois-value>
+            </md-input-container>
+        </div>
+        <div ng-if="application.status === 'AVALDUS_STAATUS_TAGASI'" layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'application.rejectReason' | translate}}</label>
+              <hois-value value="application.rejectReason"></hois-value>
             </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
             <label>{{'main.createdBy' | translate}}</label>
             <hois-value value="application.insertedBy"></hois-value>
+          </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+            <label>{{'application.confirmationDate' | translate}}</label>
+            <hois-value value="'main.formattedDate' | translate: {date: application.status === 'AVALDUS_STAATUS_KINNITATUD' ? application.changed : null}"></hois-value>
           </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -114,29 +129,29 @@
         <div ng-if="application.type === 'AVALDUS_LIIK_AKADK'">
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label>{{'application.reason' | translate}}</label>
-            <hois-classifier-value ng-model="academicLeaveApplication.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+            <hois-classifier-value ng-model="application.academicApplication.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
           </md-input-container>
 
-          <div ng-show="!academicLeaveApplication.isPeriod" layout="row" layout-xs="column">
+          <div ng-show="!application.academicApplication.isPeriod" layout="row" layout-xs="column">
             <md-input-container  flex="20" flex-sm="100" flex-xs="100">
               <label>{{'application.academicLeaveStart' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: academicLeaveApplication.startDate}"></hois-value>
+              <hois-value value="'main.formattedDate' | translate: {date: application.academicApplication.startDate}"></hois-value>
             </md-input-container>
 
             <md-input-container style="margin-left: 0px" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
               <label>{{'application.academicLeaveEnd' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: academicLeaveApplication.endDate}"></hois-value>
+              <hois-value value="'main.formattedDate' | translate: {date: application.academicApplication.endDate}"></hois-value>
             </md-input-container>
           </div>
 
-          <div ng-show="academicLeaveApplication.isPeriod" layout="row" layout-xs="column">
+          <div ng-show="application.academicApplication.isPeriod" layout="row" layout-xs="column">
             <md-input-container  flex="20" flex-sm="100" flex-xs="100">
               <label>{{'application.academicLeaveStart' | translate}}</label>
-              <hois-select ng-model="academicLeaveApplication.studyPeriodStart" values="studyPeriods" disabled></hois-select>
+              <hois-select ng-model="application.academicApplication.studyPeriodStart" values="studyPeriods" disabled></hois-select>
             </md-input-container>
             <md-input-container  flex="20" flex-sm="100" flex-xs="100">
               <label>{{'application.academicLeaveEnd' | translate}}</label>
-              <hois-select ng-model="academicLeaveApplication.studyPeriodEnd" values="studyPeriods" disabled></hois-select>
+              <hois-select ng-model="application.academicApplication.studyPeriodEnd" values="studyPeriods" disabled></hois-select>
             </md-input-container>
           </div>
 
@@ -145,8 +160,6 @@
             <hois-value value="'main.formattedDate' | translate: {date: application.startDate}"></hois-value>
           </md-input-container>
         </div>
-
-
 
         <div ng-if="application.type === 'AVALDUS_LIIK_OKAVA'">
           <div layout="row" layout-sm="column" layout-xs="column">

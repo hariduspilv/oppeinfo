@@ -20,7 +20,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          isCreate: function (){return true;}
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
@@ -50,7 +51,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
           entity: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/applications').get({id: $route.current.params.id}).$promise;
-          }
+          },
+          isView: function (){return true;}
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

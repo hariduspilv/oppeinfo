@@ -52,8 +52,8 @@ angular.module('hitsaOis')
         return { occupationModuleTypesModules: occupationModuleTypesModules, modulesWithOutOccupation: modulesWithOutOccupation};
     };
 
-    Curriculum.queryVersions = function() {
-      return QueryUtils.endpoint('/autocomplete/curriculumversions').query();
+    Curriculum.queryVersions = function(params) {
+      return QueryUtils.endpoint('/autocomplete/curriculumversions').query(params);
     };
 
     return Curriculum;

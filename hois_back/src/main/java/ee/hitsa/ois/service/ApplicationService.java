@@ -9,12 +9,11 @@ import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.JoinType;
@@ -51,10 +50,12 @@ import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApplicationUtil;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -63,7 +64,9 @@ import ee.hitsa.ois.web.commandobject.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.ApplicationApplicableDto;
 import ee.hitsa.ois.web.dto.ApplicationDto;
+import ee.hitsa.ois.web.dto.ApplicationFileDto;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
+import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectEquivalentDto;
 import ee.hitsa.ois.web.dto.ApplicationSearchDto;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -192,52 +195,31 @@ public class ApplicationService {
     }
 
     private void updatePlannedSubjects(Application application, ApplicationForm applicationForm) {
-        Set<ApplicationPlannedSubject> newPlannedSubjects = new HashSet<>();
-        if(applicationForm.getPlannedSubjects() != null) {
-            applicationForm.getPlannedSubjects().forEach(dto -> {
-                ApplicationPlannedSubject plannedSubject = dto.getId() == null ? new ApplicationPlannedSubject() :
-                    application.getPlannedSubjects().stream().filter(p -> p.getId().equals(dto.getId())).findFirst().get();
-                EntityUtil.bindToEntity(dto, plannedSubject, "equivalents");
-                updateEquivalents(dto, plannedSubject);
-                newPlannedSubjects.add(plannedSubject);
-            });
-        }
-        application.getPlannedSubjects().clear();
-        application.getPlannedSubjects().addAll(newPlannedSubjects);
-
+        EntityUtil.bindEntityCollection(application.getPlannedSubjects(), ApplicationPlannedSubject::getId, applicationForm.getPlannedSubjects(), ApplicationPlannedSubjectDto::getId, dto -> {
+            ApplicationPlannedSubject plannedSubject = EntityUtil.bindToEntity(dto, new ApplicationPlannedSubject(), "equivalents");
+            updateEquivalents(dto, plannedSubject);
+            return plannedSubject;
+        }, (dto, plannedSubject) -> {
+            EntityUtil.bindToEntity(dto, plannedSubject, "equivalents");
+            updateEquivalents(dto, plannedSubject);
+        });
     }
 
     private void updateEquivalents(ApplicationPlannedSubjectDto plannedSubjectDto, ApplicationPlannedSubject plannedSubject) {
-        Set<ApplicationPlannedSubjectEquivalent> newPlannedSubjectEquivalents = new HashSet<>();
-        if(plannedSubjectDto.getEquivalents() != null) {
-            plannedSubjectDto.getEquivalents().forEach(dto -> {
-                ApplicationPlannedSubjectEquivalent plannedSubjectEquivalent = dto.getId() == null ? new ApplicationPlannedSubjectEquivalent() :
-                    plannedSubject.getEquivalents().stream().filter(e -> e.getId().equals(dto.getId())).findFirst().get();
-                if (dto.getId() == null) {
-                    EntityUtil.bindToEntity(dto, plannedSubjectEquivalent, "subject");
-                    EntityUtil.setEntityFromRepository(dto, plannedSubjectEquivalent, subjectRepository, "subject");
-                }
-                newPlannedSubjectEquivalents.add(plannedSubjectEquivalent);
-            });
-        }
-        plannedSubject.getEquivalents().clear();
-        plannedSubject.getEquivalents().addAll(newPlannedSubjectEquivalents);
+        EntityUtil.bindEntityCollection(plannedSubject.getEquivalents(), ApplicationPlannedSubjectEquivalent::getId, plannedSubjectDto.getEquivalents(), ApplicationPlannedSubjectEquivalentDto::getId, dto -> {
+            ApplicationPlannedSubjectEquivalent plannedSubjectEquivalent = new ApplicationPlannedSubjectEquivalent();
+            EntityUtil.bindToEntity(dto, plannedSubjectEquivalent, "subject");
+            EntityUtil.setEntityFromRepository(dto, plannedSubjectEquivalent, subjectRepository, "subject");
+            return plannedSubjectEquivalent;
+        }, null);
     }
 
     private static void updateFiles(Application application, ApplicationForm applicationForm) {
-        Set<ApplicationFile> newFiles = new HashSet<>();
-        if(applicationForm.getFiles() != null) {
-            applicationForm.getFiles().forEach(dto -> {
-                ApplicationFile file = dto.getId() == null ? new ApplicationFile() :
-                    application.getFiles().stream().filter(f -> f.getId().equals(dto.getId())).findFirst().get();
-                if (dto.getId() == null) {
-                    file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
-                }
-                newFiles.add(file);
-            });
-        }
-        application.getFiles().clear();
-        application.getFiles().addAll(newFiles);
+        EntityUtil.bindEntityCollection(application.getFiles(), ApplicationFile::getId, applicationForm.getFiles(), ApplicationFileDto::getId, dto -> {
+            ApplicationFile file = new ApplicationFile();
+            file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
+            return file;
+        }, null);
     }
 
     public void delete(Application application) {
@@ -248,8 +230,7 @@ public class ApplicationService {
         List<Application> existingApplications = applicationRepository.findDistinctTypeByStudentIdAndStatusCodeIn(studentId,
                 Arrays.asList(ApplicationStatus.AVALDUS_STAATUS_KOOST.name(), ApplicationStatus.AVALDUS_STAATUS_ESIT.name(),
                         ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name()));
-        return existingApplications.stream()
-                .map(application -> ApplicationType.valueOf(EntityUtil.getCode(application.getType()))).collect(Collectors.toList());
+        return StreamUtil.toMappedList(application -> ApplicationType.valueOf(EntityUtil.getCode(application.getType())), existingApplications);
     }
 
     public Application submit(HoisUserDetails user, Application application) {
@@ -279,7 +260,7 @@ public class ApplicationService {
 
     private void setSeenBySchoolAdmin(HoisUserDetails user, Application application) {
         if (UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) &&
-                EntityUtil.getCode(application.getStatus()).equals(ApplicationStatus.AVALDUS_STAATUS_ESIT.name())) {
+                ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_ESIT, application.getStatus())) {
             application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
             applicationRepository.save(application);
         }
@@ -293,11 +274,13 @@ public class ApplicationService {
           filters.add(cb.equal(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name()));
 
           Subquery<Long> revocationQuery = query.subquery(Long.class);
-          Root<Application> applicationRoot = revocationQuery.from(Application.class);
+          Root<Application> revocationRoot = revocationQuery.from(Application.class);
           revocationQuery
-              .select(applicationRoot.get("id"))
-              .where(cb.equal(applicationRoot.get("id"), root.get("id")));
-          filters.add(cb.exists(revocationQuery));
+              .select(revocationRoot.get("id"))
+              .where(cb.and(
+                      cb.equal(revocationRoot.get("type").get("code"), ApplicationType.AVALDUS_LIIK_AKADK.name()),
+                      cb.equal(revocationRoot.get("academicApplication").get("id"), root.get("id"))));
+          filters.add(cb.not(cb.exists(revocationQuery)));
 
           root.join("studyPeriodEnd", JoinType.LEFT);
           filters.add(cb.or(
@@ -307,14 +290,11 @@ public class ApplicationService {
           return cb.and(filters.toArray(new Predicate[filters.size()]));
       });
 
-      Application validAcademicLeave = null;
-      if (validAcademicLeaves.size() == 1) {
-          validAcademicLeaves.get(0);
-      } else if (validAcademicLeaves.size() > 1) {
-          validAcademicLeave = validAcademicLeaves.stream()
-                  .sorted((application, other) -> other.getChanged().compareTo(application.getChanged())).findFirst().get();
+      if(validAcademicLeaves.isEmpty()) {
+          return null;
       }
-      return validAcademicLeave;
+      validAcademicLeaves.sort(Comparator.comparing(Application::getChanged).reversed());
+      return validAcademicLeaves.get(0);
     }
 
     public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(Student student) {

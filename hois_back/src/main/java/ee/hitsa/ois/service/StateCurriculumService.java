@@ -8,7 +8,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -36,7 +35,6 @@ import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.repository.specification.StateCurriculumSpecification;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SearchUtil;
-import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
@@ -107,16 +105,13 @@ public class StateCurriculumService {
 	}
 
 	private void setEkrLevels(Iterable<StateCurriculum> iterable) {
-      List<Object[]> list = stateCurriculumRepository.getEkrLEvels();
-      Map<Long, String> map = list.stream().filter(e -> e[1] != null).collect(
-              Collectors.toMap(e -> resultAsLong(e, 0), e -> resultAsString(e, 1), (o, n) -> n));
-      Iterator<StateCurriculum> iterator = iterable.iterator();
-      while(iterator.hasNext()) {
-          StateCurriculum s = iterator.next();
-          Long key = s.getId();
-          String ekr = map.get(key);
-          s.setEkrLevel(ekr);
-      }
+	    List<Object[]> levels = stateCurriculumRepository.getEkrLEvels();
+	    Map<Long, String> map = levels.stream().filter(e -> e[1] != null).collect(
+	            Collectors.toMap(e -> resultAsLong(e, 0), e -> resultAsString(e, 1), (o, n) -> n));
+	    for(StateCurriculum s : iterable) {
+	        String ekr = map.get(s.getId());
+	        s.setEkrLevel(ekr);
+	    }
 	}
 
     public boolean isUnique(UniqueCommand command) {
@@ -163,7 +158,6 @@ public class StateCurriculumService {
     }
 
     public StateCurriculum save(StateCurriculum stateCurriculum, StateCurriculumForm stateCurriculumForm) {
-
         EntityUtil.bindToEntity(stateCurriculumForm, stateCurriculum, classifierRepository, "occupations", "modules");
         updateOccupations(stateCurriculum, stateCurriculumForm.getOccupations());
         updateModules(stateCurriculum, stateCurriculumForm.getModules());
@@ -171,55 +165,33 @@ public class StateCurriculumService {
     }
 
     private void updateOccupations(StateCurriculum stateCurriculum, Set<String> occupations) {
-        Set<StateCurriculumOccupation> storedOccupations = stateCurriculum.getOccupations();
-        if(occupations != null && !occupations.isEmpty()) {
-            EntityUtil.bindClassifierCollection(storedOccupations, o -> EntityUtil.getCode(o.getOccupation()), occupations, occupation -> {
-                return new StateCurriculumOccupation(EntityUtil.validateClassifier(classifierRepository.getOne(occupation), MainClassCode.KUTSE));
-            });
-        } else {
-            stateCurriculum.setOccupations(new HashSet<>());
-        }
+        EntityUtil.bindEntityCollection(stateCurriculum.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), occupations, occupation -> {
+            return new StateCurriculumOccupation(EntityUtil.validateClassifier(classifierRepository.getOne(occupation), MainClassCode.KUTSE));
+        });
     }
 
     private void updateModules(StateCurriculum stateCurriculum, Set<StateCurriculumModuleDto> moduleDtos) {
-        Set<StateCurriculumModule> newModules = new HashSet<>();
-        moduleDtos.forEach(dto -> {
-            StateCurriculumModule module = dto.getId() == null ? new StateCurriculumModule() :
-                stateCurriculum.getModules().stream().filter(m -> m.getId().equals(dto.getId())).findFirst().get();
-            module = EntityUtil.bindToEntity(dto, module, classifierRepository, "outcome", "moduleOccupations");
-            StateCurriculumModuleOutcome outcome = module.getOutcome() != null
-                    ? module.getOutcome() : new StateCurriculumModuleOutcome();
-            outcome.setOutcomesEt(dto.getOutcomesEt());
-            outcome.setOutcomesEn(dto.getOutcomesEn());
-            module.setOutcome(outcome);
-            updateModuleOccupations(module, dto.getModuleOccupations());
-            newModules.add(module);
-        });
-        stateCurriculum.setModules(newModules);
+        EntityUtil.bindEntityCollection(stateCurriculum.getModules(), StateCurriculumModule::getId, moduleDtos, StateCurriculumModuleDto::getId, dto -> {
+            StateCurriculumModule module = new StateCurriculumModule();
+            updateModule(dto, module);
+            return module;
+        }, this::updateModule);
+    }
+
+    private void updateModule(StateCurriculumModuleDto dto, StateCurriculumModule module) {
+        module = EntityUtil.bindToEntity(dto, module, classifierRepository, "outcome", "moduleOccupations");
+        StateCurriculumModuleOutcome outcome = module.getOutcome();
+        outcome.setOutcomesEt(dto.getOutcomesEt());
+        outcome.setOutcomesEn(dto.getOutcomesEn());
+        updateModuleOccupations(module, dto.getModuleOccupations());
     }
 
     private void updateModuleOccupations(StateCurriculumModule module, Set<String> moduleOccupations) {
-        Set<StateCurriculumModuleOccupation> newSet = new HashSet<>();
+        EntityUtil.bindEntityCollection(module.getModuleOccupations(), o -> EntityUtil.getCode(o.getOccupation()), moduleOccupations, occupation -> {
+            Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupation),
+                    MainClassCode.KUTSE, MainClassCode.OSAKUTSE, MainClassCode.SPETSKUTSE);
 
-        if(moduleOccupations != null && !moduleOccupations.isEmpty()) {
-            // TODO use EntityUtil.bindClassifierCollection
-            Map<String, StateCurriculumModuleOccupation> occupations = StreamUtil.toMap(o -> EntityUtil.getCode(o.getOccupation()), module.getModuleOccupations());
-            for(String occupation : moduleOccupations) {
-                StateCurriculumModuleOccupation scmo = occupations.get(occupation);
-                if(scmo != null) {
-                    newSet.add(scmo);
-                } else {
-                  Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupation),
-                          MainClassCode.KUTSE, MainClassCode.OSAKUTSE, MainClassCode.SPETSKUTSE);
-
-                  newSet.add(new StateCurriculumModuleOccupation(c));
-                }
-            }
-        }
-        module.setModuleOccupations(newSet);
-    }
-
-    public StateCurriculum create(StateCurriculum stateCurriculum) {
-        return stateCurriculumRepository.save(stateCurriculum);
+            return new StateCurriculumModuleOccupation(c);
+        });
     }
 }

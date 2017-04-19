@@ -2,7 +2,6 @@ package ee.hitsa.ois.service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -31,6 +30,7 @@ import ee.hitsa.ois.repository.MessageRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 
 @Transactional
@@ -56,16 +56,14 @@ public class AutomaticMessageService {
 
     public void sendMessageToSchoolAdmins(MessageType type, School school, Object dataBean) {
         Role role = Role.ROLL_A;
-        List<Person> persons = userService.findAllValidSchoolUsersByRole(school, role)
-                .stream().map(User::getPerson).collect(Collectors.toList());
+        List<Person> persons = StreamUtil.toMappedList(User::getPerson, userService.findAllValidSchoolUsersByRole(school, role));
 
         Message message = sendMessageToPersons(type, school, persons, role, dataBean);
 
         if(message != null) {
-            List<String> receivers = persons.stream().map(Person::getEmail).collect(Collectors.toList());
+            List<String> receivers = StreamUtil.toMappedList(Person::getEmail, persons);
             mailService.sendMail(message.getSender().getEmail(), receivers, message.getSubject(), message.getContent());
         }
-
     }
 
     public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {
@@ -80,11 +78,11 @@ public class AutomaticMessageService {
     }
 
     public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean) {
-        List<Person> persons = student.getRepresentatives().stream().map(StudentRepresentative::getPerson).collect(Collectors.toList());
+        List<Person> persons = StreamUtil.toMappedList(StudentRepresentative::getPerson, student.getRepresentatives());
 
         Message message = sendMessageToPersons(type, student.getSchool(), persons, Role.ROLL_L, dataBean);
         if(message != null) {
-            List<String> receivers = persons.stream().map(Person::getEmail).collect(Collectors.toList());
+            List<String> receivers = StreamUtil.toMappedList(Person::getEmail, persons);
             mailService.sendMail(message.getSender().getEmail(), receivers, message.getSubject(), message.getContent());
         }
     }
@@ -99,12 +97,12 @@ public class AutomaticMessageService {
 
     private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Role role, Object dataBean) {
         Classifier status = classifierRepository.getOne(MessageStatus.TEATESTAATUS_U.name());
-        List<MessageReceiver> messageReceivers = persons.stream().map(person -> {
+        List<MessageReceiver> messageReceivers = StreamUtil.toMappedList(person -> {
             MessageReceiver messageReceiver = new MessageReceiver();
             messageReceiver.setPerson(person);
             messageReceiver.setStatus(status);
             return messageReceiver;
-        }).collect(Collectors.toList());
+        }, persons);
 
         Person automaticSender = personRepository.getOne(PersonUtil.AUTOMATIC_SENDER_ID);
         return sendTemplateMessage(type, school, automaticSender, messageReceivers, role, dataBean);

@@ -28,6 +28,7 @@ import ee.hitsa.ois.service.CurriculumService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
@@ -101,8 +102,7 @@ public class CurriculumController {
     //TODO: add tests!
     @GetMapping("/areasOfStudyByGroupOfStudy/{code}")
     public List<ClassifierSelection> getAreasOfStudyByGroupOfStudy(@NotNull @PathVariable("code") String code) {
-        return curriculumService.getAreasOfStudyByGroupOfStudy(code).stream().
-                map(c -> ClassifierSelection.of(c)).collect(Collectors.toList());
+        return StreamUtil.toMappedList(ClassifierSelection::of, curriculumService.getAreasOfStudyByGroupOfStudy(code));
     }
 
     @PostMapping("/{curriculumId:\\d+}/versions")
@@ -125,7 +125,6 @@ public class CurriculumController {
         curriculumService.deleteVersion(curriculumVersion);
     }
 
-
     /**
      * TODO: test
      */
@@ -143,8 +142,6 @@ public class CurriculumController {
         ehisSchools.addAll(curriculum.getJointPartners().stream().filter(it -> it.getEhisSchool() != null)
                 .map(it -> EntityUtil.getCode(it.getEhisSchool())).collect(Collectors.toList()));
 
-        if (!ehisSchools.contains(EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool()))) {
-            throw new AssertionFailedException("EHIS school mismatch");
-        }
+        AssertionFailedException.assertTrue(ehisSchools.contains(EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool())), "EHIS school mismatch");
     }
 }

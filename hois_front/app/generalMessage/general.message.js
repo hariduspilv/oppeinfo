@@ -27,6 +27,8 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
     var id = $route.current.params.id;
     var baseUrl = '/generalmessages';
 
+    $scope.formState = {minDate: new Date()};
+
     function afterLoad() {
       DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
       Classifier.setSelectedCodes($scope.roleDefs, $scope.record.targets || []);

@@ -3,7 +3,7 @@
     <form ng-submit="loadData()" layout="column">
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
-            <label>{{'reception.contest.code' | translate}}</label>
+            <label>{{'reception.admission.code' | translate}}</label>
             <hois-select ng-model="criteria.code" values="saisAdmissionCodes" value-property="nameEt"></hois-select>
           </md-input-container>
       </div>
@@ -46,10 +46,10 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
         <tr md-row>
-          <th md-column md-order-by="code">{{'reception.contest.code' | translate}}</th>
+          <th md-column md-order-by="code">{{'reception.admission.code' | translate}}</th>
           <th md-column md-order-by="curriculumVersion.curriculum.{{currentLanguageNameField()}}">{{'student.curriculum' | translate}}</th>
-          <th md-column md-order-by="places">{{'reception.contest.places' | translate}}</th>
-          <th md-column md-order-by="language.{{currentLanguageNameField()}}">{{'reception.contest.language' | translate}}</th>
+          <th md-column md-order-by="places">{{'reception.admission.places' | translate}}</th>
+          <th md-column md-order-by="language.{{currentLanguageNameField()}}">{{'reception.admission.language' | translate}}</th>
           <th md-column md-order-by="periodStart">{{'studyYear.startDate' | translate}}</th>
           <th md-column md-order-by="periodEnd">{{'studyYear.endDate' | translate}}</th>
           <th md-column md-order-by="studyForm.{{currentLanguageNameField()}}">{{'student.studyForm' | translate}}</th>

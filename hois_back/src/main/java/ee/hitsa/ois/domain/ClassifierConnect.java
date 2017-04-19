@@ -94,6 +94,7 @@ class ClassifierConnectPk implements Serializable {
             return true;
         if (obj == null)
             return false;
+        // TODO does not work with hibernate proxy
         if (getClass() != obj.getClass())
             return false;
         ClassifierConnectPk other = (ClassifierConnectPk) obj;

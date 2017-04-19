@@ -52,7 +52,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container class="md-block" flex="25" flex-sm="100" flex-xs="100">
             <label>{{'teacher.occupation.label' | translate}}</label>
-            <md-select ng-model="teacher.teacherOccupation" required>
+            <md-select ng-model="teacher.teacherOccupation.id" required>
               <md-option></md-option>
               <md-option ng-repeat="occupation in occupations" ng-value="occupation.id">
                 {{currentLanguage()==='en' ? (occupation.occupationEn || occupation.occupationEt) :
@@ -69,11 +69,22 @@
             <input ng-model="teacher.email" type="email" required>
           </md-input-container>
         </div>
-        <div layout="row">
-          <md-input-container flex="20" flex-sm="100"  flex-offset-xs="0" flex-offset-sm="0">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="25" flex-sm="100"  flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'teacher.scheduleLoad' | translate}}</label>
             <input ng-model="teacher.scheduleLoad" type="number" required>
           </md-input-container>
+          <!-- todo: alert or check for need for alert -->
+          <md-radio-group ng-model="teacher.isStudyPeriodScheduleLoad" required layout="row" layout-sm="column"
+                          layout-xs="column" flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0"
+                          flex-offset-sm="0" class="align-center">
+            <md-radio-button ng-value="true">
+              {{'teacher.studyPeriodLoad' | translate}}
+            </md-radio-button>
+            <md-radio-button ng-value="false">
+              {{'teacher.studyYearLoad' | translate}}
+            </md-radio-button>
+          </md-radio-group>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-checkbox ng-model="teacher.isVocational" ng-required="!teacher.isVocational && !teacher.isHigher"

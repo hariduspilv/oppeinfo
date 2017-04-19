@@ -10,9 +10,14 @@
           <input ng-model="record.code" name="code" ng-readonly="record.id" type="text" required md-maxlength="100">
         </md-input-container>
 
-        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'studentGroup.course' | translate}}</label>
           <input ng-model="record.course" name="course" ng-readonly="record.id" type="number" required min="0">
+        </md-input-container>
+
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'studentGroup.places' | translate}}</label>
+          <input ng-model="record.places" name="places" ng-readonly="record.id" type="number" min="0">
         </md-input-container>
       </div>
 
@@ -23,7 +28,7 @@
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{formState.curriculumVersionLabel | translate}}</label>
-          <hois-select ng-model="record.curriculumVersion" name="curriculumVersion" ng-disabled="record.id" values="formState.curriculumVersions"></hois-select>
+          <hois-select ng-model="record.curriculumVersion" name="curriculumVersion" ng-disabled="record.id" values="formState.curriculumVersions" ng-change="curriculumVersionChanged()"></hois-select>
         </md-input-container>
       </div>
 
@@ -68,7 +73,9 @@
         </thead>
         <tbody md-body>
           <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{::row.fullname}}</td>
+            <td md-cell>
+              <md-button ng-disabled="!record.id" md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</md-button>
+            </td>
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
             <td md-cell>

@@ -8,7 +8,6 @@ import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.Predicate;
@@ -38,8 +37,10 @@ import ee.hitsa.ois.repository.StudentRepresentativeApplicationRepository;
 import ee.hitsa.ois.repository.StudentRepresentativeRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SearchUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -160,7 +161,7 @@ public class StudentRepresentativeService {
         School school = representative.getStudent().getSchool();
         Long schoolId = EntityUtil.getId(school);
         // if there is no user for given person with role of parent/representative for school of student, create it
-        if(!person.getUsers().stream().anyMatch(u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && Role.ROLL_L.name().equals(EntityUtil.getCode(u.getRole())))) {
+        if(!person.getUsers().stream().anyMatch(u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && ClassifierUtil.equals(Role.ROLL_L, u.getRole()))) {
             userService.createUser(person, Role.ROLL_L, school);
         }
         application.setStatus(classifierRepository.getOne(AVALDUS_ESINDAJA_STAATUS_K.name()));
@@ -195,9 +196,7 @@ public class StudentRepresentativeService {
             // FIXME status of student?
             return cb.equal(root.get("person").get("idcode"), form.getStudentIdcode());
         });
-        if(students.isEmpty()) {
-            throw new AssertionFailedException("Student representative application: student not found");
-        }
+        AssertionFailedException.assertTrue(!students.isEmpty(), "Student representative application: student not found");
 
         if(StudentUtil.isAdult(students.get(0))) {
             throw new ValidationFailedException("representative.application.adult");
@@ -212,23 +211,25 @@ public class StudentRepresentativeService {
         applications(person, students, form);
 
         // send message to school administrative workers about new application
-        Set<School> schools = students.stream().map(Student::getSchool).collect(Collectors.toSet());
+        Set<School> schools = StreamUtil.toMappedSet(Student::getSchool, students);
         StudentRepresentativeApplicationCreated data = new StudentRepresentativeApplicationCreated();
-        schools.forEach(school -> automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_OPPURI_ANDMED, school, data));
+        for(School school : schools) {
+            automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_OPPURI_ANDMED, school, data);
+        }
     }
 
     private void applications(Person person, List<Student> students, StudentRepresentativeApplicationForm form) {
         Classifier status = classifierRepository.getOne(AVALDUS_ESINDAJA_STAATUS_E.name());
         Classifier relation = classifierRepository.getOne(form.getRelation());
 
-        students.forEach(student -> {
+        for(Student student : students) {
             StudentRepresentativeApplication application = new StudentRepresentativeApplication();
             application.setStudent(student);
             application.setPerson(person);
             application.setStatus(status);
             application.setRelation(relation);
             studentRepresentativeApplicationRepository.save(application);
-        });
+        }
     }
 
     private void representativeCreatedMessage(StudentRepresentative representative) {
@@ -239,8 +240,6 @@ public class StudentRepresentativeService {
     }
 
     private static void assertApplicationIsRequested(StudentRepresentativeApplication application) {
-        if(!AVALDUS_ESINDAJA_STAATUS_E.name().equals(EntityUtil.getCode(application.getStatus()))) {
-            throw new AssertionFailedException("Invalid student representative application status");
-        }
+        AssertionFailedException.assertTrue(ClassifierUtil.equals(AVALDUS_ESINDAJA_STAATUS_E, application.getStatus()), "Invalid student representative application status");
     }
 }

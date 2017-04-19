@@ -12,7 +12,7 @@ angular.module('hitsaOis')
     var clMapper = Classifier.valuemapper({object: 'TEEMAOIGUS'});
 
     function loadDefaults(action) {
-      QueryUtils.endpoint('/users/rolesDefaults').get().$promise.then(function (response) {
+      QueryUtils.endpoint('/users/rolesDefaults').search().$promise.then(function (response) {
         $scope.userRoleDefaults = response;
         if (action) {
           action(response);

@@ -10,11 +10,11 @@ public interface UserProjection extends Serializable {
     Long getId();
 
     @Value("#{target.role.nameEt} #{target.school != null ? target.school.code : ''}")
-    String getRoleEt();
+    String getNameEt();
 
     @Value("#{target.role.nameEn} #{target.school != null ? target.school.code : ''}")
-    String getRoleEn();
+    String getNameEn();
 
     @Value("#{target.role.nameRu} #{target.school != null ? target.school.code : ''}")
-    String getRoleRu();
+    String getNameRu();
 }

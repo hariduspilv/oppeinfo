@@ -21,7 +21,7 @@
                 md-selected-item="receiver"
                 md-search-text="queryText"
                 md-items="item in querySearch(queryText)"
-                md-item-text="item.name"
+                md-item-text="item.fullname"
                 md-min-length="3"
                 md-floating-label="{{'message.receiver' | translate}}"
                 ng-model="queryText"
@@ -30,7 +30,7 @@
                 md-selected-item-change="addReceiver(receiver)"
                 >
                 <md-item-template>
-                    <span md-highlight-text="queryText" md-highlight-flags="^i">{{item.name}}</span>
+                    <span md-highlight-text="queryText" md-highlight-flags="^i">{{item.fullname}}</span>
                 </md-item-template>
                 <md-not-found>
                     {{'main.messages.error.notFound' | translate}}
@@ -74,19 +74,29 @@
                 <thead md-head>
                     <tr md-row>
                         <th md-column>{{'message.receiver' | translate}}</th>
-                        <th md-column>{{'student.idcode' | translate}}</th>
-                        <th md-column>{{'message.targetGroup' | translate}}</th>
+                        <th md-column ng-if="auth.isAdmin()">{{'student.idcode' | translate}}</th>
+                        <th md-column ng-if="auth.isAdmin()">{{'message.targetGroup' | translate}}</th>
+                        <th md-column ng-if="auth.isTeacher()">{{'message.curriculum' | translate}}</th>
+                        <th md-column ng-if="auth.isTeacher()">{{'message.studentGroup' | translate}}</th>
                         <th md-column></th>
                     </tr>
                 </thead>
                 <tbody md-body>
                 <tr md-row ng-repeat="receiver in receivers" ng-class-odd="'odd'" ng-class-even="'even'">
                     <td md-cell>{{receiver.fullname}}</td>
-                    <td md-cell>{{receiver.idcode}}</td>
-                    <td md-cell>
+                    <td md-cell ng-if="auth.isAdmin()">
+                        <span ng-if="receiver.role.length === 1 && receiver.role[0] === 'ROLL_T'">{{receiver.idcode}}</span>
+                    </td>
+                    <td md-cell ng-if="auth.isAdmin()">
                         <p ng-repeat="role in receiver.role">
                             <hois-classifier-value ng-model="role" main-classifier-code="ROLL"></hois-classifier-value>
                         </p>
+                    </td>
+                    <td md-cell ng-if="auth.isTeacher()">
+                        {{currentLanguageNameField(receiver.curriculum)}}
+                    </td>
+                    <td md-cell ng-if="auth.isTeacher()">
+                        {{currentLanguageNameField(receiver.studentGroup)}}
                     </td>
                     <td md-cell><md-button class="remove nomargin" ng-click="removeReceiver(receiver)">&times;</md-button></td>
                 </tr>

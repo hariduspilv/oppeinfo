@@ -135,7 +135,7 @@ public class SchoolDepartmentService {
         qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
 
         List<?> data = qb.select("sd.id, sd.version, sd.code, sd.name_et, sd.name_en, sd.valid_from, sd.valid_thru, sd.parent_school_department_id", em).getResultList();
-        return data.stream().map(r -> {
+        return StreamUtil.toMappedList(r -> {
             SchoolDepartmentDto dto = new SchoolDepartmentDto();
             dto.setId(resultAsLong(r, 0));
             dto.setVersion(resultAsLong(r, 1));
@@ -146,7 +146,7 @@ public class SchoolDepartmentService {
             dto.setValidThru(resultAsLocalDate(r, 6));
             dto.setParentSchoolDepartment(resultAsLong(r, 7));
             return dto;
-        }).collect(Collectors.toList());
+        }, data);
     }
 
     private static SchoolDepartmentDto createTreeItem(SchoolDepartmentDto sd, Map<Long, List<SchoolDepartmentDto>> children, Set<Long> filtered) {

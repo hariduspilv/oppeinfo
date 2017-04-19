@@ -7,7 +7,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -26,9 +25,11 @@ import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
+import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodTeacherForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
 
@@ -64,13 +65,13 @@ public class SubjectStudyPeriodService {
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM, pageable);
         if(StringUtils.hasText(criteria.getTeachersFullname())) {
-            qb.optionalCriteria("exists"
+            qb.requiredCriteria("exists"
                     + "(select sspt.id "
                     + "from subject_study_period_teacher sspt "
                     + "inner join teacher t on t.id = sspt.teacher_id "
                     + "inner join person p on p.id = t.person_id "
-                    + "where p.firstname || ' ' || p.lastname ilike :teachersName "
-                    + "and sspt.subject_study_period_id = ssp.id)", "teachersName", "%" + criteria.getTeachersFullname() + "%");
+                    + "where upper(p.firstname || ' ' || p.lastname) like :teachersName "
+                    + "and sspt.subject_study_period_id = ssp.id)", "teachersName", SearchUtil.toContains(criteria.getTeachersFullname()));
         }
         qb.optionalContains(Arrays.asList("s.name_et", "s.name_en", "s.code", "s.name_et || '/' || s.code", "s.name_en || '/' || s.code"), "subjectNameAndCode", criteria.getSubjectNameAndCode());
         qb.optionalCriteria("sp.id in (:studyPeriods)", "studyPeriods", criteria.getStudyPeriods());
@@ -93,27 +94,25 @@ public class SubjectStudyPeriodService {
             dto.setSubject(subject);
             //TODO: set number of declared students
             return dto;
-          }
-        );
+        });
     }
 
     public SubjectStudyPeriod updateSubjectStudyPeriodTeachers(SubjectStudyPeriod subjectStudyPeriod, 
-            SubjectStudyPeriodForm form) {   
-      Map<Long, SubjectStudyPeriodTeacher> oldTeachersMap = StreamUtil.toMap
-              (t -> EntityUtil.getId(t.getTeacher()), subjectStudyPeriod.getTeachers());
-      List<SubjectStudyPeriodTeacher> newTeachers = new ArrayList<>();
-        form.getTeachers().forEach(t -> {
+            SubjectStudyPeriodForm form) {
+
+        Map<Long, SubjectStudyPeriodTeacher> oldTeachersMap = StreamUtil.toMap
+                (t -> EntityUtil.getId(t.getTeacher()), subjectStudyPeriod.getTeachers());
+        List<SubjectStudyPeriodTeacher> newTeachers = new ArrayList<>();
+        for(SubjectStudyPeriodTeacherForm t : form.getTeachers()) {
             SubjectStudyPeriodTeacher teacher = oldTeachersMap.get(t.getTeacherId());
-            if(teacher != null) {
-                teacher.setIsSignatory(t.getIsSignatory());
-            } else {
+            if(teacher == null) {
                 teacher = new SubjectStudyPeriodTeacher();
-                teacher.setIsSignatory(t.getIsSignatory());
                 teacher.setSubjectStudyPeriod(subjectStudyPeriod);
                 teacher.setTeacher(teacherRepository.findOne(t.getTeacherId()));
             }
+            teacher.setIsSignatory(t.getIsSignatory());
             newTeachers.add(teacher);
-        });
+        }
         subjectStudyPeriod.setTeachers(newTeachers);
         return subjectStudyPeriodRepository.save(subjectStudyPeriod);
     }

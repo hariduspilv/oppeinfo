@@ -10,7 +10,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
@@ -37,6 +36,7 @@ import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
@@ -80,10 +80,10 @@ public class AutocompleteService {
         qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
 
         List<?> data = qb.select("b.id, b.name", em).getResultList();
-        return data.stream().map(r -> {
+        return StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
-        }).collect(Collectors.toList());
+        }, data);
     }
 
     public List<Classifier> classifierForAutocomplete(ClassifierSearchCommand classifierSearchCommand) {
@@ -103,10 +103,10 @@ public class AutocompleteService {
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
         List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value", em).getResultList();
-        return data.stream().map(r -> new ClassifierSelection(resultAsString(r, 0),
+        return StreamUtil.toMappedList(r -> new ClassifierSelection(resultAsString(r, 0),
                     resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
                     resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
-                    resultAsString(r, 7), resultAsString(r, 8))).collect(Collectors.toList());
+                    resultAsString(r, 7), resultAsString(r, 8)), data);
     }
 
     public List<AutocompleteResult> curriculums(Long schoolId, AutocompleteCommand term) {
@@ -116,7 +116,7 @@ public class AutocompleteService {
         qb.optionalContains(Language.EN.equals(term.getLang()) ? "c.name_en" : "c.name_et", "name", term.getName());
 
         List<?> data = qb.select("c.id, c.name_et, c.name_en", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
-        return data.stream().map(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2))).collect(Collectors.toList());
+        return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
     }
 
     public List<CurriculumVersionResult> curriculumVersions(Long schoolId, Boolean valid, Boolean sais) {
@@ -128,7 +128,7 @@ public class AutocompleteService {
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         if(Boolean.TRUE.equals(valid)) {
             // only valid ones
-            qb.requiredCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K.name());
+            qb.requiredCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K);
             qb.requiredCriteria("c.valid_from <= :currentDate and (c.valid_thru is null or c.valid_thru >= :currentDate)", "currentDate", LocalDate.now());
         }
         if(Boolean.TRUE.equals(sais)) {
@@ -136,11 +136,11 @@ public class AutocompleteService {
         }
 
         List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, sf.study_form_code", em).getResultList();
-        return data.stream().map(r -> {
+        return StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 1);
             return new CurriculumVersionResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)),
                     CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsLong(r, 4), resultAsString(r, 5));
-        }).collect(Collectors.toList());
+        }, data);
     }
 
     public List<AutocompleteResult> directiveCoordinators(Long schoolId) {
@@ -149,10 +149,10 @@ public class AutocompleteService {
         qb.requiredCriteria("dc.school_id = :schoolId", "schoolId", schoolId);
 
         List<?> data = qb.select("dc.id, dc.name", em).getResultList();
-        return data.stream().map(r -> {
+        return StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
-        }).collect(Collectors.toList());
+        }, data);
     }
 
     public Person person(PersonLookupCommand lookup) {
@@ -179,12 +179,12 @@ public class AutocompleteService {
         qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
 
         List<?> data = qb.select("sd.id, sd.name_et, sd.name_en, sd.school_id, s.code", em).getResultList();
-        return data.stream().map(r -> new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4))).collect(Collectors.toList());
+        return StreamUtil.toMappedList(r -> new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4)), data);
     }
 
     public List<StudentGroupResult> studentGroups(Long schoolId) {
         // StudentGroupResult includes attributes for filtering in frontend
-        return studentGroupRepository.findAllBySchool_id(schoolId).stream().map(StudentGroupResult::of).collect(Collectors.toList());
+        return StreamUtil.toMappedList(StudentGroupResult::of, studentGroupRepository.findAllBySchool_id(schoolId));
     }
 
     public List<AutocompleteResult> students(Long schoolId, AutocompleteCommand lookup) {
@@ -195,10 +195,10 @@ public class AutocompleteService {
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", lookup.getName());
 
         List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
-        return data.stream().map(r -> {
+        return StreamUtil.toMappedList(r -> {
             String name = PersonUtil.fullnameAndIdcode(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
-        }).collect(Collectors.toList());
+        }, data);
     }
 
     public Page<SubjectSearchDto> subjects(Long schoolId, AutocompleteCommand command) {
@@ -225,14 +225,14 @@ public class AutocompleteService {
     }
 
     public List<AutocompleteResult> studyPeriods(Long schoolId) {
-        return studyPeriodRepository.findAll((root, query, cb) -> {
+        return StreamUtil.toMappedList(AutocompleteResult::of, studyPeriodRepository.findAll((root, query, cb) -> {
             return cb.equal(root.get("studyYear").get("school").get("id"), schoolId);
-        }).stream().map(AutocompleteResult::of).collect(Collectors.toList());
+        }));
     }
 
     public List<AutocompleteResult> saisAdmissionCodes(Long schoolId) {
-        return saisAdmissionRepository.findAllDistinctCodeByCurriculumVersionCurriculumSchoolId(schoolId)
-                .stream().map(AutocompleteResult::of).collect(Collectors.toList());
+        return StreamUtil.toMappedList(AutocompleteResult::of,
+                saisAdmissionRepository.findAllDistinctCodeByCurriculumVersionCurriculumSchoolId(schoolId));
     }
 
     private static PageRequest sortAndLimit(String... sortFields) {

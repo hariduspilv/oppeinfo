@@ -1,6 +1,6 @@
 package ee.hitsa.ois.service;
 
-import java.util.Collections;
+import java.util.List;
 
 import javax.transaction.Transactional;
 
@@ -10,12 +10,12 @@ import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.junit4.SpringRunner;
 
-import ee.hitsa.ois.web.commandobject.UsersSeachCommand;
-import ee.hitsa.ois.web.dto.UsersSearchDto;
+import ee.hitsa.ois.TestConfiguration;
+import ee.hitsa.ois.service.security.HoisUserDetailsService;
+import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
+import ee.hitsa.ois.web.dto.MessageReceiverDto;
 
 /**
  * Different queries are run depending on user's role.
@@ -28,16 +28,13 @@ public class MessageServiceTest {
 
     @Autowired
     private MessageService messageService;
+    @Autowired
+    private HoisUserDetailsService hoisUserDetailsService;
 
     @Test
     public void searchAllUsers() {
-        Page<UsersSearchDto> page = messageService.searchAllUsers(new UsersSeachCommand(), new PageRequest(0, 10));
+        List<MessageReceiverDto> page = messageService.searchAllUsers(hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID), new UsersSearchCommand());
         Assert.assertNotNull(page);
-    }
-
-    @Test
-    public void getRepresentativePersonIds() {
-        messageService.getRepresentativePersonIds(Collections.singleton(Long.valueOf(10)));
     }
 
     /**
@@ -48,7 +45,7 @@ public class MessageServiceTest {
 //    public void searchParentsTeachers() {
 ////        HoisUserDetails user = new HoisUserDetails(null, null);
 //        User userr = userRepository.findOne(Long.valueOf(1));
-//        Page<UsersSearchDto> page = messageService.searchParentsTeachers(null, new UsersSeachCommand(), new PageRequest(0, 10));
+//        Page<UsersSearchDto> page = messageService.searchParentsTeachers(null, new UsersSearchCommand(), new PageRequest(0, 10));
 //        Assert.assertNotNull(page);
 //    }
 }

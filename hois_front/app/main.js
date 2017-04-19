@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav, $mdMedia, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService) {
+  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService) {
 
     var self = this;
 
@@ -49,13 +49,15 @@ angular.module('hitsaOis')
       return Menu.isPageSelected(page);
     }
 	
+	
+	/**************************************/
 	$scope.isLeftOpen = function () {
 		return $mdSidenav('left').isOpen();
 	} 
 
 	$scope.$mdMedia = $mdMedia;
 
-/**************************************/
+
 
 	$scope.toggleLeft = buildToggler('left');
 	$scope.lockLeft = true;
@@ -158,13 +160,17 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
     $rootScope.currentLanguageNameField = $scope.currentLanguageNameField;
 
     $scope.leftSideNavToggle = function() {
-      //$mdSidenav('left').isLockedOpen=true;//open();
+      //$mdSidenav('left').open();
+	  //$mdSidenav('left').isLockedOpen=true;//open();
 	  $mdSidenav('left').toggle();
     };
 
     $scope.leftSideNavSelect = function(path) {
       $location.path( path );
-      //if(!$mdSidenav('left').isLockedOpen()) {
+      /*if(!$mdSidenav('left').isLockedOpen()) {
+        $mdSidenav('left').close();
+      }*/
+	   //if(!$mdSidenav('left').isLockedOpen()) {
         $mdSidenav('left').close();
       //}
     };
@@ -269,17 +275,11 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
       var backUrl = oldUrl.substring(oldUrl.indexOf('#'), oldUrl.length);
       history.push(backUrl);
     }
-    function popHistoryState() {
-      if (history.length > 0) {
-        return history.pop();
-      }
-      return null;
-    }
     function goBack(defaultUrl) {
-      var backUrlFromHistory = popHistoryState();
-      var backUrl = backUrlFromHistory ? backUrlFromHistory : defaultUrl;
+      var backUrlFromHistory = history.pop();
+      var backUrl = backUrlFromHistory || defaultUrl;
       isBack = true;
-      $window.location.href = backUrl ? backUrl : defaultUrl;
+      $window.location.href = backUrl;
     }
 
     $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {

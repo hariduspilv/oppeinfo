@@ -8,13 +8,13 @@
           </md-input-container>
           <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'curriculum.studyLevel' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code" show-only-values="studyLevelCodes" ></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code"></hois-classifier-select>
           </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column"  ng-if="auth.school">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'curriculum.studyLevel' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code" show-only-values="studyLevelCodes" ></hois-classifier-select>
+            <hois-classifier-select ng-model="criteria.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code" show-only-values="studyLevelOptions" ></hois-classifier-select>
           </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
@@ -37,7 +37,30 @@
               <input ng-model="criteria.merCode" type="text">
           </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column">
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.higher && school.vocational">
+            <md-input-container flex="20" flex-sm="100" flex-xs="100">
+                <label>{{'curriculum.areaOfStudy' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD"></hois-classifier-select>
+            </md-input-container>
+
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'curriculum.fieldOfStudy' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" watch-model="criteria.iscedVald"
+                                    search-from-connect connect-main-classifier-code="ISCED_VALD" multiple></hois-classifier-select>
+            </md-input-container>
+
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'curriculum.group' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.iscedClassCode" model-value-attr="code" main-classifier-code="ISCED_RYHM" watch-model="criteria.iscedSuun"
+                                    search-from-connect connect-main-classifier-code="ISCED_SUUN" multiple></hois-classifier-select>
+            </md-input-container>
+
+            <md-input-container  flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'curriculum.curriculumGroup' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP" multiple></hois-classifier-select>
+            </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.vocational && !school.higher">
             <md-input-container flex="30" flex-sm="100" flex-xs="100">
                 <label>{{'curriculum.areaOfStudy' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD"></hois-classifier-select>
@@ -46,14 +69,31 @@
             <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.fieldOfStudy' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" watch-model="criteria.iscedVald"
-                                    search-from-connect connect-main-classifier-code="ISCED_VALD"></hois-classifier-select>
+                                    search-from-connect connect-main-classifier-code="ISCED_VALD" multiple></hois-classifier-select>
             </md-input-container>
 
             <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.group' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.iscedClassCode" model-value-attr="code" main-classifier-code="ISCED_RYHM" watch-model="criteria.iscedSuun"
-                                    search-from-connect connect-main-classifier-code="ISCED_SUUN"></hois-classifier-select>
+                                    search-from-connect connect-main-classifier-code="ISCED_SUUN" multiple></hois-classifier-select>
             </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.higher && !school.vocational">
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+                <label>{{'curriculum.areaOfStudy' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.iscedVald" model-value-attr="code" main-classifier-code="ISCED_VALD"></hois-classifier-select>
+            </md-input-container>
+
+            <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'curriculum.fieldOfStudy' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.iscedSuun" model-value-attr="code" main-classifier-code="ISCED_SUUN" watch-model="criteria.iscedVald"
+                                    search-from-connect connect-main-classifier-code="ISCED_VALD" multiple></hois-classifier-select>
+            </md-input-container>
+
+            <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'curriculum.curriculumGroup' | translate}}</label>
+                <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP" multiple></hois-classifier-select>
+         </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
           <md-input-container flex="100" flex-sm="100" flex-xs="100">
@@ -108,16 +148,6 @@
               <hois-school-department-select ng-model="criteria.department" multiple></hois-school-department-select>
           </md-input-container>
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin" ng-if="!auth.school">
-          <md-input-container flex="100" flex-sm="100" flex-xs="100">
-              <label>{{'school.department.department' | translate}}</label>
-              <md-select ng-model="criteria.department" multiple>
-                    <md-option ng-repeat="option in schoolDepartments | orderBy: currentLanguageNameField()" ng-value="option.id">
-                        {{currentLanguageNameField(option)}}
-                    </md-option>
-              </md-select>
-          </md-input-container>
-      </div>
 	  <div layout="row" layout-sm="column" layout-xs="column"  class="top-margin">
             <md-checkbox
                   ng-model="criteria.isJoint"
@@ -139,11 +169,11 @@
     <tr md-row>
         <th md-column md-order-by="school.{{currentLanguageNameField()}}" ng-if="!auth.school">{{'school.label' | translate}}</th>
         <th md-column md-order-by="{{currentLanguageNameField()}}">{{'curriculum.name' | translate}}</th>
-        <th md-column md-order-by="origStudyLevel">{{'curriculum.studyLevel' | translate}}</th>
+        <th md-column md-order-by="origStudyLevel.{{currentLanguageNameField()}}">{{'curriculum.studyLevel' | translate}}</th>
         <th md-column md-order-by="credits">{{'curriculum.creditsEapEkap' | translate}}</th>
         <th md-column md-order-by="validFrom">{{'stateCurriculum.validFrom' | translate}}</th>
         <th md-column md-order-by="validThru">{{'stateCurriculum.validThru' | translate}}</th>
-        <th md-column md-order-by="status">{{'stateCurriculum.status' | translate}}</th>
+        <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'stateCurriculum.status' | translate}}</th>
         <th></th>
     </tr>
     </thead>

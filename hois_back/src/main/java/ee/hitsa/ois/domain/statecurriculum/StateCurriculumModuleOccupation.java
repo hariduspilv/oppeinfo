@@ -44,6 +44,7 @@ public class StateCurriculumModuleOccupation extends BaseEntityWithId {
 			return true;
 		if (obj == null)
 			return false;
+        // TODO does not work with hibernate proxy
 		if (getClass() != obj.getClass())
 			return false;
 		StateCurriculumModuleOccupation other = (StateCurriculumModuleOccupation) obj;

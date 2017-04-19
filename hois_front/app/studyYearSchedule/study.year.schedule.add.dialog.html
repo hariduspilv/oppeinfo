@@ -1,0 +1,43 @@
+<md-dialog aria-label="module add dialog" flex="30" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"studyYearSchedule.studentGroup" | translate}} {{studentGroup.code}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+          <span flex></span>
+          <h2>{{week}} {{"studyYearSchedule.week" | translate}}: 17.04.2017 - 23.04.2017</h2>
+
+          <md-input-container>
+            <label>{{'studyYearSchedule.studyType' | translate}}</label>
+                <hois-select ng-model="data.legend" values="legends" required></hois-select>
+          </md-input-container>
+          <!-- TODO: proper integer validation -->
+          <md-input-container  flex>
+            <label>{{'studyYearSchedule.durationInWeeks' | translate}}</label>
+            <input type="number" ng-model="data.weeks" min="1" required name="weeks" step="1" pattern="^\d+$">
+            <div ng-messages="dialogForm.weeks.$error" ng-show="dialogForm.weeks.$dirty">
+                <div ng-message="min">
+                    {{'studyYearSchedule.error.minWeeks' | translate}}
+                </div>
+                <div ng-message="pattern">
+                    {{'stateCurriculum.enter.credits.integer' | translate}}
+                </div>
+            </div>
+          </md-input-container>
+        <span flex></span>
+      </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

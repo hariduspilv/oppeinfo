@@ -26,7 +26,7 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class SubjectStudyPeriodControllerTest {
     
-    private static final String BASE_URL = "/subjectStudyPeriod";
+    private static final String BASE_URL = "/subjectStudyPeriods";
     
     @Autowired
     private TestRestTemplate restTemplate;

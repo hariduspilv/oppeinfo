@@ -39,6 +39,7 @@ public class ClassifierController {
      */
     @PostMapping("")
     public Classifier create(@Valid @RequestBody Classifier classifier) {
+        // FIXME: add security constraints
         return classifierService.save(classifier);
     }
 
@@ -47,6 +48,7 @@ public class ClassifierController {
      */
     @PutMapping("/{code}")
     public Classifier update(@WithEntity("code") Classifier classifier, @Valid @RequestBody Classifier newClassifier) {
+        // FIXME: add security constraints
         EntityUtil.bindToEntity(newClassifier, classifier);
         return classifierService.save(classifier);
     }
@@ -64,6 +66,7 @@ public class ClassifierController {
      */
     @GetMapping("")
     public Page<ClassifierSelection> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
+        // FIXME: add security constraints
         return classifierService.search(classifierSearchCommand, pageable);
     }
 
@@ -83,12 +86,13 @@ public class ClassifierController {
      */
     @DeleteMapping("/{code}")
     public boolean delete(@PathVariable("code") String code) {
+        // FIXME: add security constraints
         classifierService.delete(code);
         return true;
     }
 
     @GetMapping("/connections/{code}")
-    public List<Classifier> getPossibleConnections(@PathVariable("code") String code){
+    public List<Classifier> getPossibleConnections(@PathVariable("code") String code) {
         return classifierService.getPossibleConnections(code);
     }
 
@@ -98,7 +102,9 @@ public class ClassifierController {
     }
 
     @GetMapping("/parents/{parentsMainClassifierCode}/{code}")
-    public List<Classifier> getParentsByMainClassifier(@PathVariable("parentsMainClassifierCode") String parentsMainClassifierCode, @PathVariable("code") String code) {
+    public List<Classifier> getParentsByMainClassifier(
+            @PathVariable("parentsMainClassifierCode") String parentsMainClassifierCode,
+            @PathVariable("code") String code) {
         return classifierService.getParentsByMainClassifier(code, parentsMainClassifierCode);
     }
 

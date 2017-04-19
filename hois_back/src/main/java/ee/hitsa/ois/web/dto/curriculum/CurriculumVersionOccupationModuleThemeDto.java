@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.dto.curriculum;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -12,6 +11,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
@@ -51,21 +51,11 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         CurriculumVersionOccupationModuleThemeDto dto = EntityUtil.bindToDto(theme, new CurriculumVersionOccupationModuleThemeDto(),
                 "capacities", "outcomes");
 
-        if (theme.getCapacities() != null) {
-            Set<CurriculumVersionOccupationModuleThemeCapacityDto> capacities = theme.getCapacities().stream().
-                    map(c -> CurriculumVersionOccupationModuleThemeCapacityDto.of(c)).collect(Collectors.toSet());
-            dto.setCapacities(capacities);
-        }
-
-        if (theme.getOutcomes() != null) {
-            Set<CurriculumVersionOccupationModuleOutcomeDto> outcomes = theme.getOutcomes().stream().
-                    map(o -> CurriculumVersionOccupationModuleOutcomeDto.of(o)).collect(Collectors.toSet());
-            dto.setOutcomes(outcomes);
-        }
+        dto.setCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeCapacityDto::of, theme.getCapacities()));
+        dto.setOutcomes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleOutcomeDto::of, theme.getOutcomes()));
 
         return dto;
     }
-
 
     public Long getId() {
         return id;
@@ -198,5 +188,4 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
     public void setGrade5Description(String grade5Description) {
         this.grade5Description = grade5Description;
     }
-
 }

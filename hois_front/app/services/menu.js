@@ -84,6 +84,10 @@ angular.module('hitsaOis')
         {
           name: 'main.menu.teachers.search',
           url: "/teachers?_menu"
+        },
+        {
+          name: 'main.menu.subjectStudyPeriods.search',
+          url: "/subjectStudyPeriods?_menu"
         }]
     });
 
@@ -170,6 +174,14 @@ angular.module('hitsaOis')
           name: 'main.menu.study.notifications',
           url: "/messages/received?_menu"
         },
+        {
+          name: 'main.menu.studyYearSchedule.legend',
+          url: "/studyYearScheduleLegend"
+        },        
+        {
+          name: 'main.menu.studyYearSchedule.edit',
+          url: "/studyYearSchedule"
+        }
       ]
     });
 
@@ -187,6 +199,18 @@ angular.module('hitsaOis')
           name: 'main.menu.reception.saisApplicationSearch',
           id: 'receptionSaisApplicationSearch',
           url: "/reception/saisApplication/search?_menu"
+        }
+      ]
+    });
+
+    sections.push({
+      name: 'main.menu.timetable.label',
+      type: 'toggle',
+      pages: [
+        {
+          name: 'main.menu.timetable.lessonTime.search',
+          id: 'timetableLessonTimeSearch',
+          url: "/timetable/lessonTime/search?_menu"
         }
       ]
     });

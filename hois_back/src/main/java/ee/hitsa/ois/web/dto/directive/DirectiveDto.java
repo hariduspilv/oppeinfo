@@ -2,11 +2,12 @@ package ee.hitsa.ois.web.dto.directive;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -50,12 +51,12 @@ public class DirectiveDto extends DirectiveForm {
     }
 
     public static DirectiveDto of(Directive directive) {
-        if(DirectiveType.KASKKIRI_TYHIST.name().equals(EntityUtil.getCode(directive.getType()))) {
+        if(ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())) {
             return DirectiveCancelDto.of(directive);
         }
 
         DirectiveDto dto = EntityUtil.bindToDto(directive, new DirectiveDto(), "students");
-        dto.setStudents(directive.getStudents().stream().map(DirectiveStudentDto::of).collect(Collectors.toList()));
+        dto.setStudents(StreamUtil.toMappedList(DirectiveStudentDto::of, directive.getStudents()));
         return dto;
     }
 
@@ -102,7 +103,7 @@ public class DirectiveDto extends DirectiveForm {
             Directive canceled = directive.getCanceledDirective();
             dto.setCanceledDirectiveData(new AutocompleteResult(canceled.getId(), canceled.getHeadline(), null));
             dto.setCanceledDirectiveType(EntityUtil.getCode(canceled.getType()));
-            dto.setCanceledStudents(canceled.getStudents().stream().map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
+            dto.setCanceledStudents(StreamUtil.toMappedList(DirectiveViewStudentDto::of, canceled.getStudents()));
             // TODO fetch list of students which cannot canceled
             // dto.setChangedStudents()
             return dto;

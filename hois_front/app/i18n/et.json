@@ -38,6 +38,9 @@
       "reject": "Lükka tagasi",
       "apply": "Taotle",
       "loadCsvFile": "Lae CSV fail",
+      "importFromCsvFile": "Impordi CSV failist",
+      "classifiersFile": "Klassifikaatorite fail",
+      "csvSampleFile": "CSV Faili näidis",
       "status": {
         "approving": "Menetle õk",
         "close": "Sulge õk",
@@ -67,7 +70,8 @@
         "positive": "Peab olema positiivne!",
         "atLeastOneShouldBeAdded": "Vähemalt üks peab olema lisatud",
         "atLeastOneMustBeSelected": "Vähemalt üks peab olema valitud",
-        "unique": "Kirje pole unikaalne"
+        "unique": "Kirje pole unikaalne",
+        "fileAlreadyExists": "Sama fail juba eksisteerib"
       },
       "form-has-errors" : "Vormil on vigu",
       "record": {
@@ -123,6 +127,10 @@
     "programmeOfStudies": "Õppeprogramm",
     "subjects": "Õppeained",
     "proccessingFile":"Töötlen faili",
+    "result": "Tulemus",
+    "type": "Liik",
+    "name": "Nimetus",
+    "value": "Väärtus",
     "menu":{
       "curriculum": {
         "label": "Õppekavad"
@@ -183,6 +191,19 @@
       "certificates": {
         "label": "Tõendid",
         "search": "Tõendite otsing"
+      },
+      "subjectStudyPeriods": {
+        "search": "Aine-õpetaja paarid"
+      },
+      "studyYearSchedule": {
+        "legend": "Õppetöögraafiku legend",
+        "edit": "Õppetöögraafik"
+      },
+      "timetable": {
+        "label": "Tunniplaan",
+        "lessonTime": {
+          "search": "Tundide aegade otsing"
+        }
       }
     }
   },
@@ -234,6 +255,7 @@
     "studyLanguage": "Õppekeel",
     "studyLoad": "Õppekoormus",
     "studyStart": "Õpingute algus",
+    "studyEnd": "Õpingute lõpp",
     "studyLevel": "Õppetase",
     "absence": {
       "cause": "Puudumise põhjus",
@@ -271,6 +293,7 @@
       "studentIdcode": "Õppuri isikukood",
       "studentVisible": "Õppuri andmed on esindajale nähtavad",
       "application": {
+        "adult": "Õppur ei ole alaealine. Täisealine õppur saab esindajale enda andmete nägemise õiguse anda õppuri andmete vormil",
         "alreadyexist": "Avaldus antud õppuri andmete nägemiseks on juba olemas",
         "applicantidcode": "Avalduse esitaja isikukood",
         "applicantname": "Avalduse esitaja nimi",
@@ -295,6 +318,7 @@
     "id": "Jrk",
     "code": "Õppeaine kood",
     "name": "Õppeaine nimetus",
+    "type": "Õppeaine liik",
     "status": "Staatus",
     "description": "Kirjeldus",
     "deleteconfirm": "Kas oled kindel, et soovid õppeaine kustutada?",
@@ -324,7 +348,8 @@
     "subjectIsPrerequisite": "Aine on eelduseks",
     "mandatoryPrerequisiteSubjects": "Kohustuslikud eeldusained",
     "recommendedPrerequisiteSubjects": "Soovituslikud eeldusained",
-    "substituteSubjects": "Asendusained"
+    "substituteSubjects": "Asendusained",
+    "alreadyexist": "Õppeaine kood peab olema unikaalne õppeasutuse lõikes"
   },
   "school": {
     "address": "Aadress",
@@ -385,12 +410,16 @@
     "extraval2": "Lisaväärtus 2",
     "isVocational": "Kutseõpe",
     "isHigher": "Kõrgharidusõpe",
-    "studyLevels": "Õppeastmed"
+    "studyLevels": "Õppeastmed",
+    "deleteconfirm": "Kas oled kindel, et soovid klassifikaatori kustutada?"
   },
   "directive": {
     "addInfo": "Lisainfo",
     "addStudents": "Lisa õppurid",
     "addToDirective": "Lisa käskkirjale",
+    "cancel": "Tühista",
+    "cancelconfirm": "Kas oled kindel, et soovid käskkirja tühistada?",
+    "canceledDirective": "Tühistatav käskkiri",
     "confirmDate": "Kinnitamise kuupäev",
     "confirmDateFrom": "Kinnitamise kuupäev alates",
     "confirmDateThru": "Kinnitamise kuupäev kuni",
@@ -401,6 +430,7 @@
     "deleteconfirm": "Kas oled kindel, et soovid käskkirja kustutada?",
     "directiveCoordinator": "Kellele suunatud",
     "directiveNr": "Dokumendi number",
+    "duplicatecancel": "Tühistamise käskkiri on juba olemas",
     "headline": "Pealkiri",
     "inserted": "Koostamise kuupäev",
     "insertedBy": "Koostaja",
@@ -462,6 +492,7 @@
       "schoolEmail": "Õppeasutuse e-posti aadress",
       "studentGroup": "Õppegrupp/rühm",
       "studyForm": "Õppevorm",
+      "studyLevel": "Õppetase",
       "studyLoad": "Õppekoormus",
       "studyLoadOPPEKOORMUS_OSA": "Täiskoormuselt osakoormusele",
       "studyLoadOPPEKOORMUS_TAIS": "Osakoormuselt täiskoormusele",
@@ -499,16 +530,20 @@
     "curriculumStudents": "Õppekava õppurid",
     "studyGroupStudents": "Õpperühma õppurid",
     "studyFormStudents": "Õppevormi õppurid",
-    "studyGroupStudentsParents": "Õpperühma õppurite lapsevanemad"
+    "studyGroupStudentsParents": "Õpperühma õppurite lapsevanemad",
+    "automaticSent": "Saadetud automaatteated",
+    "curriculum": "Õppekava",
+    "studentGroup": "Õpperühm"
   },
   "messageTemplate": {
+    "deleteconfirm": "Kas oled kindel, et soovid malli kustutada?",
+    "invalidcontent": "Vigane teate sisu",
     "messageTemplate": "Teate mall",
     "messageTemplates": "Teadete mallid",
     "type": "Teate liik",
-    "validFrom": "Kehtivuse alguskuupäev",
-    "validThru": "Kehtivuse lõppkuupäev",
     "validDate": "Kehtivuse kuupäev",
-    "deleteconfirm": "Kas oled kindel, et soovid malli kustutada?"
+    "validFrom": "Kehtivuse alguskuupäev",
+    "validThru": "Kehtivuse lõppkuupäev"
   },
   "certificate": {
       "type": "Tõendi liik",
@@ -518,6 +553,7 @@
       "inserted": "Koostamise kuupäev",
       "nr": "Tõendi number",
       "add": "Koosta tõend",
+      "order": "Telli tõend",
       "whom": "Kellele",
       "content": "Tõendi sisu",
       "student": "Õppur",
@@ -528,7 +564,8 @@
       "clearOther": "Tühista õppuri nimi ja isikukood",
       "invalidIdcode": "Vale isikukood!",
       "otherName": "Õppuri nimi",
-      "otherIdcode": "Õppuri isikukood"
+      "otherIdcode": "Õppuri isikukood",
+      "signatoriesMissing": "Tõendi allkirjastad puuduvad, palun pöördu õppespetsialisti poole"
   },
   "stateCurriculum": {
     "deleteconfirm": "Kas oled kindel, et soovid riikliku õppekava kustutada?",
@@ -766,6 +803,8 @@
     "deleteConfirm": "Kas oled kindel, et soovid õpetaja kustutada?",
     "email": "E-posti aadress",
     "phone": "Kontakttelefon",
+    "studyPeriodLoad": "Õppeaasta koormus",
+    "studyYearLoad": "Õppeperioodi koormus",
     "person": {
       "alreadyexist": "Sisestatud õpetaja on juba süsteemis olemas",
       "name": "Õpetaja nimi",
@@ -779,6 +818,7 @@
       "email": "Isiklik e-posti aadress",
       "phone": "Isiklik kontakttelefon"
     },
+    "isVocationalOrIsHigher":"Kutseõpe/Kõrgharidusõpe",
     "isVocational": "Kutseõpe",
     "isHigher": "Kõrgharidusõpe",
     "scheduleLoad": "Tunniplaani koormus",
@@ -795,6 +835,7 @@
     },
     "teacherPositionEhis": {
       "label": "EHISe ametikoht",
+      "teachingLevel": "Õppetase",
       "add": "lisa EHISe ametikoht",
       "contractType": "Lepingu liik",
       "contractStart": "Lepingu alguskuupäev",
@@ -857,7 +898,7 @@
     "phone": "Isiklik kontakttelefon",
     "email": "Isiklik e-posti aadress",
     "exists": "Isik juba eksisteerib",
-    "deleteconfirm": "Kas oled kindel, et soovid isikut kustutada?",
+    "deleteconfirm": "Kas oled kindel, et soovid kasutajat kustutada?",
     "back": "Isik ei ole leitav kasutajana kui tal ei ole kasutajarolli, kas soovite jätkata?"
   },
   "occupation": {
@@ -995,6 +1036,18 @@
       "uniqueInPeriod": "kalendri-sündmus peab olema unikaalne õppeperioodis"
     }
   },
+  "subjectStudyPeriod": {
+    "nameCode": "Õppeaine nimetus / kood",
+    "studyPeriod": "Õppeperiood",
+    "teachersFullname": "Õpetaja ees- ja perekonnanimi",
+    "declaredStudentsNumber": "Deklareerinud"
+  },
+  "subjectStudyPeriodTeacher": {
+      "teacher": "Õpetaja",
+      "teacherAlreadyAdded": "Õpetaja on juba lisatud",
+      "isSignatory": "Hinnete protokolli allkirjastamine",
+      "deleteconfirm": "Kas oled kindel, et soovid aine-õpetaja paari kustutada?"
+  },
   "ehis": {
     "fileType": "Ehise faili liik"
   },
@@ -1038,6 +1091,7 @@
     "mandatoryfields": "Kohustuslikud väljad täitmata",
     "nostudentsfound": "Tingimustele vastavaid õppureid ei leitud",
     "origStudyLevel": "Õppetase",
+    "places": "Rühma suurus vastuvõtul",
     "speciality": "Spetsialiseerumine",
     "studentCount": "Õppurite arv",
     "studentname": "Õppuri nimi",
@@ -1057,6 +1111,7 @@
     "type": "Avalduse liik",
     "insertionDate": "Koostamise kuupäev",
     "submissionDate": "Esitamise kuupäev",
+    "confirmationDate": "Kinnitamise kuupäev",
     "student": "Õppur",
     "studentName": "Õppuri nimi",
     "studentIdCode": "Õppuri isikukood",
@@ -1080,24 +1135,37 @@
     "substitutableSubject": "Asendatav õppeaine",
     "justification": "Põhjendus",
     "rejection": "Avalduse tagasilükkamine",
+    "rejectReason": "Avalduse tagasilükkamise põhjendus",
     "confirmedByRepresentative": "Lapsevanema/esindaja poolt kinnitatud",
     "inEstonianEducationalInstitution": "Eesti õppeasutuses",
     "inAbroadEducationalInstitution": "Välismaa õppeasutuses",
     "abroadStudiesStart": "Välisõpingute algus",
     "abroadStudiesEnd": "Välisõpingute lõpp",
     "deleteconfirm": "Kas oled kindel, et soovid avalduse kustutada?",
+    "missingRepresentativeConfirmation":"Avaldusel puudub lapsevanema/esindaja kinnitus!",
     "messages": {
       "applicationAlreadyExists": "Avaldus juba eksisteerib",
       "academicLeaveApplicationNotfound": "Akadeemilise puhkuse avaldust ei leitud",
       "validAcademicLeaveApplicationExists": "Akadeemilise puhkuse avaldus juba eksisteerib",
       "validAcademicLeaveRevocationApplicationExists": "Akadeemilise puhkuse katkestamise avaldus juba eksisteerib",
       "submitted": "Avaldus on esitatud",
-      "rejected": "Avaldus on tagasi lükatud"
+      "rejected": "Avaldus on tagasi lükatud",
+      "periodIsTooLong":"Avalduse periood on liiga pikk",
+      "startIsEarlierThanToday":"Avalduse alguskuupäev ei tohi olla varasem hetkeajast",
+      "endPeriodMissing":"Avaldusel puudub lõpu periood",
+      "endDateMissing":"Avaldusel puudub lõpu kuupäev",
+      "startPeriodMissing":"Avaldusel puudub alguse periood",
+      "startDateMissing":"Avaldusel puudub alguse kuupäev",
+      "validApplicationExistsWithOverlappingDates":"Avalduse kuupäevade vahemik kattub juba olemasoleva avalduse kuupäeva vahemikuga",
+      "studentIsNotHigher":"Avaldusega seotud õppur ei omanda kõrgharidust",
+      "wrongAcademicApplicationType":"Vale akadeemilise avalduse liik",
+      "revocationStartDateBeforeAcademicLeaveStartDate":"Katkestamise kuupäev on varasem, kui akadeemilise puhkuse avalduse alguse kuupäev",
+      "revocationStartDateAfterAcademicLeaveEndDate":"Katkestamise kuupäev on hilisem, kui akadeemilise puhkuse avalduse lõpu kuupäev"
     }
   },
   "reception": {
     "label": "Vastuvõtt",
-    "contest": {
+    "admission": {
       "code": "Konkursi kood",
       "language": "Konkursi keel",
       "places": "Kohtade arv"
@@ -1107,12 +1175,46 @@
       "status": "Avalduse staatus",
       "candidateName": "Kandidaadi nimi",
       "candidateIdCode": "Kandidaadi isikukood",
-      "showRevoked":"Kuva tühistatud avaldusi",
+      "showRevoked":"Kuva ka tühistatud avaldused",
       "addedToDirective":"Avaldus on lisatud käskkirjale",
+      "showAddedToDirective": "Kuva ainult käskkirjale lisatud avaldused",
       "importFromCsvFile":"Avalduste lisamine csv failiga",
       "added":"Lisatud avaldusi",
       "failed":"Ebaõnnestunud avalduste lisamine",
-      "csvFileRowNr": "csv faili rea nr"
+      "csvFileRowNr": "csv faili rea nr",
+      "email": "e-posti aadress",
+      "address":"Postiaadress",
+      "changeDate": "Avalduse muutmise kuupäev",
+      "submissionDate": "Avalduse esitamise kuupäev",
+      "graduationHistory":"Hariduskäik",
+      "grades": "Hinded",
+      "gradesResults": "Hinded/Tulemused",
+      "otherData": "Täiendav informatsioon"
     }
+  },
+  "studyYearSchedule": {
+      "studyYear": "Õppeaasta", 
+      "schoolDepartment": "Struktuuriüksus",
+      "studentGroup": "Õpperühm",
+      "week": "nädal",
+      "studyType": "Õppetöö liik",
+      "durationInWeeks": "Kestvus nädalates",
+      "error": {
+          "minWeeks": "Minimaalne õppetöö kestvus on 1 nädal"
+      }
+  },
+  "studyYearScheduleLegend": {
+      "code": "Kood",
+      "name": "Nimetus",
+      "nameEt": "Nimetus eesti keeles",
+      "nameEn": "Nimetus inglise keeeles",
+      "color": "Värv",
+      "add": "Lisa uus rida",
+      "error": {
+          "codeRequired": "Kood on kohustuslik!",
+          "codeLength": "Koodi maksimaalne pikkus on 2 sümbolit",
+          "nameEtRequired": "Nimetus eesti keeles on kohustuslik!",
+          "nameLength": "Nimetuse maksimaalne pikkus on 50 sümbolit"
+      }
   }
 }

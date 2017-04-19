@@ -25,7 +25,7 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
 
 @RestController
-@RequestMapping("/subjectStudyPeriod")
+@RequestMapping("/subjectStudyPeriods")
 public class SubjectStudyPeriodController {
 
 

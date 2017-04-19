@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -19,6 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.service.ClassifierConnectService;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.ClassifierConnectSearchCommand;
 import ee.hitsa.ois.web.dto.ClassifierConnectSelection;
 
@@ -45,7 +45,6 @@ public class ClassifierConnectController {
 
     @GetMapping("/all")
     public List<ClassifierConnectSelection> searchAll(ClassifierConnectSearchCommand classifierConnectSearchCommand, Sort sort) {
-        return service.searchAll(classifierConnectSearchCommand, sort).stream()
-                .map(ClassifierConnectSelection::of).collect(Collectors.toList());
+        return StreamUtil.toMappedList(ClassifierConnectSelection::of, service.searchAll(classifierConnectSearchCommand, sort));
     }
 }

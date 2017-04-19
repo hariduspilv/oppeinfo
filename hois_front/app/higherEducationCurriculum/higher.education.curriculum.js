@@ -39,16 +39,14 @@ angular.module('hitsaOis')
     };
 
     if(!$scope.auth.school) {
-        QueryUtils.endpoint('/curriculum/schoolDepartments').query().$promise.then(function(response){
-            $scope.schoolDepartments = response;
-        });
+        $scope.schoolDepartments = QueryUtils.endpoint('/autocomplete/schooldepartments').query();
     }
 
     // --- Get and Set Data
     $scope.studyLevels = [];
     function getAllowedStudyLevels() {
         if($scope.auth.school) {
-            QueryUtils.endpoint('/school/studyLevels').get().$promise.then(function(response){
+            QueryUtils.endpoint('/school/studyLevels').search().$promise.then(function(response){
                 var studyLevelCodes = response.studyLevels;
 
                 studyLevelCodes.forEach(function(it) {
@@ -145,7 +143,6 @@ angular.module('hitsaOis')
 
 
     $scope.removejointPartner = function(deletedPartner) {
-        // old solution
         $scope.removeFromArray($scope.curriculum.jointPartners, deletedPartner);
         if(!deletedPartner.abroad) {
             $scope.removeFromArray($scope.jointPartnersEhisSchools, deletedPartner.ehisSchool);
@@ -154,47 +151,7 @@ angular.module('hitsaOis')
             }
             deletePartersSubjects(deletedPartner.ehisSchool);
         }
-
-        // if(!deletedPartner.abroad && anySubjectAddedFromThisSchool(deletedPartner)) {
-        //     dialogService.confirmDialog({prompt: 'curriculum.prompt.deleteJointPartner'}, function() {
-        //         removeFinallyJointPartner(deletedPartner);
-        //     });
-        // } else {
-        //     removeFinallyJointPartner(deletedPartner);
-        // }
     };
-
-    function removeFinallyJointPartner(deletedPartner) {
-        $scope.removeFromArray($scope.curriculum.jointPartners, deletedPartner);
-        if(!deletedPartner.abroad) {
-            $scope.removeFromArray($scope.jointPartnersEhisSchools, deletedPartner.ehisSchool);
-            if($scope.curriculum.jointMentor === deletedPartner.ehisSchool) {
-                $scope.curriculum.jointMentor = undefined;
-            }
-            deletePartersSubjects(deletedPartner.ehisSchool);
-        }
-    }
-
-    function anySubjectAddedFromThisSchool(deletedPartner) {
-        var anyAdded = false;
-        $scope.curriculum.versions.forEach(function(v){
-            v.modules.forEach(function(m){
-                m.subjects.forEach(function(s){
-                    if(s.ehisSchool === deletedPartner.ehisSchool) {
-                        anyAdded = true;
-                    }
-                });
-                // var removedSubjects = m.subjects.filter(function(s){
-                //     return s.ehisSchoolCode === partnersEhisSchool.ehisSchool;
-                // });
-                // removedSubjects.forEach(function(rs){
-                //     $scope.deleteSubject(m, rs);
-                // });
-            });
-        });
-        return anyAdded;
-        // return true;
-    }
 
     // TODO: removal in iteration
     function deletePartersSubjects(partnersEhisSchool) {
@@ -217,27 +174,12 @@ angular.module('hitsaOis')
     };
 
     function curriculumFormIsValid() {
-        return $scope.higherEducationCurriculumForm.$valid && $scope.curriculum.specialities.length > 0 && $scope.jointPartnersAdded()
-        //  && allVersionsValid()
-         ;
+        return $scope.higherEducationCurriculumForm.$valid && $scope.curriculum.specialities.length > 0 && $scope.jointPartnersAdded();
     }
 
     $scope.jointPartnersAdded = function() {
         return !$scope.curriculum.joint || $scope.curriculum.jointPartners.length > 0;
     };
-
-
-    function allVersionsValid() {
-        if(!$scope.curriculum.versions || $scope.curriculum.versions.length === 0) {
-            return true;
-        }
-        for(var i = 0; i < $scope.curriculum.versions.length; i++) {
-            if(!$scope.versionIsValid($scope.curriculum.versions[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
 
     $scope.codeUniqueQuery = {
       id: id,
@@ -476,62 +418,4 @@ angular.module('hitsaOis')
         };
         return enabledStatusesToChange[currentStatusCode].indexOf(status.code) !== -1;
     };
-
-
-
-
-
-
-
-
-
-
-
-    // version form validation
-
-    $scope.versionIsValid = function(version) {
-        return version.specialitiesReferenceNumbers && version.specialitiesReferenceNumbers.length > 0 && $scope.anyModuleAdded(version) && allModulesValid(version);
-    };
-
-
-    function allModulesValid(version) {
-        if(!version.modules) {
-            return false;
-        }
-        for(var i = 0; i < version.modules.length; i++) {
-            if(!$scope.moduleValid(version.modules[i])) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    $scope.moduleValid = function(module1) {
-        return $scope.moduleHasSubjects(module1);
-    };
-
-    $scope.anyModuleAdded = function(version) {
-        return version.modules.filter(function(el){return !el.minorSpeciality;}).length > 0;
-    };
-
-    $scope.moduleHasSubjects = function(module1) {
-        if(module1.minorSpeciality) {
-            return module1.subjects && module1.subjects.length > 0;
-        } else {
-            return module1.type === 'KORGMOODUL_L' || module1.type === 'KORGMOODUL_V' || module1.subjects && module1.subjects.length > 0;
-        }
-    };
-
-    // modules and specialities
-
-    // TODO: may be useful 
-    function getAllSubjectIdsFromModules(modules) {
-        var subjects = [];
-        for(var i = 0; i < modules.length; i++) {
-            for(var j = 0; j < modules[i].subjects.length; j++) {
-                subjects.push(modules[i].subjects[j].subjectId);
-            }
-        }
-        return subjects;
-    }
   });

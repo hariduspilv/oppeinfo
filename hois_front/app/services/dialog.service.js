@@ -16,8 +16,9 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils',
     /**
      * For form validation to work dialog form name must be dialogForm
      */
-    this.showDialog = function(templateUrl, dialogController, submitCallback, cancelCallback) {
+    this.showDialog = function(templateUrl, dialogController, submitCallback, cancelCallback, userConfig) {
       var submitted = false;
+      var config = angular.extend({}, userConfig);
       $mdDialog.show({
         controller: function($scope, $rootScope, $mdDialog) {
           $scope.removeFromArray = ArrayUtils.remove;
@@ -51,7 +52,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils',
         },
         templateUrl: templateUrl,
 /*        skipHide: true,*/
-        clickOutsideToClose: true,
+        clickOutsideToClose: angular.isDefined(config.clickOutsideToClose) ? config.clickOutsideToClose === true : true,
         onRemoving: function() {
           if (angular.isFunction(cancelCallback)) {
               if (submitted !== true) {

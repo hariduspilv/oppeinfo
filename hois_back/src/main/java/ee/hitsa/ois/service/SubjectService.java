@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 
 @Transactional
 @Service
@@ -76,7 +77,7 @@ public class SubjectService {
             schoolDepartment = schoolDepartmentRepository.getOne(newSubject.getSchoolDepartment());
         }
         subject.setSchoolDepartment(schoolDepartment);
-        EntityUtil.bindClassifierCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {
+        EntityUtil.bindEntityCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {
             SubjectLanguage subjectLanguage = new SubjectLanguage();
             subjectLanguage.setSubject(subject);
             subjectLanguage.setLanguage(EntityUtil.validateClassifier(classifierRepository.getOne(code), MainClassCode.OPPEKEEL));
@@ -88,9 +89,9 @@ public class SubjectService {
 
     private void bindConnections(Subject target, SubjectForm source) {
         Set<Long> subjectIds = new HashSet<>();
-        Collection<Long> mandatory = source.getMandatoryPrerequisiteSubjects().stream().map(EntityConnectionCommand::getId).collect(Collectors.toSet());
-        Collection<Long> recommended = source.getRecommendedPrerequisiteSubjects().stream().map(EntityConnectionCommand::getId).collect(Collectors.toSet());
-        Collection<Long> substitute = source.getSubstituteSubjects().stream().map(EntityConnectionCommand::getId).collect(Collectors.toSet());
+        Collection<Long> mandatory = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getMandatoryPrerequisiteSubjects());
+        Collection<Long> recommended = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getRecommendedPrerequisiteSubjects());
+        Collection<Long> substitute = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getSubstituteSubjects());
 
         subjectIds.addAll(mandatory);
         subjectIds.addAll(recommended);
@@ -118,7 +119,7 @@ public class SubjectService {
     }
 
     private static void bindSubjectConnect(Subject primarySubject, Classifier connectionType, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Collection<Subject> connectSubjects) {
-        // TODO use EntityUtil.bindClassifierCollection
+        // TODO use EntityUtil.bindEntityCollection
         Map<Long, SubjectConnect> m = connections.stream()
                 .filter(it -> Objects.equals(EntityUtil.getCode(it.getConnection()), EntityUtil.getCode(connectionType)))
                 .collect(Collectors.toMap(k -> EntityUtil.getId(k.getConnectSubject()), v -> v));

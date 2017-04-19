@@ -20,7 +20,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', '$stateProvid
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          isCreate: function (){return true;}
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

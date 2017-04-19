@@ -2,11 +2,11 @@ package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 
 import java.math.BigDecimal;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class SubjectSearchDto implements SubjectAutocompleteResult {
     private Long id;
@@ -30,7 +30,7 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
 
     public static SubjectSearchDto of(Subject subject) {
         SubjectSearchDto dto = EntityUtil.bindToDto(subject, new SubjectSearchDto(), "languages");
-        dto.languages = SubjectUtil.getLanguages(subject).stream().map(EntityUtil::getCode).collect(Collectors.toSet());
+        dto.setLanguages(StreamUtil.toMappedSet(EntityUtil::getCode, SubjectUtil.getLanguages(subject)));
         return dto;
     }
 
