@@ -9,12 +9,14 @@
     "formattedDate": "{{date|date:'dd.MM.yyyy'}}",
     "formattedDateTime": "{{date|date:'dd.MM.yyyy HH:mm:ss'}}",
     "formattedDateMinTime": "{{date|date:'dd.MM.yyyy HH:mm'}}",
+    "formattedTime": "{{date|date:'HH:mm'}}",
     "button": {
       "add": "Lisa",
       "addRow": "Lisa rida",
       "back": "Tagasi",
       "cancel": "Katkesta",
       "change": "Muuda",
+      "edit": "Muuda",
       "choose": "Vali",
       "clear": "Tühjenda väljad",
       "close": "Sulge",
@@ -94,6 +96,7 @@
     "no": "Ei",
     "validityPeriod": "Kehtivuse periood",
     "validFrom": "Kehtiv alates",
+    "validThru": "Kehtiv kuni",
     "validTo": "Kehtiv kuni",
     "valid": "Kehtiv",
     "invalid": "Kehtetu",
@@ -131,6 +134,16 @@
     "type": "Liik",
     "name": "Nimetus",
     "value": "Väärtus",
+    "start": "Algus",
+    "end": "Lõpp",
+    "nr": "Nr",
+    "mondayShort": "E",
+    "tuesdayShort": "T",
+    "wednesdayShort": "K",
+    "thursdayShort": "N",
+    "fridayShort": "R",
+    "saturdayShort": "L",
+    "sundayShort": "P",
     "menu":{
       "curriculum": {
         "label": "Õppekavad"
@@ -185,8 +198,12 @@
       "reception": {
         "label": "Vastuvõtt",
         "import": "Avalduste import CSV",
-        "saisAdmissionSearch": "Konkursi otsing",
-        "saisApplicationSearch": "Vastuvõtu avalduste otsing"
+        "saisAdmission": {
+          "search": "Konkursi otsing"
+        },
+        "saisApplication": {
+          "search": "Vastuvõtu avalduste otsing"
+        }
       },
       "certificates": {
         "label": "Tõendid",
@@ -202,7 +219,8 @@
       "timetable": {
         "label": "Tunniplaan",
         "lessonTime": {
-          "search": "Tundide aegade otsing"
+          "search": "Tundide aegade otsing",
+          "insert": "Tundide aegade sisestamine"
         }
       }
     }
@@ -508,6 +526,17 @@
     "validFrom": "Üldteate kuvamise alguskuupäev",
     "validThru": "Üldteate kuvamise lõppkuupäev"
   },
+  "lessonplan": {
+    "curriculumVersion": "Õppekava",
+    "schoolDepartment": "Struktuuriüksus",
+    "studentGroup": "Õpperühm",
+    "studyYear": "Õppeaasta",
+    "teacher": "Õpetaja",
+    "search": {
+      "vocational": "Õpperühmad (kutse)",
+      "vocational-byteacher": "Õpetajad (kutse)"
+    }
+  },
   "message": {
     "label": "Teade",
     "messages": "Teated",
@@ -569,6 +598,7 @@
   },
   "stateCurriculum": {
     "deleteconfirm": "Kas oled kindel, et soovid riikliku õppekava kustutada?",
+    "occupationdeleteconfirm": "Kas oled kindel, et soovid kutse kustutada?",
     "name": "Riiklik õppekava",
     "EKR": "EKR tase",
     "credits": "Õppekava maht",
@@ -587,6 +617,7 @@
       "credits" : {
         "credits": "Õppekava maht EKAP",
         "positive": "Peab olema positiivne!",
+        "max": "Peab olema väiksem, kui 1000 EKAP",
         "integer": "Peab olema täisarv"
       },
       "ROKclassifier": "EHISe RÕK klassifikaator",
@@ -785,7 +816,9 @@
     },
     "error": {
         "numberOfElectiveModules": "Number peab olema mitte suurem, kui valikmoodulite arv",
-        "specAddedToVersion": "Peaeriala on seotud õppekava versiooniga"
+        "specAddedToVersion": "Peaeriala on seotud õppekava versiooniga",
+        "max999": "Peab olema väiksem, kui 1000",
+        "monthsMax11": "Kuude arv peab olema väiksem, kui 12"
     },
     "prompt": {
         "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?"
@@ -1052,6 +1085,7 @@
     "fileType": "Ehise faili liik"
   },
   "building": {
+    "label": "Hoone",
     "add": "Lisa hoone",
     "address": "Aadress",
     "alreadyexist": "Sellise tähisega hoone on juba olemas",
@@ -1176,13 +1210,13 @@
       "candidateName": "Kandidaadi nimi",
       "candidateIdCode": "Kandidaadi isikukood",
       "showRevoked":"Kuva ka tühistatud avaldused",
-      "addedToDirective":"Avaldus on lisatud käskkirjale",
+      "addedToDirective":"Lisatud käskkirjale",
       "showAddedToDirective": "Kuva ainult käskkirjale lisatud avaldused",
       "importFromCsvFile":"Avalduste lisamine csv failiga",
       "added":"Lisatud avaldusi",
       "failed":"Ebaõnnestunud avalduste lisamine",
       "csvFileRowNr": "csv faili rea nr",
-      "email": "e-posti aadress",
+      "email": "E-posti aadress",
       "address":"Postiaadress",
       "changeDate": "Avalduse muutmise kuupäev",
       "submissionDate": "Avalduse esitamise kuupäev",
@@ -1193,7 +1227,7 @@
     }
   },
   "studyYearSchedule": {
-      "studyYear": "Õppeaasta", 
+      "studyYear": "Õppeaasta",
       "schoolDepartment": "Struktuuriüksus",
       "studentGroup": "Õpperühm",
       "week": "nädal",
@@ -1216,5 +1250,17 @@
           "nameEtRequired": "Nimetus eesti keeles on kohustuslik!",
           "nameLength": "Nimetuse maksimaalne pikkus on 50 sümbolit"
       }
+  },
+  "timetable": {
+    "weekday": "Nädalapäev",
+    "weekdays": "Nädalapäevad",
+    "buildings": "Hooned",
+    "academicHours": "Akadeemiliste tundide arv",
+    "lessonTime": {
+      "validFrom": "Kehtivuse algus",
+      "addNewRow": "Lisa uus rida",
+      "addNewBlock": "Lisa uus tundide aegade plokk",
+      "deleteBlock": "Kustuta tundide aegade plokk"
+    }
   }
 }

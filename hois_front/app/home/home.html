@@ -29,8 +29,11 @@
                     <p>{{'message.messageSender' | translate}}: {{row.sender}}</p>
                 </div>
             </td>
-            <td md-cell><md-button class="md-primary" ng-href="/#/message/{{row.id}}/respond?backUrl=home" ng-click="readMessage()">{{'message.respond' | translate}}</md-button></td>
-            <!--<td md-cell><md-button>{{'main.button.delete' | translate}}</md-button></td>-->
+            <td md-cell>
+                <md-button class="md-primary" ng-href="/#/message/{{row.id}}/respond?backUrl=home" ng-if="row.sendersId !== -1" ng-click="readMessage()">
+                    {{'message.respond' | translate}}
+                </md-button>
+            </td>
           </tr>
         </tbody>
       </table>

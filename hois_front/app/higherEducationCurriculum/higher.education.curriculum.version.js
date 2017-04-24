@@ -320,6 +320,7 @@ angular.module('hitsaOis')
             });
 
             scope.myEhisSchool = $scope.myEhisSchool;
+            scope.readOnly = $scope.readOnly;
 
             scope.addElectiveModule = function() {
                 var newElectiveModule = {
@@ -454,7 +455,7 @@ angular.module('hitsaOis')
       var DialogController = function (scope) {
 
             scope.myEhisSchool = $scope.myEhisSchool;
-
+            scope.readOnly = $scope.readOnly;
             scope.addElectiveModule = function() {
                 var newElectiveModule = {
                     nameEt: scope.optionalNameEt,

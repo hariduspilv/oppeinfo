@@ -26,7 +26,8 @@ import ee.hitsa.ois.web.dto.ClassifierConnectSelection;
 @RequestMapping("classifierConnect")
 public class ClassifierConnectController {
 
-    @Autowired ClassifierConnectService service;
+    @Autowired
+    private ClassifierConnectService service;
 
     @GetMapping("")
     public Page<ClassifierConnect> search(ClassifierConnectSearchCommand classifierConnectSearchCommand, Pageable pageable) {

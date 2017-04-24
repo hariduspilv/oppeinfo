@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.commandobject;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.NotNull;
@@ -68,7 +69,7 @@ public class SubjectForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.OPPEKEEL)
     private Set<String> languages = new HashSet<>();
 
-    private Long schoolDepartment;
+    private AutocompleteResult schoolDepartment;
 
     @NotEmpty
     @ClassifierRestriction(MainClassCode.AINESTAATUS)
@@ -248,11 +249,11 @@ public class SubjectForm extends VersionedCommand {
         this.languages = languages;
     }
 
-    public Long getSchoolDepartment() {
+    public AutocompleteResult getSchoolDepartment() {
         return schoolDepartment;
     }
 
-    public void setSchoolDepartment(Long schoolDepartment) {
+    public void setSchoolDepartment(AutocompleteResult schoolDepartment) {
         this.schoolDepartment = schoolDepartment;
     }
 

@@ -1,9 +1,10 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -102,11 +103,11 @@ public class AutocompleteService {
 
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
-        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value", em).getResultList();
+        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value, c.valid_from, c.valid_thru", em).getResultList();
         return StreamUtil.toMappedList(r -> new ClassifierSelection(resultAsString(r, 0),
                     resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
                     resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
-                    resultAsString(r, 7), resultAsString(r, 8)), data);
+                    resultAsString(r, 7), resultAsString(r, 8), resultAsLocalDate(r, 9), resultAsLocalDate(r, 10)), data);
     }
 
     public List<AutocompleteResult> curriculums(Long schoolId, AutocompleteCommand term) {
@@ -135,11 +136,11 @@ public class AutocompleteService {
             qb.filter("exists(select sa.id from sais_admission sa where sa.curriculum_version_id = cv.id)");
         }
 
-        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, sf.study_form_code", em).getResultList();
+        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 1);
             return new CurriculumVersionResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)),
-                    CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsLong(r, 4), resultAsString(r, 5));
+                    CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsLong(r, 4), resultAsLong(r, 5), resultAsString(r, 6));
         }, data);
     }
 
@@ -178,6 +179,7 @@ public class AutocompleteService {
 
         qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
 
+        // FIXME why school_id is fetched when it's filtering criteria?
         List<?> data = qb.select("sd.id, sd.name_et, sd.name_en, sd.school_id, s.code", em).getResultList();
         return StreamUtil.toMappedList(r -> new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4)), data);
     }

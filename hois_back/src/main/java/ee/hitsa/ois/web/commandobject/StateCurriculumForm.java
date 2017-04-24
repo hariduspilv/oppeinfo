@@ -19,7 +19,7 @@ public class StateCurriculumForm extends VersionedCommand {
     private String admissionRequirementsEn;
     private String graduationRequirementsEt;
     private String graduationRequirementsEn;
-    private Integer credits;
+    private Long credits;
     private String practiceDescription;
     private Integer optionalStudyCredits;
     private LocalDate validFrom;
@@ -119,11 +119,11 @@ public class StateCurriculumForm extends VersionedCommand {
         this.graduationRequirementsEn = graduationRequirementsEn;
     }
 
-    public Integer getCredits() {
+    public Long getCredits() {
         return credits;
     }
 
-    public void setCredits(Integer credits) {
+    public void setCredits(Long credits) {
         this.credits = credits;
     }
 

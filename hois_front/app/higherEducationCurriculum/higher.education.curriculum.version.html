@@ -4,7 +4,7 @@
             <md-input-container flex ng-if="!showMainForm">
                 <label>{{'curriculum.version.code' | translate}}</label>
                 <input name="code" ng-model="version.code" type="text" required md-maxlength="100" ng-model-options="{ debounce: 250 }"  
-                hois-curriculum-version-code-validator unique-query="curriculumVersionCodeUniqueQuery" unique-function="validateVersionCode">
+                hois-curriculum-version-code-validator unique-query="curriculumVersionCodeUniqueQuery" unique-function="validateVersionCode" ng-readonly="readOnly">
                 <div ng-messages="higherEducationCurriculumVersionForm.code.$error" ng-show="higherEducationCurriculumVersionForm.code.$dirty">
                     <div ng-message="hoisQueryValidation">
                         {{'main.messages.error.mustBeUnique' | translate}}
@@ -16,7 +16,7 @@
             </md-input-container>
             <md-input-container flex>
                 <label>{{'curriculum.version.firstAdmissionYear' | translate}}</label>
-                <md-select ng-model="version.admissionYear" required>
+                <md-select ng-model="version.admissionYear" required ng-disabled="readOnly">
                     <md-option ng-repeat="year in ::admissionYears" ng-value="year" aria-label="{{year}}">{{year}}</md-option>
                 </md-select>
             </md-input-container>
@@ -24,17 +24,17 @@
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex>
                 <label>{{'curriculum.version.type' | translate}}</label>
-                <hois-classifier-select ng-model="version.type" main-classifier-code="OPPEKAVA_VERSIOON_LIIK" required model-value-attr="code"></hois-classifier-select>
+                <hois-classifier-select ng-model="version.type" main-classifier-code="OPPEKAVA_VERSIOON_LIIK" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
             </md-input-container>
             <md-input-container flex>
                 <label>{{'curriculum.version.status' | translate}}</label>
-                <hois-classifier-select ng-model="version.status" main-classifier-code="OPPEKAVA_VERSIOON_STAATUS" show-only-values="allowerVersionStatuses" required model-value-attr="code"></hois-classifier-select>
+                <hois-classifier-select ng-model="version.status" main-classifier-code="OPPEKAVA_VERSIOON_STAATUS" show-only-values="allowerVersionStatuses" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
             </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="50" flex-sm="100" flex-xs="100">
                 <label>{{'curriculum.specialty.specialties' | translate}}</label>
-                <md-select multiple ng-model="version.specialitiesReferenceNumbers" required ng-change="removeSpecsFromModules()">
+                <md-select multiple ng-model="version.specialitiesReferenceNumbers" required ng-change="removeSpecsFromModules()" ng-disabled="readOnly">
                     <md-option ng-repeat="speciality in curriculum.specialities | orderBy: currentLanguageNameField()" ng-value="speciality.referenceNumber">
                         {{speciality[currentLanguageNameField()]}}
                     </md-option>

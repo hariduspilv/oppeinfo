@@ -4,7 +4,7 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container  flex="50" flex-sm="100" flex-xs="100">
               <label>{{'stateCurriculum.enter.nameEt' | translate}}</label>
-              <input ng-model="stateCurriculum.nameEt" type="text" required md-maxlength="255" name="nameEt" ng-model-options="{ debounce: 250 }" unique='nameEtUniqueQuery'>
+              <input ng-model="stateCurriculum.nameEt" type="text" required md-maxlength="255" name="nameEt" ng-model-options="{ debounce: 250 }" unique='nameEtUniqueQuery' ng-readonly="readOnly">
               <div ng-messages="stateCurriculumForm.nameEt.$error" ng-show="stateCurriculumForm.nameEt.$dirty">
                   <div ng-message="notUnique">
                     {{'stateCurriculum.error.unique.name' | translate}}
@@ -13,7 +13,7 @@
             </md-input-container>
             <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'stateCurriculum.enter.nameEn' | translate}}</label>
-              <input ng-model="stateCurriculum.nameEn" type="text" required md-maxlength="255" name="nameEn" ng-model-options="{ debounce: 250 }" unique="nameEnUniqueQuery">
+              <input ng-model="stateCurriculum.nameEn" type="text" required md-maxlength="255" name="nameEn" ng-model-options="{ debounce: 250 }" unique="nameEnUniqueQuery" ng-readonly="readOnly">
               <div ng-messages="stateCurriculumForm.nameEn.$error" ng-show="true">
                   <div ng-message="notUnique">
                     {{'stateCurriculum.error.unique.name' | translate}}
@@ -24,28 +24,31 @@
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="25" flex-sm="100" flex-xs="100">
                 <label>{{'curriculum.areaOfStudy' | translate}}</label>
-                <hois-classifier-select ng-model="iscedVald" main-classifier-code="ISCED_VALD" criteria="{vocational: true}" required model-value-attr="code"></hois-classifier-select>
+                <hois-classifier-select ng-model="iscedVald" main-classifier-code="ISCED_VALD" criteria="{vocational: true}" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
             </md-input-container>
 
             <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.fieldOfStudy' | translate}}</label>
                 <hois-classifier-select ng-model="iscedSuun" main-classifier-code="ISCED_SUUN" criteria="{vocational: true}" watch-model="iscedVald" model-value-attr="code"
-                                    search-from-connect connect-main-classifier-code="ISCED_VALD" required></hois-classifier-select>
+                                    search-from-connect connect-main-classifier-code="ISCED_VALD" required ng-disabled="readOnly"></hois-classifier-select>
             </md-input-container>
 
             <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                 <label>{{'curriculum.group' | translate}}</label>
                 <hois-classifier-select ng-model="stateCurriculum.iscedClass" main-classifier-code="ISCED_RYHM" criteria="{vocational: true}" watch-model="iscedSuun" model-value-attr="code"
-                                    search-from-connect connect-main-classifier-code="ISCED_SUUN" required></hois-classifier-select>
+                                    search-from-connect connect-main-classifier-code="ISCED_SUUN" required ng-disabled="readOnly"></hois-classifier-select>
             </md-input-container>
           </div>
 		  <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
 				<md-input-container flex="25" flex-sm="100" flex-xs="100">
 				  <label>{{'stateCurriculum.enter.credits.credits' | translate}}</label>
-				  <input ng-model="stateCurriculum.credits" type="number" pattern="^\d+$" required min="0" name="credits">
+				  <input ng-model="stateCurriculum.credits" type="number" pattern="^\d+$" required min="0" max="999" name="credits" ng-readonly="readOnly">
 				  <div ng-messages="stateCurriculumForm.credits.$error" ng-show="stateCurriculumForm.credits.$dirty">
 					  <div ng-message="min">
 						{{'stateCurriculum.enter.credits.positive' | translate}}
+					  </div>
+                      <div ng-message="max">
+						{{'stateCurriculum.enter.credits.max' | translate}}
 					  </div>
 					  <div ng-message="pattern">
 						{{'stateCurriculum.enter.credits.integer' | translate}}
@@ -57,43 +60,43 @@
 				</md-input-container>
 				<md-input-container flex="20"flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
 				  <label>{{'stateCurriculum.enter.ROKclassifier' | translate}}</label>
-                  <hois-classifier-select ng-model="stateCurriculum.stateCurrClass" main-classifier-code="EHIS_ROK" criteria="{vocational: true}" required model-value-attr="code"></hois-classifier-select>
+                  <hois-classifier-select ng-model="stateCurriculum.stateCurrClass" main-classifier-code="EHIS_ROK" criteria="{vocational: true}" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
 				</md-input-container>
 			</div>
 
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.objectivesEt' | translate}}</label>
-              <textarea ng-model="stateCurriculum.objectivesEt" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.objectivesEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.objectivesEn' | translate}}</label>
-              <textarea ng-model="stateCurriculum.objectivesEn" md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.objectivesEn" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
 
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.outcome.outcomeLabelEt' | translate}}</label>
-              <textarea ng-model="stateCurriculum.outcomesEt" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.outcomesEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.outcome.outcomeLabelEn' | translate}}</label>
-              <textarea ng-model="stateCurriculum.outcomesEn" md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.outcomesEn" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
 
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.admission.requirementsEt' | translate}}</label>
-              <textarea ng-model="stateCurriculum.admissionRequirementsEt" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.admissionRequirementsEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.admission.requirementsEn' | translate}}</label>
-              <textarea ng-model="stateCurriculum.admissionRequirementsEn" md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.admissionRequirementsEn" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.graduation.requirementsEt' | translate}}</label>
-              <textarea ng-model="stateCurriculum.graduationRequirementsEt" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.graduationRequirementsEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.graduation.requirementsEn' | translate}}</label>
-              <textarea ng-model="stateCurriculum.graduationRequirementsEn" md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.graduationRequirementsEn" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
 
 
@@ -110,17 +113,18 @@
                 placeholder="{{'stateCurriculum.enter.occupation.add' | translate}}"
                 ng-model="queryText"
                 md-no-cache
-				class="small-margin"
+                class="small-margin"
                 md-selected-item-change="addOcupation(occupation)"
+                ng-if="!readOnly"
                 >
 
-              <md-item-template>
-                <span md-highlight-text="queryText" md-highlight-flags="^i">{{currentLanguage()=='en' ? item.nameEn : item.nameEt}}</span>
-              </md-item-template>
+            <md-item-template>
+                <span md-highlight-text="queryText" md-highlight-flags="^i">{{currentLanguageNameField(item)}}</span>
+            </md-item-template>
 
-              <md-not-found>
+            <md-not-found>
                 {{'main.messages.error.notFound' | translate}}
-              </md-not-found>
+            </md-not-found>
 
             </md-autocomplete>
 			<div>
@@ -144,7 +148,7 @@
                         {{subOccupation[currentLanguageNameField()]}}</span></td>
 						<td md-cell><span ng-repeat="subOccupation in subOccupations[occupation] | filter:{ mainClassCode: 'SPETSKUTSE'}"><span ng-if="$index > 0">; </span>
                         {{subOccupation[currentLanguageNameField()]}}</span></td>
-						<td md-cell ><md-button class="remove" ng-click="removeOcupation(occupation)">&times;</md-button></td>
+						<td md-cell ><md-button class="remove" ng-click="removeOcupation(occupation)" ng-if="!readOnly">&times;</md-button></td>
 					</tr>
 				</tbody>
 			</table>
@@ -153,7 +157,7 @@
 
 			  <div layout="row" ng-if="stateCurriculum.occupations.length > 0">
 				<h2>{{'stateCurriculum.enter.module.modules' | translate}}&nbsp;*</h2>
-				<md-button class="nomargin" ng-click="openAddModuleDialog()">{{'stateCurriculum.enter.module.add' | translate}}</md-button>
+				<md-button class="nomargin" ng-click="openAddModuleDialog()" ng-if="!readOnly">{{'stateCurriculum.enter.module.add' | translate}}</md-button>
 			  </div>
                 <!--KUTSETE MOODULID-->
               <div ng-repeat="occupation in stateCurriculum.occupations" layout="column">
@@ -168,7 +172,7 @@
 							<div flex="100" ng-repeat="module in stateCurriculum.modules | filter: filterModules(occupation, 'KUTSEMOODUL_Y')" layout="row" class="align-center">
 								<a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguage()=='en' ? module.nameEn : module.nameEt}}</a>
 								<span flex="10">{{module.credits}}&nbsp; EKAP</span>
-								<md-button flex="20" class="remove" ng-click="removeModule(occupation, module)">&times;</md-button>
+								<md-button flex="20" class="remove" ng-click="removeModule(occupation, module)" ng-if="!readOnly">&times;</md-button>
 							</div>
 						</div>
 					</div>
@@ -179,7 +183,7 @@
 							<div flex="100" ng-repeat="module in stateCurriculum.modules | filter: filterModules(occupation, 'KUTSEMOODUL_P')" layout="row" class="align-center">
 								<a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguage()=='en' ? module.nameEn : module.nameEt}}</a>
 								<span flex="10">{{module.credits}}&nbsp; EKAP</span>
-								<md-button flex="20" class="remove nomargin" ng-click="removeModule(occupation, module)">&times;</md-button>
+								<md-button flex="20" class="remove nomargin" ng-click="removeModule(occupation, module)" ng-if="!readOnly">&times;</md-button>
 							</div>
 						</div>
 					</div>
@@ -195,7 +199,7 @@
 								<div flex="100" ng-repeat="module in stateCurriculum.modules | filter: filterModules(suboccupation.code, 'KUTSEMOODUL_Y')" layout="row" class="align-center">
 									<a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguage()=='en' ? module.nameEn : module.nameEt}}</a>
 									<span flex="10">{{module.credits}}&nbsp; EKAP</span>
-									<md-button flex="20" class="remove" ng-click="removeModule(suboccupation.code, module)">&times;</md-button>
+									<md-button flex="20" class="remove" ng-click="removeModule(suboccupation.code, module)" ng-if="!readOnly">&times;</md-button>
 								</div>
 							</div>
 						</div>
@@ -206,7 +210,7 @@
 								<div flex="100" ng-repeat="module in stateCurriculum.modules | filter: filterModules(suboccupation.code, 'KUTSEMOODUL_P')" layout="row" class="align-center">
 									<a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
 									<span flex="10">{{module.credits}}&nbsp; EKAP</span>
-									<md-button flex="20" class="remove nomargin" ng-click="removeModule(suboccupation.code, module)">&times;</md-button>
+									<md-button flex="20" class="remove nomargin" ng-click="removeModule(suboccupation.code, module)" ng-if="!readOnly">&times;</md-button>
 								</div>
 							</div>
 						</div>
@@ -223,7 +227,7 @@
 								<div flex="100" ng-repeat="module in stateCurriculum.modules | filter: filterModules(suboccupation.code, 'KUTSEMOODUL_Y')" layout="row" class="align-center">
 									<a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguage()=='en' ? module.nameEn : module.nameEt}}</a>
 									<span flex="10">{{module.credits}}&nbsp; EKAP</span>
-									<md-button flex="20" class="remove" ng-click="removeModule(suboccupation.code, module)">&times;</md-button>
+									<md-button flex="20" class="remove" ng-click="removeModule(suboccupation.code, module)" ng-if="!readOnly">&times;</md-button>
 								</div>
 							</div>
 						</div>
@@ -234,7 +238,7 @@
 								<div flex="100" ng-repeat="module in stateCurriculum.modules | filter: filterModules(suboccupation.code, 'KUTSEMOODUL_P')" layout="row" class="align-center">
 									<a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguage()=='en' ? module.nameEn : module.nameEt}}</a>
 									<span flex="10">{{module.credits}}&nbsp; EKAP</span>
-									<md-button flex="20" class="remove nomargin" ng-click="removeModule(suboccupation.code, module)">&times;</md-button>
+									<md-button flex="20" class="remove nomargin" ng-click="removeModule(suboccupation.code, module)" ng-if="!readOnly">&times;</md-button>
 								</div>
 							</div>
 						</div>
@@ -251,40 +255,58 @@
 				<div layout="row">
 				<md-input-container>
 				  <label>{{'stateCurriculum.enter.module.modules3' | translate}}</label>
-				  <input name="vocationalCredits" type="number" ng-model="stateCurriculum.optionalStudyCredits" required aria-label="optional credits" class="shiftDown1" min="0">
+				  <input type="number" name="optionalCredits" ng-model="stateCurriculum.optionalStudyCredits" required aria-label="optional credits" class="shiftDown1" min="0" max="999" ng-readonly="readOnly">
+                  <div ng-messages="stateCurriculumForm.optionalCredits.$error" ng-show="stateCurriculumForm.optionalCredits.$dirty">
+					  <div ng-message="min">
+						{{'stateCurriculum.enter.credits.positive' | translate}}
+					  </div>
+                      <div ng-message="max">
+						{{'stateCurriculum.enter.credits.max' | translate}}
+					  </div>
+				  </div>
 				</md-input-container>
 			</div>
 
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.practice' | translate}}</label>
-              <textarea ng-model="stateCurriculum.practiceDescription" md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.practiceDescription" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.finalExam' | translate}}</label>
-              <textarea ng-model="stateCurriculum.finalExamDescription" md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.finalExamDescription" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
 
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.comment' | translate}}</label>
-              <textarea ng-model="stateCurriculum.description" md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="stateCurriculum.description" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.riigiteataja' | translate}}</label>
-              <input ng-model="stateCurriculum.riigiteatajaUrl" type="text"  md-maxlength="4000">
+              <input ng-model="stateCurriculum.riigiteatajaUrl" type="text"  md-maxlength="4000" ng-readonly="readOnly">
             </md-input-container>
 			</div>
 			<div layout="row" layout-sm="column" layout-xs="column">
-			  <div layout="row" layout-sm="column" layout-xs="column" flex="50" flex-sm="100" flex-xs="100">
-              <md-input-container flex-sm="100" flex-xs="100">
-                  <label>{{'stateCurriculum.enter.validFrom' | translate}}</label>
-                  <md-datepicker ng-model="stateCurriculum.validFrom" required md-open-on-focus ng-change="checkValidThru()">
-                  </md-datepicker>
-              </md-input-container>
-              <md-input-container flex-sm="100" flex-xs="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'stateCurriculum.enter.validThru' | translate}}</label>
-                  <md-datepicker ng-model="stateCurriculum.validThru" md-min-date="stateCurriculum.validFrom" md-open-on-focus>
-                  </md-datepicker>
-              </md-input-container>
+			  <div layout="row" layout-sm="column" layout-xs="column" flex="50" flex-sm="100" flex-xs="100" ng-if="!readOnly">
+                <md-input-container flex-sm="100" flex-xs="100">
+                    <label>{{'stateCurriculum.enter.validFrom' | translate}}</label>
+                    <md-datepicker ng-model="stateCurriculum.validFrom" required md-open-on-focus ng-change="checkValidThru()">
+                    </md-datepicker>
+                </md-input-container>
+                <md-input-container flex-sm="100" flex-xs="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'stateCurriculum.enter.validThru' | translate}}</label>
+                    <md-datepicker ng-model="stateCurriculum.validThru" md-min-date="stateCurriculum.validFrom" md-open-on-focus>
+                    </md-datepicker>
+                </md-input-container>
+			  </div>
+              <div layout="row" layout-sm="column" layout-xs="column" flex="50" flex-sm="100" flex-xs="100" ng-if="readOnly">
+                <md-input-container flex>
+                    <label>{{'stateCurriculum.enter.validFrom' | translate}}</label>
+                    <hois-value value="'main.formattedDate' | translate: {date: stateCurriculum.validFrom} "></hois-value>
+                </md-input-container>
+                <md-input-container flex flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'stateCurriculum.enter.validThru' | translate}}</label>
+                    <hois-value value="'main.formattedDate' | translate: {date: stateCurriculum.validThru} "></hois-value>
+                </md-input-container>
 			  </div>
                 <md-input-container layout="row" layout-sm="column" layout-xs="column" flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label class="label">{{'main.status' | translate}}</label>
@@ -294,14 +316,15 @@
             <hois-created-modified object="stateCurriculum"></hois-created-modified>
         </form>
         <div layout="row">
-            <md-button ng-click="save()" ng-if="!readOnly"
+            <md-button ng-click="save()" ng-if="!isViewPage && currentStatus !== 'OPPEKAVA_STAATUS_C'"
                  class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-			<div ng-if="stateCurriculum.id && !readOnly" ng-repeat="status in statuses | filter: filterStatusChangeOptions" >
+			<div ng-if="stateCurriculum.id && !isViewPage && currentStatus !== 'OPPEKAVA_STAATUS_C'" ng-repeat="status in statuses | filter: filterStatusChangeOptions" >
 				<md-button class="md-raised md-default" ng-click="setStatus(status)">{{status.button | translate}}</md-button>
             </div>
+            <md-button ng-if="!isViewPage && stateCurriculum.status === 'OPPEKAVA_STAATUS_C' && currentStatus !== 'OPPEKAVA_STAATUS_C'" class="md-raised md-default" ng-click="setStatus(statuses[1])">{{statuses[1].button | translate}}</md-button>
             <md-button ng-click="delete()"
-               ng-if="stateCurriculum.id && !readOnly" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-            <md-button ng-href="/#/stateCurriculum"
+               ng-if="stateCurriculum.id && !isViewPage && currentStatus !== 'OPPEKAVA_STAATUS_C'" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+            <md-button ng-click="back('#/stateCurriculum', stateCurriculumForm)"
                  class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>
   </div>

@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web.dto;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Set;
 
@@ -16,25 +15,28 @@ public class MessageSearchDto {
     private String sender;
     private Set<String> receivers;
     private Boolean isRead;
+    private Long sendersId;
+
 
     public MessageSearchDto(Message message) {
-        this(message.getId(), message.getSubject(), message.getInserted(), null, null);
+        this(message.getId(), message.getSubject(), message.getInserted(), null, null, message.getSender().getId());
     }
 
     public MessageSearchDto(Long id, String subject, String content, LocalDateTime dateSent, String sender,
-            Boolean isRead) {
-        this(id, subject, dateSent, sender, isRead);
+            Boolean isRead, Long sendersId) {
+        this(id, subject, dateSent, sender, isRead, sendersId);
 
         this.content = content;
     }
 
     public MessageSearchDto(Long id, String subject, LocalDateTime dateSent, String sender,
-            Boolean isRead) {
+            Boolean isRead, Long sendersId) {
         this.id = id;
         this.subject = subject;
         this.dateSent = dateSent;
         this.sender = sender;
         this.isRead = isRead;
+        this.sendersId = sendersId;
     }
 
     public static MessageSearchDto ofSent(Message message) {
@@ -97,5 +99,13 @@ public class MessageSearchDto {
 
     public void setSender(String sender) {
         this.sender = sender;
+    }
+
+    public Long getSendersId() {
+        return sendersId;
+    }
+
+    public void setSendersId(Long sendersId) {
+        this.sendersId = sendersId;
     }
 }

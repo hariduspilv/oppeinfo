@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.SaisApplication;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 
@@ -28,6 +29,7 @@ public class SaisApplicationDto {
     private LocalDate submitted;
     private LocalDate saisChanged;
     private String saisAdmissionCode;
+    private Boolean isHigher;
     private Set<SaisApplicationGraduatedSchoolDto> graduatedSchools;
     private Set<SaisApplicationGradeDto> grades;
     private Set<SaisApplicationOtherDataDto> otherData;
@@ -38,6 +40,7 @@ public class SaisApplicationDto {
         dto.getGraduatedSchools().addAll(StreamUtil.toMappedList(SaisApplicationGraduatedSchoolDto::of, saisApplication.getGraduatedSchools()));
         dto.getGrades().addAll(StreamUtil.toMappedList(SaisApplicationGradeDto::of, saisApplication.getGrades()));
         dto.getOtherData().addAll(StreamUtil.toMappedList(SaisApplicationOtherDataDto::of, saisApplication.getOtherData()));
+        dto.setIsHigher(Boolean.valueOf(CurriculumUtil.isHigher(saisApplication.getSaisAdmission().getStudyLevel())));
         return dto;
     }
 
@@ -208,4 +211,14 @@ public class SaisApplicationDto {
     public void setOtherData(Set<SaisApplicationOtherDataDto> otherData) {
         this.otherData = otherData;
     }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
+    }
+
+
 }

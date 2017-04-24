@@ -15,6 +15,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
     restrict: 'E',
     replace: true,
     scope: {
+      criteria: '=',
       multiple:'@',
       ngRequired:'=',
       required:'@',
@@ -36,15 +37,17 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
         if(attrs.type === 'building') {
           scope.options = QueryUtils.endpoint('/autocomplete/buildings').query();
         } else if(attrs.type === 'curriculumversion') {
-          scope.options = Curriculum.queryVersions();
+          scope.options = Curriculum.queryVersions(scope.criteria);
         } else if(attrs.type === 'directivecoordinator') {
           scope.options = QueryUtils.endpoint('/autocomplete/directivecoordinators').query();
         } else if(attrs.type === 'school') {
           scope.options = School.getAll();
         } else if(attrs.type === 'curriculum') {
           QueryUtils.endpoint('/autocomplete/curriculums').search(afterLoad);
-        } else if(attrs.type === 'studentgroups') {
+        } else if(attrs.type === 'studentgroup') {
           scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query();
+        } else if(attrs.type === 'studyyear') {
+          scope.options = QueryUtils.endpoint('/school/studyYears').query();
         }
       } else if(angular.isDefined(scope.values)) {
         scope.$parent.$watchCollection(scope.values, function(values) {

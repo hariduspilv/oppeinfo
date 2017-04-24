@@ -16,7 +16,7 @@ public class LessonPlan extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private StudyYear studyYear;
-    private boolean isUsable;
+    private Boolean isUsable;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private School school;
@@ -34,11 +34,11 @@ public class LessonPlan extends BaseEntityWithId {
         this.studyYear = studyYear;
     }
 
-    public boolean isUsable() {
+    public Boolean getIsUsable() {
         return isUsable;
     }
 
-    public void setUsable(boolean isUsable) {
+    public void setIsUsable(Boolean isUsable) {
         this.isUsable = isUsable;
     }
 

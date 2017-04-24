@@ -1,6 +1,5 @@
 package ee.hitsa.ois.domain.timetable;
 
-import java.time.LocalDate;
 import java.time.LocalTime;
 
 import javax.persistence.Entity;
@@ -17,11 +16,21 @@ public class LessonTime extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private School school;
+
     private LocalTime startTime;
     private LocalTime endTime;
     private Integer lessonNr;
-    private LocalDate validFrom;
-    private LocalDate validThru;
+    private Boolean dayMon;
+    private Boolean dayTue;
+    private Boolean dayWed;
+    private Boolean dayThu;
+    private Boolean dayFri;
+    private Boolean daySat;
+    private Boolean daySun;
+
+    @ManyToOne(optional = false, fetch = FetchType.EAGER)
+    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    private LessonTimeBuildingGroup lessonTimeBuildingGroup;
 
     public School getSchool() {
         return school;
@@ -55,19 +64,68 @@ public class LessonTime extends BaseEntityWithId {
         this.lessonNr = lessonNr;
     }
 
-    public LocalDate getValidFrom() {
-        return validFrom;
+    public Boolean getDayMon() {
+        return dayMon;
     }
 
-    public void setValidFrom(LocalDate validFrom) {
-        this.validFrom = validFrom;
+    public void setDayMon(Boolean dayMon) {
+        this.dayMon = dayMon;
     }
 
-    public LocalDate getValidThru() {
-        return validThru;
+    public Boolean getDayTue() {
+        return dayTue;
     }
 
-    public void setValidThru(LocalDate validThru) {
-        this.validThru = validThru;
+    public void setDayTue(Boolean dayTue) {
+        this.dayTue = dayTue;
     }
+
+    public Boolean getDayWed() {
+        return dayWed;
+    }
+
+    public void setDayWed(Boolean dayWed) {
+        this.dayWed = dayWed;
+    }
+
+    public Boolean getDayThu() {
+        return dayThu;
+    }
+
+    public void setDayThu(Boolean dayThu) {
+        this.dayThu = dayThu;
+    }
+
+    public Boolean getDayFri() {
+        return dayFri;
+    }
+
+    public void setDayFri(Boolean dayFri) {
+        this.dayFri = dayFri;
+    }
+
+    public Boolean getDaySat() {
+        return daySat;
+    }
+
+    public void setDaySat(Boolean daySat) {
+        this.daySat = daySat;
+    }
+
+    public Boolean getDaySun() {
+        return daySun;
+    }
+
+    public void setDaySun(Boolean daySun) {
+        this.daySun = daySun;
+    }
+
+    public LessonTimeBuildingGroup getLessonTimeBuildingGroup() {
+        return lessonTimeBuildingGroup;
+    }
+
+    public void setLessonTimeBuildingGroup(LessonTimeBuildingGroup lessonTimeBuildingGroup) {
+        this.lessonTimeBuildingGroup = lessonTimeBuildingGroup;
+    }
+
 }

@@ -16,6 +16,11 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 
 /**
+ * 
+ * This is just proposal for creating instances of objects for testing (currently not used)
+ * In most cases this approach does not work as inserted_by column, which is 
+ * mandatory in most tables and is handled by Spring, is left empty.
+ * 
  * Methods are placed in alphabetical order.
  * 
  * Remember that not all objects have cascade delete option when cleaning test data!

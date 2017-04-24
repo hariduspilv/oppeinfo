@@ -175,12 +175,12 @@ angular.module('hitsaOis')
           url: "/messages/received?_menu"
         },
         {
-          name: 'main.menu.studyYearSchedule.legend',
-          url: "/studyYearScheduleLegend"
-        },        
-        {
           name: 'main.menu.studyYearSchedule.edit',
           url: "/studyYearSchedule"
+        },
+        {
+          name: 'main.menu.studyYearSchedule.legend',
+          url: "/studyYearScheduleLegend"
         }
       ]
     });
@@ -191,12 +191,12 @@ angular.module('hitsaOis')
       type: 'toggle',
       pages: [
         {
-          name: 'main.menu.reception.saisAdmissionSearch',
+          name: 'main.menu.reception.saisAdmission.search',
           id: 'receptionSaisAdmissionSearch',
           url: "/reception/saisAdmission/search?_menu"
         },
         {
-          name: 'main.menu.reception.saisApplicationSearch',
+          name: 'main.menu.reception.saisApplication.search',
           id: 'receptionSaisApplicationSearch',
           url: "/reception/saisApplication/search?_menu"
         }

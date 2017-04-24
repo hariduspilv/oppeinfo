@@ -1,0 +1,126 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form layout="column">
+      <div layout="column" layout-sm="column" layout-xs="column" flex>
+        <div layout="row" layout-sm="column" layout-xs="column" flex-sm="100" flex-xs="100">
+            <md-input-container>
+              <label>{{'timetable.lessonTime.validFrom' | translate}}</label>
+              <md-datepicker ng-model="validFrom"></md-datepicker>
+            </md-input-container>
+        </div>
+
+      <div layout-padding ng-repeat="block in blocks | orderBy: $index">
+          <div layout="row" layout-sm="column" layout-xs="column" flex>
+            <md-input-container flex="10" flex-xs="100">
+              <label>{{'timetable.buildings' | translate}}</label>
+            </md-input-container>
+            <md-input-container layout="row" layout-align="start center">
+              <md-checkbox ng-model="block.selectedBuildings[building.id]" ng-disabled="isBuildingDisabled(building, block)" ng-change="buildingChanged(building, block)" ng-repeat="building in buildings | orderBy: currentLanguageNameField()">{{ building[currentLanguageNameField()] }}</md-checkbox>
+            </md-input-container>
+          </div>
+
+          <md-table-container>
+            <table md-table md-progress="tabledata.$promise">
+              <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row>
+                <th md-column>{{'main.nr' | translate}}</th>
+                <th md-column>{{'main.start' | translate}}</th>
+                <th md-column>{{'main.end' | translate}}</th>
+                <th md-column>{{'timetable.academicHours' | translate}}</th>
+                <th md-column>{{'main.mondayShort' | translate}}</th>
+                <th md-column>{{'main.tuesdayShort' | translate}}</th>
+                <th md-column>{{'main.wednesdayShort' | translate}}</th>
+                <th md-column>{{'main.thursdayShort' | translate}}</th>
+                <th md-column>{{'main.fridayShort' | translate}}</th>
+                <th md-column>{{'main.saturdayShort' | translate}}</th>
+                <th md-column>{{'main.sundayShort' | translate}}</th>
+                <th md-column></th>
+              </tr>
+              </thead>
+              <tbody md-body>
+              <tr md-row ng-repeat="lessonTime in block.lessonTimes" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>
+                  <md-input-container flex="25">
+                    <input ng-model="lessonTime.lessonNr" aria-label="{{'main.nr' | translate}}" type="text">
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <input type="time" ng-model="lessonTime.startTime" aria-label="{{'main.start' | translate}}"></input>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <input type="time" ng-model="lessonTime.endTime" aria-label="{{'main.end' | translate}}"></input>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container flex="25">
+                    <input ng-model="lessonTime.academicHours" ng-value="calculateAcademicHours(lessonTime.startTime, lessonTime.endTime)" aria-label="{{'timetable.academicHours' | translate}}" type="text" readonly="true">
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayMon" aria-label="{{'main.mondayShort' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayTue" aria-label="{{'main.tuesdayShort' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayWed" aria-label="{{'main.wednesdayShort' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayThu" aria-label="{{'main.thursdayShort' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayFri" aria-label="{{'main.fridayShort' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.daySat" aria-label="{{'main.saturdayShort' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.daySun" aria-label="{{'main.sundayShort' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <div class="remove nomargin" ng-click="deleteRow(block.lessonTimes, lessonTime)">&times;</div>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+
+          <div layout="row" layout-sm="column" layout-xs="column" flex>
+            <md-button class="md-primary" ng-click="addNewRow(block)">{{'timetable.lessonTime.addNewRow' | translate}}</md-button>
+            <md-button class="md-primary" ng-click="deleteBlock(block)">{{'timetable.lessonTime.deleteBlock' | translate}}</md-button>
+          </div>
+
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column" flex>
+          <md-button class="md-primary" ng-click="addNewBlock()">{{'timetable.lessonTime.addNewBlock' | translate}}</md-button>
+        </div>
+      </div>
+
+      <br/>
+      <div layout="row">
+        <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-href="#/timetable/lessonTime/search" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+
+    </form>
+  </div>
+</div>
+

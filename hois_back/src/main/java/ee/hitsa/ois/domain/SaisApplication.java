@@ -71,7 +71,7 @@ public class SaisApplication extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier citizenship;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyLoad;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

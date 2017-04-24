@@ -1,6 +1,6 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.math.BigDecimal;
 
@@ -73,8 +73,8 @@ public class SubjectService {
         EntityUtil.bindToEntity(newSubject, subject, classifierRepository /*, "status"*/);
         subject.setSchool(schoolRepository.getOne(user.getSchoolId()));
         SchoolDepartment schoolDepartment = null;
-        if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().longValue() > 0) {
-            schoolDepartment = schoolDepartmentRepository.getOne(newSubject.getSchoolDepartment());
+        if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().getId() != null && newSubject.getSchoolDepartment().getId().longValue() > 0) {
+            schoolDepartment = schoolDepartmentRepository.getOne(newSubject.getSchoolDepartment().getId());
         }
         subject.setSchoolDepartment(schoolDepartment);
         EntityUtil.bindEntityCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {

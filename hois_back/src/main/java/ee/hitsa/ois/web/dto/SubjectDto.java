@@ -42,9 +42,8 @@ public class SubjectDto extends SubjectForm {
     private Set<AutocompleteResult> curriculumVersions;
 
     public static SubjectDto of(Subject subject, List<CurriculumVersion> curriculumVersions) {
-        SubjectDto dto = EntityUtil.bindToDto(subject, new SubjectDto(), "languages", "schoolDepartment", "curriculumVersions");
+        SubjectDto dto = EntityUtil.bindToDto(subject, new SubjectDto(), "languages", "curriculumVersions");
         dto.setLanguages(StreamUtil.toMappedSet(EntityUtil::getCode, SubjectUtil.getLanguages(subject)));
-        dto.setSchoolDepartment(EntityUtil.getNullableId(subject.getSchoolDepartment()));
         dto.setCurriculumVersions(StreamUtil.toMappedSet(AutocompleteResult::of, curriculumVersions));
 
         dto.setPrimarySubjects(
@@ -57,9 +56,9 @@ public class SubjectDto extends SubjectForm {
         Set<EntityConnectionCommand> recommendedPrerequisiteSubjects = new HashSet<>();
         Set<EntityConnectionCommand> substituteSubjects = new HashSet<>();
 
-        for (SubjectConnect connetion: subject.getSubjectConnections()) {
-            AutocompleteResult s = AutocompleteResult.of(connetion.getConnectSubject());
-            String connectionCode = EntityUtil.getCode(connetion.getConnection());
+        for (SubjectConnect connection: subject.getSubjectConnections()) {
+            AutocompleteResult s = AutocompleteResult.of(connection.getConnectSubject());
+            String connectionCode = EntityUtil.getCode(connection.getConnection());
             if (SubjectConnection.AINESEOS_EK.name().equals(connectionCode)) {
                 mandatoryPrerequisiteSubjects.add(s);
             } else if (SubjectConnection.AINESEOS_EV.name().equals(connectionCode)) {

@@ -13,17 +13,23 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class CurriculumVersionResult extends AutocompleteResult {
 
     private final Long curriculum;
+    private final Long schoolDepartment;
     private final String studyForm;
 
-    public CurriculumVersionResult(Long id, String nameEt, String nameEn, Long curriculum, String studyForm) {
+    public CurriculumVersionResult(Long id, String nameEt, String nameEn, Long curriculum, Long schoolDepartment, String studyForm) {
         super(id, nameEt, nameEn);
 
         this.curriculum = curriculum;
+        this.schoolDepartment = schoolDepartment;
         this.studyForm = studyForm;
     }
 
     public Long getCurriculum() {
         return curriculum;
+    }
+
+    public Long getSchoolDepartment() {
+        return schoolDepartment;
     }
 
     public String getStudyForm() {
@@ -35,6 +41,7 @@ public class CurriculumVersionResult extends AutocompleteResult {
         Classifier studyForm = curriculumVersion.getCurriculumStudyForm() != null ? curriculumVersion.getCurriculumStudyForm().getStudyForm() : null;
         String code = curriculumVersion.getCode();
         return new CurriculumVersionResult(curriculumVersion.getId(), CurriculumUtil.versionName(code, curriculum.getNameEt()),
-                CurriculumUtil.versionName(code, curriculum.getNameEn()), curriculum.getId(), EntityUtil.getNullableCode(studyForm));
+                CurriculumUtil.versionName(code, curriculum.getNameEn()), curriculum.getId(),
+                EntityUtil.getId(curriculumVersion.getSchoolDepartment()), EntityUtil.getNullableCode(studyForm));
     }
 }

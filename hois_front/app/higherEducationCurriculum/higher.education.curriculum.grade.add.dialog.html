@@ -14,25 +14,25 @@
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
         <md-input-container flex>
             <label>{{'curriculum.grade.nameEt' | translate}}</label>
-            <input ng-model="data.nameEt" type="text" required md-maxlength="255">
+            <input ng-model="data.nameEt" type="text" required md-maxlength="255" ng-readonly="readOnly">
         </md-input-container>
         <md-input-container flex>
             <label>{{'curriculum.grade.nameEn' | translate}}</label>
-            <input ng-model="data.nameEn" type="text" required md-maxlength="255">
+            <input ng-model="data.nameEn" type="text" required md-maxlength="255" ng-readonly="readOnly">
         </md-input-container>
         <md-input-container flex>
             <label>{{'curriculum.grade.nameEtGenitive' | translate}}</label>
-            <input ng-model="data.nameGenitiveEt" type="text" required md-maxlength="255">
+            <input ng-model="data.nameGenitiveEt" type="text" required md-maxlength="255" ng-readonly="readOnly">
         </md-input-container>
         <md-input-container flex>
             <label>{{'curriculum.grade.ehisGrade' | translate}}</label>
-            <hois-classifier-select ng-model="data.ehisGrade" main-classifier-code="EKR" required model-value-attr="code"></hois-classifier-select>
+            <hois-classifier-select ng-model="data.ehisGrade" main-classifier-code="EKR" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
         </md-input-container>
 
       </div>
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!readOnly">{{"main.button.save" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

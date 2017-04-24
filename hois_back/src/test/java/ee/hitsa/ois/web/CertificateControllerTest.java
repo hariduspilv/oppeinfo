@@ -53,7 +53,10 @@ public class CertificateControllerTest {
         responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+    /**
+     * This test is vulnerable to database changes. 
+     * This was the reasons for failing last times. 
+     */
     @Test
     public void crud() {
         CertificateForm form = getForm();

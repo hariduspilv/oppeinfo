@@ -1,6 +1,6 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -314,6 +314,7 @@ public class CurriculumService {
     }
 
 	public boolean isUnique(Long schoolId, UniqueCommand command) {
+        // TODO use existBy
         return curriculumRepository.count((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             if(command.getId() != null) {
@@ -337,6 +338,7 @@ public class CurriculumService {
         if(command.getFk() == null) {
             command.setFk(Long.valueOf(0));
         }
+        // TODO use existBy
         long count = curriculumVersionRepository.countBySchoolAndOtherCurriculums
                 (schoolId, command.getParamValue(), command.getFk());
         return count == 0;
@@ -373,7 +375,10 @@ public class CurriculumService {
       updateJointPartners(curriculum, curriculumForm.getJointPartners());
       updateOccupations(curriculum, curriculumForm.getOccupations());
       updateModules(curriculum, curriculumForm.getModules());
-      // Versions are now saved on separate form
+      /*
+       * TODO: remove line below as now saving curriculum versions is done on separate form via own controller.
+       * Beware, that a lot of tests from CurriculumControllerTest are going to fail.
+       */
       updateVersions(curriculum, curriculumForm.getVersions());
 
       return curriculumRepository.save(curriculum);

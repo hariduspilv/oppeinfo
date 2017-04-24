@@ -310,6 +310,7 @@ angular.module('hitsaOis')
             scope.data =  angular.extend({}, editedSpecialty);
         }
         scope.maxCredits = $scope.curriculum.credits ? $scope.curriculum.credits : 0;
+        scope.readOnly = $scope.readOnly;
       };
 
       dialogService.showDialog('higherEducationCurriculum/higher.education.curriculum.specialty.add.dialog.html', DialogController,
@@ -363,6 +364,7 @@ angular.module('hitsaOis')
       if (editingGrade) {
         DialogController = function (scope) {
           scope.data = angular.extend({}, editingGrade);
+          scope.readOnly = $scope.readOnly;
         };
       }
       dialogService.showDialog('higherEducationCurriculum/higher.education.curriculum.grade.add.dialog.html', DialogController,
@@ -377,7 +379,7 @@ angular.module('hitsaOis')
     };
 
     $scope.openAddFileDialog = function () {
-      dialogService.showDialog('higherEducationCurriculum/vocationalCurriculum/file.add.dialog.html', null, function (submitScope) {
+      dialogService.showDialog('vocationalCurriculum/file.add.dialog.html', null, function (submitScope) {
         var data = submitScope.data;
         data.sendEhis = false;
         data.ehis = false;

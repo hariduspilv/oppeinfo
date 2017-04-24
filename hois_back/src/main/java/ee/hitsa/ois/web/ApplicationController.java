@@ -123,7 +123,7 @@ public class ApplicationController {
             throw new ValidationFailedException(String.format("user %s is not allowed to reject application %d with status %s", user.getUsername(), application.getId(), status));
         }
         Application rejectedApplication = applicationService.reject(application, applicationRejectForm);
-        applicationService.sendRejectionNotificationMessage(rejectedApplication);
+        applicationService.sendRejectionNotificationMessage(rejectedApplication, user);
 
         return get(user, rejectedApplication);
     }

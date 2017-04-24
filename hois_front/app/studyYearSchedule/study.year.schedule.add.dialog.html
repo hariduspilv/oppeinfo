@@ -13,12 +13,30 @@
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
           <span flex></span>
-          <h2>{{week}} {{"studyYearSchedule.week" | translate}}: 17.04.2017 - 23.04.2017</h2>
+          <h2>{{week.weekNr}}. {{"studyYearSchedule.week" | translate}}: {{'main.formattedDate' | translate: {date: week.start} }} - {{'main.formattedDate' | translate: {date: week.end} }}</h2>
+          <br>
 
-          <md-input-container>
+    <!-- testing radio buttons-->
+        <md-input-container layout="row">
+            <md-radio-group ng-model="data.legend" layout="row"> 
+                <span class="label">{{'studyYearSchedule.studyType' | translate}}</span>
+                <md-radio-button ng-value="null" aria-label="{{ 'select color' }}" layout="column">
+                        <div class="colorCell" style="background: 'white'"></div>
+                </md-radio-button>
+                <md-radio-button ng-repeat="legend in legends" ng-value="legend.id" aria-label="{{ 'select color' }}">
+                        <div class="colorCell" ng-style="{ background: true ? legend.color : 'white' }">
+                            <span>&nbsp;{{ legend.code }}</span>
+                        </div>
+                </md-radio-button>
+            </md-radio-group>
+        </md-input-container>
+        <br>
+          <!--<md-input-container>
             <label>{{'studyYearSchedule.studyType' | translate}}</label>
-                <hois-select ng-model="data.legend" values="legends" required></hois-select>
-          </md-input-container>
+                <hois-select ng-model="data.legend" values="legends"></hois-select>
+          </md-input-container>-->
+
+
           <!-- TODO: proper integer validation -->
           <md-input-container  flex>
             <label>{{'studyYearSchedule.durationInWeeks' | translate}}</label>
@@ -41,3 +59,16 @@
     </md-dialog-actions>
   </form>
 </md-dialog>
+
+<style>
+
+/* testing radio buttons */
+.colorCell {
+    width: 20px;
+    height: 20px;
+    border: 1px solid black;
+}
+md-radio-button {
+    padding-right: 20px;
+}
+</style>

@@ -4,9 +4,8 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.school.StudyYearSchedule;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
-public class StudyYearScheduleDto extends VersionedCommand {
+public class StudyYearScheduleDto {
 
     private Long id;
     @NotNull

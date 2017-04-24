@@ -4,28 +4,28 @@
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="50" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.nameEt' | translate}}</label>
-                    <input ng-model="curriculum.nameEt" type="text" required md-maxlength="255">
+                    <input ng-model="curriculum.nameEt" type="text" required md-maxlength="255" ng-readonly="readOnly">
                 </md-input-container>
                 <md-input-container  flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'curriculum.nameGenitiveEt' | translate}}</label>
-                    <input ng-model="curriculum.nameGenitiveEt" type="text" required md-maxlength="255">
+                    <input ng-model="curriculum.nameGenitiveEt" type="text" required md-maxlength="255" ng-readonly="readOnly">
                 </md-input-container>
             </div>
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container  flex="50" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.nameEn' | translate}}</label>
-                    <input ng-model="curriculum.nameEn" type="text" required md-maxlength="255">
+                    <input ng-model="curriculum.nameEn" type="text" required md-maxlength="255" ng-readonly="readOnly">
                 </md-input-container>
                 <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'curriculum.nameGenitiveEn' | translate}}</label>
-                    <input ng-model="curriculum.nameGenitiveEn" type="text" required md-maxlength="255">
+                    <input ng-model="curriculum.nameGenitiveEn" type="text" required md-maxlength="255" ng-readonly="readOnly">
                 </md-input-container>
             </div>
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="20" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.studyLevel' | translate}}</label>
                    <hois-classifier-select ng-model="curriculum.origStudyLevel" main-classifier-code="OPPEASTE"
-                   show-only-values="studyLevels" required model-value-attr="code"></hois-classifier-select>
+                   show-only-values="studyLevels" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
                 </md-input-container>
 
                 <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -43,21 +43,21 @@
 			<div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
 				<md-input-container flex="20" flex-sm="100" flex-xs="100">
 					<label>{{'curriculum.curriculumGroup' | translate}}</label>
-					<hois-classifier-select ng-model="curriculum.group" required main-classifier-code="OPPEKAVAGRUPP" ng-change="getAreasOfStudy(true)" model-value-attr="code"></hois-classifier-select>
+					<hois-classifier-select ng-model="curriculum.group" required main-classifier-code="OPPEKAVAGRUPP" ng-change="getAreasOfStudy(true)" model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
 				</md-input-container>
 				<md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
 				  <label>{{'curriculum.areaOfStudy' | translate}}</label>
-				  <hois-classifier-select ng-model="curriculum.areaOfStudy" main-classifier-code="ISCED_VALD" ng-change="clearIscedClass()" model-value-attr="code" show-only-values="areasOfStudy" criteria="{higher: true}"></hois-classifier-select>
+				  <hois-classifier-select ng-model="curriculum.areaOfStudy" main-classifier-code="ISCED_VALD" ng-change="clearIscedClass()" model-value-attr="code" show-only-values="areasOfStudy" criteria="{higher: true}" ng-disabled="readOnly"></hois-classifier-select>
 				</md-input-container>
 				<md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
 					<label>{{'curriculum.fieldOfStudy' | translate}}</label>
-					<hois-classifier-select ng-model="curriculum.fieldOfStudy" main-classifier-code="ISCED_SUUN" watch-model="curriculum.areaOfStudy" search-from-connect connect-main-classifier-code="ISCED_VALD" criteria="{higher: true}"ng-disabled="!curriculum.areaOfStudy" model-value-attr="code"></hois-classifier-select>
+					<hois-classifier-select ng-model="curriculum.fieldOfStudy" main-classifier-code="ISCED_SUUN" watch-model="curriculum.areaOfStudy" search-from-connect connect-main-classifier-code="ISCED_VALD" criteria="{higher: true}"ng-disabled="!curriculum.areaOfStudy || readOnly" model-value-attr="code"></hois-classifier-select>
 				</md-input-container>
 		    </div>
             <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
                 <md-input-container flex="20" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.code' | translate}}</label>
-                    <input ng-model="curriculum.code" name="code" type="text" required md-maxlength="25" ng-model-options="{ debounce: 250 }" unique='codeUniqueQuery'>
+                    <input ng-model="curriculum.code" name="code" type="text" required md-maxlength="25" ng-model-options="{ debounce: 250 }" unique='codeUniqueQuery' ng-readonly="readOnly">
                     <div ng-messages="higherEducationCurriculumForm.code.$error" ng-show="higherEducationCurriculumForm.code.$dirty">
                         <div ng-message="notUnique">
                             {{'main.messages.error.mustBeUnique' | translate}}
@@ -66,7 +66,7 @@
                 </md-input-container>
                 <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'curriculum.merCode' | translate}}</label>
-                    <input ng-model="curriculum.merCode" name="merCode" type="text" md-maxlength="10"  ng-model-options="{ debounce: 250 }" unique='merCodeUniqueQuery'>
+                    <input ng-model="curriculum.merCode" name="merCode" type="text" md-maxlength="10"  ng-model-options="{ debounce: 250 }" unique='merCodeUniqueQuery' ng-readonly="readOnly">
                     <div ng-messages="higherEducationCurriculumForm.merCode.$error" ng-show="higherEducationCurriculumForm.merCode.$dirty">
                         <div ng-message="notUnique">
                             {{'main.messages.error.mustBeUnique' | translate}}
@@ -77,28 +77,37 @@
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="20" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.creditsEap' | translate}}</label>
-                    <input ng-model="curriculum.credits" type="number" required min="0" name="credits">
+                    <input ng-model="curriculum.credits" type="number" required min="0" max="999" name="credits" ng-readonly="readOnly">
                     <div ng-messages="higherEducationCurriculumForm.credits.$error" ng-show="higherEducationCurriculumForm.credits.$dirty">
                         <div ng-message="min">
                             {{'main.messages.error.positive' | translate}}
                         </div>
+                         <div ng-message="max">
+                            {{'curriculum.error.max999' | translate}}
+                        </div>
                     </div>
                 </md-input-container>
                 <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5" >
-                    <input ng-model="curriculum.studyPeriodYears" type="number" name="studyPeriodYears" placeholder="{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}" required min="0"
-                    ng-change="curriculum.studyPeriod = curriculum.studyPeriodMonths + 12 * curriculum.studyPeriodYears">
+                    <input ng-model="curriculum.studyPeriodYears" type="number" name="studyPeriodYears" placeholder="{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}" required min="0" max="999"
+                    ng-change="curriculum.studyPeriod = curriculum.studyPeriodMonths + 12 * curriculum.studyPeriodYears" ng-readonly="readOnly">
                     <div ng-messages="higherEducationCurriculumForm.studyPeriodYears.$error" ng-show="higherEducationCurriculumForm.studyPeriodYears.$dirty">
                         <div ng-message="min">
                             {{'main.messages.error.positive' | translate}}
                         </div>
+                         <div ng-message="max">
+                            {{'curriculum.error.max999' | translate}}
+                        </div>
                     </div>
                 </md-input-container>
                 <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
-                    <input ng-model="curriculum.studyPeriodMonths" type="number" name="studyPeriodMonths" placeholder="{{'main.months' | translate}}" required min="0"
-                    ng-change="curriculum.studyPeriod = curriculum.studyPeriodMonths + 12 * curriculum.studyPeriodYears">
+                    <input ng-model="curriculum.studyPeriodMonths" type="number" name="studyPeriodMonths" placeholder="{{'main.months' | translate}}" required min="0" max="11"
+                    ng-change="curriculum.studyPeriod = curriculum.studyPeriodMonths + 12 * curriculum.studyPeriodYears" ng-readonly="readOnly">
                     <div ng-messages="higherEducationCurriculumForm.studyPeriodMonths.$error" ng-show="higherEducationCurriculumForm.studyPeriodMonths.$dirty">
                         <div ng-message="min">
                             {{'main.messages.error.positive' | translate}}
+                        </div>
+                        <div ng-message="max">
+                            {{'curriculum.error.monthsMax11' | translate}}
                         </div>
                     </div>
                 </md-input-container>
@@ -108,50 +117,50 @@
 			<div layout="row" layout-sm="column" layout-xs="column" >
                 <md-input-container flex>
                     <label>{{'stateCurriculum.enter.objectivesEt' | translate}}</label>
-                    <textarea ng-model="curriculum.objectivesEt" required md-maxlength="20000" max-rows="2"></textarea>
+                    <textarea ng-model="curriculum.objectivesEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
                 </md-input-container>
 			</div>
             <md-input-container flex>
               <label>{{'stateCurriculum.enter.objectivesEn' | translate}}</label>
-              <textarea ng-model="curriculum.objectivesEn" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="curriculum.objectivesEn" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'curriculum.studyOutcomesEt' | translate}}</label>
-              <textarea ng-model="curriculum.outcomesEt" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="curriculum.outcomesEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'curriculum.studyOutcomesEn' | translate}}</label>
-              <textarea ng-model="curriculum.outcomesEn" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="curriculum.outcomesEn" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'curriculum.higherAdmissionRequirementsEt' | translate}}</label>
-              <textarea ng-model="curriculum.admissionRequirementsEt" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="curriculum.admissionRequirementsEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'curriculum.higherAdmissionRequirementsEn' | translate}}</label>
-              <textarea ng-model="curriculum.admissionRequirementsEn" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="curriculum.admissionRequirementsEn" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'curriculum.higherGraduationRequirementsEt' | translate}}</label>
-              <textarea ng-model="curriculum.graduationRequirementsEt" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="curriculum.graduationRequirementsEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'curriculum.higherGraduationRequirementsEn' | translate}}</label>
-              <textarea ng-model="curriculum.graduationRequirementsEn" required md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="curriculum.graduationRequirementsEn" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
 			
             <md-input-container flex>
               <label>{{'curriculum.optionalStudyDescription' | translate}}</label>
-              <textarea ng-model="curriculum.optionalStudyDescription" md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="curriculum.optionalStudyDescription" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
             <md-input-container flex>
               <label>{{'curriculum.addInfo' | translate}}</label>
-              <textarea ng-model="curriculum.addInfo"  md-maxlength="20000" max-rows="2"></textarea>
+              <textarea ng-model="curriculum.addInfo"  md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
             </md-input-container>
 
             <md-input-container flex ng-if="auth.school">
                 <label>{{'curriculum.structuralUnitResponsible' | translate}}</label>
-                <hois-school-department-select ng-model="curriculum.schoolDepartments" multiple required></hois-school-department-select>
+                <hois-school-department-select ng-model="curriculum.schoolDepartments" multiple required ng-disabled="readOnly"></hois-school-department-select>
             </md-input-container>
 			<md-input-container flex ng-if="!auth.school">
                 <label>{{'curriculum.structuralUnitResponsible' | translate}}</label>
@@ -160,22 +169,22 @@
 			<div layout="row" class="top-margin">
                 <md-input-container flex>
                     <label>{{'stateCurriculum.enter.comment' | translate}}</label>
-                    <textarea ng-model="curriculum.description"  md-maxlength="20000" max-rows="2"></textarea>
+                    <textarea ng-model="curriculum.description"  md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
                 </md-input-container>
             </div>
 			
 			<div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
 				<md-input-container flex="20" flex-sm="100" flex-xs="100">
 					<label>{{'curriculum.studyLanguage' | translate}}</label>
-					<hois-classifier-select multiple ng-model="curriculum.studyLanguages" required main-classifier-code="OPPEKEEL" model-value-attr="code" criteria="{higher: true}"></hois-classifier-select>
+					<hois-classifier-select multiple ng-model="curriculum.studyLanguages" required main-classifier-code="OPPEKEEL" model-value-attr="code" criteria="{higher: true}" ng-disabled="readOnly"></hois-classifier-select>
 				</md-input-container>
 				<md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
 				  <label>{{'curriculum.languageDescription' | translate}}</label>
-				  <textarea ng-model="curriculum.languageDescription" md-maxlength="20000" max-rows="2"></textarea>
+				  <textarea ng-model="curriculum.languageDescription" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
 				</md-input-container>
 				<md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
 				  <label>{{'curriculum.otherLanguages' | translate}}</label>
-				  <textarea ng-model="curriculum.otherLanguages" md-maxlength="20000" max-rows="2"></textarea>
+				  <textarea ng-model="curriculum.otherLanguages" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
 				</md-input-container>
 			</div>
 			
@@ -183,36 +192,36 @@
 			<div layout="row" layout-sm="column" layout-xs="column">
 				<md-input-container  flex="20" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.approvalDocumentNr' | translate}}</label>
-                    <input ng-model="curriculum.approvalDokNr" type="text" md-maxlength="100">
+                    <input ng-model="curriculum.approvalDokNr" type="text" md-maxlength="100" ng-readonly="readOnly">
                 </md-input-container>
                 <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'curriculum.approvalDate' | translate}}</label>
-                    <md-datepicker ng-model="curriculum.approval" md-open-on-focus></md-datepicker>
+                    <md-datepicker ng-model="curriculum.approval" md-open-on-focus ng-disabled="readOnly"></md-datepicker>
                 </md-input-container>
 				<md-input-container  flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'curriculum.htmRegisterDate' | translate}}</label>
-                    <md-datepicker ng-model="curriculum.merRegDate" md-open-on-focus></md-datepicker>
+                    <md-datepicker ng-model="curriculum.merRegDate" md-open-on-focus ng-disabled="readOnly"></md-datepicker>
                 </md-input-container>
             </div>
 			
 			<div layout="row" layout-sm="column" layout-xs="column">
                <md-input-container flex="20" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.accreditationDesision' | translate}}</label>
-                    <input ng-model="curriculum.accreditationResolution" type="text" md-maxlength="255">
+                    <input ng-model="curriculum.accreditationResolution" type="text" md-maxlength="255" ng-readonly="readOnly">
                 </md-input-container>
                 <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'curriculum.accreditationDate' | translate}}</label>
-                    <md-datepicker ng-model="curriculum.accreditationDate" md-open-on-focus></md-datepicker>
+                    <md-datepicker ng-model="curriculum.accreditationDate" md-open-on-focus ng-disabled="readOnly"></md-datepicker>
                 </md-input-container>
             </div>
             <div layout="row" layout-sm="column" layout-xs="column">
 				<md-input-container  flex="20" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.accreditationDesisionNumber' | translate}}</label>
-                    <input ng-model="curriculum.accreditationNr" type="text" md-maxlength="255">
+                    <input ng-model="curriculum.accreditationNr" type="text" md-maxlength="255" ng-readonly="readOnly">
                 </md-input-container>
                 <md-input-container  flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'curriculum.accreditationValidityDate' | translate}}</label>
-                    <md-datepicker ng-model="curriculum.accreditationValidDate" md-open-on-focus></md-datepicker>
+                    <md-datepicker ng-model="curriculum.accreditationValidDate" md-open-on-focus ng-disabled="readOnly"></md-datepicker>
                 </md-input-container>
             </div>
 			
@@ -240,7 +249,7 @@
                 <md-input-container flex="20" flex-xs="100">
                     <label class="md-required common-label">{{'curriculum.isJoint' | translate}}</label>
                 </md-input-container>
-                <md-radio-group ng-model="curriculum.joint" layout="row" required ng-change="setAbroad()" flex="80" class="align-center">
+                <md-radio-group ng-model="curriculum.joint" layout="row" required ng-change="setAbroad()" flex="80" class="align-center" ng-disabled="readOnly">
                     <md-radio-button ng-value="true" aria-label="yes">{{ 'main.yes' | translate }}</md-radio-button>
                     <md-radio-button ng-value="false" aria-label="no">{{ 'main.no' | translate }}</md-radio-button>
                 </md-radio-group>
@@ -251,7 +260,7 @@
                     <label class="md-required common-label">{{'curriculum.jointSchool' | translate}}</label>
                 </md-input-container>
 
-                <md-radio-group ng-model="curriculum.abroad" flex="35" layout="row" class="align-center" flex="50"  ng-required="curriculum.joint" ng-change="clearJointPartnersFields()">
+                <md-radio-group ng-model="curriculum.abroad" flex="35" layout="row" class="align-center" flex="50"  ng-required="curriculum.joint" ng-change="clearJointPartnersFields()" ng-disabled="readOnly">
                     <md-radio-button ng-value="false" aria-label="{{ 'curriculum.estonianEducationalInstitute' | translate }}">
                         {{ 'curriculum.estonianEducationalInstitute' | translate }}
                     </md-radio-button>
@@ -263,15 +272,15 @@
 					<md-input-container flex="70" ng-hide="curriculum.abroad">
 						<label>{{'curriculum.estonianEducationalInstitute' | translate}}</label>
 						<hois-classifier-select ng-model="curriculum.jointPartnerEhisSchool" main-classifier-code="EHIS_KOOL"
-						filter-values="jointPartnersEhisSchools" model-value-attr="code"></hois-classifier-select>
+						filter-values="jointPartnersEhisSchools" model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
 					</md-input-container>
 					<md-input-container ng-hide="!curriculum.abroad">
 						<label>{{'school.name' | translate}}</label>
-						<input ng-model="curriculum.jointPartnerForeignNameEt" type="text" md-maxlength="100"></input>
+						<input ng-model="curriculum.jointPartnerForeignNameEt" type="text" md-maxlength="100" ng-readonly="readOnly"></input>
 					</md-input-container>
 					<md-input-container ng-hide="!curriculum.abroad">
 						<label>{{'school.nameEn' | translate}}</label>
-						<input ng-model="curriculum.jointPartnerForeignNameEn" type="text" md-maxlength="100"></input>
+						<input ng-model="curriculum.jointPartnerForeignNameEn" type="text" md-maxlength="100" ng-readonly="readOnly"></input>
 					</md-input-container>
 				</div>
                 <md-button class="md-raised" ng-click="addJointPartner()" ng-disabled="(!curriculum.jointPartnerForeignNameEt || !curriculum.jointPartnerForeignNameEn) && !curriculum.jointPartnerEhisSchool">{{'main.button.add' | translate}}</md-button>
@@ -283,7 +292,7 @@
 					<div flex="5">&nbsp;</div>
                     <div ng-if="item.abroad">{{item[currentLanguageNameField()]}}</div>
                     <div ng-if="!item.abroad"> <hois-classifier-value ng-model="item.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value></div>
-					<md-button class="remove nomargin" ng-click="removejointPartner(item)">&times;</md-button>
+					<md-button class="remove nomargin" ng-click="removejointPartner(item)" ng-if="!readOnly">&times;</md-button>
                 </div>
             </div>
 			<div layout="row" ng-show="curriculum.joint" class="joint-data-small">&nbsp;</div>
@@ -291,22 +300,22 @@
                 <md-input-container  flex="50"  ng-if="curriculum.joint">
                     <label>{{'curriculum.jointMentor' | translate}}</label>
                      <hois-classifier-select ng-model="curriculum.jointMentor" main-classifier-code="EHIS_KOOL"
-                     model-value-attr="code" show-only-values="jointPartnersEhisSchools" required></hois-classifier-select>
+                     model-value-attr="code" show-only-values="jointPartnersEhisSchools" required  ng-disabled="readOnly"></hois-classifier-select>
                 </md-input-container>
                 <md-input-container   flex="45" flex-offset="5">
                     <label>{{'curriculum.jointResponsible' | translate}}</label>
-                    <input ng-model="curriculum.supervisor" type="text" md-maxlength="100">
+                    <input ng-model="curriculum.supervisor" type="text" md-maxlength="100" ng-readonly="readOnly">
                 </md-input-container>
             </div>
 			<div layout="row" ng-show="curriculum.joint" class="joint-data-small">&nbsp;</div>
             <div layout="row" layout-sm="column" layout-xs="column" ng-show="curriculum.joint" class="joint-data">
                 <md-input-container flex="50">
                     <label>{{'curriculum.jointAgreementInfoEt' | translate}}</label>
-                    <textarea ng-model="curriculum.contractEt" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="curriculum.joint"></textarea>
+                    <textarea ng-model="curriculum.contractEt" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="curriculum.joint" ng-readonly="readOnly"></textarea>
                 </md-input-container>
                 <md-input-container  flex="45" flex-offset="5">
                     <label>{{'curriculum.jointAgreementInfoEn' | translate}}</label>
-                    <textarea ng-model="curriculum.contractEn" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="curriculum.joint"></textarea>
+                    <textarea ng-model="curriculum.contractEn" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="curriculum.joint" ng-readonly="readOnly"></textarea>
                 </md-input-container>
             </div>
 
@@ -329,7 +338,7 @@
 				<div layout = "row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">
 					<div flex="5">{{$index + 1}}</div>
                     <div><a ng-click="openAddSpecialtyDialog(item)" href="">{{item[currentLanguageNameField()]}}</a></div>
-                    <div><md-button flex="20" class="remove nomargin" ng-click="removeSpeciality(item)">&times;</md-button></div>
+                    <div><md-button flex="20" class="remove nomargin" ng-click="removeSpeciality(item)" ng-if="!readOnly">&times;</md-button></div>
                 </div>
 			</div>
 			
@@ -350,7 +359,7 @@
 				<div layout = "row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">
 					<div flex="5">{{$index + 1}}</div>
                     <div><a ng-click="openAddGradeDialog(item)" href="">{{item[currentLanguageNameField()]}}</a></div>
-                    <div><md-button flex="20" class="remove nomargin" ng-click="removeFromArray(curriculum.grades, item)">&times;</md-button></div>
+                    <div><md-button flex="20" class="remove nomargin" ng-click="removeFromArray(curriculum.grades, item)" ng-if="!readOnly">&times;</md-button></div>
                 </div>
 			</div>	
              
@@ -384,10 +393,10 @@
                             <hois-classifier-value ng-model="file.ehisFile" main-classifier-code="EHIS_FAIL"></hois-classifier-value>
                         </td>
                         <td md-cell>
-                            <md-checkbox ng-model="file.sendEhis" aria-label="send to ehis"></md-checkbox>
+                            <md-checkbox ng-model="file.sendEhis" aria-label="send to ehis" ng-disabled="readOnly"></md-checkbox>
                         </td>
                         <td md-cell>
-                            <md-button class="remove nomargin" ng-click="removeFromArray(curriculum.files, file)">&times;</md-button>
+                            <md-button class="remove nomargin" ng-click="removeFromArray(curriculum.files, file)" ng-if="!readOnly">&times;</md-button>
                         </td>
                     </tr>
                     </tbody>

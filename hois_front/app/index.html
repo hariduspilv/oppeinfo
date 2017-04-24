@@ -78,11 +78,11 @@
             </div>
           </div>
         </div>
-      </md-toolbar>   
+      </md-toolbar>
 	  <div style="height:2px">&nbsp;</div>
 	  <!--div flex layout="row" class="height100"-->
 	  <md-content layout="row" flex>
-			<md-sidenav md-colors="{background: 'background-100'}" class="site-sidenav" md-is-locked-open="isLeftOpen()" md-component-id="left" md-whiteframe="1" md-is-open="shouldLeftBeOpen" >		 
+			<md-sidenav md-colors="{background: 'background-100'}" class="site-sidenav" md-is-locked-open="isLeftOpen()" md-component-id="left" md-whiteframe="1" md-is-open="shouldLeftBeOpen" >
 			  <md-content role="navigation" flex>
 				<ul class="docs-menu">
 				  <li ng-repeat="section in Menu.sections" class="parent-list-item {{section.className || ''}}" ng-class="{'parentActive' : isSectionSelected(section)}">
@@ -107,7 +107,7 @@
 					<div ng-view=""></div>
 				</md-content>
 			</div>
-	   <!--/div-->	  
+	   <!--/div-->
 	   </md-content>
     </div>
 
@@ -199,6 +199,9 @@
     <script src="higherEducationCurriculum/higher.education.curriculum.version.js"></script>
     <script src="higherEducationCurriculum/hois.curriculum.version.code.validator.js"></script>
 
+    <script src="lessonplan/lessonplan.js"></script>
+    <script src="lessonplan/lessonplan.route.js"></script>
+
     <script src="message/message.js"></script>
     <script src="message/message.route.js"></script>
 
@@ -247,16 +250,17 @@
     <script src="studentRepresentative/student.representative.application.js"></script>
     <script src="studentRepresentative/student.representative.route.js"></script>
 
-    <script src="studyYearSchedule/studyYearSchedule.js"></script>
-    <script src="studyYearSchedule/studyYearSchedule.route.js"></script>
-    <script src="studyYearSchedule/studyYearScheduleLegend.js"></script>
+    <script src="studyYearSchedule/study.year.schedule.js"></script>
+    <script src="studyYearSchedule/study.year.schedule.route.js"></script>
+    <script src="studyYearSchedule/study.year.schedule.legend.js"></script>
 
     <script src="subject/subject.js"></script>
     <script src="subject/subject.route.js"></script>
 
-    <script src="subjectStudyPeriod/subjectStudyPeriod.js"></script>
+    <script src="subjectStudyPeriod/subject.study.period.js"></script>
 
     <script src="timetable/timetable.route.js"></script>
+    <script src="timetable/timetable.lessonTime.js"></script>
     <script src="timetable/timetable.lessonTime.list.js"></script>
 
     <script src="teacher/teacher.js"></script>

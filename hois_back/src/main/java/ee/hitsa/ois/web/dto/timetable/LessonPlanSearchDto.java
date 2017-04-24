@@ -1,28 +1,26 @@
 package ee.hitsa.ois.web.dto.timetable;
 
-import ee.hitsa.ois.web.dto.AutocompleteResult;
-
 public class LessonPlanSearchDto {
 
     private final Long id;
-    private final AutocompleteResult studentGroup;
-    private final String teacherFullname;
+    private final String studentGroup;
+    private final String curriculumVersion;
 
-    public LessonPlanSearchDto(Long id, AutocompleteResult studentGroup, String teacherFullname) {
+    public LessonPlanSearchDto(Long id, String studentGroup, String curriculumVersion) {
         this.id = id;
         this.studentGroup = studentGroup;
-        this.teacherFullname = teacherFullname;
+        this.curriculumVersion = curriculumVersion;
     }
 
     public Long getId() {
         return id;
     }
 
-    public AutocompleteResult getStudentGroup() {
+    public String getStudentGroup() {
         return studentGroup;
     }
 
-    public String getTeacherFullname() {
-        return teacherFullname;
+    public String getCurriculumVersion() {
+        return curriculumVersion;
     }
 }

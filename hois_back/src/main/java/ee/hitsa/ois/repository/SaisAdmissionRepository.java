@@ -12,6 +12,6 @@ public interface SaisAdmissionRepository extends JpaRepository<SaisAdmission, Lo
     List<SaisAdmission> findAllDistinctCodeByCurriculumVersionCurriculumSchoolId(Long schoolId);
     SaisAdmission findByCode(String code);
     SaisAdmission findByCodeAndCurriculumVersionCurriculumSchoolId(String code, Long schoolId);
-    SaisAdmission findByCurriculumVersionId(Long id);
+    SaisAdmission findFirstByCurriculumVersionIdOrderByIdDesc(Long id);
 
 }

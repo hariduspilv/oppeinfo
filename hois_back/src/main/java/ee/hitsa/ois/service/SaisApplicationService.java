@@ -50,6 +50,7 @@ import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SaisApplicationRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -200,9 +201,9 @@ public class SaisApplicationService {
         String messageForMissing = String.format("Avaldusel nr %s puudub ", applicationNr);
         String messageForOther = String.format("Avaldusega nr %s ", applicationNr);
 
-        String code = row.getCode();
+        String admissionCode = row.getCode();
         String curriculumVersionCode = row.getCurriculumVersionCode();
-        if (StringUtils.isEmpty(code) && StringUtils.isEmpty(curriculumVersionCode)) {
+        if (StringUtils.isEmpty(admissionCode) && StringUtils.isEmpty(curriculumVersionCode)) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther + "seotud konkursil puudub konkursi kood."));
             return;
         }
@@ -210,18 +211,16 @@ public class SaisApplicationService {
         CurriculumVersion curriculumVersion = curriculumVersionRepository.findByCodeAndCurriculumSchoolId(curriculumVersionCode, schoolId);
         SaisAdmission existingSaisAdmission = null;
 
-        if (StringUtils.isEmpty(code)) {
+        if (StringUtils.isEmpty(admissionCode)) {
             if (curriculumVersion == null) {
                 failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther + "ei ole seotud õppekava/rakenduskava."));
                 return;
             }
-            // FIXME which one gets used from possible multiple admissions linked to given curriculum version?
-            existingSaisAdmission = saisAdmissionRepository.findByCurriculumVersionId(EntityUtil.getId(curriculumVersion));
+            existingSaisAdmission = saisAdmissionRepository.findFirstByCurriculumVersionIdOrderByIdDesc(EntityUtil.getId(curriculumVersion));
         } else {
-            existingSaisAdmission = saisAdmissionRepository.findByCodeAndCurriculumVersionCurriculumSchoolId(code, schoolId);
+            existingSaisAdmission = saisAdmissionRepository.findByCodeAndCurriculumVersionCurriculumSchoolId(admissionCode, schoolId);
         }
 
-        //FIXME: only one SaisAdmission should be generated per file.
         SaisAdmission saisAdmission = existingSaisAdmission == null ? new SaisAdmission() : existingSaisAdmission;
         if (existingSaisAdmission == null) {
             saisAdmission.setCurriculumVersion(curriculumVersion);
@@ -291,7 +290,12 @@ public class SaisApplicationService {
             return;
         }
 
-        if (saisApplication.getStudyLoad() == null) {
+        if (saisAdmission.getStudyLevel() == null && curriculumVersion != null && curriculumVersion.getCurriculum() != null) {
+            saisAdmission.setStudyLevel(curriculumVersion.getCurriculum().getOrigStudyLevel());
+        }
+
+        //study load is only mandatory for higher education
+        if (saisApplication.getStudyLoad() == null && CurriculumUtil.isHigher(saisAdmission.getStudyLevel())) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing + "õppekoormus."));
             return;
         }
@@ -333,9 +337,9 @@ public class SaisApplicationService {
 
 
         if (saisAdmission.getCode() == null) {
-            saisAdmission.setCode(code);
-            saisAdmission.setName(code);
-            saisAdmission.setSaisId(code);
+            saisAdmission.setCode(admissionCode);
+            saisAdmission.setName(admissionCode);
+            saisAdmission.setSaisId(admissionCode);
         }
         if (saisAdmission.getFin() == null) {
             saisAdmission.setFin(saisApplication.getFin());
@@ -345,9 +349,6 @@ public class SaisApplicationService {
         }
         if (saisAdmission.getStudyLoad() == null) {
             saisAdmission.setStudyLoad(saisApplication.getStudyLoad());
-        }
-        if (saisAdmission.getStudyLevel() == null && curriculumVersion != null && curriculumVersion.getCurriculum() != null) {
-            saisAdmission.setStudyLevel(curriculumVersion.getCurriculum().getOrigStudyLevel());
         }
         if (saisAdmission.getStudyForm() == null) {
             saisAdmission.setStudyForm(saisApplication.getStudyForm());

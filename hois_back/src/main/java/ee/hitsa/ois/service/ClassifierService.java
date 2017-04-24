@@ -1,7 +1,7 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.EntityUtil.propertyName;
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -15,7 +15,6 @@ import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -41,10 +40,6 @@ public class ClassifierService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private ClassifierConnectRepository classifierConnectRepository;
-
-    @CacheEvict(cacheNames = "classifier", allEntries = true)
-    public void evictCache() {
-    }
 
     public Classifier save(Classifier classifier) {
         return classifierRepository.save(classifier);

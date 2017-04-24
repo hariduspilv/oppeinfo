@@ -30,7 +30,7 @@ public class StateCurriculum extends BaseEntityWithId {
 	private String admissionRequirementsEn;
 	private String graduationRequirementsEt;
 	private String graduationRequirementsEn;
-	private Integer credits;
+	private Long credits;
 	private String practiceDescription;
 	private Integer optionalStudyCredits;
 	private LocalDate validFrom;
@@ -173,11 +173,11 @@ public class StateCurriculum extends BaseEntityWithId {
 		this.graduationRequirementsEn = graduationRequirementsEn;
 	}
 
-	public Integer getCredits() {
+	public Long getCredits() {
 		return credits;
 	}
 
-	public void setCredits(Integer credits) {
+	public void setCredits(Long credits) {
 		this.credits = credits;
 	}
 

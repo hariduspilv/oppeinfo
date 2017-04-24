@@ -56,7 +56,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     @Valid
     private Set<CurriculumVersionOccupationModuleDto> occupationModules;
     private Set<Long> specialitiesReferenceNumbers;
-    
+
     /**
      * Curriculum specialities may be also added from curriculum version form
      */
@@ -64,14 +64,19 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
 
     public static CurriculumVersionDto of(CurriculumVersion version) {
         CurriculumVersionDto dto = EntityUtil.bindToDto(version, new CurriculumVersionDto(),
-                "modules", "specialities", "occupationModules");
+                "modules", "specialities", "occupationModules", "curriculumStudyForm");
 
         dto.setModules(StreamUtil.toMappedSet(CurriculumVersionHigherModuleDto::of, version.getModules()));
         dto.setOccupationModules(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleDto::of, version.getOccupationModules()));
         dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getCurriculumSpeciality()), version.getSpecialities()));
+
+        //CurriculumVersion.curriculumStudyForm is not a Classifier
+        if (version.getCurriculumStudyForm() != null) {
+            dto.setCurriculumStudyForm(EntityUtil.getNullableCode(version.getCurriculumStudyForm().getStudyForm()));
+        }
         return dto;
     }
-    
+
     public Set<CurriculumSpecialityDto> getNewCurriculumSpecialities() {
         return newCurriculumSpecialities;
     }

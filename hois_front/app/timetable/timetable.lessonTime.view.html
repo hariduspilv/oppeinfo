@@ -1,0 +1,102 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form layout="column">
+      <div layout="column" layout-sm="column" layout-xs="column" flex>
+        <div layout="row" layout-sm="column" layout-xs="column" flex-sm="100" flex-xs="100">
+            <md-input-container flex>
+              <label>{{'timetable.lessonTime.validFrom' | translate}}</label>
+              <hois-value value="'main.formattedDate' | translate: {date: validFrom} "></hois-value>
+            </md-input-container>
+        </div>
+
+      <div layout-padding ng-repeat="block in blocks | orderBy: $index">
+          <div layout="row" layout-sm="column" layout-xs="column" flex>
+            <md-input-container flex="10" flex-xs="100">
+              <label>{{'timetable.buildings' | translate}}</label>
+            </md-input-container>
+            <md-input-container layout="row" layout-align="start center" >
+              <md-checkbox ng-model="block.selectedBuildings[building.id]" ng-repeat="building in buildings | orderBy: currentLanguageNameField()" disabled>{{ building[currentLanguageNameField()] }}</md-checkbox>
+            </md-input-container>
+          </div>
+
+          <md-table-container>
+            <table md-table md-progress="tabledata.$promise">
+              <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row>
+                <th md-column>{{'main.nr' | translate}}</th>
+                <th md-column>{{'main.start' | translate}}</th>
+                <th md-column>{{'main.end' | translate}}</th>
+                <th md-column>{{'timetable.academicHours' | translate}}</th>
+                <th md-column>{{'main.mondayShort' | translate}}</th>
+                <th md-column>{{'main.tuesdayShort' | translate}}</th>
+                <th md-column>{{'main.wednesdayShort' | translate}}</th>
+                <th md-column>{{'main.thursdayShort' | translate}}</th>
+                <th md-column>{{'main.fridayShort' | translate}}</th>
+                <th md-column>{{'main.saturdayShort' | translate}}</th>
+                <th md-column>{{'main.sundayShort' | translate}}</th>
+              </tr>
+              </thead>
+              <tbody md-body>
+              <tr md-row ng-repeat="lessonTime in block.lessonTimes | orderBy: 'lessonNr'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>
+                    <span>{{::lessonTime.lessonNr}}</span>
+                </td>
+                <td md-cell>
+                  <span>{{'main.formattedTime' | translate: {date: lessonTime.startTime} }}</span>
+                </td>
+                <td md-cell>
+                  <span>{{'main.formattedTime' | translate: {date: lessonTime.endTime} }}</span>
+                </td>
+                <td md-cell>
+                  <span>{{calculateAcademicHours(lessonTime.startTime, lessonTime.endTime)}}</span>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayMon" aria-label="{{'main.mondayShort' | translate}}" disabled></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayTue" aria-label="{{'main.tuesdayShort' | translate}}" disabled></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayWed" aria-label="{{'main.wednesdayShort' | translate}}" disabled></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayThu" aria-label="{{'main.thursdayShort' | translate}}" disabled></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.dayFri" aria-label="{{'main.fridayShort' | translate}}" disabled></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.daySat" aria-label="{{'main.saturdayShort' | translate}}" disabled></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="lessonTime.daySun" aria-label="{{'main.sundayShort' | translate}}" disabled></md-checkbox>
+                  </md-input-container>
+                </td>
+              </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+      </div>
+
+      <br/>
+      <div layout="row">
+        <md-button ng-href="#/timetable/lessonTime/search" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>
+

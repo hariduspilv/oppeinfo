@@ -3,7 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_E;
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_K;
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_T;
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +39,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.SearchUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
@@ -132,7 +132,7 @@ public class StudentRepresentativeService {
                 List<Predicate> name = new ArrayList<>();
                 propertyContains(() -> root.get("person").get("firstname"), cb, criteria.getName(), name::add);
                 propertyContains(() -> root.get("person").get("lastname"), cb, criteria.getName(), name::add);
-                name.add(cb.like(cb.concat(cb.upper(root.get("person").get("firstname")), cb.concat(" ", cb.upper(root.get("person").get("lastname")))), SearchUtil.toContains(criteria.getName())));
+                name.add(cb.like(cb.concat(cb.upper(root.get("person").get("firstname")), cb.concat(" ", cb.upper(root.get("person").get("lastname")))), JpaQueryUtil.toContains(criteria.getName())));
                 if(!name.isEmpty()) {
                     filters.add(cb.or(name.toArray(new Predicate[name.size()])));
                 }
@@ -180,7 +180,7 @@ public class StudentRepresentativeService {
         // send message to representative candidate about rejected application
         StudentRepresentativeApplicationRejectedMessage data = new StudentRepresentativeApplicationRejectedMessage(application);
         automaticMessageService.sendMessageToPerson(MessageType.TEATE_LIIK_OP_TL,
-                application.getStudent().getSchool(), application.getPerson(), Role.ROLL_L, data);
+                application.getStudent().getSchool(), application.getPerson(), data);
     }
 
     public void createApplication(HoisUserDetails user, StudentRepresentativeApplicationForm form) {
@@ -236,7 +236,7 @@ public class StudentRepresentativeService {
         // send message to new representative
         Student student = representative.getStudent();
         StudentRepresentativeApplicationAccepted data = new StudentRepresentativeApplicationAccepted(representative);
-        automaticMessageService.sendMessageToPerson(MessageType.TEATE_LIIK_OP_ESINDAJA, student.getSchool(), student.getPerson(), Role.ROLL_L, data);
+        automaticMessageService.sendMessageToPerson(MessageType.TEATE_LIIK_OP_ESINDAJA, student.getSchool(), student.getPerson(), data);
     }
 
     private static void assertApplicationIsRequested(StudentRepresentativeApplication application) {

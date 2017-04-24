@@ -84,7 +84,8 @@ public class SaisApplicationControllerTests {
     @Test
     public void crud() {
         //create
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(
+                admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -104,7 +105,8 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void importCsvValid() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(
+                admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);

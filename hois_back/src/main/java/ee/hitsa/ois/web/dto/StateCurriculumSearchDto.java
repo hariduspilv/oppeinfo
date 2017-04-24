@@ -11,7 +11,7 @@ public class StateCurriculumSearchDto {
     private String nameEn;
     private LocalDate validFrom;
     private LocalDate validThru;
-    private Integer credits;
+    private Long credits;
     private String status;
     private String iscedClass;
     private String ekrLevel;
@@ -19,7 +19,7 @@ public class StateCurriculumSearchDto {
     public StateCurriculumSearchDto() {}
     
     public StateCurriculumSearchDto(Long id, String nameEt, String nameEn, LocalDate validFrom,
-            LocalDate validThru, Integer credits, String status, String iscedClass) {
+            LocalDate validThru, Long credits, String status, String iscedClass) {
         this.id = id;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
@@ -53,11 +53,11 @@ public class StateCurriculumSearchDto {
         this.id = id;
     }
 
-    public Integer getCredits() {
+    public Long getCredits() {
         return credits;
     }
 
-    public void setCredits(Integer credits) {
+    public void setCredits(Long credits) {
         this.credits = credits;
     }
 

@@ -5,8 +5,6 @@ import java.util.Set;
 
 import javax.validation.Valid;
 
-import org.hibernate.validator.constraints.NotEmpty;
-
 import ee.hitsa.ois.web.dto.StudyYearScheduleDto;
 
 public class StudyYearScheduleDtoContainer {

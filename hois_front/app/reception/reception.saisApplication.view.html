@@ -75,11 +75,10 @@
                 <label>{{'student.studyForm' | translate}}</label>
                 <hois-classifier-value ng-model="saisApplication.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
               </md-input-container>
-              <md-input-container flex>
+              <md-input-container ng-if="saisApplication.isHigher" flex>
                 <label>{{'student.studyLoad' | translate}}</label>
                 <hois-classifier-value ng-model="saisApplication.studyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
               </md-input-container>
-
             </div>
 
             <div layout="row" layout-sm="column" layout-xs="column">

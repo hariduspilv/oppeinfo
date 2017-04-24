@@ -257,7 +257,7 @@ public class StateCurriculumControllerTest {
         stateCurriculumForm.setOutcomesEt("StateCurriculumControllerTest");
         stateCurriculumForm.setObjectivesEt("StateCurriculumControllerTest");
         stateCurriculumForm.setAdmissionRequirementsEt("StateCurriculumControllerTest");
-        stateCurriculumForm.setCredits(Integer.valueOf(1));
+        stateCurriculumForm.setCredits(Long.valueOf(1));
         stateCurriculumForm.setOptionalStudyCredits(Integer.valueOf(1));
         stateCurriculumForm.setValidFrom(LocalDate.now());
         stateCurriculumForm.setStatus("OPPEKAVA_STAATUS_S");

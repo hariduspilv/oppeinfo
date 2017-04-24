@@ -387,7 +387,11 @@ public class CurriculumControllerTests {
         Assert.assertTrue(updatedCurriculum.getStatus().equals("OPPEKAVA_STAATUS_M"));
         Assert.assertTrue(updatedCurriculum.getNameEt().equals("newName"));
         Assert.assertTrue(updatedCurriculum.getVersion().equals(Long.valueOf(1)));
-        Assert.assertNotNull(updatedCurriculum.getVersions().stream().findFirst().get().getCurriculumStudyForm());
+        /*
+         * Checking curriculum version removed, 
+         * because now saving curriculum version is done on separate form via its own controller
+         */
+//        Assert.assertNotNull(updatedCurriculum.getVersions().stream().findFirst().get().getCurriculumStudyForm());
 
         // remove collection completely
         updatedCurriculum.setGrades(null);

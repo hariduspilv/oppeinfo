@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.domain.Building;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.SaisAdmission;
 import ee.hitsa.ois.domain.StudyPeriod;
@@ -15,6 +16,7 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
+import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.SubjectUtil;
@@ -106,4 +108,15 @@ public class AutocompleteResult extends EntityConnectionCommand {
         String name = teacher.getPerson().getFullname();
         return new AutocompleteResult(teacher.getId(), name, name);
     }
+
+    public static AutocompleteResult of(Building building) {
+        String name = building.getName();
+        return new AutocompleteResult(building.getId(), name, name);
+    }
+
+    public static AutocompleteResult of(LessonTimeBuilding lessonTimeBuilding) {
+        return of(lessonTimeBuilding.getBuilding());
+    }
+
+
 }

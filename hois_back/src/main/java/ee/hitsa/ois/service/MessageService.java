@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
@@ -36,7 +37,6 @@ import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
-import ee.hitsa.ois.util.SearchUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
@@ -54,7 +54,7 @@ public class MessageService {
             " from message m inner join message_receiver mr on m.id = mr.message_id inner join person p on m.person_id = p.id ";
     private static final String RECEIVED_MESSAGES_SELECT =
             " m.id, m.subject, m.content, m.inserted, mr.read is not null as isRead, "
-            + "p.firstname, p.lastname";
+            + "p.firstname, p.lastname, m.person_id";
     private static final String STUDENT_PARENTS_FROM =
               " from student s "
             + "inner join student_group sg on s.student_group_id = sg.id "
@@ -123,7 +123,7 @@ public class MessageService {
         }
         qb.filter("mr.read is null");
         Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, RECEIVED_MESSAGES_SELECT, em, pageable);
-        return messages.map(d -> new MessageSearchDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 3), PersonUtil.fullname(resultAsString(d, 5), resultAsString(d, 6)), Boolean.FALSE));
+        return messages.map(d -> new MessageSearchDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 3), PersonUtil.fullname(resultAsString(d, 5), resultAsString(d, 6)), Boolean.FALSE, resultAsLong(d, 7)));
     }
 
     public Page<MessageSearchDto> searchSent(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {
@@ -143,7 +143,7 @@ public class MessageService {
             if(sentThru != null) {
               filters.add(cb.lessThanOrEqualTo(root.get("inserted"), DateUtils.lastMomentOfDay(sentThru)));
             }
-            SearchUtil.propertyContains(() -> root.get("subject"), cb, criteria.getSubject(), filters::add);
+            propertyContains(() -> root.get("subject"), cb, criteria.getSubject(), filters::add);
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(MessageSearchDto::ofSent);
@@ -162,7 +162,7 @@ public class MessageService {
             if(sentThru != null) {
               filters.add(cb.lessThanOrEqualTo(root.get("inserted"), DateUtils.lastMomentOfDay(sentThru)));
             }
-            SearchUtil.propertyContains(() -> root.get("subject"), cb, criteria.getSubject(), filters::add);
+            propertyContains(() -> root.get("subject"), cb, criteria.getSubject(), filters::add);
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(MessageSearchDto::ofSent);
@@ -184,7 +184,7 @@ public class MessageService {
         qb.optionalCriteria("m.inserted >= :sentFrom", "sentFrom", criteria.getSentFrom(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("m.inserted <= :sentThru", "sentThru", criteria.getSentThru(), DateUtils::lastMomentOfDay);
         Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, RECEIVED_MESSAGES_SELECT, em, pageable);
-        return messages.map(d -> new MessageSearchDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsLocalDateTime(d, 3), PersonUtil.fullname(resultAsString(d, 5), resultAsString(d, 6)), resultAsBoolean(d, 4)));
+        return messages.map(d -> new MessageSearchDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsLocalDateTime(d, 3), PersonUtil.fullname(resultAsString(d, 5), resultAsString(d, 6)), resultAsBoolean(d, 4), resultAsLong(d, 7)));
     }
 
     public Message create(HoisUserDetails user, MessageForm form) {

@@ -15,6 +15,7 @@ angular.module('hitsaOis')
     $scope.readOnly = false;
     $scope.removeFromArray = ArrayUtils.remove;
     $scope.subOccupations = {};
+    $scope.isViewPage = $route.current.$$route.originalPath.indexOf("view") !== -1;
 
     function getStateCurriculum() {
       if (id) {
@@ -33,6 +34,7 @@ angular.module('hitsaOis')
         fillCascadeDropdowns();
         setReadOnly();
         getAllSuboccupations();
+        $scope.currentStatus = $scope.stateCurriculum.status;
     }
 
     function fillCascadeDropdowns() {
@@ -49,7 +51,7 @@ angular.module('hitsaOis')
     }
 
     function setReadOnly() {
-        $scope.readOnly = $scope.stateCurriculum.status === "OPPEKAVA_STAATUS_C" ||
+        $scope.readOnly = $scope.stateCurriculum.status !== "OPPEKAVA_STAATUS_S" ||
         $route.current.$$route.originalPath.indexOf("view") !== -1;
     }
         // ----------- save and delete
@@ -65,9 +67,13 @@ angular.module('hitsaOis')
     };
 
     $scope.save = function () {
-      if($scope.readOnly) {
-         return;
-      }
+        /*
+        Commented out as changing status needed.
+        It would be better to make another controller from changing status
+        */
+    //   if($scope.readOnly) {
+    //      return;
+    //   }
       $scope.stateCurriculumForm.$setSubmitted();
 
       if (!stateCurriculumFormIsValid()) {
@@ -77,6 +83,7 @@ angular.module('hitsaOis')
       createOrUpdate().then(function() {
          setVariablesForExistingStateCurriculum();
          message.info('main.messages.create.success');
+         $scope.stateCurriculumForm.$setPristine();
       });
     };
 
@@ -210,25 +217,27 @@ angular.module('hitsaOis')
     }
 
     $scope.removeOcupation = function(occupation) {
-      $scope.removeFromArray($scope.stateCurriculum.occupations, occupation);
-      var removedSubOccupations = $scope.subOccupations[occupation].map(function(o){return o.code;});
-      delete $scope.subOccupations[occupation];
-      $scope.getSubOccupationsAsList();
+        dialogService.confirmDialog({prompt: 'stateCurriculum.occupationdeleteconfirm'}, function() {
+            $scope.removeFromArray($scope.stateCurriculum.occupations, occupation);
+            var removedSubOccupations = $scope.subOccupations[occupation].map(function(o){return o.code;});
+            delete $scope.subOccupations[occupation];
+            $scope.getSubOccupationsAsList();
 
-      $scope.stateCurriculum.modules.forEach(function(m){
-          $scope.removeFromArray(m.moduleOccupations, occupation);
-          $scope.stateCurriculum.modules.forEach(function(m){
-              deleteModuleWithNoOccupations(m);
-          });
-      });
-      removedSubOccupations.forEach(function(so){
-        $scope.stateCurriculum.modules.forEach(function(m){
-            $scope.removeFromArray(m.moduleOccupations, so);
+            $scope.stateCurriculum.modules.forEach(function(m){
+                $scope.removeFromArray(m.moduleOccupations, occupation);
+                $scope.stateCurriculum.modules.forEach(function(m){
+                    deleteModuleWithNoOccupations(m);
+                });
+            });
+            removedSubOccupations.forEach(function(so){
+                $scope.stateCurriculum.modules.forEach(function(m){
+                    $scope.removeFromArray(m.moduleOccupations, so);
+                });
+                $scope.stateCurriculum.modules.forEach(function(m){
+                    deleteModuleWithNoOccupations(m);
+                });
+            });
         });
-        $scope.stateCurriculum.modules.forEach(function(m){
-            deleteModuleWithNoOccupations(m);
-        });
-      });
     };
 
     $scope.filterSubOccupations = function(occupation, subOccupationType) {
@@ -270,6 +279,7 @@ angular.module('hitsaOis')
                     moduleOccupations: []
                 };
             }
+            scope.readOnly = $scope.readOnly;
             scope.occupations = $scope.stateCurriculum.occupations;
             $scope.stateCurriculum.occupations.forEach(function(o){
                 var list = $scope.subOccupations[o].map(function(e){return e.code;});

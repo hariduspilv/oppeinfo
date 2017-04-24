@@ -344,8 +344,8 @@ public class ApplicationService {
         }
     }
 
-    public void sendRejectionNotificationMessage(Application application) {
+    public void sendRejectionNotificationMessage(Application application, HoisUserDetails user) {
         StudentApplicationRejectedMessage data = new StudentApplicationRejectedMessage(application);
-        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data);
+        automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data, user);
     }
 }

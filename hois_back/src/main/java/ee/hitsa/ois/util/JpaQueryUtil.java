@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -123,6 +124,16 @@ public abstract class JpaQueryUtil {
         return entityManager.createQuery(dq.where(path.in(data))).getResultList();
     }
 
+    public static void propertyContains(Supplier<Path<String>> pathSupplier, CriteriaBuilder cb, String value, Consumer<Predicate> consumer) {
+        if(StringUtils.hasText(value)) {
+            consumer.accept(cb.like(cb.upper(pathSupplier.get()), toContains(value)));
+        }
+    }
+
+    public static String toContains(String value) {
+        return "%" + value.trim().toUpperCase() + "%";
+    }
+
     public static class NativeQueryBuilder {
         private final String from;
         private final Sort sort;
@@ -210,7 +221,7 @@ public abstract class JpaQueryUtil {
                     sb.append(")");
                 }
 
-                filter(sb.toString(), name, SearchUtil.toContains(value));
+                filter(sb.toString(), name, toContains(value));
             }
         }
 

@@ -60,17 +60,7 @@ public class StudyYearScheduleService {
       }).stream().map(StudyYearScheduleDto::of).collect(Collectors.toSet());
     }
 
-    /*
-     * TODO: saving container with no studyPeriods.
-     */
     public List<StudyYearSchedule> update(StudyYearScheduleDtoContainer schedulesCmd, Long schoolId) {
-
-//        delete(schedulesCmd.getDeletedStudyYearSchedules());
-        
-        /*
-         * Validation annotation constraint is not used as it can studyPeriods can be empty on get request
-         */
-//        assert !CollectionUtils.isEmpty(schedulesCmd.getStudyPeriods());
 
         Set<Long> oldSchedulesDtosIds = schedulesCmd.getStudyYearSchedules().stream()
                 .filter(d -> d.getId() != null).map(StudyYearScheduleDto::getId).collect(Collectors.toSet());
@@ -89,13 +79,12 @@ public class StudyYearScheduleService {
               if(!CollectionUtils.isEmpty(schedulesCmd.getStudentGroups())) {
                   filters.add(root.get("studentGroup").get("id").in(schedulesCmd.getStudentGroups()));
               }
-              
+            //FIXME: must be not in!!!
               if(!oldSchedulesDtosIds.isEmpty()) {
-                  filters.add(root.get("id").in(oldSchedulesDtosIds));
+                  filters.add(cb.not(root.get("id").in(oldSchedulesDtosIds)));
               }
               return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
-        System.out.println("Hola delete!");
         studyYearScheduleRepository.delete(deletedItems);
     }
 

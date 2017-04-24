@@ -12,7 +12,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.service.StudyYearScheduleService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
@@ -62,9 +61,5 @@ public class StudyYearScheduleController {
     @GetMapping("/studyYears")
     public List<StudyYearDto> getStudyYearsWithStudyPeriods(HoisUserDetails user) {
         return studyYearScheduleService.getStudyYearsWithStudyPeriods(user.getSchoolId());
-    }
-    
-    public void assertSameSchool(HoisUserDetails user, StudyYear studyYear) {
-        assert studyYear.getSchool().getId().equals(user.getSchoolId());
     }
 }

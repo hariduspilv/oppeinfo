@@ -2,6 +2,7 @@ package ee.hitsa.ois.service;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -28,6 +29,7 @@ import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.MessageRepository;
 import ee.hitsa.ois.repository.PersonRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -58,7 +60,7 @@ public class AutomaticMessageService {
         Role role = Role.ROLL_A;
         List<Person> persons = StreamUtil.toMappedList(User::getPerson, userService.findAllValidSchoolUsersByRole(school, role));
 
-        Message message = sendMessageToPersons(type, school, persons, role, dataBean);
+        Message message = sendMessageToPersons(type, school, persons, dataBean);
 
         if(message != null) {
             List<String> receivers = StreamUtil.toMappedList(Person::getEmail, persons);
@@ -66,36 +68,51 @@ public class AutomaticMessageService {
         }
     }
 
-    public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {
-        Message message = sendMessageToPersons(type, student.getSchool(), Collections.singletonList(student.getPerson()), Role.ROLL_T, dataBean);
-        if(message != null) {
+    public void sendMessageToStudent(MessageType type, Student student, Object dataBean, HoisUserDetails initiator) {
+        Message message = sendMessageToPersons(type, student.getSchool(), Collections.singletonList(student.getPerson()), dataBean);
+        if (message != null) {
             mailService.sendMail(message.getSender().getEmail(), student.getEmail(), message.getSubject(), message.getContent());
         }
 
         if (!StudentUtil.isAdult(student)) {
-            sendMessageToStudentRepresentatives(type, student, dataBean);
+            sendMessageToStudentRepresentatives(type, student, dataBean, message, initiator);
         }
     }
 
-    public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean) {
-        List<Person> persons = StreamUtil.toMappedList(StudentRepresentative::getPerson, student.getRepresentatives());
+    public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {
+        sendMessageToStudent(type, student, dataBean, null);
+    }
 
-        Message message = sendMessageToPersons(type, student.getSchool(), persons, Role.ROLL_L, dataBean);
+    public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean, Message existingMessage, HoisUserDetails initiator) {
+        List<Person> persons = student.getRepresentatives().stream()
+                .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible()))
+                .filter(sr -> initiator == null || !EntityUtil.getId(sr.getPerson()).equals(initiator.getPersonId()))
+                .map(StudentRepresentative::getPerson)
+                .collect(Collectors.toList());
+
+
+        Message message = sendMessageToPersons(type, student.getSchool(), persons, dataBean, existingMessage);
+
         if(message != null) {
             List<String> receivers = StreamUtil.toMappedList(Person::getEmail, persons);
             mailService.sendMail(message.getSender().getEmail(), receivers, message.getSubject(), message.getContent());
         }
     }
 
-    public void sendMessageToPerson(MessageType type, School school, Person person, Role role, Object data) {
-        Message message = sendMessageToPersons(type, school, Collections.singletonList(person), role, data);
+    public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean) {
+        sendMessageToStudentRepresentatives(type, student, dataBean, null, null);
+    }
+
+    public void sendMessageToPerson(MessageType type, School school, Person person, Object data) {
+        Message message = sendMessageToPersons(type, school, Collections.singletonList(person), data);
 
         if (message != null) {
             mailService.sendMail(message.getSender().getEmail(), person.getEmail(), message.getSubject(), message.getContent());
         }
     }
 
-    private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Role role, Object dataBean) {
+
+    private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean, Message existingMessage) {
         Classifier status = classifierRepository.getOne(MessageStatus.TEATESTAATUS_U.name());
         List<MessageReceiver> messageReceivers = StreamUtil.toMappedList(person -> {
             MessageReceiver messageReceiver = new MessageReceiver();
@@ -105,7 +122,11 @@ public class AutomaticMessageService {
         }, persons);
 
         Person automaticSender = personRepository.getOne(PersonUtil.AUTOMATIC_SENDER_ID);
-        return sendTemplateMessage(type, school, automaticSender, messageReceivers, role, dataBean);
+        return sendTemplateMessage(type, school, automaticSender, messageReceivers, dataBean, existingMessage);
+    }
+
+    private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean) {
+        return sendMessageToPersons(type, school, persons, dataBean, null);
     }
 
     private Message getMessage(MessageType type, School school, Object dataBean) {
@@ -131,27 +152,29 @@ public class AutomaticMessageService {
         return null;
     }
 
-    private Message sendTemplateMessage(MessageType type, School school, Person sender, List<MessageReceiver> messageReceivers, Role role, Object dataBean) {
+    private Message sendTemplateMessage(MessageType type, School school, Person sender, List<MessageReceiver> messageReceivers, Object dataBean, Message existingMessage) {
         if (!type.validBean(dataBean)) {
             throw new RuntimeException(String.format("invalid data bean for template %s", type.name()));
         }
 
-        Long schoolId = EntityUtil.getId(school);
-        MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
-        if (template == null) {
-            throw new RuntimeException(String.format("no message template %s found for school %d", type.name(), schoolId));
+        Message message = existingMessage;
+        if (existingMessage == null) {
+            message = getMessage(type, school, dataBean);
+            if (message != null) {
+                message.setSendersSchool(school);
+                message.setSender(sender);
+            }
         }
 
-        Message message = getMessage(type, school, dataBean);
         if (message != null) {
-            message.setSendersSchool(school);
-            message.setSender(sender);
-            message.setSendersRole(classifierRepository.getOne(role.name()));
             message.getReceivers().addAll(messageReceivers);
             messageRepository.save(message);
         }
+
         return message;
     }
+
+
 
 
 }

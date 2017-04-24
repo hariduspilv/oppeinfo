@@ -254,8 +254,8 @@ angular.module('hitsaOis')
 
     function filterReceivers() {
         $scope.receivers = $scope.receivers.filter(function(r){
-            return (isStudentsParent(r) || includesOrEmpty(r.role, $scope.targetGroup)) 
-            && (r.addedWithAutocomplete || 
+            return (isStudentsParent(r) || includesOrEmpty(r.role, $scope.targetGroup)) && 
+            (r.addedWithAutocomplete || 
             includesOrEmpty($scope.curriculum, r.curriculum ? r.curriculum.id : null) && 
             includesOrEmpty($scope.studentGroup, r.studentGroup ? r.studentGroup.id : null) && 
             includesOrEmpty($scope.studyForm, r.studyForm) && 
@@ -266,11 +266,18 @@ angular.module('hitsaOis')
      * do not remove student's parents, if student is added with autocomplete
      */
     function isStudentsParent(r) {
-        return $scope.targetGroup === 'ROLL_T' & includesOrEmpty(r.role, 'ROLL_L');
+        return $scope.targetGroup === 'ROLL_T' && includesOrEmpty(r.role, 'ROLL_L');
     }
 
     $scope.tarGetGroupChanged = function() {
-        filterReceivers();
+        /*
+        filterReceivers() did not work in the following scenario: 
+        user adds a student which has representative and then selects Parents as target group.
+        In that case student's representative hadn't been removed from the list.
+        So now list of receivers is just completely cleared.
+        */
+        // filterReceivers();
+        $scope.receivers = [];
         $scope.curriculum = [];
         $scope.studentGroup = [];
         $scope.studyForm = [];
