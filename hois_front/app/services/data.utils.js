@@ -32,6 +32,29 @@ angular.module('hitsaOis').factory('DataUtils',
       return convert(object, dateProperties, "hh:mm");
     }
 
+    function sortStudyYearsOrPeriods(list) {
+        for(var i = 0; i < list.length; i++) {
+            convertStringToDates(list[i], ["startDate", "endDate"]);
+        }
+        // return list.sort(function(el1, el2){
+        list.sort(function(el1, el2){
+            return el1.startDate >= el2.startDate;
+        });
+    }
+    /**
+     * Beware that using this method changes the order of initial array
+     */
+    function getStudyYearOrPeriodAt(date, list) {
+        sortStudyYearsOrPeriods(list);
+        return list.find(function(item){
+            return date <= item.endDate;
+        });
+    }
+
+    function getCurrentStudyYearOrPeriod(list) {
+        return getStudyYearOrPeriodAt(new Date(), list);
+    }
+
     return {
       assign: function( path, obj, value ) {
         return path.split('.').reduce( function( prev, curr, currentIndex, array ) {
@@ -45,6 +68,9 @@ angular.module('hitsaOis').factory('DataUtils',
       },
       convertStringToDates: convertStringToDates,
       convertStringToTime: convertStringToTime,
+      getCurrentStudyYearOrPeriod: getCurrentStudyYearOrPeriod,
+      getStudyYearOrPeriodAt: getStudyYearOrPeriodAt,
+      sortStudyYearsOrPeriods: sortStudyYearsOrPeriods,
 
       sexFromIdcode : function (idcode) {
         if (idcode.length !== 11  || isNaN(idcode)) {

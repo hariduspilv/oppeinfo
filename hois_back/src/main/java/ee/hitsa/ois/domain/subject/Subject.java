@@ -1,11 +1,8 @@
 package ee.hitsa.ois.domain.subject;
 
-import ee.hitsa.ois.domain.BaseEntityWithId;
-import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.domain.school.SchoolDepartment;
-import ee.hitsa.ois.web.dto.SubjectAutocompleteResult;
-import org.springframework.format.annotation.NumberFormat;
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -14,9 +11,14 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
+import org.springframework.format.annotation.NumberFormat;
+
+import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodPlan;
+import ee.hitsa.ois.web.dto.SubjectAutocompleteResult;
 
 @Entity
 public class Subject extends BaseEntityWithId implements SubjectAutocompleteResult {
@@ -62,6 +64,17 @@ public class Subject extends BaseEntityWithId implements SubjectAutocompleteResu
 
     @OneToMany(mappedBy = "connectSubject")
     private Set<SubjectConnect> parentConnections;
+    
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    private Set<SubjectStudyPeriodPlan> subjectStudyPeriodPlans;
+
+    public Set<SubjectStudyPeriodPlan> getSubjectStudyPeriodPlans() {
+        return subjectStudyPeriodPlans != null ? subjectStudyPeriodPlans : (subjectStudyPeriodPlans = new HashSet<>());
+    }
+
+    public void setSubjectStudyPeriodPlans(Set<SubjectStudyPeriodPlan> subjectStudyPeriodPlans) {
+        this.subjectStudyPeriodPlans = subjectStudyPeriodPlans;
+    }
 
     public School getSchool() {
         return school;

@@ -63,7 +63,7 @@ public class CertificateService {
             + "end as sortablename ";
 
     public Page<CertificateSearchDto> search(HoisUserDetails user, CertificateSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(CERTIFICATE_FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(CERTIFICATE_FROM).sort(pageable);
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("s.id = :studentId", "studentId", user.getStudentId());
         qb.optionalContains("c.headline", "headline", criteria.getHeadline());

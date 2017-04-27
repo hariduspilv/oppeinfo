@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
-import ee.hitsa.ois.domain.subject.SubjectStudyPeriodTeacher;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodTeacherForm;
 
 public class SubjectStudyPeriodTeacherDto extends SubjectStudyPeriodTeacherForm {

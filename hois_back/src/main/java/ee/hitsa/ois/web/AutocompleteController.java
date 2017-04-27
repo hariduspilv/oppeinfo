@@ -61,8 +61,8 @@ public class AutocompleteController {
     }
 
     @GetMapping("/directivecoordinators")
-    public List<AutocompleteResult> directiveCoordinators(HoisUserDetails user) {
-        return autocompleteService.directiveCoordinators(user.getSchoolId());
+    public List<AutocompleteResult> directiveCoordinators(HoisUserDetails user, @RequestParam(name = "isDirective", required = false) Boolean isDirective) {
+        return autocompleteService.directiveCoordinators(user.getSchoolId(), isDirective);
     }
 
     @GetMapping("/persons")

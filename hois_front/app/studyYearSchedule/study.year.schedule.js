@@ -25,26 +25,34 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
     });
 
     function selectCurrentStudyYear() {
-        $scope.criteria.studyYear = $scope.studyYears.find(function(item){
-            var date = new Date();
-            return date >= item.startDate && date <= item.endDate;
-        });
-        $scope.criteria.studyYear.studyPeriods.sort(function(el1, el2){
-            return el1.startDate >= el2.startDate;
-        });
+        // $scope.criteria.studyYear = $scope.studyYears.find(function(item){
+        //     return new Date() <= item.endDate;
+        // });
+        $scope.criteria.studyYear = DataUtils.getCurrentStudyYearOrPeriod($scope.studyYears);
+
+        // $scope.criteria.studyYear.studyPeriods.sort(function(el1, el2){
+        //     return el1.startDate >= el2.startDate;
+        // });
+        // $scope.criteria.studyYear.studyPeriods = DataUtils.sortStudyYearsOrPeriods($scope.criteria.studyYear.studyPeriods);
+        DataUtils.sortStudyYearsOrPeriods($scope.criteria.studyYear.studyPeriods);
     }
 
     QueryUtils.endpoint('/studyYearSchedule/studyYears').query().$promise.then(function(response){
         $scope.studyYears = response;
 
-        for(var i = 0; i < $scope.studyYears.length; i++) {
-            DataUtils.convertStringToDates($scope.studyYears[i], ["startDate", "endDate"]);
-            if($scope.studyYears[i].studyPeriods) {
-                for(var j = 0; j < $scope.studyYears[i].studyPeriods.length; j++) {
-                    DataUtils.convertStringToDates($scope.studyYears[i].studyPeriods[j], ["startDate", "endDate"]);
-                }
-            }
-        }
+        // for(var i = 0; i < $scope.studyYears.length; i++) {
+        //     DataUtils.convertStringToDates($scope.studyYears[i], ["startDate", "endDate"]);
+        //     if($scope.studyYears[i].studyPeriods) {
+        //         for(var j = 0; j < $scope.studyYears[i].studyPeriods.length; j++) {
+        //             DataUtils.convertStringToDates($scope.studyYears[i].studyPeriods[j], ["startDate", "endDate"]);
+        //         }
+        //     }
+        // }
+        // $scope.studyYears = response.sort(function(el1, el2){
+        //     return el1.startDate >= el2.startDate;
+        // });
+        // $scope.studyYears = DataUtils.sortStudyYearsOrPeriods(response);
+        // DataUtils.sortStudyYearsOrPeriods(response);
     }).then(selectCurrentStudyYear);
 
     $scope.$watch('criteria.studyYear', function() {
@@ -62,21 +70,16 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
                 queryOnLoad = false;
             } else {
                 $scope.criteria.studentGroups = $scope.studentGroups.
-                filter(function(sg){return arraysIntersect(sg.schoolDepartments, $scope.criteria.schoolDepartments);})
+                filter(function(sg){return ArrayUtils.intersect(sg.schoolDepartments, $scope.criteria.schoolDepartments);})
                 .map(function(sg){return sg.id;});
                 getSchedules();
             }
         }
     );
 
-    function arraysIntersect(arr1, arr2) {
-        for(var i = 0; i < arr1.length; i++) {
-            if(ArrayUtils.includes(arr2, arr1[i])) {
-                return true;
-            }
-        }
-        return false;
-    }
+    // function arraysIntersect(arr1, arr2) {
+    //     return ArrayUtils.intersect(arr1, arr2);
+    // }
 
     function getSchedules() {
         $scope.record = QueryUtils.endpoint('/studyYearSchedule').search($scope.criteria);
@@ -107,21 +110,22 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
         }
         $scope.weeks = weeks;
 
-        function getPeriodsLenghInWeeks (acc, val) {
+        function getPeriodsLengthInWeeks (acc, val) {
             var num = val.studyPeriodId === $scope.criteria.studyYear.studyPeriods[i].id ? 1 : 0;
             return acc + num;
         }
         // set number of weeks to study periods
         for(var i = 0; i < $scope.criteria.studyYear.studyPeriods.length; i++) {
-            var weeksNumber = $scope.weeks.reduce(getPeriodsLenghInWeeks, 0);
+            var weeksNumber = $scope.weeks.reduce(getPeriodsLengthInWeeks, 0);
             $scope.criteria.studyYear.studyPeriods[i].weeks = weeksNumber;
         }
     }
 
     function getWeeksPeriod(week) {
-        return $scope.criteria.studyYear.studyPeriods.find(function(el){
-            return !week.studyPeriodId && week.start <= el.endDate;
-        });
+        // return $scope.criteria.studyYear.studyPeriods.find(function(el){
+        //     return !week.studyPeriodId && week.start <= el.endDate;
+        // });
+        return DataUtils.getStudyYearOrPeriodAt(week.start, $scope.criteria.studyYear.studyPeriods);
     }
 
     $scope.filterSchoolDepartments = function(dept) {

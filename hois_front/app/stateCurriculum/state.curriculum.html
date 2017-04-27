@@ -161,8 +161,8 @@
 			  </div>
                 <!--KUTSETE MOODULID-->
               <div ng-repeat="occupation in stateCurriculum.occupations" layout="column">
-                <div class="occupation-header align-center">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp;
-                    <hois-classifier-value ng-model="occupation" main-classifier-code="KUTSE"></hois-classifier-value>
+                <div class="occupation-header align-center"><span ng-class="{invalid: stateCurriculumForm.$submitted && !isOccutationValid(occupation) }">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp;</span>
+                    <hois-classifier-value ng-model="occupation" main-classifier-code="KUTSE" ng-class="{invalid: stateCurriculumForm.$submitted && !isOccutationValid(occupation) }"></hois-classifier-value>
                 </div>
                 <div layout="column">
 					<div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
@@ -218,7 +218,7 @@
 				</div>
                 <!--SPETSKUTSETE MOODULID-->
 				<div ng-repeat = "suboccupation in subOccupationsList | filter: filterSubOccupations(occupation, 'SPETSKUTSE')" layout="column">
-					<div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: {{currentLanguage()=='en' ? suboccupation.nameEn : suboccupation.nameEt}}</div>
+					<div class="occupation-header2 align-center"><span ng-class="{invalid: stateCurriculumForm.$submitted && !isSpetsOccupationValid(suboccupation.code, occupation)}">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: {{currentLanguage()=='en' ? suboccupation.nameEn : suboccupation.nameEt}}</span></div>
 					<div layout="column">
 						<div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
 							<div flex="5">&nbsp;</div>
@@ -255,13 +255,16 @@
 				<div layout="row">
 				<md-input-container>
 				  <label>{{'stateCurriculum.enter.module.modules3' | translate}}</label>
-				  <input type="number" name="optionalCredits" ng-model="stateCurriculum.optionalStudyCredits" required aria-label="optional credits" class="shiftDown1" min="0" max="999" ng-readonly="readOnly">
+				  <input type="number" name="optionalCredits" ng-model="stateCurriculum.optionalStudyCredits" pattern="^\d+$" required aria-label="optional credits" class="shiftDown1" min="0" max="999" ng-readonly="readOnly">
                   <div ng-messages="stateCurriculumForm.optionalCredits.$error" ng-show="stateCurriculumForm.optionalCredits.$dirty">
 					  <div ng-message="min">
 						{{'stateCurriculum.enter.credits.positive' | translate}}
 					  </div>
                       <div ng-message="max">
 						{{'stateCurriculum.enter.credits.max' | translate}}
+					  </div>
+                      <div ng-message="pattern">
+						{{'stateCurriculum.enter.credits.integer' | translate}}
 					  </div>
 				  </div>
 				</md-input-container>

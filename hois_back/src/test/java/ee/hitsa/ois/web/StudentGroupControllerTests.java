@@ -23,7 +23,6 @@ public class StudentGroupControllerTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
-
     @Autowired
     private TestConfigurationService testConfigurationService;
 

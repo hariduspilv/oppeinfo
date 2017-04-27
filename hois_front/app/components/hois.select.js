@@ -39,7 +39,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
         } else if(attrs.type === 'curriculumversion') {
           scope.options = Curriculum.queryVersions(scope.criteria);
         } else if(attrs.type === 'directivecoordinator') {
-          scope.options = QueryUtils.endpoint('/autocomplete/directivecoordinators').query();
+          scope.options = QueryUtils.endpoint('/autocomplete/directivecoordinators').query(scope.criteria);
         } else if(attrs.type === 'school') {
           scope.options = School.getAll();
         } else if(attrs.type === 'curriculum') {

@@ -54,5 +54,15 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         auth: function (AuthResolver) { return AuthResolver.resolve(); }
       },
       data: authorizedRoles
+    })
+    .when('/persons/:id', {
+      templateUrl: 'persons/persons.view.html',
+      controller: 'PersonsViewController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: authorizedRoles
     });
 }]);

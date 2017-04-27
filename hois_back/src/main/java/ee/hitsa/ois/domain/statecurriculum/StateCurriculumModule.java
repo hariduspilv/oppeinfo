@@ -23,7 +23,7 @@ public class StateCurriculumModule extends BaseEntityWithId {
 	private Classifier module;	
 	private String nameEt;
 	private String nameEn;
-	private Integer credits;
+	private Double credits;
 	private String objectivesEt;
 	private String objectivesEn;
 	private String assessmentsEt;
@@ -78,11 +78,11 @@ public class StateCurriculumModule extends BaseEntityWithId {
 		this.nameEn = nameEn;
 	}
 
-	public Integer getCredits() {
+	public Double getCredits() {
 		return credits;
 	}
 
-	public void setCredits(Integer credits) {
+	public void setCredits(Double credits) {
 		this.credits = credits;
 	}
 

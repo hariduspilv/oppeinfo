@@ -136,21 +136,25 @@ public abstract class JpaQueryUtil {
 
     public static class NativeQueryBuilder {
         private final String from;
-        private final Sort sort;
+        private Sort sort;
         private final Map<String, Object> parameters = new HashMap<>();
         private final StringBuilder where = new StringBuilder();
 
         public NativeQueryBuilder(String from) {
-            this(from, (Sort)null);
-        }
-
-        public NativeQueryBuilder(String from, Sort sort) {
             this.from = Objects.requireNonNull(from);
-            this.sort = sort;
         }
 
-        public NativeQueryBuilder(String from, Pageable pageable) {
-            this(from, pageable != null ? pageable.getSort() : null);
+        public NativeQueryBuilder sort(Sort sort) {
+            this.sort = sort;
+            return this;
+        }
+
+        public NativeQueryBuilder sort(String... sortFields) {
+            return sort(new Sort(sortFields));
+        }
+
+        public NativeQueryBuilder sort(Pageable pageable) {
+            return sort(pageable != null ? pageable.getSort() : null);
         }
 
         public void optionalCriteria(String criteria, String name, Collection<?> value) {
@@ -232,19 +236,19 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, Collection<?> value) {
-            AssertionFailedException.assertTrue(value != null && !value.isEmpty(), "Required criteria is missing");
+            AssertionFailedException.throwIf(value == null || value.isEmpty(), "Required criteria is missing");
 
             filter(criteria, name, value);
         }
 
         public void requiredCriteria(String criteria, String name, EntityConnectionCommand value) {
-            AssertionFailedException.assertTrue(value != null && value.getId() != null, "Required criteria is missing");
+            AssertionFailedException.throwIf(value == null || value.getId() == null, "Required criteria is missing");
 
             filter(criteria, name, value.getId());
         }
 
         public void requiredCriteria(String criteria, String name, Enum<?> value) {
-            AssertionFailedException.assertTrue(value != null, "Required criteria is missing");
+            AssertionFailedException.throwIf(value == null, "Required criteria is missing");
 
             filter(criteria, name, value.name());
         }
@@ -262,7 +266,7 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, String value) {
-            AssertionFailedException.assertTrue(StringUtils.hasText(value), "Required criteria is missing");
+            AssertionFailedException.throwIf(!StringUtils.hasText(value), "Required criteria is missing");
 
             filter(criteria, name, value);
         }
@@ -354,35 +358,43 @@ public abstract class JpaQueryUtil {
 
     }
 
-    public static Boolean resultAsBoolean(Object value, int index) {
-        value = ((Object[])value)[index];
+    public static Boolean resultAsBoolean(Object row, int index) {
+        Object value = getValue(row, index);
         return (Boolean)value;
     }
 
-    public static Integer resultAsInteger(Object value, int index) {
-        value = ((Object[])value)[index];
+    public static Integer resultAsInteger(Object row, int index) {
+        Object value = getValue(row, index);
         return value != null ? Integer.valueOf(((Number)value).intValue()) : null;
     }
 
-    public static LocalDate resultAsLocalDate(Object value, int index) {
-        value = ((Object[])value)[index];
+    public static LocalDate resultAsLocalDate(Object row, int index) {
+        Object value = getValue(row, index);
         if(value instanceof java.sql.Date) {
             return ((java.sql.Date)value).toLocalDate();
         }
         return value != null ? ((java.sql.Timestamp)value).toLocalDateTime().toLocalDate() : null;
     }
 
-    public static LocalDateTime resultAsLocalDateTime(Object value, int index) {
-        value = ((Object[])value)[index];
+    public static LocalDateTime resultAsLocalDateTime(Object row, int index) {
+        Object value = getValue(row, index);
         return value != null ? ((java.sql.Timestamp)value).toLocalDateTime() : null;
     }
 
-    public static Long resultAsLong(Object value, int index) {
-        value = ((Object[])value)[index];
+    public static Long resultAsLong(Object row, int index) {
+        Object value = getValue(row, index);
         return value != null ? Long.valueOf(((Number)value).longValue()) : null;
     }
 
-    public static String resultAsString(Object value, int index) {
-        return (String)(((Object[])value)[index]);
+    public static String resultAsString(Object row, int index) {
+        return (String)(getValue(row, index));
+    }
+
+    private static Object getValue(Object row, int index) {
+        Object value = row;
+        if (value instanceof Object[]) {
+            value = ((Object[])value)[index];
+        }
+        return value;
     }
 }

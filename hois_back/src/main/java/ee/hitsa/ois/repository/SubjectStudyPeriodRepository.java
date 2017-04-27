@@ -5,7 +5,7 @@ import java.util.List;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
-import ee.hitsa.ois.domain.subject.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 
 public interface SubjectStudyPeriodRepository extends JpaRepository<SubjectStudyPeriod, Long> {
 

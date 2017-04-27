@@ -37,6 +37,17 @@ angular.module('hitsaOis')
     });
 
     sections.push({
+        name: 'Õppeained',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.subjectStudyPeriods.plans',
+            url: "/subjectStudyPeriodPlans?_menu"
+          }
+        ]
+      });
+
+    sections.push({
         name: 'main.menu.directives.label',
         type: 'toggle',
         pages: [
@@ -211,6 +222,11 @@ angular.module('hitsaOis')
           name: 'main.menu.timetable.lessonTime.search',
           id: 'timetableLessonTimeSearch',
           url: "/timetable/lessonTime/search?_menu"
+        },
+        {
+          name: 'main.menu.lessonplan.label',
+          id: 'timetableLessonPlanSearch',
+          url: "/lessonplans/vocational?_menu"
         }
       ]
     });

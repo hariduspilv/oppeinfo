@@ -58,7 +58,7 @@
 
     <div ng-include="formState.templateUrl"></div>
 
-    <md-button ng-href="{{formState.backUrl || '#/directives'}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-click="back('#/directives')" class="md-raised">{{'main.button.back' | translate}}</md-button>
     <md-button ng-click="confirmDirective()" ng-if="record.status === 'KASKKIRI_STAATUS_KINNITAMISEL'" class="md-raised">{{'directive.confirmDuringTest' | translate}}</md-button>
     <md-button ng-click="cancelDirective()" ng-if="record.status === 'KASKKIRI_STAATUS_KINNITATUD' && record.type !== 'KASKKIRI_TYHIST'" class="md-raised">{{'directive.cancel' | translate}}</md-button>
   </div>

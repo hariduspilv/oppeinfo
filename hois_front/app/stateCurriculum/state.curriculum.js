@@ -37,6 +37,7 @@ angular.module('hitsaOis')
         $scope.currentStatus = $scope.stateCurriculum.status;
     }
 
+
     function fillCascadeDropdowns() {
         var iscedClass = $scope.stateCurriculum.iscedClass;
         Classifier.getParentsWithMainClass('ISCED_SUUN', $scope.stateCurriculum.iscedClass).$promise.then(function(response) {
@@ -69,7 +70,7 @@ angular.module('hitsaOis')
     $scope.save = function () {
         /*
         Commented out as changing status needed.
-        It would be better to make another controller from changing status
+        It would be better to make another controller or method for changing status
         */
     //   if($scope.readOnly) {
     //      return;
@@ -80,6 +81,16 @@ angular.module('hitsaOis')
         message.error('main.messages.form-has-errors');
         return;
       }
+
+      if(!allOccuppationsValid()) {
+          message.error('stateCurriculum.error.occupationsCredids');
+          return;
+      }
+      if(!allSpetsOccupationsValid()) {
+          message.error('stateCurriculum.error.spetsOccupationsCredids');
+          return;
+      }
+
       createOrUpdate().then(function() {
          setVariablesForExistingStateCurriculum();
          message.info('main.messages.create.success');
@@ -146,6 +157,88 @@ angular.module('hitsaOis')
       paramName: 'nameEn',
       url: $scope.nameEtUniqueQuery.url
     };
+
+
+    // ---------- validate credits
+
+    $scope.isOccutationValid = function(occupation) {
+        var sum = getCreditsOfOccupationOrSubOccupation(occupation) + $scope.stateCurriculum.optionalStudyCredits;
+
+        var osakutsed = getOccupationsSubOccupations(occupation, 'OSAKUTSE');
+        for(var i = 0; i < osakutsed.length; i++) {
+            sum += getCreditsOfOccupationOrSubOccupation(osakutsed[i]);
+        }
+
+        var spetskutse = getOccupationsSubOccupations(occupation, 'SPETSKUTSE');
+        if(spetskutse[0]) {
+            sum += getCreditsOfOccupationOrSubOccupation(spetskutse[0]);
+        }
+
+        return $scope.stateCurriculum.credits === sum;
+    };
+
+    function allOccuppationsValid() {
+        var occupation = getOccupations();
+        for(var i = 0; i < occupation.length; i++) {
+            if(!$scope.isOccutationValid(occupation[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function allSpetsOccupationsValid() {
+        var occupations = $scope.stateCurriculum.occupations;
+        for(var i = 0; i < occupations.length; i++) {
+            var spetskutsed = getOccupationsSubOccupations(occupations[i], 'SPETSKUTSE');
+            for(var j = 0; j < spetskutsed.length; j++) {
+                if(!$scope.isSpetsOccupationValid(spetskutsed[j], occupations[i])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    $scope.isSpetsOccupationValid = function(spetsOccupation, occupation) {
+        var occMod = getCreditsOfOccupationOrSubOccupation(occupation);
+        var subOccMod = getCreditsOfOccupationOrSubOccupation(spetsOccupation);
+        var partOccMod = sumOfPartOccupations(occupation);
+        var bool = occMod + subOccMod + partOccMod + 
+        $scope.stateCurriculum.optionalStudyCredits === $scope.stateCurriculum.credits;
+        return bool;
+    };
+
+    function sumOfPartOccupations(occupation) {
+        var partOccupations = getOccupationsSubOccupations(occupation, 'OSAKUTSE');        
+        return partOccupations.reduce(function(sum, val){
+            return sum + getCreditsOfOccupationOrSubOccupation(val);
+        }, 0);
+    }
+
+
+    function getOccupationsSubOccupations(occupation, mainClassCode) {
+        return $scope.subOccupations[occupation] ? $scope.subOccupations[occupation].filter(function(el){
+            return el.mainClassCode === mainClassCode;
+        }).map(function(el){return el.code;}) : [];
+    }
+
+    function getCreditsOfOccupationOrSubOccupation(occupation) {
+        return $scope.stateCurriculum.modules.filter(function(m){
+            return ArrayUtils.includes(m.moduleOccupations, occupation);
+        }).reduce(function(total, val){
+                return total + val.credits;
+        }, 0);
+    }
+
+    function getOccupations() {
+        return $scope.stateCurriculum.occupations.filter(function(o){
+            return o.indexOf('KUTSE_') === 0;
+        });
+    }
+
+
+    // ---------- validate credits//
 
     //  statuses
 
@@ -245,6 +338,9 @@ angular.module('hitsaOis')
             return $scope.subOccupations[occupation] && $scope.subOccupations[occupation].length !== null && ArrayUtils.includes($scope.subOccupations[occupation], subOccupation) && subOccupation.code.indexOf(subOccupationType) !== -1;
         };
     };
+
+
+
 
 
 

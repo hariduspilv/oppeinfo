@@ -6,8 +6,10 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.TeacherForm;
-import ee.hitsa.ois.web.commandobject.TeacherSearchCommand;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityFormWrapper;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFromWrapper;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,5 +54,17 @@ public class TeacherController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Teacher teacher,  @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertSameSchool(user, teacher.getSchool());
         teacherService.delete(teacher);
+    }
+
+    @PutMapping("/{id:\\d+}/qualifications")
+    public TeacherDto saveQualifications(HoisUserDetails user, @WithEntity(value = "id") Teacher teacher, @Valid @RequestBody TeacherQualificationFromWrapper teacherQualificationFroms) {
+        UserUtil.assertSameSchool(user, teacher.getSchool());
+        return teacherService.saveQualifications(teacher, teacherQualificationFroms.getQualifications());
+    }
+
+    @PutMapping("/{id:\\d+}/mobilities")
+    public TeacherDto saveMobilities(HoisUserDetails user, @WithEntity(value = "id") Teacher teacher, @Valid @RequestBody TeacherMobilityFormWrapper mobilityForms) {
+        UserUtil.assertSameSchool(user, teacher.getSchool());
+        return teacherService.saveMobilities(teacher, mobilityForms.getMobilities());
     }
 }

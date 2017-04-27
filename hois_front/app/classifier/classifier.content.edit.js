@@ -1,40 +1,27 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('ClassifierContentEditController', function ($scope, $route, Classifier, classifierAutocomplete, $location, message, $mdDialog, ClassifierConnect, dialogService) {
+  .controller('ClassifierContentEditController', function ($scope, $route, Classifier, classifierAutocomplete, $location, message, ClassifierConnect, dialogService, QueryUtils, DataUtils) {
+
+    var code = $route.current.params.codeThis;
+    var Endpoint = QueryUtils.endpoint('/classifier');
 
     function getThisClassifier() {
         $scope.parents = [];
-        if($route.current.params.codeThis) {
-          Classifier.get($route.current.params.codeThis).$promise.then(function(result){
-            $scope.classifier = result;
-            setDates();
-            getParents($scope.classifier.code);
-            getChildren($scope.classifier.code);
-            //console.log("this classifier");
-            //console.log($scope.classifier);
-          });
-        } else {
-          $scope.parents = [];
+        if(code) {
+            $scope.classifier = Endpoint.get({id: code}, function() {
+                DataUtils.convertStringToDates($scope.classifier, ['validFrom', 'validThru']);
+                getParents($scope.classifier.code);
+                getChildren($scope.classifier.code);
+            });
         }
         getMainClassifier();
     }
     getThisClassifier();
 
-    function setDates() {
-      if($scope.classifier.validFrom) {
-        $scope.classifier.validFrom = new Date($scope.classifier.validFrom);
-      }
-      if($scope.classifier.validThru) {
-        $scope.classifier.validThru = new Date($scope.classifier.validThru);
-      }
-    }
-
     function getParents(code) {
         Classifier.getParents(code).$promise.then(function(result) {
           $scope.parents = result;
-          //console.log("parents:");
-          //console.log($scope.parents);
         });
     }
 
@@ -42,8 +29,6 @@ angular.module('hitsaOis')
         Classifier.getChildren(code).$promise.then(function(result) {
           $scope.children = result;
           $scope.hasChildren = result.length > 0;
-          //console.log("children:");
-          //console.log($scope.children);
         });
     }
 
@@ -63,46 +48,48 @@ angular.module('hitsaOis')
 
     $scope.save = function() {
       $scope.classifierForm.$setSubmitted();
-      //console.log('form is valid: '+ $scope.classifierForm.$valid);
       if($scope.classifierForm.$valid) {
         if($scope.classifier.code) {
-          $scope.update();
+          update();
         } else {
-          $scope.create();
+          create();
         }
       } else {
-        //console.log("form invalid!");
+          message.error('main.messages.form-has-errors');
       }
     };
 
-    $scope.update = function() {
+    function update() {
       ClassifierConnect.sendListOfParents($scope.classifier, $scope.parents);
-      new Classifier($scope.classifier).save().$promise.then(message.updateSuccess);
-    };
+      $scope.classifier.id = $scope.classifier.code;    // required for using QueryUtils methods
+      $scope.classifier.$update().then(function() {
+            message.info('main.messages.create.success');
+          });
+    }
 
     $scope.delete = function() {
         dialogService.confirmDialog({prompt: 'classifier.deleteconfirm'}, function() {
-            new Classifier($scope.classifier).delete().$promise.then(function() {
+            $scope.classifier.id = $scope.classifier.code;    // required for using QueryUtils methods
+            $scope.classifier.$delete().then(function() {
                 message.info('main.messages.delete.success');
                 $location.path( '/classifier/' + $scope.mainClassCode);
             });
         });
     };
 
-    $scope.create = function() {
-
+    function create() {
       $scope.classifier.value = $scope.classifier.value.toUpperCase();
       $scope.classifier.mainClassCode = $scope.mainClassCode;
       $scope.classifier.code = $scope.classifier.mainClassCode + "_" + $scope.classifier.value;
       $scope.classifier.valid = true;
-      var promise = new Classifier($scope.classifier).create().$promise;
-      promise.then(function(result) {
-        message.info('main.messages.create.success');
-        $scope.classifier = result;
-        setDates();
-        ClassifierConnect.sendListOfParents($scope.classifier, $scope.parents);
-      });
-    };
+      $scope.classifier.id = $scope.classifier.code;    // required for using QueryUtils methods
+
+      new Endpoint($scope.classifier).$save().then(function(result) {
+          ClassifierConnect.sendListOfParents(result, $scope.parents);
+          message.info('main.messages.create.success');
+          $location.path( '/classifier/' + $scope.mainClassCode + '/' + result.code + '/edit');
+        });
+    }
 
     $scope.querySearch = function(queryName, mainClassCode) {
       return classifierAutocomplete.searchByName(queryName, mainClassCode);

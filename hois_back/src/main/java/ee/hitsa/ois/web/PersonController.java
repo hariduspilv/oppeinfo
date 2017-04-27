@@ -16,8 +16,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
-import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.PersonService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
@@ -39,9 +37,6 @@ public class PersonController {
 
     @Autowired
     private PersonService personService;
-
-    @Autowired
-    private ClassifierRepository classifierRepository;
 
     //TODO: permission checks
     @PostMapping("")
@@ -70,7 +65,7 @@ public class PersonController {
         if (!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson()))) {
             throw new AssertionFailedException("Person and user don't match");
         }
-        return UserDto.of(user, classifierRepository.findAllByMainClassCode(MainClassCode.TEEMAOIGUS.name()));
+        return personService.getUser(user);
     }
 
     //TODO: permission checks

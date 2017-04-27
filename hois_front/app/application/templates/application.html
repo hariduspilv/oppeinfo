@@ -141,7 +141,7 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label>{{'application.newCurriculumVersion' | translate}}</label>
-              <hois-select ng-model="application.newCurriculumVersion.id" values="curriculumVersions" ng-required="application.type === 'AVALDUS_LIIK_OKAVA'"></hois-select>
+              <hois-select ng-model="application.newCurriculumVersion.id" ng-change="newCurriculumVersionSelected()" values="curriculumVersions" ng-required="application.type === 'AVALDUS_LIIK_OKAVA'"></hois-select>
             </md-input-container>
           </div>
 
@@ -149,7 +149,7 @@
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label>{{'application.newStudyForm' | translate}}</label>
               <hois-classifier-select ng-model="application.newStudyForm" model-value-attr="code"
-                main-classifier-code="OPPEVORM" filter-values="[application.oldStudyForm]" ng-required="application.type === 'AVALDUS_LIIK_OKAVA'"></hois-classifier-select>
+                main-classifier-code="OPPEVORM" ng-required="application.type === 'AVALDUS_LIIK_OKAVA'"></hois-classifier-select>
             </md-input-container>
           </div>
         </div>
@@ -231,8 +231,10 @@
               <a class="md-button md-primary" href="" ng-click="addPlannedSubjectRow()">{{'main.button.addRow' | translate}}</a>
             </div>
             <div layout="row" class="top-margin">
-              <input style="display:none" type="number" readonly name="plannedSubjectLenght" ng-model="plannedSubjectLenght" min="1"  />
-              <div md-colors="{color: 'warn-A400'}" ng-messages="applicationForm.plannedSubjectLenght.$error">
+
+
+              <input style="display:none" type="number" readonly name="plannedSubjectLength" ng-model="plannedSubjectLength" ng-model-options="{ getterSetter: true }" min="1"  />
+              <div md-colors="{color: 'warn-A400'}" ng-messages="applicationForm.plannedSubjectLength.$error">
                 <div ng-if="applicationForm.$submitted" ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
               </div>
             </div>

@@ -39,9 +39,6 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
     //@Cacheable(cacheNames = "classifier", key="#spec.getSearchCommand().getCacheKey()+#sort.toString()")
     List<Classifier> findAll(Specification<Classifier> spec, Sort sort);
 
-	@CacheEvict(cacheNames = "classifier", allEntries = true)
-	List<Classifier> removeByCode(String code);
-
 	@Query(value = "select * from classifier as c inner join classifier_connect as cc on c.code = cc.connect_classifier_code where cc.classifier_code = ?1", nativeQuery = true)
 	List<Classifier> findParents(String code);
 

@@ -41,6 +41,7 @@ import ee.hitsa.ois.web.commandobject.UserForm;
 import ee.hitsa.ois.web.commandobject.UserForm.UserRight;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.UserDto;
 import ee.hitsa.ois.web.dto.UsersSearchDto;
 
 /*
@@ -75,7 +76,7 @@ public class PersonService {
     //private static final String PERSON_SELECT = "distinct p.idcode, p.firstname, p.lastname, u.school_id, roles.roll roll";
 
     public Page<UsersSearchDto> search(UsersSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(PERSON_FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(PERSON_FROM).sort(pageable);
 
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
 
@@ -115,11 +116,15 @@ public class PersonService {
         return personRepository.save(person);
     }
 
+    public UserDto getUser(User user) {
+        return UserDto.of(user, classifierRepository.findAllByMainClassCode(MainClassCode.TEEMAOIGUS.name()));
+    }
+
     public User saveUser(UserForm userForm, User user) {
         EntityUtil.bindToEntity(userForm, user, classifierRepository, "school", "userRights");
-        user.setSchool(userForm.getSchool() != null ? schoolRepository.getOne(userForm.getSchool()) : null);
+        user.setSchool(EntityUtil.getOptionalOne(School.class, userForm.getSchool(), em));
 
-        Map<String, List<UserRights>> oldRights = user.getUserRights().stream().collect(Collectors.groupingBy(it -> it.getObject().getCode()));
+        Map<String, List<UserRights>> oldRights = user.getUserRights().stream().collect(Collectors.groupingBy(it -> EntityUtil.getCode(it.getObject())));
         Set<UserRights> result = new HashSet<>();
 
         Map<String, Classifier> oigused = StreamUtil.toMap(Classifier::getCode, classifierRepository.findAllByMainClassCode(MainClassCode.OIGUS.name()));

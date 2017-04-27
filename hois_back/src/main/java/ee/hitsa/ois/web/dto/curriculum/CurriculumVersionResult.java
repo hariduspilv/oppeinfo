@@ -15,13 +15,15 @@ public class CurriculumVersionResult extends AutocompleteResult {
     private final Long curriculum;
     private final Long schoolDepartment;
     private final String studyForm;
+    private final Boolean isVocational;
 
-    public CurriculumVersionResult(Long id, String nameEt, String nameEn, Long curriculum, Long schoolDepartment, String studyForm) {
+    public CurriculumVersionResult(Long id, String nameEt, String nameEn, Long curriculum, Long schoolDepartment, String studyForm, Boolean isVocational) {
         super(id, nameEt, nameEn);
 
         this.curriculum = curriculum;
         this.schoolDepartment = schoolDepartment;
         this.studyForm = studyForm;
+        this.isVocational = isVocational;
     }
 
     public Long getCurriculum() {
@@ -36,12 +38,18 @@ public class CurriculumVersionResult extends AutocompleteResult {
         return studyForm;
     }
 
+    public Boolean getIsVocational() {
+        return isVocational;
+    }
+
+    // FIXME is this used?
     public static CurriculumVersionResult of(CurriculumVersion curriculumVersion) {
         Curriculum curriculum = curriculumVersion.getCurriculum();
         Classifier studyForm = curriculumVersion.getCurriculumStudyForm() != null ? curriculumVersion.getCurriculumStudyForm().getStudyForm() : null;
         String code = curriculumVersion.getCode();
         return new CurriculumVersionResult(curriculumVersion.getId(), CurriculumUtil.versionName(code, curriculum.getNameEt()),
                 CurriculumUtil.versionName(code, curriculum.getNameEn()), curriculum.getId(),
-                EntityUtil.getId(curriculumVersion.getSchoolDepartment()), EntityUtil.getNullableCode(studyForm));
+                EntityUtil.getId(curriculumVersion.getSchoolDepartment()), EntityUtil.getNullableCode(studyForm),
+                Boolean.valueOf(CurriculumUtil.isVocational(curriculum.getOrigStudyLevel())));
     }
 }

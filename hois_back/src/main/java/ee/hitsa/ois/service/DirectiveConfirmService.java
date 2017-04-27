@@ -23,9 +23,11 @@ import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.domain.UserRights;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
@@ -34,6 +36,7 @@ import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.repository.ApplicationRepository;
@@ -68,7 +71,7 @@ public class DirectiveConfirmService {
     private Validator validator;
 
     public void sendToConfirm(Directive directive) {
-        AssertionFailedException.assertTrue(ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Invalid directive status");
+        AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Invalid directive status");
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         List<Map.Entry<String, String>> allErrors = new ArrayList<>();
@@ -93,6 +96,12 @@ public class DirectiveConfirmService {
                     allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "startDate"), "InvalidValue"));
                 }
             }
+            if(DirectiveType.KASKKIRI_VALIS.equals(directiveType)) {
+                boolean isAbroad = Boolean.TRUE.equals(ds.getIsAbroad());
+                if(isAbroad ? !StringUtils.hasText(ds.getAbroadSchool()) : ds.getEhisSchool() == null) {
+                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, isAbroad ? "abroadSchool" : "ehisSchool"), "NotNull"));
+                }
+            }
             rowNum++;
         }
 
@@ -106,7 +115,7 @@ public class DirectiveConfirmService {
     }
 
     public void confirm(HoisUserDetails user, Directive directive, LocalDate confirmDate) {
-        AssertionFailedException.assertTrue(ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus()), "Invalid directive status");
+        AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus()), "Invalid directive status");
 
         // update directive fields
         directive.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name()));
@@ -133,6 +142,14 @@ public class DirectiveConfirmService {
 
     private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent, Classifier studentStatus, DirectiveStudent academicLeave) {
         Student student = directiveStudent.getStudent();
+        if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_IMMATV.equals(directiveType)) {
+            student = createStudent(directiveStudent);
+        }
+
+        // copy entered data from directive
+        copyDirectiveProperties(directiveType, directiveStudent, student, false);
+
+        // directive type specific calculated data and additional actions
         LocalDate confirmDate = directiveStudent.getDirective().getConfirmDate();
         User user;
         long duration;
@@ -168,20 +185,22 @@ public class DirectiveConfirmService {
             break;
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
-            student = createStudent(directiveStudent);
             student.setStudyStart(confirmDate);
             break;
         default:
             break;
         }
 
-        copyDirectiveProperties(directiveType, directiveStudent, student, false);
-
         // optional new status
         if(studentStatus != null) {
             student.setStatus(studentStatus);
         }
-        studentService.saveWithHistory(student);
+
+        student = studentService.saveWithHistory(student);
+        if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_IMMATV.equals(directiveType)) {
+            // store reference to created student also into directive_student
+            directiveStudent.setStudent(student);
+        }
 
         // inform student about new directive
         StudentDirectiveCreated data = new StudentDirectiveCreated(directiveStudent);
@@ -265,6 +284,13 @@ public class DirectiveConfirmService {
         user.setRole(em.getReference(Classifier.class, Role.ROLL_T.name()));
         user.setStudent(student);
         user.setValidFrom(validFrom);
+        // rights for logging in
+        // TODO wrong rights, replace!
+        UserRights userRights = new UserRights();
+        userRights.setUser(user);
+        userRights.setPermission(classifierRepository.getOne(Permission.OIGUS_V.name()));
+        userRights.setObject(classifierRepository.getOne("TEEMAOIGUS_A"));
+        user.setUserRights(Collections.singleton(userRights));
         em.persist(user);
         return user;
     }

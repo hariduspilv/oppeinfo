@@ -16,9 +16,9 @@
                          md-page="criteria.page" md-total="{{generalmessages.totalElements}}" md-on-paginate="loadGeneralMessages"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
     
-    <h3>{{'message.messages' | translate}}</h3>
-    <h5 ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5>
-    <md-table-container>
+    <h3 ng-show="showUnreadMessages">{{'message.messages' | translate}}</h3>
+    <h5 ng-show="showUnreadMessages" ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5>
+    <md-table-container ng-show="showUnreadMessages">
       <table md-table md-progress="unreadMessages.$promise">
         <tbody md-body>
           <tr md-row ng-repeat="row in unreadMessages.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="readMessage(row)">

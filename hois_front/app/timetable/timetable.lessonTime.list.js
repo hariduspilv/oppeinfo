@@ -35,7 +35,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeListController', funct
       days.push({day: 'NADALAPAEV_N'});
     }
     if (lessonTime.dayFri === true) {
-      days.push({day: 'NADALAPAEV_F'});
+      days.push({day: 'NADALAPAEV_R'});
     }
     if (lessonTime.daySat === true) {
       days.push({day: 'NADALAPAEV_L'});
@@ -60,9 +60,8 @@ angular.module('hitsaOis').controller('TimetableLessonTimeListController', funct
     return $filter('orderBy')(result).join(", ");
   };
 
-  $scope.isValid = function(lessonTime) {
+  $scope.hasPassed = function(lessonTime) {
     DataUtils.convertStringToDates(lessonTime, ["validThru"]);
-    return lessonTime.validThru >= new Date();
+    return lessonTime.validThru !== null && lessonTime.validThru < new Date();
   };
-  DataUtils.convertStringToTime($scope.criteria, ["from", "thru"]);
 });

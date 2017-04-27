@@ -3,13 +3,21 @@ package ee.hitsa.ois.web.dto;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.web.commandobject.TeacherForm;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityForm;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFrom;
+
+import java.util.Set;
 
 public class TeacherDto extends TeacherForm {
 
     private Long id;
     // todo start using persondto
     private String fullname;
+
+    private Set<TeacherQualificationFrom> teacherQualifications;
+
+    private Set<TeacherMobilityForm> teacherMobility;
 
     public Long getId() {
         return id;
@@ -31,5 +39,21 @@ public class TeacherDto extends TeacherForm {
         dto.setTeacherMobility(StreamUtil.toMappedSet(it -> EntityUtil.bindToDto(it, new TeacherMobilityForm()), teacher.getTeacherMobility()));
         dto.fullname = teacher.getPerson().getFullname();
         return dto;
+    }
+
+    public Set<TeacherQualificationFrom> getTeacherQualifications() {
+        return teacherQualifications;
+    }
+
+    public void setTeacherQualifications(Set<TeacherQualificationFrom> teacherQualifications) {
+        this.teacherQualifications = teacherQualifications;
+    }
+
+    public Set<TeacherMobilityForm> getTeacherMobility() {
+        return teacherMobility;
+    }
+
+    public void setTeacherMobility(Set<TeacherMobilityForm> teacherMobility) {
+        this.teacherMobility = teacherMobility;
     }
 }

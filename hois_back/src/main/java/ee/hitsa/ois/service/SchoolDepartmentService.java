@@ -131,7 +131,7 @@ public class SchoolDepartmentService {
     }
 
     private List<SchoolDepartmentDto> findForTree(Long schoolId, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd", pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd").sort(pageable);
         qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
 
         List<?> data = qb.select("sd.id, sd.version, sd.code, sd.name_et, sd.name_en, sd.valid_from, sd.valid_thru, sd.parent_school_department_id", em).getResultList();

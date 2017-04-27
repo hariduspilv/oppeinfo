@@ -39,6 +39,17 @@ angular.module('hitsaOis')
             }
         }
         return false;
+      },
+       /**
+       * Checks whether two arrays have common elements
+       */
+      intersect: function(array1, array2) {
+        for(var i = 0; i < array1.length; i++) {
+            if(this.includes(array2, array1[i])) {
+                return true;
+            }
+        }
+        return false;
       }
     };
   });

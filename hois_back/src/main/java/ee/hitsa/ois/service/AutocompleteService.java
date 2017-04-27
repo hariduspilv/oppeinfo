@@ -4,7 +4,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -103,11 +102,11 @@ public class AutocompleteService {
 
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
-        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value, c.valid_from, c.valid_thru", em).getResultList();
+        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value", em).getResultList();
         return StreamUtil.toMappedList(r -> new ClassifierSelection(resultAsString(r, 0),
                     resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
                     resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
-                    resultAsString(r, 7), resultAsString(r, 8), resultAsLocalDate(r, 9), resultAsLocalDate(r, 10)), data);
+                    resultAsString(r, 7), resultAsString(r, 8)), data);
     }
 
     public List<AutocompleteResult> curriculums(Long schoolId, AutocompleteCommand term) {
@@ -122,6 +121,7 @@ public class AutocompleteService {
 
     public List<CurriculumVersionResult> curriculumVersions(Long schoolId, Boolean valid, Boolean sais) {
         String from = "from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id "+
+            "inner join classifier sl on c.orig_study_level_code = sl.code "+
             "left outer join curriculum_study_form sf on cv.curriculum_study_form_id = sf.id";
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
@@ -136,18 +136,21 @@ public class AutocompleteService {
             qb.filter("exists(select sa.id from sais_admission sa where sa.curriculum_version_id = cv.id)");
         }
 
-        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code", em).getResultList();
+        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code, sl.value", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 1);
             return new CurriculumVersionResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)),
-                    CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsLong(r, 4), resultAsLong(r, 5), resultAsString(r, 6));
+                    CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsLong(r, 4), resultAsLong(r, 5), resultAsString(r, 6), Boolean.valueOf(CurriculumUtil.isVocational(resultAsString(r, 7))));
         }, data);
     }
 
-    public List<AutocompleteResult> directiveCoordinators(Long schoolId) {
+    public List<AutocompleteResult> directiveCoordinators(Long schoolId, Boolean isDirective) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator dc");
 
         qb.requiredCriteria("dc.school_id = :schoolId", "schoolId", schoolId);
+        if(Boolean.TRUE.equals(isDirective)) {
+            qb.filter("dc.is_directive = true");
+        }
 
         List<?> data = qb.select("dc.id, dc.name", em).getResultList();
         return StreamUtil.toMappedList(r -> {
@@ -191,7 +194,7 @@ public class AutocompleteService {
 
     public List<AutocompleteResult> students(Long schoolId, AutocompleteCommand lookup) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
-                "from student s inner join person p on s.person_id = p.id", new Sort("p.lastname", "p.firstname"));
+                "from student s inner join person p on s.person_id = p.id").sort("p.lastname", "p.firstname");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", lookup.getName());

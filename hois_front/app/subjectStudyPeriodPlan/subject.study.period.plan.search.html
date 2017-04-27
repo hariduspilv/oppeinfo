@@ -1,0 +1,76 @@
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <form ng-submit="loadData()" layout="column" novalidate >
+        <md-input-container>
+            <label class="textInput">{{'subjectStudyPeriodPlan.studyPeriod' | translate}}</label>
+            <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>
+        </md-input-container>
+        <md-input-container>
+            <label class="textInput">{{'subjectStudyPeriodPlan.curriculum' | translate}}</label>
+            <hois-select ng-model="criteria.curriculum" values="curriculums"></hois-select>
+        </md-input-container>
+        <hois-autocomplete ng-model="criteria.subjectObject" method="subjects" name="subject"
+                label="subjectStudyPeriodPlan.subject"></hois-autocomplete>
+        <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        </div>
+    </form>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'subjectStudyPeriodPlan.subject' | translate}}</th>
+            <th md-column>{{'subjectStudyPeriodPlan.studyForm' | translate}}</th>
+            <th md-column ng-repeat="capacityType in capacityTypes">
+                {{capacityType.value}}
+            </th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+                {{currentLanguageNameField(row.subject)}}
+                <p ng-repeat="plan in row.plans">
+                    <span ng-repeat="curriculum in plan.curriculums">
+                        <span ng-if="$index > 0">, </span>
+                        {{currentLanguageNameField(curriculum)}}
+                    </span>
+                </p>
+            </td>
+            <td md-cell>
+                <p ng-repeat="plan in row.plans">
+                    <span ng-repeat="studyForm in plan.studyForms">
+                        <span ng-if="$index > 0">, </span>
+                        {{currentLanguageNameField(studyForm)}}
+                    </span>
+                </p>
+            </td>
+             <td md-cell ng-repeat="capacityType in capacityTypes">
+                <!--{{capacityType.value}} {{$index}}-->
+                <p ng-repeat="plan in row.plans">
+                    {{getCapacitiesHours(capacityType.code, plan)}}
+                </p>
+            </td>
+            <td md-cell>
+                <!--TODO: instead of 1 in a row beloq must be studyPeriod Id-->
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/{{criteria.studyPeriod}}/new">{{'subjectStudyPeriodPlan.add' | translate}}
+                    </md-button>
+                    <p ng-repeat="plan in row.plans">
+                        <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriodPlans/{{::plan.id}}/edit">{{'main.button.change' | translate}}
+                        </md-button>
+                    </p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

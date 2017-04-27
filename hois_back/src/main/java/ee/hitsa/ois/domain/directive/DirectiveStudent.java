@@ -21,6 +21,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.util.Period;
+import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.validation.PeriodRange;
 
 @PeriodRange(groups = {Akad.class, Valis.class})
@@ -32,7 +33,6 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private Directive directive;
     @NotNull(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Valis.class})
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(updatable = false)
     private Student student;
     @NotNull(groups = {Akadk.class})
     private LocalDate startDate;
@@ -40,10 +40,10 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @NotNull(groups = {Akad.class, Eksmat.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier reason;
-    @NotNull(groups = Okoorm.class)
+    @NotNull(groups = {Immat.class, Okoorm.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyLoad;
-    @NotNull(groups = {Lopet.class})
+    @NotNull(groups = {Immat.class, Lopet.class, Ovorm.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
     @NotNull(groups = {Immat.class, Okava.class, Ovorm.class})
@@ -74,6 +74,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private Boolean isAbroad;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier ehisSchool;
+    @NotNull(groups = Valis.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier country;
     @NotNull(groups = Valis.class)
@@ -83,6 +84,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier abroadProgramme;
     private String abroadSchool;
+    @NotEmpty(groups = Immat.class)
     private String email;
     @NotNull(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -97,6 +99,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private Application application;
     @NotNull(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
     private Person person;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudentHistory studentHistory;

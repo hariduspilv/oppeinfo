@@ -61,7 +61,7 @@
               {{currentLanguageNameField(row.status)}}
             </td>
             <td md-cell ng-if="formState.status !== 'AVALDUS_ESINDAJA_STAATUS_E'">{{'main.formattedDate' | translate: {date: (row.confirmDate || row.declineDate)} }}</td>
-            <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.studentId}}/main?backUrl=applications">{{::row.studentFullname}}</md-button></td>
+            <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.studentId}}/main">{{::row.studentFullname}}</md-button></td>
             <td md-cell>{{::row.studentIdcode}}</td>
             <td md-cell>
               <md-button ng-if="row.status.code === 'AVALDUS_ESINDAJA_STAATUS_E'" md-no-ink class="md-primary change-button" ng-click="accept(row)">{{'main.button.confirm' | translate}}</md-button>

@@ -69,7 +69,7 @@
           <td md-cell>{{ 'main.formattedDate' | translate: {date: row.validFrom} }}</td>
           <td md-cell>{{ 'main.formattedDate' | translate: {date: row.validThru} }}</td>
           <td md-cell>
-            <a class="md-button md-primary" ng-href="/#/timetable/lessonTime/{{::row.id}}/{{isValid(row) ? 'edit' : 'view'}}">{{'main.button.' + (isValid(row) ? 'edit' : 'view') | translate}}</a>
+            <a class="md-button md-primary" ng-href="/#/timetable/lessonTime/{{::row.id}}/{{hasPassed(row) ? 'view' : 'edit'}}">{{'main.button.' + (hasPassed(row) ? 'view' : 'edit') | translate}}</a>
           </td>
         </tr>
         </tbody>

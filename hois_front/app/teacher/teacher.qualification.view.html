@@ -1,0 +1,50 @@
+<!--<div ng-include="'teacher/teacher.menu.view.html'"></div>-->
+<div layout-padding>
+  <div flex>
+    <div ng-repeat="qualification in teacher.teacherQualifications | orderBy: 'id'">
+      <hois-collapsable label="('teacher.qualification.qualification' | translate)">
+        <div layout="column" flex>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="50" flex-sm="100" >
+              <label>{{'teacher.qualification.qualification' | translate}}</label>
+              <hois-classifier-value ng-model="qualification.qualification" main-classifier-code="EHIS_KVALIFIKATSIOON"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="45" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.qualification.qualificationName' | translate}}</label>
+              <hois-classifier-value ng-model="qualification.qualificationName" main-classifier-code="EHIS_KVALIFIKATSIOON_NIMI"></hois-classifier-value>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
+            <md-input-container flex="25" flex-sm="100" >
+              <label>{{'teacher.qualification.state' | translate}}</label>
+              <hois-classifier-value ng-model="qualification.state" main-classifier-code="RIIK"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-offset="5" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.qualification.year' | translate}}</label>
+              <!-- todo fix hois-value-->
+              <hois-value value="qualification.year"></hois-value>
+            </md-input-container>
+            <md-input-container flex="45" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.qualification.qualificationOther' | translate}}</label>
+              <hois-value value="qualification.qualificationOther"></hois-value>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="25" flex-sm="100"  flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.qualification.school' | translate}}</label>
+              <hois-classifier-value ng-model="qualification.school" main-classifier-code="EHIS_EESTI_OPPEASUTUS"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.qualification.exSchool' | translate}}</label>
+              <hois-classifier-value ng-model="qualification.exSchool" main-classifier-code="EHIS_EESTI_OPPEASUTUS_ENDINE"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="25" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.qualification.schoolOther' | translate}}</label>
+              <hois-value value="qualification.schoolOther"></hois-value>
+            </md-input-container>
+          </div>
+        </div>
+      </hois-collapsable>
+    </div>
+  </div>
+</div>

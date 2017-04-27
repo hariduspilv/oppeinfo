@@ -2,6 +2,8 @@ package ee.hitsa.ois.web.dto;
 
 public class ApplicationApplicableDto {
 
+    private static final ApplicationApplicableDto TRUE_VALUE = new ApplicationApplicableDto();
+
     private Boolean isAllowed;
     private String reason;
 
@@ -24,6 +26,10 @@ public class ApplicationApplicableDto {
     }
     public void setReason(String reason) {
         this.reason = reason;
+    }
+
+    public static ApplicationApplicableDto trueValue() {
+        return TRUE_VALUE;
     }
 
 }

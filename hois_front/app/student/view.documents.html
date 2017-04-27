@@ -1,7 +1,7 @@
 <md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/main{{::formState.backRef}}" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences{{::formState.backRef}}" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents{{::formState.backRef}}" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
+  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <div layout-padding>
@@ -46,7 +46,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in directives.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/view?backUrl={{'#/students/'+studentId+'/documents' | encodeURIComponent}}">{{::row.headline}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/view">{{::row.headline}}</md-button>
             </td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
             <td md-cell>{{::row.directiveNr}}</td>
@@ -60,6 +60,6 @@
                          md-page="directivesCriteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadDirectives"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
-    <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

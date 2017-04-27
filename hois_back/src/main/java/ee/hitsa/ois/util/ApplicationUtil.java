@@ -78,6 +78,7 @@ public class ApplicationUtil {
     public static void assertOverLappingDates(Application application, ApplicationRepository applicationRepository) {
         LocalDate start = getStartDate(application);
         LocalDate end = getEndDate(application);
+        // TODO use exists query
         long overLappingApplicationsCount = applicationRepository.count((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("student").get("id"), EntityUtil.getId(application.getStudent())));
@@ -156,8 +157,8 @@ public class ApplicationUtil {
             assertPeriod(application, 3, 0);
         }
         else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_O.name().equals(reason)) {
-            //TODO: algusega mitte varem kui esimese õppeaasta teisest semestrist);
-            if (!StudentUtil.isHigher(application.getStudent())) {
+            // TODO: algusega mitte varem kui esimese õppeaasta teisest semestrist
+            if (!CurriculumUtil.isHigher(application.getStudent().getCurriculumVersion().getCurriculum().getOrigStudyLevel())) {
                 throw new ValidationFailedException("application.messages.studentIsNotHigher");
             }
 

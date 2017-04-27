@@ -17,8 +17,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
-import ee.hitsa.ois.domain.subject.SubjectStudyPeriod;
-import ee.hitsa.ois.domain.subject.SubjectStudyPeriodTeacher;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
@@ -62,7 +62,7 @@ public class SubjectStudyPeriodService {
                 + "left join person p2 on p2.id = t2.person_id "
                 + "where ssp2.id = ssp.id ) as names";
 
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM).sort(pageable);
         if(StringUtils.hasText(criteria.getTeachersFullname())) {
             qb.requiredCriteria("exists"
                     + "(select sspt.id "

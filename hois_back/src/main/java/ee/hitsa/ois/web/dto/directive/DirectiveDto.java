@@ -56,6 +56,7 @@ public class DirectiveDto extends DirectiveForm {
         }
 
         DirectiveDto dto = EntityUtil.bindToDto(directive, new DirectiveDto(), "students");
+        // TODO insertedBy full person name
         dto.setStudents(StreamUtil.toMappedList(DirectiveStudentDto::of, directive.getStudents()));
         return dto;
     }
@@ -100,6 +101,7 @@ public class DirectiveDto extends DirectiveForm {
 
         public static DirectiveCancelDto of(Directive directive) {
             DirectiveCancelDto dto = EntityUtil.bindToDto(directive, new DirectiveCancelDto(), "students");
+            // TODO insertedBy full person name
             Directive canceled = directive.getCanceledDirective();
             dto.setCanceledDirectiveData(new AutocompleteResult(canceled.getId(), canceled.getHeadline(), null));
             dto.setCanceledDirectiveType(EntityUtil.getCode(canceled.getType()));

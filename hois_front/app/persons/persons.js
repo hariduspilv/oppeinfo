@@ -8,11 +8,10 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
 
   $scope.loadData();
 }])
-  .controller('PersonsEditController', ['$location', '$route', '$scope', 'dialogService', 'Classifier', 'DataUtils', 'message', 'QueryUtils', function ($location, $route, $scope, dialogService, Classifier, DataUtils, message, QueryUtils) {
+  .controller('PersonsEditController', ['$location', '$route', '$scope', 'dialogService', 'DataUtils', 'message', 'PersonService', 'QueryUtils', function ($location, $route, $scope, dialogService, DataUtils, message, PersonService, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/persons';
     var Endpoint = QueryUtils.endpoint(baseUrl);
-    var clMapper = Classifier.valuemapper({role: "ROLL"});
     $scope.showSchool = $route.current.locals.auth.isMainAdmin();
     $scope.maxDate = new Date();
 
@@ -26,23 +25,7 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
         $scope.idcodeReadonly = true;
       }
       if ($scope.users) {
-        clMapper.objectmapper($scope.users);
-        $scope.users.forEach(function (it) {
-          DataUtils.convertStringToDates(it, ['validThru', 'validFrom']);
-        });
-
-        var now = new moment();
-        for (var i = 0; i < $scope.users.length; i++) {
-          var valid = true;
-          var item = $scope.users[i];
-          if (item.validThru !== null && moment(item.validThru).isBefore(now)) {
-            valid = false;
-          }
-          if (item.validFrom !== null && moment(item.validFrom).isAfter(now)) {
-            valid = false;
-          }
-          item.valid = valid;
-        }
+        PersonService.usersAfterLoad($scope.users);
       }
     }
 
@@ -116,4 +99,41 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
         });
       });
     };
+  }])
+  .controller('PersonsViewController', ['$scope', '$route', 'PersonService','QueryUtils', function ($scope, $route, PersonService, QueryUtils) {
+    var id = $route.current.params.id;
+    var Endpoint = QueryUtils.endpoint('/persons');
+
+    var afterLoad = function () {
+      PersonService.usersAfterLoad($scope.person.users)
+    };
+
+    $scope.person = Endpoint.get({id: id}, afterLoad);
+  }])
+  .factory('PersonService', ['Classifier', 'DataUtils', function (Classifier, DataUtils) {
+    var clMapper = Classifier.valuemapper({role: "ROLL"});
+
+    var usersAfterLoad = function(users) {
+      if (users) {
+        clMapper.objectmapper(users);
+      }
+      users.forEach(function (it) {
+        DataUtils.convertStringToDates(it, ['validThru', 'validFrom']);
+      });
+
+      var now = new moment();
+      for (var i = 0; i < users.length; i++) {
+        var valid = true;
+        var item = users[i];
+        if (item.validThru !== null && moment(item.validThru).isBefore(now)) {
+          valid = false;
+        }
+        if (item.validFrom !== null && moment(item.validFrom).isAfter(now)) {
+          valid = false;
+        }
+        item.valid = valid;
+      }
+    };
+
+    return {usersAfterLoad: usersAfterLoad}
   }]);

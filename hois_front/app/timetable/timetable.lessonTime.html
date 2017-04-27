@@ -1,15 +1,15 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form layout="column">
+    <form layout="column" name="lessonTimeForm">
       <div layout="column" layout-sm="column" layout-xs="column" flex>
         <div layout="row" layout-sm="column" layout-xs="column" flex-sm="100" flex-xs="100">
             <md-input-container>
               <label>{{'timetable.lessonTime.validFrom' | translate}}</label>
-              <md-datepicker ng-model="validFrom"></md-datepicker>
+              <md-datepicker ng-model="validFrom" md-min-date="minValidFrom" required></md-datepicker>
             </md-input-container>
         </div>
 
-      <div layout-padding ng-repeat="block in blocks | orderBy: $index">
+      <div layout-padding ng-repeat="block in blocks | orderBy: 'id'">
           <div layout="row" layout-sm="column" layout-xs="column" flex>
             <md-input-container flex="10" flex-xs="100">
               <label>{{'timetable.buildings' | translate}}</label>
@@ -17,6 +17,11 @@
             <md-input-container layout="row" layout-align="start center">
               <md-checkbox ng-model="block.selectedBuildings[building.id]" ng-disabled="isBuildingDisabled(building, block)" ng-change="buildingChanged(building, block)" ng-repeat="building in buildings | orderBy: currentLanguageNameField()">{{ building[currentLanguageNameField()] }}</md-checkbox>
             </md-input-container>
+          </div>
+
+          <input style="display:none" type="number" readonly name="{{'buildingsLength'+$index}}" ng-model="selectedBuildingsLength(block)" ng-model-options="{ getterSetter: true }"  min="1"  />
+          <div md-colors="{color: 'warn-A400'}" ng-messages="lessonTimeForm['buildingsLength'+$index].$error">
+            <div ng-if="lessonTimeForm.$submitted" ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
           </div>
 
           <md-table-container>
@@ -38,20 +43,20 @@
               </tr>
               </thead>
               <tbody md-body>
-              <tr md-row ng-repeat="lessonTime in block.lessonTimes" ng-class-odd="'odd'" ng-class-even="'even'">
+              <tr md-row ng-repeat="lessonTime in block.lessonTimes | orderBy: 'lessonNr'" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>
                   <md-input-container flex="25">
-                    <input ng-model="lessonTime.lessonNr" aria-label="{{'main.nr' | translate}}" type="text">
+                    <input ng-model="lessonTime.lessonNr" aria-label="{{'main.nr' | translate}}" type="text" required>
                   </md-input-container>
                 </td>
                 <td md-cell>
                   <md-input-container>
-                    <input type="time" ng-model="lessonTime.startTime" aria-label="{{'main.start' | translate}}"></input>
+                    <input type="time" ng-model="lessonTime.startTime" ng-max="lessonTime.endTime" aria-label="{{'main.start' | translate}}" required></input>
                   </md-input-container>
                 </td>
                 <td md-cell>
                   <md-input-container>
-                    <input type="time" ng-model="lessonTime.endTime" aria-label="{{'main.end' | translate}}"></input>
+                    <input type="time" ng-model="lessonTime.endTime" ng-min="lessonTime.startTime" aria-label="{{'main.end' | translate}}" required></input>
                   </md-input-container>
                 </td>
                 <td md-cell>

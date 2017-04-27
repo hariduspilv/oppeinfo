@@ -458,7 +458,7 @@ public class CurriculumService {
                   newSpecialities.add(oldSpecsMap.get(s));
               } else {
                 CurriculumVersionSpeciality newSpec = new CurriculumVersionSpeciality();
-                AssertionFailedException.assertTrue(curricSpecsMap.containsKey(s), "Curriculum speciality must be added to Curriculum before adding to Curriculum version!");
+                AssertionFailedException.throwIf(!curricSpecsMap.containsKey(s), "Curriculum speciality must be added to Curriculum before adding to Curriculum version!");
                 CurriculumSpeciality curriculumSpeciality = curricSpecsMap.get(s);
                 newSpec.setCurriculumSpeciality(curriculumSpeciality);
                 newSpec.setCurriculumVersion(version);

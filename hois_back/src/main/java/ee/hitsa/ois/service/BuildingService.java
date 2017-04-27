@@ -111,7 +111,7 @@ public class BuildingService {
         }
 
         // check for duplicate rows
-        AssertionFailedException.assertTrue(StreamUtil.toMappedSet(RoomForm.RoomEquipmentCommand::getEquipment, newRoomEquipment).size() == newRoomEquipment.size(), "Duplicate values in equipment list");
+        AssertionFailedException.throwIf(StreamUtil.toMappedSet(RoomForm.RoomEquipmentCommand::getEquipment, newRoomEquipment).size() != newRoomEquipment.size(), "Duplicate values in equipment list");
 
         List<RoomEquipment> storedRoomEquipment = room.getRoomEquipment();
         if(storedRoomEquipment == null) {

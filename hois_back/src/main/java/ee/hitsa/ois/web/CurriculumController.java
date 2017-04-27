@@ -142,6 +142,6 @@ public class CurriculumController {
         ehisSchools.addAll(curriculum.getJointPartners().stream().filter(it -> it.getEhisSchool() != null)
                 .map(it -> EntityUtil.getCode(it.getEhisSchool())).collect(Collectors.toList()));
 
-        AssertionFailedException.assertTrue(ehisSchools.contains(EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool())), "EHIS school mismatch");
+        AssertionFailedException.throwIf(!ehisSchools.contains(EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool())), "EHIS school mismatch");
     }
 }

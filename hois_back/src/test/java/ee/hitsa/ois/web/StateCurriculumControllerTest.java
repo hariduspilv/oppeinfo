@@ -185,7 +185,7 @@ public class StateCurriculumControllerTest {
         stateCurriculumDto.setFinalExamDescription("StateCurriculumControllerTest");
         module = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn().equals("StateCurriculumControllerTestNameEn")).findFirst().get();
         module.getModuleOccupations().clear();
-        module.setCredits(Integer.valueOf(2));
+        module.setCredits(Double.valueOf(2));
         
         responseEntity = restTemplate.exchange("/stateCurriculum/{id}", HttpMethod.PUT, new HttpEntity<>(stateCurriculumDto), StateCurriculumDto.class, stateCurriculumDto.getId());
         Assert.assertNotNull(responseEntity);
@@ -199,7 +199,7 @@ public class StateCurriculumControllerTest {
 
         module = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn().equals("StateCurriculumControllerTestNameEn")).findFirst().get();
         Assert.assertTrue(module.getModuleOccupations().isEmpty());
-        Assert.assertTrue(module.getCredits().equals(Integer.valueOf(2)));
+        Assert.assertTrue(module.getCredits().equals(Double.valueOf(2)));
         Assert.assertTrue(module.getVersion().equals(Long.valueOf(2)));
 
 
@@ -273,7 +273,7 @@ public class StateCurriculumControllerTest {
         dto.setObjectivesEt("StateCurriculumControllerTest");
         dto.setAssessmentsEt("StateCurriculumControllerTest");
         dto.setModule("KUTSEMOODUL_Y");
-        dto.setCredits(Integer.valueOf(1));
+        dto.setCredits(Double.valueOf(1));
         dto.setOutcomesEt("StateCurriculumControllerTest");
         return dto;
     }

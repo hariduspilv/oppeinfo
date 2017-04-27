@@ -27,12 +27,7 @@ public class StudentUtil {
         return nominalStudyEnd != null && LocalDate.now().isBefore(student.getNominalStudyEnd());
     }
 
-    public static boolean isHigher(Student student) {
-        return CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel());
-    }
-
     public static boolean isAdult(Student student) {
         return PersonUtil.isAdult(student.getPerson()) && Boolean.FALSE.equals(student.getIsRepresentativeMandatory());
     }
-
 }

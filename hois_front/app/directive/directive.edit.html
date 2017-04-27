@@ -22,10 +22,10 @@
             <tbody md-body>
               <tr md-row md-select="row" md-select-id="id" ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>
-                  <md-button md-no-ink class="md-primary change-button" ng-href="#/student/{{::row.id}}/main?backUrl=directive">{{::row.fullname}}</md-button>
+                  <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</md-button>
                 </td>
                 <td md-cell>{{::row.idcode}}</td>
-                <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{currentLanguageNameField(row.curriculum)}}</td>
+                <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{currentLanguageNameField(row.curriculumVersion)}}</td>
                 <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{::row.studentGroup}}</td>
               </tr>
             </tbody>
@@ -79,7 +79,7 @@
 
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.directiveCoordinator' | translate}}</label>
-          <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator"></hois-value>
+          <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator" criteria="{isDirective: true}"></hois-value>
         </md-input-container>
 
         <div layout="row" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">

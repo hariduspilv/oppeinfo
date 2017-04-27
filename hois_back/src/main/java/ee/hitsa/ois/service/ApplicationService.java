@@ -6,7 +6,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -14,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.JoinType;
@@ -73,7 +73,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 @Transactional
 @Service
 public class ApplicationService {
-    @SuppressWarnings("unused")
+
     private static final Logger log = LoggerFactory.getLogger(ApplicationService.class);
 
     private static final String APPLICATION_FROM = "from application a inner join student student on a.student_id = student.id "+
@@ -102,7 +102,7 @@ public class ApplicationService {
     private Validator validator;
 
     public Page<ApplicationSearchDto> search(HoisUserDetails user, ApplicationSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(APPLICATION_FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(APPLICATION_FROM).sort(pageable);
 
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("a.type_code in (:type)", "type", criteria.getType());
@@ -169,11 +169,7 @@ public class ApplicationService {
         ApplicationType applicationType = ApplicationType.valueOf(EntityUtil.getCode(application.getType()));
         Set<ConstraintViolation<Application>> errors = validator.validate(application, applicationType.validationGroup());
         if(!errors.isEmpty()) {
-            List<Map.Entry<String, String>> allErrors = new ArrayList<>();
-            for(ConstraintViolation<Application> e : errors) {
-                allErrors.add(new AbstractMap.SimpleImmutableEntry<>(e.getPropertyPath().toString(), e.getMessage()));
-            }
-            throw new ValidationFailedException(allErrors);
+            throw new ValidationFailedException(errors);
         }
     }
 
@@ -290,11 +286,7 @@ public class ApplicationService {
           return cb.and(filters.toArray(new Predicate[filters.size()]));
       });
 
-      if(validAcademicLeaves.isEmpty()) {
-          return null;
-      }
-      validAcademicLeaves.sort(Comparator.comparing(Application::getChanged).reversed());
-      return validAcademicLeaves.get(0);
+      return validAcademicLeaves.stream().collect(Collectors.maxBy(Comparator.comparing(Application::getChanged))).orElse(null);
     }
 
     public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
@@ -327,7 +319,9 @@ public class ApplicationService {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotStudying"));
                     }
                 }
-                result.put(type, new ApplicationApplicableDto());
+                if (!result.containsKey(type)) {
+                    result.put(type, ApplicationApplicableDto.trueValue());
+                }
             }
         }
 
@@ -338,13 +332,16 @@ public class ApplicationService {
         Student student = application.getStudent();
         ConfirmationNeededMessage data = new ConfirmationNeededMessage(application);
         if (student.getRepresentatives() != null && !student.getRepresentatives().isEmpty()) {
+            log.info(String.format("rejection notification message sent to student %d representatives", application.getStudent().getId()));
             automaticMessageService.sendMessageToStudentRepresentatives(MessageType.TEATE_LIIK_AV_KINNIT, student, data);
         } else {
+            log.info(String.format("rejection notification message sent to student %d school", application.getStudent().getId()));
             automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, student.getSchool(), data);
         }
     }
 
     public void sendRejectionNotificationMessage(Application application, HoisUserDetails user) {
+        log.info(String.format("rejection notification message sent to student %d", application.getStudent().getId()));
         StudentApplicationRejectedMessage data = new StudentApplicationRejectedMessage(application);
         automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data, user);
     }

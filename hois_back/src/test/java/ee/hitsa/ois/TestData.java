@@ -45,8 +45,8 @@ public class TestData {
         c.setNameEn(STRING);
         c.setCode(STRING);
         
-        c.setStudyPeriod(1);
-        c.setOptionalStudyCredits(1);
+        c.setStudyPeriod(Integer.valueOf(1));
+        c.setOptionalStudyCredits(Integer.valueOf(1));
         
         c.setHigher(Boolean.FALSE);
         c.setJoint(Boolean.FALSE);
@@ -74,7 +74,7 @@ public class TestData {
         StudentGroup sg = new StudentGroup();
         sg.setCode(STRING);
         sg.setSchool(getSchool());
-        sg.setCourse(1);
+        sg.setCourse(Integer.valueOf(1));
         sg.setCurriculum(curriculum);
         sg.setStudyForm(classifierRepository.findOne("OPPEVORM_MS"));
         return sg;

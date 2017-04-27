@@ -17,7 +17,7 @@
           <hois-classifier-value ng-model="row.fin" main-classifier-code="FINALLIKAS"></hois-classifier-value>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.finSpecific" model-value-attr="code" filtered-value="[row.oldFinSpecific]" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-model="row.finSpecific" model-value-attr="code" filter-values="[row.oldFinSpecific]" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
           <md-button ng-click="deleteStudent(row.idcode)" md-no-ink class="md-primary change-button">{{'main.button.delete' | translate}}</md-button>

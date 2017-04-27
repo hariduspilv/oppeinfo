@@ -145,6 +145,18 @@
     "saturdayShort": "L",
     "sundayShort": "P",
     "menu":{
+      "applications": {
+        "label": "Avaldused",
+        "search": "Avalduste otsing",
+        "student": {
+          "list": "Minu avaldused",
+          "new": "Avalduse koostamine"
+        }
+      },
+      "certificates": {
+        "label": "Tõendid",
+        "search": "Tõendite otsing"
+      },
       "curriculum": {
         "label": "Õppekavad"
       },
@@ -161,39 +173,16 @@
         "directivecoordinators": "Käskkirjade kooskõlastajad",
         "generalmessages": "Üldteadete haldamine",
         "messageTemplates": "Automaatsete teadete mallid",
-        "studyLevels": "Õppeasutuse õppeastmed",
+        "studyLevels": "Õppeasutuse õppetasemed",
         "studyYears": "Õppeasutuse õppeperioodid",
         "classifiers": "Klassifikaatorid",
         "users": "Kasutajad"
       },
+      "lessonplan": {
+        "label": "Tunniplaanid"
+      },
       "more": {
         "label": "VEEL MIDAGI"
-      },
-      "student": {
-        "label": "Õppurid",
-        "search": "Õppurite otsing"
-      },
-      "studentGroup":{
-        "label": "Õpperühmad",
-        "search": "Õpperühmade otsing"
-      },
-      "teachers":{
-        "label": "Õpetajad",
-        "search": "Õpetajate otsing"
-      },
-      "applications": {
-        "label": "Avaldused",
-        "search": "Avalduste otsing",
-        "student": {
-          "list": "Minu avaldused",
-          "new": "Avalduse koostamine"
-        }
-      },
-      "study": {
-        "label": "Õppetöö",
-        "subjectTeacher": "Aine-õppejõu paarid",
-        "declaration": "Deklareerimine",
-        "notifications": "Teated"
       },
       "reception": {
         "label": "Vastuvõtt",
@@ -205,16 +194,31 @@
           "search": "Vastuvõtu avalduste otsing"
         }
       },
-      "certificates": {
-        "label": "Tõendid",
-        "search": "Tõendite otsing"
+      "student": {
+        "label": "Õppurid",
+        "search": "Õppurite otsing"
       },
-      "subjectStudyPeriods": {
-        "search": "Aine-õpetaja paarid"
+      "studentGroup":{
+        "label": "Õpperühmad",
+        "search": "Õpperühmade otsing"
+      },
+      "study": {
+        "label": "Õppetöö",
+        "subjectTeacher": "Aine-õppejõu paarid",
+        "declaration": "Deklareerimine",
+        "notifications": "Teated"
       },
       "studyYearSchedule": {
         "legend": "Õppetöögraafiku legend",
         "edit": "Õppetöögraafik"
+      },
+      "subjectStudyPeriods": {
+        "search": "Aine-õpetaja paarid",
+        "plans": "Õppeainete koormused"
+      },
+      "teachers":{
+        "label": "Õpetajad",
+        "search": "Õpetajate otsing"
       },
       "timetable": {
         "label": "Tunniplaan",
@@ -428,7 +432,7 @@
     "extraval2": "Lisaväärtus 2",
     "isVocational": "Kutseõpe",
     "isHigher": "Kõrgharidusõpe",
-    "studyLevels": "Õppeastmed",
+    "studyLevels": "Õppetasemed",
     "deleteconfirm": "Kas oled kindel, et soovid klassifikaatori kustutada?"
   },
   "directive": {
@@ -474,6 +478,8 @@
       "certificateDefault": "Õppuri tõend vaikimisi"
     },
     "student": {
+      "abroadProgramme": "Õppeprogramm",
+      "abroadPurpose": "Õpingute eesmärk",
       "addInfo": "Lisainfo",
       "akadCancelDate": "Akadeemilise puhkuse katkestamise kuupäev",
       "akadEndDate": "Akadeemilise puhkuse lõpp",
@@ -670,7 +676,9 @@
     },
     "select": "Vali riiklik õppekava",
     "error": {
-      "unique.name": "Kehtivate riiklike õppekavade nimetused peavad olema unikaalsed"
+      "unique.name": "Kehtivate riiklike õppekavade nimetused peavad olema unikaalsed",
+      "occupationsCredids": "Vale kuste maht!",
+      "spetsOccupationsCredids": "Vale spetskutse maht!"
     },
     "info": {
       "createdOccupationalCurriculums": "Riikliku õppekava alusel loodud kutseõppe koolide õppekavad",
@@ -688,7 +696,7 @@
     "nameRu": "Õppekava nimetus vene keeles",
     "nameGenitiveEt": "Õppekava nimetus omastavas",
     "nameGenitiveEn": "Õppekava nimetus omastavas inglise keeles",
-    "studyLevel": "Õppeaste",
+    "studyLevel": "Õppetase",
     "ekrLevel": "EKR tase",
     "educationLevel": "Haridustase",
     "code": "Õppekava kood",
@@ -1081,6 +1089,21 @@
       "isSignatory": "Hinnete protokolli allkirjastamine",
       "deleteconfirm": "Kas oled kindel, et soovid aine-õpetaja paari kustutada?"
   },
+  "subjectStudyPeriodPlan": {
+      "studyPeriod": "Õppeperiood",
+      "curriculum": "Õppekava",
+      "subject": "Õppeaine",
+      "studyForm": "Õppevorm",
+      "add": "Lisa koormus",
+      "edit": "Muuda",
+      "volumes": "Mahude jaotus",
+      "volume": "Maht",
+      "volumeTotal": "Maht kokku",
+      "isContact": "Kontaktõpe",
+      "deleteconfirm": "Kas oled kindel, et soovid õppeaine koormuse kustutada",
+      "validInCurriculums": "Kehtib õppekavades",
+      "validInStudyForms": "Kehtib õppevormides"
+  },
   "ehis": {
     "fileType": "Ehise faili liik"
   },
@@ -1194,7 +1217,12 @@
       "studentIsNotHigher":"Avaldusega seotud õppur ei omanda kõrgharidust",
       "wrongAcademicApplicationType":"Vale akadeemilise avalduse liik",
       "revocationStartDateBeforeAcademicLeaveStartDate":"Katkestamise kuupäev on varasem, kui akadeemilise puhkuse avalduse alguse kuupäev",
-      "revocationStartDateAfterAcademicLeaveEndDate":"Katkestamise kuupäev on hilisem, kui akadeemilise puhkuse avalduse lõpu kuupäev"
+      "revocationStartDateAfterAcademicLeaveEndDate":"Katkestamise kuupäev on hilisem, kui akadeemilise puhkuse avalduse lõpu kuupäev",
+      "studentNotStudying": "Õpilane ei õpi",
+      "studentNotActive": "Õpilane ei ole aktiivne",
+      "studentNotNominalStudy": "Õpilane on ületanud nominaal õppeaja",
+      "studentNotOnAcademicLeave": "Õpilane ei ole akadeemilisel puhkusel",
+      "noValidAcademicLeaveApplicationFound": "Õpilasel ei ole ühtegi kehtivat akadeemilise puhkuse avaldust"
     }
   },
   "reception": {

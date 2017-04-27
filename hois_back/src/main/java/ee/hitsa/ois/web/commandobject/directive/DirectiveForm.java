@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject.directive;
 
+import static ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -91,10 +92,13 @@ public class DirectiveForm extends VersionedCommand {
     @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
     public static class DirectiveFormStudent {
         private Long id;
+        @NotEmpty(groups = Immat.class)
         @EstonianIdCode
         private String idcode;
+        @NotEmpty(groups = Immat.class)
         @Size(max = 255)
         private String firstname;
+        @NotEmpty(groups = Immat.class)
         @Size(max = 255)
         private String lastname;
         private LocalDate startDate;

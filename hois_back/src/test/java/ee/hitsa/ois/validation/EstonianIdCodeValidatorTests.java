@@ -5,7 +5,7 @@ import java.time.LocalDate;
 import org.junit.Assert;
 import org.junit.Test;
 
-import ee.hitsa.ois.web.commandobject.TeacherForm;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
 
 public class EstonianIdCodeValidatorTests {
 

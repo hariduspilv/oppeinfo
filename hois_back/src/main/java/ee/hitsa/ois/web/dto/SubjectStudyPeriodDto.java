@@ -2,7 +2,7 @@ package ee.hitsa.ois.web.dto;
 
 import java.util.List;
 
-import ee.hitsa.ois.domain.subject.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;

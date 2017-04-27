@@ -47,39 +47,14 @@ public class StateCurriculumService {
 
 	@Autowired
 	private StateCurriculumRepository stateCurriculumRepository;
-
     @Autowired
     private ClassifierRepository classifierRepository;
-    
     @Autowired
     private EntityManager em;
-
-    /**
-     * TODO: this is not optimal solution. Below is alternative
-     */
-//    public Page<StateCurriculumSearchDto> search(StateCurriculumSearchCommand stateCurriculumSearchCommand, Pageable pageable) {
-//
-//        if(stateCurriculumSearchCommand.getEkrLevel() != null && !stateCurriculumSearchCommand.getEkrLevel().isEmpty() || pageable.getSort() != null && (
-//                pageable.getSort().toString().equals("ekrLevel: DESC") || pageable.getSort().toString().equals("ekrLevel: ASC"))) {
-//            List<StateCurriculum> theBestList = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand));
-//            setEkrLevels(theBestList);
-//
-//            if(stateCurriculumSearchCommand.getEkrLevel() != null && !stateCurriculumSearchCommand.getEkrLevel().isEmpty()) {
-//                theBestList =  theBestList.stream().filter(
-//                        sc -> correctEkrLevel(sc.getEkrLevel(), stateCurriculumSearchCommand.getEkrLevel())
-//                        ).collect(Collectors.toList());
-//            }
-//            Page<StateCurriculum> page = sortList(theBestList, pageable);
-//            return page.map(StateCurriculumSearchDto::of);
-//        }
-//        Page<StateCurriculum> page = stateCurriculumRepository.findAll(new StateCurriculumSpecification(stateCurriculumSearchCommand), pageable);
-//        setEkrLevels(page);
-//        return page.map(StateCurriculumSearchDto::of);
-//    }
     
-    private final String FROM = "from state_curriculum as sc "
+    private static final String FROM = "from state_curriculum as sc "
             + "inner join classifier status on status.code = sc.status_code";  // only for sorting by classifier's name
-    private final String SELECT = " sc.id, sc.name_et, sc.name_en, sc.valid_from, sc.valid_thru, sc.credits, "
+    private static final String SELECT = " sc.id, sc.name_et, sc.name_en, sc.valid_from, sc.valid_thru, sc.credits, "
             + "sc.status_code, "
                 + "(select cc.connect_classifier_code "
                 + "from classifier_connect as cc "
@@ -94,7 +69,7 @@ public class StateCurriculumService {
      * StateCurriculumSearchDto can also be simplified: iscedClass and large constructor can be removed
      */
     public Page<StateCurriculumSearchDto> search(StateCurriculumSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM).sort(pageable);
 
         String fieldName = Language.EN.equals(criteria.getLang()) ? "sc.name_en" : "sc.name_et";
         qb.optionalContains(fieldName, "name", criteria.getName());

@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
@@ -20,17 +22,17 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.util.CollectionUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.ExmatriculationReason;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.service.security.HoisUserDetailsService;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.dto.ApplicationDto;
 import ee.hitsa.ois.web.dto.ApplicationSearchDto;
@@ -41,8 +43,8 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class ApplicationControllerTests {
 
-    @Autowired
-    private HoisUserDetailsService hoisUserDetailsService;
+    private static final Long SCHOOL_ID = Long.valueOf(9L);
+
     @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
@@ -54,12 +56,13 @@ public class ApplicationControllerTests {
 
     @Before
     public void setUp() {
+        testConfigurationService.userToRoleInSchool(Role.ROLL_A, SCHOOL_ID, restTemplate);
         student = studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId()));
+            filters.add(cb.equal(root.get("school").get("id"), SCHOOL_ID));
+            filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }).stream().findFirst().get();
-        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
     }
 
     @After
@@ -131,6 +134,31 @@ public class ApplicationControllerTests {
         uriBuilder.queryParam("version", version);
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);
+    }
+
+    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @Test
+    public void applicable() {
+        List<Student> students = studentRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("school").get("id"), SCHOOL_ID));
+            filters.add(cb.not(root.get("status").get("code").in(Arrays.asList(StudentStatus.OPPURSTAATUS_O.name(), StudentStatus.OPPURSTAATUS_A.name(), StudentStatus.OPPURSTAATUS_V.name()))));
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        });
+
+        Assert.assertTrue(!CollectionUtils.isEmpty(students));
+
+        for (Student notStudyingStudent : students) {
+            UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/applications/student/"+notStudyingStudent.getId()+"/applicable");
+            ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+            Assert.assertNotNull(responseEntity);
+            Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+            Map<String, Map> result = (Map<String, Map>) responseEntity.getBody();
+            for (String key : result.keySet()) {
+                Assert.assertFalse(Boolean.TRUE.equals(result.get(key).get("isAllowed")));
+            }
+        }
+
     }
 
 }

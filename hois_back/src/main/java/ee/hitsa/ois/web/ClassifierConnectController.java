@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.service.ClassifierConnectService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.ClassifierConnectSearchCommand;
 import ee.hitsa.ois.web.dto.ClassifierConnectSelection;
@@ -39,7 +41,8 @@ public class ClassifierConnectController {
      * Or @Id for both variables of composite primary key is enough?
      */
     @PostMapping("/changeParents/{code}")
-    public boolean changeListOfParents(@PathVariable("code") String code, @Valid @RequestBody List<Classifier> parents) {
+    public boolean changeListOfParents(HoisUserDetails user, @PathVariable("code") String code, @Valid @RequestBody List<Classifier> parents) {
+        AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can update classifiers' connections");
         service.updateParents(code, parents);
         return true;
     }

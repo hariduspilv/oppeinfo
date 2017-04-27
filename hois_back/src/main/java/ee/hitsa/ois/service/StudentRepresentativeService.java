@@ -196,7 +196,7 @@ public class StudentRepresentativeService {
             // FIXME status of student?
             return cb.equal(root.get("person").get("idcode"), form.getStudentIdcode());
         });
-        AssertionFailedException.assertTrue(!students.isEmpty(), "Student representative application: student not found");
+        AssertionFailedException.throwIf(students.isEmpty(), "Student representative application: student not found");
 
         if(StudentUtil.isAdult(students.get(0))) {
             throw new ValidationFailedException("representative.application.adult");
@@ -240,6 +240,6 @@ public class StudentRepresentativeService {
     }
 
     private static void assertApplicationIsRequested(StudentRepresentativeApplication application) {
-        AssertionFailedException.assertTrue(ClassifierUtil.equals(AVALDUS_ESINDAJA_STAATUS_E, application.getStatus()), "Invalid student representative application status");
+        AssertionFailedException.throwIf(!ClassifierUtil.equals(AVALDUS_ESINDAJA_STAATUS_E, application.getStatus()), "Invalid student representative application status");
     }
 }

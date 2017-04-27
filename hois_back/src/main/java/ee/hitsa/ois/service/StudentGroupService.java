@@ -78,7 +78,7 @@ public class StudentGroupService {
     private StudentService studentService;
 
     public Page<StudentGroupSearchDto> search(Long schoolId, StudentGroupSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_GROUP_LIST_FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_GROUP_LIST_FROM).sort(pageable);
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
 

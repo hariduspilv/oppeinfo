@@ -111,7 +111,7 @@ public class MessageService {
     
 
     public Page<MessageSearchDto> show(HoisUserDetails user, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM).sort(pageable);
         qb.requiredCriteria("mr.person_id = :personId", "personId", user.getPersonId());
         /**
          * Usually users can only view messages sent by others from the same school.
@@ -169,7 +169,7 @@ public class MessageService {
     }
 
     public Page<MessageSearchDto> searchReceived(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM).sort(pageable);
         qb.requiredCriteria("mr.person_id = :personId", "personId", user.getPersonId());
         /**
          * Usually users can only view messages sent by others from the same school.

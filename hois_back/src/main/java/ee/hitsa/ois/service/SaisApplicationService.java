@@ -107,7 +107,7 @@ public class SaisApplicationService {
 
     public Page<SaisApplicationSearchDto> search(HoisUserDetails user, SaisApplicationSearchCommand criteria,
             Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SAIS_APPLICATION_FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SAIS_APPLICATION_FROM).sort(pageable);
 
         qb.requiredCriteria("school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("sais_admission_code in (:code)", "code", criteria.getCode());

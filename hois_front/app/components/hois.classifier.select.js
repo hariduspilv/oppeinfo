@@ -29,7 +29,7 @@ angular.module('hitsaOis')
         criteria: '=',
         filterValues: '@', //model of array of classifiers (or other objects which contain classifier, then byProperty must be defined )
         byProperty: '@',
-        showOnlyValues: '@', //model of array of classifiers
+        showOnlyValues: '@', //model of array of classifiers (if value === true, all items are shown)
         watchModel: '@',
         watchMultiple: '@',
         searchFromConnect: '@',
@@ -172,8 +172,9 @@ angular.module('hitsaOis')
                 }
               });
             }
+            // changedShowOnlyValues value true means "show all items"
             for(var key in scope.optionsByCode) {
-              scope.optionsByCode[key].hide = (showOptions.indexOf(key) === -1);
+              scope.optionsByCode[key].hide = (changedShowOnlyValues !== true && showOptions.indexOf(key) === -1);
             }
             deselectHiddenValue();
           });

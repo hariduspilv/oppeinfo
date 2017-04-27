@@ -17,6 +17,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -25,6 +26,8 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
+import javax.validation.ConstraintViolation;
+import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -63,6 +66,7 @@ import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -135,9 +139,11 @@ public class DirectiveService {
     private StudentRepository studentRepository;
     @Autowired
     private StudyPeriodRepository studyPeriodRepository;
+    @Autowired
+    private Validator validator;
 
     public Page<DirectiveSearchDto> search(Long schoolId, DirectiveSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(DIRECTIVE_LIST_FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(DIRECTIVE_LIST_FROM).sort(pageable);
 
         qb.requiredCriteria("d.school_id = :schoolId", "schoolId", schoolId);
 
@@ -183,11 +189,17 @@ public class DirectiveService {
         assertSameSchool(directive, coordinator != null ? coordinator.getSchool() : null);
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
+        // second validation of input: specific for given directive type
+        Set<ConstraintViolation<DirectiveForm>> errors = validator.validate(form, directiveType.validationGroup());
+        if(!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+
         if(KASKKIRI_TYHIST.equals(directiveType) && directive.getId() == null) {
             // canceled directive can added only during directive create, check for same school
             EntityUtil.setEntityFromRepository(form, directive, directiveRepository, "canceledDirective");
             Directive canceledDirective = directive.getCanceledDirective();
-            AssertionFailedException.assertTrue(canceledDirective != null, "Canceled directive is missing");
+            AssertionFailedException.throwIf(canceledDirective == null, "Canceled directive is missing");
 
             assertSameSchool(directive, canceledDirective.getSchool());
             // check that there is no cancel directive already
@@ -363,7 +375,7 @@ public class DirectiveService {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from student s inner join person person on s.person_id = person.id "+
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id inner join curriculum c on cv.curriculum_id = c.id "+
-                "left outer join student_group sg on s.student_group_id = sg.id", new Sort("person.lastname", "person.firstname"));
+                "left outer join student_group sg on s.student_group_id = sg.id").sort("sg.code", "person.lastname", "person.firstname");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains("person.firstname", "firstname", criteria.getFirstname());
@@ -406,15 +418,18 @@ public class DirectiveService {
             break;
         }
 
-        List<?> data = qb.select("s.id, person.firstname, person.lastname, person.idcode, c.id as curriculum_id, c.name_et, c.name_en, sg.code", em).setMaxResults(STUDENTS_MAX).getResultList();
+        List<?> data = qb.select("s.id, person.firstname, person.lastname, person.idcode, c.id as curriculum_id, cv.code, c.name_et, c.name_en, sg.code as student_group_code", em).setMaxResults(STUDENTS_MAX).getResultList();
         return StreamUtil.toMappedList(r -> {
             DirectiveStudentSearchDto dto = new DirectiveStudentSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             dto.setIdcode(resultAsString(r, 3));
             if(DirectiveType.KASKKIRI_LOPET.equals(directiveType)) {
-                dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 6)));
-                dto.setStudentGroup(resultAsString(r, 7));
+                String curriculumVersionCode = resultAsString(r, 5);
+                dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
+                        CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 6)),
+                        CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 7))));
+                dto.setStudentGroup(resultAsString(r, 8));
             }
             return dto;
         }, data);
@@ -473,7 +488,7 @@ public class DirectiveService {
     }
 
     public Page<DirectiveCoordinatorDto> search(Long schoolId, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator dc", pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator dc").sort(pageable);
         qb.requiredCriteria("dc.school_id = :schoolId", "schoolId", schoolId);
 
         return JpaQueryUtil.pagingResult(qb, "dc.id, dc.name, dc.idcode, dc.version, dc.is_directive, dc.is_certificate, dc.is_certificate_default", em, pageable).map(r -> {
@@ -534,19 +549,24 @@ public class DirectiveService {
             if(person == null) {
                 person = new Person();
                 person.setIdcode(idcode);
-                person.setFirstname(formStudent.getFirstname());
-                person.setLastname(formStudent.getLastname());
-                person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
-                person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(idcode)));
                 SaisApplication sais = student.getSaisApplication();
                 if(sais != null) {
-                    // can copy additional fields from sais application
+                    // copy fields from sais application
+                    person.setFirstname(sais.getFirstname());
+                    person.setLastname(sais.getLastname());
+                    person.setBirthdate(sais.getBirthdate());
+                    person.setSex(sais.getSex());
                     person.setForeignIdcode(sais.getForeignIdcode());
                     person.setAddress(sais.getAddress());
                     person.setPhone(sais.getPhone());
                     person.setEmail(sais.getEmail());
                     person.setCitizenship(sais.getCitizenship());
                     person.setResidenceCountry(sais.getResidenceCountry());
+                } else {
+                    person.setFirstname(formStudent.getFirstname());
+                    person.setLastname(formStudent.getLastname());
+                    person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(idcode));
+                    person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(idcode)));
                 }
                 person = personRepository.save(person);
             }
@@ -554,22 +574,23 @@ public class DirectiveService {
         }
     }
 
-    private void setStudent(Long studentId, DirectiveStudent student) {
+    private void setStudent(Long studentId, DirectiveStudent directiveStudent) {
         if(studentId != null) {
-            Student s = em.getReference(Student.class, studentId);
+            Student student = em.getReference(Student.class, studentId);
             // verify student to be linked
-            Long schoolId = EntityUtil.getId(student.getDirective().getSchool());
-            if(schoolId == null || !schoolId.equals(EntityUtil.getId(s.getSchool()))) {
+            Long schoolId = EntityUtil.getId(directiveStudent.getDirective().getSchool());
+            if(schoolId == null || !schoolId.equals(EntityUtil.getId(student.getSchool()))) {
                 // not from same school
                 throw new AssertionFailedException("School mismatch");
             }
-            String directiveType = EntityUtil.getCode(student.getDirective().getType());
+            String directiveType = EntityUtil.getCode(directiveStudent.getDirective().getType());
             List<String> allowedStudentStatus = STUDENT_STATUS_FOR_DIRECTIVE_TYPE.get(DirectiveType.valueOf(directiveType));
-            if(allowedStudentStatus != null && !allowedStudentStatus.contains(EntityUtil.getCode(s.getStatus()))) {
+            if(allowedStudentStatus != null && !allowedStudentStatus.contains(EntityUtil.getCode(student.getStatus()))) {
                 // wrong status of student for given directive type
                 throw new AssertionFailedException("Student status for given directive mismatch");
             }
-            student.setStudent(s);
+            directiveStudent.setStudent(student);
+            directiveStudent.setPerson(student.getPerson());
         }
     }
 
@@ -627,7 +648,7 @@ public class DirectiveService {
 
     private static void assertModifyable(Directive directive) {
         // only directive state 'KOOSTAMISEL' allows modification
-        AssertionFailedException.assertTrue(ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Directive status mismatch");
+        AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Directive status mismatch");
     }
 
     private static Optional<ApplicationType> applicationType(DirectiveType type) {

@@ -45,6 +45,7 @@ import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 
 import ee.hitsa.ois.domain.BaseEntity;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -130,6 +131,16 @@ public class Application {
                 @Override
                 public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
                     return LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneId.systemDefault());
+                }
+            });
+
+            jacksonObjectMapperBuilder.deserializerByType(LocalTime.class, new JsonDeserializer<LocalTime>() {
+                @Override
+                public LocalTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+                    try {
+                        return LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneId.systemDefault()).toLocalTime();
+                    } catch (@SuppressWarnings("unused") Exception e) {}
+                    return LocalTimeDeserializer.INSTANCE.deserialize(p, ctxt);
                 }
             });
 

@@ -72,7 +72,7 @@ public class StudyYearScheduleService {
     }
 
     private void delete(Long schoolId, StudyYearScheduleDtoContainer schedulesCmd, Set<Long> oldSchedulesDtosIds) {
-        Iterable<StudyYearSchedule> deletedItems = studyYearScheduleRepository.findAll((root, query, cb) -> {
+        List<StudyYearSchedule> deletedItems = studyYearScheduleRepository.findAll((root, query, cb) -> {
               List<Predicate> filters = new ArrayList<>();
               filters.add(cb.equal(root.get("school").get("id"), schoolId));              
               filters.add(root.get("studyPeriod").get("id").in(schedulesCmd.getStudyPeriods()));
@@ -94,10 +94,10 @@ public class StudyYearScheduleService {
             School school = schoolRepository.getOne(schoolId);            
             newSchedulesDtos.forEach(dto -> {
 
-                AssertionFailedException.assertTrue(CollectionUtils.isEmpty(schedulesCmd.getStudentGroups()) || 
-                        schedulesCmd.getStudentGroups().contains(dto.getStudentGroup()), 
+                AssertionFailedException.throwIf(!CollectionUtils.isEmpty(schedulesCmd.getStudentGroups()) &&
+                        !schedulesCmd.getStudentGroups().contains(dto.getStudentGroup()),
                         "Update command does not contain dto's studentGroup!");  
-                AssertionFailedException.assertTrue(schedulesCmd.getStudyPeriods().contains(dto.getStudyPeriod()), 
+                AssertionFailedException.throwIf(!schedulesCmd.getStudyPeriods().contains(dto.getStudyPeriod()),
                         "Update command does not contain dto's studyPeriod!");
 
                 StudyYearSchedule schedule = getFromDto(dto, school);
@@ -115,18 +115,18 @@ public class StudyYearScheduleService {
         schedule.setSchool(school);
         
         StudyPeriod studyPeriod = studyPeriodRepository.getOne(dto.getStudyPeriod());
-        AssertionFailedException.assertTrue(studyPeriod.getStudyYear().getSchool().getId().equals(school.getId()), 
+        AssertionFailedException.throwIf(!studyPeriod.getStudyYear().getSchool().getId().equals(school.getId()),
         "Wrong studyPeriod's school!");
         schedule.setStudyPeriod(studyPeriod);
         
         StudentGroup sg = studentGroupRepository.getOne(dto.getStudentGroup());
-        AssertionFailedException.assertTrue(sg.getSchool().getId().equals(school.getId()), 
+        AssertionFailedException.throwIf(!sg.getSchool().getId().equals(school.getId()),
         "Wrong studentGroups's school!");
         schedule.setStudentGroup(sg);
         
         StudyYearScheduleLegend legend = studyYearScheduleLegendRepository
                 .getOne(dto.getStudyYearScheduleLegend());
-        AssertionFailedException.assertTrue(legend.getSchool().getId().equals(school.getId()), 
+        AssertionFailedException.throwIf(!legend.getSchool().getId().equals(school.getId()),
         "Wrong legend's school!");
         schedule.setStudyYearScheduleLegend(legend);
         

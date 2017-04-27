@@ -8,11 +8,6 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 
     $scope.studentId = studentId;
     $scope.currentNavItem = 'student.main';
-    var backUrl = $route.current.params.backUrl;
-    $scope.formState = {backRef: backUrl ? '?backUrl='+backUrl : '', backUrl: backUrl === 'applications' ? '#/studentrepresentatives/applications' : '#/students'};
-    if(backUrl === 'certificate') {
-        $scope.formState.backUrl = '#/certificate';
-    }
 
     $scope.student = Endpoint.get({id: studentId});
     $scope.student.$promise.then(function() {
@@ -103,11 +98,6 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 ]).controller('StudentViewDocumentsController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', function ($q, $route, $scope, Classifier, QueryUtils) {
   $scope.studentId = $route.current.params.id;
   $scope.currentNavItem = 'student.documents';
-  var backUrl = $route.current.params.backUrl;
-  $scope.formState = {backRef: backUrl ? '?backUrl='+backUrl : '', backUrl: backUrl === 'applications' ? '#/studentrepresentatives/applications' : '#/students'};
-  if(backUrl === 'certificate') {
-     $scope.formState.backUrl = '#/certificate';
-  }
   $scope.applicationsCriteria = {order: 'created', studentId: $scope.studentId};
   $scope.applications = {};
 
@@ -165,11 +155,6 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
   function ($mdDialog, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
     $scope.studentId = $route.current.params.id;
     $scope.currentNavItem = 'student.absences';
-    var backUrl = $route.current.params.backUrl;
-    $scope.formState = {backRef: backUrl ? '?backUrl='+backUrl : '', backUrl: backUrl === 'applications' ? '#/studentrepresentatives/applications' : '#/students'};
-    if(backUrl === 'certificate') {
-        $scope.formState.backUrl = '#/certificate';
-    }
     QueryUtils.createQueryForm($scope, '/students/' + $scope.studentId + '/absences', {order: 'validFrom'}, function(rows) {
       DataUtils.convertStringToDates(rows, ['validFrom', 'validThru']);
     });

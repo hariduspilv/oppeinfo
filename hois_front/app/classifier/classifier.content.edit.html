@@ -76,14 +76,14 @@
             </md-input-container>
 
           <div ng-repeat="connection in possibleConnections">
-            <h3>{{'classifier.connection' | translate}}: <span ng-bind="connection.nameEt"></span></h3> 
+            <h3>{{'classifier.connection' | translate}}: <span ng-bind="currentLanguageNameField(connection)"></span></h3> 
 
             <md-autocomplete
               name="classifiersParentInput$index"
               md-selected-item="classifiersParent$index"
               md-search-text="queryName"
               md-items="item in querySearch(queryName, connection.code)"
-              md-item-text="currentLanguage()=='en' ? item.nameEn : item.nameEt"
+              md-item-text="currentLanguageNameField(item)"
               md-min-length="0"
               placeholder="{{'classifier.connection.add' | translate}}"
               ng-model="queryName"
@@ -92,7 +92,7 @@
               >
 
             <md-item-template>
-              <span md-highlight-text="queryName" md-highlight-flags="^i">{{currentLanguage()=='en' ? item.nameEn : item.nameEt}}</span>
+              <span md-highlight-text="queryName" md-highlight-flags="^i">{{currentLanguageNameField(item)}}</span>
             </md-item-template>
 
             <md-not-found>
@@ -102,14 +102,14 @@
           </md-autocomplete>
 
           <p ng-repeat="parent in parents | filter:{ mainClassCode: connection.code}">
-            <a ng-bind="parent.nameEt" ng-href="#/classifier/{{parent.mainClassCode}}/{{parent.code}}/edit"></a>
+            <a ng-bind="currentLanguageNameField(parent)" ng-href="#/classifier/{{parent.mainClassCode}}/{{parent.code}}/edit"></a>
             <md-button class="remove" ng-click="removeParent(parent)">&times;</md-button>
           </p>
           <br>
           </div>
           <h3 ng-if="hasChildren">{{'classifier.connection.children.label' | translate}}: </h3>
           <ul>
-            <li ng-repeat = "child in children | orderBy : 'nameEt'"><a ng-bind="child.nameEt" ng-href="#/classifier/{{child.mainClassCode}}/{{child.code}}/edit"></a></li>
+            <li ng-repeat = "child in children | orderBy : 'nameEt'"><a ng-bind="currentLanguageNameField(child)" ng-href="#/classifier/{{child.mainClassCode}}/{{child.code}}/edit"></a></li>
           </ul>
         </form>
         <md-button ng-click="save()" class="md-raised md-primary">

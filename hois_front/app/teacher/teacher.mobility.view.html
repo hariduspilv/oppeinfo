@@ -1,0 +1,35 @@
+<!--<div ng-include="'teacher/teacher.menu.view.html'"></div>-->
+<div layout-padding>
+  <div flex>
+    <div ng-repeat="mobility in teacher.teacherMobility">
+      <hois-collapsable label="('teacher.mobility.mobility' | translate)">
+        <div layout="column">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="25" flex-sm="100" flex-offset-sm="0">
+              <label>{{'teacher.mobility.start' | translate}}</label>
+              <hois-value value="'main.formattedDate' | translate: {date: mobility.start}"></hois-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-sm="0">
+              <label>{{'teacher.mobility.end' | translate}}</label>
+              <hois-value value="'main.formattedDate' | translate: {date: mobility.end}"></hois-value>
+            </md-input-container>
+            <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-sm="0">
+              <label>{{'teacher.mobility.state' | translate}}</label>
+              <hois-classifier-value ng-model="mobility.state" main-classifier-code="RIIK"></hois-classifier-value>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="25" flex-sm="100" flex-offset-sm="0">
+              <label>{{'teacher.mobility.target' | translate}}</label>
+              <hois-classifier-value ng-model="mobility.target" main-classifier-code="EHIS_MOBIILSUS"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-sm="0">
+              <label>{{'teacher.mobility.school' | translate}}</label>
+              <hois-value value="mobility.school"></hois-value>
+            </md-input-container>
+          </div>
+        </div>
+      </hois-collapsable>
+    </div>
+  </div>
+</div>

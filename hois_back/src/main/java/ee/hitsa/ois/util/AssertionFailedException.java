@@ -9,8 +9,8 @@ public class AssertionFailedException extends RuntimeException {
         super(message);
     }
 
-    public static void assertTrue(boolean expression, String message) {
-        if(!expression) {
+    public static void throwIf(boolean expression, String message) {
+        if(expression) {
             throw new AssertionFailedException(message);
         }
     }

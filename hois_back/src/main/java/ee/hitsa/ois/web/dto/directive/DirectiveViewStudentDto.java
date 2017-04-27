@@ -47,6 +47,9 @@ public class DirectiveViewStudentDto {
     private String country;
     private String abroadPurpose;
     private String abroadProgramme;
+    private Boolean isCumLaude;
+    private Boolean isOccupationExamPassed;
+    private String curriculumGrade;
 
     public Long getStudent() {
         return student;
@@ -328,6 +331,30 @@ public class DirectiveViewStudentDto {
         this.abroadProgramme = abroadProgramme;
     }
 
+    public Boolean getIsCumLaude() {
+        return isCumLaude;
+    }
+
+    public void setIsCumLaude(Boolean isCumLaude) {
+        this.isCumLaude = isCumLaude;
+    }
+
+    public Boolean getIsOccupationExamPassed() {
+        return isOccupationExamPassed;
+    }
+
+    public void setIsOccupationExamPassed(Boolean isOccupationExamPassed) {
+        this.isOccupationExamPassed = isOccupationExamPassed;
+    }
+
+    public String getCurriculumGrade() {
+        return curriculumGrade;
+    }
+
+    public void setCurriculumGrade(String curriculumGrade) {
+        this.curriculumGrade = curriculumGrade;
+    }
+
     public static DirectiveViewStudentDto of(DirectiveStudent directiveStudent) {
         DirectiveViewStudentDto dto = EntityUtil.bindToDto(directiveStudent, new DirectiveViewStudentDto());
         Student student = directiveStudent.getStudent();
@@ -336,6 +363,7 @@ public class DirectiveViewStudentDto {
             dto.setStudent(student.getId());
             person = student.getPerson();
         } else {
+            // possible only on unconfirmed IMMAT or IMMATV
             person = directiveStudent.getPerson();
         }
         if(person != null) {
@@ -346,53 +374,54 @@ public class DirectiveViewStudentDto {
         }
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directiveStudent.getDirective().getType()));
-        if(student != null) {        
-            Application application = directiveStudent.getApplication();
-            switch(directiveType) {
-            case KASKKIRI_AKAD:
-                dto.setApplicationIsPeriod(application != null ? application.getIsPeriod() : null);
-                dto.setApplicationStartDate(application != null ? application.getStartDate() : null);
-                dto.setApplicationEndDate(application != null ? application.getEndDate() : null);
-                dto.setApplicationStudyPeriodStart(application != null && application.getStudyPeriodStart() != null ? AutocompleteResult.of(application.getStudyPeriodStart()) : null);
-                dto.setApplicationStudyPeriodEnd(application != null && application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
-                break;
-            case KASKKIRI_ENNIST:
-                dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-                dto.setStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
-                dto.setStudyLoad(EntityUtil.getNullableCode(student.getStudyLoad()));
-                dto.setFin(EntityUtil.getNullableCode(student.getFin()));
-                dto.setFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
-                dto.setLanguage(EntityUtil.getNullableCode(student.getLanguage()));
-                break;
-            case KASKKIRI_EKSMAT:
-                if(application != null) {
-                    dto.setAddInfo(application.getAddInfo());
-                }
-                break;
-            case KASKKIRI_FINM:
-                dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
-                break;
-            case KASKKIRI_LOPET:
-                dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-                // TODO
-                // dto.setIsCumLaude(isCumLaude);
-                // dto.setCurriculumGrade(curriculumGrade);
-                break;
-            case KASKKIRI_OKAVA:
-                dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
-                dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-                dto.setCurriculumVersion(AutocompleteResult.of(directiveStudent.getCurriculumVersion()));
-                dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
-                break;
-            case KASKKIRI_OVORM:
-                dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
-                dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
-                break;
-            default:
-                break;
+        Application application = directiveStudent.getApplication();
+        switch(directiveType) {
+        case KASKKIRI_AKAD:
+            dto.setApplicationIsPeriod(application != null ? application.getIsPeriod() : null);
+            dto.setApplicationStartDate(application != null ? application.getStartDate() : null);
+            dto.setApplicationEndDate(application != null ? application.getEndDate() : null);
+            dto.setApplicationStudyPeriodStart(application != null && application.getStudyPeriodStart() != null ? AutocompleteResult.of(application.getStudyPeriodStart()) : null);
+            dto.setApplicationStudyPeriodEnd(application != null && application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
+            break;
+        case KASKKIRI_ENNIST:
+            dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+            dto.setStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+            dto.setStudyLoad(EntityUtil.getNullableCode(student.getStudyLoad()));
+            dto.setFin(EntityUtil.getNullableCode(student.getFin()));
+            dto.setFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
+            dto.setLanguage(EntityUtil.getNullableCode(student.getLanguage()));
+            break;
+        case KASKKIRI_EKSMAT:
+            if(application != null) {
+                dto.setAddInfo(application.getAddInfo());
             }
-        } else if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType) || DirectiveType.KASKKIRI_IMMATV.equals(directiveType)) {
+            break;
+        case KASKKIRI_FINM:
+            dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
+            break;
+        case KASKKIRI_IMMAT:
+        case KASKKIRI_IMMATV:
             dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
+            break;
+        case KASKKIRI_LOPET:
+            dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+            // TODO
+            // dto.setIsCumLaude(isCumLaude);
+            // dto.setIsOccupationExamPassed(isOccupationExamPassed);
+            // dto.setCurriculumGrade(curriculumGrade);
+            break;
+        case KASKKIRI_OKAVA:
+            dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+            dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+            dto.setCurriculumVersion(AutocompleteResult.of(directiveStudent.getCurriculumVersion()));
+            dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
+            break;
+        case KASKKIRI_OVORM:
+            dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+            dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
+            break;
+        default:
+            break;
         }
 
         return dto;

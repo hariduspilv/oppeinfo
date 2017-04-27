@@ -74,12 +74,24 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
   function applicationOkava(student, loadFormDeferred) {
     //TODO: valid to true
+    var allCurriculumVersions;
     Curriculum.queryVersions({valid: false}).$promise.then(function(result) {
-      $scope.curriculumVersions = result.filter(function(it) { return it.id !== student.curriculumVersion.id;});
+      allCurriculumVersions = result;
+      $scope.curriculumVersions = allCurriculumVersions.filter(function(it) { return it.id !== student.curriculumVersion.id;});
       loadFormDeferred.resolve();
     });
     $scope.application.oldStudyForm = student.studyForm;
     $scope.application.oldCurriculumVersion = student.curriculumVersion;
+
+    $scope.newCurriculumVersionSelected = function() {
+      var curriculumVersions = allCurriculumVersions.filter(function(it) { return it.id === $scope.application.newCurriculumVersion.id;});
+      if (angular.isArray(curriculumVersions) && curriculumVersions.length === 1) {
+        var selectedCurriculumVersion = curriculumVersions[0];
+        if (selectedCurriculumVersion.isVocational === true && angular.isObject(selectedCurriculumVersion) && angular.isString(selectedCurriculumVersion.studyForm)) {
+          $scope.application.newStudyForm = selectedCurriculumVersion.studyForm;
+        }
+      }
+    };
   }
 
   function applicationAkad(loadFormDeferred) {
@@ -118,14 +130,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       }
     };
 
-    $scope.plannedSubjectLenght = 0;
-    $scope.$watchCollection('application.plannedSubjects', function(val) {
-      if (angular.isArray(val)) {
-        $scope.plannedSubjectLenght = val.length;
-      } else {
-        $scope.plannedSubjectLenght = 0;
-      }
-    });
+    $scope.plannedSubjectLength = function() {
+      return angular.isArray($scope.application.plannedSubjects) ? $scope.application.plannedSubjects.length : 0;
+    };
 
     $scope.addPlannedSubjectRow = function() {
       if (!angular.isArray($scope.application.plannedSubjects)) {
@@ -229,7 +236,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           if(angular.isObject(result[$scope.application.type]) && result[$scope.application.type].isAllowed === true) {
             loadFormData($scope.application.type, student.id);
           } else {
-            message.error('application.messages.applicationAlreadyExists');
+            message.error(result[$scope.application.type].reason);
           }
         });
       } else {
@@ -297,16 +304,17 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   };
 
   $scope.delete = function() {
-      dialogService.confirmDialog({prompt: 'application.deleteconfirm'}, function() {
-        var application = new ApplicationsEndpoint($scope.application);
-        application.$delete().then(function() {
-          message.info('main.messages.delete.success');
-          if ($scope.auth.isStudent()) {
-            $location.path('/applications/student');
-          } else {
-            $location.path('/applications');
-          }
-        });
+    dialogService.confirmDialog({prompt: 'application.deleteconfirm'}, function() {
+      var application = new ApplicationsEndpoint($scope.application);
+      application.$delete().then(function() {
+        message.info('main.messages.delete.success');
+        if ($scope.auth.isStudent()) {
+          $location.path('/applications/student');
+        } else {
+          $location.path('/applications');
+        }
       });
-    };
+    });
+  };
+
 });

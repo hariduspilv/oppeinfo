@@ -2,14 +2,21 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalTime;
 
+import javax.validation.constraints.NotNull;
+
 import ee.hitsa.ois.domain.timetable.LessonTime;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.validation.TimeRange;
 
+@TimeRange(from = "startTime", thru = "endTime")
 public class LessonTimeDto {
 
     private Long id;
+    @NotNull
     private LocalTime startTime;
+    @NotNull
     private LocalTime endTime;
+    @NotNull
     private Integer lessonNr;
     private Boolean dayMon;
     private Boolean dayTue;

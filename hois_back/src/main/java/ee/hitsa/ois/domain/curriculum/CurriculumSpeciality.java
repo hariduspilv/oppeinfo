@@ -60,7 +60,7 @@ public class CurriculumSpeciality extends BaseEntityWithId {
     }
 
     public Long getReferenceNumber() {
-        AssertionFailedException.assertTrue(referenceNumber != null || this.getId() != null, "Speciality should whether be saved before or have a reference number!");
+        AssertionFailedException.throwIf(referenceNumber == null && this.getId() == null, "Speciality should whether be saved before or have a reference number!");
         return referenceNumber != null ? referenceNumber : this.getId();
     }
 

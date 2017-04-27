@@ -27,8 +27,9 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private String oldFin;
     private String oldFinSpecific;
     private String oldLanguage;
-    private String curriculumGrade;
     private Boolean isCumLaude;
+    private Boolean isOccupationExamPassed;
+    private String curriculumGrade;
     private String addInfo;
     private Boolean applicationIsPeriod;
     private LocalDate applicationStartDate;
@@ -92,20 +93,28 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.oldLanguage = oldLanguage;
     }
 
-    public String getCurriculumGrade() {
-        return curriculumGrade;
-    }
-
-    public void setCurriculumGrade(String curriculumGrade) {
-        this.curriculumGrade = curriculumGrade;
-    }
-
     public Boolean getIsCumLaude() {
         return isCumLaude;
     }
 
     public void setIsCumLaude(Boolean isCumLaude) {
         this.isCumLaude = isCumLaude;
+    }
+
+    public Boolean getIsOccupationExamPassed() {
+        return isOccupationExamPassed;
+    }
+
+    public void setIsOccupationExamPassed(Boolean isOccupationExamPassed) {
+        this.isOccupationExamPassed = isOccupationExamPassed;
+    }
+
+    public String getCurriculumGrade() {
+        return curriculumGrade;
+    }
+
+    public void setCurriculumGrade(String curriculumGrade) {
+        this.curriculumGrade = curriculumGrade;
     }
 
     public String getAddInfo() {
@@ -274,6 +283,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             // TODO
             // dto.setIsCumLaude(isCumLaude);
+            // dto.setIsOccupationExamPassed(isOccupationExamPassed);
             // dto.setCurriculumGrade(curriculumGrade);
             break;
         case KASKKIRI_OKAVA:
@@ -281,7 +291,8 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             break;
         case KASKKIRI_OKOORM:
-            // we are adding new student to the directive, calculate new study load and fin from existing values
+            dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
+            // calculate new study load and fin from existing values
             boolean partial = ClassifierUtil.equals(StudyLoad.OPPEKOORMUS_OSA, student.getStudyLoad());
             dto.setStudyLoad(partial ? StudyLoad.OPPEKOORMUS_TAIS.name() : StudyLoad.OPPEKOORMUS_OSA.name());
             dto.setFin(partial ? FinSource.FINALLIKAS_RE.name() : FinSource.FINALLIKAS_REV.name());

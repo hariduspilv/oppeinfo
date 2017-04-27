@@ -66,7 +66,7 @@ public class LessonPlanService {
     public Page<LessonPlanSearchDto> search(Long schoolId, LessonPlanSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from lesson_plan lp inner join student_group sg on lp.student_group_id = sg.id " +
-                "inner join curriculum_version cv on lp.curriculum_version_id = cv.id", pageable);
+                "inner join curriculum_version cv on lp.curriculum_version_id = cv.id").sort(pageable);
 
         qb.requiredCriteria("lp.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria("lp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
@@ -74,7 +74,7 @@ public class LessonPlanService {
         qb.optionalCriteria("lp.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", criteria.getCurriculumVerison());
         qb.optionalCriteria("lp.student_group_id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
 
-        return JpaQueryUtil.pagingResult(qb, "lp.id, sg.code, cv.code", em, pageable).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, "lp.id, sg.code as student_group_code, cv.code", em, pageable).map(r -> {
             return new LessonPlanSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2));
         });
     }
@@ -82,7 +82,7 @@ public class LessonPlanService {
     public Page<LessonPlanSearchTeacherDto> search(HoisUserDetails user, LessonPlanSearchTeacherCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from journal j inner join journal_teacher jt on j.id = jt.journal_id " +
-                "inner join teacher t on jt.teacher_id = t.id inner join person p on t.person_id = p.id", pageable);
+                "inner join teacher t on jt.teacher_id = t.id inner join person p on t.person_id = p.id").sort(pageable);
 
         qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());

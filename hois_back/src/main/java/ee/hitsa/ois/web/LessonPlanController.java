@@ -49,7 +49,7 @@ public class LessonPlanController {
 
     @GetMapping("/byteacher")
     public Page<LessonPlanSearchTeacherDto> search(HoisUserDetails user, @Valid LessonPlanSearchTeacherCommand criteria, Pageable pageable) {
-        AssertionFailedException.assertTrue(user.isSchoolAdmin() || user.isTeacher(), "User has no rights");
+        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isTeacher(), "User has no rights");
         return lessonPlanService.search(user, criteria, pageable);
     }
 

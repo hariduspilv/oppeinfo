@@ -45,6 +45,12 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       } else {
         setTemplateUrl();
         $scope.record.students = studentConverter($scope.record.students);
+        if(result && result.type === 'KASKKIRI_IMMAT') {
+          for(var i = 0, cnt = $scope.record.students.length; i < cnt; i++) {
+            $scope.record.students[i]._found = true;
+            $scope.record.students[i]._idcode = $scope.record.students[i].idcode;
+          }
+        }
       }
     }
 
@@ -62,10 +68,13 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
           // create mapping curriculumversion -> all possible student groups
           $q.all([$scope.formState.studentGroups.$promise, $scope.formState.curriculumVersions.$promise]).then(function() {
             var groups = $scope.formState.studentGroups;
+            function idgetter(it) {
+              return it.id;
+            }
             $scope.formState.studentGroupMap = {};
             for(var i = 0; i < groups.length; i++) {
               var sg = groups[i];
-              var cvids = sg.curriculumVersion ? [sg.curriculumVersion] : $scope.formState.curriculumVersions.filter(function(it) { return it.curriculum === sg.curriculum;}).map(function(it) { return it.id;});
+              var cvids = sg.curriculumVersion ? [sg.curriculumVersion] : $scope.formState.curriculumVersions.filter(function(it) { return it.curriculum === sg.curriculum;}).map(idgetter);
               for(var j = 0; j < cvids.length; j++) {
                 var cv = cvids[j];
                 var cvgroups = $scope.formState.studentGroupMap[cv];
@@ -79,7 +88,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
           });
         }
       }
-      if(type === 'KASKKIRI_AKAD') {
+      if(type === 'KASKKIRI_AKAD' || type === 'KASKKIRI_VALIS') {
         $scope.formState.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
       }
     }
@@ -145,6 +154,9 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
 
     $scope.directiveTypeChanged = function() {
       var data = {type: $scope.record.type};
+      if(data.type === 'KASKKIRI_EKSMAT') {
+        data.application = true;
+      }
       if(data.type !== 'KASKKIRI_IMMAT' && data.type !== 'KASKKIRI_IMMATV') {
         QueryUtils.endpoint(baseUrl+'/findstudents').search(data, function(result) {
           $scope.formState.students = result.content;
@@ -237,8 +249,18 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
           row.lastname = response.lastname;
         }).catch(function(response) {
           row._found = false;
+          row.firstname = undefined;
+          row.lastname = undefined;
           return $q.reject(response);
         });
+      } else if(idcode !== row._idcode) {
+        row._found = false;
+      }
+    };
+
+    $scope.abroadChanged = function(row) {
+      if(!row.isAbroad) {
+        row.country = 'RIIK_EST';
       }
     };
 
@@ -262,7 +284,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
     var id = $route.current.params.id;
     var baseUrl = '/directives';
 
-    $scope.formState = {backUrl: $route.current.params.backUrl};
+    $scope.formState = {};
     $scope.record = QueryUtils.endpoint(baseUrl + '/:id/view').search({id: id});
 
     $scope.record.$promise.then(function() {
