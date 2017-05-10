@@ -1,0 +1,30 @@
+<div>
+  <div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'application.validCurriculumVersion' | translate}}</label>
+      <hois-value value="currentLanguageNameField(application.oldCurriculumVersion)"></hois-value>
+    </md-input-container>
+  </div>
+  <div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'application.validStudyForm' | translate}}</label>
+      <hois-classifier-value ng-model="application.oldStudyForm" model-value-attr="code"
+        main-classifier-code="OPPEVORM"></hois-classifier-value>
+    </md-input-container>
+  </div>
+
+  <div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'application.newCurriculumVersion' | translate}}</label>
+      <hois-select ng-model="application.newCurriculumVersion.id" ng-change="newCurriculumVersionSelected()" values="curriculumVersions" ng-required="application.type === 'AVALDUS_LIIK_OKAVA'"></hois-select>
+    </md-input-container>
+  </div>
+
+  <div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'application.newStudyForm' | translate}}</label>
+      <hois-classifier-select ng-model="application.newStudyForm" model-value-attr="code"
+        main-classifier-code="OPPEVORM" required></hois-classifier-select>
+    </md-input-container>
+  </div>
+</div>

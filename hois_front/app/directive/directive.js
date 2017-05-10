@@ -14,13 +14,12 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
     var baseUrl = '/directives';
 
     $scope.formState = {state: (id || canceledDirective ? 'EDIT' : 'CHOOSETYPE'), students: undefined,
-                        selectedStudents: [], excludedTypes: ['KASKKIRI_KYLALIS']};
+                        selectedStudents: [], excludedTypes: ['KASKKIRI_KYLALIS'], school: Session.school || {}};
     if(!canceledDirective) {
       $scope.formState.excludedTypes.push('KASKKIRI_TYHIST');
     }
 
-    var school = Session.school || {};
-    if(!school.higher) {
+    if(!$scope.formState.school.higher) {
       $scope.formState.excludedTypes.push('KASKKIRI_OKOORM');
     }
 
@@ -34,14 +33,20 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
     }
 
     function afterLoad(result) {
-      if(result && result.type === 'KASKKIRI_TYHIST') {
+      $scope.formState.cancelSelect = (result && result.type === 'KASKKIRI_TYHIST');
+      if($scope.formState.cancelSelect) {
         var templateId = result.canceledDirectiveType ? result.canceledDirectiveType.substr(9).toLowerCase() : 'unknown';
         $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.view.html';
-        $scope.record.students = result.canceledStudents;
         $scope.formState.canceledDirective = result.canceledDirectiveData;
+        var changedStudents = result.changedStudents || [];
+        var selectedStudents = result.selectedStudents || [];
+        $scope.record.students = (result.canceledStudents || []).map(function(it) {it.selectable = changedStudents.indexOf(it.student) === -1; return it;});
+        $scope.formState.selectedStudents = $scope.record.students.filter(function(it) { return selectedStudents.indexOf(it.student) !== -1;});
         delete result.canceledDirectiveType;
         delete result.canceledDirectiveData;
+        delete result.changedStudents;
         delete result.canceledStudents;
+        delete result.selectedStudents;
       } else {
         setTemplateUrl();
         $scope.record.students = studentConverter($scope.record.students);
@@ -57,7 +62,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
     function loadFormData() {
       var type = $scope.record.type;
       if(type === 'KASKKIRI_ENNIST' || type === 'KASKKIRI_IMMAT' || type === 'KASKKIRI_IMMATV' || type === 'KASKKIRI_OKAVA') {
-        $scope.formState.curriculumVersions = Curriculum.queryVersions();
+        $scope.formState.curriculumVersions = Curriculum.queryVersions({valid: true});
         $scope.formState.curriculumVersions.$promise.then(function(result) {
           $scope.formState.curriculumVersionMap = result.reduce(function(acc, item) { acc[item.id] = item; return acc; }, {});
         });
@@ -128,17 +133,24 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       return true;
     }
 
+    function beforeSave() {
+      if($scope.record.type === 'KASKKIRI_TYHIST') {
+        $scope.record.selectedStudents = $scope.formState.selectedStudents.map(function(it) { return it.student;});
+      }
+    }
+
     $scope.update = function() {
       if(!formIsValid()) {
         return;
       }
 
+      beforeSave();
       if($scope.record.id) {
         $scope.record.$update().then(afterLoad).then(message.updateSuccess);
       }else{
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
         });
       }
     };
@@ -147,7 +159,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       dialogService.confirmDialog({prompt: 'directive.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path(baseUrl);
+          $location.url(baseUrl);
         });
       });
     };
@@ -259,8 +271,11 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
     };
 
     $scope.abroadChanged = function(row) {
+      var est = 'RIIK_EST';
       if(!row.isAbroad) {
-        row.country = 'RIIK_EST';
+        row.country = est;
+      } else if(row.country === est) {
+        row.country = null;
       }
     };
 
@@ -271,24 +286,25 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       }
 
       // save first
+      beforeSave();
       $scope.record.$update().then(afterLoad).then(function() {
         QueryUtils.endpoint(baseUrl + '/sendtoconfirm').update({id: $scope.record.id}).$promise.then(function() {
           message.info('directive.sentToConfirm');
-          $location.path(baseUrl + '/' + $scope.record.id + '/view');
+          $location.url(baseUrl + '/' + $scope.record.id + '/view?_noback');
         });
       });
     };
   }
-]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'QueryUtils',
-  function ($location, $route, $scope, dialogService, message, QueryUtils) {
+]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Session', 'QueryUtils',
+  function ($location, $route, $scope, dialogService, message, Session, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/directives';
 
-    $scope.formState = {};
+    $scope.formState = {school: Session.school || {}};
     $scope.record = QueryUtils.endpoint(baseUrl + '/:id/view').search({id: id});
 
     $scope.record.$promise.then(function() {
-      var templateId = $scope.record.type ? $scope.record.type.substr(9).toLowerCase() : 'unknown';
+      var templateId = $scope.record.type === 'KASKKIRI_TYHIST' ? $scope.record.canceledDirectiveType.substr(9).toLowerCase() : ($scope.record.type ? $scope.record.type.substr(9).toLowerCase() : 'unknown');
       $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.view.html';
     });
 

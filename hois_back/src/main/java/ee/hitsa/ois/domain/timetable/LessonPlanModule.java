@@ -16,7 +16,8 @@ public class LessonPlanModule extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private LessonPlan lessonPlan;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    private CurriculumVersionOccupationModule curriculumVersionOmodule;
+    @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false)
+    private CurriculumVersionOccupationModule curriculumVersionOccupationModule;
     @ManyToOne(fetch = FetchType.LAZY)
     private Teacher teacher;
 
@@ -28,12 +29,12 @@ public class LessonPlanModule extends BaseEntityWithId {
         this.lessonPlan = lessonPlan;
     }
 
-    public CurriculumVersionOccupationModule getCurriculumVersionOmodule() {
-        return curriculumVersionOmodule;
+    public CurriculumVersionOccupationModule getCurriculumVersionOccupationModule() {
+        return curriculumVersionOccupationModule;
     }
 
-    public void setCurriculumVersionOmodule(CurriculumVersionOccupationModule curriculumVersionOmodule) {
-        this.curriculumVersionOmodule = curriculumVersionOmodule;
+    public void setCurriculumVersionOccupationModule(CurriculumVersionOccupationModule module) {
+        this.curriculumVersionOccupationModule = module;
     }
 
     public Teacher getTeacher() {

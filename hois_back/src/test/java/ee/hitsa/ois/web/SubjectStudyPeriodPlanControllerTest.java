@@ -56,7 +56,7 @@ public class SubjectStudyPeriodPlanControllerTest {
     
     @Test
     public void get() {
-        Long id = Long.valueOf(1);
+        Long id = Long.valueOf(3);
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).pathSegment(id.toString());
         String uri = uriBuilder.build().toUriString();
         ResponseEntity<SubjectStudyPeriodPlanDto> response = restTemplate.getForEntity(uri, SubjectStudyPeriodPlanDto.class);

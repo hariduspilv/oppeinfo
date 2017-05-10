@@ -4,8 +4,6 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 import ee.hitsa.ois.domain.directive.Directive;
-import ee.hitsa.ois.enums.DirectiveType;
-import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -51,12 +49,7 @@ public class DirectiveDto extends DirectiveForm {
     }
 
     public static DirectiveDto of(Directive directive) {
-        if(ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())) {
-            return DirectiveCancelDto.of(directive);
-        }
-
         DirectiveDto dto = EntityUtil.bindToDto(directive, new DirectiveDto(), "students");
-        // TODO insertedBy full person name
         dto.setStudents(StreamUtil.toMappedList(DirectiveStudentDto::of, directive.getStudents()));
         return dto;
     }
@@ -99,15 +92,14 @@ public class DirectiveDto extends DirectiveForm {
             this.changedStudents = changedStudents;
         }
 
-        public static DirectiveCancelDto of(Directive directive) {
+        public static DirectiveCancelDto of(Directive directive, List<Long> changedStudents) {
             DirectiveCancelDto dto = EntityUtil.bindToDto(directive, new DirectiveCancelDto(), "students");
-            // TODO insertedBy full person name
             Directive canceled = directive.getCanceledDirective();
             dto.setCanceledDirectiveData(new AutocompleteResult(canceled.getId(), canceled.getHeadline(), null));
             dto.setCanceledDirectiveType(EntityUtil.getCode(canceled.getType()));
             dto.setCanceledStudents(StreamUtil.toMappedList(DirectiveViewStudentDto::of, canceled.getStudents()));
-            // TODO fetch list of students which cannot canceled
-            // dto.setChangedStudents()
+            dto.setChangedStudents(changedStudents);
+            dto.setSelectedStudents(StreamUtil.toMappedList(ds -> EntityUtil.getId(ds.getStudent()), directive.getStudents()));
             return dto;
         }
     }

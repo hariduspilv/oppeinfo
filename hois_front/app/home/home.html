@@ -5,9 +5,14 @@
     <md-table-container>
       <table md-table md-progress="generalmessages.$promise">
         <tbody md-body>
-          <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="openCloseDetails(row)">
+          <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
             <td md-cell><h4>{{::row.title}}</h4><pre ng-show="row.clicked">{{::row.content}}</pre></td>
+            <td md-cell>
+                <md-button class="md-primary" ng-click="openCloseDetails(row)">
+                    <span ng-if="!row.clicked">{{'main.button.view' | translate}}</span>
+                    <span ng-if="row.clicked">{{'main.button.hide' | translate}}</span>
+                </md-button></td>
           </tr>
         </tbody>
       </table>

@@ -80,7 +80,7 @@ public class SchoolDepartmentService {
         }).flatMap(ids -> ids.stream()).collect(Collectors.toSet());
 
         Map<Long, List<SchoolDepartmentDto>> children = structure.stream().filter(sd -> sd.getParentSchoolDepartment() != null).collect(Collectors.groupingBy(sd -> sd.getParentSchoolDepartment()));
-        List<SchoolDepartmentDto> items = structure.stream().filter(sd -> sd.getParentSchoolDepartment() == null && filtered.contains(sd.getId())).map(sd -> createTreeItem(sd, children, filtered)).collect(Collectors.toList());
+        List<SchoolDepartmentDto> items = StreamUtil.toMappedList(sd -> createTreeItem(sd, children, filtered), structure.stream().filter(sd -> sd.getParentSchoolDepartment() == null && filtered.contains(sd.getId())));
         int totalCount = items.size();
         int offset = Math.min(pageable.getOffset(), totalCount);
         items = new ArrayList<>(items.subList(offset, Math.min(offset + pageable.getPageSize(), totalCount)));
@@ -150,7 +150,7 @@ public class SchoolDepartmentService {
     }
 
     private static SchoolDepartmentDto createTreeItem(SchoolDepartmentDto sd, Map<Long, List<SchoolDepartmentDto>> children, Set<Long> filtered) {
-        sd.setChildren(children.getOrDefault(sd.getId(), Collections.emptyList()).stream().filter(childsd -> filtered.contains(childsd.getId())).map(childsd -> createTreeItem(childsd, children, filtered)).collect(Collectors.toList()));
+        sd.setChildren(StreamUtil.toMappedList(childsd -> createTreeItem(childsd, children, filtered), children.getOrDefault(sd.getId(), Collections.emptyList()).stream().filter(childsd -> filtered.contains(childsd.getId()))));
         return sd;
     }
 }

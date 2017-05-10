@@ -65,7 +65,10 @@ angular.module('hitsaOis')
         disabled:'@',
         modelValueAttr: '@',
         mainClassifierCode: '@',
+        watchModel: '@',
         connectMainClassifierCode: '@',
+        searchFromConnect: '@',
+        selectFirstValue: '@'
       },
       link: function postLink(scope, element, attrs, ngModelControllers) {
         scope.isRequired = angular.isDefined(scope.required);
@@ -243,17 +246,20 @@ angular.module('hitsaOis')
                   showOptions.push(code);
                 });
 
-                if (showOptions.length > 0) {
+                if (showOptions.length > 0 && (angular.isDefined(scope.showOnlyValues) || angular.isDefined(scope.filterValues))) {
                   for(var key in scope.optionsByCode) {
                     scope.optionsByCode[key].hide = (showOptions.indexOf(key) === -1);
                   }
                 }
 
-                if(angular.isDefined(scope.selectFirstValue) && showOptions.length > 0) {
-                  if (angular.isDefined(scope.modelValueAttr)) {
-                    scope.value = optionsByCode[showOptions[0]][scope.modelValueAttr];
-                  } else {
-                    scope.value = optionsByCode[showOptions[0]];
+                if(angular.isDefined(scope.selectFirstValue)) {
+                  var value = showOptions.length > 0 ? showOptions[0] : (angular.isString(scope.selectFirstValue) ? scope.selectFirstValue : null);
+                  if (value !== null) {
+                    if (angular.isDefined(scope.modelValueAttr)) {
+                      scope.value = optionsByCode[value][scope.modelValueAttr];
+                    } else {
+                      scope.value = optionsByCode[value];
+                    }
                   }
                 }
                 deselectHiddenValue();

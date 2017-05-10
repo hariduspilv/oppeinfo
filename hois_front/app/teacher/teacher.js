@@ -12,42 +12,52 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
   });
 
   function updateQualifications(teacher) {
-    teacher.teacherPositionEhis.forEach(function (it) {
-      DataUtils.convertStringToDates(it, ['contractStart', 'contractEnd']);
-    });
-    $scope.teacherQualifications = new TeacherQualificationsEndpoint({qualifications: teacher.teacherQualifications});
-    teacher.teacherQualifications = undefined;
+    if (teacher.teacherQualifications) {
+      $scope.teacherQualifications = new TeacherQualificationsEndpoint({qualifications: teacher.teacherQualifications});
+      teacher.teacherQualifications = undefined;
+    }
   }
 
   function updateMobilities(teacher) {
-    teacher.teacherMobility.forEach(function (it) {
-      DataUtils.convertStringToDates(it, ['start', 'end']);
-    });
-    $scope.teacherMobility = new TeacherMobilityEndpoint({mobilities: teacher.teacherMobility});
-    teacher.teacherMobility = undefined;
+    if (teacher.teacherMobility) {
+      teacher.teacherMobility.forEach(function (it) {
+        DataUtils.convertStringToDates(it, ['start', 'end']);
+      });
+      $scope.teacherMobility = new TeacherMobilityEndpoint({mobilities: teacher.teacherMobility});
+      teacher.teacherMobility = undefined;
+    }
   }
 
   function afterLoad() {
-    if (!$scope.teacher.person.sex && ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11)) {
+    if ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11) {
       $scope.teacher.person.sex = DataUtils.sexFromIdcode($scope.teacher.person.idcode);
     }
-    if (!$scope.teacher.person.birthdate && ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11)) {
+    if ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11) {
       $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
     }
+    $scope.teacher.teacherPositionEhis.forEach(function (it) {
+      DataUtils.convertStringToDates(it, ['contractStart', 'contractEnd']);
+    });
     DataUtils.convertStringToDates($scope.teacher.person, ['birthdate']);
     updateQualifications($scope.teacher);
     updateMobilities($scope.teacher);
-    $scope.formState = {person: true};
+    $scope.displaySendEhis = ($scope.teacher.teacherPositionEhis.filter(function (it) {
+      return it.id > 0;
+    }).length > 0);
+    $scope.formState = {
+      person: true,
+      id: true
+    };
   }
 
   $scope.lookupFailure = function () {
-    if (!$scope.teacher.person.sex) {
-      $scope.teacher.person.sex = DataUtils.sexFromIdcode($scope.teacher.person.idcode);
-    }
-    if (!$scope.teacher.person.birthdate) {
-      $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
-    }
-    $scope.formState = {person: false};
+    $scope.cleanReadOnly();
+    $scope.formState = {
+      person: false,
+      id: true
+    };
+    $scope.teacher.person.sex = DataUtils.sexFromIdcode($scope.teacher.person.idcode);
+    $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
   };
 
   if (id) {
@@ -96,20 +106,25 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
   };
 
   $scope.cleanReadOnly = function () {
-    var idcode = $scope.teacher.person.idcode;
-    if ($scope.formState && $scope.formState.person && !(idcode && idcode.length === 11)) {
-      $scope.formState = {person: false};
-      $scope.teacher.person.citizenship = null;
-      $scope.teacher.person.firstname = '';
-      $scope.teacher.person.lastname = '';
-      $scope.teacher.person.nativeLanguage = '';
-      $scope.teacher.person.birthdate = null;
-      $scope.teacher.person.sex = null;
+    $scope.formState = {
+      person: false,
+      id:false
+    };
+    $scope.teacher.person.citizenship = {citizenship: 'RIIK_EST'};
+    $scope.teacher.person.firstname = '';
+    $scope.teacher.person.lastname = '';
+    $scope.teacher.person.nativeLanguage = '';
+    $scope.teacher.person.birthdate = null;
+    $scope.teacher.person.sex = null;
+
+    if ($scope.oldFoundPerson && $scope.oldFoundPerson.idcode &&
+          ($scope.oldFoundPerson.idcode === $scope.teacher.person.idcode)) {
+      $scope.lookupPerson($scope.oldFoundPerson);
     }
   };
 
   $scope.lookupPerson = function (response) {
-
+    $scope.oldFoundPerson = response;
     $scope.teacher.person.citizenship = response.citizenship;
     $scope.teacher.person.firstname = response.firstname;
     $scope.teacher.person.lastname = response.lastname;
@@ -131,12 +146,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
 
   $scope.update = function () {
     $scope.teacherForm.$setSubmitted();
-    var errors = false;
-    if ($scope.teacher.teacherPositionEhis.length === 0) {
-      message.error('teacher.teacherPositionEhis.error');
-      errors = true;
-    }
-    if ($scope.teacherForm.$valid && !errors) {
+    if ($scope.teacherForm.$valid) {
       if ($scope.teacher.id) {
         $scope.teacher.$update().then(afterLoad).then(message.updateSuccess);
       } else {

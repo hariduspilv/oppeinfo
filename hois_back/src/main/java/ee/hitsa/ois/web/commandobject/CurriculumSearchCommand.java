@@ -26,8 +26,17 @@ public class CurriculumSearchCommand extends SearchCommand {
 	private Boolean isJoint;
 	private List<Long> department;
 	private Boolean isVocational;
+	private List<Long> subjects;
 		
-	public List<String> getCurriculumGroup() {
+	public List<Long> getSubjects() {
+        return subjects;
+    }
+
+    public void setSubjects(List<Long> subjects) {
+        this.subjects = subjects;
+    }
+
+    public List<String> getCurriculumGroup() {
         return curriculumGroup;
     }
 

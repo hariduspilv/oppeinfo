@@ -2,7 +2,6 @@ package ee.hitsa.ois.service;
 
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
@@ -57,8 +56,7 @@ public class AutomaticMessageService {
     private MailService mailService;
 
     public void sendMessageToSchoolAdmins(MessageType type, School school, Object dataBean) {
-        Role role = Role.ROLL_A;
-        List<Person> persons = StreamUtil.toMappedList(User::getPerson, userService.findAllValidSchoolUsersByRole(school, role));
+        List<Person> persons = StreamUtil.toMappedList(User::getPerson, userService.findAllValidSchoolUsersByRole(school, Role.ROLL_A));
 
         Message message = sendMessageToPersons(type, school, persons, dataBean);
 
@@ -84,12 +82,9 @@ public class AutomaticMessageService {
     }
 
     public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean, Message existingMessage, HoisUserDetails initiator) {
-        List<Person> persons = student.getRepresentatives().stream()
+        List<Person> persons = StreamUtil.toMappedList(StudentRepresentative::getPerson, student.getRepresentatives().stream()
                 .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible()))
-                .filter(sr -> initiator == null || !EntityUtil.getId(sr.getPerson()).equals(initiator.getPersonId()))
-                .map(StudentRepresentative::getPerson)
-                .collect(Collectors.toList());
-
+                .filter(sr -> initiator == null || !EntityUtil.getId(sr.getPerson()).equals(initiator.getPersonId())));
 
         Message message = sendMessageToPersons(type, student.getSchool(), persons, dataBean, existingMessage);
 

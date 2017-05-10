@@ -74,11 +74,11 @@ public class GeneralMessageService {
             // display periods should overlap
             LocalDate validFrom = criteria.getValidFrom();
             if(validFrom != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), validFrom));
+                filters.add(cb.or(cb.isNull(root.get("validThru")), cb.greaterThanOrEqualTo(root.get("validThru"), validFrom)));
             }
             LocalDate validThru = criteria.getValidThru();
             if(validThru != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("validThru"), validThru));
+                filters.add(cb.or(cb.isNull(root.get("validFrom")), cb.lessThanOrEqualTo(root.get("validFrom"), validThru)));
             }
             List<String> targets = criteria.getTargets();
             if(targets != null && !targets.isEmpty()) {

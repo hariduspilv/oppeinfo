@@ -48,13 +48,13 @@
             <th md-column md-order-by="headline">{{'generalmessage.title' | translate}}</th>
             <th md-column md-order-by="validFrom">{{'messageTemplate.validFrom' | translate}}</th>
             <th md-column md-order-by="validThru">{{'messageTemplate.validThru' | translate}}</th>
-            <th md-column md-order-by="">{{'main.status' | translate}}</th>
+            <th md-column>{{'main.status' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+            <td md-cell><a ng-href="#/messageTemplate/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
             <td md-cell>{{::row.headline}}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.validFrom} }}</td>
             <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>

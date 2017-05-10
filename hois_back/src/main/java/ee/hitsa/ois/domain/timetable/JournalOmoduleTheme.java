@@ -12,12 +12,13 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 public class JournalOmoduleTheme extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Journal journal;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private LessonPlanModule lessonPlanModule;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    private CurriculumVersionOccupationModuleTheme curriculumVersionOmoduleTheme;
+    @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false)
+    private CurriculumVersionOccupationModuleTheme curriculumVersionOccupationModuleTheme;
 
     public Journal getJournal() {
         return journal;
@@ -35,11 +36,11 @@ public class JournalOmoduleTheme extends BaseEntityWithId {
         this.lessonPlanModule = lessonPlanModule;
     }
 
-    public CurriculumVersionOccupationModuleTheme getCurriculumVersionOmoduleTheme() {
-        return curriculumVersionOmoduleTheme;
+    public CurriculumVersionOccupationModuleTheme getCurriculumVersionOccupationModuleTheme() {
+        return curriculumVersionOccupationModuleTheme;
     }
 
-    public void setCurriculumVersionOmoduleTheme(CurriculumVersionOccupationModuleTheme curriculumVersionOmoduleTheme) {
-        this.curriculumVersionOmoduleTheme = curriculumVersionOmoduleTheme;
+    public void setCurriculumVersionOccupationModuleTheme(CurriculumVersionOccupationModuleTheme theme) {
+        this.curriculumVersionOccupationModuleTheme = theme;
     }
 }

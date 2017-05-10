@@ -3,6 +3,9 @@ package ee.hitsa.ois.web.commandobject.timetable;
 import java.time.LocalDateTime;
 import java.util.Set;
 
+import ee.hitsa.ois.validation.DateTimeRange;
+
+@DateTimeRange(from = "from", thru = "thru")
 public class LessonTimeSearchCommand {
 
     private LocalDateTime from;

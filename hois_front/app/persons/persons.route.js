@@ -26,7 +26,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       data: authorizedRoles
     })
     .when('/persons/:person/users/new', {
-      templateUrl: 'persons/users.html',
+      templateUrl: 'persons/users.edit.html',
       controller: 'UsersEditController',
       controllerAs: 'controller',
       resolve: {
@@ -36,8 +36,18 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       data: authorizedRoles
     })
     .when('/persons/:person/users/:user/edit', {
-      templateUrl: 'persons/users.html',
+      templateUrl: 'persons/users.edit.html',
       controller: 'UsersEditController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: authorizedRoles
+    })
+    .when('/persons/:person/users/:user', {
+      templateUrl: 'persons/users.view.html',
+      controller: 'UsersViewController',
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function ($translate) { return $translate.onReady(); },

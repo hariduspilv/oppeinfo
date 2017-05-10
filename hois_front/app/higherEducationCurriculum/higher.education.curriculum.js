@@ -1,20 +1,15 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('HigherEducationCurriculumController', function ($scope, Classifier, Curriculum, Session, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, $translate, DataUtils, $rootScope) {
+  .controller('HigherEducationCurriculumController', function ($scope, Classifier, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, $translate, DataUtils, $rootScope) {
+
     $scope.auth = $route.current.locals.auth;
-
-    $scope.formView = {
-        curriculum: "curriculum",
-        version: "version"
+    $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
+    $scope.removeFromArray = function(array, item) {
+        dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
+            ArrayUtils.remove(array, item);
+        });
     };
-
-    $scope.showMainForm = true;
-
-    // TODO: finish readonly
-
-    $scope.removeFromArray = ArrayUtils.remove;
-
 
     var baseUrl = '/curriculum';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -35,6 +30,7 @@ angular.module('hitsaOis')
       validFrom: new Date(),
       joint: false,
       abroad: false,
+      studyPeriodMonths: 0,
       optionalStudyCredits: 0   //TODO: which version to take when calculating this value? (probably current)
     };
 
@@ -100,14 +96,8 @@ angular.module('hitsaOis')
         setAreaOfStudy();
         $scope.getAreasOfStudy();
         getJointPartners();
-        setReadOnly();
         getEhisSchoolsSelection();
         $scope.curriculum.abroad = false;
-    }
-
-    function setReadOnly() {
-        $scope.readOnly = $scope.curriculum.status === "OPPEKAVA_STAATUS_K" || $scope.curriculum.status === "OPPEKAVA_STAATUS_C" ||
-        $route.current.$$route.originalPath.indexOf("view") !== -1;
     }
 
     function setStudyPeriod() {
@@ -131,26 +121,17 @@ angular.module('hitsaOis')
         }
     }
 
-    //TODO: method currently not used
-    // function getMyEhisSchool() {
-    //   if($rootScope.currentUser && Session.school.id) {
-    //     QueryUtils.endpoint("/school").get({id: Session.school.id}).$promise.then(function(response) {
-    //       $scope.myEhisSchool = response.ehisSchool;
-    //     });
-    //   }
-    // }
-    // getMyEhisSchool();
-
-
     $scope.removejointPartner = function(deletedPartner) {
-        $scope.removeFromArray($scope.curriculum.jointPartners, deletedPartner);
-        if(!deletedPartner.abroad) {
-            $scope.removeFromArray($scope.jointPartnersEhisSchools, deletedPartner.ehisSchool);
-            if($scope.curriculum.jointMentor === deletedPartner.ehisSchool) {
-                $scope.curriculum.jointMentor = undefined;
+        dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
+            ArrayUtils.remove($scope.curriculum.jointPartners, deletedPartner);
+            if(!deletedPartner.abroad) {
+                ArrayUtils.remove($scope.jointPartnersEhisSchools, deletedPartner.ehisSchool);
+                if($scope.curriculum.jointMentor === deletedPartner.ehisSchool) {
+                    $scope.curriculum.jointMentor = undefined;
+                }
+                deletePartersSubjects(deletedPartner.ehisSchool);
             }
-            deletePartersSubjects(deletedPartner.ehisSchool);
-        }
+        });
     };
 
     // TODO: removal in iteration
@@ -215,6 +196,10 @@ angular.module('hitsaOis')
       clearGradesIfNecessary();
         $scope.curriculum.iscedClass = $scope.curriculum.fieldOfStudy ?
         $scope.curriculum.fieldOfStudy : $scope.curriculum.areaOfStudy;
+
+        $scope.curriculum.studyPeriodMonths = $scope.curriculum.studyPeriodMonths ? $scope.curriculum.studyPeriodMonths : 0;
+        $scope.curriculum.studyPeriod = $scope.curriculum.studyPeriodMonths + 12 * $scope.curriculum.studyPeriodYears;
+
         if($scope.curriculum.id) {
             $scope.curriculum.$update().then(function(){
                 message.updateSuccess();

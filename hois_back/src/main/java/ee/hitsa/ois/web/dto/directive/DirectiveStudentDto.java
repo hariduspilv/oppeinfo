@@ -3,10 +3,10 @@ package ee.hitsa.ois.web.dto.directive;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.SaisApplication;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.FinSource;
@@ -30,7 +30,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private Boolean isCumLaude;
     private Boolean isOccupationExamPassed;
     private String curriculumGrade;
-    private String addInfo;
     private Boolean applicationIsPeriod;
     private LocalDate applicationStartDate;
     private LocalDate applicationEndDate;
@@ -117,14 +116,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.curriculumGrade = curriculumGrade;
     }
 
-    public String getAddInfo() {
-        return addInfo;
-    }
-
-    public void setAddInfo(String addInfo) {
-        this.addInfo = addInfo;
-    }
-
     public Boolean getApplicationIsPeriod() {
         return applicationIsPeriod;
     }
@@ -188,7 +179,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_EKSMAT:
             dto.setReason(EntityUtil.getNullableCode(application.getReason()));
-            dto.setAddInfo(application.getAddInfo());
             break;
         case KASKKIRI_FINM:
             dto.setFinSpecific(EntityUtil.getNullableCode(application.getNewFinSpecific()));
@@ -204,7 +194,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setIsAbroad(application.getIsAbroad());
             dto.setAbroadSchool(application.getAbroadSchool());
             dto.setEhisSchool(EntityUtil.getNullableCode(application.getEhisSchool()));
-            dto.setCountry(EntityUtil.getNullableCode(application.getCountry()));
+            dto.setCountry(!Boolean.TRUE.equals(application.getIsAbroad()) ? ClassifierUtil.COUNTRY_ESTONIA : EntityUtil.getNullableCode(application.getCountry()));
             dto.setIsPeriod(application.getIsPeriod());
             dto.setStartDate(application.getStartDate());
             dto.setEndDate(application.getEndDate());
@@ -299,6 +289,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_OVORM:
             dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+            dto.setStudentGroup(EntityUtil.getNullableId(student.getStudentGroup()));
             break;
         default:
             break;

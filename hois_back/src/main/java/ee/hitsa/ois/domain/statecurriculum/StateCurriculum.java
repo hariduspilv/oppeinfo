@@ -32,7 +32,7 @@ public class StateCurriculum extends BaseEntityWithId {
 	private String graduationRequirementsEn;
 	private Long credits;
 	private String practiceDescription;
-	private Integer optionalStudyCredits;
+	private Double optionalStudyCredits;
 	private LocalDate validFrom;
 	private LocalDate validThru;
 
@@ -197,11 +197,11 @@ public class StateCurriculum extends BaseEntityWithId {
 		this.finalExamDescription = finalExamDescription;
 	}
 
-	public Integer getOptionalStudyCredits() {
+	public Double getOptionalStudyCredits() {
 		return optionalStudyCredits;
 	}
 
-	public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+	public void setOptionalStudyCredits(Double optionalStudyCredits) {
 		this.optionalStudyCredits = optionalStudyCredits;
 	}
 

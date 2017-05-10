@@ -1,9 +1,12 @@
 package ee.hitsa.ois.domain.timetable;
 
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.StudyYear;
@@ -25,6 +28,8 @@ public class LessonPlan extends BaseEntityWithId {
     private StudentGroup studentGroup;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
+    @OneToMany(mappedBy = "lessonPlan")
+    private List<LessonPlanModule> lessonPlanModules;
 
     public StudyYear getStudyYear() {
         return studyYear;
@@ -72,5 +77,13 @@ public class LessonPlan extends BaseEntityWithId {
 
     public void setCurriculumVersion(CurriculumVersion curriculumVersion) {
         this.curriculumVersion = curriculumVersion;
+    }
+
+    public List<LessonPlanModule> getLessonPlanModules() {
+        return lessonPlanModules;
+    }
+
+    public void setLessonPlanModules(List<LessonPlanModule> lessonPlanModules) {
+        this.lessonPlanModules = lessonPlanModules;
     }
 }

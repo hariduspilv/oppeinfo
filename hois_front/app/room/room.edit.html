@@ -7,13 +7,13 @@
       </md-input-container>
 
       <md-input-container class="md-block">
-        <label>{{'room.name' | translate}}</label>
-        <input ng-model="record.name" name="name" type="text" required md-maxlength="100">
+        <label class="textInput">{{'room.code' | translate}}</label>
+        <input ng-model="record.code" name="code" type="text" required md-maxlength="100">
       </md-input-container>
 
       <md-input-container class="md-block">
-        <label class="textInput">{{'room.code' | translate}}</label>
-        <input ng-model="record.code" name="code" type="text" required md-maxlength="100">
+        <label>{{'room.name' | translate}}</label>
+        <input ng-model="record.name" name="name" type="text" md-maxlength="100">
       </md-input-container>
 
       <md-checkbox ng-model="record.isStudy" name="isStudy">
@@ -39,7 +39,7 @@
         <md-list-item ng-repeat="equipment in formState.roomEquipment">
           <md-input-container flex>
             <label class="textInput">{{currentLanguageNameField(equipment.equipment)}}</label>
-            <input ng-model="equipment.equipmentCount" type="number" min="0">
+            <input ng-model="equipment.equipmentCount" type="number" min="0" max="100000000">
           </md-input-container>
           <md-input-container flex>
             <md-button ng-click="deleteEquipment(equipment.equipment.code)" class="md-raised md-primary">{{'main.button.delete' | translate}}</md-button>

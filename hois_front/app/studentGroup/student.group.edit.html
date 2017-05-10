@@ -59,6 +59,21 @@
         </md-input-container>
       </div>
 
+      <div layout="row">
+        <md-input-container flex="20">
+          <label>{{'main.validityPeriod' | translate}}</label>
+          <input type="hidden">
+        </md-input-container>
+        <div flex="33">
+          <md-input-container flex>
+            <md-datepicker ng-model="record.validFrom" md-placeholder="{{'main.validFrom' | translate}}"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex>
+            <md-datepicker ng-model="record.validThru" md-min-date="record.validFrom" md-placeholder="{{'main.validThru' | translate}}"></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+
     </form>
 
     <md-table-container ng-if="formState.students">

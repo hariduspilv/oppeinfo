@@ -55,6 +55,11 @@ angular.module('hitsaOis').factory('DataUtils',
         return getStudyYearOrPeriodAt(new Date(), list);
     }
 
+    function isPastStudyYearOrPeriod(period) {
+        convertStringToDates(period, ["endDate"]);
+        return new Date() >= period.endDate;
+    }
+
     return {
       assign: function( path, obj, value ) {
         return path.split('.').reduce( function( prev, curr, currentIndex, array ) {
@@ -71,6 +76,7 @@ angular.module('hitsaOis').factory('DataUtils',
       getCurrentStudyYearOrPeriod: getCurrentStudyYearOrPeriod,
       getStudyYearOrPeriodAt: getStudyYearOrPeriodAt,
       sortStudyYearsOrPeriods: sortStudyYearsOrPeriods,
+      isPastStudyYearOrPeriod: isPastStudyYearOrPeriod,
 
       sexFromIdcode : function (idcode) {
         if (idcode.length !== 11  || isNaN(idcode)) {

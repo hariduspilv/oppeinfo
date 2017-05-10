@@ -7,7 +7,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 
 import org.slf4j.Logger;
@@ -45,59 +44,24 @@ public class ApplicationUtil {
         }
     }
 
-    // TODO replace with DateUtils.periodEnd
     public static LocalDate getEndDate(Application application) {
-        if (Boolean.TRUE.equals(application.getIsPeriod())) {
-            if (application.getStudyPeriodEnd() == null) {
-                throw new ValidationFailedException("application.messages.endPeriodMissing");
-            }
-            return application.getStudyPeriodEnd().getEndDate();
-        }
-
-        if (application.getEndDate() == null) {
+        LocalDate date = DateUtils.periodEnd(application);
+        if (date == null && Boolean.TRUE.equals(application.getIsPeriod())) {
+            throw new ValidationFailedException("application.messages.endPeriodMissing");
+        } else if (date == null && Boolean.FALSE.equals(application.getIsPeriod())) {
             throw new ValidationFailedException("application.messages.endDateMissing");
         }
-        return application.getEndDate();
+        return date;
     }
 
-    // TODO replace with DateUtils.periodStart
     public static LocalDate getStartDate(Application application) {
-        if (Boolean.TRUE.equals(application.getIsPeriod())) {
-            if (application.getStudyPeriodStart() == null) {
-                throw new ValidationFailedException("application.messages.startPeriodMissing");
-            }
-            return application.getStudyPeriodStart().getStartDate();
-        }
-
-        if (application.getStartDate() == null) {
+        LocalDate date = DateUtils.periodStart(application);
+        if (date == null && Boolean.TRUE.equals(application.getIsPeriod())) {
+            throw new ValidationFailedException("application.messages.startPeriodMissing");
+        } else if (date == null && Boolean.FALSE.equals(application.getIsPeriod())) {
             throw new ValidationFailedException("application.messages.startDateMissing");
         }
-        return application.getStartDate();
-    }
-
-    public static void assertOverLappingDates(Application application, ApplicationRepository applicationRepository) {
-        LocalDate start = getStartDate(application);
-        LocalDate end = getEndDate(application);
-        // TODO use exists query
-        long overLappingApplicationsCount = applicationRepository.count((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("student").get("id"), EntityUtil.getId(application.getStudent())));
-            filters.add(cb.equal(root.get("type").get("code"), EntityUtil.getCode(application.getType())));
-            filters.add(cb.equal(root.get("status").get("code"), ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name()));
-            root.join("studyPeriodStart", JoinType.LEFT);
-            root.join("studyPeriodEnd", JoinType.LEFT);
-            filters.add(cb.or(
-                cb.and(cb.equal(root.get("isPeriod"), Boolean.FALSE), cb.between(cb.literal(start), root.get("startDate"), root.get("endDate"))),
-                cb.and(cb.equal(root.get("isPeriod"), Boolean.FALSE), cb.between(cb.literal(end), root.get("startDate"), root.get("endDate"))),
-                cb.and(cb.equal(root.get("isPeriod"), Boolean.TRUE), cb.between(cb.literal(start), root.get("studyPeriodStart").get("startDate"), root.get("studyPeriodEnd").get("endDate"))),
-                cb.and(cb.equal(root.get("isPeriod"), Boolean.TRUE), cb.between(cb.literal(end), root.get("studyPeriodStart").get("startDate"), root.get("studyPeriodEnd").get("endDate")))
-            ));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        });
-
-        if (overLappingApplicationsCount > 0) {
-            throw new ValidationFailedException("application.messages.validApplicationExistsWithOverlappingDates");
-        }
+        return date;
     }
 
     public static long daysUsed(Long studentId, AcademicLeaveReason reason, ApplicationRepository applicationRepository) {
@@ -129,22 +93,27 @@ public class ApplicationUtil {
         long daysUsed = 0;
         for (Application academicLeaveApplication : previousSameTypeAcademicLeaves) {
             LocalDate start = getStartDate(academicLeaveApplication);
-            LocalDate end = null;
-            Application revocation = academicLeaveRevocations.get(academicLeaveApplication.getId());
-            if (revocation != null) {
-                // FIXME maybe getStartDate?
-                end = getEndDate(revocation);
-            } else {
-                end = getEndDate(academicLeaveApplication);
-            }
+            LocalDate end = getAcademicLeaveActualEnd(academicLeaveRevocations, academicLeaveApplication);
             daysUsed += ChronoUnit.DAYS.between(start, end);
         }
         return daysUsed;
     }
 
+    private static LocalDate getAcademicLeaveActualEnd(Map<Long, Application> academicLeaveRevocations, Application academicLeaveApplication) {
+        LocalDate end;
+        Application revocation = academicLeaveRevocations.get(academicLeaveApplication.getId());
+        if (revocation != null) {
+            //if academic leave is cancelled by revocation application then its date is end date
+            //TODO: consider using directive date
+            end = getEndDate(revocation);
+        } else {
+            end = getEndDate(academicLeaveApplication);
+        }
+        return end;
+    }
+
     public static void assertAkadConstraints(Application application, ApplicationRepository applicationRepository) {
         assertStartAfterToday(application);
-        assertOverLappingDates(application, applicationRepository);
 
         String reason = EntityUtil.getCode(application.getReason());
         if (AcademicLeaveReason.AKADPUHKUS_POHJUS_T.name().equals(reason)) {
@@ -155,8 +124,7 @@ public class ApplicationUtil {
             assertPeriod(application, 1, daysUsed);
         } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_L.name().equals(reason)) {
             assertPeriod(application, 3, 0);
-        }
-        else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_O.name().equals(reason)) {
+        } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_O.name().equals(reason)) {
             // TODO: algusega mitte varem kui esimese õppeaasta teisest semestrist
             if (!CurriculumUtil.isHigher(application.getStudent().getCurriculumVersion().getCurriculum().getOrigStudyLevel())) {
                 throw new ValidationFailedException("application.messages.studentIsNotHigher");

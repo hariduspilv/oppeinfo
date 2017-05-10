@@ -48,12 +48,12 @@ angular.module('hitsaOis')
     function isSelected(page) {
       return Menu.isPageSelected(page);
     }
-	
-	
+
+
 	/**************************************/
 	$scope.isLeftOpen = function () {
 		return $mdSidenav('left').isOpen();
-	} 
+	}
 
 	$scope.$mdMedia = $mdMedia;
 
@@ -64,7 +64,7 @@ angular.module('hitsaOis')
 	$scope.isLeftOpen = function() {
 		return $mdSidenav('left').isOpen();
 	}
-    
+
 
     function buildToggler(navID) {
       var debounceFn = $mdUtil.debounce(function() {
@@ -75,13 +75,13 @@ angular.module('hitsaOis')
 		  if($mdSidenav('left').isOpen())
 			$mdSidenav('left').close();
 	      else
-            $mdSidenav('left').open();		  
+            $mdSidenav('left').open();
       }, 300);
 
       return debounceFn;
     }
 $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
-  
+
 /*  .controller('LeftCtrl', function($scope, $timeout, $mdSidenav, $log) {
     $scope.close = function() {
       $mdSidenav('left').close()
@@ -282,9 +282,21 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
       $window.location.href = backUrl;
     }
 
+    /**
+     * TODO: find better solution
+     */
+    $rootScope.replaceLastUrl = function(newUrl, condition) {
+        var lastUrl = history.pop();
+        if(angular.isDefined(condition) && condition(lastUrl) === false) {
+            history.push(lastUrl);
+            return;
+        }
+        history.push(newUrl);
+    }
+
     $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
       //console.log(history, newUrl, oldUrl, isBack)
-      if (newUrl !== oldUrl && !isBack) {
+      if (newUrl !== oldUrl && !isBack && newUrl.indexOf('_noback') === -1) {
         pushHistoryState(oldUrl.replace(/(\?_menu)$/, ''), newUrl.replace(/(\?_menu)$/, ''));
       }
       isBack = false;
@@ -292,6 +304,7 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
 
     //usage <md-button ng-click="back("#/someDefaultUrl", formObject)" class="md-raised">{{'main.button.back' | translate}}</md-button>
     //for confirm dialog to work when form.$setSubmitted() is used to submit the form, one has to call form.$setPristine() after successful update
+    //by adding "_noback" to url parameter you can skip adding current url to history stack
     $rootScope.back = function(defaultUrl, form) {
       if (angular.isDefined(form) && form.$dirty === true ) {
         dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function() {

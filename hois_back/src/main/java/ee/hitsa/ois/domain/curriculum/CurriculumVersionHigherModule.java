@@ -22,6 +22,10 @@ import ee.hitsa.ois.domain.Classifier;
 @Entity
 @Table(name="curriculum_version_hmodule")
 public class CurriculumVersionHigherModule extends BaseEntityWithId {
+    
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
+    private CurriculumVersion curriculumVersion;
 
     @NotBlank
     @Size(max = 255)
@@ -54,8 +58,9 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier type;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_hmodule_id", nullable = false, updatable = false)
+//    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JoinColumn(name = "curriculum_version_hmodule_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumVersionHigherModuleSubject> subjects = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -66,6 +71,14 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
     @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
 //    @JoinColumn(name = "curriculum_version_hmodule_id", nullable = false, updatable = false)
     private Set<CurriculumVersionHigherModuleSpeciality> specialities = new HashSet<>();
+
+    public CurriculumVersion getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(CurriculumVersion curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
+    }
 
     public Integer getElectiveModulesNumber() {
         return electiveModulesNumber;

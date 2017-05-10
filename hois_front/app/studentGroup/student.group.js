@@ -151,7 +151,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       }else{
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
         });
       }
     };
@@ -160,7 +160,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       dialogService.confirmDialog({prompt: 'studentGroup.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path(baseUrl);
+          $location.url(baseUrl);
         });
       });
     };

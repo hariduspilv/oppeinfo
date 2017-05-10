@@ -5,7 +5,7 @@ import java.util.Set;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodPlan;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;

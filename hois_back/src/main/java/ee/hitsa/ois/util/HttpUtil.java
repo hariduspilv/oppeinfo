@@ -10,7 +10,13 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 
 public class HttpUtil {
 
-    public static ResponseEntity<Map<String, ?>> created(BaseEntityWithId entity) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(Collections.singletonMap("id", EntityUtil.getId(entity)));
+    public static CreatedResponse created(BaseEntityWithId entity) {
+        return new CreatedResponse(EntityUtil.getId(entity));
+    }
+
+    public static class CreatedResponse extends ResponseEntity<Map<String, ?>> {
+        public CreatedResponse(Long id) {
+            super(Collections.singletonMap("id", id), HttpStatus.CREATED);
+        }
     }
 }

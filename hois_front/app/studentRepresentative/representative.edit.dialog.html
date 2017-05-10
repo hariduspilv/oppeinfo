@@ -4,7 +4,7 @@
       <div class="md-dialog-content">
         <md-input-container class="md-block">
           <label>{{'student.representative.idcode' | translate}}</label>
-          <hois-idcode-lookup ng-model="record.person.idcode" name="idcode" role="forrepresentative" after-lookup="lookupPerson(response)" after-failed-lookup="lookupFailure()" ng-readonly="record.id" required></hois-idcode-lookup>
+          <hois-idcode-lookup ng-model="record.person.idcode" name="idcode" role="forrepresentative" after-lookup="lookupPerson(response)" after-failed-lookup="lookupFailure()" ng-readonly="record.id" required md-autofocus="!record.id"></hois-idcode-lookup>
         </md-input-container>
 
         <md-input-container class="md-block">
@@ -24,7 +24,7 @@
 
         <md-input-container class="md-block">
           <label>{{'student.representative.phone' | translate}}</label>
-          <input ng-model="record.person.phone" name="phone" type="text" required md-maxlength="100">
+          <input ng-model="record.person.phone" name="phone" type="text" required md-maxlength="100" md-autofocus="!!record.id">
         </md-input-container>
 
         <md-input-container class="md-block">

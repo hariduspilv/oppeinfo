@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.validation.Valid;
 
@@ -18,13 +20,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.subject.Subject;
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodPlan;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.service.SubjectStudyPeriodPlanService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanSearchCommand;
+import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanUniqueCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanDto;
@@ -67,22 +72,22 @@ public class SubjectStudyPeriodPlanController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") SubjectStudyPeriodPlan plan, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
                 "Only school administrator can delete subjectStudyPeriodPlan");  
-        subjectStudyPeriodPlanService.delete(plan);
+        subjectStudyPeriodPlanService.delete(user.getSchoolId(), plan);
     }
     
-    @GetMapping("/studyPeriods")
-    public List<StudyPeriodDto> studyPeriods(HoisUserDetails user) {
-        return subjectStudyPeriodPlanService.studyPeriods(user.getSchoolId());
+    @GetMapping("/exists")
+    public Map<String, ?> exists(@Valid SubjectStudyPeriodPlanUniqueCommand form) {
+        return Collections.singletonMap("exists", subjectStudyPeriodPlanService.exists(form));
     }
     
     @GetMapping("/curriculums")
-    public List<AutocompleteResult> curriculums(HoisUserDetails user) {
-        return subjectStudyPeriodPlanService.curriculums(user.getSchoolId());
+    public List<AutocompleteResult> curriculums(HoisUserDetails user, CurriculumSearchCommand criteria) {
+        return subjectStudyPeriodPlanService.curriculums(user.getSchoolId(), criteria);
     }
     
     @GetMapping("/studyPeriod/{id:\\d+}")
-    public AutocompleteResult studyPeriod(@WithEntity("id") StudyPeriod studyPeriod) {
-        return AutocompleteResult.of(studyPeriod);
+    public StudyPeriodDto studyPeriod(@WithEntity("id") StudyPeriod studyPeriod) {
+        return EntityUtil.bindToDto(studyPeriod, new StudyPeriodDto());
     }
     
     @GetMapping("/subject/{id:\\d+}")

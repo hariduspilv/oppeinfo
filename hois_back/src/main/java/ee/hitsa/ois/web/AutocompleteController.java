@@ -25,6 +25,7 @@ import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
+import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
@@ -102,13 +103,23 @@ public class AutocompleteController {
     }
 
     @GetMapping("/studyPeriods")
-    public List<AutocompleteResult> studyPeriods(HoisUserDetails user) {
+    public List<StudyPeriodDto> studyPeriods(HoisUserDetails user) {
         return autocompleteService.studyPeriods(user.getSchoolId());
     }
 
     @GetMapping("/saisAdmissionCodes")
     public List<AutocompleteResult> saisAdmissionCodes(HoisUserDetails user) {
         return autocompleteService.saisAdmissionCodes(user.getSchoolId());
+    }
+
+    @GetMapping("/vocationalmodules")
+    public Page<AutocompleteResult> vocationalModules(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+        return autocompleteService.vocationalModules(user.getSchoolId(), lookup);
+    }
+
+    @GetMapping("/journals")
+    public List<AutocompleteResult> journals(HoisUserDetails user) {
+        return autocompleteService.journals(user.getSchoolId(), user);
     }
 
     private static <R> Page<R> asPage(List<R> data) {

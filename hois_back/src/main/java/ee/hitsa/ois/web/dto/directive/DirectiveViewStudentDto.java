@@ -22,8 +22,8 @@ public class DirectiveViewStudentDto {
     private LocalDate endDate;
     private AutocompleteResult studyPeriodStart;
     private AutocompleteResult studyPeriodEnd;
+    private LocalDate nominalStudyEnd;
     private String reason;
-    private String addInfo;
     private String fin;
     private String oldFinSpecific;
     private String finSpecific;
@@ -131,20 +131,20 @@ public class DirectiveViewStudentDto {
         this.studyPeriodEnd = studyPeriodEnd;
     }
 
+    public LocalDate getNominalStudyEnd() {
+        return nominalStudyEnd;
+    }
+
+    public void setNominalStudyEnd(LocalDate nominalStudyEnd) {
+        this.nominalStudyEnd = nominalStudyEnd;
+    }
+
     public String getReason() {
         return reason;
     }
 
     public void setReason(String reason) {
         this.reason = reason;
-    }
-
-    public String getAddInfo() {
-        return addInfo;
-    }
-
-    public void setAddInfo(String addInfo) {
-        this.addInfo = addInfo;
     }
 
     public String getFin() {
@@ -390,11 +390,7 @@ public class DirectiveViewStudentDto {
             dto.setFin(EntityUtil.getNullableCode(student.getFin()));
             dto.setFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
             dto.setLanguage(EntityUtil.getNullableCode(student.getLanguage()));
-            break;
-        case KASKKIRI_EKSMAT:
-            if(application != null) {
-                dto.setAddInfo(application.getAddInfo());
-            }
+            dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_FINM:
             dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
@@ -413,12 +409,12 @@ public class DirectiveViewStudentDto {
         case KASKKIRI_OKAVA:
             dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-            dto.setCurriculumVersion(AutocompleteResult.of(directiveStudent.getCurriculumVersion()));
-            dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
+            dto.setCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
+            dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_OVORM:
             dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
-            dto.setStudentGroup(student.getStudentGroup() != null ? student.getStudentGroup().getCode() : null);
+            dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         default:
             break;

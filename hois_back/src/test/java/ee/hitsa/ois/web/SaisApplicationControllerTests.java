@@ -21,14 +21,14 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
-import ee.hitsa.ois.domain.SaisAdmission;
+import ee.hitsa.ois.domain.sais.SaisAdmission;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
-import ee.hitsa.ois.web.commandobject.SaisApplicationImportCsvCommand;
-import ee.hitsa.ois.web.dto.SaisApplicationDto;
-import ee.hitsa.ois.web.dto.SaisApplicationImportResultDto;
-import ee.hitsa.ois.web.dto.SaisApplicationSearchDto;
+import ee.hitsa.ois.web.commandobject.sais.SaisApplicationImportCsvCommand;
+import ee.hitsa.ois.web.dto.sais.SaisApplicationDto;
+import ee.hitsa.ois.web.dto.sais.SaisApplicationImportResultDto;
+import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 
 
 @Transactional

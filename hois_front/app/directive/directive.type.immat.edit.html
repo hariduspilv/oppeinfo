@@ -8,12 +8,12 @@
         <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
         <th md-column>{{'directive.student.studyLoad' | translate}}</th>
         <th md-column>{{'directive.student.studyForm' | translate}}</th>
+        <th md-column>{{'directive.student.nominalStudyEnd' | translate}}</th>
         <th md-column>{{'directive.student.fin' | translate}}</th>
         <th md-column>{{'directive.student.finSpecific' | translate}}</th>
         <th md-column>{{'directive.student.language' | translate}}</th>
         <th md-column>{{'directive.student.studentGroup' | translate}}</th>
         <th md-column>{{'directive.student.previousStudyLevel' | translate}}</th>
-        <th md-column>{{'directive.student.schoolEmail' | translate}}</th>
         <th></th>
       </tr>
     </thead>
@@ -34,6 +34,9 @@
           <hois-classifier-select ng-model="row.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" aria-label="{{'directive.student.studyForm' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
+          <md-datepicker ng-model="row.nominalStudyEnd" md-placeholder="{{'directive.student.nominalStudyEnd' | translate}}"></md-datepicker>
+        </td>
+        <td md-cell>
           <hois-classifier-select ng-model="row.fin" model-value-attr="code" main-classifier-code="FINALLIKAS" aria-label="{{'directive.student.fin' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
@@ -47,9 +50,6 @@
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.previousStudyLevel" model-value-attr="code" main-classifier-code="OPPEASTE" aria-label="{{'directive.student.previousStudyLevel' | translate}}"></hois-classifier-select>
-        </td>
-        <td md-cell>
-          <input type="text" ng-model="row.email">
         </td>
         <td md-cell>
           <md-button ng-click="deleteStudent(row.idcode)" md-no-ink class="md-primary change-button">{{'main.button.delete' | translate}}</md-button>

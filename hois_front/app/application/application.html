@@ -12,7 +12,7 @@
 
         <div ng-hide="!application.type" layout="row" layout-sm="column" layout-xs="column">
             <div flex="60" flex-sm="100" flex-xs="100">
-              <hois-autocomplete ng-model="application.student"  method="students" name="student"
+              <hois-autocomplete ng-model="application.student" method="students" name="student"
                 label="student.label"></hois-autocomplete>
             </div>
         </div>
@@ -31,7 +31,7 @@
         <md-button ng-if="!auth.isStudent()" ng-click="back('#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
       <div ng-hide="applicationEditView" layout="row">
-        <md-button ng-href="#/applications/" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-click="back('#/applications/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

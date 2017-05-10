@@ -7,7 +7,14 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     private String subjectNameAndCode;
     private String teachersFullname;
     private List<Long> studyPeriods;
+    private Long studentGroup;
 
+    public Long getStudentGroup() {
+        return studentGroup;
+    }
+    public void setStudentGroup(Long studentGroup) {
+        this.studentGroup = studentGroup;
+    }
     public String getSubjectNameAndCode() {
         return subjectNameAndCode;
     }

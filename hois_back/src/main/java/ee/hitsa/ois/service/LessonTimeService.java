@@ -36,6 +36,7 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.timetable.LessonTimeSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -87,8 +88,8 @@ public class LessonTimeService {
                 filters.add(cb.lessThanOrEqualTo(root.get("lessonTimeBuildingGroup").get("validThru"), criteria.getThru().toLocalDate()));
             }
             if (!CollectionUtils.isEmpty(criteria.getDay())) {
-                Predicate[] days = criteria.getDay().stream().map(day -> cb.equal(root.get(getDayProperty(day)), Boolean.TRUE)).collect(Collectors.toList()).toArray(new Predicate[0]);
-                filters.add(cb.or(days));
+                List<Predicate> days = StreamUtil.toMappedList(day -> cb.equal(root.get(getDayProperty(day)), Boolean.TRUE), criteria.getDay());
+                filters.add(cb.or(days.toArray(new Predicate[days.size()])));
             }
             if (!CollectionUtils.isEmpty(criteria.getBuilding())) {
                 Subquery<Long> buildingQuery = query.subquery(Long.class);
@@ -202,21 +203,22 @@ public class LessonTimeService {
     }
 
     private LessonTimeBuildingGroup getPreviousGroup(Set<LessonTimeBuilding> buildings, LocalDate validFrom, Long schoolId) {
-        List<String> buildingIds = buildings.stream().map(ltb -> ltb.getBuilding().getId().toString()).collect(Collectors.toList());
-        if (CollectionUtils.isEmpty(buildingIds)) {
+        if (CollectionUtils.isEmpty(buildings)) {
             return null;
         }
 
         // TODO: try to get rid of array comparison
+        String buildingIds = buildings.stream().map(ltb -> EntityUtil.getId(ltb.getBuilding()).toString()).collect(Collectors.joining(","));
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from (select * from (select ltbg.id, ltbg.valid_from, array_agg(DISTINCT building_id) as buildings from lesson_time_building_group ltbg "+
                 "inner join lesson_time_building ltb on ltb.lesson_time_building_group_id = ltbg.id "+
                 "inner join lesson_time lt on lt.lesson_time_building_group_id = ltbg.id "+
-                "where lt.school_id = " + schoolId + " " +
+                "where lt.school_id = :schoolId " +
                 "group by ltbg.id) as buildings_query "
-                + "where buildings_query.buildings = '{" + String.join(",", buildingIds) + "}' " //this is Array comparison
+                + "where buildings_query.buildings = '{" + buildingIds + "}' " //this is Array comparison
                 + ") as from_query ").sort(new Sort(Direction.DESC, "from_query.valid_from"));
 
+        qb.parameter("schoolId", schoolId);
         qb.requiredCriteria("from_query.valid_from < :validFrom", "validFrom", validFrom);
 
         List<?> data = qb.select("from_query.id",  em).setMaxResults(1).getResultList();
@@ -228,8 +230,7 @@ public class LessonTimeService {
 
     private void deleteGroups(LessonTimeGroupsDto newLessonTimeGroupsDto, LocalDate validFrom, Long schoolId) {
         Set<LessonTimeBuildingGroup> storedLessonTimeGroupsDto = getLessonTimeBuildingGroups(validFrom, schoolId);
-        List<Long> ids = newLessonTimeGroupsDto.getLessonTimeBuildingGroups().stream().map(LessonTimeBuildingGroupDto::getId)
-                .collect(Collectors.toList());
+        Set<Long> ids = StreamUtil.toMappedSet(LessonTimeBuildingGroupDto::getId, newLessonTimeGroupsDto.getLessonTimeBuildingGroups());
         List<LessonTimeBuildingGroup> deleted = storedLessonTimeGroupsDto.stream().filter(it -> !ids.contains(it.getId()))
                 .collect(Collectors.toList());
 

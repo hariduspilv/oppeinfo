@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.util.StreamUtil;
@@ -9,13 +10,16 @@ public class SubjectStudyPeriodPlanSearchDtoContainer {
 
     private AutocompleteResult subject;
     private Set<SubjectStudyPeriodPlanSearchDto> plans;
-    // TODO: filter plans
-    public static SubjectStudyPeriodPlanSearchDtoContainer of (Subject subject) {
+
+    public static SubjectStudyPeriodPlanSearchDtoContainer of (Subject subject, Long studyPeriodId) {
         SubjectStudyPeriodPlanSearchDtoContainer container = 
                 new SubjectStudyPeriodPlanSearchDtoContainer();
         container.setSubject(AutocompleteResult.of(subject));
         container.setPlans(StreamUtil.toMappedSet
-              (SubjectStudyPeriodPlanSearchDto::of, subject.getSubjectStudyPeriodPlans()));
+              (SubjectStudyPeriodPlanSearchDto::of, 
+                      subject.getSubjectStudyPeriodPlans().stream().filter(p -> {
+                  return p.getStudyPeriod().getId().equals(studyPeriodId);
+              }).collect(Collectors.toSet())));
         return container;
     }
 

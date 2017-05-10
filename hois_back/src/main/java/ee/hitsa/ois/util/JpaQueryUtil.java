@@ -144,8 +144,8 @@ public abstract class JpaQueryUtil {
             this.from = Objects.requireNonNull(from);
         }
 
-        public NativeQueryBuilder sort(Sort sort) {
-            this.sort = sort;
+        public NativeQueryBuilder sort(Sort sortFields) {
+            this.sort = sortFields;
             return this;
         }
 

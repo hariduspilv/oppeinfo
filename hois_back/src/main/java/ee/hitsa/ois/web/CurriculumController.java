@@ -3,7 +3,6 @@ package ee.hitsa.ois.web;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
@@ -139,8 +138,7 @@ public class CurriculumController {
     private void assertSameOrJoinSchool(HoisUserDetails user, Curriculum curriculum) {
         Set<String> ehisSchools = new HashSet<>();
         ehisSchools.add(EntityUtil.getCode(curriculum.getSchool().getEhisSchool()));
-        ehisSchools.addAll(curriculum.getJointPartners().stream().filter(it -> it.getEhisSchool() != null)
-                .map(it -> EntityUtil.getCode(it.getEhisSchool())).collect(Collectors.toList()));
+        ehisSchools.addAll(StreamUtil.toMappedList(it -> EntityUtil.getCode(it.getEhisSchool()), curriculum.getJointPartners().stream().filter(it -> it.getEhisSchool() != null)));
 
         AssertionFailedException.throwIf(!ehisSchools.contains(EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool())), "EHIS school mismatch");
     }

@@ -12,7 +12,7 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 public class JournalTeacher extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Journal journal;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Teacher teacher;

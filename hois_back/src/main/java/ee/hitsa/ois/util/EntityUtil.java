@@ -168,6 +168,10 @@ public abstract class EntityUtil {
                         Class<?> targetPropertyType = writeMethod.getParameterTypes()[0];
                         if(ClassUtils.isAssignable(targetPropertyType, sourcePropertyType)) {
                             Object value = readMethod.invoke(entity);
+                            if("insertedBy".equals(propertyName) || "changedBy".equals(propertyName) && value instanceof String) {
+                                // strip possible idcode from actual value
+                                value = PersonUtil.stripIdcodeFromFullnameAndIdcode((String)value);
+                            }
                             writeMethod.invoke(dto, value);
                         } else {
                             // special handling for Classifier -> String and BaseEntityWithId -> Long and BaseEntityWithId -> AutocompleteResult

@@ -1,6 +1,7 @@
 package ee.hitsa.ois.enums;
 
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
+import ee.hitsa.ois.message.StudentAbsenceCreated;
 import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationAccepted;
@@ -17,6 +18,7 @@ public enum MessageType {
     TEATE_LIIK_OP_ESINDAJA(StudentRepresentativeApplicationAccepted.class),
     TEATE_LIIK_OP_TL(StudentRepresentativeApplicationRejectedMessage.class),
     TEATE_LIIK_OP_AVALDUS_TL(StudentApplicationRejectedMessage.class),
+    TEATE_LIIK_OP_PT(StudentAbsenceCreated.class),
     TEATE_LIIK_OA_TULEMUS(null);
 
     private final Class<?> dataBean;

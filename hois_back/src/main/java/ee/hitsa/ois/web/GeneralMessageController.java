@@ -1,13 +1,10 @@
 package ee.hitsa.ois.web;
 
-import java.util.Map;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -55,7 +52,7 @@ public class GeneralMessageController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, ?>> createGeneralMessage(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
+    public HttpUtil.CreatedResponse createGeneralMessage(HoisUserDetails user, @Valid @RequestBody GeneralMessageForm form) {
         assertSchoolAdmin(user);
         return HttpUtil.created(generalMessageService.create(user, form));
     }

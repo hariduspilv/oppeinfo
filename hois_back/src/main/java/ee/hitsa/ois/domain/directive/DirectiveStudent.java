@@ -12,16 +12,15 @@ import javax.validation.constraints.NotNull;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.SaisApplication;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.util.Period;
-import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.validation.PeriodRange;
 
 @PeriodRange(groups = {Akad.class, Valis.class})
@@ -43,7 +42,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @NotNull(groups = {Immat.class, Okoorm.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyLoad;
-    @NotNull(groups = {Immat.class, Lopet.class, Ovorm.class})
+    @NotNull(groups = {Immat.class, Lopet.class, Okava.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
     @NotNull(groups = {Immat.class, Okava.class, Ovorm.class})
@@ -70,6 +69,8 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private StudyPeriod studyPeriodStart;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudyPeriod studyPeriodEnd;
+    @NotNull(groups = Ennist.class) // Immat is checked by hand
+    private LocalDate nominalStudyEnd;
     @NotNull(groups = Valis.class)
     private Boolean isAbroad;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -84,7 +85,6 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier abroadProgramme;
     private String abroadSchool;
-    @NotEmpty(groups = Immat.class)
     private String email;
     @NotNull(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -238,6 +238,14 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
 
     public void setStudyPeriodEnd(StudyPeriod studyPeriodEnd) {
         this.studyPeriodEnd = studyPeriodEnd;
+    }
+
+    public LocalDate getNominalStudyEnd() {
+        return nominalStudyEnd;
+    }
+
+    public void setNominalStudyEnd(LocalDate nominalStudyEnd) {
+        this.nominalStudyEnd = nominalStudyEnd;
     }
 
     public Boolean getIsAbroad() {

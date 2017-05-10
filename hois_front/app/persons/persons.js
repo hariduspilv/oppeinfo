@@ -8,7 +8,7 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
 
   $scope.loadData();
 }])
-  .controller('PersonsEditController', ['$location', '$route', '$scope', 'dialogService', 'DataUtils', 'message', 'PersonService', 'QueryUtils', function ($location, $route, $scope, dialogService, DataUtils, message, PersonService, QueryUtils) {
+  .controller('PersonsEditController', ['$location', '$route', '$scope', '$rootScope', 'dialogService', 'DataUtils', 'message', 'PersonService', 'QueryUtils', function ($location, $route, $scope, $rootScope, dialogService, DataUtils, message, PersonService, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/persons';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -16,6 +16,8 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
     $scope.maxDate = new Date();
 
     function afterLoad() {
+
+      DataUtils.convertStringToDates($scope.person, ['birthdate']);
 
       $scope.users = $scope.person.users;
       $scope.person.users = null;
@@ -63,17 +65,13 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
       return $scope.currentLanguageNameField(item.role);
     };
 
-    var back = function () {
-      $location.path(baseUrl);
-    };
-
     $scope.personBack = function () {
       if (($scope.users && $scope.users.length > 0) || $scope.showSchool || !$scope.person.id) {
-        back();
+        $rootScope.back('#' + baseUrl);
       } else {
         dialogService.confirmDialog({prompt: 'person.back'}, function () {
-          back();
-        })
+          $rootScope.back('#' + baseUrl);
+        });
       }
     };
 
@@ -91,27 +89,39 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
       }
     };
 
-    $scope.delete = function () {
+    $scope.delete = PersonService.deletePerson;
+  }])
+  .controller('PersonsViewController', ['$scope', '$route', 'PersonService','QueryUtils', function ($scope, $route, PersonService, QueryUtils) {
+    var id = $route.current.params.id;
+    var Endpoint = QueryUtils.endpoint('/persons');
+    $scope.showSchool = $route.current.locals.auth.isMainAdmin();
+
+    var afterLoad = function () {
+      PersonService.usersAfterLoad($scope.person.users);
+      $scope.users = $scope.person.users;
+    };
+
+    $scope.orderValue = function (item) {
+      return $scope.currentLanguageNameField(item.role);
+    };
+
+    $scope.person = Endpoint.get({id: id}, afterLoad);
+
+    $scope.delete = PersonService.deletePerson;
+  }])
+  .factory('PersonService', ['$location', 'Classifier', 'DataUtils', 'dialogService', 'message', function ($location, Classifier, DataUtils, dialogService, message) {
+    var clMapper = Classifier.valuemapper({role: "ROLL"});
+
+    var baseUrl = '/persons';
+
+    var deletePerson = function (person) {
       dialogService.confirmDialog({prompt: 'person.deleteconfirm'}, function () {
-        $scope.person.$delete().then(function () {
+        person.$delete().then(function () {
           message.info('main.messages.delete.success');
           $location.path(baseUrl);
         });
       });
     };
-  }])
-  .controller('PersonsViewController', ['$scope', '$route', 'PersonService','QueryUtils', function ($scope, $route, PersonService, QueryUtils) {
-    var id = $route.current.params.id;
-    var Endpoint = QueryUtils.endpoint('/persons');
-
-    var afterLoad = function () {
-      PersonService.usersAfterLoad($scope.person.users)
-    };
-
-    $scope.person = Endpoint.get({id: id}, afterLoad);
-  }])
-  .factory('PersonService', ['Classifier', 'DataUtils', function (Classifier, DataUtils) {
-    var clMapper = Classifier.valuemapper({role: "ROLL"});
 
     var usersAfterLoad = function(users) {
       if (users) {
@@ -135,5 +145,5 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
       }
     };
 
-    return {usersAfterLoad: usersAfterLoad}
+    return {usersAfterLoad: usersAfterLoad, deletePerson: deletePerson};
   }]);

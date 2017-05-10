@@ -32,6 +32,39 @@ public class PersonUtilTests {
         person.setBirthdate(null);
         person.setIdcode(null);
         Assert.assertTrue(PersonUtil.isAdult(person));
+    }
 
+    @Test
+    public void testFullname() {
+        Assert.assertNotNull(PersonUtil.fullname(null, "Last"));
+        Assert.assertNotNull(PersonUtil.fullname("First", "Last"));
+        Person person = new Person();
+        person.setFirstname(null);
+        person.setLastname("Last");
+        Assert.assertNotNull(PersonUtil.fullname(person));
+        person.setFirstname("First");
+        Assert.assertNotNull(PersonUtil.fullname(person));
+    }
+
+    @Test
+    public void fullnameAndIdcode() {
+        Assert.assertNotNull(PersonUtil.fullnameAndIdcode(null, "Last", "47101010033"));
+        Assert.assertNotNull(PersonUtil.fullnameAndIdcode("First", "Last", "47101010033"));
+        Person person = new Person();
+        person.setFirstname(null);
+        person.setLastname("Last");
+        person.setIdcode("47101010033");
+        Assert.assertNotNull(PersonUtil.fullnameAndIdcode(person));
+        person.setFirstname("First");
+        Assert.assertNotNull(PersonUtil.fullnameAndIdcode(person));
+    }
+
+    @Test
+    public void stripIdcodeFromFullnameAndIdcode() {
+        String name = "First Last";
+        String noIdcode = name + " (12345678901)";
+        Assert.assertEquals(noIdcode, PersonUtil.stripIdcodeFromFullnameAndIdcode(noIdcode));
+        String idcode = name + " (47101010033)";
+        Assert.assertEquals(name, PersonUtil.stripIdcodeFromFullnameAndIdcode(idcode));
     }
 }

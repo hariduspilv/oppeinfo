@@ -51,6 +51,7 @@ import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApplicationUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -313,6 +314,12 @@ public class ApplicationService {
                         if (academicLeaveApplication == null) {
                             result.put(type, new ApplicationApplicableDto("application.messages.noValidAcademicLeaveApplicationFound"));
                         }
+                    }
+                } else if (type == ApplicationType.AVALDUS_LIIK_VALIS) {
+                    if (!StudentUtil.isStudying(student)) {
+                        result.put(type, new ApplicationApplicableDto("application.messages.studentNotStudying"));
+                    } else if (!CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel())) {
+                        result.put(type, new ApplicationApplicableDto("application.messages.studentIsNotHigher"));
                     }
                 } else {
                     if (!StudentUtil.isStudying(student)) {

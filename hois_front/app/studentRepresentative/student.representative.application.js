@@ -65,7 +65,7 @@ angular.module('hitsaOis').controller('StudentRepresentativeApplicationSearchCon
 
       QueryUtils.endpoint('/studentrepresentatives/applications').save($scope.record).$promise.then(function() {
         message.info('student.representative.application.applied');
-        $location.path('#/');
+        $location.url('#/');
       });
     };
   }

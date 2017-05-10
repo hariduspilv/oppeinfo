@@ -3,17 +3,17 @@
     <div flex>
       <md-input-container class="md-block">
         <label class="textInput">{{'directive.student.firstname' | translate}}</label>
-        <input type="text" ng-model="criteria.firstname" name="firstname"></input>
+        <input type="text" ng-model="criteria.firstname" name="firstname" md-autofocus>
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'directive.student.lastname' | translate}}</label>
-        <input type="text" ng-model="criteria.lastname" name="lastname"></input>
+        <input type="text" ng-model="criteria.lastname" name="lastname">
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'directive.student.idcode' | translate}}</label>
-        <input type="text" ng-model="criteria.idcode" name="idcode"></input>
+        <input type="text" ng-model="criteria.idcode" name="idcode">
       </md-input-container>
 
       <div layout="row" class="horizontal-radio-group" ng-if="formState.type === 'KASKKIRI_EKSMAT'">
@@ -50,7 +50,7 @@
               <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{::row.fullname}}</td>
                 <td md-cell>{{::row.idcode}}</td>
-                <td md-cell ng-if="formState.type === 'KASKKIRI_LOPET'">{{$root.currentLanguageNameField(row.curriculum)}}</td>
+                <td md-cell ng-if="formState.type === 'KASKKIRI_LOPET'">{{$root.currentLanguageNameField(row.curriculumVersion)}}</td>
                 <td md-cell ng-if="formState.type === 'KASKKIRI_LOPET'">{{::row.studentGroup}}</td>
               </tr>
             </tbody>

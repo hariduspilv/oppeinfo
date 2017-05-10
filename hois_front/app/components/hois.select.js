@@ -48,6 +48,8 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
           scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query();
         } else if(attrs.type === 'studyyear') {
           scope.options = QueryUtils.endpoint('/school/studyYears').query();
+        } else if(attrs.type === 'journal') {
+          scope.options = QueryUtils.endpoint('/autocomplete/journals').query();
         }
       } else if(angular.isDefined(scope.values)) {
         scope.$parent.$watchCollection(scope.values, function(values) {

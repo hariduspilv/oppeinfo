@@ -41,7 +41,7 @@
       </div>
     </div>
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-    <md-button ng-if="person.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-if="person.id" ng-click="delete(person)" class="md-raised">{{'main.button.delete' | translate}}</md-button>
     <md-button ng-click="personBack()" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </form>
   <div ng-if="person.id">
@@ -50,24 +50,7 @@
       <md-button class="md-primary" ng-if="person.id" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
     </div >
     <div layout="row">
-      <table md-table class="secondary-table">
-        <thead md-head>
-        <tr md-row>
-          <th ng-if="showSchool" md-column>{{'school.label' | translate}}</th>
-          <th md-column>{{'user.role' | translate}}</th>
-          <th md-column>{{'main.status' | translate}}</th>
-          <th md-column></th>
-        </tr>
-        </thead>
-        <tbody md-body>
-        <tr md-row ng-repeat="user in users | orderBy: orderValue" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td ng-if="showSchool" md-cell>{{currentLanguageNameField(user.school)}}</td>
-          <td md-cell>{{currentLanguageNameField(user.role)}}</td>
-          <td md-cell>{{user.valid ? 'main.valid' : 'main.invalid' | translate }}</td>
-          <td md-cell ><md-button class="md-primary change-button" ng-href="#/persons/{{::person.id}}/users/{{::user.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
-        </tr>
-        </tbody>
-      </table>
+      <div ng-include="'persons/users.table.html'" flex></div>
     </div>
   </div>
 </div>

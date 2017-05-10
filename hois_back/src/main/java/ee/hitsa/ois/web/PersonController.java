@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -79,19 +80,19 @@ public class PersonController {
     @PostMapping("/{person:\\d+}/users")
     public UserDto createUser(HoisUserDetails userDetails, @WithEntity("person") Person person, @Valid @RequestBody UserForm userForm) {
         if (!userDetails.isMainAdmin()) {
-            userForm.setSchool(userDetails.getSchoolId());
+            userForm.setSchool(new EntityConnectionCommand(userDetails.getSchoolId()));
         }
+        UserUtil.assertCanUpdateUser(userForm.getRole());
         return getUser(userDetails, person, personService.createUser(userForm, person));
     }
 
     @PutMapping("/{person:\\d+}/users/{id:\\d+}")
     public UserDto updateUser(HoisUserDetails userDetails, @WithEntity("person") Person person, @WithEntity("id") User user, @Valid @RequestBody UserForm userForm) {
-        if (!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson()))) {
-            throw new AssertionFailedException("Person and user don't match");
-        }
+        UserUtil.assertUserBelongsToPerson(user, person);
+        UserUtil.assertCanUpdateUser(userForm.getRole());
         if (!userDetails.isMainAdmin()) {
             UserUtil.assertSameSchool(userDetails, user.getSchool());
-            userForm.setSchool(EntityUtil.getId(user.getSchool()));
+            userForm.setSchool(new EntityConnectionCommand(EntityUtil.getId(user.getSchool())));
         }
         return getUser(userDetails, person, personService.saveUser(userForm, user));
     }
@@ -105,9 +106,8 @@ public class PersonController {
     //TODO: more permission checks
     @DeleteMapping("/{person:\\d+}/users/{id:\\d+}")
     public void deleteUser(@WithEntity("person") Person person, @WithEntity("id") User user) {
-        if (!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson()))) {
-            throw new AssertionFailedException("Person and user don't match");
-        }
+        UserUtil.assertUserBelongsToPerson(user, person);
+        UserUtil.assertCanUpdateUser(EntityUtil.getCode(user.getRole()));
         personService.deleteUser(user);
     }
 }

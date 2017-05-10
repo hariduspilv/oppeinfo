@@ -1,9 +1,12 @@
 package ee.hitsa.ois.web.commandobject.student;
 
+import java.time.LocalDate;
 import java.util.List;
 
+import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
+@DateRange
 public class StudentGroupSearchCommand {
 
     private String code;
@@ -13,9 +16,12 @@ public class StudentGroupSearchCommand {
     private List<String> studyForm;
     private EntityConnectionCommand teacher;
     private List<Long> teachers;
+    private LocalDate validFrom;
+    private LocalDate validThru;
+
     // for MessageController.getStudentGroups
     private Long teacherPerson;
-    
+
     public List<Long> getTeachers() {
         return teachers;
     }
@@ -70,6 +76,22 @@ public class StudentGroupSearchCommand {
 
     public void setTeacher(EntityConnectionCommand teacher) {
         this.teacher = teacher;
+    }
+
+    public LocalDate getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
+    }
+
+    public LocalDate getValidThru() {
+        return validThru;
+    }
+
+    public void setValidThru(LocalDate validThru) {
+        this.validThru = validThru;
     }
 
     public Long getTeacherPerson() {

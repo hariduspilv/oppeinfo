@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -21,14 +22,15 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.MessageType;
+import ee.hitsa.ois.message.StudentAbsenceCreated;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.StudentAbsenceRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -58,13 +60,13 @@ public class StudentService {
             "left outer join classifier study_form on s.study_form_code=study_form.code";
 
     @Autowired
-    private EntityManager em;
+    private AutomaticMessageService automaticMessageService;
     @Autowired
     private ApplicationRepository applicationRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private DirectiveRepository directiveRepository;
+    private EntityManager em;
     @Autowired
     private PersonRepository personRepository;
     @Autowired
@@ -139,11 +141,16 @@ public class StudentService {
         return studentAbsenceRepository.findAllByStudent_id(studentId, pageable).map(StudentAbsenceDto::of);
     }
 
-    public StudentAbsence create(Student student, StudentAbsenceForm form) {
+    public StudentAbsence create(HoisUserDetails user, Student student, StudentAbsenceForm form) {
         StudentAbsence absence = new StudentAbsence();
         absence.setStudent(student);
         absence.setIsAccepted(Boolean.FALSE);
-        return save(absence, form);
+        absence = save(absence, form);
+        if(user.isRepresentative()) {
+            // send message to school admins, if absence is created by parent/representative
+            automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_OP_PT, student.getSchool(), new StudentAbsenceCreated(absence));
+        }
+        return absence;
     }
 
     public StudentAbsence save(StudentAbsence absence, StudentAbsenceForm form) {
@@ -159,11 +166,21 @@ public class StudentService {
         return applicationRepository.findAllByStudent_id(studentId, pageable).map(StudentApplicationDto::of);
     }
 
-    public Page<StudentDirectiveDto> directives(HoisUserDetails user, Student student, Pageable pageable) {
-        boolean isAdmin = UserUtil.isSchoolAdmin(user, student.getSchool());
-        return directiveRepository.findAllByStudent_id(EntityUtil.getId(student), pageable).map(r -> {
-            StudentDirectiveDto dto = StudentDirectiveDto.of(r);
-            dto.setUserCanEdit(Boolean.valueOf(isAdmin && ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, r.getStatus())));
+    public Page<StudentDirectiveDto> directives(Student student, Pageable pageable) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive d").sort(pageable);
+
+        qb.requiredCriteria("d.id in (select ds.directive_id from directive_student ds where ds.student_id = :studentId)", "studentId", EntityUtil.getId(student));
+        qb.requiredCriteria("d.type_code <> :directiveType", "directiveType", DirectiveType.KASKKIRI_TYHIST);
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+
+        return JpaQueryUtil.pagingResult(qb, "d.id, d.headline, d.type_code, d.directive_nr, d.confirm_date, d.inserted_by", em, pageable).map(r -> {
+            StudentDirectiveDto dto = new StudentDirectiveDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setHeadline(resultAsString(r, 1));
+            dto.setType(resultAsString(r, 2));
+            dto.setDirectiveNr(resultAsString(r, 3));
+            dto.setConfirmDate(resultAsLocalDate(r, 4));
+            dto.setInsertedBy(resultAsString(r, 5));
             return dto;
         });
     }
@@ -175,5 +192,4 @@ public class StudentService {
                 m -> m.getSubjects().forEach(s -> subjects.add(AutocompleteResult.of(s.getSubject()))));
         return subjects;
     }
-
 }

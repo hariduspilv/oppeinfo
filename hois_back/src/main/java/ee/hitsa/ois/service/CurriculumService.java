@@ -479,6 +479,7 @@ public class CurriculumService {
                 CurriculumVersionHigherModule module = dto.getId() == null ? new CurriculumVersionHigherModule() :
                     version.getModules().stream().filter(m -> m.getId().equals(dto.getId())).findFirst().get();
                 module = EntityUtil.bindToEntity(dto, module, classifierRepository, "subjects", "electiveModules", "specialities");
+                module.setCurriculumVersion(version);
                 updateCurriculumVersionModuleSubjects(module, dto.getSubjects());
                 updateCurriculumVersionModuleElectiveModules(module, dto.getElectiveModules());
                 updateVersionModuleSpecialities(version, module, dto.getSpecialitiesReferenceNumbers());
@@ -623,6 +624,7 @@ public class CurriculumService {
                     module.getSubjects().stream().filter(s -> s.getId().equals(dto.getId())).findFirst().get();
                 subject = EntityUtil.bindToEntity(dto, subject, "nameEt", "nameEt", "credits", "school", "subjectId");
                 subject.setSubject(subjectRepository.getOne(dto.getSubjectId()));
+                subject.setModule(module);
                 newSubjects.add(subject);
             }
         }

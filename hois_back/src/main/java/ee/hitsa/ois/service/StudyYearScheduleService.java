@@ -79,7 +79,6 @@ public class StudyYearScheduleService {
               if(!CollectionUtils.isEmpty(schedulesCmd.getStudentGroups())) {
                   filters.add(root.get("studentGroup").get("id").in(schedulesCmd.getStudentGroups()));
               }
-            //FIXME: must be not in!!!
               if(!oldSchedulesDtosIds.isEmpty()) {
                   filters.add(cb.not(root.get("id").in(oldSchedulesDtosIds)));
               }
@@ -135,15 +134,14 @@ public class StudyYearScheduleService {
     }
 
     public List<StudentGroupSearchDto> getStudentGroups(Long schoolId) {
-        return studentGroupRepository.findAll((root, query, cb) -> {
-            return cb.equal(root.get("school").get("id"), schoolId);
-      }).stream().filter(sg -> !CollectionUtils.isEmpty(sg.getCurriculum().getDepartments())).map(sg -> {
-          StudentGroupSearchDto dto = new StudentGroupSearchDto();
-          dto.setId(sg.getId());
-          dto.setCode(sg.getCode());
-          dto.setSchoolDepartments(StreamUtil.toMappedList(d -> EntityUtil.getId(d.getSchoolDepartment()), sg.getCurriculum().getDepartments()));
-          return dto;
-      }).collect(Collectors.toList());
+        List<StudentGroup> data = studentGroupRepository.findAll((root, query, cb) -> cb.equal(root.get("school").get("id"), schoolId));
+        return StreamUtil.toMappedList(sg -> {
+            StudentGroupSearchDto dto = new StudentGroupSearchDto();
+            dto.setId(sg.getId());
+            dto.setCode(sg.getCode());
+            dto.setSchoolDepartments(StreamUtil.toMappedList(d -> EntityUtil.getId(d.getSchoolDepartment()), sg.getCurriculum().getDepartments()));
+            return dto;
+        }, data.stream().filter(sg -> !CollectionUtils.isEmpty(sg.getCurriculum().getDepartments())));
     }
 
     public List<StudyYearDto> getStudyYearsWithStudyPeriods(Long schoolId) {

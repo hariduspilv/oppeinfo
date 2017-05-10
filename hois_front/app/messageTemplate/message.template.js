@@ -13,6 +13,8 @@ angular.module('hitsaOis').controller('MessageTemplateListController', ['$scope'
 }]).controller('MessageTemplateEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils', 
   function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
 
+    $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
+
     $scope.getIsValid = function() {
         $scope.isValid = 
         ($scope.record.validFrom === undefined || $scope.record.validFrom === null || $scope.record.validFrom <= new Date()) &&

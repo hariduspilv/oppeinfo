@@ -4,6 +4,7 @@ public class TeacherSearchCommand {
 
     private String name;
     private String idcode;
+    private Boolean isHigher;
 
     private Long school;
 
@@ -29,5 +30,13 @@ public class TeacherSearchCommand {
 
     public void setSchool(Long school) {
         this.school = school;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 }

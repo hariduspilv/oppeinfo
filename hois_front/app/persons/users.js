@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('UsersEditController', ['$scope', '$location', '$route', 'dialogService', 'Classifier', 'DataUtils', 'message', 'QueryUtils', 'Session', function ($scope, $location, $route, dialogService, Classifier, DataUtils, message, QueryUtils, Session) {
+  .controller('UsersEditController', ['$scope', '$location', '$route', '$rootScope', 'dialogService', 'Classifier', 'DataUtils', 'message', 'QueryUtils', 'Session', function ($scope, $location, $route, $rootScope, dialogService, Classifier, DataUtils, message, QueryUtils, Session) {
     var id = $route.current.params.person;
     var code = $route.current.params.user;
 
@@ -23,7 +23,7 @@ angular.module('hitsaOis')
     function afterLoad() {
       DataUtils.convertStringToDates($scope.user, ['validFrom', 'validThru']);
       if ($scope.user.school) {
-        $scope.user.school = Session.school.id.toString();
+        $scope.user.school.id = Session.school.id.toString();
       }
       loadDefaults();
     }
@@ -88,7 +88,7 @@ angular.module('hitsaOis')
       dialogService.confirmDialog({prompt: 'user.deleteconfirm'}, function () {
         $scope.user.$delete().then(function () {
           message.info('main.messages.delete.success');
-          $location.path('/persons/' + id + '/edit');
+          $rootScope.back('#/persons/' + id);
         });
       });
     };
@@ -100,10 +100,30 @@ angular.module('hitsaOis')
           $scope.user.$update().then(message.updateSuccess);
         } else {
           $scope.user.$save().then(function (response) {
-            $location.path('/persons/' + response.person.id + '/users/' + response.id + '/edit');
+            $location.path('/persons/' + response.person.id + '/users/' + response.id + '/edit').search({_noback: ''});
             message.info('main.messages.create.success');
           });
         }
       }
     };
+  }])
+  .controller('UsersViewController', ['$scope', '$route', '$rootScope', 'DataUtils', 'dialogService', 'message', 'QueryUtils', function ($scope, $route, $rootScope, DataUtils, dialogService, message, QueryUtils) {
+    var id = $route.current.params.person;
+    var code = $route.current.params.user;
+    var Endpoint = QueryUtils.endpoint('/persons/'+id+'/users');
+
+    $scope.delete = function () {
+      dialogService.confirmDialog({prompt: 'user.deleteconfirm'}, function () {
+        $scope.user.$delete().then(function () {
+          message.info('main.messages.delete.success');
+          $rootScope.back('#/persons/' + id);
+        });
+      });
+    };
+
+    function afterLoad() {
+      DataUtils.convertStringToDates($scope.user, ['validFrom', 'validThru']);
+    }
+
+    $scope.user = Endpoint.get({id: code}, afterLoad);
   }]);

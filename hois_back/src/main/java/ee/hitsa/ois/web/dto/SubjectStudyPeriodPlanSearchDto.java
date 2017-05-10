@@ -2,7 +2,7 @@ package ee.hitsa.ois.web.dto;
 
 import java.util.Set;
 
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodPlan;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 

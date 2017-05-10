@@ -1,9 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.Map;
-import java.util.Set;
 
 import javax.validation.Valid;
 
@@ -11,7 +8,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -59,24 +55,17 @@ public class DirectiveController {
     @GetMapping("/{id:\\d+}/view")
     public DirectiveViewDto getForView(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertSameSchool(user, directive.getSchool());
-        // filter for visible students: for school admin none, for student only itself
-        Set<Long> filtered = null;
-        if(user.isStudent()) {
-            filtered = Collections.singleton(user.getStudentId());
-        } else if(user.isRepresentative()) {
-            // TODO for representative all represented students of same school
-        }
-        return DirectiveViewDto.of(directive, filtered);
+        return directiveService.getForView(user, directive);
     }
 
     @GetMapping("/{id:\\d+}")
     public DirectiveDto get(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
-        return DirectiveDto.of(directive);
+        return directiveService.get(directive);
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, ?>> create(HoisUserDetails user, @Valid @RequestBody DirectiveForm form) {
+    public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody DirectiveForm form) {
         UserUtil.assertIsSchoolAdmin(user);
         return HttpUtil.created(directiveService.create(user, form));
     }
@@ -131,7 +120,7 @@ public class DirectiveController {
     }
 
     @PostMapping("/coordinators")
-    public ResponseEntity<Map<String, ?>> createCoordinator(HoisUserDetails user, @Valid @RequestBody DirectiveCoordinatorForm form) {
+    public HttpUtil.CreatedResponse createCoordinator(HoisUserDetails user, @Valid @RequestBody DirectiveCoordinatorForm form) {
         return HttpUtil.created(directiveService.create(user, form));
     }
 

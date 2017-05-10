@@ -1,9 +1,15 @@
 package ee.hitsa.ois.domain.timetable;
 
+import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -25,6 +31,28 @@ public class Journal extends BaseEntityWithId {
     private Classifier groupProportion;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier status;
+    private LocalDate endDate;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_id", nullable = false, updatable = false)
+    private Set<JournalTeacher> journalTeachers = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_id", nullable = false, updatable = false)
+    private Set<JournalStudent> journalStudents = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_id", nullable = false, updatable = false)
+    private Set<JournalOmoduleTheme> journalOmoduleThemes = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_id", nullable = false, updatable = false)
+    private Set<JournalCapacity> journalCapacities = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_id", nullable = false, updatable = false)
+    private Set<JournalEntry> journalEntries = new HashSet<>();
+
 
     public School getSchool() {
         return school;
@@ -73,4 +101,53 @@ public class Journal extends BaseEntityWithId {
     public void setStatus(Classifier status) {
         this.status = status;
     }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public Set<JournalTeacher> getJournalTeachers() {
+        return journalTeachers;
+    }
+
+    public void setJournalTeachers(Set<JournalTeacher> journalTeachers) {
+        this.journalTeachers = journalTeachers;
+    }
+
+    public Set<JournalStudent> getJournalStudents() {
+        return journalStudents;
+    }
+
+    public void setJournalStudents(Set<JournalStudent> journalStudents) {
+        this.journalStudents = journalStudents;
+    }
+
+    public Set<JournalOmoduleTheme> getJournalOmoduleThemes() {
+        return journalOmoduleThemes;
+    }
+
+    public void setJournalOmoduleThemes(Set<JournalOmoduleTheme> journalOmoduleThemes) {
+        this.journalOmoduleThemes = journalOmoduleThemes;
+    }
+
+    public Set<JournalCapacity> getJournalCapacities() {
+        return journalCapacities;
+    }
+
+    public void setJournalCapacities(Set<JournalCapacity> journalCapacities) {
+        this.journalCapacities = journalCapacities;
+    }
+
+    public Set<JournalEntry> getJournalEntries() {
+        return journalEntries;
+    }
+
+    public void setJournalEntries(Set<JournalEntry> journalEntries) {
+        this.journalEntries = journalEntries;
+    }
+
 }

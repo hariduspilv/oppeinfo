@@ -1,0 +1,7 @@
+<div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'application.reason' | translate}}</label>
+      <hois-classifier-select ng-model="application.reason" model-value-attr="code"
+      required main-classifier-code="EKSMAT_POHJUS"></hois-classifier-select>
+    </md-input-container>
+</div>

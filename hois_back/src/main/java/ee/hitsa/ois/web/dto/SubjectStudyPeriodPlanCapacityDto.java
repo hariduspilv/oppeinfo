@@ -4,7 +4,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodPlanCapacity;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlanCapacity;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;

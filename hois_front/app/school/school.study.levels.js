@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('SchoolStudyLevelsController', ['$q', '$scope', '$rootScope','Classifier', 'QueryUtils', 'AUTH_EVENTS', 'message', function ($q, $scope, $rootScope, Classifier, QueryUtils, AUTH_EVENTS,message) {
-    $scope.studyLevelDefs = Classifier.queryForDropdown({mainClassCode: 'OPPEASTE'});
+    $scope.studyLevelDefs = Classifier.queryForDropdown({mainClassCode: 'OPPEASTE', order: 'code'});
     $scope.studyLevels = QueryUtils.endpoint('/school/studyLevels').search();
 
     $q.all([$scope.studyLevelDefs.$promise, $scope.studyLevels.$promise]).then(function() {

@@ -2,12 +2,13 @@ package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.Building;
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.SaisAdmission;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
+import ee.hitsa.ois.domain.sais.SaisAdmission;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
@@ -16,6 +17,7 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
+import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -116,6 +118,16 @@ public class AutocompleteResult extends EntityConnectionCommand {
 
     public static AutocompleteResult of(LessonTimeBuilding lessonTimeBuilding) {
         return of(lessonTimeBuilding.getBuilding());
+    }
+
+    public static AutocompleteResult of(CurriculumModule curriculumModule) {
+        return new AutocompleteResult(curriculumModule.getId(),
+                curriculumModule.getNameEt() + " - " + curriculumModule.getModule().getNameEt() + ", " + curriculumModule.getCurriculum().getCode(),
+                curriculumModule.getNameEn() + " - " + curriculumModule.getModule().getNameEn() + ", " + curriculumModule.getCurriculum().getCode());
+    }
+
+    public static AutocompleteResult of(Journal journal) {
+        return new AutocompleteResult(journal.getId(), journal.getNameEt(), journal.getNameEt());
     }
 
 

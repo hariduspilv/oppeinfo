@@ -9,15 +9,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.SaisAdmission;
+import ee.hitsa.ois.domain.sais.SaisAdmission;
 import ee.hitsa.ois.service.SaisAdmissionService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.SaisAdmissionSearchCommand;
-import ee.hitsa.ois.web.dto.SaisAdmissionDto;
-import ee.hitsa.ois.web.dto.SaisAdmissionSearchDto;
+import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionSearchCommand;
+import ee.hitsa.ois.web.dto.sais.SaisAdmissionDto;
+import ee.hitsa.ois.web.dto.sais.SaisAdmissionSearchDto;
 
 @RestController
 @RequestMapping("/saisAdmissions")

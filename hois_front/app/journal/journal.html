@@ -1,0 +1,128 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form name="journalForm" ng-submit="journalForm.$valid && loadData()" novalidate>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.studyYear' | translate}}</label>
+          <hois-classifier-value ng-model="journal.studyYear" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'main.status' | translate}}</label>
+          <hois-classifier-value ng-model="journal.status" main-classifier-code="PAEVIK_STAATUS"></hois-classifier-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.label' | translate}}</label>
+          <hois-value value="journal.nameEt"></hois-value>
+        </md-input-container>
+
+        <div ng-if="auth.isAdmin()" flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container style="margin-bottom:-10px">
+            <label class="textInput">{{'journal.endDate' | translate}}</label>
+            <md-datepicker ng-model="journal.endDate" md-hide-icons="calendar"></md-datepicker>
+          </md-input-container>
+          <md-button ng-click="saveEndDate()" class="md-raised">{{'journal.saveEndDate' | translate}}</md-button>
+        </div>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.studentGroups' | translate}}</label>
+          <hois-value value="journal.studentGroups.join(', ')"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.teachers' | translate}}</label>
+          <hois-value value="journal.journalTeachers.join(', ')"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.modules' | translate}}</label>
+          <hois-value value="showModuleNames(journal.curriculumModules)"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.plannedAndEnteredCapacities' | translate}}</label>
+          <hois-value value="journal.plannedHours + '/' + journal.usedHours"></hois-value>
+        </md-input-container>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div ng-if="hasStudents">
+  <div layout-padding>
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row flex>
+              <th md-column><span>{{'student.label' | translate}}</span></th>
+              <th md-column><span>{{'journal.studentGroup' | translate}}</span></th>
+              <th md-column><span>{{'curriculum.code' | translate}}</span></th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{row.fullname}}</td>
+              <td md-cell>{{row.studentGroup}}</td>
+              <td md-cell>{{row.curriculum}}</td>
+              <td md-cell>
+                <md-button ng-if="isDeletionAllowed" class="remove nomargin" ng-click="removeStudentFormJournal(row)">&times;</md-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </div>
+  </div>
+
+  <div layout-padding>
+    <div flex>
+      <div layout="row">
+        <md-button class="md-raised" ng-click="searchStudent()">{{'journal.searchForOtherStudent' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back('#/journals/', journalForm)" >{{'main.button.back' | translate}}</md-button>
+      </div>
+    </div>
+  </div>
+</div>
+<div ng-if="!hasStudents">
+  <div class="ois-form-layout" layout="column">
+    <div layout-padding>
+      <div flex>
+        <md-table-container>
+          <table md-table md-progress="tabledata.$promise" md-row-select multiple ng-model="selectedStudents">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row flex>
+                <th md-column><span>{{'student.label' | translate}}</span></th>
+                <th md-column><span>{{'journal.studentGroup' | translate}}</span></th>
+                <th md-column><span>{{'curriculum.code' | translate}}</span></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row md-select="row.studentId" md-auto-select ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{row.fullname}}</td>
+                <td md-cell>{{currentLanguageNameField(row.studentGroup)}}</td>
+                <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+        <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                      md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                      md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+
+        <div layout="row">
+          <md-button class="md-raised md-primary" ng-click="addSelectedStudents()">{{'journal.addSelectedStudents' | translate}}</md-button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>

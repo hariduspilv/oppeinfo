@@ -17,7 +17,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodPlan;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.web.dto.SubjectAutocompleteResult;
 
 @Entity

@@ -5,6 +5,10 @@ import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.NotEmpty;
+
 public class SubjectStudyPeriodForm  extends VersionedCommand {
 
     private List<SubjectStudyPeriodTeacherForm> teachers;
@@ -12,9 +16,27 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
     private Long studyPeriod;
     @NotNull
     private Long subject;
+    
+    private String addInfo;
+    private List<Long> studentGroups;
+    
+    @ClassifierRestriction(MainClassCode.DEKLARATSIOON)
+    private String declarationType;
+
+    @NotEmpty
+    @ClassifierRestriction(MainClassCode.PAEVIK_GRUPI_JAOTUS)
+    private String groupProportion;
 
     public List<SubjectStudyPeriodTeacherForm> getTeachers() {
         return teachers != null ? teachers : (teachers = new ArrayList<>());
+    }
+
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 
     public void setTeachers(List<SubjectStudyPeriodTeacherForm> teachers) {
@@ -35,5 +57,29 @@ public class SubjectStudyPeriodForm  extends VersionedCommand {
 
     public void setSubject(Long subject) {
         this.subject = subject;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+
+    public String getDeclarationType() {
+        return declarationType;
+    }
+
+    public void setDeclarationType(String declarationType) {
+        this.declarationType = declarationType;
+    }
+
+    public String getGroupProportion() {
+        return groupProportion;
+    }
+
+    public void setGroupProportion(String groupProportion) {
+        this.groupProportion = groupProportion;
     }
 }

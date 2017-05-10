@@ -1,5 +1,6 @@
 package ee.hitsa.ois.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -18,4 +19,7 @@ public interface StudyYearRepository extends JpaRepository<StudyYear, Long>, Jpa
             "where y.school_id = ?1 group by y.id) sy on c.code = sy.year_code " +
             "where c.main_class_code = 'OPPEAASTA' order by c.code desc", nativeQuery = true)
     List<Object[]> findStudyYearsBySchool(Long schoolId);
+
+    StudyYear findFirstBySchoolIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateDesc(Long schoolId, LocalDate start, LocalDate end);
+
 }

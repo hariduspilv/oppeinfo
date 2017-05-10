@@ -50,6 +50,20 @@ angular.module('hitsaOis')
             }
         }
         return false;
+      },
+      /**
+       * Finds common parts of two arrays!
+       * 
+       * Note, that arrays with repeating elements are not considered here
+       */
+      intersection : function(array1, array2) {
+        var commonPart = [];
+        for(var i = 0; i < array1.length; i++) {
+            if(this.includes(array2, array1[i])) {
+                commonPart.push(array1[i]);
+            }
+        }
+        return commonPart;
       }
     };
   });

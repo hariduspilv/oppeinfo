@@ -24,7 +24,7 @@ angular.module('hitsaOis').controller('BuildingEditController', ['dialogService'
       } else {
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
         });
       }
     };
@@ -33,7 +33,7 @@ angular.module('hitsaOis').controller('BuildingEditController', ['dialogService'
       dialogService.confirmDialog({prompt: 'building.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path('/rooms/search');
+          $location.url('/rooms/search');
         });
       });
     };

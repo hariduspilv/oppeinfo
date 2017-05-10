@@ -13,10 +13,27 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
      */
     private Long id;
     private List<SubjectStudyPeriodTeacherDto> teachers;
+    private List<SubjectStudyPeriodCapacityDto> capacities;
     private Long studyPeriod;
     private Long subject;
     private Long teacher;
+    private String addInfo;
+    private String declarationType;
+    private String groupProportion;
+    private List<Long> studentGroups;
 
+    public List<SubjectStudyPeriodCapacityDto> getCapacities() {
+        return capacities;
+    }
+    public void setCapacities(List<SubjectStudyPeriodCapacityDto> capacities) {
+        this.capacities = capacities;
+    }
+    public List<Long> getStudentGroups() {
+        return studentGroups;
+    }
+    public void setStudentGroups(List<Long> studentGroups) {
+        this.studentGroups = studentGroups;
+    }
     public Long getId() {
         return id;
     }
@@ -47,13 +64,37 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     public void setTeacher(Long teacher) {
         this.teacher = teacher;
     }
+    public String getAddInfo() {
+        return addInfo;
+    }
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+    public String getDeclarationType() {
+        return declarationType;
+    }
+    public void setDeclarationType(String declarationType) {
+        this.declarationType = declarationType;
+    }
+    public String getGroupProportion() {
+        return groupProportion;
+    }
+    public void setGroupProportion(String groupProportion) {
+        this.groupProportion = groupProportion;
+    }
     public static SubjectStudyPeriodDto of(SubjectStudyPeriod subjectStudyPeriod) {
         SubjectStudyPeriodDto dto = EntityUtil.bindToDto(subjectStudyPeriod, new SubjectStudyPeriodDto(), 
-                "studyPeriod", "teacher", "subjectStudyPeriodTeachers", "subject");
+                "studyPeriod", "teacher", "subjectStudyPeriodTeachers", "subject", "capacities");
         dto.setTeachers(StreamUtil.toMappedList(SubjectStudyPeriodTeacherDto::of, subjectStudyPeriod.getTeachers()));
         dto.setVersion(subjectStudyPeriod.getVersion());
         dto.setSubject(subjectStudyPeriod.getSubject().getId());
         dto.setStudyPeriod(subjectStudyPeriod.getStudyPeriod().getId());
+        dto.setAddInfo(subjectStudyPeriod.getAddInfo());
+        dto.setDeclarationType(EntityUtil.getNullableCode(subjectStudyPeriod.getDeclarationType()));
+        dto.setGroupProportion(EntityUtil.getNullableCode(subjectStudyPeriod.getGroupProportion()));
+        dto.setStudentGroups(StreamUtil.toMappedList(sg -> {
+            return EntityUtil.getId(sg.getStudentGroup());
+        }, subjectStudyPeriod.getStudentGroups()));
         return dto;
     }
 }

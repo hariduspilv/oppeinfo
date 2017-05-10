@@ -1,9 +1,13 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -17,6 +21,9 @@ import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.dto.UserProjection;
 
 @Transactional
 @Service
@@ -24,6 +31,8 @@ public class UserService {
 
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private EntityManager em;
     @Autowired
     private UserRepository userRepository;
 
@@ -46,6 +55,25 @@ public class UserService {
             filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
+    }
 
+
+    private static String ACTIVE_SELECT = "distinct u.id, s.code, u.role_code";
+    private static String ACTIVE_FROM = "from user_ u " +
+            "left outer join school s on u.school_id = s.id " +
+            "inner join user_rights r on u.id = r.user_id ";
+    public List<UserProjection> findAllActiveUsers(Long personId) {
+        LocalDate now = LocalDate.now();
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(ACTIVE_FROM);
+
+        qb.requiredCriteria("u.person_id = :personId", "personId", personId);
+        qb.requiredCriteria("u.valid_from <= :now", "now", now);
+        qb.requiredCriteria("coalesce(u.valid_thru, :now) >= :now", "now", now);
+
+        List<?> resultList = qb.select(ACTIVE_SELECT, em).getResultList();
+
+        return StreamUtil.toMappedList(r -> new UserProjection(
+                resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)
+        ), resultList);
     }
 }

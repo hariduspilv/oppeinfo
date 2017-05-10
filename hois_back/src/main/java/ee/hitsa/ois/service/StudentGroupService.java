@@ -90,6 +90,8 @@ public class StudentGroupService {
         qb.optionalCriteria("sg.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
         qb.optionalCriteria("sg.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeachers());
         qb.optionalCriteria("sg.teacher_id in (select t.id from teacher t where t.person_id = :teacherPerson and t.school_id = :schoolId)", "teacherPerson", criteria.getTeacherPerson());
+        qb.optionalCriteria("sg.valid_thru >= :validFrom", "validFrom", criteria.getValidFrom());
+        qb.optionalCriteria("sg.valid_from <= :validThru", "validThru", criteria.getValidThru());
 
         return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();

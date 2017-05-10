@@ -1,14 +1,14 @@
 <div layout="column" layout-padding>
     <form name="subjectStudyPeriodEditForm">
         <div layout="column">
-            <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!auth.school">
+            <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="45" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
                     <hois-select ng-model="record.studyPeriod" values="studyPeriods" disabled></hois-select>
                 </md-input-container>
                 <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'subjectStudyPeriod.nameCode' | translate}}</label>
-                    <hois-select ng-model="record.subject" values="subjects" disabled></hois-select>
+                    <hois-select ng-model="record.subject" values="subjects" ng-disabled="disableSubject"></hois-select>
                 </md-input-container>
             </div>
 
@@ -26,7 +26,7 @@
                 md-items="item in querySearch(queryText)"
                 md-item-text="item.nameEt"
                 md-min-length="3"
-                md-floating-label="{{'subjectStudyPeriodTeacher.teacher' | translate}}"
+                md-floating-label="{{'subjectStudyPeriodTeacher.teacher' | translate}} *"
                 ng-model="queryText"
                 md-no-cache
                 class="small-margin"
@@ -55,10 +55,29 @@
                     </tr>
                 </tbody>
             </table>
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'subjectStudyPeriod.otherStudentGroups' | translate}}</label>
+                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple></hois-select>
+                </md-input-container>
+                <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'subjectStudyPeriod.proportion' | translate}}</label>
+                    <hois-classifier-select ng-model="record.groupProportion" model-value-attr="code" main-classifier-code="PAEVIK_GRUPI_JAOTUS" required></hois-classifier-select>
+                </md-input-container>
+            </div>
+            <md-input-container flex>
+                <label>{{'subjectStudyPeriod.addInfo' | translate}}</label>
+                <textarea ng-model="record.addInfo" md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container flex>
+                <label>{{'subjectStudyPeriod.declaration' | translate}}</label>
+                <hois-classifier-select ng-model="record.declarationType" model-value-attr="code" main-classifier-code="DEKLARATSIOON"></hois-classifier-select>
+            </md-input-container>
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="/#/subjectStudyPeriods">{{'main.button.back' | translate}}</md-button>
+            <!--<md-button class="md-raised" ng-href="/#/subjectStudyPeriods">{{'main.button.back' | translate}}</md-button>-->
+            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods')">{{'main.button.back' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
         </div>
     </form>

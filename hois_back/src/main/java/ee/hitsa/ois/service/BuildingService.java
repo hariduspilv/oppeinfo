@@ -87,7 +87,7 @@ public class BuildingService {
         }, pageable, em);
 
         // load room equipment with single query
-        List<Long> roomIds = data.getContent().stream().filter(r -> r[1] != null).map(r -> ((Room)r[1]).getId()).collect(Collectors.toList());
+        List<Long> roomIds = StreamUtil.toMappedList(r -> ((Room)r[1]).getId(), data.getContent().stream().filter(r -> r[1] != null));
         Map<Long, List<RoomEquipment>> equipment = JpaQueryUtil.loadRelationChilds(RoomEquipment.class, roomIds, em, "room", "id").stream().collect(Collectors.groupingBy(re -> EntityUtil.getId(re.getRoom())));
 
         return data.map(r -> RoomSearchDto.of((Building)r[0], (Room)r[1], equipment.get(EntityUtil.getNullableId((Room)r[1]))));

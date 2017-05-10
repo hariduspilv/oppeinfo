@@ -37,17 +37,6 @@ angular.module('hitsaOis')
     });
 
     sections.push({
-        name: 'Õppeained',
-        type: 'toggle',
-        pages: [
-          {
-            name: 'main.menu.subjectStudyPeriods.plans',
-            url: "/subjectStudyPeriodPlans?_menu"
-          }
-        ]
-      });
-
-    sections.push({
         name: 'main.menu.directives.label',
         type: 'toggle',
         pages: [
@@ -178,6 +167,10 @@ angular.module('hitsaOis')
       type: 'toggle',
       pages: [
         {
+          name: 'main.menu.study.journal.search',
+          url: "/journals?_menu"
+        },
+        {
           name: 'main.menu.certificates.label',
           url: "/certificate?_menu"
         },
@@ -227,6 +220,14 @@ angular.module('hitsaOis')
           name: 'main.menu.lessonplan.label',
           id: 'timetableLessonPlanSearch',
           url: "/lessonplans/vocational?_menu"
+        },
+        {
+          name: 'main.menu.subjectStudyPeriods.plans',
+          url: "/subjectStudyPeriodPlans?_menu"
+        },
+        {
+          name: 'main.menu.subjectStudyPeriods.studentGroups',
+          url: "/subjectStudyPeriods/studentGroups?_menu"
         }
       ]
     });

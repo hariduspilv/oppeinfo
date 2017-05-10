@@ -101,10 +101,32 @@ public class SubjectStudyPeriodControllerTest {
         restTemplate.delete(uri);
     }
     
+    @Test
+    public void searchStudentGroups() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/studentGroups");
+        uriBuilder.queryParam("curriculum", "1");
+        uriBuilder.queryParam("department", "1");
+        uriBuilder.queryParam("studentGroupId", "1");
+        uriBuilder.queryParam("sort", "code,asc");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void curricula() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/curricula");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
     private static SubjectStudyPeriodForm getForm() {
         SubjectStudyPeriodForm form = new SubjectStudyPeriodForm();
         form.setStudyPeriod(Long.valueOf(4));
         form.setSubject(Long.valueOf(51));
+        form.setGroupProportion("PAEVIK_GRUPI_JAOTUS_1");
+        form.setDeclarationType("DEKLARATSIOON_LISA");
         
         SubjectStudyPeriodTeacherForm t1 = new SubjectStudyPeriodTeacherForm();
         t1.setTeacherId(Long.valueOf(8));

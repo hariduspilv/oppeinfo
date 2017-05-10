@@ -174,7 +174,7 @@
                             {{'curriculum.minorSpecialty.minorSpecialty' | translate}} {{module[currentLanguageNameField()]}} {{module.totalCredits}} EAP
                         </a>
                     </h1>
-                    <md-button class="remove nomargin" ng-click="removeFromArray(version.modules, module)" ng-if="!readOnly">&times;</md-button>
+                    <md-button class="remove nomargin" ng-click="removeModule(version.modules, module)" ng-if="!readOnly">&times;</md-button>
                 </div>
                 <h2>{{'subject.mandatory' | translate}}</h2>
                 <table md-table class="secondary-table">

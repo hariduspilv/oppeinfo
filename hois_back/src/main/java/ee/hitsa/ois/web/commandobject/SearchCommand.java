@@ -7,6 +7,7 @@ public abstract class SearchCommand {
     private Language lang = Language.ET;
     private String code;
     private String name;
+    private Long id;
 
     public String getCode() {
         return code;
@@ -30,6 +31,14 @@ public abstract class SearchCommand {
 
     public void setLang(Language lang) {
         this.lang = lang;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
 }

@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.repository.UserRepository;
+import ee.hitsa.ois.service.UserService;
 import ee.hitsa.ois.service.security.AuthenticatedUser;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
@@ -28,11 +29,13 @@ public class AuthenticationController {
 
     private final UserRepository userRepository;
     private final HoisUserDetailsService userDetailsService;
+    private final UserService userService;
 
     @Autowired
-    public AuthenticationController(UserRepository userRepository, HoisUserDetailsService userDetailsService) {
+    public AuthenticationController(UserRepository userRepository, HoisUserDetailsService userDetailsService, UserService userService) {
         this.userRepository = userRepository;
         this.userDetailsService = userDetailsService;
+        this.userService = userService;
     }
 
     @RequestMapping("/user")
@@ -42,7 +45,7 @@ public class AuthenticationController {
             HoisUserDetails userDetails = HoisUserDetails.fromPrincipal(principal);
             User user = userRepository.getOne(userDetails.getUserId());
             AuthenticatedUser authenticatedUser = new AuthenticatedUser(user);
-            List<UserProjection> users = userRepository.findDistinctByPerson_IdAndUserRightsIsNotNull(user.getPerson().getId());
+            List<UserProjection> users = userService.findAllActiveUsers(user.getPerson().getId());
 
             authenticatedUser.setSchool(user.getSchool());
             authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());

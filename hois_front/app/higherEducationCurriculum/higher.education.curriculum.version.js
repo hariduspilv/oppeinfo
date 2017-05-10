@@ -3,7 +3,6 @@
 angular.module('hitsaOis')
   .controller('HigherEducationCurriculumVersionController', function ($scope, Classifier, Curriculum, Session, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, $translate, DataUtils, $rootScope, $routeParams) {
 
-    $scope.removeFromArray = ArrayUtils.remove;
     var baseUrl = '/curriculum';
     $scope.curriculum = $route.current.locals.curriculum;
     $scope.myEhisSchool = $rootScope.currentUser.school ? $rootScope.currentUser.school.ehisSchool : null;
@@ -18,6 +17,14 @@ angular.module('hitsaOis')
         code: $scope.curriculum.code + "/" + new Date().getFullYear(),
         curriculum: $scope.curriculum.id,
         modules: []
+    };
+
+    $scope.removeFromArray = ArrayUtils.remove;
+
+    $scope.removeModule = function(versionModules, deletedModule){
+        dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
+            ArrayUtils.remove(versionModules, deletedModule);
+        });
     };
 
     if (angular.isDefined($route.current.params.versionId)) {
@@ -230,8 +237,10 @@ angular.module('hitsaOis')
     // modules and specialities
 
     $scope.removeModuleFromSpeciality = function (module1, speciality) {
-        $scope.removeFromArray(module1.specialitiesReferenceNumbers, speciality.referenceNumber);
-        deleteModulesWithNoSpeciality($scope.version);
+        dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
+            $scope.removeFromArray(module1.specialitiesReferenceNumbers, speciality.referenceNumber);
+            deleteModulesWithNoSpeciality($scope.version);
+        });
     };
 
     function deleteModulesWithNoSpeciality(version) {
@@ -273,11 +282,13 @@ angular.module('hitsaOis')
 
     // subjects
     $scope.deleteSubject = function(module1, subject) {
-        $scope.removeFromArray(module1.subjects, subject);
-        module1.electiveModules.forEach(function(em){
-            $scope.removeFromArray(em.subjects, subject.subjectId);
+        dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
+            $scope.removeFromArray(module1.subjects, subject);
+            module1.electiveModules.forEach(function(em){
+                $scope.removeFromArray(em.subjects, subject.subjectId);
+            });
+            $scope.setCompulsoryAndTotalStudyCredits(module1);
         });
-        $scope.setCompulsoryAndTotalStudyCredits(module1);
     };
 
     $scope.setCompulsoryAndTotalStudyCredits = function(module1) {

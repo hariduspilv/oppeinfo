@@ -22,7 +22,6 @@ public class TeacherForm extends VersionedCommand {
     @NotNull
     private TeacherPersonForm person;
 
-    @NotEmpty
     private Set<TeacherPositionEhisForm> teacherPositionEhis;
 
     private Boolean isVocational = Boolean.FALSE;

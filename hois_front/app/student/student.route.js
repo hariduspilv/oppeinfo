@@ -8,21 +8,37 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       templateUrl: 'student/view.main.html',
       controller: 'StudentViewMainController',
       controllerAs: 'controller',
-      data: authorizedRoles
+      data: authorizedRoles,
+      resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
     }).when('/students/:id/documents', {
       templateUrl: 'student/view.documents.html',
       controller: 'StudentViewDocumentsController',
       controllerAs: 'controller',
-      data: authorizedRoles
+      data: authorizedRoles,
+      resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
     }).when('/students/:id/edit', {
       templateUrl: 'student/edit.main.html',
       controller: 'StudentEditController',
       controllerAs: 'controller',
-      data: authorizedRoles
+      data: authorizedRoles,
+      resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
     }).when('/students/:id/absences', {
       templateUrl: 'student/view.absences.html',
       controller: 'StudentAbsencesController',
       controllerAs: 'controller',
-      data: authorizedRoles
+      data: authorizedRoles,
+      resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
     });
 });

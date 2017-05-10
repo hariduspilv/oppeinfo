@@ -7,6 +7,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   $scope.removeFromArray = ArrayUtils.remove;
   $scope.auth = $route.current.locals.auth;
   $scope.isCreate = $route.current.locals.isCreate;
+  $scope.isView = $route.current.locals.isView;
   $scope.now = new Date();
 
   function entityToForm(savedApplication) {
@@ -31,6 +32,15 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
     entityToForm(entity);
+  }
+
+  if (angular.isDefined($route.current.params.student) && angular.isDefined($route.current.params.type)) {
+    $scope.application.type = $route.current.params.type;
+    QueryUtils.endpoint('/autocomplete/students?id=' + $route.current.params.student).get({}, function(result) {
+      if (result && result.totalElements === 1) {
+        $scope.application.student = result.content[0];
+      }
+    });
   }
 
 
@@ -61,14 +71,18 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
 
   function applicationFinm(student, loadFormDeferred) {
-    $scope.application.oldFin = student.fin;
-    $scope.application.oldFinSpecific = student.finSpecific;
+    if ($scope.isCreate === true) {
+      $scope.application.oldFin = student.fin;
+      $scope.application.oldFinSpecific = student.finSpecific;
+    }
     $scope.application.newFin = student.fin === "FINALLIKAS_RE" ? "FINALLIKAS_REV" : "FINALLIKAS_RE";
     loadFormDeferred.resolve();
   }
 
   function applicationOvorm(student, loadFormDeferred) {
-    $scope.application.oldStudyForm = student.studyForm;
+    if ($scope.isCreate === true) {
+      $scope.application.oldStudyForm = student.studyForm;
+    }
     loadFormDeferred.resolve();
   }
 
@@ -80,8 +94,11 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       $scope.curriculumVersions = allCurriculumVersions.filter(function(it) { return it.id !== student.curriculumVersion.id;});
       loadFormDeferred.resolve();
     });
-    $scope.application.oldStudyForm = student.studyForm;
-    $scope.application.oldCurriculumVersion = student.curriculumVersion;
+    if ($scope.isCreate === true) {
+      $scope.application.oldStudyForm = student.studyForm;
+      $scope.application.oldCurriculumVersion = student.curriculumVersion;
+    }
+
 
     $scope.newCurriculumVersionSelected = function() {
       var curriculumVersions = allCurriculumVersions.filter(function(it) { return it.id === $scope.application.newCurriculumVersion.id;});
@@ -221,6 +238,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
 
     loadFormDeferred.promise.then(function() {
       $scope.applicationEditView = true;
+      var type = $scope.application.type.substring($scope.application.type.lastIndexOf('_') + 1).toLowerCase();
+      $scope.templateUrlByType = 'application/templates/application.type.' + type + "." + ($scope.isView === true ? 'view' : 'edit') + ".html";
     }, function(rejectMessage) {
       message.error(rejectMessage);
       $scope.applicationEditView = false;

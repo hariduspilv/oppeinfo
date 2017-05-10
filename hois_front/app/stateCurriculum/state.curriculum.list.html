@@ -77,7 +77,7 @@
         <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
         <td md-cell="status">{{currentLanguageNameField(row.status)}}</td>
         <td md-cell>
-            <md-button md-no-ink class="md-primary change-button"  ng-href="#/stateCurriculum/{{row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            <md-button md-no-ink class="md-primary change-button"  ng-href="#/stateCurriculum/{{row.id}}/edit" ng-if="row.status.code !== 'OPPEKAVA_STAATUS_C'">{{'main.button.change' | translate}}</md-button>
         </td>
     </tr>
     </tbody>

@@ -3,6 +3,7 @@ package ee.hitsa.ois.domain.curriculum;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -13,6 +14,10 @@ import ee.hitsa.ois.domain.subject.Subject;
 @Entity
 @Table(name="curriculum_version_hmodule_subject")
 public class CurriculumVersionHigherModuleSubject extends BaseEntityWithId {
+    
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name="curriculum_version_hmodule_id",  nullable = false, updatable = false)
+    private CurriculumVersionHigherModule module;
     
     @NotNull
     @Column(name="is_optional")
@@ -35,5 +40,13 @@ public class CurriculumVersionHigherModuleSubject extends BaseEntityWithId {
 
     public void setSubject(Subject subject) {
         this.subject = subject;
+    }
+
+    public CurriculumVersionHigherModule getModule() {
+        return module;
+    }
+
+    public void setModule(CurriculumVersionHigherModule module) {
+        this.module = module;
     }
 }

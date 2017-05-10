@@ -159,7 +159,7 @@ public class SubjectService {
                 Root<CurriculumVersion> curriculumVersionRoot = curriculaQuery.from(CurriculumVersion.class);
                 curriculaQuery = curriculaQuery
                         .select(curriculumVersionRoot.join("modules").join("subjects").get("subject").get("id"))
-                        .where(curriculumVersionRoot.get("id").in(curricula));
+                        .where(curriculumVersionRoot.get("curriculum").get("id").in(curricula));
                 filters.add(root.get("id").in(curriculaQuery));
             }
 

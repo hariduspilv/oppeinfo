@@ -1,0 +1,83 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.studyYear' | translate}}</label>
+          <hois-select ng-model="criteria.studyYear" type="studyyear" required autofocus></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.studentGroup' | translate}}</label>
+          <hois-select ng-model="criteria.studentGroup" type="studentgroup"></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container ng-if="!auth.isTeacher()" flex="45" flex-sm="100" flex-xs="100">
+          <hois-autocomplete label="teacher.label" ng-model="search.teacher" method="teachers"></hois-autocomplete>
+        </md-input-container>
+
+        <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <hois-autocomplete label="module.label" ng-model="search.module" method="vocationalmodules" multiple></hois-autocomplete>
+        </div>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.label' | translate}}</label>
+          <hois-select ng-model="criteria.journal" type="journal"></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.status' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.status" main-classifier-code="PAEVIK_STAATUS" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        <md-button ng-if="!auth.isTeacher()" class="md-raised">{{'journal.confirmAllJournals' | translate}}</md-button>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column>{{'journal.studentGroups' | translate}}</th>
+            <th md-column>{{'journal.label' | translate}}</th>
+            <th md-column>{{'journal.teachers' | translate}}</th>
+            <th md-column>{{'journal.modules' | translate}}</th>
+            <th md-column>{{'journal.plannedAndEnteredCapacities' | translate}}</th>
+            <th md-column>{{'main.status' | translate}}</th>
+            <th md-column>{{'curriculum.code' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{row.studentGroups.join(", ")}}</td>
+            <td md-cell>{{row.nameEt}}</td>
+            <td md-cell>{{row.teachers.join(", ")}}</td>
+            <td md-cell>{{showModuleNames(row.modules)}}</td>
+            <td md-cell>{{row.plannedHours}}/{{row.usedHours}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{row.curriculums.join(", ")}}</td>
+            <td md-cell>
+              <md-button ng-if="row.status.code === 'PAEVIK_STAATUS_T' || (row.status.code === 'PAEVIK_STAATUS_K' && auth.isAdmin())" md-no-ink class="md-primary change-button" ng-href="#/journal/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

@@ -17,6 +17,9 @@ public class UserDto extends UserForm {
     public static UserDto of(User user, Collection<Classifier> allByMainClassCode) {
         UserDto dto = EntityUtil.bindToDto(user, new UserDto());
         dto.person = EntityUtil.bindToDto(user.getPerson(), new PersonMinDto());
+        if (user.getSchool() != null) {
+            dto.setSchool(AutocompleteResult.of(user.getSchool()));
+        }
         if (allByMainClassCode != null) {
             dto.setRights(StreamUtil.toMappedSet(it -> {
                 UserRight userRight = new UserRight();

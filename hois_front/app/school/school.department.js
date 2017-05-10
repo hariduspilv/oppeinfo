@@ -31,7 +31,7 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$locat
       } else {
         $scope.schoolDepartment.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.schoolDepartment.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.schoolDepartment.id + '/edit');
         });
       }
     };
@@ -40,7 +40,7 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$locat
       dialogService.confirmDialog({prompt: 'school.department.deleteconfirm'}, function() {
         $scope.schoolDepartment.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path('/school/departments');
+          $location.url('/school/departments');
         });
       });
     };

@@ -13,16 +13,16 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.SaisApplication;
+import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.service.SaisApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
-import ee.hitsa.ois.web.commandobject.SaisApplicationImportCsvCommand;
-import ee.hitsa.ois.web.commandobject.SaisApplicationSearchCommand;
-import ee.hitsa.ois.web.dto.SaisApplicationDto;
-import ee.hitsa.ois.web.dto.SaisApplicationImportResultDto;
-import ee.hitsa.ois.web.dto.SaisApplicationSearchDto;
+import ee.hitsa.ois.web.commandobject.sais.SaisApplicationImportCsvCommand;
+import ee.hitsa.ois.web.commandobject.sais.SaisApplicationSearchCommand;
+import ee.hitsa.ois.web.dto.sais.SaisApplicationDto;
+import ee.hitsa.ois.web.dto.sais.SaisApplicationImportResultDto;
+import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 
 @RestController
 @RequestMapping("/saisApplications")

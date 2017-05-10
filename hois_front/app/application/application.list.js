@@ -1,6 +1,5 @@
 'use strict';
 
-
 angular.module('hitsaOis').controller('ApplicationListController', function ($scope, $route, $q, QueryUtils, Classifier, DataUtils) {
   $scope.auth = $route.current.locals.auth;
   var clMapper = Classifier.valuemapper({type: 'AVALDUS_LIIK', status: 'AVALDUS_STAATUS'});
@@ -9,5 +8,4 @@ angular.module('hitsaOis').controller('ApplicationListController', function ($sc
   $q.all(clMapper.promises).then(function() {
     $scope.loadData();
   });
-  DataUtils.convertStringToDates($scope.criteria, ['insertedFrom', 'insertedThru', 'submittedFrom', 'submittedThru']);
 });

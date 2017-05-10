@@ -15,7 +15,7 @@
           <span flex></span>
           <md-input-container>
             <label>{{'stateCurriculum.enter.module.occupation' | translate}}</label>
-            <md-select ng-model="data.moduleOccupations" multiple="true" required  ng-disabled="readOnly">
+            <md-select ng-model="data.moduleOccupations" multiple="true" required  ng-disabled="readOnly" ng-change="validateOccupations()">
                 <!--TODO: find better solution-->
                 <md-option ng-value="option" ng-repeat="option in occupations | filter: filterOccupations('KUTSE')">
                     <hois-classifier-value ng-model="option" main-classifier-code="KUTSE"></hois-classifier-value>
@@ -28,6 +28,23 @@
                 </md-option>
             </md-select>
           </md-input-container>
+
+        <p class="invalid" ng-show="dialogForm.$submitted && !occupationsValid">
+            {{'stateCurriculum.error.specialtiesInvalid' | translate}}
+        </p>
+        <br>
+        <md-input-container hide>
+            <input ng-model="occupationsValid" type="text" required>
+        </md-input-container>
+
+        <p class="invalid" ng-show="dialogForm.$submitted && !suboccupationsValid">
+            {{'stateCurriculum.error.partAndSpecOccupationsInvalid' | translate}}
+        </p>
+        <br>
+        <md-input-container hide>
+            <input ng-model="suboccupationsValid" type="text" required>
+        </md-input-container>
+
           <md-input-container>
             <label>{{'stateCurriculum.enter.module.type' | translate}}</label>
             <hois-classifier-select ng-model="data.module" main-classifier-code="KUTSEMOODUL"
@@ -43,7 +60,7 @@
           </md-input-container>
           <md-input-container  flex>
             <label>{{'stateCurriculum.enter.module.credits' | translate}}</label>
-            <input ng-model="data.credits" type="number" min="0" max="999" required name="credits" ng-readonly="readOnly">
+            <input ng-model="data.credits" type="number" min="0" max="999" required name="credits" ng-readonly="readOnly" pattern="^\d+(\.\d{1})?$">
               <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
                   <div ng-message="min">
                     {{'stateCurriculum.enter.credits.positive' | translate}}
@@ -51,6 +68,9 @@
                   <div ng-message="max">
                     {{'stateCurriculum.enter.credits.max' | translate}}
                   </div>
+                   <div ng-message="pattern">
+					{{'stateCurriculum.error.decimalPresision' | translate}}
+				   </div>
               </div>
           </md-input-container>
           <md-input-container  flex>

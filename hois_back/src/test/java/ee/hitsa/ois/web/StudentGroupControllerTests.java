@@ -48,6 +48,8 @@ public class StudentGroupControllerTests {
         uriBuilder.queryParam("curriculumVersion", "1", "2", "3");
         uriBuilder.queryParam("studyForm", "OPPEVORM_P", "OPPEVORM_K");
         uriBuilder.queryParam("teacher.id", "1");
+        uriBuilder.queryParam("validFrom", "2016-12-31T22:00:00.000Z");
+        uriBuilder.queryParam("validThru", "2017-01-31T22:00:00.000Z");
         url = uriBuilder.build().toUriString();
         responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertNotNull(responseEntity);

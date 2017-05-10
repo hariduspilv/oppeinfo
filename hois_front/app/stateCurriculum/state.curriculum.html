@@ -53,9 +53,6 @@
 					  <div ng-message="pattern">
 						{{'stateCurriculum.enter.credits.integer' | translate}}
 					  </div>
-					  <div ng-message="wrongCredits">
-						Wrong number of credits!
-					  </div>
 				  </div>
 				</md-input-container>
 				<md-input-container flex="20"flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -255,7 +252,7 @@
 				<div layout="row">
 				<md-input-container>
 				  <label>{{'stateCurriculum.enter.module.modules3' | translate}}</label>
-				  <input type="number" name="optionalCredits" ng-model="stateCurriculum.optionalStudyCredits" pattern="^\d+$" required aria-label="optional credits" class="shiftDown1" min="0" max="999" ng-readonly="readOnly">
+				  <input type="number" name="optionalCredits" ng-model="stateCurriculum.optionalStudyCredits" pattern="^\d+(\.\d{1})?$" required aria-label="optional credits" class="shiftDown1" min="0" max="999" ng-readonly="readOnly">
                   <div ng-messages="stateCurriculumForm.optionalCredits.$error" ng-show="stateCurriculumForm.optionalCredits.$dirty">
 					  <div ng-message="min">
 						{{'stateCurriculum.enter.credits.positive' | translate}}
@@ -264,7 +261,7 @@
 						{{'stateCurriculum.enter.credits.max' | translate}}
 					  </div>
                       <div ng-message="pattern">
-						{{'stateCurriculum.enter.credits.integer' | translate}}
+						{{'stateCurriculum.error.decimalPresision' | translate}}
 					  </div>
 				  </div>
 				</md-input-container>
@@ -319,14 +316,20 @@
             <hois-created-modified object="stateCurriculum"></hois-created-modified>
         </form>
         <div layout="row">
-            <md-button ng-click="save()" ng-if="!isViewPage && currentStatus !== 'OPPEKAVA_STAATUS_C'"
+            <md-button ng-if="readOnly && (stateCurriculum.status === 'OPPEKAVA_STAATUS_S' || stateCurriculum.status === 'OPPEKAVA_STAATUS_K')"
+            ng-href="#/stateCurriculum/{{stateCurriculum.id}}/edit?_noback"
+                 class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+            <md-button ng-click="save()" ng-if="!readOnly && currentStatus !== 'OPPEKAVA_STAATUS_C'"
                  class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-			<div ng-if="stateCurriculum.id && !isViewPage && currentStatus !== 'OPPEKAVA_STAATUS_C'" ng-repeat="status in statuses | filter: filterStatusChangeOptions" >
-				<md-button class="md-raised md-default" ng-click="setStatus(status)">{{status.button | translate}}</md-button>
-            </div>
-            <md-button ng-if="!isViewPage && stateCurriculum.status === 'OPPEKAVA_STAATUS_C' && currentStatus !== 'OPPEKAVA_STAATUS_C'" class="md-raised md-default" ng-click="setStatus(statuses[1])">{{statuses[1].button | translate}}</md-button>
+
+            <md-button ng-if="!readOnly && stateCurriculum.id && stateCurriculum.status === 'OPPEKAVA_STAATUS_S'" 
+            class="md-raised md-default" ng-click="confirmCurriculum()">{{'stateCurriculum.statusButton.confirm' | translate}}</md-button>
+            <md-button ng-if="!readOnly && stateCurriculum.id && (stateCurriculum.status === 'OPPEKAVA_STAATUS_K' || stateCurriculum.status === 'OPPEKAVA_STAATUS_S')" 
+            class="md-raised md-default" class="md-raised md-default" ng-click="closeCurriculum()">{{'stateCurriculum.statusButton.close' | translate}}</md-button>
+
             <md-button ng-click="delete()"
-               ng-if="stateCurriculum.id && !isViewPage && currentStatus !== 'OPPEKAVA_STAATUS_C'" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+               ng-if="stateCurriculum.id && stateCurriculum.status === 'OPPEKAVA_STAATUS_S' && !readOnly" class="md-raised">
+               {{'main.button.delete' | translate}}</md-button>
             <md-button ng-click="back('#/stateCurriculum', stateCurriculumForm)"
                  class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>

@@ -72,7 +72,7 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
       } else {
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
         });
       }
     };
@@ -81,7 +81,7 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
       dialogService.confirmDialog({prompt: 'room.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path('/rooms/search');
+          $location.url('/rooms/search');
         });
       });
     };

@@ -12,6 +12,8 @@ import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -27,12 +29,15 @@ import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.CurriculumModuleRepository;
+import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -45,6 +50,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
+import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
@@ -73,6 +79,11 @@ public class AutocompleteService {
     private StudyPeriodRepository studyPeriodRepository;
     @Autowired
     private SaisAdmissionRepository saisAdmissionRepository;
+    @Autowired
+    private CurriculumModuleRepository curriculumModuleRepository;
+    @Autowired
+    private JournalRepository journalRepository;
+
 
     public List<AutocompleteResult> buildings(Long schoolId) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from building b");
@@ -198,6 +209,7 @@ public class AutocompleteService {
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", lookup.getName());
+        qb.optionalCriteria("s.id = :studentId", "studentId", lookup.getId());
 
         List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
         return StreamUtil.toMappedList(r -> {
@@ -228,9 +240,11 @@ public class AutocompleteService {
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, sortAndLimit("person.lastname", "person.firstname")).map(AutocompleteResult::of);
     }
-
-    public List<AutocompleteResult> studyPeriods(Long schoolId) {
-        return StreamUtil.toMappedList(AutocompleteResult::of, studyPeriodRepository.findAll((root, query, cb) -> {
+    /**
+     * startDate and endDate required to get current studyPeriod in front end
+     */
+    public List<StudyPeriodDto> studyPeriods(Long schoolId) {
+        return StreamUtil.toMappedList(StudyPeriodDto::of, studyPeriodRepository.findAll((root, query, cb) -> {
             return cb.equal(root.get("studyYear").get("school").get("id"), schoolId);
         }));
     }
@@ -240,7 +254,32 @@ public class AutocompleteService {
                 saisAdmissionRepository.findAllDistinctCodeByCurriculumVersionCurriculumSchoolId(schoolId));
     }
 
+    public Page<AutocompleteResult> vocationalModules(Long schoolId, AutocompleteCommand lookup) {
+        String nameField = Language.EN.equals(lookup.getLang()) ? "nameEn" : "nameEt";
+        return curriculumModuleRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("curriculum").get("school").get("id"), schoolId));
+            cb.lessThan(cb.substring(root.get("curriculum").get("origStudyLevel").get("value"), 0, 1), "5");
+            propertyContains(() -> root.get(nameField), cb, lookup.getName(), filters::add);
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }, sortAndLimit(nameField)).map(AutocompleteResult::of);
+    }
+
+    public List<AutocompleteResult> journals(Long schoolId, HoisUserDetails user) {
+        return StreamUtil.toMappedList(AutocompleteResult::of, journalRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+            if (user.isTeacher()) {
+                Join<Object, Object> join = root.join("journalTeachers", JoinType.INNER);
+                filters.add(cb.equal(join.get("id"), user.getUserId()));
+            }
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }));
+    }
+
     private static PageRequest sortAndLimit(String... sortFields) {
         return new PageRequest(0, MAX_ITEM_COUNT, new Sort(sortFields));
     }
+
+
 }

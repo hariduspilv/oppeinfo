@@ -1,5 +1,5 @@
 <md-table-container>
-  <table md-table>
+  <table md-table md-row-select="formState.cancelSelect" multiple ng-model="formState.selectedStudents">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
@@ -7,16 +7,16 @@
         <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
         <th md-column>{{'directive.student.studyLoad' | translate}}</th>
         <th md-column>{{'directive.student.studyForm' | translate}}</th>
+        <th md-column>{{'directive.student.nominalStudyEnd' | translate}}</th>
         <th md-column>{{'directive.student.fin' | translate}}</th>
         <th md-column>{{'directive.student.finSpecific' | translate}}</th>
         <th md-column>{{'directive.student.language' | translate}}</th>
         <th md-column>{{'directive.student.studentGroup' | translate}}</th>
         <th md-column>{{'directive.student.previousStudyLevel' | translate}}</th>
-        <th md-column>{{'directive.student.schoolEmail' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell ng-if="row.student">
           <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</md-button>
         </td>
@@ -28,6 +28,9 @@
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+        </td>
+        <td md-cell>
+          <hois-value value="'main.formattedDate' | translate: {date: row.nominalStudyEnd}"></hois-value>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.fin" main-classifier-code="FINALLIKAS"></hois-classifier-value>
@@ -42,7 +45,6 @@
         <td md-cell>
           <hois-classifier-value ng-model="row.previousStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
         </td>
-        <td md-cell>{{::row.email}}</td>
       </tr>
     </tbody>
   </table>

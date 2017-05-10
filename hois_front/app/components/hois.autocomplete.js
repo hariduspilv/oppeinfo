@@ -21,11 +21,14 @@ angular.module('hitsaOis')
         multiple: '@',
         required: '=', // todo add chip visuals
         mdSelectedItemChange: '&?',
-        readonly: '='
+        readonly: '=',
+        additionalQueryParams: '=',
+        url: '@'    // this allows to search from different controllers, not only AutocompleteController
       },
       link: {
         post: function(scope, element, attrs) {
-          var lookup = QueryUtils.endpoint('/autocomplete/'+scope.method);
+          var url =  scope.url ? scope.url : '/autocomplete/' + scope.method;
+          var lookup = QueryUtils.endpoint(url);
 
           if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngModel)) {
             scope.ngModel = [];
@@ -54,10 +57,14 @@ angular.module('hitsaOis')
 
           scope.search = function (text) {
             var deferred = $q.defer();
-            lookup.search({
+            var query = {
               lang: $translate.use().toUpperCase(),
               name: text
-            }, function (data) {
+            };
+            if(scope.additionalQueryParams) {
+                angular.extend(query, scope.additionalQueryParams);
+            }
+            lookup.search(query, function (data) {
               deferred.$$resolve(data.content);
             });
             return deferred.promise;

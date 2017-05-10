@@ -1,0 +1,10 @@
+<div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'application.reason' | translate}}</label>
+      <hois-classifier-value ng-model="application.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+    </md-input-container>
+</div>
+<div layout="row" layout-sm="column" layout-xs="column">
+  <div flex="60" flex-sm="100" flex-xs="100" ng-include="'application/templates/period.view.html'"
+    ng-init="labelStart='application.academicLeaveStart';labelEnd='application.academicLeaveEnd'"></div>
+</div>

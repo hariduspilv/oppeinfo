@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -16,6 +17,7 @@ public class CurriculumSearchDto {
     private String status;
     private String origStudyLevel;
     private AutocompleteResult school;
+    private List<Long> departments;
 
     public CurriculumSearchDto() {
     }
@@ -33,6 +35,14 @@ public class CurriculumSearchDto {
         this.status = status;
         this.origStudyLevel = origStudyLevel;
         this.school = new AutocompleteResult(schoolId, schoolNameEt, schoolNameEn);
+    }
+
+    public List<Long> getDepartments() {
+        return departments;
+    }
+
+    public void setDepartments(List<Long> departments) {
+        this.departments = departments;
     }
 
     public Long getId() {

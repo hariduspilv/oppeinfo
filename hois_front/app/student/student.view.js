@@ -98,11 +98,14 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 ]).controller('StudentViewDocumentsController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', function ($q, $route, $scope, Classifier, QueryUtils) {
   $scope.studentId = $route.current.params.id;
   $scope.currentNavItem = 'student.documents';
-  $scope.applicationsCriteria = {order: 'created', studentId: $scope.studentId};
+  $scope.applicationsCriteria = {order: 'submitted', studentId: $scope.studentId};
   $scope.applications = {};
+  $scope.auth = $route.current.locals.auth;
 
   var applicationsMapper = Classifier.valuemapper({type: 'AVALDUS_LIIK', status: 'AVALDUS_STAATUS'});
   $scope.afterApplicationsLoad = function(result) {
+    $scope.applicationsCriteria.size = result.size;
+    $scope.applicationsCriteria.page = result.number + 1;
     $scope.applications.content = applicationsMapper.objectmapper(result.content);
     $scope.applications.totalElements = result.totalElements;
   };
@@ -112,11 +115,20 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     $scope.applications.$promise = QueryUtils.endpoint('/students/:studentId/applications').search(query, $scope.afterApplicationsLoad);
   };
 
+  var StudentApplicableApplicationsEndpoint = QueryUtils.endpoint('/applications/student/'+$scope.studentId+'/applicable');
+  StudentApplicableApplicationsEndpoint.search(function(result) {
+    $scope.applicationTypesApplicable = result;
+    $scope.applicationTypes = Classifier.queryForDropdown({mainClassCode: 'AVALDUS_LIIK'});
+  });
+
+
   $scope.directivesCriteria = {order: 'headline', studentId: $scope.studentId};
   $scope.directives = {};
 
   var directivesMapper = Classifier.valuemapper({type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'});
   $scope.afterDirectivesLoad = function(result) {
+    $scope.directivesCriteria.size = result.size;
+    $scope.directivesCriteria.page = result.number + 1;
     $scope.directives.content = directivesMapper.objectmapper(result.content);
     $scope.directives.totalElements = result.totalElements;
   };

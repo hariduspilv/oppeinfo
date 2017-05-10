@@ -68,10 +68,6 @@ public class TeacherService {
         if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
             throw new ValidationFailedException("teacher-vocational-higher");
         }
-        String nativeLanguage = teacherForm.getPerson().getNativeLanguage();
-        if (Boolean.TRUE.equals(teacherForm.getIsVocational()) && !StringUtils.hasText(nativeLanguage)) {
-            throw new ValidationFailedException("nativeLanguage", null);
-        }
         EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification");
         teacher.setSchool(schoolRepository.getOne(user.getSchoolId()));
         teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation().getId(), user.getSchoolId()));
@@ -109,21 +105,16 @@ public class TeacherService {
             throw new ValidationFailedException("person.citizenship", "null");
         }
         person.setCitizenship(citizenship);
+        person.setSex(classifierRepository.findOneByCodeAndMainClassCode(teacherForm.getPerson().getSex(), MainClassCode.SUGU.name()));
         // TODO: generate from idcode
-        if (person.getSex() == null) {
-            person.setSex(classifierRepository.findOneByCodeAndMainClassCode(personForm.getSex(), MainClassCode.SUGU.name()));
-        }
-        // TODO: generate from idcode
-        if (person.getBirthdate() == null) {
-            if (personForm.getBirthdate() != null ) {
-                if (LocalDate.now().isAfter(personForm.getBirthdate())) {
-                    person.setBirthdate(personForm.getBirthdate());
-                } else {
-                    throw new ValidationFailedException("person.birthdate", "future");
-                }
+        if (personForm.getBirthdate() != null) {
+            if (LocalDate.now().isAfter(personForm.getBirthdate())) {
+                person.setBirthdate(personForm.getBirthdate());
             } else {
-                throw new ValidationFailedException("person.birthdate", "null");
+                throw new ValidationFailedException("person.birthdate", "future");
             }
+        } else {
+            throw new ValidationFailedException("person.birthdate", "null");
         }
     }
 
@@ -211,6 +202,10 @@ public class TeacherService {
 
             if(!StringUtils.isEmpty(criteria.getIdcode())) {
                 filters.add(cb.equal(root.get("person").get("idcode"), criteria.getIdcode()));
+            }
+            
+            if(criteria.getIsHigher() != null) {
+                filters.add(cb.equal(root.get("isHigher"), criteria.getIsHigher()));
             }
 
             if(!StringUtils.isEmpty(criteria.getName())) {

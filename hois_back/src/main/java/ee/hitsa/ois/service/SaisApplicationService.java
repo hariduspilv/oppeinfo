@@ -39,10 +39,10 @@ import com.fasterxml.jackson.dataformat.csv.CsvMapper;
 import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.SaisAdmission;
-import ee.hitsa.ois.domain.SaisApplication;
-import ee.hitsa.ois.domain.SaisApplicationGraduatedSchool;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.sais.SaisAdmission;
+import ee.hitsa.ois.domain.sais.SaisApplication;
+import ee.hitsa.ois.domain.sais.SaisApplicationGraduatedSchool;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SaisApplicationStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -55,13 +55,13 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
-import ee.hitsa.ois.web.commandobject.SaisApplicationClassifiersCsv;
-import ee.hitsa.ois.web.commandobject.SaisApplicationCsvRow;
-import ee.hitsa.ois.web.commandobject.SaisApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.sais.SaisApplicationClassifiersCsv;
+import ee.hitsa.ois.web.commandobject.sais.SaisApplicationCsvRow;
+import ee.hitsa.ois.web.commandobject.sais.SaisApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
-import ee.hitsa.ois.web.dto.SaisApplicationImportResultDto;
-import ee.hitsa.ois.web.dto.SaisApplicationImportedRowDto;
-import ee.hitsa.ois.web.dto.SaisApplicationSearchDto;
+import ee.hitsa.ois.web.dto.sais.SaisApplicationImportResultDto;
+import ee.hitsa.ois.web.dto.sais.SaisApplicationImportedRowDto;
+import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 
 @Transactional
 @Service

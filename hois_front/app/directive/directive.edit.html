@@ -59,7 +59,7 @@
 
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.headline' | translate}}</label>
-          <input type="text" ng-model="record.headline" name="headline" required md-maxlength="500"></input>
+          <input type="text" ng-model="record.headline" name="headline" required md-maxlength="500">
         </md-input-container>
 
         <md-input-container class="md-block">
@@ -80,6 +80,11 @@
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.directiveCoordinator' | translate}}</label>
           <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator" criteria="{isDirective: true}"></hois-value>
+        </md-input-container>
+
+        <md-input-container class="md-block" ng-if="record.type === 'KASKKIRI_TYHIST'">
+          <label class="textInput">{{'directive.cancelType' | translate}}</label>
+          <hois-classifier-select ng-model="formState.cancelType" ng-required="record.type === 'KASKKIRI_TYHIST'" main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
 
         <div layout="row" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">

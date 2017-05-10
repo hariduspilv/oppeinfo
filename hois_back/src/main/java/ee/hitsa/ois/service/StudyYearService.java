@@ -1,5 +1,15 @@
 package ee.hitsa.ois.service;
 
+import java.time.LocalDate;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Set;
+
+import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
@@ -17,13 +27,6 @@ import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
 import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.StudyYearForm;
 import ee.hitsa.ois.web.dto.StudyYearsSearchDto;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import javax.transaction.Transactional;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Set;
 
 @Service
 @Transactional
@@ -49,6 +52,11 @@ public class StudyYearService {
 
     public List<StudyYearsSearchDto> getStudyYears(Long schoolId) {
         return StreamUtil.toMappedList(StudyYearsSearchDto::new, studyYearRepository.findStudyYearsBySchool(schoolId));
+    }
+
+    public StudyYear getCurrentStudyYear(Long schoolId) {
+        LocalDate now = LocalDate.now();
+        return studyYearRepository.findFirstBySchoolIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateDesc(schoolId, now, now);
     }
 
     public StudyYear create(HoisUserDetails user, StudyYearForm studyYearForm) {

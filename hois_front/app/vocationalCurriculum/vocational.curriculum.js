@@ -113,6 +113,10 @@ angular.module('hitsaOis')
 
     var mapModelToDto = function(curriculumModel) {
       var dto = angular.extend({}, curriculumModel);
+
+      curriculumModel.studyPeriodMonths = curriculumModel.studyPeriodMonths ? curriculumModel.studyPeriodMonths : 0;
+      dto.studyPeriod = curriculumModel.studyPeriodMonths + 12 * curriculumModel.studyPeriodYears;
+
       if (angular.isArray(dto.occupations)) {
         dto.occupations.forEach(function(it) {
           if (angular.isObject(it.occupation)) {
@@ -140,7 +144,11 @@ angular.module('hitsaOis')
       return dto;
     };
 
-    $scope.removeFromArray = ArrayUtils.remove;
+    $scope.removeFromArray = function(array, item) {
+        dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
+            ArrayUtils.remove(array, item);
+        });
+    };
 
     var initialCurriculumScope = {
       validFrom: new Date(),
@@ -157,7 +165,8 @@ angular.module('hitsaOis')
       optionalStudyCredits: 0,
       joint: false,
       abroad: false,
-      occupation: false
+      occupation: false,
+      studyPeriodMonths: 0
     };
     $scope.curriculum = angular.extend({}, initialCurriculumScope);
     $scope.validation = {};
@@ -615,12 +624,9 @@ angular.module('hitsaOis')
         $scope.modulesWithOutOccupation = modulesView.modulesWithOutOccupation;
 
         $scope.validation.mainModuleCount = 0;
-        $scope.validation.voluntaryModuleCount = 0;
         $scope.curriculum.modules.forEach(function(it) {
           if (it.module.code === "KUTSEMOODUL_P") {
             $scope.validation.mainModuleCount++;
-          } else if (it.module.code === "KUTSEMOODUL_V") {
-            $scope.validation.voluntaryModuleCount++;
           }
         });
 
@@ -739,6 +745,7 @@ angular.module('hitsaOis')
           });
         }
       } else {
+          message.error('main.messages.form-has-errors');
           console.log($scope.vocationalCurriculumForm.$error);
       }
     };

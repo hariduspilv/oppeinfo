@@ -4,63 +4,55 @@
       <div style="padding-top: 1em">
         <div layout="column">
           <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex>
+            <md-input-container flex="25" flex-sm="100" flex-xs="100">
               <label>{{'teacher.person.idcode' | translate}}</label>
               <hois-value value="teacher.person.idcode"></hois-value>
             </md-input-container>
-            <md-input-container flex>
-              <label>{{'teacher.isVocationalOrIsHigher' | translate}}</label>
-              <hois-value value="vocationalHigher"></hois-value>
-            </md-input-container>
-          </div>
-          <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex>
-              <label>{{'teacher.person.name' | translate}}</label>
-              <hois-value value="teacher.person.firstname + ' ' + teacher.person.lastname"></hois-value>
-            </md-input-container>
-            <md-input-container flex>
-              <label>{{'teacher.person.citizenship' | translate}}</label>
-              <hois-classifier-value ng-model="teacher.person.citizenship" main-classifier-code="RIIK"></hois-classifier-value>
-            </md-input-container>
-          </div>
-          <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex>
-              <label>{{'teacher.person.nativeLanguage' | translate}}</label>
-              <hois-value value="teacher.person.nativeLanguage"></hois-value>
-            </md-input-container>
-            <md-input-container flex>
+            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.birthdate' | translate}}</label>
               <hois-value value="'main.formattedDate' | translate: {date: teacher.person.birthdate}"></hois-value>
             </md-input-container>
-          </div>
-          <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex>
+            <md-input-container flex="10" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.sex' | translate}}</label>
               <hois-classifier-value ng-model="teacher.person.sex" main-classifier-code="SUGU"></hois-classifier-value>
             </md-input-container>
-            <md-input-container flex>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="25" flex-sm="100" flex-xs="100">
+              <label>{{'teacher.person.name' | translate}}</label>
+              <hois-value value="teacher.person.firstname + ' ' + teacher.person.lastname"></hois-value>
+            </md-input-container>
+            <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.person.nativeLanguage' | translate}}</label>
+              <hois-value value="teacher.person.nativeLanguage"></hois-value>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex="25" flex-sm="100" flex-xs="100">
+              <label>{{'teacher.person.citizenship' | translate}}</label>
+              <hois-classifier-value ng-model="teacher.person.citizenship" main-classifier-code="RIIK"></hois-classifier-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.person.phone' | translate}}</label>
+              <hois-value value="teacher.person.phone"></hois-value>
+            </md-input-container>
+            <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.email' | translate}}</label>
               <hois-value value="teacher.person.email"></hois-value>
             </md-input-container>
           </div>
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex>
-              <label>{{'teacher.person.phone' | translate}}</label>
-              <hois-value value="teacher.person.phone"></hois-value>
+              <label>{{'teacher.occupation.label' | translate}}</label>
+              <hois-value value="currentLanguageNameField(teacher.teacherOccupation)"></hois-value>
             </md-input-container>
-            <md-input-container flex>
-              <label>{{'teacher.email' | translate}}</label>
-              <hois-value value="teacher.email"></hois-value>
-            </md-input-container>
-          </div>
-          <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex>
+            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.phone' | translate}}</label>
               <hois-value value="teacher.phone"></hois-value>
             </md-input-container>
-            <md-input-container flex>
-              <label>{{'teacher.occupation.label' | translate}}</label>
-              <hois-value value="currentLanguageNameField(teacher.teacherOccupation)"></hois-value>
+            <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+              <label>{{'teacher.email' | translate}}</label>
+              <hois-value value="teacher.email"></hois-value>
             </md-input-container>
           </div>
           <div layout="row" layout-sm="column" layout-xs="column">
@@ -71,6 +63,12 @@
             <md-input-container flex>
               <hois-value ng-if="teacher.isStudyPeriodScheduleLoad === true" value="'teacher.studyPeriodLoad' | translate"></hois-value>
               <hois-value ng-if="teacher.isStudyPeriodScheduleLoad === false" value="'teacher.studyYearLoad' | translate"></hois-value>
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex>
+              <label>{{'teacher.isVocationalOrIsHigher' | translate}}</label>
+              <hois-value value="vocationalHigher"></hois-value>
             </md-input-container>
           </div>
         </div>
@@ -130,7 +128,7 @@
                 <hois-value value="teacherPositionEhis.meetsQualification === true ? 'main.yes' : 'main.no' | translate"></hois-value>
               </md-input-container>
               <md-input-container flex>
-                <label>{{'teacher.teacherPositionEhis.isChildCare' | translate}}</label>
+                <label>{{'teacher.teacherPositionEhis.workHalted' | translate}}</label>
                 <hois-value value="teacherPositionEhis.isChildCare === true ? 'main.yes' : 'main.no' | translate"></hois-value>
               </md-input-container>
             </div>

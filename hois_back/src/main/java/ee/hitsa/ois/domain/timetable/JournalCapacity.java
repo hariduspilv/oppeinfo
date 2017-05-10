@@ -12,13 +12,14 @@ import ee.hitsa.ois.domain.StudyPeriod;
 public class JournalCapacity extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Journal journal;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private JournalCapacityType journalCapacityType;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private StudyPeriod studyPeriod;
     private Integer weekNr;
+    //academic hours count
     private Integer hours;
 
     public Journal getJournal() {

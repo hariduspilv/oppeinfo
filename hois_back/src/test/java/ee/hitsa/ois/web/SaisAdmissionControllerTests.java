@@ -16,7 +16,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
-import ee.hitsa.ois.web.dto.SaisAdmissionSearchDto;
+import ee.hitsa.ois.web.dto.sais.SaisAdmissionSearchDto;
 
 @Transactional
 @RunWith(SpringRunner.class)

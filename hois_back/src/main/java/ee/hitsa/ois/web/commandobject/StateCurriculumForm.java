@@ -21,7 +21,7 @@ public class StateCurriculumForm extends VersionedCommand {
     private String graduationRequirementsEn;
     private Long credits;
     private String practiceDescription;
-    private Integer optionalStudyCredits;
+    private Double optionalStudyCredits;
     private LocalDate validFrom;
     private LocalDate validThru;
     private String description;
@@ -135,11 +135,11 @@ public class StateCurriculumForm extends VersionedCommand {
         this.practiceDescription = practiceDescription;
     }
 
-    public Integer getOptionalStudyCredits() {
+    public Double getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+    public void setOptionalStudyCredits(Double optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 

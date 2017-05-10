@@ -64,7 +64,7 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       }else{
         $scope.record.$save(afterLoad).then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
         });
       }
     };
@@ -73,7 +73,7 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       dialogService.confirmDialog({prompt: 'generalmessage.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path(baseUrl);
+          $location.url(baseUrl);
         });
       });
     };

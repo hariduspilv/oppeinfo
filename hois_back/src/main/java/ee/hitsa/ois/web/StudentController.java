@@ -84,7 +84,7 @@ public class StudentController {
     @PostMapping("/{studentId:\\d+}/absences")
     public void createAbsence(HoisUserDetails user, @WithEntity(value = "studentId") Student student, @Valid @RequestBody StudentAbsenceForm form) {
         assertCanCreateAbsence(user, student);
-        studentService.create(student, form);
+        studentService.create(user, student, form);
     }
 
     @PutMapping("/{studentId:\\d+}/absences/{id:\\d+}")
@@ -127,7 +127,7 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/directives")
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
         assertCanView(user, student);
-        return studentService.directives(user, student, pageable);
+        return studentService.directives(student, pageable);
     }
 
     @GetMapping("/{id:\\d+}/subjects")

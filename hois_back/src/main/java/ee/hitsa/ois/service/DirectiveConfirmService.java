@@ -38,6 +38,7 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -82,10 +83,12 @@ public class DirectiveConfirmService {
         // validate each student's data for given directive
         long rowNum = 0;
         for(DirectiveStudent ds : directive.getStudents()) {
-            Set<ConstraintViolation<DirectiveStudent>> errors = validator.validate(ds, directiveType.validationGroup());
-            if(!errors.isEmpty()) {
-                for(ConstraintViolation<DirectiveStudent> e : errors) {
-                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, e.getPropertyPath().toString()), e.getMessage()));
+            if(directiveType.validationGroup() != null) {
+                Set<ConstraintViolation<DirectiveStudent>> errors = validator.validate(ds, directiveType.validationGroup());
+                if(!errors.isEmpty()) {
+                    for(ConstraintViolation<DirectiveStudent> e : errors) {
+                        allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, e.getPropertyPath().toString()), e.getMessage()));
+                    }
                 }
             }
             if(DirectiveType.KASKKIRI_AKADK.equals(directiveType)) {
@@ -95,8 +98,14 @@ public class DirectiveConfirmService {
                 if(academicLeave == null || leaveCancel.isBefore(DateUtils.periodStart(academicLeave)) || leaveCancel.isAfter(DateUtils.periodEnd(academicLeave))) {
                     allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "startDate"), "InvalidValue"));
                 }
-            }
-            if(DirectiveType.KASKKIRI_VALIS.equals(directiveType)) {
+            } else if(DirectiveType.KASKKIRI_IMMAT.equals(directiveType)) {
+                // check by hand because for immatv it's filled automatically after directive confirmation
+                if(ds.getNominalStudyEnd() == null) {
+                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "nominalStudyEnd"), "NotNull"));
+                }
+            } else if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
+                // TODO check that it's last modification of student
+            } else if(DirectiveType.KASKKIRI_VALIS.equals(directiveType)) {
                 boolean isAbroad = Boolean.TRUE.equals(ds.getIsAbroad());
                 if(isAbroad ? !StringUtils.hasText(ds.getAbroadSchool()) : ds.getEhisSchool() == null) {
                     allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, isAbroad ? "abroadSchool" : "ehisSchool"), "NotNull"));
@@ -174,6 +183,7 @@ public class DirectiveConfirmService {
             break;
         case KASKKIRI_ENNIST:
             student.setStudyStart(confirmDate);
+            student.setStudyEnd(null);
             user = userForStudent(student);
             // FIXME can user be null?
             if(user == null) {
@@ -183,9 +193,19 @@ public class DirectiveConfirmService {
                 user.setValidThru(null);
             }
             break;
-        case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
+            Integer months = directiveStudent.getCurriculumVersion().getCurriculum().getStudyPeriod();
+            student.setNominalStudyEnd(confirmDate.plusMonths(months.longValue()));
+            // fall thru
+        case KASKKIRI_IMMAT:
             student.setStudyStart(confirmDate);
+            break;
+        case KASKKIRI_LOPET:
+            student.setStudyEnd(confirmDate);
+            user = userForStudent(student);
+            if(user != null) {
+                user.setValidThru(confirmDate);
+            }
             break;
         default:
             break;
@@ -207,7 +227,7 @@ public class DirectiveConfirmService {
         automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_UUS_KK, student, data);
     }
 
-    private static void cancelDirective(Directive directive) {
+    private void cancelDirective(Directive directive) {
         // cancellation may include only some students
         Set<Long> includedStudentIds = StreamUtil.toMappedSet(ds -> EntityUtil.getId(ds.getStudent()), directive.getStudents());
         Directive canceledDirective = directive.getCanceledDirective();
@@ -215,12 +235,20 @@ public class DirectiveConfirmService {
         for(DirectiveStudent ds : canceledDirective.getStudents()) {
             Student student = ds.getStudent();
             if(includedStudentIds.contains(student.getId())) {
-                if(!KASKKIRI_IMMAT.equals(canceledDirectiveType) && !KASKKIRI_IMMATV.equals(canceledDirectiveType)) {
-                    copyDirectiveProperties(canceledDirectiveType, ds.getStudentHistory(), student, true);
+                if(KASKKIRI_IMMAT.equals(canceledDirectiveType) || KASKKIRI_IMMATV.equals(canceledDirectiveType)) {
+                    // undo create student. Logic similar to EKSMAT
+                    LocalDate confirmDate = directive.getConfirmDate();
+                    student.setStudyEnd(confirmDate);
+                    student.setStatus(classifierRepository.getOne(StudentStatus.OPPURSTAATUS_K.name()));
+                    User user = userForStudent(student);
+                    if(user != null) {
+                        user.setValidThru(confirmDate);
+                    }
                 } else {
-                    // TODO undo create student
+                    copyDirectiveProperties(canceledDirectiveType, ds.getStudentHistory(), student, true);
                 }
                 // TODO cancel task from task queue, if there is one for given student and directive
+                studentService.saveWithHistory(student);
             }
         }
     }
@@ -272,6 +300,8 @@ public class DirectiveConfirmService {
         student.setStudyStart(directiveStudent.getStartDate());
         student.setIsRepresentativeMandatory(Boolean.FALSE);
         student.setIsSpecialNeed(Boolean.FALSE);
+        // if student's email is not generated, copy from person
+        student.setEmail(directiveStudent.getPerson().getEmail());
         // new role for student
         createUser(student, directiveStudent.getDirective().getConfirmDate());
         return student;

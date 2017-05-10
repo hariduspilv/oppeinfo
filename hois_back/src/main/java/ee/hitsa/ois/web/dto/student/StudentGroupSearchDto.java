@@ -13,6 +13,10 @@ public class StudentGroupSearchDto {
     private Integer course;
     private Long studentCount;
     private List<Long> schoolDepartments;
+    /**
+     * Planned number of hours in studyPeriod
+     */
+    private Long hours;
 
     public Long getId() {
         return id;
@@ -68,5 +72,13 @@ public class StudentGroupSearchDto {
 
     public void setSchoolDepartments(List<Long> schoolDepartments) {
         this.schoolDepartments = schoolDepartments;
+    }
+
+    public Long getHours() {
+        return hours;
+    }
+
+    public void setHours(Long hours) {
+        this.hours = hours;
     }
 }

@@ -12,7 +12,7 @@ import java.util.Set;
 @DateRange
 public class UserForm extends VersionedCommand {
 
-    private Long school;
+    private EntityConnectionCommand school;
 
     @NotEmpty
     @ClassifierRestriction(MainClassCode.ROLL)
@@ -81,11 +81,11 @@ public class UserForm extends VersionedCommand {
 */
     }
 
-    public Long getSchool() {
+    public EntityConnectionCommand getSchool() {
         return school;
     }
 
-    public void setSchool(Long school) {
+    public void setSchool(EntityConnectionCommand school) {
         this.school = school;
     }
 

@@ -12,7 +12,7 @@
         <div layout="row" layout-sm="column" layout-xs="column" flex="25" flex-sm="100" flex-xs="100">
             <md-input-container>
               <label>{{'main.thru' | translate}}</label>
-              <md-datepicker ng-model="criteria.thru"></md-datepicker>
+              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
             </md-input-container>
         </div>
 

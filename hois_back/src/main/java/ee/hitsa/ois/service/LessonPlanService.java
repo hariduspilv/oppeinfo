@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -14,9 +15,12 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
+import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.repository.LessonPlanRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -53,8 +57,18 @@ public class LessonPlanService {
         lessonPlan.setIsUsable(Boolean.FALSE);
         lessonPlan.setShowWeeks(Boolean.FALSE);
         // XXX for higher this is optional in student group
-        lessonPlan.setCurriculumVersion(studentGroup.getCurriculumVersion());
-        // TODO modules
+        CurriculumVersion curriculumVersion = studentGroup.getCurriculumVersion();
+        lessonPlan.setCurriculumVersion(curriculumVersion);
+        // modules
+        if(curriculumVersion != null) {
+            List<LessonPlanModule> modules = new ArrayList<>();
+            for(CurriculumVersionOccupationModule module : curriculumVersion.getOccupationModules()) {
+                LessonPlanModule lpm = new LessonPlanModule();
+                lpm.setLessonPlan(lessonPlan);
+                lpm.setCurriculumVersionOccupationModule(module);
+                modules.add(lpm);
+            }
+        }
         return lessonPlanRepository.save(lessonPlan);
     }
 

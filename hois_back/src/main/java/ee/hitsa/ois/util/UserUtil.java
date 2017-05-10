@@ -1,18 +1,20 @@
 package ee.hitsa.ois.util;
 
+import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class UserUtil {
 
     public static boolean canSubmitApplication(HoisUserDetails user, Application application) {
-        String status = EntityUtil.getCode(application.getStatus());
-        if(ApplicationStatus.AVALDUS_STAATUS_KOOST.name().equals(status)) {
+        if(ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_KOOST, application.getStatus())) {
             Student student = application.getStudent();
             return isSame(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student);
         }
@@ -120,5 +122,19 @@ public abstract class UserUtil {
 
     public static void assertIsSchoolAdmin(HoisUserDetails user, School school) {
         AssertionFailedException.throwIf(!isSchoolAdmin(user, school), "User is not school admin in given school");
+    }
+
+    public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user) {
+        if (!user.isSchoolAdmin() && !user.isTeacher()) {
+            AssertionFailedException.throwIf(!user.isSchoolAdmin(), "User is not school admin");
+            AssertionFailedException.throwIf(!user.isTeacher(), "User is not school teacher");
+        }
+    }
+    public static void assertCanUpdateUser(String role) {
+        AssertionFailedException.throwIf(role.equals(Role.ROLL_T.name()) || role.equals(Role.ROLL_L.name()),"Invalid role");
+    }
+
+    public static void assertUserBelongsToPerson(User user, Person person) {
+        AssertionFailedException.throwIf(!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson())), "Person and user don't match");
     }
 }

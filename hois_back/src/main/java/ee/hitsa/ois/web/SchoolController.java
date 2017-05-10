@@ -10,7 +10,6 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -143,7 +142,7 @@ public class SchoolController {
     }
 
     @PostMapping("/departments")
-    public ResponseEntity<Map<String, ?>> createSchoolDepartment(HoisUserDetails user, @Valid @RequestBody SchoolDepartmentForm form) {
+    public HttpUtil.CreatedResponse createSchoolDepartment(HoisUserDetails user, @Valid @RequestBody SchoolDepartmentForm form) {
         return HttpUtil.created(schoolDepartmentService.create(user, form));
     }
 
@@ -176,7 +175,7 @@ public class SchoolController {
     }
 
     @PostMapping("/teacheroccupations")
-    public ResponseEntity<Map<String, ?>> createTeacherOccupation(HoisUserDetails user, @Valid @RequestBody TeacherOccupationForm form) {
+    public HttpUtil.CreatedResponse createTeacherOccupation(HoisUserDetails user, @Valid @RequestBody TeacherOccupationForm form) {
         return HttpUtil.created(teacherOccupationService.create(user, form));
     }
 

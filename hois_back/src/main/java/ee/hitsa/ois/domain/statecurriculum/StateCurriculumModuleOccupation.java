@@ -6,6 +6,7 @@ import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.util.EntityUtil;
 
 /**
  * TODO:
@@ -22,13 +23,13 @@ public class StateCurriculumModuleOccupation extends BaseEntityWithId {
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Classifier occupation;
 
-	public StateCurriculumModuleOccupation() {}
-	
+	public StateCurriculumModuleOccupation() {
+	}
+
     public StateCurriculumModuleOccupation(Classifier occupation) {
         this.occupation = occupation;
-        setType(Character.valueOf(occupation.getCode().charAt(0)));
+        setType(Character.valueOf(EntityUtil.getCode(occupation).charAt(0)));
     }
-
 	
 	@Override
 	public int hashCode() {

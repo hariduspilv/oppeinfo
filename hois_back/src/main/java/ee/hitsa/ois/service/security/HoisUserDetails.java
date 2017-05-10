@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
 
 
 /**
@@ -28,7 +29,7 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     private Long studentId;
 
     HoisUserDetails(User user, List<String> roles) {
-        super(user.getPerson().getIdcode(), "undefined", getAuthorities(roles));
+        super(PersonUtil.fullnameAndIdcode(user.getPerson()), "undefined", getAuthorities(roles));
         this.userId = EntityUtil.getId(user);
         this.personId = EntityUtil.getId(user.getPerson());
         this.role = EntityUtil.getCode(user.getRole());

@@ -31,6 +31,7 @@ public class DirectiveForm extends VersionedCommand {
     private String cancelType;
     @Valid
     private List<? extends DirectiveFormStudent> students;
+    private List<Long> selectedStudents;
 
     public String getType() {
         return type;
@@ -88,6 +89,14 @@ public class DirectiveForm extends VersionedCommand {
         this.students = students;
     }
 
+    public List<Long> getSelectedStudents() {
+        return selectedStudents;
+    }
+
+    public void setSelectedStudents(List<Long> selectedStudents) {
+        this.selectedStudents = selectedStudents;
+    }
+
     @DateRange(from = "startDate", thru = "endDate")
     @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
     public static class DirectiveFormStudent {
@@ -123,10 +132,12 @@ public class DirectiveForm extends VersionedCommand {
         private Boolean isPeriod;
         private Long studyPeriodStart;
         private Long studyPeriodEnd;
+        private LocalDate nominalStudyEnd;
         private Boolean isAbroad;
         @ClassifierRestriction(MainClassCode.EHIS_KOOL)
         private String ehisSchool;
         private String abroadSchool;
+        @ClassifierRestriction(MainClassCode.RIIK)
         private String country;
         @ClassifierRestriction(MainClassCode.VALISOPE_EESMARK)
         private String abroadPurpose;
@@ -287,6 +298,14 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setStudyPeriodEnd(Long studyPeriodEnd) {
             this.studyPeriodEnd = studyPeriodEnd;
+        }
+
+        public LocalDate getNominalStudyEnd() {
+            return nominalStudyEnd;
+        }
+
+        public void setNominalStudyEnd(LocalDate nominalStudyEnd) {
+            this.nominalStudyEnd = nominalStudyEnd;
         }
 
         public Boolean getIsAbroad() {

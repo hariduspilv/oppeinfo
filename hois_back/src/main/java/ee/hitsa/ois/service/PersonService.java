@@ -122,7 +122,8 @@ public class PersonService {
 
     public User saveUser(UserForm userForm, User user) {
         EntityUtil.bindToEntity(userForm, user, classifierRepository, "school", "userRights");
-        user.setSchool(EntityUtil.getOptionalOne(School.class, userForm.getSchool(), em));
+        Long schoolId = userForm.getSchool() == null ? null : userForm.getSchool().getId();
+        user.setSchool(EntityUtil.getOptionalOne(School.class, schoolId, em));
 
         Map<String, List<UserRights>> oldRights = user.getUserRights().stream().collect(Collectors.groupingBy(it -> EntityUtil.getCode(it.getObject())));
         Set<UserRights> result = new HashSet<>();
@@ -194,10 +195,10 @@ public class PersonService {
     }
 
     public void deleteUser(User user) {
-        userRepository.delete(user);
+        EntityUtil.deleteEntity(userRepository, user);
     }
 
     public void delete(Person person) {
-        personRepository.delete(person);
+        EntityUtil.deleteEntity(personRepository, person);
     }
 }
