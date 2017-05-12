@@ -1,6 +1,6 @@
 <md-tabs md-dynamic-height md-border-bottom>
   <md-tab label="{{'teacher.data' | translate}}">
-    <md-content class="md-padding">
+    <md-content class="md-padding form-readonly">
       <div style="padding-top: 1em">
         <div layout="column">
           <div layout="row" layout-sm="column" layout-xs="column">
@@ -22,7 +22,7 @@
               <label>{{'teacher.person.name' | translate}}</label>
               <hois-value value="teacher.person.firstname + ' ' + teacher.person.lastname"></hois-value>
             </md-input-container>
-            <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.person.nativeLanguage' | translate}}</label>
               <hois-value value="teacher.person.nativeLanguage"></hois-value>
             </md-input-container>
@@ -66,9 +66,13 @@
             </md-input-container>
           </div>
           <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex>
+            <md-input-container flex="25" flex-sm="100" flex-xs="100">
               <label>{{'teacher.isVocationalOrIsHigher' | translate}}</label>
               <hois-value value="vocationalHigher"></hois-value>
+            </md-input-container>
+            <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'teacher.isActive' | translate}}</label>
+                <hois-value value="teacher.isActive ? 'main.yes' : 'main.no' | translate"></hois-value>
             </md-input-container>
           </div>
         </div>

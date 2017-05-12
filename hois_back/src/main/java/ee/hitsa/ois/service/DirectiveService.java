@@ -488,8 +488,10 @@ public class DirectiveService {
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, new PageRequest(0, STUDENTS_MAX, new Sort("lastname", "firstname"))).map(DirectiveStudentDto::of).getContent();
 
-        // suggest studentGroup, if possible
-        List<StudentGroup> groups = studentGroupRepository.findAllBySchool_id(schoolId);
+        // suggest valid studentGroup, if possible
+        LocalDate now = LocalDate.now();
+        List<StudentGroup> groups = studentGroupRepository.findAllBySchool_id(schoolId).stream()
+                .filter(sg -> (sg.getValidFrom() == null || !sg.getValidFrom().isAfter(now)) && (sg.getValidThru() == null || !sg.getValidThru().isBefore(now))).collect(Collectors.toList());
         Map<Long, List<StudentGroup>> groupsByCurriculumVersion = groups.stream().filter(sg -> sg.getCurriculumVersion() != null).collect(Collectors.groupingBy(sg -> EntityUtil.getId(sg.getCurriculumVersion())));
         Map<Long, List<StudentGroup>> groupsByCurriculum = null;
         Map<Long, Integer> addedCount = new HashMap<>();

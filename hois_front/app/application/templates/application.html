@@ -6,7 +6,7 @@
         </div>
         <div ng-if="!isCreate" ng-include="'application/templates/application.information.html'"></div>
 
-        <div layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.isStudent()">
+        <div ng-if="isCreate" layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.isStudent()">
             <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
               <label>{{'student.label' | translate}}</label>
               <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>

@@ -6,16 +6,34 @@
             <label class="textInput">{{'teacher.person.name' | translate}}</label>
             <input ng-model="criteria.name" type="text" autofocus>
           </md-input-container>
-          <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label class="textInput">{{'teacher.person.idcode' | translate}}</label>
             <input ng-model="criteria.idcode" type="text">
           </md-input-container>
       </div>
+      <div layout="row" layout-sm="column" layout-xs="column" ng-show="!showSchool">
+          <md-input-container flex="45" flex-sm="100" flex-xs="100">
+            <label>{{'teacher.occupation.label' | translate}}</label>
+            <hois-select ng-model="criteria.teacherOccupation" values="teacherOccupations"></hois-select>
+          </md-input-container>
+          <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+          ng-show="schoolHigher">
+            <label>{{'teacher.occupation.department' | translate}}</label>
+            <hois-school-department-select ng-model="criteria.schoolDepartment"></hois-school-department-select>
+          </md-input-container>
+      </div>
       <div layout="row">
-        <md-input-container flex="45" flex-sm="100">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-show="showSchool">
           <label>{{'school.label' | translate}}</label>
-          <hois-school-select ng-show="showSchool" ng-model="criteria.school"></hois-school-select>
+          <hois-school-select ng-model="criteria.school"></hois-school-select>
         </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column" class="top-margin" ng-show="!showSchool">
+        <md-checkbox
+           ng-model="criteria.isActive"
+           aria-label="{{'teacher.isActive' | translate}}">
+            {{'teacher.isActive' | translate}}
+        </md-checkbox>
       </div>
       <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
@@ -35,8 +53,12 @@
           <th md-column md-order-by="person.lastname,person.firstname">{{'teacher.person.name' | translate}}</th>
           <th md-column md-order-by="person.idcode">{{'teacher.person.idcode' | translate}}</th>
           <th md-column md-order-by="school.{{currentLanguageNameField()}}" ng-if="showSchool">{{'school.label' | translate}}</th>
-          <th md-column>{{'teacher.email' | translate}}</th>
-          <th md-column>{{'teacher.phone' | translate}}</th>
+          <th md-column md-order-by="email">{{'teacher.email' | translate}}</th>
+          <th md-column md-order-by="phone">{{'teacher.phone' | translate}}</th>
+          <th md-column md-order-by="teacherOccupation.{{currentLanguage() === 'en' ? 'occupationEn' : 'occupationEt'}}"
+            ng-if="!showSchool">{{'teacher.occupation.label' | translate}}</th>
+          <th md-column ng-if="schoolHigher && !showSchool">{{'teacher.occupation.departments' | translate}}</th>
+          <th md-column md-order-by="isActive" ng-if="!showSchool">{{'teacher.isActive' | translate}}</th>
           <th md-column></th>
         </tr>
         </thead>
@@ -47,6 +69,15 @@
           <td md-cell ng-if="showSchool">{{currentLanguageNameField(row.school)}}</td>
           <td md-cell>{{::row.email}}</td>
           <td md-cell>{{::row.phone}}</td>
+          <td md-cell ng-if="!showSchool">{{currentLanguageNameField(row.teacherOccupation)}}</td>
+          <td md-cell ng-if="schoolHigher && !showSchool">
+            <table>
+                <tr ng-repeat="department in removeDuplicates(row.schoolDepartments, 'id')">
+                    <td>{{currentLanguageNameField(department)}}</td>
+                </tr>
+            </table>
+          </td>
+          <td md-cell ng-if="!showSchool">{{::row.isActive ? 'main.yes' : 'main.no' | translate}}</td>
           <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/teachers/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
         </tr>
         </tbody>

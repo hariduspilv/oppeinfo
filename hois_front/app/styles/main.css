@@ -116,7 +116,7 @@ md-input-container {
      /*border-radius: 5px;
      border-style: solid;*/
      width: 100%;
-	 font-size: 14px;
+	 font-size: 13px;
      /*box-sizing: border-box;*/
      float: left; }
 
@@ -138,7 +138,7 @@ md-input-container md-select {
      /*border-radius: 5px;
      border-style: solid;*/
      width: 100%;
-	 font-size: 14px;
+	 font-size: 13px;
      /*box-sizing: border-box;*/
      float: left; }
 
@@ -166,7 +166,7 @@ md-input-container .md-errors-spacer {
 	margin-top: -28px;
     z-index: 1;
     position: relative;
-	transform: translate3d(0,0,0) scale(0.9);
+	transform: translate3d(0,0,0) scale(0.85);
 	color: #ccc;
 }
 
@@ -191,13 +191,13 @@ md-input-container .md-errors-spacer bdo[dir=ltr] {
 }*/
 
 md-input-container.md-input-focused label:not(.md-no-float), md-input-container.md-input-has-placeholder label:not(.md-no-float), md-input-container.md-input-has-value label:not(.md-no-float) {
-     -webkit-transform: translate3d(2px, 20px, 0) scale(0.8);
-     transform: translate3d(2px, 20px, 0) scale(0.8); 
+     -webkit-transform: translate3d(2px, 20px, 0) scale(0.85);
+     transform: translate3d(2px, 20px, 0) scale(0.85); 
 }
 
 md-input-container.md-input-focused:not([md-no-float]) .md-select-placeholder span:first-child {
-    -webkit-transform: translate3d(0px, -10px, 0) scale(0.8);
-    transform: translate3d(0px, -10px, 0) scale(0.8); 
+    -webkit-transform: translate3d(0px, -10px, 0) scale(0.85);
+    transform: translate3d(0px, -10px, 0) scale(0.85); 
     color: rgba(0,0,0,0.87);
 }
 
@@ -303,7 +303,7 @@ md-input-container.md-input-focused:not([md-no-float]) .md-select-placeholder sp
 md-input-container label:not(.md-no-float):not(.md-container-ignore),
   md-input-container .md-placeholder,
 .md-select-value > span:not(.md-select-icon)  {
-  font-size: 14px;
+  font-size: 13px;
   /*color: rgba(0,0,0,.87);*/
 }
 
@@ -681,10 +681,10 @@ body[dir=rtl] .menu-heading {
 /*.md-icon-button + .md-datepicker-input-container {
     margin-left: 0px;
 }
-
+*/
 .md-datepicker-input-container {
     width: 150px;
-}*/
+}
 
 /*._md-datepicker-floating-label._md-datepicker-has-calendar-icon > label:not(.md-no-float):not(.md-container-ignore) {
      right: inherit;
@@ -851,9 +851,9 @@ fieldset{
 	height: 100%; 
 }
 
-/*fieldset legend{
+fieldset legend{
 	color: #1565C0;
-}*/
+}
 
 .md-title-small {
     font-size: 16px;
@@ -863,5 +863,52 @@ fieldset{
 
 [role="tabpanel"] {
   transition: none;
+}
+
+.form-readonly md-input-container, .readonly{
+	margin-bottom: 18px;
+}
+
+.form-readonly md-input-container > label, .readonly > label{
+    transform: translate3d(2px, 4px, 0) scale(0.85)!important;
+}
+
+.form-readonly md-input-container > div, .readonly > div{
+    font-size:13px;
+	padding-left: 2px;
+	background-image: linear-gradient(to right, rgb(192,192,192) 33%, rgba(255,255,255,0) 0%);
+	background-position: bottom;
+	background-size: 3px 1px;
+	background-repeat: repeat-x;
+}
+
+.md-datepicker-button
+{
+	display: none;
+}
+
+.md-icon-button + .md-datepicker-input-container {
+	margin-left: 0px;
+}
+
+._md-datepicker-floating-label._md-datepicker-has-calendar-icon > label:not(.md-no-float):not(.md-container-ignore) {
+right:inherit;
+}
+
+.md-datepicker-triangle-button.md-button.md-icon-button {
+right: 5px;
+}
+
+.form-readonly div:empty:after{
+   content:"-";
+   line-height: 20px;
+   color:#fff;
+}
+
+.form-readonly div > span:empty:after {
+  /* border: 1px solid white!important;*/
+  content:"-";
+  line-height: 20px;
+  color:#fff;
 }
 

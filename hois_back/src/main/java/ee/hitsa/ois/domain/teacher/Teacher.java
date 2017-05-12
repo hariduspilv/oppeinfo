@@ -31,6 +31,7 @@ public class Teacher extends BaseEntityWithId {
     private Short scheduleLoad;
 
     private Boolean isStudyPeriodScheduleLoad;
+    private Boolean isActive;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private TeacherOccupation teacherOccupation;
@@ -90,6 +91,14 @@ public class Teacher extends BaseEntityWithId {
 
     public void setIsHigher(Boolean higher) {
         isHigher = higher;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
     }
 
     public Short getScheduleLoad() {

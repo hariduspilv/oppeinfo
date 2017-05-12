@@ -1,6 +1,10 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.Set;
+import java.util.stream.Collectors;
+
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.util.StreamUtil;
 
 public class TeacherSearchDto {
     private Long id;
@@ -9,6 +13,9 @@ public class TeacherSearchDto {
     private String idcode;
     private String email;
     private String phone;
+    private Boolean isActive;
+    private AutocompleteResult teacherOccupation;
+    private Set<AutocompleteResult> schoolDepartments;
 
     public static TeacherSearchDto of(Teacher teacher) {
         TeacherSearchDto dto = new TeacherSearchDto();
@@ -18,6 +25,13 @@ public class TeacherSearchDto {
         dto.idcode = teacher.getPerson().getIdcode();
         dto.email = teacher.getEmail();
         dto.phone = teacher.getPhone();
+        dto.isActive = teacher.getIsActive();
+        dto.teacherOccupation = AutocompleteResult.of(teacher.getTeacherOccupation());
+        dto.schoolDepartments = StreamUtil.toMappedSet(o -> {
+            
+            return AutocompleteResult.of(o.getSchoolDepartment());
+        }, teacher.getTeacherPositionEhis().stream().filter(o -> o.getSchoolDepartment() != null
+        ).collect(Collectors.toSet()));
         return dto;
     }
 
@@ -67,5 +81,29 @@ public class TeacherSearchDto {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public AutocompleteResult getTeacherOccupation() {
+        return teacherOccupation;
+    }
+
+    public void setTeacherOccupation(AutocompleteResult teacherOccupation) {
+        this.teacherOccupation = teacherOccupation;
+    }
+
+    public Set<AutocompleteResult> getSchoolDepartments() {
+        return schoolDepartments;
+    }
+
+    public void setSchoolDepartments(Set<AutocompleteResult> schoolDepartments) {
+        this.schoolDepartments = schoolDepartments;
     }
 }

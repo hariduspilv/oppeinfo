@@ -25,11 +25,18 @@
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="70" flex-sm="100" flex-xs="100">
                 <label>{{'module.type' | translate}}</label>
-                <hois-classifier-select ng-model="data.type" main-classifier-code="KORGMOODUL" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
+                <md-select ng-model="data.typeObject" required ng-disabled="readOnly">
+                    <md-option ng-repeat="type in moduleTypes | filter: {'code': 'KORGMOODUL_M'}" ng-value="type">
+                        {{type[currentLanguageNameField()]}}
+                    </md-option>
+                    <md-option ng-repeat="type in moduleTypes | filter: {'code': '!KORGMOODUL_M'} | orderBy: currentLanguageNameField()" ng-value="type">
+                        {{type[currentLanguageNameField()]}}
+                    </md-option>
+                </md-select>
             </md-input-container>
         </div>
 
-        <div ng-if="data.type === 'KORGMOODUL_M'" layout="row" layout-sm="column" layout-xs="column">
+        <div ng-if="data.typeObject.code === 'KORGMOODUL_M'" layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex>
                 <label>{{'module.typeNameEt' | translate}}</label>
                 <input ng-model="data.typeNameEt" type="text" required md-maxlength="255" ng-readonly="readOnly">

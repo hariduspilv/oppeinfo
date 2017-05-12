@@ -446,9 +446,9 @@
 
 	<div layout="row">&nbsp;</div>
 	<div layout="row" class="top-margin">
-      <md-input-container class="numberInput" flex="10">
+      <md-input-container flex="10">
 	    <label>{{'stateCurriculum.enter.module.modules3' | translate}}</label>
-        <input name="vocationalCredits" type="number" ng-model="curriculum.optionalStudyCredits" required aria-label="optional credits" class="shiftDown1" min="0">
+        <input name="vocationalCredits" type="number" ng-model="curriculum.optionalStudyCredits" required aria-label="optional credits" min="0">
 
       <div ng-messages="curriculumForm.vocationalCredits.$error" ng-show="curriculumForm.vocationalCredits.$dirty">
           <div ng-message="min">
@@ -457,6 +457,12 @@
       </div>
       </md-input-container><span class="shiftDown2">EKAP</span>
     </div>
+	<!--div layout="row" layout-xs="column">
+      <md-input-container flex="25" flex-sm="100" flex-xs="100">
+        <label>{{'stateCurriculum.enter.module.modules3' | translate}}</label>
+        <input name="vocationalCredits" type="number" ng-model="curriculum.optionalStudyCredits" required aria-label="optional credits" min="0">
+      </md-input-container>
+	</div-->  
 
     <div layout="row" class="top-margin">
       <md-input-container flex>
@@ -521,7 +527,7 @@
     </div>
 
 	<div layout="row" layout-xs="column" class="top-margin">
-                <md-input-container flex="25" flex-sm="100" flex-xs="100">
+                <md-input-container flex="25" flex-sm="100" flex-xs="100" class="readonly">
                     <label class="label">{{'main.status' | translate}}</label>
                     <hois-classifier-value ng-model="curriculum.status" main-classifier-code="OPPEKAVA_STAATUS"></hois-classifier-value>
                 </md-input-container>

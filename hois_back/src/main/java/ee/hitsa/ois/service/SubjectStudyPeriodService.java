@@ -376,12 +376,13 @@ public class SubjectStudyPeriodService {
         
         List<SubjectStudyPeriodPlan> plans = subjectStudyPeriodPlanRepository.findAll((root, query, cb) -> {
             
-            
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("studyPeriod").get("id"), container.getStudyPeriod()));
             
             List<Long> subjectIds = StreamUtil.toMappedList(s -> s.getSubject(), container.getSubjectStudyPeriodDtos());
-            filters.add(root.get("subject").get("id").in(subjectIds));
+            if(!CollectionUtils.isEmpty(subjectIds)) {
+                filters.add(root.get("subject").get("id").in(subjectIds));
+            }
             //TODO: filter by curriculum and studyForm
             
             /*

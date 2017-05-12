@@ -91,6 +91,8 @@ public class DirectiveConfirmService {
                     }
                 }
             }
+            // TODO check for valid studentGroup for ennist, immat, okava, ovorm
+            // TODO check for valid curriculumVersion for ennist (student's current), immat, okava
             if(DirectiveType.KASKKIRI_AKADK.equals(directiveType)) {
                 // check that cancel date is inside academic leave period
                 DirectiveStudent academicLeave = academicLeaves.get(EntityUtil.getId(ds.getStudent()));

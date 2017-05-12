@@ -1,0 +1,30 @@
+  <div class="ois-form-layout" layout="column">
+    <div layout-padding>
+      <div flex>
+        <md-table-container>
+          <table md-table md-progress="tabledata.$promise" md-row-select multiple ng-model="selectedStudents">
+            <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+              <tr md-row flex>
+                <th md-column><span>{{'student.label' | translate}}</span></th>
+                <th md-column><span>{{'journal.studentGroup' | translate}}</span></th>
+                <th md-column><span>{{'curriculum.code' | translate}}</span></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row md-select="row.studentId" md-auto-select ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{row.fullname}}</td>
+                <td md-cell>{{row.studentGroup}}</td>
+                <td md-cell>{{row.curriculum}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </div>
+
+    <div layout="row" layout-margin>
+      <md-button class="md-raised md-primary" ng-click="addSelectedStudents()">{{'journal.addSelectedStudents' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="searchStudent()">{{'journal.searchForOtherStudent' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="back('#/journals/', journalForm)" >{{'main.button.back' | translate}}</md-button>
+    </div>
+  </div>

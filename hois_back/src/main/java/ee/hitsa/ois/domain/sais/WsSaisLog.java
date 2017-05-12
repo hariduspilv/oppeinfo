@@ -24,8 +24,15 @@ public class WsSaisLog extends BaseEntityWithId {
     private String response;
     private Boolean hasXteeErrors;
     private Boolean hasOtherErrors;
-    private Integer recordCount;
-    private WsSaisLog firstWsSaisLogId;
+    private Long recordCount;
+    
+    @ManyToOne
+    private WsSaisLog firstWsSaisLog;
+    
+    public WsSaisLog() {
+        this.hasOtherErrors = Boolean.FALSE;
+        this.hasXteeErrors = Boolean.FALSE;
+    }
 
     public School getSchool() {
         return school;
@@ -107,20 +114,20 @@ public class WsSaisLog extends BaseEntityWithId {
         this.hasOtherErrors = hasOtherErrors;
     }
 
-    public Integer getRecordCount() {
+    public Long getRecordCount() {
         return recordCount;
     }
 
-    public void setRecordCount(Integer recordCount) {
+    public void setRecordCount(Long recordCount) {
         this.recordCount = recordCount;
     }
 
-    public WsSaisLog getFirstWsSaisLogId() {
-        return firstWsSaisLogId;
+    public WsSaisLog getFirstWsSaisLog() {
+        return firstWsSaisLog;
     }
 
-    public void setFirstWsSaisLogId(WsSaisLog firstWsSaisLogId) {
-        this.firstWsSaisLogId = firstWsSaisLogId;
+    public void setFirstWsSaisLog(WsSaisLog firstWsSaisLog) {
+        this.firstWsSaisLog = firstWsSaisLog;
     }
 
 }

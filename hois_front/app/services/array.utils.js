@@ -20,6 +20,9 @@ angular.module('hitsaOis')
           array.splice(index, 1);
         }
       },
+      isEmpty: function(array) {
+        return !angular.isDefined(array) || array === null || array.length === 0;
+      },
       includes: function(array, searchElement , fromIndex) {
         // based on example from
         // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/includes#Polyfill
@@ -64,6 +67,17 @@ angular.module('hitsaOis')
             }
         }
         return commonPart;
+      },
+      removeDuplicates: function(array, property) {
+        var mySet = new Set();
+        return array.filter(function(el) {
+            var key = angular.isDefined(property) ? property : el;
+            var isNew = !mySet.has(key);
+            if (isNew) {
+                mySet.add(key);
+            } 
+            return isNew;
+        });
       }
     };
   });

@@ -1,0 +1,55 @@
+
+<div layout-padding>
+  <form ng-submit="loadData()" novalidate>
+    <div flex>
+      <div layout="row">
+        <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
+          <!--div class="indentForToast"></div-->
+
+          <h3>{{currentLanguageNameField(mainClass)}}</h3>
+
+          <md-input-container>
+            <label class="textInput">{{'saisClassifier.value' | translate}}</label>
+            <input ng-model="criteria.value" type="text" autofocus>
+          </md-input-container>
+          <md-input-container>
+            <label class="textInput">{{'saisClassifier.name' | translate}}</label>
+            <input ng-model="criteria.name" type="text">
+          </md-input-container>
+
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="#/saisClassifier">{{'main.button.back' | translate}}</md-button>
+          </div>
+        </div>
+        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+      </div>
+    </div>
+  </form>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="value">{{'saisClassifier.value' | translate}}</th>
+            <th md-column md-order-by="nameEt">{{'saisClassifier.nameEt' | translate}}</th>
+            <th md-column md-order-by="nameEn">{{'saisClassifier.nameEn' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.value}}</td>
+            <td md-cell>{{::row.nameEt}}</td>
+            <td md-cell>{{::row.nameEn}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }" md-page-select></md-table-pagination>
+  </div>
+</div>

@@ -26,6 +26,7 @@ public class TeacherForm extends VersionedCommand {
 
     private Boolean isVocational = Boolean.FALSE;
     private Boolean isHigher = Boolean.FALSE;
+    private Boolean isActive = Boolean.TRUE;
 
     private AutocompleteResult teacherOccupation;
 
@@ -49,6 +50,16 @@ public class TeacherForm extends VersionedCommand {
     public void setIsStudyPeriodScheduleLoad(Boolean studyPeriodScheduleLoad) {
         isStudyPeriodScheduleLoad = studyPeriodScheduleLoad;
     }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+
 
     @EstonianIdCode
     public static class TeacherPersonForm {

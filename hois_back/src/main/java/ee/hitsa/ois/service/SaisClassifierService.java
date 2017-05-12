@@ -6,10 +6,8 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.function.BiConsumer;
+import java.util.UUID;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
@@ -20,13 +18,21 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-import org.springframework.web.bind.annotation.RequestMapping;
 
+import ee.hitsa.ois.config.SaisProperties;
 import ee.hitsa.ois.domain.sais.SaisClassifier;
+import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisClassifierRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.sais.SaisClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
+import ee.hois.xroad.helpers.XRoadHeader;
+import ee.hois.xroad.helpers.sais.SaisClassificationResponse;
+import ee.hois.xroad.sais2.generated.ClassificationTypeItem;
+import ee.hois.xroad.sais2.generated.ClassificationItem;
+import ee.hois.xroad.sais2.generated.Kvp;
+import ee.hois.xroad.sais2.service.SaisService;
 
 @Transactional
 @Service
@@ -36,10 +42,13 @@ public class SaisClassifierService {
     private SaisClassifierRepository saisClassifierRepository;
     @Autowired
     private EntityManager em;
-    //@Autowired
-    //private SaisService saisService;
-    //@Autowired
-    //private SaisLogService saisLogService;
+    private SaisService saisService = new SaisService();
+    @Autowired
+    private SaisProperties sp;
+    @Autowired
+    private SaisLogService saisLogService;
+    @Autowired
+    private PersonRepository personRepository;
 
     public Page<SaisClassifierSearchDto> search(String parentCode, SaisClassifierSearchCommand criteria,
             Pageable pageable) {
@@ -68,58 +77,70 @@ public class SaisClassifierService {
                 .sort(pageable);
 
         qb.filter("sc.parent_code is null");
-        qb.optionalContains("sc.name_en or sc.name_et", "name", criteria.getName());
+        qb.optionalContains("sc.name_et", "name", criteria.getName());
 
-        String select = "sc.name_et, (select count(*) from sais_classifier sc2 where sc2.parent_code = sc.code)";
+        String select = "sc.code, sc.name_et, (select count(*) from sais_classifier sc2 where sc2.parent_code = sc.code)";
         return JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
-            return new SaisClassifierSearchDto(resultAsString(r, 0), resultAsLong(r, 1));
+            return new SaisClassifierSearchDto(resultAsString(r, 0), resultAsString(r, 1), resultAsLong(r, 2));
         });
     }
 
-    @RequestMapping("/importClassifiers")
-    public Page<SaisClassifierSearchDto> importClassifiers(SaisClassifierSearchCommand criteria, Pageable pageable) {
-        /*XRoadHeader xRoadHeader = new XRoadHeader();
+    public Page<SaisClassifierSearchDto> importClassifiers(SaisClassifierSearchCommand criteria, Pageable pageable, HoisUserDetails user) {
+        XRoadHeader xRoadHeader = new XRoadHeader();
 
-        // siia tuleb teha confi lugemine
-        xRoadHeader.setConsumer("10239452");
-        xRoadHeader.setEndpoint("http://141.192.105.184/cgi-bin/consumer_proxy");
-        xRoadHeader.setId("3aed1ae3813eb7fbed9396fda70ca1215d3f3fe1");
-        xRoadHeader.setProducer("sais2");
+        xRoadHeader.setConsumer(sp.getConsumer());
+        xRoadHeader.setEndpoint(sp.getEndpoint());
+        xRoadHeader.setProducer(sp.getProducer());
+        xRoadHeader.setUserId(sp.getUseridcode() + personRepository.getOne(user.getPersonId()).getIdcode());
+        xRoadHeader.setId(UUID.randomUUID().toString());
         xRoadHeader.setService("sais2.ClassificationsExport.v1");
-        xRoadHeader.setUserId("EE30101010007");
+        SaisClassificationResponse classificationResponse = null;
 
-        SaisClassificationResponse classificationResponse = saisService.classificationsExport(xRoadHeader);
-        classificationResponse.setQueryStart(LocalDateTime.now());
-        
-        for (ClassificationTypeItem cTItem : classificationResponse.getClassificationsExport().getClassificationTypes()
-                .getClassificationTypeItem()) {
-            SaisClassifier scRoot = new SaisClassifier();
-            scRoot.setCode(cTItem.getId());
-            scRoot.setValue(cTItem.getName());
-            scRoot.setNameEt(cTItem.getName());
-            em.persist(scRoot);
-            for (ClassificationItem cItem : cTItem.getClassifications().getClassificationItem()) {
-                SaisClassifier sc = new SaisClassifier();
-                sc.setCode(cItem.getId());
-                sc.setParentCode(scRoot.getCode());
-                sc.setValue(cItem.getValue());
-                for (Kvp kvp : cItem.getTranslation().getKvp()) {
-                    String name = kvp.getValue();
-                    switch(kvp.getKey().toUpperCase()) {
-                    case "ENGLISH":
-                        sc.setNameEn(name);
-                        break;
-                    case "ESTONIAN":
-                        sc.setNameEt(name);
-                        break;
+        try {
+            classificationResponse = saisService.classificationsExport(xRoadHeader);
+            saisClassifierRepository.deleteAllInBatch();
+            classificationResponse.setQueryStart(LocalDateTime.now());
+            try {
+            for (ClassificationTypeItem cTItem : classificationResponse.getClassificationsExport()
+                    .getClassificationTypes().getClassificationTypeItem()) {
+                SaisClassifier scRoot = new SaisClassifier();
+                scRoot.setCode(cTItem.getId());
+                scRoot.setValue(cTItem.getName());
+                scRoot.setNameEt(cTItem.getName());
+                em.persist(scRoot);
+                for (ClassificationItem cItem : cTItem.getClassifications().getClassificationItem()) {
+                    SaisClassifier sc = new SaisClassifier();
+                    sc.setCode(cItem.getId());
+                    sc.setParentCode(scRoot.getCode());
+                    sc.setValue(cItem.getValue());
+                    for (Kvp kvp : cItem.getTranslation().getKvp()) {
+                        String name = kvp.getValue();
+                        switch (kvp.getKey().toUpperCase()) {
+                        case "ENGLISH":
+                            sc.setNameEn(name);
+                            break;
+                        case "ESTONIAN":
+                            sc.setNameEt(name);
+                            break;
+                        }
                     }
+                    em.persist(sc);
                 }
-                em.persist(sc);
             }
+            classificationResponse.setRecordCount(saisClassifierRepository.count());
+            } catch (Exception e) {
+                classificationResponse.setError(e.getStackTrace().toString());
+                classificationResponse.setProcessingErrors(Boolean.TRUE);
+            }
+            classificationResponse.setQueryEnd(LocalDateTime.now());
+        } catch (Exception e) {
+            if(classificationResponse == null) {
+                classificationResponse = new SaisClassificationResponse();
+            }
+            classificationResponse.setError(e.getStackTrace().toString());
+            classificationResponse.setxRoadErrors(Boolean.TRUE);
         }
-        classificationResponse.setQueryEnd(LocalDateTime.now());
-        //saisLogService.insertLog(classificationResponse);*/
-
+        saisLogService.insertLog(classificationResponse, user);
         return list(criteria, pageable);
     }
 

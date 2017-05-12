@@ -5,7 +5,6 @@ import ee.hitsa.ois.util.EntityUtil;
 
 public class SaisClassifierDto {
 
-    private Long id;
     private String code;
     private String parentCode;
     private String value;
@@ -15,14 +14,6 @@ public class SaisClassifierDto {
     public static SaisClassifierDto of(SaisClassifier saisClassifierDto) {
         SaisClassifierDto dto = EntityUtil.bindToDto(saisClassifierDto, new SaisClassifierDto());
         return dto;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
     }
 
     public String getCode() {

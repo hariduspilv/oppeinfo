@@ -20,14 +20,14 @@
                 <table md-table>
                     <thead>
                         <tr>
-                            <th></th>
+                            <th class="studentGroup"></th>
                             <th ng-repeat="studyPeriod in criteria.studyYear.studyPeriods" colspan="{{studyPeriod.weeks}}">
                                 {{currentLanguageNameField(studyPeriod)}}
                             </th>
                         </tr>
                         <tr>
-                            <th></th>
-                            <th ng-repeat="week in weeks" class="weekNr">{{$index + 1}}</th>
+                            <th class="studentGroup"></th>
+                            <th class="weekCell" ng-repeat="week in weeks" class="weekNr">{{$index + 1}}</th>
                         </tr>
                     </thead>
                     <tbody ng-repeat="department in schoolDepartments | filter: filterSchoolDepartments">
@@ -35,13 +35,13 @@
                             <td colspan="{{weeks.length + 1}}" class="schoolDepartment">{{currentLanguageNameField(department)}}</td>
                         </tr>
                         <tr ng-repeat="sg in studentGroups | filter: filterStudentGroups(department)">
-                            <td>{{sg.code}}</td>
+                            <td class="studentGroup">{{sg.code}}</td>
                             <!--
                                 style="background: { getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color}"
                                 Was not used insted of ng-style as VS code marked curly braces as error(css property expected),
                                 though it did not cause an error on "grunt build" on local machine
                             -->
-                            <td ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
+                            <td class="weekCell" ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
                             ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }">
                                 {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
                                 </td>
@@ -63,6 +63,14 @@
 table, th, td {
     border: 1px solid #1cb3ff;
     border-collapse: collapse;
+
+    /*table-layout: fixed;  with this table horizontal scroll does not work on small screens*/
+}
+.studentGroup {
+    width: 100px;
+}
+.weekCell {
+    width: 30px;
 }
 .schoolDepartment {
     font-weight: bold;

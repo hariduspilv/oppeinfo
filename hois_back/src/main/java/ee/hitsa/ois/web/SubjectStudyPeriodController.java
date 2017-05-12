@@ -1,11 +1,13 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
 import java.util.List;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,12 +21,16 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.enums.SubjectStatus;
+import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.service.SubjectStudyPeriodService;
 import ee.hitsa.ois.service.TeacherService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodStudentGroupSearchCommand;
@@ -46,6 +52,8 @@ public class SubjectStudyPeriodController {
     private SubjectStudyPeriodService subjectStudyPeriodService;
     @Autowired
     private TeacherService teacherService;
+    @Autowired
+    private SubjectService subjectService;
 
     @GetMapping
     public Page<SubjectStudyPeriodSearchDto> search(HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
@@ -131,5 +139,19 @@ public class SubjectStudyPeriodController {
         return teacherService.search(command, pageable).map(t -> {
             return new AutocompleteResult(t.getId(), t.getName(), t.getName());
         });
+    }
+    
+    /**
+     * Later subjects' options will be more limited
+     */
+    @GetMapping("/subjects")
+    public List<AutocompleteResult> subjects(HoisUserDetails user) {
+        SubjectSearchCommand subjectSearchCommand = new SubjectSearchCommand();
+        subjectSearchCommand.setStatus(Collections.singletonList(SubjectStatus.AINESTAATUS_K.name()));
+        return subjectService.search(user.getSchoolId(), subjectSearchCommand, new PageRequest(0, Integer.MAX_VALUE))
+                .map(s -> new AutocompleteResult(s.getId(), 
+                        SubjectUtil.subjectName(s.getCode(), s.getNameEt(), s.getCredits()), 
+                        SubjectUtil.subjectName(s.getCode(), s.getNameEn(), s.getCredits())))
+                .getContent();
     }
 }

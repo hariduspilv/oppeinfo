@@ -34,7 +34,6 @@ import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
-import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -51,6 +50,7 @@ import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
@@ -73,8 +73,6 @@ public class AutocompleteService {
     private SubjectService subjectService;
     @Autowired
     private TeacherRepository teacherRepository;
-    @Autowired
-    private StudentGroupRepository studentGroupRepository;
     @Autowired
     private StudyPeriodRepository studyPeriodRepository;
     @Autowired
@@ -198,9 +196,26 @@ public class AutocompleteService {
         return StreamUtil.toMappedList(r -> new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4)), data);
     }
 
-    public List<StudentGroupResult> studentGroups(Long schoolId) {
-        // StudentGroupResult includes attributes for filtering in frontend
-        return StreamUtil.toMappedList(StudentGroupResult::of, studentGroupRepository.findAllBySchool_id(schoolId));
+    public List<StudentGroupResult> studentGroups(Long schoolId, Boolean valid) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+                "from student_group sg inner join curriculum c on sg.curriculum_id = c.id " +
+                "left outer join curriculum_version cv on sg.curriculum_version_id = cv.id");
+
+        qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
+
+        if(Boolean.TRUE.equals(valid)) {
+            qb.requiredCriteria("(sg.valid_from is null or sg.valid_from <= :now) and (sg.valid_thru is null or sg.valid_thru >= :now)", "now", LocalDate.now());
+        }
+
+        List<?> data = qb.select("sg.id, sg.code, c.id as c_id, cv.id as cv_id, sg.study_form_code, sg.language_code", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            StudentGroupResult dto = new StudentGroupResult(resultAsLong(r, 0), resultAsString(r, 1));
+            dto.setCurriculum(resultAsLong(r, 2));
+            dto.setCurriculumVersion(resultAsLong(r, 3));
+            dto.setStudyForm(resultAsString(r, 4));
+            dto.setLanguage(resultAsString(r, 5));
+            return dto;
+        }, data);
     }
 
     public List<AutocompleteResult> students(Long schoolId, AutocompleteCommand lookup) {
@@ -247,6 +262,14 @@ public class AutocompleteService {
         return StreamUtil.toMappedList(StudyPeriodDto::of, studyPeriodRepository.findAll((root, query, cb) -> {
             return cb.equal(root.get("studyYear").get("school").get("id"), schoolId);
         }));
+    }
+
+    public List<StudyYearSearchDto> studyYears(Long schoolId) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+                "from study_year sy inner join classifier c on sy.year_code = c.code").sort("c.code desc");
+        qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", schoolId);
+        List<?> data = qb.select("c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, 0 as count", em).getResultList();
+        return StreamUtil.toMappedList(r -> new StudyYearSearchDto((Object[])r), data);
     }
 
     public List<AutocompleteResult> saisAdmissionCodes(Long schoolId) {

@@ -43,7 +43,7 @@ public class Journal extends BaseEntityWithId {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
-    private Set<JournalOmoduleTheme> journalOmoduleThemes = new HashSet<>();
+    private Set<JournalOccupationModuleTheme> journalOccupationModuleThemes = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
@@ -126,12 +126,12 @@ public class Journal extends BaseEntityWithId {
         this.journalStudents = journalStudents;
     }
 
-    public Set<JournalOmoduleTheme> getJournalOmoduleThemes() {
-        return journalOmoduleThemes;
+    public Set<JournalOccupationModuleTheme> getJournalOccupationModuleThemes() {
+        return journalOccupationModuleThemes;
     }
 
-    public void setJournalOmoduleThemes(Set<JournalOmoduleTheme> journalOmoduleThemes) {
-        this.journalOmoduleThemes = journalOmoduleThemes;
+    public void setJournalOccupationModuleThemes(Set<JournalOccupationModuleTheme> journalOccupationModuleThemes) {
+        this.journalOccupationModuleThemes = journalOccupationModuleThemes;
     }
 
     public Set<JournalCapacity> getJournalCapacities() {

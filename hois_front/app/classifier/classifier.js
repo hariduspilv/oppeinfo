@@ -5,37 +5,7 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
 	// qrunt jshint gives Missing 'new' prefix when invoking a constructor
     CacheFactory('classifierCache');
 
-    function Classifier(args) {
-
-      this.code = args.code || null;
-      this.value = args.value || null;
-      this.value2 = args.value2 || null;
-      this.nameEt = args.nameEt || null;
-      this.nameEn = args.nameEn || null;
-      this.nameRu = args.nameRu || null;
-      this.mainClassCode = args.mainClassCode || null;
-      this.description = args.description || null;
-      this.changedDate = args.changedDate || null;
-      this.validFrom = args.validFrom || null;
-      this.validThru = args.validThru || null;
-      this.extraval1 = args.extraval1 || null;
-      this.extraval2 = args.extraval2 || null;
-      this.ehisValue = args.ehisValue || null;
-      this.vocational = args.vocational || false;
-      this.higher = args.higher || false;
-
-
-      this.save = function () {
-          return $resource(config.apiUrl+'/classifier/:code', {code: '@code'}).update(this);
-      };
-
-      this.create = function() {
-          return $resource(config.apiUrl+'/classifier').save(this);
-      };
-
-      this.delete = function () {
-        return $resource(config.apiUrl+'/classifier/:code', {code: '@code'}).delete(this);
-      };
+    function Classifier() {
     }
 
     Classifier.get = function(code) {

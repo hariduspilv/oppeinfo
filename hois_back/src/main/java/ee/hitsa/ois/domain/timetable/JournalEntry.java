@@ -1,11 +1,15 @@
 package ee.hitsa.ois.domain.timetable;
 
 import java.time.LocalDate;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -26,6 +30,15 @@ public class JournalEntry extends BaseEntityWithId {
     private String content;
     private String homework;
     private LocalDate homeworkDuedate;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_entry_id", nullable = false, updatable = false)
+    private Set<JournalEntryCapacityType> journalEntryCapacityTypes = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_entry_id", nullable = false, updatable = false)
+    private Set<JournalEntryStudent> journalEntryStudents = new HashSet<>();
+
     public Journal getJournal() {
         return journal;
     }
@@ -80,7 +93,17 @@ public class JournalEntry extends BaseEntityWithId {
     public void setHomeworkDuedate(LocalDate homeworkDuedate) {
         this.homeworkDuedate = homeworkDuedate;
     }
-
-
+    public Set<JournalEntryCapacityType> getJournalEntryCapacityTypes() {
+        return journalEntryCapacityTypes;
+    }
+    public void setJournalEntryCapacityTypes(Set<JournalEntryCapacityType> journalEntryCapacityTypes) {
+        this.journalEntryCapacityTypes = journalEntryCapacityTypes;
+    }
+    public Set<JournalEntryStudent> getJournalEntryStudents() {
+        return journalEntryStudents;
+    }
+    public void setJournalEntryStudents(Set<JournalEntryStudent> journalEntryStudents) {
+        this.journalEntryStudents = journalEntryStudents;
+    }
 
 }

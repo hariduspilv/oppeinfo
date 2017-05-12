@@ -131,6 +131,13 @@ public class MessageControllerTest {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
+    @Test
+    public void students() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(BASE_URL + "/students", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
     private static MessageForm getForm() {
         MessageForm form = new MessageForm();
         form.setSubject(TEXT);

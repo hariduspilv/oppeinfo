@@ -55,4 +55,15 @@ public class StudentGroupControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+
+    @Test
+    public void findstudents() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/studentgroups/findstudents");
+        uriBuilder.queryParam("language", "ET");
+        uriBuilder.queryParam("curriculum", "1");
+        uriBuilder.queryParam("studyForm", "OPPEVORM_P");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

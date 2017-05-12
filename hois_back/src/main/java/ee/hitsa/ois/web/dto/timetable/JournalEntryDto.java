@@ -2,8 +2,9 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 
-public class JournalEntryDto {
+public class JournalEntryDto extends JournalEntryForm {
 
     private Long id;
 

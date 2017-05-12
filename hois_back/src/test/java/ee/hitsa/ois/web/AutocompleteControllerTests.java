@@ -153,7 +153,7 @@ public class AutocompleteControllerTests {
 
     @Test
     public void studentgroups() {
-        String uri = "/autocomplete/studentgroups";
+        String uri = "/autocomplete/studentgroups?valid=true";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -170,6 +170,22 @@ public class AutocompleteControllerTests {
     @Test
     public void students() {
         String uri = "/autocomplete/students";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void studyPeriods() {
+        String uri = "/autocomplete/studyPeriods";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void studyYears() {
+        String uri = "/autocomplete/studyYears";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

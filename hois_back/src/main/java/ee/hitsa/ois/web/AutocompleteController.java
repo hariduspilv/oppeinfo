@@ -26,6 +26,7 @@ import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
@@ -83,8 +84,8 @@ public class AutocompleteController {
     }
 
     @GetMapping("/studentgroups")
-    public List<StudentGroupResult> studentGroups(HoisUserDetails user) {
-        return autocompleteService.studentGroups(user.getSchoolId());
+    public List<StudentGroupResult> studentGroups(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
+        return autocompleteService.studentGroups(user.getSchoolId(), valid);
     }
 
     @GetMapping("/subjects")
@@ -105,6 +106,11 @@ public class AutocompleteController {
     @GetMapping("/studyPeriods")
     public List<StudyPeriodDto> studyPeriods(HoisUserDetails user) {
         return autocompleteService.studyPeriods(user.getSchoolId());
+    }
+
+    @GetMapping("/studyYears")
+    public List<StudyYearSearchDto> studyYears(HoisUserDetails user) {
+        return autocompleteService.studyYears(user.getSchoolId());
     }
 
     @GetMapping("/saisAdmissionCodes")

@@ -56,11 +56,19 @@
                 </tbody>
             </table>
             <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="!hasObligatoryStudentGroup">
+                    <label>{{'subjectStudyPeriod.studentGroups' | translate}}</label>
+                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple></hois-select>
+                </md-input-container>
+                <md-input-container flex="10" flex-sm="100" flex-xs="100" ng-if="hasObligatoryStudentGroup">
+                    <label>{{'subjectStudyPeriod.studentGroupPreselected' | translate}}</label>
+                    <input type="text" ng-model="studentGroup.code" readonly>
+                </md-input-container>
+                <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="hasObligatoryStudentGroup">
                     <label>{{'subjectStudyPeriod.otherStudentGroups' | translate}}</label>
                     <hois-select ng-model="record.studentGroups" values="studentGroups" multiple></hois-select>
                 </md-input-container>
-                <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'subjectStudyPeriod.proportion' | translate}}</label>
                     <hois-classifier-select ng-model="record.groupProportion" model-value-attr="code" main-classifier-code="PAEVIK_GRUPI_JAOTUS" required></hois-classifier-select>
                 </md-input-container>

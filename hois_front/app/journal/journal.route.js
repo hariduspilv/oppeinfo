@@ -5,7 +5,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     .when('/journals', {
         templateUrl: 'journal/journal.list.html',
         controller: 'JournalListController',
-        controllerAs: 'controller',
+        controllerAs: 'journalListController',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
@@ -19,7 +19,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           return urlAttrs.action === 'edit' ? 'journal/journal.html' : 'journal/journal.view.html';
         },
         controller: 'JournalController',
-        controllerAs: 'controller',
+        controllerAs: 'journalController',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
           auth: function (AuthResolver) { return AuthResolver.resolve(); },

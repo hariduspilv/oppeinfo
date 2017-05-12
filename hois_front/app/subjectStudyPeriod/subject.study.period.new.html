@@ -59,7 +59,6 @@
                     <tbody md-body ng-repeat="subject in record.subjects">
                         <tr md-row ng-class-odd="'even'" ng-class-even="'even'">
                             <td class="cell bold">
-                                <!--  ng-class="{'invalid': !subjectsLoadValid(subject.id)}" -->
                                 <span>{{currentLanguageNameField(subject)}}</span>
                                 <md-button md-no-ink class="md-primary change-button right" ng-href="#/subjectStudyPeriod/{{subject.id}}/{{record.studentGroup}}/{{record.studyPeriod}}/new">{{'subjectStudyPeriod.addTeachers' | translate}}
                                 </md-button>
@@ -80,7 +79,7 @@
                                         <hois-classifier-value ng-model="ssp.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
                                     </span>
                                 </span>
-                                <md-button md-no-ink class="md-primary change-button right" ng-href="#/subjectStudyPeriod/{{ssp.id}}/edit">{{'main.button.change' | translate}}
+                                <md-button md-no-ink class="md-primary change-button right" ng-href="#/subjectStudyPeriod/{{ssp.id}}/{{record.studentGroup}}/edit">{{'main.button.change' | translate}}
                                 </md-button>
                             </td>
                             <td ng-repeat="type in capacityTypes" class="cell center" ng-click="setCapacityEditable(ssp, type.code)" ng-mouseleave="unsetCapacityEditable(ssp, type.code)">

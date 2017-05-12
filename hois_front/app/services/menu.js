@@ -138,6 +138,11 @@ angular.module('hitsaOis')
           url: "/classifier?_menu"
         },
         {
+          name: 'main.menu.fixData.saisClassifiers',
+          id: 'saisClassifier',
+          url: "/saisClassifier?_menu"
+        },
+        {
           name: 'main.menu.fixData.users',
           id: 'users',
           url: "/persons?_menu"

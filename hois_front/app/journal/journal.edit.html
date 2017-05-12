@@ -1,0 +1,63 @@
+<div layout-padding>
+    <div flex>
+      <h2>{{'journal.entryTabelLegend' | translate}}</h2>
+      <md-table-container>
+        <table md-table md-progress="entries.$promise">
+          <thead md-head md-on-reorder="loadEntries">
+            <tr md-row flex>
+              <th md-column><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in journal.journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</td>
+              <td md-cell layout="row" layout-align="end">
+                <md-button class="remove nomargin">&times;</md-button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </div>
+  </div>
+
+  <div layout-padding>
+    <div flex>
+      <div layout="row">
+        <md-button class="md-raised md-primary" ng-click="addNewEntry()">{{'journal.addNewEntry' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="searchStudent()">{{'journal.addStudents' | translate}}</md-button>
+        <md-button class="md-raised" >{{'journal.confirmJournal' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back('#/journals/', journalForm)" >{{'main.button.back' | translate}}</md-button>
+      </div>
+    </div>
+  </div>
+
+  <div layout-padding>
+  <div flex>
+    <h2>{{'journal.entries' | translate}}</h2>
+    <md-table-container>
+      <table md-table md-progress="journalEntries.$promise">
+        <thead md-head md-order="journalEntriesCriteria.order" md-on-reorder="loadJournalEntries">
+          <tr md-row>
+            <th md-column>{{'journal.entry.date' | translate}}</th>
+            <th md-column>{{'journal.entry.content' | translate}}</th>
+            <th md-column>{{'journal.entry.homework' | translate}}</th>
+            <th md-column>{{'journal.entry.homeworkDuedate' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in journalEntries.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{row.entryDate}}</td>
+            <td md-cell>{{row.content}}</td>
+            <td md-cell>{{row.homework}}</td>
+            <td md-cell>{{'main.formattedDate' | translate: {date: row.homeworkDuedate} }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="journalEntriesCriteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="journalEntriesCriteria.page" md-total="{{journalEntries.totalElements}}" md-on-paginate="loadJournalEntries"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

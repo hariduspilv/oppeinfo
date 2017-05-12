@@ -428,7 +428,7 @@
         </div>
         <br>
         <div layout="row">
-            <md-button class="md-raised md-primary" ng-href="#/higherEducationCurriculum/{{curriculum.id}}/edit" ng-if="readOnly">{{'main.button.change' | translate}}</md-button>
+            <md-button class="md-raised md-primary" ng-href="#/higherEducationCurriculum/{{curriculum.id}}/edit" ng-if="readOnly && (curriculum.status === 'OPPEKAVA_STAATUS_S' || curriculum.status === 'OPPEKAVA_STAATUS_M' || curriculum.status === 'OPPEKAVA_STAATUS_K')">{{'main.button.change' | translate}}</md-button>
             <md-button class="md-raised md-primary" ng-click="save()" ng-if="!readOnly">{{'main.button.save' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-href="/#/curriculum">{{'main.button.back' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-click="delete()" ng-if="curriculum.id && !readOnly">{{'main.button.delete' | translate}}</md-button>

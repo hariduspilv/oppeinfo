@@ -1,0 +1,125 @@
+<md-dialog aria-label="add entry dialog" flex="50">
+  <form name="dialogForm" ng-submit="loadData()" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"journal.entry.new" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin>
+        <div flex>
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex="45">
+                <label>{{'journal.entry.type' | translate}}</label>
+                <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required></hois-classifier-select>
+              </md-input-container>
+              <md-input-container flex="45" flex-offset="10">
+                <label>{{'journal.entry.name' | translate}}</label>
+                <input type="text" ng-model="journalEntry.nameEt">
+              </md-input-container>
+            </div>
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container layout="row" layout-align="start center" flex>
+                <md-checkbox ng-repeat="type in capacityTypes" ng-model="journalEntry.capacityTypes[type.code]">{{currentLanguageNameField(type)}}</md-checkbox>
+              </md-input-container>
+            </div>
+
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex="20">
+                <label>{{'journal.entry.selectDate' | translate}}</label>
+                <hois-select ng-model="journalEntry.entryDateSelect" values="lessonPlanDates" on-change="journalEntry.entryDateCalendar=undefined;journalEntry.entryDate=journalEntry.entryDateSelect"></hois-select>
+              </md-input-container>
+              <div layout="row" layout-align="center" style="padding-top:8px" flex="5">
+                <span>{{'main.or' | translate}}</span>
+              </div>
+              <md-input-container flex="25">
+                <label>{{'journal.entry.selectFromCalendar' | translate}}</label>
+                <md-datepicker ng-model="journalEntry.entryDateCalendar" md-open-on-focus on-change="journalEntry.entryDateSelect=undefined;journalEntry.entryDate=journalEntry.entryDateCalendar"></md-datepicker>
+              </md-input-container>
+              <md-input-container flex="20" flex-offset="5">
+                <label>{{'journal.entry.startLessonNr' | translate}}</label>
+                <hois-select ng-model="journalEntry.startLessonNr" values="startLessonNrs"></hois-select>
+              </md-input-container>
+              <md-input-container flex="20" flex-offset="5">
+                <label>{{'journal.entry.lessons' | translate}}</label>
+                <hois-select ng-model="journalEntry.lessons" values="lessons"></hois-select>
+              </md-input-container>
+            </div>
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex>
+                <label>{{'journal.entry.content' | translate}}</label>
+                <textarea ng-model="journalEntry.content" md-maxlength="10000" max-rows="2"></textarea>
+              </md-input-container>
+            </div>
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex="70">
+                <label>{{'journal.entry.homework' | translate}}</label>
+                <textarea ng-model="journalEntry.homework" md-maxlength="10000" max-rows="2"></textarea>
+              </md-input-container>
+
+              <md-input-container flex flex-offset="5">
+                <label>{{'journal.entry.homeworkDuedate' | translate}}</label>
+                <md-datepicker ng-model="journalEntry.homeworkDuedate" md-open-on-focus ng-required="!!journalEntry.homework"></md-datepicker>
+              </md-input-container>
+            </div>
+        </div>
+
+        <div layout-padding>
+          <div flex>
+            <md-table-container>
+              <table md-table>
+                <thead md-head>
+                  <tr md-row flex>
+                    <th md-column><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
+                    <th md-column><span>{{'journal.entry.student.lateAbsent' | translate}}</span></th>
+                    <th md-column><span>{{'journal.entry.student.grade' | translate}}</span></th>
+                    <th md-column><span>{{'journal.entry.student.description' | translate}}</span></th>
+                  </tr>
+                </thead>
+                <tbody md-body>
+                  <tr md-row ng-repeat="row in journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                    <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</td>
+                    <td md-cell>
+                      <md-input-container>
+                        <md-radio-group ng-model="journalEntry.journalEntryStudents[$index].absence" layout="row" aria-label="absence">
+                          <md-radio-button value="PUUDUMINE_H" aria-label="PUUDUMINE_H">{{absenceOptions["PUUDUMINE_H"].value}}</md-radio-button>
+                          <md-radio-button value="PUUDUMINE_P" aria-label="PUUDUMINE_P">{{absenceOptions["PUUDUMINE_P"].value}}</md-radio-button>
+                        </md-radio-group>
+                      </md-input-container>
+                    </td>
+                    <td md-cell>
+                      <md-input-container>
+                        <hois-classifier-select ng-model="journalEntry.journalEntryStudents[$index].grade" model-value-attr="code" main-classifier-code="KUTSEHINDAMINE" aria-label="grade"></hois-classifier-select>
+                      </md-input-container>
+                    </td>
+                    <td md-cell>
+                      <md-input-container>
+                        <input type="text" ng-model="journalEntry.journalEntryStudents[$index].description" aria-label="description">
+                      </md-input-container>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </md-table-container>
+          </div>
+        </div>
+
+        <span flex></span>
+        <md-dialog-actions layout="row" layout-align="start center">
+          <md-button class="md-raised md-primary" ng-click="submit()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+        </md-dialog-actions>
+      </div>
+    </md-dialog-content>
+
+
+
+
+  </form>
+</md-dialog>

@@ -312,7 +312,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           $scope.applicationForm.$setPristine();
         });
       } else {
-          application.$save().then(function() {
+        application.$save().then(function() {
           message.info('main.messages.create.success');
           $location.path('/applications/'+application.id+'/edit');
         });

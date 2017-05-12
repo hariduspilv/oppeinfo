@@ -5,6 +5,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -16,12 +17,13 @@ import ee.hitsa.ois.web.commandobject.sais.SaisClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
 
 @RestController
-@RequestMapping("/saisClassifiers")
+@RequestMapping("/saisClassifier")
 public class SaisClassifierController {
 
     @Autowired
     private SaisClassifierService saisClassifierService;
 
+    @GetMapping("")
     public Page<SaisClassifierSearchDto> list(SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
         assertIsMainAdmin(user);
         return saisClassifierService.list(command, pageable);
@@ -34,11 +36,11 @@ public class SaisClassifierController {
         return saisClassifierService.search(parentCode, command, pageable);
     }
 
-    /*@PostMapping
-    public SaisAdmissionDto saisImport(HoisUserDetails user) {
+    @PostMapping("/saisImport")
+    public Page<SaisClassifierSearchDto> saisImport(SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
         assertIsMainAdmin(user);
-        return SaisClassifierService.saisClassifierImport();
-    }*/
+        return saisClassifierService.importClassifiers(command, pageable, user);
+    }
     
     private static void assertIsMainAdmin(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isMainAdmin(), "User is not main admin");

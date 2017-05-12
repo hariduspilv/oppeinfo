@@ -168,7 +168,7 @@ public class DirectiveControllerTests {
         String uri = uriBuilder.build().toUriString();
         DirectiveCoordinatorForm form = new DirectiveCoordinatorForm();
         form.setName("Käskkirjade kooskõlastaja");
-        form.setIdcode("48908209998");
+        form.setIdcode("46904014003");
         ResponseEntity<DirectiveCoordinatorDto> responseEntity = restTemplate.postForEntity(uri, form, DirectiveCoordinatorDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());

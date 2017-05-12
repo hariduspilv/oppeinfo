@@ -13,6 +13,7 @@ angular.module('hitsaOis')
 
     var baseUrl = '/curriculum';
     var Endpoint = QueryUtils.endpoint(baseUrl);
+    var SpecialityEndpoint = QueryUtils.endpoint(baseUrl + '/speciality');
     var id = $route.current.params.id;
 
     var initialCurriculumScope = {
@@ -301,15 +302,34 @@ angular.module('hitsaOis')
       dialogService.showDialog('higherEducationCurriculum/higher.education.curriculum.specialty.add.dialog.html', DialogController,
         function (submitScope) {
             var data = submitScope.data;
+            var spec;
             if(!data.occupation) {
                 data.occupationEt = undefined;
                 data.occupationEn = undefined;
             }
             if(editedSpecialty) {
-                angular.extend(editedSpecialty, data);
+                 if($scope.curriculum.id) {
+                    spec = new SpecialityEndpoint(data);
+                    spec.$update().then(function(response){
+                        message.info('main.messages.update.success');
+                        angular.extend(editedSpecialty, response);
+                    });
+                } else {
+                    angular.extend(editedSpecialty, data);
+                }
+
             } else {
                 data.referenceNumber = getReferenceNumber($scope.curriculum.specialities);
-                $scope.curriculum.specialities.push(data);
+                if($scope.curriculum.id) {
+                    spec = new SpecialityEndpoint(data);
+                    spec.curriculum = $scope.curriculum.id;
+                    spec.$save().then(function(responses){
+                        message.info('main.messages.create.success');
+                        $scope.curriculum.specialities.push(responses);
+                    });
+                } else {
+                    $scope.curriculum.specialities.push(data);
+                }    
             }
         });
     };
@@ -329,11 +349,23 @@ angular.module('hitsaOis')
     }
 
     $scope.removeSpeciality = function(speciality) {
-        if(specAddedToVersion(speciality)) {
-            message.error('curriculum.error.specAddedToVersion');
-            return;
-        }
-        $scope.removeFromArray($scope.curriculum.specialities, speciality);
+
+        dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
+
+            if(specAddedToVersion(speciality)) {
+                message.error('curriculum.error.specAddedToVersion');
+                return;
+            }
+            if(speciality.id) {
+                var spec = new SpecialityEndpoint(speciality);
+                spec.$delete().then(function(){
+                    message.info('main.messages.delete.success');
+                    ArrayUtils.remove($scope.curriculum.specialities, speciality);
+                });
+            } else {
+                ArrayUtils.remove($scope.curriculum.specialities, speciality);
+            }
+        });
     };
 
     function specAddedToVersion(spec) {

@@ -4,8 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.domain.timetable.Journal;
-import ee.hitsa.ois.domain.timetable.JournalEntry;
-import ee.hitsa.ois.domain.timetable.JournalOmoduleTheme;
+import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -25,7 +24,7 @@ public class JournalSearchDto {
 
     public static JournalSearchDto of(Journal journal) {
         JournalSearchDto dto = EntityUtil.bindToDto(journal, new JournalSearchDto());
-        for (JournalOmoduleTheme theme : journal.getJournalOmoduleThemes()) {
+        for (JournalOccupationModuleTheme theme : journal.getJournalOccupationModuleThemes()) {
             dto.getStudentGroups().add(theme.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode());
             dto.getModules().add(AutocompleteResult.of(theme.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule()));
             dto.getCurriculums().add(theme.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule().getCurriculum().getCode());
@@ -35,8 +34,8 @@ public class JournalSearchDto {
             dto.getTeachers().add(PersonUtil.fullname(teacher.getTeacher().getPerson()));
         }
 
-        dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours().intValue()).sum()));
-        dto.setUsedHours(Integer.valueOf(journal.getJournalEntries().stream().mapToInt(JournalEntry::getLessons).sum()));
+        dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours() == null ? 0 : it.getHours().intValue()).sum()));
+        dto.setUsedHours(Integer.valueOf(journal.getJournalEntries().stream().mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum()));
         return dto;
     }
 

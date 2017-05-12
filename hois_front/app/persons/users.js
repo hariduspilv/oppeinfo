@@ -34,7 +34,7 @@ angular.module('hitsaOis')
         $scope.user.rights = response.userRoles;
       });
       if (!$scope.showSchool) {
-        $scope.user.school = (Session.school.id.toString());
+        $scope.user.school = {id: (Session.school.id.toString())};
       }
     }
 

@@ -9,11 +9,10 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
-import ee.hitsa.ois.domain.teacher.TeacherMobility;
-import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityForm;
-import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFrom;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -24,6 +23,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.teacher.TeacherMobility;
 import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -31,7 +31,10 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.repository.TeacherMobilityRepository;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
+import ee.hitsa.ois.repository.TeacherPositionEhisRepository;
+import ee.hitsa.ois.repository.TeacherQualificationRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -39,6 +42,8 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityForm;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFrom;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
@@ -56,7 +61,13 @@ public class TeacherService {
     @Autowired
     private SchoolDepartmentRepository schoolDepartmentRepository;
     @Autowired
+    private TeacherMobilityRepository teacherMobilityRepository;
+    @Autowired
     private TeacherOccupationRepository teacherOccupationRepository;
+    @Autowired
+    private TeacherPositionEhisRepository teacherPositionEhisRepository;
+    @Autowired
+    private TeacherQualificationRepository teacherQualificationRepository;
     @Autowired
     private TeacherRepository teacherRepository;
 
@@ -207,6 +218,23 @@ public class TeacherService {
             if(criteria.getIsHigher() != null) {
                 filters.add(cb.equal(root.get("isHigher"), criteria.getIsHigher()));
             }
+            
+            if(Boolean.TRUE.equals(criteria.getIsActive())) {
+                filters.add(cb.equal(root.get("isActive"), Boolean.TRUE));
+            }
+            
+            if(criteria.getSchoolDepartment() != null) {
+                Subquery<Long> teacherPositionSubquery = query.subquery(Long.class);
+                Root<TeacherPositionEhis> teacherPositionEhisRoot = teacherPositionSubquery.from(TeacherPositionEhis.class);
+                teacherPositionSubquery = teacherPositionSubquery
+                        .select(teacherPositionEhisRoot.get("teacher").get("id"))
+                        .where(cb.equal(teacherPositionEhisRoot.get("schoolDepartment").get("id"), criteria.getSchoolDepartment()));
+                filters.add(root.get("id").in(teacherPositionSubquery));                
+            }
+            
+            if(criteria.getTeacherOccupation() != null) {
+                filters.add(cb.equal(root.get("teacherOccupation").get("id"), criteria.getTeacherOccupation()));
+            }
 
             if(!StringUtils.isEmpty(criteria.getName())) {
                 List<Predicate> name = new ArrayList<>();
@@ -234,5 +262,17 @@ public class TeacherService {
     public TeacherDto saveQualifications(Teacher teacher, Set<TeacherQualificationFrom> teacherQualificationFroms) {
         bindTeacherQualificationForm(teacher, teacherQualificationFroms);
         return TeacherDto.of(teacherRepository.save(teacher));
+    }
+
+    public void delete(TeacherQualification qualification) {
+        EntityUtil.deleteEntity(teacherQualificationRepository, qualification);
+    }
+
+    public void delete(TeacherMobility teacherMobility) {
+        EntityUtil.deleteEntity(teacherMobilityRepository, teacherMobility);
+    }
+
+    public void delete(TeacherPositionEhis teacherPositionEhis) {
+        EntityUtil.deleteEntity(teacherPositionEhisRepository, teacherPositionEhis);
     }
 }

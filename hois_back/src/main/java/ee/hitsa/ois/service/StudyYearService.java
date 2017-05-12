@@ -26,7 +26,7 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
 import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.StudyYearForm;
-import ee.hitsa.ois.web.dto.StudyYearsSearchDto;
+import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 
 @Service
 @Transactional
@@ -50,8 +50,8 @@ public class StudyYearService {
     // TODO use enum for classifier
     private static final String[] STUDY_PERIOD_EVENTS = {"SYNDMUS_AVES", "SYNDMUS_DEKP", "SYNDMUS_VOTA"};
 
-    public List<StudyYearsSearchDto> getStudyYears(Long schoolId) {
-        return StreamUtil.toMappedList(StudyYearsSearchDto::new, studyYearRepository.findStudyYearsBySchool(schoolId));
+    public List<StudyYearSearchDto> getStudyYears(Long schoolId) {
+        return StreamUtil.toMappedList(StudyYearSearchDto::new, studyYearRepository.findStudyYearsBySchool(schoolId));
     }
 
     public StudyYear getCurrentStudyYear(Long schoolId) {

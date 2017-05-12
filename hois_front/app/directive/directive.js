@@ -68,7 +68,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
         });
       }
       if(type === 'KASKKIRI_ENNIST' || type === 'KASKKIRI_IMMAT' || type === 'KASKKIRI_IMMATV' || type === 'KASKKIRI_OKAVA' || type === 'KASKKIRI_OVORM') {
-        $scope.formState.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').query();
+        $scope.formState.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').query({valid: true});
         if($scope.formState.curriculumVersions) {
           // create mapping curriculumversion -> all possible student groups
           $q.all([$scope.formState.studentGroups.$promise, $scope.formState.curriculumVersions.$promise]).then(function() {

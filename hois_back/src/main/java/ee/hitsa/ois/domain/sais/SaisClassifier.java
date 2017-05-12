@@ -1,14 +1,14 @@
 package ee.hitsa.ois.domain.sais;
 
 import javax.persistence.Entity;
-import javax.validation.constraints.Size;
+import javax.persistence.Id;
 
-import ee.hitsa.ois.domain.BaseEntityWithId;
-import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.domain.BaseEntity;
 
 @Entity
-public class SaisClassifier extends BaseEntityWithId {
-
+public class SaisClassifier extends BaseEntity {
+    
+    @Id
     private String code;
     private String parentCode;
     private String value;

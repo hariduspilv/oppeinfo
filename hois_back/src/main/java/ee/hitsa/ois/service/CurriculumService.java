@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -75,6 +76,7 @@ import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
@@ -742,7 +744,7 @@ public class CurriculumService {
             for(CurriculumSpecialityDto dto : specialities) {
                 CurriculumSpeciality speciality = dto.getId() == null ? new CurriculumSpeciality() :
                     curriculum.getSpecialities().stream().filter(s -> s.getId().equals(dto.getId())).findFirst().get();
-                CurriculumSpeciality updatedSpeciality = EntityUtil.bindToEntity(dto, speciality, classifierRepository);
+                CurriculumSpeciality updatedSpeciality = EntityUtil.bindToEntity(dto, speciality, classifierRepository, "curriculum");
                 updatedSpeciality.setCurriculum(curriculum);
                 newSpecialities.add(updatedSpeciality);
             }
@@ -835,5 +837,40 @@ public class CurriculumService {
 
     public void deleteVersion(CurriculumVersion curriculumVersion) {
         EntityUtil.deleteEntity(curriculumVersionRepository, curriculumVersion);
+    }
+
+    public CurriculumSpeciality createCurriculumSpeciality(HoisUserDetails user, CurriculumSpecialityDto form) {
+        CurriculumSpeciality speciality = new CurriculumSpeciality();
+        speciality.setCurriculum(curriculumRepository.getOne(form.getCurriculum()));
+        return saveCurriculumSpeciality(speciality, form);
+    }
+
+    public CurriculumSpeciality saveCurriculumSpeciality(CurriculumSpeciality speciality,
+            CurriculumSpecialityDto form) {
+        EntityUtil.bindToEntity(form, speciality, classifierRepository, "curriculum");
+        return curriculumSpecialityRepository.save(speciality);
+    }
+
+    public void deleteSpeciality(CurriculumSpeciality speciality) {
+        EntityUtil.deleteEntity(curriculumSpecialityRepository, speciality);
+    }
+    
+    public List<ClassifierSelection> getCurriculumVersionHmoduleTypes(Long schoolId) {
+        final String SELECT = " distinct cvm.type_name_et, cvm.type_name_en ";
+        final String FROM = "from curriculum_version_hmodule cvm "
+                + "join curriculum_version cv on cv.id = cvm.curriculum_version_id "
+                + "join curriculum c on c.id = cv.curriculum_id";
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM);
+        qb.filter("cvm.type_code = 'KORGMOODUL_M'");
+        qb.filter("cvm.type_name_et is not null");
+        /*
+         * criteria is optional as external expert can view the form
+         */
+        qb.optionalCriteria("c.school_id = :schoolId", "schoolId", schoolId);
+        
+        List<?> data = qb.select(SELECT, em).getResultList();
+        return StreamUtil.toMappedList(r -> 
+             new ClassifierSelection(null, resultAsString(r, 0), resultAsString(r, 1), null, null, null, null, null, null)
+        , data);
     }
 }

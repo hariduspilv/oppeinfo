@@ -22,6 +22,16 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
+      }).when('/subjectStudyPeriod/:id/:studentGroupId/edit', {
+        templateUrl: 'subjectStudyPeriod/subject.study.period.edit.html',
+        controller: 'SubjectStudyPeriodEditController',
+        controllerAs: 'controller',
+        resolve: {
+            translationLoaded: function($translate) { return $translate.onReady(); }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        }
       }).when('/subjectStudyPeriod/:studentGroupId/:studyPeriodId/new', {
         templateUrl: 'subjectStudyPeriod/subject.study.period.edit.html',
         controller: 'SubjectStudyPeriodEditController',

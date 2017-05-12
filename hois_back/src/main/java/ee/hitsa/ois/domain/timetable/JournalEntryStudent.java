@@ -1,11 +1,15 @@
 package ee.hitsa.ois.domain.timetable;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -31,6 +35,10 @@ public class JournalEntryStudent extends BaseEntityWithId {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(nullable = true, updatable = false)
     private Classifier grade;
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_entry_student_id", nullable = false, updatable = false)
+    private Set<JournalEntryStudentHistory> journalEntryStudentHistories = new HashSet<>();
 
     private LocalDateTime gradeInserted;
 
@@ -88,6 +96,14 @@ public class JournalEntryStudent extends BaseEntityWithId {
 
     public void setGradeInserted(LocalDateTime gradeInserted) {
         this.gradeInserted = gradeInserted;
+    }
+
+    public Set<JournalEntryStudentHistory> getJournalEntryStudentHistories() {
+        return journalEntryStudentHistories;
+    }
+
+    public void setJournalEntryStudentHistories(Set<JournalEntryStudentHistory> journalEntryStudentHistories) {
+        this.journalEntryStudentHistories = journalEntryStudentHistories;
     }
 
 }

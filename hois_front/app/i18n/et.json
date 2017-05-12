@@ -95,6 +95,7 @@
     "months": "kuud",
     "yes": "Jah",
     "no": "Ei",
+    "or": "Või",
     "validityPeriod": "Kehtivuse periood",
     "validFrom": "Kehtiv alates",
     "validThru": "Kehtiv kuni",
@@ -178,7 +179,8 @@
         "studyLevels": "Õppeasutuse õppetasemed",
         "studyYears": "Õppeasutuse õppeperioodid",
         "classifiers": "Klassifikaatorid",
-        "users": "Kasutajad"
+        "users": "Kasutajad",
+        "saisClassifiers": "Klassifikaatorid SAISist"
       },
       "lessonplan": {
         "label": "Tunniplaanid"
@@ -441,6 +443,14 @@
     "isHigher": "Kõrgharidusõpe",
     "studyLevels": "Õppetasemed",
     "deleteconfirm": "Kas oled kindel, et soovid klassifikaatori kustutada?"
+  },
+  "saisClassifier": {
+  	"name" : "Nimetus",
+  	"klassifikaator": "Klassifikaator",
+  	"count": "Kirjete arv",
+  	"value": "Väärtus",
+  	"nameEt": "Nimetus eesti keeles",
+  	"nameEn": "Nimetus inglise keeles"
   },
   "directive": {
     "addInfo": "Lisainfo",
@@ -810,7 +820,7 @@
       "nameEt": "Peaeriala nimetus eesti keeles",
       "nameEn": "Peaeriala nimetus inglise keeles",
       "credits": "Peaeriala maht EAP",
-      "creditsError": "Peaeriala maht peab olema mitte suurem, kui õppekava maht",
+      "creditsError": "Peaeriala maht ei tohi olla suurem kui õppekava maht",
       "specialtyReferenceEt": "Akadeemilisele õiendile trükitav kutse eesti keeles",
       "specialtyReferenceEn": "Akadeemilisele õiendile trükitav kutse inglise keeles"
     },
@@ -842,7 +852,10 @@
         "firstAdmissionYear": "Esimene vastuvõtu aasta",
         "status": "Versiooni staatus",
         "copy": "Loo uus antud RK alusel",
-        "deleteconfirm": "Kas oled kindel, et soovid õppekava versiooni kustutada?"
+        "deleteconfirm": "Kas oled kindel, et soovid õppekava versiooni kustutada?",
+        "classifiers": "Klassifikaatorid",
+        "othersModuleTypes": "Eelnevalt süsteemi sisestatud mooduli liigid"
+
     },
     "error": {
         "numberOfElectiveModules": "Number peab olema mitte suurem, kui valikmoodulite arv",
@@ -885,6 +898,7 @@
     "isVocationalOrIsHigher":"Kutseõpe/Kõrgharidusõpe",
     "isVocational": "Kutseõpe",
     "isHigher": "Kõrgharidusõpe",
+    "isActive": "Aktiivne",
     "scheduleLoad": "Tunniplaani koormus",
     "occupations": "Õpetaja ametid",
     "occupation": {
@@ -895,7 +909,9 @@
       "occupationEn": "Ametikoht inglise keeles",
       "status": "Staatus",
       "validTrue": "Kehtiv",
-      "validFalse": "Kehtetu"
+      "validFalse": "Kehtetu",
+      "department": "Kehtiva ametikoha struktuuriüksus ",
+      "departments": "Kehtivate ametikohtade struktuuriüksused"
     },
     "teacherPositionEhis": {
       "label": "EHISe ametikoht",
@@ -918,7 +934,8 @@
       "position": "Ametikoht",
       "positionSpecificationEn": "Ametikoha täpsustus (inglise keeles)",
       "positionSpecificationEt": "Täpsustus",
-      "error": "Vähemalt üks EHISe ametikoht peab olema lisatud"
+      "error": "Vähemalt üks EHISe ametikoht peab olema lisatud",
+      "deleteConfirm": "Kas oled kindel, et soovid õpetaja EHISe ametikohta kustutada?"
     },
     "qualification": {
       "add": "lisa Kvalifikatsioon",
@@ -929,7 +946,8 @@
       "school": "Õppeasutus",
       "schoolOther": "Muu õppeasutus",
       "state": "Riik",
-      "year": "Aasta"
+      "year": "Aasta",
+      "deleteConfirm": "Kas oled kindel, et soovid õpetaja kvalifikatisooni kustutada?"
     },
     "mobility": {
       "add": "Lisa Lühiajaline eemalolek",
@@ -938,7 +956,8 @@
       "school": "Õppeasutus",
       "start": "Eemaloleku alguskuupäev",
       "state": "Sihtriik",
-      "target": "Eesmärk"
+      "target": "Eesmärk",
+      "deleteConfirm": "Kas oled kindel, et soovid õpetaja lühiajalist eemalolekut kustutada?"
     }
   },
   "user": {
@@ -1117,6 +1136,8 @@
     "department": "Struktuuriüksus",
     "curriculum": "Õppekava",
     "timetable": "Tunniplaan",
+    "studentGroups": "Seotud õpperühmad",
+    "studentGroupPreselected": "Seotud õpperühm",
     "otherStudentGroups": "Seotud teised õpperühmad",
     "curriculumStudyPeriod": "Õppeaeg",
     "course": "Kursus",
@@ -1131,7 +1152,8 @@
     "error": {
         "groupCannotBeRemoved": "See õpperühm peab olema lisatud!",
         "teacherNotAdded": "Õpetaja pole lisatud!",
-        "subjectLoad": "{{subject}} koormused ei klapi planeeritud koormustega. Salvesta?"
+        "subjectLoad": "{{subject}} koormused ei klapi planeeritud koormustega. Kas soovid salvestada?",
+        "noDataForSaving": "Andmed salvestamiseks puuduvad!"
     }
   },
   "subjectStudyPeriodTeacher": {
@@ -1314,7 +1336,8 @@
       "studyType": "Õppetöö liik",
       "durationInWeeks": "Kestvus nädalates",
       "error": {
-          "minWeeks": "Minimaalne õppetöö kestvus on 1 nädal"
+          "minWeeks": "Minimaalne õppetöö kestvus on 1 nädal",
+          "maxWeeks": "Õppeaasta lõppuni on jäänud {{weeks}} nädalat"
       }
   },
   "studyYearScheduleLegend": {
@@ -1357,6 +1380,29 @@
     "searchForOtherStudent": "Otsi muu õppur",
     "endDate": "Päeviku lõppkuupäev",
     "saveEndDate": "Salvesta lõppkuupäev",
-    "addStudentsToJournal": "Lisa õppurid päevikusse"
+    "addStudentsToJournal": "Lisa õppurid päevikusse",
+    "addStudents": "Lisa õppurid",
+    "addNewEntry": "Lisa uus sissekanne",
+    "confirmJournal": "Kinnita päevik",
+    "entryTabelLegend": "H - hilinemine, P - põhjuseta puudumine, V - vabandatav puudumine",
+    "entries": "Sissekanded",
+    "entry": {
+      "date": "Sissekande kp",
+      "new": "Sissekanne (uus)",
+      "type": "Sissekande liik",
+      "name": "Sissekande nimetus",
+      "selectDate": "Vali kuupäev",
+      "selectFromCalendar": "Vali kalendrist",
+      "startLessonNr": "Algustund",
+      "lessons": "Tundide arv",
+      "content": "Sisu",
+      "homework": "Kodutöö",
+      "homeworkDuedate": "Kodutöö tähtaeg",
+      "student" : {
+        "lateAbsent": "H/P",
+        "grade": "Hinne",
+        "description": "Selgitus"
+      }
+    }
   }
 }

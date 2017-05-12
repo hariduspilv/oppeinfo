@@ -1,7 +1,5 @@
 package ee.hitsa.ois.web.dto.student;
 
-import ee.hitsa.ois.domain.student.StudentGroup;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 /**
@@ -48,14 +46,5 @@ public class StudentGroupResult extends AutocompleteResult {
 
     public void setLanguage(String language) {
         this.language = language;
-    }
-
-    public static StudentGroupResult of(StudentGroup studentGroup) {
-        StudentGroupResult dto = new StudentGroupResult(studentGroup.getId(), studentGroup.getCode());
-        dto.setCurriculum(EntityUtil.getId(studentGroup.getCurriculum()));
-        dto.setCurriculumVersion(EntityUtil.getNullableId(studentGroup.getCurriculumVersion()));
-        dto.setStudyForm(EntityUtil.getNullableCode(studentGroup.getStudyForm()));
-        dto.setLanguage(EntityUtil.getNullableCode(studentGroup.getLanguage()));
-        return dto;
     }
 }

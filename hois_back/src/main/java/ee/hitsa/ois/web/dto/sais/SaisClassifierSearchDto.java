@@ -5,6 +5,7 @@ import ee.hitsa.ois.util.EntityUtil;
 
 public class SaisClassifierSearchDto {
 
+    private String code;
     private String value;
     private String nameEt;
     private String nameEn;
@@ -14,14 +15,23 @@ public class SaisClassifierSearchDto {
         SaisClassifierSearchDto dto = EntityUtil.bindToDto(saisClassifier, new SaisClassifierSearchDto());
         return dto;
     }
-    
-    public SaisClassifierSearchDto(String nameEt, Long count) {
+
+    public SaisClassifierSearchDto(String code, String nameEt, Long count) {
+        this.setCode(code);
         this.count = count;
         this.nameEt = nameEt;
     }
 
     public SaisClassifierSearchDto() {
         // TODO Auto-generated constructor stub
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getValue() {

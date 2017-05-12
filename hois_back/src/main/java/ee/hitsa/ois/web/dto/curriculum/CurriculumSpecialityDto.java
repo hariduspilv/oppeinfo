@@ -31,12 +31,23 @@ public class CurriculumSpecialityDto extends VersionedCommand {
     private String occupationEn;
     @ClassifierRestriction(MainClassCode.KUTSE)
     private String occupation;
+    private Long curriculum;
     
 
     public static CurriculumSpecialityDto of(CurriculumSpeciality speciality) {
-        return EntityUtil.bindToDto(speciality, new CurriculumSpecialityDto(), "referenceNumber");
+        CurriculumSpecialityDto dto = EntityUtil.bindToDto(speciality, new CurriculumSpecialityDto(), "referenceNumber", "curriculum");
+        dto.setCurriculum(EntityUtil.getId(speciality.getCurriculum()));
+        return dto;
     }
     
+    public Long getCurriculum() {
+        return curriculum;
+    }
+    
+    public void setCurriculum(Long curriculum) {
+        this.curriculum = curriculum;
+    }
+
     public Long getReferenceNumber() {
         return referenceNumber;
     }

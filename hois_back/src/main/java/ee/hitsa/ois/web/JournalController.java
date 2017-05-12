@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -9,7 +10,9 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -24,10 +27,13 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEndDateCommand;
+import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsSearchCommand;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 
@@ -41,7 +47,7 @@ public class JournalController {
     private StudyYearService studyYearService;
 
     @GetMapping("")
-    public Page<JournalSearchDto> search(JournalSearchCommand command, Pageable pageable, HoisUserDetails user) {
+    public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return journalService.search(user, command, pageable);
     }
@@ -67,6 +73,24 @@ public class JournalController {
         journalService.saveEndDate(journal, command);
     }
 
+    @GetMapping("/{id:\\d+}/journalEntry")
+    public Page<JournalEntryDto> journalEntries(HoisUserDetails user, @PathVariable("id") Long journalId, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return journalService.journalEntries(journalId, pageable);
+    }
+
+    @PostMapping("/{id:\\d+}/journalEntry")
+    public void saveJournalEntry(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalEntryForm journalEntryForm) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        journalService.saveJournalEntry(journal, journalEntryForm);
+    }
+
+    @PutMapping("/{id:\\d+}/journalEntry")
+    public void updateJournalEntry(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalEntryDto journalEntryDto) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        journalService.updateJournalEntry(journal, journalEntryDto);
+    }
+
     @PostMapping("/{id:\\d+}/addStudentsToJournal")
     public void addStudentsToJournal(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalStudentsCommand command) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
@@ -82,10 +106,22 @@ public class JournalController {
         journalService.removeStudentsFromJournal(journal, command);
     }
 
-    @GetMapping("/{id:\\d+}/students")
-    public Page<JournalStudentDto> students(HoisUserDetails user, @WithEntity("id") Journal journal, JournalStudentsSearchCommand command, Pageable pageable) {
+    @GetMapping("/{id:\\d+}/otherStudents")
+    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, @PathVariable("id") Long journalId, JournalStudentsSearchCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return journalService.students(user, journal, command, pageable);
+        return journalService.otherStudents(user, journalId, command, pageable);
+    }
+
+    @GetMapping("/{id:\\d+}/suitedStudents")
+    public List<JournalStudentDto> suitedStudents(HoisUserDetails user, @PathVariable("id") Long journalId) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return journalService.suitedStudents(user, journalId);
+    }
+
+    @GetMapping("/{id:\\d+}/journalEntry/lessonInfo")
+    public JournalEntryLessonInfoDto journalEntryLessonInfo(HoisUserDetails user, @WithEntity("id") Journal journal) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return journalService.journalEntryLessonInfo(user, journal);
     }
 
     @GetMapping("currentStudyYear")

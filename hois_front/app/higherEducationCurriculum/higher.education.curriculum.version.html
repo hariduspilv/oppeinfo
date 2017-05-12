@@ -28,7 +28,7 @@
             </md-input-container>
             <md-input-container flex>
                 <label>{{'curriculum.version.status' | translate}}</label>
-                <hois-classifier-select ng-model="version.status" main-classifier-code="OPPEKAVA_VERSIOON_STAATUS" show-only-values="allowerVersionStatuses" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
+                <hois-classifier-select ng-model="version.status" main-classifier-code="OPPEKAVA_VERSIOON_STAATUS" show-only-values="allowedVersionStatuses" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
             </md-input-container>
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -259,6 +259,7 @@
         </md-list>
     </form>
     <div layout="row">
+        <md-button class="md-raised md-primary" ng-href="#/higherEducationCurriculum/{{version.curriculum}}/version/{{version.id}}/edit" ng-if="readOnly">{{'main.button.change' | translate}}</md-button>
         <md-button class="md-raised md-primary" ng-click="save()" ng-if="!readOnly">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-href="#/higherEducationCurriculum/{{version.curriculum}}/edit" ng-if="!readOnly">{{'main.button.back' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-href="#/higherEducationCurriculum/{{version.curriculum}}/view" ng-if="readOnly">{{'main.button.back' | translate}}</md-button>
@@ -266,3 +267,4 @@
         <md-button class="md-raised md-default" ng-click="delete()" ng-if="!readOnly">{{'main.button.delete' | translate}}</md-button>
     </div>
  </div>
+ 

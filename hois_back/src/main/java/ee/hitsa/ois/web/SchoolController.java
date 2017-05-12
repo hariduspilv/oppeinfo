@@ -57,7 +57,7 @@ import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.StudyPeriodEventDto;
 import ee.hitsa.ois.web.dto.StudyYearDto;
 import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
-import ee.hitsa.ois.web.dto.StudyYearsSearchDto;
+import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.TeacherOccupationDto;
 
 
@@ -192,7 +192,7 @@ public class SchoolController {
     }
 
     @GetMapping("/studyYears")
-    public List<StudyYearsSearchDto> getAllStudyYears(HoisUserDetails user) {
+    public List<StudyYearSearchDto> getAllStudyYears(HoisUserDetails user) {
         return studyYearService.getStudyYears(user.getSchoolId());
     }
 

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,8 +22,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
+import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.CurriculumService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
@@ -37,6 +41,7 @@ import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
 
@@ -48,6 +53,8 @@ public class CurriculumController {
 	private CurriculumService curriculumService;
 	@Autowired
 	private SchoolRepository schoolRepository;
+    @Autowired
+    private AutocompleteService autocompleteService;
 
 	@GetMapping("/{id:\\d+}")
     public CurriculumDto get(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
@@ -58,7 +65,7 @@ public class CurriculumController {
         return CurriculumDto.of(curriculum);
     }
 
-    @GetMapping("")
+    @GetMapping
     public Page<CurriculumSearchDto> search(HoisUserDetails user, CurriculumSearchCommand curriculumSearchCommand, Pageable pageable) {
         return curriculumService.search(user.getSchoolId(), curriculumSearchCommand, pageable);
     }
@@ -68,7 +75,7 @@ public class CurriculumController {
         return curriculumService.findAllDepartments();
     }
 
-    @PostMapping("")
+    @PostMapping
     public CurriculumDto create(HoisUserDetails user, @RequestBody CurriculumForm curriculumForm) {
         return CurriculumDto.of(curriculumService.create(user, curriculumForm));
     }
@@ -96,6 +103,21 @@ public class CurriculumController {
     public void delete(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
         UserUtil.assertSameSchool(user, curriculum.getSchool());
     	curriculumService.delete(curriculum);
+    }
+    
+    @PostMapping("/speciality")
+    public CurriculumSpecialityDto createCurriculumSpeciality(HoisUserDetails user, @RequestBody CurriculumSpecialityDto form) {
+        return CurriculumSpecialityDto.of(curriculumService.createCurriculumSpeciality(user, form));
+    }
+
+    @PutMapping("/speciality/{id:\\d+}")
+    public CurriculumSpecialityDto updateCurriculumSpeciality(HoisUserDetails user, @NotNull @Valid @RequestBody CurriculumSpecialityDto form, @WithEntity("id") CurriculumSpeciality speciality) {
+        return CurriculumSpecialityDto.of(curriculumService.saveCurriculumSpeciality(speciality, form));
+    }
+    
+    @DeleteMapping("/speciality/{id:\\d+}")
+    public void deleteCurriculumSpeciality(HoisUserDetails user, @WithEntity("id") CurriculumSpeciality speciality) {
+        curriculumService.deleteSpeciality(speciality);
     }
 
     //TODO: add tests!
@@ -141,5 +163,16 @@ public class CurriculumController {
         ehisSchools.addAll(StreamUtil.toMappedList(it -> EntityUtil.getCode(it.getEhisSchool()), curriculum.getJointPartners().stream().filter(it -> it.getEhisSchool() != null)));
 
         AssertionFailedException.throwIf(!ehisSchools.contains(EntityUtil.getNullableCode(schoolRepository.getOne(user.getSchoolId()).getEhisSchool())), "EHIS school mismatch");
+    }
+
+    @GetMapping("/versionHmoduleTypes")
+    public List<ClassifierSelection> getCurriculumVersionHmoduleTypes(HoisUserDetails user) {
+        /*
+         * is_valid and is_higher is not considered at autocompleteService.classifiers()
+         */
+        List<ClassifierSelection> classifiers = autocompleteService.classifiers(Collections.singletonList(MainClassCode.KORGMOODUL.name()));
+        List<ClassifierSelection> otherTypes = curriculumService.getCurriculumVersionHmoduleTypes(user.getSchoolId());
+        classifiers.addAll(otherTypes);
+        return classifiers;
     }
 }

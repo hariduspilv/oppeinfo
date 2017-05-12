@@ -192,6 +192,20 @@ public class SchoolControllerTests {
         Assert.assertTrue(item.getCode().equals(CODE_3));  
     }
 
+    @Test
+    public void studyYears() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/studyYears", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void teacherOccupations() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/teacheroccupations/all", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
     @SuppressWarnings("unchecked")
     private static List<StudyYearScheduleLegendDto> getUpdateLegendsResult(Object body) {
         Map<String, ?> map = (Map<String, ?>) body;

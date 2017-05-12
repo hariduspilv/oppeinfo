@@ -44,7 +44,7 @@
                 <md-input-container flex="25" flex-sm="100" flex-xs="100">
                   <label>{{'teacher.person.citizenship' | translate}}</label>
                   <hois-classifier-select ng-model="teacher.person.citizenship" main-classifier-code="RIIK"
-                                          model-value-attr="code" required></hois-classifier-select>
+                                          model-value-attr="code" required ng-disabled="teacher.id"></hois-classifier-select>
                 </md-input-container>
                 <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'teacher.person.phone' | translate}}</label>
@@ -110,6 +110,9 @@
                   <div>{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
                 </div>
               </div>
+               <md-checkbox ng-model="teacher.isActive">
+                  {{'teacher.isActive' | translate}}
+               </md-checkbox>
             </div>
           </hois-collapsable>
           <div ng-repeat="teacherPositionEhis in teacher.teacherPositionEhis | orderBy: 'id'">
@@ -214,7 +217,7 @@
                       {{'teacher.teacherPositionEhis.isClassTeacher' | translate}}
                     </md-checkbox>
                   </md-input-container>
-                  <md-button ng-click="removeFromCollection(teacher, 'teacherPositionEhis', teacherPositionEhis)"
+                  <md-button ng-click="deleteEhisPosition(teacherPositionEhis)"
                              class="md-raised" flex-offset="5" flex-offset-xs="0"
                              flex-offset-sm="0">{{'main.button.delete' | translate}}
                   </md-button>
@@ -246,7 +249,7 @@
                     <label>{{'teacher.teacherPositionEhis.positionSpecificationEn' | translate}}</label>
                     <input ng-model="teacherPositionEhis.positionSpecificationEn" type="text">
                   </md-input-container>
-                  <md-button ng-click="removeFromCollection(teacher, 'teacherPositionEhis', teacherPositionEhis)"
+                  <md-button ng-click="deleteEhisPosition(teacherPositionEhis)"
                              class="md-raised" flex-offset="35" flex-offset-xs="0"
                              flex-offset-sm="0">{{'main.button.delete' | translate}}
                   </md-button>
@@ -264,7 +267,7 @@
       </div>
     </md-content>
   </md-tab>
-  <md-tab label="{{'teacher.qualification.qualification' | translate}}" ng-disabled="!(teacher.id && teacher.isHigher)">
+  <md-tab label="{{'teacher.qualification.qualification' | translate}}" ng-disabled="!(teacher.id && teacher.isHigher && isHigher)">
     <md-content class="md-padding">
       <form name="qualificationsForm" class="nomargin">
         <md-button ng-click="newTeacherQualification()" class="md-raised">{{'teacher.qualification.add' |
@@ -323,7 +326,7 @@
                   <textarea ng-model="qualification.schoolOther" md-maxlength="255" max-rows="2" md-select-on-focus
                             ng-disabled="qualification.state === 'RIIK_EST'"></textarea>
                 </md-input-container>
-                <md-button ng-click="removeFromCollection(teacherQualifications, 'qualifications', qualification)"
+                <md-button ng-click="deleteQualification(qualification)"
                            class="md-raised" flex-offset="5" flex-offset-xs="0"
                            flex-offset-sm="0">{{'main.button.delete' | translate}}
                 </md-button>
@@ -336,7 +339,7 @@
       </form>
     </md-content>
   </md-tab>
-  <md-tab label="{{'teacher.mobility.mobility' | translate}}" ng-disabled="!(teacher.id && teacher.isHigher)">
+  <md-tab label="{{'teacher.mobility.mobility' | translate}}" ng-disabled="!(teacher.id && teacher.isHigher && isHigher)">
     <md-content class="md-padding">
       <form name="mobilityForm" class="nomargin">
         <md-button ng-click="newTeacherMobility()" class="md-raised">{{'teacher.mobility.add' | translate}}</md-button>
@@ -371,7 +374,7 @@
                   <textarea ng-model="mobility.school" md-maxlength="255" max-rows="2" md-select-on-focus
                             required></textarea>
                 </md-input-container>
-                <md-button ng-click="removeFromCollection(teacherMobility, 'mobilities', mobility)" class="md-raised"
+                <md-button ng-click="deleteMobility(mobility)" class="md-raised"
                            flex-sm="100" flex-offset="5" flex-offset-sm="0">{{'main.button.delete' | translate}}
                 </md-button>
               </div>

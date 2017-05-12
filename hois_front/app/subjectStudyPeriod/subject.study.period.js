@@ -30,9 +30,20 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     var studentGroupId = $route.current.params.studentGroupId ? parseInt($route.current.params.studentGroupId) : null;
     var subjectId = $route.current.params.subjectId ? parseInt($route.current.params.subjectId) : null;
 
+    $scope.hasObligatoryStudentGroup = studentGroupId !== null;
+
+    if(studentGroupId) {
+        QueryUtils.endpoint('/studentgroups').get({id: studentGroupId}).$promise.then(function(response){
+            $scope.studentGroup = response;
+        });
+    }
+
     if(id) {
         Endpoint.get({id: id}).$promise.then(function(response){
             $scope.record = response;
+            if(studentGroupId) {
+                ArrayUtils.remove($scope.record.studentGroups, studentGroupId);
+            }
             if(!$scope.record.groupProportion) {
                 $scope.record.groupProportion = 'PAEVIK_GRUPI_JAOTUS_1';
             }
@@ -43,33 +54,20 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
             groupProportion: 'PAEVIK_GRUPI_JAOTUS_1', 
             studyPeriod: studyPeriodId ? studyPeriodId : null, 
             subject: subjectId, teachers: [], 
-            studentGroups: studentGroupId ? [studentGroupId] : null
+            studentGroups: []
         };
         $scope.record = new Endpoint(initialObject);
         $scope.disableSubject = subjectId !== null;
     }
 
-    if(studentGroupId) {
-        $scope.$watch('record.studentGroups', function(newValue, oldValue) {
-                if(!ArrayUtils.includes(newValue, studentGroupId)) {
-                    $scope.record.studentGroups = oldValue;
-                    message.error('subjectStudyPeriod.error.groupCannotBeRemoved');
-                }
-            }
-        );
-    }
-
-
     QueryUtils.endpoint('/autocomplete/studyPeriods').query(function(result) {
         $scope.studyPeriods = result;
     });
 
-    // QueryUtils.endpoint('/autocomplete/studentgroups').query(function(result) {
-    //     $scope.studentGroups = result;
-    // });
-
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
-        $scope.studentGroups = result.map(function(el){
+        $scope.studentGroups = result.filter(function(el){
+            return studentGroupId ? el.id !== studentGroupId : true; 
+        }).map(function(el){
             var newEl = el;
             newEl.nameEt = el.code;
             newEl.nameEn = el.code;
@@ -77,8 +75,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         });
     });
 
-    QueryUtils.endpoint('/autocomplete/subjects').get(function(result) {
-        $scope.subjects = result.content;
+    QueryUtils.endpoint('/subjectStudyPeriods/subjects').query(function(result) {
+        $scope.subjects = result;
     });
 
     $scope.addTeacher = function(teacher) {
@@ -123,6 +121,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         if(!$scope.record.teachers || $scope.record.teachers.length === 0) {
             message.error('subjectStudyPeriod.error.teacherNotAdded');
             return;
+        }
+        if(studentGroupId) {
+            $scope.record.studentGroups.push(studentGroupId);
         }
         if($scope.record.id) {
             $scope.record.$update().then(message.updateSuccess);
@@ -202,6 +203,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
 
     if(studentGroup) {
         $scope.record = Endpoint.search({studyPeriod: studyPeriodId, studentGroup: studentGroup, subjectStudyPeriodDtos: []});
+        // $scope.record.$promise.then(function(response){
+        //     console.log("container: ", response);
+        // });
     } else {
         $scope.record = new Endpoint({studyPeriod: studyPeriodId, subjectStudyPeriodDtos: []});
     }
@@ -285,9 +289,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
 
     // capacities sums (try another optimal solution)
 
-    function countHours(sum2, val) {
+    function countHours(sum, val) {
          var newVal = val && val.hours ? val.hours : 0;
-         return sum2 += newVal;
+         return sum += newVal;
     }
 
     $scope.capacitiesSumBySsp = function(ssp) {
@@ -424,31 +428,59 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
 
     $scope.subjectsLoadValid = function(subjectId) {
         var sspLoadByType, sspsCapacities; 
+        var ssps = getCapacitiesBySubject(subjectId);
 
         for (var i = 0; i < $scope.capacityTypes.length; i++) {
-            sspLoadByType = $scope.capacitiesSumBySubjectAndType(subjectId, $scope.capacityTypes[i].code);
+            
             sspsCapacities = $scope.getSubjectsCapacityByType(subjectId, $scope.capacityTypes[i].code);
-            if(sspLoadByType > sspsCapacities) {
-                return false;
+
+            for(var j = 0; j < ssps.length; j++) {
+                var capacity = ssps[j].capacities.find(function(el){
+                    return el.capacityType === $scope.capacityTypes[i].code;
+                });
+                sspLoadByType = capacity ? capacity.hours : 0;
+                if(sspLoadByType > sspsCapacities) {
+                    return false;
+                }
             }
         }
         return true;
     };
 
-    /**
-     * FIXME: Logic of saving is not good enough. User can select YES for one subject, but there can be others with not matching loads
-     */
+    // $scope.subjectsLoadValid = function(subjectId) {
+    //     var sspLoadByType, sspsCapacities; 
+    //     for (var i = 0; i < $scope.capacityTypes.length; i++) {
+    //         sspLoadByType = $scope.capacitiesSumBySubjectAndType(subjectId, $scope.capacityTypes[i].code);
+    //         sspsCapacities = $scope.getSubjectsCapacityByType(subjectId, $scope.capacityTypes[i].code);
+    //         if(sspLoadByType > sspsCapacities) {
+    //             return false;
+    //         }
+    //     }
+    //     return true;
+    // };
+
     $scope.save = function() {
         var subjects = $scope.record.subjects;
-        for(var i = 0; i < subjects.length; i++) {
-            if(!$scope.subjectsLoadValid(subjects[i].id)) {
-               dialogService.confirmDialog({prompt: 'subjectStudyPeriod.error.subjectLoad', 
-               subject: $rootScope.currentLanguageNameField(subjects[i])}, save);
-               return;
-            }
+        if(ArrayUtils.isEmpty(subjects) || ArrayUtils.isEmpty($scope.record.subjectStudyPeriodDtos)) {
+            message.error('subjectStudyPeriod.error.noDataForSaving');
+            return;
+        }
+        var wrongSubjects = $scope.record.subjects.filter(function(el){
+            return !$scope.subjectsLoadValid(el.id);
+        });
+        if(!ArrayUtils.isEmpty(wrongSubjects)) {
+            var subjectsNames = wrongSubjects.map(function(el){
+                return $rootScope.currentLanguageNameField(el);
+            }).join(", ");
+            dialogService.confirmDialog({
+                prompt: 'subjectStudyPeriod.error.subjectLoad', 
+                subject: subjectsNames
+            }, save);
+            return;
         }
         save();
     };
+
 
     function save() {
         filterEmptyCapacities();

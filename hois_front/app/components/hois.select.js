@@ -47,7 +47,7 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
         } else if(attrs.type === 'studentgroup') {
           scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query();
         } else if(attrs.type === 'studyyear') {
-          scope.options = QueryUtils.endpoint('/school/studyYears').query();
+          scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query();
         } else if(attrs.type === 'journal') {
           scope.options = QueryUtils.endpoint('/autocomplete/journals').query();
         }

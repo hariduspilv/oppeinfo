@@ -5,8 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.domain.timetable.Journal;
-import ee.hitsa.ois.domain.timetable.JournalEntry;
-import ee.hitsa.ois.domain.timetable.JournalOmoduleTheme;
+import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.util.EntityUtil;
@@ -23,17 +22,17 @@ public class JournalDto {
     private List<String> journalTeachers = new ArrayList<>();
     private List<AutocompleteResult> curriculumModules = new ArrayList<>();
     private List<JournalStudentDto> journalStudents = new ArrayList<>();
-    private List<JournalEntryDto> journalEntries = new ArrayList<>();
     private Integer plannedHours;
     private Integer usedHours;
     private String status;
     private LocalDate endDate;
+    private Boolean hasJournalEntries;
 
     public static JournalDto of(Journal journal) {
         JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers", "journalStudents", "journalEntries");
         dto.setStudyYear(EntityUtil.getCode(journal.getStudyYear().getYear()));
         dto.setStudyYearEndDate(journal.getStudyYear().getEndDate());
-        for (JournalOmoduleTheme theme : journal.getJournalOmoduleThemes()) {
+        for (JournalOccupationModuleTheme theme : journal.getJournalOccupationModuleThemes()) {
             dto.getStudentGroups().add(theme.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode());
             dto.getCurriculumModules().add(AutocompleteResult.of(theme.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule()));
         }
@@ -43,12 +42,11 @@ public class JournalDto {
         for (JournalStudent journalStudent : journal.getJournalStudents()) {
             dto.getJournalStudents().add(JournalStudentDto.of(journalStudent));
         }
-        for (JournalEntry JournalEntry : journal.getJournalEntries()) {
-            dto.getJournalEntries().add(JournalEntryDto.of(JournalEntry));
-        }
 
-        dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours().intValue()).sum()));
-        dto.setUsedHours(Integer.valueOf(journal.getJournalEntries().stream().mapToInt(JournalEntry::getLessons).sum()));
+        dto.setHasJournalEntries(Boolean.valueOf(!journal.getJournalEntries().isEmpty()));
+
+        dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours() == null ? 0 : it.getHours().intValue()).sum()));
+        dto.setUsedHours(Integer.valueOf(journal.getJournalEntries().stream().mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum()));
         return dto;
     }
 
@@ -116,14 +114,6 @@ public class JournalDto {
         this.journalStudents = journalStudents;
     }
 
-    public List<JournalEntryDto> getJournalEntries() {
-        return journalEntries;
-    }
-
-    public void setJournalEntries(List<JournalEntryDto> journalEntries) {
-        this.journalEntries = journalEntries;
-    }
-
     public Integer getPlannedHours() {
         return plannedHours;
     }
@@ -154,6 +144,14 @@ public class JournalDto {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public Boolean getHasJournalEntries() {
+        return hasJournalEntries;
+    }
+
+    public void setHasJournalEntries(Boolean hasJournalEntries) {
+        this.hasJournalEntries = hasJournalEntries;
     }
 
 

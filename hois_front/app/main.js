@@ -51,35 +51,33 @@ angular.module('hitsaOis')
 
 
 	/**************************************/
-	$scope.isLeftOpen = function () {
-		return $mdSidenav('left').isOpen();
-	}
 
 	$scope.$mdMedia = $mdMedia;
 
-
-
-	$scope.toggleLeft = buildToggler('left');
-	$scope.lockLeft = true;
-	$scope.isLeftOpen = function() {
-		return $mdSidenav('left').isOpen();
-	}
-
-
-    function buildToggler(navID) {
+    function buildToggler() {
       var debounceFn = $mdUtil.debounce(function() {
         /*$mdSidenav(navID)
           .toggle()
           .then(function() {
           });*/
-		  if($mdSidenav('left').isOpen())
-			$mdSidenav('left').close();
-	      else
+		  if($mdSidenav('left').isOpen()) {
+            $mdSidenav('left').close();
+          } else {
             $mdSidenav('left').open();
+          }
       }, 300);
 
       return debounceFn;
     }
+
+	$scope.toggleLeft = buildToggler('left');
+	$scope.lockLeft = true;
+	$scope.isLeftOpen = function() {
+		return $mdSidenav('left').isOpen();
+	};
+
+
+
 $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
 
 /*  .controller('LeftCtrl', function($scope, $timeout, $mdSidenav, $log) {
@@ -90,7 +88,7 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
         });
 
     };
-  })*/;
+  });*/
 
 /**************************************/
 
@@ -292,7 +290,7 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
             return;
         }
         history.push(newUrl);
-    }
+    };
 
     $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
       //console.log(history, newUrl, oldUrl, isBack)

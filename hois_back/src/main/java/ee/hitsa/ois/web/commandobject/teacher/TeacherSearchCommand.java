@@ -5,7 +5,9 @@ public class TeacherSearchCommand {
     private String name;
     private String idcode;
     private Boolean isHigher;
-
+    private Boolean isActive;
+    private Long schoolDepartment;
+    private Long teacherOccupation;
     private Long school;
 
     public String getName() {
@@ -38,5 +40,29 @@ public class TeacherSearchCommand {
 
     public void setIsHigher(Boolean isHigher) {
         this.isHigher = isHigher;
+    }
+
+    public Boolean getIsActive() {
+        return isActive;
+    }
+
+    public void setIsActive(Boolean isActive) {
+        this.isActive = isActive;
+    }
+
+    public Long getSchoolDepartment() {
+        return schoolDepartment;
+    }
+
+    public void setSchoolDepartment(Long schoolDepartment) {
+        this.schoolDepartment = schoolDepartment;
+    }
+
+    public Long getTeacherOccupation() {
+        return teacherOccupation;
+    }
+
+    public void setTeacherOccupation(Long teacherOccupation) {
+        this.teacherOccupation = teacherOccupation;
     }
 }
