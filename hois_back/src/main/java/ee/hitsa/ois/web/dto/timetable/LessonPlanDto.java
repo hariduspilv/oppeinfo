@@ -2,28 +2,23 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.temporal.ChronoField;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
+import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
-public class LessonPlanDto {
+public class LessonPlanDto extends LessonPlanForm {
 
     private Long id;
-    private Boolean isUsable;
-    private Boolean showWeeks;
     private List<StudyPeriodDto> studyPeriods;
-    private List<LessonPlanModuleDto> modules;
-
-    public static LessonPlanDto of(LessonPlan lessonPlan) {
-        LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
-        dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::of).collect(Collectors.toList()));
-        // TODO modules
-        return dto;
-    }
 
     public Long getId() {
         return id;
@@ -33,20 +28,11 @@ public class LessonPlanDto {
         this.id = id;
     }
 
-    public Boolean getIsUsable() {
-        return isUsable;
-    }
-
-    public void setIsUsable(Boolean isUsable) {
-        this.isUsable = isUsable;
-    }
-
-    public Boolean getShowWeeks() {
-        return showWeeks;
-    }
-
-    public void setShowWeeks(Boolean showWeeks) {
-        this.showWeeks = showWeeks;
+    public static LessonPlanDto of(LessonPlan lessonPlan) {
+        LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
+        dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::of).collect(Collectors.toList()));
+        dto.setModules(lessonPlan.getLessonPlanModules().stream().map(LessonPlanModuleDto::of).sorted().collect(Collectors.toList()));
+        return dto;
     }
 
     public List<StudyPeriodDto> getStudyPeriods() {
@@ -57,19 +43,61 @@ public class LessonPlanDto {
         this.studyPeriods = studyPeriods;
     }
 
-    public List<LessonPlanModuleDto> getModules() {
-        return modules;
+    protected static class LessonPlanModuleDto extends LessonPlanModuleForm {
+
+        private String nameEt;
+        private String nameEn;
+        private List<LessonPlanJournalDto> journals;
+
+        public static LessonPlanModuleDto of(LessonPlanModule lessonPlanModule) {
+            LessonPlanModuleDto dto = new LessonPlanModuleDto();
+            dto.setId(lessonPlanModule.getId());
+            CurriculumModule cm = lessonPlanModule.getCurriculumVersionOccupationModule().getCurriculumModule();
+            dto.setNameEt(cm.getNameEt());
+            dto.setNameEn(cm.getNameEn());
+            dto.setTeacher(lessonPlanModule.getTeacher() != null ? AutocompleteResult.of(lessonPlanModule.getTeacher()) : null);
+            dto.setJournals(Collections.emptyList());
+            return dto;
+        }
+
+        public String getNameEt() {
+            return nameEt;
+        }
+
+        public void setNameEt(String nameEt) {
+            this.nameEt = nameEt;
+        }
+
+        public String getNameEn() {
+            return nameEn;
+        }
+
+        public void setNameEn(String nameEn) {
+            this.nameEn = nameEn;
+        }
+
+        public List<LessonPlanJournalDto> getJournals() {
+            return journals;
+        }
+
+        public void setJournals(List<LessonPlanJournalDto> journals) {
+            this.journals = journals;
+        }
     }
 
-    public void setModules(List<LessonPlanModuleDto> modules) {
-        this.modules = modules;
+    protected static class LessonPlanJournalDto {
+        private String nameEt;
+
+        public String getNameEt() {
+            return nameEt;
+        }
+
+        public void setNameEt(String nameEt) {
+            this.nameEt = nameEt;
+        }
     }
 
-    public static class LessonPlanModuleDto {
-        private Long id;
-    }
-
-    public static class StudyPeriodDto {
+    protected static class StudyPeriodDto {
         private String nameEt;
         private String nameEn;
         private List<Long> weekNrs;

@@ -74,7 +74,8 @@
         "atLeastOneShouldBeAdded": "Vähemalt üks peab olema lisatud",
         "atLeastOneMustBeSelected": "Vähemalt üks peab olema valitud",
         "unique": "Kirje pole unikaalne",
-        "fileAlreadyExists": "Sama fail juba eksisteerib"
+        "fileAlreadyExists": "Sama fail juba eksisteerib",
+        "integer": "Peab olema täisarv"
       },
       "form-has-errors" : "Vormil on vigu",
       "record": {
@@ -220,6 +221,7 @@
         "edit": "Õppetöögraafik"
       },
       "subjectStudyPeriods": {
+        "label": "Koormuste planeerimine",
         "search": "Aine-õpetaja paarid",
         "plans": "Õppeainete koormused",
         "studentGroups": "Õpperühmade koormused"
@@ -450,7 +452,9 @@
   	"count": "Kirjete arv",
   	"value": "Väärtus",
   	"nameEt": "Nimetus eesti keeles",
-  	"nameEn": "Nimetus inglise keeles"
+  	"nameEn": "Nimetus inglise keeles",
+  	"saisImport": "IMPORDI SAISist",
+  	"importFinished": "Import lõpetatud"
   },
   "directive": {
     "addInfo": "Lisainfo",
@@ -553,7 +557,9 @@
     "validThru": "Üldteate kuvamise lõppkuupäev"
   },
   "lessonplan": {
+    "addjournal": "Lisa uus päevik",
     "curriculumVersion": "Õppekava",
+    "journalreference": "Viide tunniplaanile",
     "schoolDepartment": "Struktuuriüksus",
     "studentGroup": "Õpperühm",
     "studyYear": "Õppeaasta",
@@ -1121,6 +1127,10 @@
     }
   },
   "subjectStudyPeriod": {
+    "label": {
+        "studentGroups": "Õpperühmad (kõrg)",
+        "teachers": "Õpetajad (kõrg)"
+    },
     "nameCode": "Õppeaine kood - nimetus",
     "studyPeriod": "Õppeperiood",
     "teachersFullname": "Õpetaja ees- ja perekonnanimi",
@@ -1149,6 +1159,8 @@
     "addTeachers": "Lisa õpeteja(d)",
     "overall": "Kokku",
     "changeLoad": "Muuda õppekoormus",
+
+    "teacher": "Õpetaja",
     "error": {
         "groupCannotBeRemoved": "See õpperühm peab olema lisatud!",
         "teacherNotAdded": "Õpetaja pole lisatud!",
@@ -1386,9 +1398,12 @@
     "confirmJournal": "Kinnita päevik",
     "entryTabelLegend": "H - hilinemine, P - põhjuseta puudumine, V - vabandatav puudumine",
     "entries": "Sissekanded",
+    "curriculumVersionModuleOrThemeDescription":"Rakenduskava mooduli/teema kirjeldus",
+    "studentDeleteconfirm": "Õppuri kustutamisel kustutatakse ka kõik temaga seotud sissekanded. Olete kindel, et soovite õppuri kustutada?",
     "entry": {
       "date": "Sissekande kp",
       "new": "Sissekanne (uus)",
+      "edit": "Sissekanne (muuda)",
       "type": "Sissekande liik",
       "name": "Sissekande nimetus",
       "selectDate": "Vali kuupäev",
@@ -1403,6 +1418,13 @@
         "grade": "Hinne",
         "description": "Selgitus"
       }
+    },
+    "messages": {
+      "studentSuccesfullyAdded": "Õppur edukalt lisatud",
+      "studentSuccesfullyRemoved": "Õppur edukalt kustutatud",
+      "dublicateJournalStudentInJournalEntry": "Õppur on juba päevikusse lisatud",
+      "addingStudentIsNotAllowed": "Õppuri lisamine päevikuse ei ole võimalik",
+      "removingStudentIsNotAllowed": "Õppuri kustutamine päevikust ei ole võimalik"
     }
   }
 }

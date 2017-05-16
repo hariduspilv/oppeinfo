@@ -4,8 +4,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.JournalEntryValidation.Homework;
+import ee.hitsa.ois.validation.JournalEntryValidation.Lesson;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentDto;
 
@@ -15,11 +19,18 @@ public class JournalEntryForm {
     @ClassifierRestriction(MainClassCode.SISSEKANNE)
     private String entryType;
     private String nameEt;
+
+    @NotNull(groups = {Lesson.class})
     private LocalDate entryDate;
+    @NotNull(groups = {Lesson.class})
     private Integer startLessonNr;
+    @NotNull(groups = {Lesson.class})
     private Integer lessons;
     private String content;
+
+
     private String homework;
+    @NotNull(groups = {Homework.class})
     private LocalDate homeworkDuedate;
     private List<String> journalEntryCapacityTypes = new ArrayList<>();
     private List<JournalEntryStudentDto> journalEntryStudents = new ArrayList<>();

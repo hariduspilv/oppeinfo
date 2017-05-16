@@ -16,10 +16,11 @@ angular.module('hitsaOis')
       replace: true,
       transclude: true,
       scope: {
-        label: '='
+        label: '=',
+        expanded: '='
       },
       link: function postLink(scope) {
-        scope.expanded = true;
+        scope.expanded = angular.isDefined(scope.expanded) ? scope.expanded : true;
         scope.expandCollapse = function() {
           scope.expanded = !scope.expanded;
         };

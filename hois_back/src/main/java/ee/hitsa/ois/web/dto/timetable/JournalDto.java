@@ -6,7 +6,6 @@ import java.util.List;
 
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
-import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -21,12 +20,11 @@ public class JournalDto {
     private List<String> studentGroups = new ArrayList<>();
     private List<String> journalTeachers = new ArrayList<>();
     private List<AutocompleteResult> curriculumModules = new ArrayList<>();
-    private List<JournalStudentDto> journalStudents = new ArrayList<>();
     private Integer plannedHours;
     private Integer usedHours;
     private String status;
     private LocalDate endDate;
-    private Boolean hasJournalEntries;
+    private Boolean hasJournalStudents;
 
     public static JournalDto of(Journal journal) {
         JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers", "journalStudents", "journalEntries");
@@ -39,11 +37,8 @@ public class JournalDto {
         for (JournalTeacher teacher : journal.getJournalTeachers()) {
             dto.getJournalTeachers().add(PersonUtil.fullname(teacher.getTeacher().getPerson()));
         }
-        for (JournalStudent journalStudent : journal.getJournalStudents()) {
-            dto.getJournalStudents().add(JournalStudentDto.of(journalStudent));
-        }
 
-        dto.setHasJournalEntries(Boolean.valueOf(!journal.getJournalEntries().isEmpty()));
+        dto.setHasJournalStudents(Boolean.valueOf(!journal.getJournalStudents().isEmpty()));
 
         dto.setPlannedHours(Integer.valueOf(journal.getJournalCapacities().stream().mapToInt(it -> it.getHours() == null ? 0 : it.getHours().intValue()).sum()));
         dto.setUsedHours(Integer.valueOf(journal.getJournalEntries().stream().mapToInt(it -> it.getLessons() == null ? 0 : it.getLessons().intValue()).sum()));
@@ -106,13 +101,13 @@ public class JournalDto {
         this.curriculumModules = curriculumModules;
     }
 
-    public List<JournalStudentDto> getJournalStudents() {
-        return journalStudents;
-    }
-
-    public void setJournalStudents(List<JournalStudentDto> journalStudents) {
-        this.journalStudents = journalStudents;
-    }
+//    public List<JournalStudentDto> getJournalStudents() {
+//        return journalStudents;
+//    }
+//
+//    public void setJournalStudents(List<JournalStudentDto> journalStudents) {
+//        this.journalStudents = journalStudents;
+//    }
 
     public Integer getPlannedHours() {
         return plannedHours;
@@ -146,12 +141,12 @@ public class JournalDto {
         this.endDate = endDate;
     }
 
-    public Boolean getHasJournalEntries() {
-        return hasJournalEntries;
+    public Boolean getHasJournalStudents() {
+        return hasJournalStudents;
     }
 
-    public void setHasJournalEntries(Boolean hasJournalEntries) {
-        this.hasJournalEntries = hasJournalEntries;
+    public void setHasJournalStudents(Boolean hasJournalStudents) {
+        this.hasJournalStudents = hasJournalStudents;
     }
 
 

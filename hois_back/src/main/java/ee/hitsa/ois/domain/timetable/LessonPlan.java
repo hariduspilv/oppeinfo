@@ -2,6 +2,7 @@ package ee.hitsa.ois.domain.timetable;
 
 import java.util.List;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -28,7 +29,7 @@ public class LessonPlan extends BaseEntityWithId {
     private StudentGroup studentGroup;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
-    @OneToMany(mappedBy = "lessonPlan")
+    @OneToMany(mappedBy = "lessonPlan", cascade = CascadeType.ALL)
     private List<LessonPlanModule> lessonPlanModules;
 
     public StudyYear getStudyYear() {

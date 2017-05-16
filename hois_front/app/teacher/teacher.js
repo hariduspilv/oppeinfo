@@ -112,7 +112,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       person: false,
       id:false
     };
-    $scope.teacher.person.citizenship = {citizenship: 'RIIK_EST'};
+    $scope.teacher.person.citizenship = 'RIIK_EST';
     $scope.teacher.person.firstname = '';
     $scope.teacher.person.lastname = '';
     $scope.teacher.person.nativeLanguage = '';

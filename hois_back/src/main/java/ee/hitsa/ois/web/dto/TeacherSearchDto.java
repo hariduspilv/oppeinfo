@@ -16,6 +16,10 @@ public class TeacherSearchDto {
     private Boolean isActive;
     private AutocompleteResult teacherOccupation;
     private Set<AutocompleteResult> schoolDepartments;
+    /**
+     * Planned number of hours in studyPeriod
+     */
+    private Long hours;
 
     public static TeacherSearchDto of(Teacher teacher) {
         TeacherSearchDto dto = new TeacherSearchDto();
@@ -105,5 +109,13 @@ public class TeacherSearchDto {
 
     public void setSchoolDepartments(Set<AutocompleteResult> schoolDepartments) {
         this.schoolDepartments = schoolDepartments;
+    }
+
+    public Long getHours() {
+        return hours;
+    }
+
+    public void setHours(Long hours) {
+        this.hours = hours;
     }
 }

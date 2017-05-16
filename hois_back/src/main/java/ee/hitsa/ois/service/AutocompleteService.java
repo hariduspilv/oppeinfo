@@ -196,7 +196,7 @@ public class AutocompleteService {
         return StreamUtil.toMappedList(r -> new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4)), data);
     }
 
-    public List<StudentGroupResult> studentGroups(Long schoolId, Boolean valid) {
+    public List<StudentGroupResult> studentGroups(Long schoolId, Boolean valid, Boolean higher) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from student_group sg inner join curriculum c on sg.curriculum_id = c.id " +
                 "left outer join curriculum_version cv on sg.curriculum_version_id = cv.id");
@@ -206,6 +206,7 @@ public class AutocompleteService {
         if(Boolean.TRUE.equals(valid)) {
             qb.requiredCriteria("(sg.valid_from is null or sg.valid_from <= :now) and (sg.valid_thru is null or sg.valid_thru >= :now)", "now", LocalDate.now());
         }
+        qb.optionalCriteria("c.is_higher = :higher", "higher", higher);
 
         List<?> data = qb.select("sg.id, sg.code, c.id as c_id, cv.id as cv_id, sg.study_form_code, sg.language_code", em).getResultList();
         return StreamUtil.toMappedList(r -> {

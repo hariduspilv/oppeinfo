@@ -19,6 +19,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.Period;
 import ee.hitsa.ois.validation.ApplicationValidation.Akad;
@@ -137,6 +138,11 @@ public class Application extends BaseEntityWithId implements Period {
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @NotNull(groups = {Akadk.class})
     private Application academicApplication;
+
+    //can one application be referenced by multiple DirectiveStudent ???
+    @OneToMany
+    @JoinColumn(name = "application_id", nullable = false, updatable = false, insertable = false)
+    private Set<DirectiveStudent> directiveStudents = new HashSet<>();
 
 //    @OneToMany
 //    @JoinColumn(name = "academic_application_id", nullable = false, updatable = false, insertable = false)
@@ -395,6 +401,14 @@ public class Application extends BaseEntityWithId implements Period {
 
     public void setPlannedSubjects(Set<ApplicationPlannedSubject> plannedSubjects) {
         this.plannedSubjects = plannedSubjects;
+    }
+
+    public Set<DirectiveStudent> getDirectiveStudents() {
+        return directiveStudents;
+    }
+
+    public void setDirectiveStudents(Set<DirectiveStudent> directiveStudents) {
+        this.directiveStudents = directiveStudents;
     }
 
 }

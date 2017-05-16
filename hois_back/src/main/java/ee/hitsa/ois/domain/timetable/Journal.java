@@ -24,6 +24,7 @@ public class Journal extends BaseEntityWithId {
     private School school;
     private String nameEt;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private StudyYear studyYear;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier assessment;
@@ -48,6 +49,10 @@ public class Journal extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
     private Set<JournalCapacity> journalCapacities = new HashSet<>();
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_id", nullable = false, updatable = false)
+    private Set<JournalCapacityType> journalCapacityTypes = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
@@ -142,6 +147,14 @@ public class Journal extends BaseEntityWithId {
         this.journalCapacities = journalCapacities;
     }
 
+    public Set<JournalCapacityType> getJournalCapacityTypes() {
+        return journalCapacityTypes;
+    }
+
+    public void setJournalCapacityTypes(Set<JournalCapacityType> journalCapacityTypes) {
+        this.journalCapacityTypes = journalCapacityTypes;
+    }
+
     public Set<JournalEntry> getJournalEntries() {
         return journalEntries;
     }
@@ -149,5 +162,4 @@ public class Journal extends BaseEntityWithId {
     public void setJournalEntries(Set<JournalEntry> journalEntries) {
         this.journalEntries = journalEntries;
     }
-
 }

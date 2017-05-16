@@ -231,7 +231,7 @@ angular.module('hitsaOis')
           url: "/subjectStudyPeriodPlans?_menu"
         },
         {
-          name: 'main.menu.subjectStudyPeriods.studentGroups',
+          name: 'main.menu.subjectStudyPeriods.label',
           url: "/subjectStudyPeriods/studentGroups?_menu"
         }
       ]

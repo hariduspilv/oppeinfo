@@ -85,7 +85,7 @@ public class AutocompleteController {
 
     @GetMapping("/studentgroups")
     public List<StudentGroupResult> studentGroups(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid) {
-        return autocompleteService.studentGroups(user.getSchoolId(), valid);
+        return autocompleteService.studentGroups(user.getSchoolId(), valid, null);
     }
 
     @GetMapping("/subjects")

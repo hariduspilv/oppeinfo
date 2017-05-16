@@ -334,7 +334,7 @@
             </div>
           </hois-collapsable>
         </div>
-        <md-button ng-click="updateQualifications()" class="md-raised md-primary">{{'main.button.save' | translate}}
+        <md-button ng-click="updateQualifications()" class="md-raised md-primary" ng-if="teacherQualifications.qualifications.length > 0">{{'main.button.save' | translate}}
         </md-button>
       </form>
     </md-content>
@@ -381,7 +381,7 @@
             </div>
           </hois-collapsable>
         </div>
-        <md-button ng-click="updateTeacherMobility()" class="md-raised md-primary">{{'main.button.save' | translate}}
+        <md-button ng-click="updateTeacherMobility()" class="md-raised md-primary" ng-if="teacherMobility.mobilities.length > 0">{{'main.button.save' | translate}}
         </md-button>
       </form>
     </md-content>

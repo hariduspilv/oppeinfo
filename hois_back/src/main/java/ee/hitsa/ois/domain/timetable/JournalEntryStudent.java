@@ -22,7 +22,7 @@ public class JournalEntryStudent extends BaseEntityWithId {
     private JournalEntry journalEntry;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private JournalStudent journalStudent;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
@@ -36,11 +36,13 @@ public class JournalEntryStudent extends BaseEntityWithId {
     @JoinColumn(nullable = true, updatable = false)
     private Classifier grade;
 
+    private LocalDateTime gradeInserted;
+    private String addInfo;
+
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_entry_student_id", nullable = false, updatable = false)
     private Set<JournalEntryStudentHistory> journalEntryStudentHistories = new HashSet<>();
 
-    private LocalDateTime gradeInserted;
 
     public JournalEntry getJournalEntry() {
         return journalEntry;
@@ -96,6 +98,14 @@ public class JournalEntryStudent extends BaseEntityWithId {
 
     public void setGradeInserted(LocalDateTime gradeInserted) {
         this.gradeInserted = gradeInserted;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
     }
 
     public Set<JournalEntryStudentHistory> getJournalEntryStudentHistories() {

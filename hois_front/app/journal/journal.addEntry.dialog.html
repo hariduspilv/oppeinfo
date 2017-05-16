@@ -2,7 +2,7 @@
   <form name="dialogForm" ng-submit="loadData()" novalidate ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{"journal.entry.new" | translate}}</h2>
+        <h2>{{journalEntry.id > 0 ? "journal.entry.edit" : "journal.entry.new" | translate}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -33,22 +33,26 @@
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="20">
                 <label>{{'journal.entry.selectDate' | translate}}</label>
-                <hois-select ng-model="journalEntry.entryDateSelect" values="lessonPlanDates" on-change="journalEntry.entryDateCalendar=undefined;journalEntry.entryDate=journalEntry.entryDateSelect"></hois-select>
+                <hois-select ng-model="entryDateSelect" values="lessonPlanDates"
+                ng-change="entryDateCalendar = undefined;journalEntry.entryDate = entryDateSelect"
+                ng-required="journalEntry.entryType === 'SISSEKANNE_T' && entryDateCalendar === undefined"></hois-select>
               </md-input-container>
               <div layout="row" layout-align="center" style="padding-top:8px" flex="5">
                 <span>{{'main.or' | translate}}</span>
               </div>
               <md-input-container flex="25">
                 <label>{{'journal.entry.selectFromCalendar' | translate}}</label>
-                <md-datepicker ng-model="journalEntry.entryDateCalendar" md-open-on-focus on-change="journalEntry.entryDateSelect=undefined;journalEntry.entryDate=journalEntry.entryDateCalendar"></md-datepicker>
+                <md-datepicker ng-model="entryDateCalendar" md-open-on-focus
+                ng-change="entryDateSelect = undefined;journalEntry.entryDate = entryDateCalendar"
+                ng-required="journalEntry.entryType === 'SISSEKANNE_T' && entryDateSelect === undefined"></md-datepicker>
               </md-input-container>
               <md-input-container flex="20" flex-offset="5">
                 <label>{{'journal.entry.startLessonNr' | translate}}</label>
-                <hois-select ng-model="journalEntry.startLessonNr" values="startLessonNrs"></hois-select>
+                <hois-select ng-model="journalEntry.startLessonNr" values="startLessonNrs" ng-required="journalEntry.entryType === 'SISSEKANNE_T'"></hois-select>
               </md-input-container>
               <md-input-container flex="20" flex-offset="5">
                 <label>{{'journal.entry.lessons' | translate}}</label>
-                <hois-select ng-model="journalEntry.lessons" values="lessons"></hois-select>
+                <hois-select ng-model="journalEntry.lessons" values="lessons" ng-required="journalEntry.entryType === 'SISSEKANNE_T'"></hois-select>
               </md-input-container>
             </div>
             <div layout="row" layout-sm="column" layout-xs="column">
@@ -84,7 +88,9 @@
                 </thead>
                 <tbody md-body>
                   <tr md-row ng-repeat="row in journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
-                    <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</td>
+                    <td md-cell>
+                      <span><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</span>
+                    </td>
                     <td md-cell>
                       <md-input-container>
                         <md-radio-group ng-model="journalEntry.journalEntryStudents[$index].absence" layout="row" aria-label="absence">
@@ -95,12 +101,14 @@
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <hois-classifier-select ng-model="journalEntry.journalEntryStudents[$index].grade" model-value-attr="code" main-classifier-code="KUTSEHINDAMINE" aria-label="grade"></hois-classifier-select>
+                        <hois-classifier-select ng-model="journalEntry.journalEntryStudents[$index].grade"
+                          ng-change="journalEntryStudentChanged(journalEntry, $index, row)" model-value-attr="code" main-classifier-code="KUTSEHINDAMINE" aria-label="grade"></hois-classifier-select>
                       </md-input-container>
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <input type="text" ng-model="journalEntry.journalEntryStudents[$index].description" aria-label="description">
+                        <input type="text" ng-model="journalEntry.journalEntryStudents[$index].addInfo"
+                          ng-change="journalEntryStudentChanged(journalEntry, $index, row)" aria-label="additional info">
                       </md-input-container>
                     </td>
                   </tr>

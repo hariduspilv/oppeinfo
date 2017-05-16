@@ -10,9 +10,16 @@ public class SubjectStudyPeriodDtoContainer {
 
     @NotNull
     private Long studyPeriod;
-
-    @NotNull
-    private Long studentGroup;
+    
+    /*
+     * For student group form studentGroup must not be null, and
+     * for teachers form teacher must not be null
+     * 
+     * As single container class is used for both forms, @NotNull annotations are not used.
+     * Appropriate checks are done in controller methods instead.
+     */
+    private Long studentGroup;    
+    private Long teacher;
 
     @Valid
     private List<SubjectStudyPeriodDto> subjectStudyPeriodDtos;
@@ -20,6 +27,14 @@ public class SubjectStudyPeriodDtoContainer {
     private List<AutocompleteResult> subjects;
 
     private List<SubjectStudyPeriodPlanDto> subjectStudyPeriodPlans;
+
+    public Long getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Long teacher) {
+        this.teacher = teacher;
+    }
 
     public List<AutocompleteResult> getSubjects() {
         return subjects;

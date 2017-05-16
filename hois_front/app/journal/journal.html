@@ -55,9 +55,9 @@
   </div>
 </div>
 
-<div ng-if="hasStudents">
+<div ng-if="journal.hasJournalStudents">
   <div ng-include="'/journal/journal.edit.html'" ng-controller="JournalEditController as journalEditController"></div>
 </div>
-<div ng-if="!hasStudents">
+<div ng-if="!journal.hasJournalStudents">
   <div ng-include="'/journal/journal.student.selection.html'" ng-controller="JournalStudentSelectionController as journalStudentSelectionController"></div>
 </div>

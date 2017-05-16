@@ -18,6 +18,11 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
 
     QueryUtils.endpoint('/autocomplete/schooldepartments').query().$promise.then(function(response){
         $scope.schoolDepartments = response;
+        if(ArrayUtils.isEmpty($scope.criteria.schoolDepartments)) {
+            $scope.criteria.schoolDepartments = $scope.schoolDepartments.map(function(el){
+                return el.id;
+            });
+        }
     });
 
     QueryUtils.endpoint('/studyYearSchedule/studentGroups').query().$promise.then(function(response){
@@ -42,13 +47,10 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
         }
     );
 
-    var queryOnLoad = true;
     $scope.$watch('criteria.schoolDepartments', function() {
-            if(queryOnLoad) {
-                queryOnLoad = false;
-            } else {
-                $scope.criteria.studentGroups = $scope.studentGroups.
-                filter(function(sg){return ArrayUtils.intersect(sg.schoolDepartments, $scope.criteria.schoolDepartments);})
+            if(!ArrayUtils.isEmpty($scope.studentGroups)){
+                $scope.criteria.studentGroups = $scope.studentGroups
+                .filter(function(sg){return ArrayUtils.intersect(sg.schoolDepartments, $scope.criteria.schoolDepartments);})
                 .map(function(sg){return sg.id;});
                 getSchedules();
             }

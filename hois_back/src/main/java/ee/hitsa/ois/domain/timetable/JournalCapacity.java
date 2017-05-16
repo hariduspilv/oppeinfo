@@ -15,6 +15,7 @@ public class JournalCapacity extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Journal journal;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private JournalCapacityType journalCapacityType;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private StudyPeriod studyPeriod;

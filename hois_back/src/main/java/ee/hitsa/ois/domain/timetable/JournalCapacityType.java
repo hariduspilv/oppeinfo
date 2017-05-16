@@ -12,9 +12,10 @@ import ee.hitsa.ois.domain.Classifier;
 public class JournalCapacityType extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Journal journal;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier capacityType;
 
     public Journal getJournal() {

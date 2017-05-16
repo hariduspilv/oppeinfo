@@ -15,6 +15,7 @@ public class JournalTeacher extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Journal journal;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private Teacher teacher;
     private Boolean isFiller;
     private Boolean isConfirmer;

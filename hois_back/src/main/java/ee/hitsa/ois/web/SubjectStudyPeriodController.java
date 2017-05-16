@@ -21,24 +21,27 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.service.SubjectService;
 import ee.hitsa.ois.service.SubjectStudyPeriodService;
 import ee.hitsa.ois.service.TeacherService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.SubjectUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
-import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodStudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDtoContainer;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
+import ee.hitsa.ois.web.dto.TeacherSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
@@ -46,7 +49,6 @@ import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 @RestController
 @RequestMapping("/subjectStudyPeriods")
 public class SubjectStudyPeriodController {
-
 
     @Autowired
     private SubjectStudyPeriodService subjectStudyPeriodService;
@@ -66,26 +68,78 @@ public class SubjectStudyPeriodController {
     }
 
     @PostMapping
-    public SubjectStudyPeriodDto create(@Valid @RequestBody SubjectStudyPeriodForm form) {
+    public SubjectStudyPeriodDto create(@Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user) {
+        checkIfSchoolAdmin(user);
         return get(subjectStudyPeriodService.create(form));
     }
 
     @PutMapping("/{id:\\d+}")
     public SubjectStudyPeriodDto update(
             @WithVersionedEntity(value = "id", versionRequestBody = true) SubjectStudyPeriod subjectStudyPeriod, 
-            @Valid @RequestBody SubjectStudyPeriodForm form) {
+            @Valid @RequestBody SubjectStudyPeriodForm form, HoisUserDetails user) {
+        checkIfSchoolAdmin(user);
+        UserUtil.assertSameSchool(user, subjectStudyPeriod.getSubject().getSchool());
         return get(subjectStudyPeriodService.update(subjectStudyPeriod, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") SubjectStudyPeriod subjectStudyPeriod, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") 
+    SubjectStudyPeriod subjectStudyPeriod, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        checkIfSchoolAdmin(user);
+        UserUtil.assertSameSchool(user, subjectStudyPeriod.getSubject().getSchool());
         subjectStudyPeriodService.delete(subjectStudyPeriod);
     }
     
+    @GetMapping("/teachers/page")
+    public Page<AutocompleteResult> getTeacheroptions(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
+        command.setSchool(user.getSchoolId());
+        command.setIsHigher(Boolean.TRUE);
+        command.setIsActive(Boolean.TRUE);
+        return teacherService.search(command, pageable).map(t -> {
+            return new AutocompleteResult(t.getId(), t.getName(), t.getName());
+        });
+    }
     
-    @GetMapping("/list")
-    public List<SubjectStudyPeriodDto> searchList(HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria) {
-        return subjectStudyPeriodService.searchList(user.getSchoolId(), criteria);
+    /**
+     * Where is it used?
+     */
+//    @GetMapping("/list")
+//    public List<SubjectStudyPeriodDto> searchList(HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria) {
+//        return subjectStudyPeriodService.searchList(user.getSchoolId(), criteria);
+//    }
+    
+    @GetMapping("/studentGroups")
+    public Page<StudentGroupSearchDto> searchByStudentGroup(HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
+        return subjectStudyPeriodService.searchByStudentGroup(user.getSchoolId(), criteria, pageable);
+    }
+    
+    @GetMapping("/studentGroups/container")
+    public SubjectStudyPeriodDtoContainer getStudentGroupsSspContainer(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container) {
+        checkIfSchoolAdmin(user);
+        AssertionFailedException.throwIf(container.getStudentGroup() == null,
+                "StudentGroup must be specified");
+        container.setSubjectStudyPeriodDtos(subjectStudyPeriodService.getSubjectStudyPeriodsList(user.getSchoolId(), container));
+        subjectStudyPeriodService.setSubjects(container);
+        subjectStudyPeriodService.setSubjectStudyPeriodPlansForStudentGroupContainer(container);
+        return container;
+    }
+    
+    @PutMapping("/studentGroups/container")
+    public SubjectStudyPeriodDtoContainer updateStudentGroupsSspCapacities(HoisUserDetails user, @Valid @RequestBody SubjectStudyPeriodDtoContainer container) {
+        AssertionFailedException.throwIf(container.getStudentGroup() == null,
+                "StudentGroup must be specified");
+        subjectStudyPeriodService.updateSspCapacities(user.getSchoolId(), container);
+        return getStudentGroupsSspContainer(user, container);
+    }
+    
+    @GetMapping("/studentGroups/list")
+    public List<StudentGroupSearchDto> getStudentGroupsForSearchForm(HoisUserDetails user) {
+        return subjectStudyPeriodService.getStudentGroupsList(user.getSchoolId(), null);
+    }
+    
+    @GetMapping("/studentGroups/list/new/{studyPeriodId:\\d+}")
+    public List<StudentGroupSearchDto> getStudentGroupsForEditForm(HoisUserDetails user, @PathVariable("studyPeriodId") Long studyPeriodId) {
+        return subjectStudyPeriodService.getStudentGroupsList(user.getSchoolId(), studyPeriodId);
     }
     
     @GetMapping("/curricula")
@@ -103,44 +157,6 @@ public class SubjectStudyPeriodController {
         return dto;
     }
     
-    @GetMapping("/studentGroups")
-    public Page<StudentGroupSearchDto> searchStudentGroups(HoisUserDetails user, SubjectStudyPeriodStudentGroupSearchCommand criteria, Pageable pageable) {
-        return subjectStudyPeriodService.studentGroups(user.getSchoolId(), criteria, pageable);
-    }
-    
-    @GetMapping("/studentGroups/list")
-    public List<StudentGroupSearchDto> getStudentGroupsList(HoisUserDetails user) {
-        return subjectStudyPeriodService.getStudentGroupsList(user.getSchoolId(), null);
-    }
-    
-    @GetMapping("/studentGroups/editform/{studyPeriodId:\\d+}")
-    public List<StudentGroupSearchDto> getStudentGroupsForEditForm(HoisUserDetails user, @PathVariable("studyPeriodId") Long studyPeriodId) {
-        return subjectStudyPeriodService.getStudentGroupsList(user.getSchoolId(), studyPeriodId);
-    }
-    
-    @GetMapping("/container")
-    public SubjectStudyPeriodDtoContainer getSspContainer(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container) {
-        container.setSubjectStudyPeriodDtos(subjectStudyPeriodService.getSubjectStudyPeriodsList(user.getSchoolId(), container));
-        subjectStudyPeriodService.setSubjects(container);
-        subjectStudyPeriodService.setSubjectStudyPeriodPlans(container);
-        return container;
-    }
-    
-    @PutMapping("/container")
-    public SubjectStudyPeriodDtoContainer updateSspCapacities(HoisUserDetails user, @Valid @RequestBody SubjectStudyPeriodDtoContainer container) {
-        subjectStudyPeriodService.updateSspCapacities(user.getSchoolId(), container);
-        return getSspContainer(user, container);
-    }
-    
-    @GetMapping("/teachers")
-    public Page<AutocompleteResult> searchTeachers(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
-        command.setSchool(user.getSchoolId());
-        command.setIsHigher(Boolean.TRUE);
-        return teacherService.search(command, pageable).map(t -> {
-            return new AutocompleteResult(t.getId(), t.getName(), t.getName());
-        });
-    }
-    
     /**
      * Later subjects' options will be more limited
      */
@@ -153,5 +169,43 @@ public class SubjectStudyPeriodController {
                         SubjectUtil.subjectName(s.getCode(), s.getNameEt(), s.getCredits()), 
                         SubjectUtil.subjectName(s.getCode(), s.getNameEn(), s.getCredits())))
                 .getContent();
+    }
+    
+    @GetMapping("/teachers")
+    public Page<TeacherSearchDto> searchByTeachers(HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
+        return subjectStudyPeriodService.searchByTeachers(user.getSchoolId(), criteria, pageable);
+    }
+    
+    @GetMapping("/teachers/container")
+    public SubjectStudyPeriodDtoContainer getTeachersSspContainer(HoisUserDetails user, @Valid SubjectStudyPeriodDtoContainer container) {
+        AssertionFailedException.throwIf(container.getTeacher() == null,
+                "Teacher must be specified");
+        subjectStudyPeriodService.setSubjectStudyPeriodsForTeachersContainer(user.getSchoolId(), container);
+        subjectStudyPeriodService.setSubjects(container);
+        subjectStudyPeriodService.setSubjectStudyPeriodPlansForTeachersContainer(container);
+        return container;
+    }
+    
+    @PutMapping("/teachers/container")
+    public SubjectStudyPeriodDtoContainer updateTeachersSspCapacities(HoisUserDetails user, @Valid @RequestBody SubjectStudyPeriodDtoContainer container) {
+        checkIfSchoolAdmin(user);
+        AssertionFailedException.throwIf(container.getTeacher() == null,
+                "Teacher must be specified");
+        subjectStudyPeriodService.updateSspCapacities(user.getSchoolId(), container);
+        return getTeachersSspContainer(user, container);
+    }
+    
+    @GetMapping("/teachers/list/new/{studyPeriodId:\\d+}")
+    public List<AutocompleteResult> getTeacherOptionsForEditForm(HoisUserDetails user, @PathVariable("studyPeriodId") Long studyPeriodId) {
+        return subjectStudyPeriodService.getTeacherOptionsForEditForm(user.getSchoolId(), studyPeriodId);
+    }
+    
+    @GetMapping("/teacher/{id:\\d+}")
+    public AutocompleteResult teacher(@WithEntity("id") Teacher teacher) {
+        return AutocompleteResult.of(teacher); 
+    }
+    
+    public void checkIfSchoolAdmin(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isSchoolAdmin(), "Only school admins have rights for this action!");
     }
 }

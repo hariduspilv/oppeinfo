@@ -19,7 +19,6 @@ angular
     'ngMaterial',
     'pascalprecht.translate',
     'md.data.table',
-    'ui.router',
     'lfNgMdFileInput',
     'ngStorage',
     'angular-cache'

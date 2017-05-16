@@ -8,9 +8,6 @@ angular.module('hitsaOis').controller('JournalController', function ($scope, $ro
     if (!angular.isString(entity.endDate)) {
       $scope.journal.endDate = entity.studyYearEndDate;
     }
-
-    $scope.hasStudents = angular.isArray(entity.journalStudents) && entity.journalStudents.length > 0;
-    $scope.hasEntries = entity.hasJournalEntries;
   }
 
   var entity = $route.current.locals.entity;
@@ -22,26 +19,9 @@ angular.module('hitsaOis').controller('JournalController', function ($scope, $ro
     return modules.map(function(it) {return $scope.currentLanguageNameField(it);}).join(", ");
   };
 
-/*  function showStudentsList() {
-      $scope.isDeletionAllowed = $scope.auth.isAdmin() || ($scope.auth.isTeacher() && !$scope.hasEntries);
-      $scope.tabledata = {
-        content: entity.journalStudents
-      };
-  }*/
-
-
   $scope.saveEndDate = function() {
     QueryUtils.endpoint('/journals/' + entity.id + '/saveEndDate').save({endDate: $scope.journal.endDate}, function() {
       message.info('main.messages.create.success');
     });
   };
-
-/*  $scope.removeStudentFormJournal = function(row) {
-    QueryUtils.endpoint('/journals/' + entity.id + '/removeStudentsFromJournal').save({students: [row.studentId]}, function() {
-      ArrayUtils.remove($scope.tabledata.content, row);
-      if ($scope.tabledata.content.length === 0) {
-        $route.reload();
-      }
-    });
-  };*/
 });

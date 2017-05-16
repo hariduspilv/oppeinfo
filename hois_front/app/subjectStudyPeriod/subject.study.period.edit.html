@@ -50,7 +50,7 @@
                             </md-checkbox>
                         </td>
                         <td md-cell>
-                            <md-button class="remove nomargin" ng-click="removeTeacher(teacher)">&times;</md-button>
+                            <md-button class="remove nomargin" ng-click="removeTeacher(teacher)" ng-show="obligatoryTeacher !== teacher.teacherId">&times;</md-button>
                         </td>
                     </tr>
                 </tbody>
@@ -84,7 +84,6 @@
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-            <!--<md-button class="md-raised" ng-href="/#/subjectStudyPeriods">{{'main.button.back' | translate}}</md-button>-->
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods')">{{'main.button.back' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
         </div>

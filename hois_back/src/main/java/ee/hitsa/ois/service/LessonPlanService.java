@@ -4,7 +4,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -14,24 +17,33 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.domain.timetable.JournalCapacityType;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.LessonPlanRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
+import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchTeacherDto;
 
@@ -40,7 +52,13 @@ import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchTeacherDto;
 public class LessonPlanService {
 
     @Autowired
+    private AutocompleteService autocompleteService;
+    @Autowired
+    private ClassifierRepository classifierRepository;
+    @Autowired
     private EntityManager em;
+    @Autowired
+    private JournalRepository journalRepository;
     @Autowired
     private LessonPlanRepository lessonPlanRepository;
 
@@ -68,12 +86,23 @@ public class LessonPlanService {
                 lpm.setCurriculumVersionOccupationModule(module);
                 modules.add(lpm);
             }
+            lessonPlan.setLessonPlanModules(modules);
         }
         return lessonPlanRepository.save(lessonPlan);
     }
 
     public LessonPlan save(LessonPlan lessonPlan, LessonPlanForm form) {
-        // TODO
+        Map<Long, LessonPlanModule> modules = StreamUtil.toMap(LessonPlanModule::getId, lessonPlan.getLessonPlanModules());
+        List<? extends LessonPlanModuleForm> formModules = form.getModules();
+        if(formModules != null) {
+            for(LessonPlanModuleForm formModule : formModules) {
+                LessonPlanModule lpm = modules.remove(formModule.getId());
+                AssertionFailedException.throwIf(lpm == null, "Unknown lessonplan module");
+                EntityUtil.bindToEntity(formModule, lpm);
+            }
+        }
+        AssertionFailedException.throwIf(!modules.isEmpty(), "Unhandled lessonplan module");
+        // TODO hours
         return lessonPlanRepository.save(lessonPlan);
     }
 
@@ -113,18 +142,44 @@ public class LessonPlanService {
         });
     }
 
-    public List<AutocompleteResult> studentgroupsForLessonPlan(Long schoolId) {
+    public Map<String, ?> searchFormData(Long schoolId) {
+        Map<String, Object> data = new HashMap<>();
+        data.put("studyyears", autocompleteService.studyYears(schoolId));
+        data.put("studentgroups", autocompleteService.studentGroups(schoolId, Boolean.TRUE, Boolean.FALSE));
+        data.put("studentgroupmapping", studentgroupsWithLessonPlans(schoolId));
+        return data;
+    }
+
+    public Journal createJournal(HoisUserDetails user, LessonPlan lessonPlan, LessonPlanJournalForm form) {
+        Journal journal = EntityUtil.bindToEntity(form, new Journal());
+        journal.setStudyYear(lessonPlan.getStudyYear());
+        journal.setSchool(em.getReference(School.class, user.getSchoolId()));
+        return saveJournal(journal, form);
+    }
+
+    public Journal saveJournal(Journal journal, LessonPlanJournalForm form) {
+        EntityUtil.bindToEntity(form, journal, classifierRepository);
+        EntityUtil.bindEntityCollection(journal.getJournalCapacityTypes(), c -> EntityUtil.getCode(c.getCapacityType()), form.getJournalCapacityTypes(), ct -> {
+            JournalCapacityType jct = new JournalCapacityType();
+            jct.setJournal(journal);
+            jct.setCapacityType(EntityUtil.validateClassifier(em.getReference(Classifier.class, ct), MainClassCode.MAHT));
+            return jct;
+        });
+        // TODO teachers, themes
+        return journalRepository.save(journal);
+    }
+
+    public void deleteJournal(Journal journal) {
+        EntityUtil.deleteEntity(journalRepository, journal);
+    }
+
+    private Map<Long, List<Long>> studentgroupsWithLessonPlans(Long schoolId) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
-                "from student_group sg left outer join lesson_plan lp on lp.student_group_id = sg.id");
+                "from study_year sy inner join lesson_plan lp on sy.id = lp.study_year_id inner join student_group sg on lp.student_group_id = sg.id");
 
-        qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
-        qb.filter("lp.id is null");
-        // TODO current study year (vocational) or study period (higher)
+        qb.requiredCriteria("sg.school_id = :schoolId and sy.school_id = :schoolId", "schoolId", schoolId);
 
-        List<?> data = qb.select("sg.id, sg.code", em).getResultList();
-        return StreamUtil.toMappedList(r -> {
-            String code = resultAsString(r, 1);
-            return new AutocompleteResult(resultAsLong(r, 0), code, code);
-        }, data);
+        List<?> data = qb.select("sy.id, sg.id as sg_id", em).getResultList();
+        return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
     }
 }

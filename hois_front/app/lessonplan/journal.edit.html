@@ -1,0 +1,22 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="journalForm" class="nomargin">
+      <div layout="row">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'directive.student.curriculumVersion' | translate}}</label>
+          <hois-select ng-model="formState.curriculumVersion" multiple values="formState.saisCurriculumVersions"></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'directive.student.studyLevel' | translate}}</label>
+          <hois-classifier-select ng-model="record.studyLevel" multiple main-classifier-code="HINDAMISVIIS" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button class="md-raised" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-href="#/lessonplans/vocational/{{formState.lessonplan}}/edit" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

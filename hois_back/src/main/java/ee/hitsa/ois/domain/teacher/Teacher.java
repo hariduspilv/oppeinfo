@@ -1,5 +1,9 @@
 package ee.hitsa.ois.domain.teacher;
 
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -10,9 +14,7 @@ import javax.persistence.OneToMany;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
-
-import java.util.HashSet;
-import java.util.Set;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 
 @Entity
 public class Teacher extends BaseEntityWithId {
@@ -44,6 +46,9 @@ public class Teacher extends BaseEntityWithId {
 
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TeacherQualification> teacherQualification;
+    
+    @OneToMany(mappedBy = "teacher", fetch = FetchType.LAZY)
+    private List<SubjectStudyPeriodTeacher> subjectStudyPeriods;
 
     public Person getPerson() {
         return person;
@@ -148,5 +153,13 @@ public class Teacher extends BaseEntityWithId {
 
     public void setIsStudyPeriodScheduleLoad(Boolean studyPeriodScheduleLoad) {
         isStudyPeriodScheduleLoad = studyPeriodScheduleLoad;
+    }
+
+    public List<SubjectStudyPeriodTeacher> getSubjectStudyPeriods() {
+        return subjectStudyPeriods;
+    }
+
+    public void setSubjectStudyPeriods(List<SubjectStudyPeriodTeacher> subjectStudyPeriods) {
+        this.subjectStudyPeriods = subjectStudyPeriods;
     }
 }

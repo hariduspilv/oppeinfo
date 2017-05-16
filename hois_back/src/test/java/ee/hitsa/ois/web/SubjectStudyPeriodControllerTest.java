@@ -3,7 +3,9 @@ package ee.hitsa.ois.web;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodTeacherForm;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodDto;
@@ -27,10 +31,22 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 public class SubjectStudyPeriodControllerTest {
     
     private static final String BASE_URL = "/subjectStudyPeriods";
-    
+
     @Autowired
     private TestRestTemplate restTemplate;
-    
+    @Autowired
+    private TestConfigurationService testConfigurationService;
+
+    @Before
+    public void setUp() {
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
+    }
+
     @Test
     public void search() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL);
@@ -124,7 +140,7 @@ public class SubjectStudyPeriodControllerTest {
     private static SubjectStudyPeriodForm getForm() {
         SubjectStudyPeriodForm form = new SubjectStudyPeriodForm();
         form.setStudyPeriod(Long.valueOf(4));
-        form.setSubject(Long.valueOf(51));
+        form.setSubject(Long.valueOf(50));
         form.setGroupProportion("PAEVIK_GRUPI_JAOTUS_1");
         form.setDeclarationType("DEKLARATSIOON_LISA");
         

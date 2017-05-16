@@ -16,12 +16,18 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     private List<SubjectStudyPeriodCapacityDto> capacities;
     private Long studyPeriod;
     private Long subject;
-    private Long teacher;
     private String addInfo;
     private String declarationType;
     private String groupProportion;
     private List<Long> studentGroups;
+    private List<AutocompleteResult> studentGroupObjects;
 
+    public List<AutocompleteResult> getStudentGroupObjects() {
+        return studentGroupObjects;
+    }
+    public void setStudentGroupObjects(List<AutocompleteResult> studentGroupObjects) {
+        this.studentGroupObjects = studentGroupObjects;
+    }
     public List<SubjectStudyPeriodCapacityDto> getCapacities() {
         return capacities;
     }
@@ -57,12 +63,6 @@ public class SubjectStudyPeriodDto extends VersionedCommand {
     }
     public void setSubject(Long subject) {
         this.subject = subject;
-    }
-    public Long getTeacher() {
-        return teacher;
-    }
-    public void setTeacher(Long teacher) {
-        this.teacher = teacher;
     }
     public String getAddInfo() {
         return addInfo;

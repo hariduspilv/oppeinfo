@@ -1,0 +1,16 @@
+<div layout-padding ng-cloak>
+  <!-- header -->
+  <table>
+    <!-- table header -->
+    <tbody ng-repeat="module in record.modules">
+      <tr>
+        <td>{{currentLanguageNameField(module)}}</td><td><md-button md-no-ink class="md-primary change-button" ng-click="newJournal(module)">{{'lessonplan.addjournal' | translate}}</md-button></td><td>{{'lessonplan.teacher' | translate}}</td><td><hois-autocomplete ng-model="module.teacher" method="teachers"></hois-autocomplete></td>
+      </tr>
+      <tr ng-repeat="journal in module">
+        <td colspan="2"></td>
+      </tr>
+    </tbody>
+  </table>
+  <md-button class="md-raised" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+  <md-button ng-click="back('#/lessonplans/vocational')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>

@@ -17,7 +17,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ee.hitsa.ois.TestConfigurationService;
@@ -51,7 +50,7 @@ public class JournalControllerTests {
     }
 
     @Test
-    public void search() throws JsonProcessingException {
+    public void search() {
         ResponseEntity<JournalSearchDto> responseEntity = restTemplate.getForEntity(ENDPOINT, JournalSearchDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
