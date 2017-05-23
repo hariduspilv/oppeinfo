@@ -185,7 +185,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       } else {
         $scope.removeFromCollection($scope.teacherQualifications, 'qualifications', qualification);
       }
-    })
+    });
   };
 
   $scope.updateTeacherMobility = function () {
@@ -207,11 +207,11 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
           $scope.teacherMobility.mobilities = $scope.teacherMobility.mobilities.filter(function (it) {
             return it.id !== mobility.id;
           });
-        })
+        });
       } else {
         $scope.removeFromCollection($scope.teacherMobility, 'mobilities', mobility);
       }
-    })
+    });
   };
 
 
@@ -224,12 +224,12 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
           $scope.teacher.teacherPositionEhis = $scope.teacher.teacherPositionEhis.filter(function (it) {
             return it.id !== ehisPosition.id;
           });
-        })
+        });
       } else {
         $scope.removeFromCollection($scope.teacher, 'teacherPositionEhis', ehisPosition);
       }
-    })
-  }
+    });
+  };
 }]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', 'ArrayUtils', function ($scope, $route, QueryUtils, ArrayUtils) {
   QueryUtils.createQueryForm($scope, '/teachers', {order: 'person.lastname,person.firstname'});
 

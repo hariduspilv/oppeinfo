@@ -1,4 +1,4 @@
-<md-dialog aria-label="occupation add dialog">
+<md-dialog aria-label="occupation add dialog" flex="40" flex-xs="100>
   <form name="dialogForm" ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
@@ -17,43 +17,36 @@
           <md-input-container flex>
             <label>{{'occupation.aquiredOccupation' | translate}}</label>
             <hois-classifier-select ng-model="occupation" main-classifier-code="KUTSE"
-             required></hois-classifier-select>
+             required ng-disabled="formState.readOnly"></hois-classifier-select>
           </md-input-container>
         </div>
 
-        <div layout="row">
-          <span class="md-title" flex>{{'occupation.specialities' | translate}}</span>
-        </div>
-        <div layout="column">
-          <div ng-repeat="occupationSpeciality in specialities" flex>
-            <md-checkbox ng-model="selectedSpecialities[occupationSpeciality.code]" aria-label="{{occupationSpeciality[currentLanguageNameField()]}}">
+		<div class="occupation-header align-center">{{'occupation.specialities' | translate}}</div>
+          <div ng-repeat="occupationSpeciality in specialities" flex layout="row" class="nomargin">
+			<div flex="5">&nbsp;</div>
+            <md-checkbox ng-model="selectedSpecialities[occupationSpeciality.code]" aria-label="{{occupationSpeciality[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
               {{occupationSpeciality[currentLanguageNameField()]}}
-            </md-checkbox>
+            </md-checkbox> 
           </div>
-        </div>
-
-        <div layout="column">
-          <span class="md-title" flex>{{'occupation.partOccupations' | translate}}</span>
-          <md-list>
-            <md-list-item ng-repeat="partOccupation in partOccupations">
-              <p>{{partOccupation[currentLanguageNameField()]}}</p>
-            </md-list-item>
-          </md-list>
-        </div>
-
+			
+			<div class="occupation-header align-center">{{'occupation.partOccupations' | translate}}</div>
+            <div ng-repeat="partOccupation in partOccupations" class="common-label" flex layout="row">
+					  <div flex="5">&nbsp;</div>
+					  <div>{{partOccupation[currentLanguageNameField()]}}</div>
+			</div>		  
+        
+		<div>&nbsp;</div>
         <div layout="row">
-          <md-input-container>
-            <span>{{'occupation.schoolHasOccupationGrant' | translate}}</span>
-            <md-checkbox ng-model="occupationGrant" aria-label="occupationGrant">
-            </md-checkbox>
-          </md-input-container>
+		  <md-checkbox ng-model="occupationGrant" aria-label="occupationGrant" ng-disabled="formState.readOnly">
+                        {{'occupation.schoolHasOccupationGrant' | translate}}
+          </md-checkbox>
         </div>
       </div>
     </md-dialog-content>
 
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!formState.readOnly">{{"main.button.save" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

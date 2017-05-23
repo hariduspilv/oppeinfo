@@ -1,6 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, QueryUtils, ArrayUtils, Classifier, message, dialogService) {
+angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, Classifier, message, dialogService) {
+  var classifierMapper = Classifier.valuemapper({entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE', absence: 'PUUDUMINE'});
+
   function loadJournalEntries() {
     $scope.journalEntriesCriteria = {size: 10, page: 1};
     if (!angular.isDefined($scope.journalEntries)) {
@@ -19,22 +21,23 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     $scope.loadJournalEntries();
   }
 
-  function loadJournalStudents() {
-    var mainQueryPromise = QueryUtils.endpoint('/journals/' + entity.id + '/journalStudents').query().$promise;
+  function loadJournalStudents(showNonStudying) {
+    var journalStudentsQueryPromise = QueryUtils.endpoint('/journals/' + entity.id + '/journalStudents').query({allStudents: !!showNonStudying}).$promise;
 
-    QueryUtils.endpoint('/journals/' + entity.id + '/journalEntriesByDate').get(function(result) {
-      var journalEntriesByDate = [];
-      for(var property in result) {
-        if (result.hasOwnProperty(property)) {
-          var date = new Date(property);
-          if (date.getTime() > 0) {
-            journalEntriesByDate.push({date: date, journalEntryStudents: result[property]});
+    QueryUtils.endpoint('/journals/' + entity.id + '/journalEntriesByDate').query({allStudents: !!showNonStudying}, function(result) {
+      var journalEntriesByDate = result;
+      DataUtils.convertStringToDates(journalEntriesByDate, ["date"]);
+      classifierMapper.objectmapper(journalEntriesByDate);
+      journalEntriesByDate.forEach(function(it) {
+        for (var p in it.journalStudentResults) {
+          if (it.journalStudentResults.hasOwnProperty(p)) {
+            classifierMapper.objectmapper(it.journalStudentResults[p]);
           }
         }
-      }
+      });
       $scope.journal.journalEntriesByDate = journalEntriesByDate;
 
-      mainQueryPromise.then(function(result) {
+      journalStudentsQueryPromise.then(function(result) {
         $scope.journal.journalStudents = result;
       });
     });
@@ -99,7 +102,9 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       dialogScope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'});
       var lessonInfo = QueryUtils.endpoint('/journals/' + entity.id + '/journalEntry/lessonInfo').get();
       dialogScope.lessonPlanDates = lessonInfo.lessonPlanDates;
+      dialogScope.startLessonNrs = [1,2,3,4,5,6,7,8,9,10].map(function(it){ return {nameEt: it, nameEn: it, id: it};});
       dialogScope.journalEntry.startLessonNr = lessonInfo.startLessonNr;
+      dialogScope.lessons = [1,2,3,4,5].map(function(it){ return {nameEt: it, nameEn: it, id: it};});
       dialogScope.journalEntry.lessons = lessonInfo.lessons;
       Classifier.queryForDropdown({mainClassCode: 'PUUDUMINE'}, function(response) {
         response.forEach(function(it) {
@@ -108,30 +113,80 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       });
   }
 
+  function journalEntryStudentsToArray(journalEntryStudents, newEntity) {
+    var journalEntryStudentsArray = [];
+      if (angular.isObject(journalEntryStudents)) {
+        for(var p in journalEntryStudents) {
+          if (journalEntryStudents.hasOwnProperty(p)) {
+            var journalEntryStudent = journalEntryStudents[p];
+            journalEntryStudentsArray.push(journalEntryStudent);
+          }
+        }
+        newEntity.journalEntryStudents = journalEntryStudentsArray;
+      }
+  }
+
+  function capacityTypesToArray(selectedCapacityTypes, newEntity) {
+    var capacityTypesArray = [];
+      if (angular.isObject(selectedCapacityTypes)) {
+        for(var p in selectedCapacityTypes) {
+          if (selectedCapacityTypes.hasOwnProperty(p) && selectedCapacityTypes[p] === true) {
+            capacityTypesArray.push(p);
+          }
+        }
+        newEntity.journalEntryCapacityTypes = capacityTypesArray;
+      }
+  }
+
   function showEntryDialog(editEntity) {
     dialogService.showDialog('journal/journal.addEntry.dialog.html', function(dialogScope) {
-      dialogScope.journalEntry = {
-        capacityTypes: {},
-        journalEntryStudents: []
-      };
+      dialogScope.journalEntry = {};
+      dialogScope.selectedCapacityTypes = {};
+      dialogScope.journalEntryStudents = {};
+
       loadJournalEntryDialogInitialData(dialogScope);
       if (angular.isDefined(editEntity)) {
         angular.extend(dialogScope.journalEntry, editEntity);
+        dialogScope.entryDateCalendar = dialogScope.journalEntry.entryDate;
+        editEntity.journalEntryStudents.forEach(function(it) {
+          dialogScope.journalEntryStudents[it.journalStudent] = it;
+          DataUtils.convertStringToDates(it.journalEntryStudentHistories, ["gradeInserted"]);
+          classifierMapper.objectmapper(it.journalEntryStudentHistories);
+        });
+        editEntity.journalEntryCapacityTypes.forEach(function(it) {
+          dialogScope.selectedCapacityTypes[it] = true;
+        });
       }
-      dialogScope.journalEntryStudentChanged = function(journalEntry, index, row) {
-        journalEntry.journalEntryStudents[index].journalStudent = row.id;
+      dialogScope.journalEntryStudentChanged = function(journalEntryStudents, row) {
+        if (!angular.isObject(journalEntryStudents[row.id])) {
+          journalEntryStudents[row.id] = {};
+        }
+        journalEntryStudents[row.id].journalStudent = row.id;
+      };
+      dialogScope.setJournalEntryDefaultName = function(name) {
+        if (!angular.isDefined(editEntity) && !angular.isString(dialogScope.journalEntry.nameEt)) {
+          var holder = {entryType: name};
+          classifierMapper.objectmapper(holder);
+          dialogScope.journalEntry.nameEt = holder.entryType.nameEt;
+        }
       };
     }, function(submittedDialogScope) {
-      var journalEntry = new JournalEntryEndpoint(submittedDialogScope.journalEntry);
-      if (angular.isDefined(submittedDialogScope.journalEntry.id)) {
+      var newEntity = angular.extend({}, submittedDialogScope.journalEntry);
+      journalEntryStudentsToArray(submittedDialogScope.journalEntryStudents, newEntity);
+      capacityTypesToArray(submittedDialogScope.selectedCapacityTypes, newEntity);
+
+      var journalEntry = new JournalEntryEndpoint(newEntity);
+      if (angular.isDefined(newEntity.id)) {
         journalEntry.$update().then(function() {
           message.info('main.messages.create.success');
           loadJournalEntries();
+          loadJournalStudents();
         });
       } else {
         journalEntry.$save().then(function() {
           message.info('main.messages.create.success');
           loadJournalEntries();
+          loadJournalStudents();
         });
       }
     });
@@ -147,4 +202,13 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     });
   };
 
+  $scope.moduleDescriptionDialog = function(moduleDescription) {
+    dialogService.showDialog('journal/journal.moduleDescription.dialog.html', function(dialogScope) {
+      dialogScope.moduleDescription = moduleDescription;
+    });
+  };
+
+  $scope.showAllStudents = function(show) {
+    loadJournalStudents(show);
+  };
 });

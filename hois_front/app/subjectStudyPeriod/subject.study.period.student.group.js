@@ -15,7 +15,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
 
     QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
         $scope.studyPeriods = response;
-        DataUtils.sortStudyYearsOrPeriods(response);
         setCurrentStudyPeriod();
     });
 
@@ -46,11 +45,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
     $scope.filterStudentGroups = function(studentGroup) {
         return $scope.criteria.curriculum ? studentGroup.curriculum.id === $scope.criteria.curriculum : true;
     };
-}]).controller('SubjectStudyPeriodStudentGroupEditController', ['$scope', 'QueryUtils', 'ArrayUtils', 'DataUtils', 'Classifier', '$translate', '$route', 'message', 'dialogService', '$rootScope', 'SspCapacities', function ($scope, QueryUtils, ArrayUtils, DataUtils, Classifier, $translate, $route, message, dialogService, $rootScope, SspCapacities) {
+}]).controller('SubjectStudyPeriodStudentGroupEditController', ['$scope', 'QueryUtils', 'ArrayUtils', 'Classifier', '$route', 'message', 'dialogService', '$rootScope', 'SspCapacities', function ($scope, QueryUtils, ArrayUtils, Classifier, $route, message, dialogService, $rootScope, SspCapacities) {
 
-    $scope.record = {
-        subjectStudyPeriodDtos: []
-    };
     var studyPeriodId = parseInt($route.current.params.studyPeriodId);
     var studentGroup = $route.current.params.studentGroupId ? parseInt($route.current.params.studentGroupId) : null;
     $scope.isEditing = studentGroup === null;
@@ -69,7 +65,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
         });
     } else {
         $scope.record = new Endpoint({studyPeriod: studyPeriodId, subjectStudyPeriodDtos: []});
-        QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list/new/' + studyPeriodId).query(function(response) {
+        QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list/limited/' + studyPeriodId).query(function(response) {
             $scope.studentGroups = response;
         });
     }
@@ -79,6 +75,14 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
             $scope.curriculum = response;
             getCurriculumStudyPeriod();
         });
+    }
+
+    function getCurriculumStudyPeriod() {
+        var sp = $scope.curriculum.studyPeriod;
+        $scope.curriculumStudyPeriod = {
+            years: Math.floor(sp / 12),
+            months: sp % 12
+        };
     }
 
     function selectStudentGroup() {
@@ -95,25 +99,11 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
         $scope.capacityTypes = response;
     });
 
-    function setCurrentStudyPeriod() {
-        $scope.record.studyPeriod = studyPeriodId ? studyPeriodId : DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
-    }
-
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
-        $scope.studyPeriods = response;
-        DataUtils.sortStudyYearsOrPeriods(response);
-        setCurrentStudyPeriod();
+    QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId}).$promise.then(function(response) {
+        $scope.studyPeriod = response;
     });
 
-    function getCurriculumStudyPeriod() {
-        var sp = $scope.curriculum.studyPeriod;
-        var years = Math.floor(sp / 12);
-        var months = sp % 12;
-        var strings = ['subjectStudyPeriod.years', 'subjectStudyPeriod.months'];
-        $translate(strings).then(function (value) {
-            $scope.curriculumStudyPeriod = years + value[strings[0]] + ' ' + months + value[strings[1]];
-        });
-    }
+
 
     $scope.$watch('record.studentGroup', function() {
             if($scope.studentGroups && $scope.record.studentGroup) {
@@ -123,12 +113,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
     );
 
     // load validation 
-
-    $scope.teachersLoadOk = function(ssp) {
-       return ssp.teachers.reduce(function(sum, val){
-           return sum += val.scheduleLoad;
-       }, 0) >=  $scope.capacitiesUtil.capacitiesSumBySsp(ssp);
-    };
 
     $scope.subjectsLoadValid = function(subjectId) {
         var sspLoadByType, sspsCapacities; 
@@ -192,6 +176,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
     };
 
     function save() {
+        $scope.record.studyPeriod = studyPeriodId;
         $scope.capacitiesUtil.filterEmptyCapacities();
         $scope.record.$put().then(function(response){
             message.updateSuccess();

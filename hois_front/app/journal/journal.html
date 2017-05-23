@@ -1,4 +1,4 @@
-<div class="ois-form-layout-padding" ng-cloak>
+<div class="ois-form-layout-padding form-readonly" ng-cloak>
   <div flex>
     <form name="journalForm" ng-submit="journalForm.$valid && loadData()" novalidate>
       <div layout="row" layout-sm="column" layout-xs="column">
@@ -56,8 +56,8 @@
 </div>
 
 <div ng-if="journal.hasJournalStudents">
-  <div ng-include="'/journal/journal.edit.html'" ng-controller="JournalEditController as journalEditController"></div>
+  <div ng-include="'journal/journal.edit.html'" ng-controller="JournalEditController as journalEditController"></div>
 </div>
 <div ng-if="!journal.hasJournalStudents">
-  <div ng-include="'/journal/journal.student.selection.html'" ng-controller="JournalStudentSelectionController as journalStudentSelectionController"></div>
+  <div ng-include="'journal/journal.student.selection.html'" ng-controller="JournalStudentSelectionController as journalStudentSelectionController"></div>
 </div>

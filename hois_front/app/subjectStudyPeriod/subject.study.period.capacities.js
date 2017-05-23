@@ -140,6 +140,12 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
                 });
             }
         };
+
+        this.teachersLoadOk = function(ssp) {
+            return ssp.teachers.reduce(function(sum, val){
+                return sum += val.scheduleLoad;
+            }, 0) >=  self.capacitiesSumBySsp(ssp);
+        };
     };
     return SspCapacity;
 }]);

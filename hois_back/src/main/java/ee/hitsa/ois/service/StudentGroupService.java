@@ -5,7 +5,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -53,7 +52,6 @@ import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
 @Service
 public class StudentGroupService {
 
-    private static final List<String> STUDENT_STATUS_ACTIVE = Arrays.asList(StudentStatus.OPPURSTAATUS_O.name(), StudentStatus.OPPURSTAATUS_A.name(), StudentStatus.OPPURSTAATUS_V.name());
     private static final String STUDENT_GROUP_LIST_SELECT =
             "sg.id, sg.code, sg.study_form_code, sg.course, curriculum.id as curriculum_id, "+
             "curriculum.name_et, curriculum.name_en, "+
@@ -93,7 +91,7 @@ public class StudentGroupService {
         qb.optionalCriteria("sg.valid_thru >= :validFrom", "validFrom", criteria.getValidFrom());
         qb.optionalCriteria("sg.valid_from <= :validThru", "validThru", criteria.getValidThru());
 
-        return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
+        return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", StudentStatus.STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setCode(resultAsString(r, 1));

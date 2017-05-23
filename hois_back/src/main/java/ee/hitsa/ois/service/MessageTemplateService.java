@@ -104,8 +104,10 @@ public class MessageTemplateService {
         });
 
         if (templates.isEmpty()) {
+            // TODO avoid use of String.format
             log.error(String.format("no %s templates found for school %d", type.name(), schoolId));
         } else if (templates.size() > 1) {
+            // TODO avoid use of String.format
             log.error(String.format("Multiple %s templates found for school %d", type.name(), schoolId));
         }
 

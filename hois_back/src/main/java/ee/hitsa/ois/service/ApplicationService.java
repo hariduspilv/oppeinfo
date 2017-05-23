@@ -339,16 +339,19 @@ public class ApplicationService {
         Student student = application.getStudent();
         ConfirmationNeededMessage data = new ConfirmationNeededMessage(application);
         if (student.getRepresentatives() != null && !student.getRepresentatives().isEmpty()) {
-            log.info(String.format("rejection notification message sent to student %d representatives", application.getStudent().getId()));
+            // TODO avoid use of String.format
+            log.info(String.format("rejection notification message sent to student %d representatives", EntityUtil.getId(application.getStudent())));
             automaticMessageService.sendMessageToStudentRepresentatives(MessageType.TEATE_LIIK_AV_KINNIT, student, data);
         } else {
-            log.info(String.format("rejection notification message sent to student %d school", application.getStudent().getId()));
+            // TODO avoid use of String.format
+            log.info(String.format("rejection notification message sent to student %d school", EntityUtil.getId(application.getStudent())));
             automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, student.getSchool(), data);
         }
     }
 
     public void sendRejectionNotificationMessage(Application application, HoisUserDetails user) {
-        log.info(String.format("rejection notification message sent to student %d", application.getStudent().getId()));
+        // TODO avoid use of String.format
+        log.info(String.format("rejection notification message sent to student %d", EntityUtil.getId(application.getStudent())));
         StudentApplicationRejectedMessage data = new StudentApplicationRejectedMessage(application);
         automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data, user);
     }

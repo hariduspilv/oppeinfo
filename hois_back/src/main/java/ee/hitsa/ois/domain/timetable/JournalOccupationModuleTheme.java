@@ -17,6 +17,7 @@ public class JournalOccupationModuleTheme extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Journal journal;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private LessonPlanModule lessonPlanModule;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false)

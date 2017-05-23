@@ -5,6 +5,8 @@ import java.util.Set;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
+import org.springframework.util.CollectionUtils;
+
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
@@ -41,16 +43,24 @@ public class CurriculumModuleDto extends VersionedCommand {
     private Set<String> competences;
 
     private Set<CurriculumModuleOutcomeDto> outcomes;
+    private Boolean addedToImplementationPlan = Boolean.FALSE;
 
     public static CurriculumModuleDto of(CurriculumModule module) {
         CurriculumModuleDto dto = EntityUtil.bindToDto
                 (module, new CurriculumModuleDto(), "outcomes", "occupations", "competences");
-
         dto.setOutcomes(StreamUtil.toMappedSet(CurriculumModuleOutcomeDto::of, module.getOutcomes()));
         dto.setOccupations(StreamUtil.toMappedSet(o -> EntityUtil.getNullableCode(o.getOccupation()), module.getOccupations()));
         dto.setCompetences(StreamUtil.toMappedSet(c -> EntityUtil.getNullableCode(c.getCompetence()), module.getCompetences()));
-
+        dto.setAddedToImplementationPlan(!CollectionUtils.isEmpty(module.getCurriculumVersionOccupationModules()));
         return dto;
+    }
+
+    public Boolean getAddedToImplementationPlan() {
+        return addedToImplementationPlan;
+    }
+
+    public void setAddedToImplementationPlan(Boolean addedToImplementationPlan) {
+        this.addedToImplementationPlan = addedToImplementationPlan;
     }
 
     public Long getId() {

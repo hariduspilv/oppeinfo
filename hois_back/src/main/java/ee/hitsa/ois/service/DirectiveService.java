@@ -348,7 +348,7 @@ public class DirectiveService {
         dto.setInserted(LocalDateTime.now());
         dto.setInsertedBy(user.getUsername());
         // directive type as default headline
-        Classifier type = classifierRepository.findOne(cmd.getType());
+        Classifier type = classifierRepository.getOne(cmd.getType());
         dto.setHeadline(type != null ? type.getNameEt() : null);
         return dto;
     }

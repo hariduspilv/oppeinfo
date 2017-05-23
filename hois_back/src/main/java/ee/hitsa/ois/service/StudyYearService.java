@@ -14,6 +14,7 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.JournalCapacityRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudyPeriodEventRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
@@ -34,16 +35,14 @@ public class StudyYearService {
 
     @Autowired
     private ClassifierRepository classifierRepository;
-
+    @Autowired
+    private JournalCapacityRepository journalCapacityRepository;
     @Autowired
     private SchoolRepository schoolRepository;
-
     @Autowired
     private StudyYearRepository studyYearRepository;
-
     @Autowired
     private StudyPeriodRepository studyPeriodRepository;
-
     @Autowired
     private StudyPeriodEventRepository studyPeriodEventRepository;
 
@@ -84,6 +83,8 @@ public class StudyYearService {
             if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriod.getStudyYear()))) {
                 throw new AssertionFailedException("Study year mismatch");
             }
+            // remove all JournalCapacity which have wrong week nrs (not present in current study period)
+            journalCapacityRepository.deleteByStudyPeriodAndWeekNrNotIn(studyPeriod, studyPeriod.getWeekNrs());
         } else {
             studyPeriod.setStudyYear(studyYear);
         }

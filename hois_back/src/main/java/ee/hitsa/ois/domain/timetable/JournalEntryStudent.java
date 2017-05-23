@@ -26,21 +26,21 @@ public class JournalEntryStudent extends BaseEntityWithId {
     private JournalStudent journalStudent;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false)
+    @JoinColumn(nullable = true)
     private Classifier absence;
 
     private LocalDateTime absenceInserted;
     private LocalDateTime absenceAccepted;
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = true, updatable = false)
+    @JoinColumn(nullable = true)
     private Classifier grade;
 
     private LocalDateTime gradeInserted;
     private String addInfo;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "journal_entry_student_id", nullable = false, updatable = false)
+    @JoinColumn(name = "journal_entry_student_id", nullable = false, updatable = false, insertable = true)
     private Set<JournalEntryStudentHistory> journalEntryStudentHistories = new HashSet<>();
 
 

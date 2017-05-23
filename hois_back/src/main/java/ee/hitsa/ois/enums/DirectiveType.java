@@ -6,8 +6,8 @@ import ee.hitsa.ois.validation.DirectiveValidation;
 
 public enum DirectiveType {
 
-    KASKKIRI_AKAD(StudentStatus.OPPURSTAATUS_A, DirectiveValidation.Akad.class, "nominalStudyEnd"),
-    KASKKIRI_AKADK(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Akadk.class, "nominalStudyEnd"),
+    KASKKIRI_AKAD(StudentStatus.OPPURSTAATUS_A, DirectiveValidation.Akad.class),
+    KASKKIRI_AKADK(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Akadk.class),
     KASKKIRI_EKSMAT(StudentStatus.OPPURSTAATUS_K, DirectiveValidation.Eksmat.class),
     KASKKIRI_ENNIST(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Ennist.class, "studentGroup", "nominalStudyEnd"),
     KASKKIRI_FINM(null, DirectiveValidation.Finm.class, "fin", "finSpecific"),

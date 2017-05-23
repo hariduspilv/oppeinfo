@@ -14,12 +14,16 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.service.StateCurriculumService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
@@ -27,10 +31,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StateCurriculumDto;
 import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
 
-/**
- * TODO: there are going to be exception
- * when trying to delete or update object, which does not exist.
- */
+
 @RestController
 @RequestMapping("/stateCurriculum")
 public class StateCurriculumController {
@@ -38,22 +39,25 @@ public class StateCurriculumController {
     @Autowired
     private StateCurriculumService stateCurriculumService;
 
-    @PostMapping("")
-    public StateCurriculumDto create(@Valid @RequestBody StateCurriculumForm stateCurriculumForm) {
+    @PostMapping
+    public StateCurriculumDto create(HoisUserDetails user, @Valid @RequestBody StateCurriculumForm stateCurriculumForm) {
+        UserUtil.assertIsMainAdmin(user);
         return get(stateCurriculumService.create(stateCurriculumForm));
     }
 
     @PutMapping("/{id:\\d+}")
-    public StateCurriculumDto update(@Valid @RequestBody StateCurriculumForm stateCurriculumForm, @WithEntity("id") StateCurriculum stateCurriculum) {
+    public StateCurriculumDto update(HoisUserDetails user, @Valid @RequestBody StateCurriculumForm stateCurriculumForm, @WithEntity("id") StateCurriculum stateCurriculum) {
+       UserUtil.assertIsMainAdmin(user);
        return get(stateCurriculumService.save(stateCurriculum, stateCurriculumForm));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(@WithEntity("id") StateCurriculum curriculum) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StateCurriculum curriculum, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        UserUtil.assertIsMainAdmin(user);
         stateCurriculumService.delete(curriculum);
     }
 
-    @GetMapping("")
+    @GetMapping
     public Page<StateCurriculumSearchDto> search(StateCurriculumSearchCommand stateCurriculumSearchCommand, Pageable pageable) {
         return stateCurriculumService.search(stateCurriculumSearchCommand, pageable);
     }

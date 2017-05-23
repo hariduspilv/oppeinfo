@@ -47,8 +47,8 @@
             <td md-cell>{{::row.code}}</td>
             <td md-cell style="padding-left:{{15*row.indent}}px">{{currentLanguageNameField(row)}}</td>
             <td md-cell>{{row.isValid ? 'school.department.validTrue' : 'school.department.validFalse' | translate}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.validFrom} }}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
+            <td md-cell>{{::row.validFrom | hoisDate}}</td>
+            <td md-cell>{{::row.validThru | hoisDate}}</td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-href="#/school/departments/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>

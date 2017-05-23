@@ -390,7 +390,7 @@ angular.module('hitsaOis')
             role: $scope.targetGroup,
             name: text
         }, function (data) {
-            deferred.$$resolve(data);
+            deferred.resolve(data);
         });
         return deferred.promise;
     };

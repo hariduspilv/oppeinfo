@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,8 +32,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
+import ee.hitsa.ois.enums.CapacityType;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
@@ -67,6 +71,8 @@ public class CurriculumControllerTests {
     private CurriculumRepository curriculumRepository;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private TestConfigurationService testConfigurationService;
 
     private JacksonTester<CurriculumForm> curriculumFormJson;
 
@@ -77,6 +83,7 @@ public class CurriculumControllerTests {
     @Before
     public void setup() {
         JacksonTester.initFields(this, objectMapper);
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
     }
 
     @After
@@ -84,6 +91,7 @@ public class CurriculumControllerTests {
         if (testCurriculum != null && testCurriculum.getId() != null) {
             this.restTemplate.delete("/curriculum/{id}", testCurriculum.getId());
         }
+        testConfigurationService.setSessionCookie(null);
     }
 
     @Test
@@ -593,18 +601,18 @@ public class CurriculumControllerTests {
         savedOccupationModule.setGrade3Description("grade3");
 
         CurriculumVersionOccupationModuleCapacityDto capacity = new CurriculumVersionOccupationModuleCapacityDto();
-        capacity.setCapacityType("MAHT_a");
+        capacity.setCapacityType(CapacityType.MAHT_a.name());
         capacity.setContact(Boolean.TRUE);
         capacity.setHours(Integer.valueOf(2));
         savedOccupationModule.getCapacities().add(capacity);
 
         CurriculumVersionOccupationModuleThemeDto theme = new CurriculumVersionOccupationModuleThemeDto();
         theme.setNameEt("themeNameEt");
-        theme.setCredits(Double.valueOf(1.0));
+        theme.setCredits(new BigDecimal("1.0"));
         theme.setHours(Integer.valueOf(1));
 
         CurriculumVersionOccupationModuleThemeCapacityDto themeCapacity = new CurriculumVersionOccupationModuleThemeCapacityDto();
-        themeCapacity.setCapacityType("MAHT_a");
+        themeCapacity.setCapacityType(CapacityType.MAHT_a.name());
         themeCapacity.setContact(Boolean.TRUE);
         themeCapacity.setHours(Integer.valueOf(2));
         theme.getCapacities().add(themeCapacity);
@@ -752,6 +760,7 @@ public class CurriculumControllerTests {
         curriculumForm.setStudyLanguages(new HashSet<>());
         curriculumForm.setIscedClass("ISCED_RYHM_0812");
         curriculumForm.setVersions(new HashSet<>());
+        curriculumForm.setJoint(Boolean.FALSE);
         return curriculumForm;
     }
 
@@ -820,7 +829,7 @@ public class CurriculumControllerTests {
         CurriculumSpecialityDto dto = new CurriculumSpecialityDto();
         dto.setNameEt("CurriculumControllerTest");
         dto.setNameEn("CurriculumControllerTest");
-        dto.setCredits(Double.valueOf(1));
+        dto.setCredits(BigDecimal.valueOf(1));
         dto.setOccupation("KUTSE_10491530");
         dto.setReferenceNumber(Long.valueOf(referenceNumber--));
         return dto;

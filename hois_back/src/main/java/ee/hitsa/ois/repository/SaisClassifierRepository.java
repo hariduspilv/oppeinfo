@@ -9,6 +9,7 @@ import ee.hitsa.ois.domain.sais.SaisClassifier;
 
 public interface SaisClassifierRepository extends JpaRepository<SaisClassifier, Long>, JpaSpecificationExecutor<SaisClassifier> {
 
+    // XXX not used?
     List<SaisClassifier> findAllByValue(String value);
 
 }

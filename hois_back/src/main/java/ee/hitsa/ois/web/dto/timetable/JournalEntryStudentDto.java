@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.util.List;
+import java.util.stream.Collectors;
+
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
@@ -20,8 +23,11 @@ public class JournalEntryStudentDto {
 
     private String addInfo;
 
+    private List<JournalEntryStudentHistoryDto> journalEntryStudentHistories;
+
     public static JournalEntryStudentDto of(JournalEntryStudent journalEntryStudent) {
-        JournalEntryStudentDto dto = EntityUtil.bindToDto(journalEntryStudent, new JournalEntryStudentDto());
+        JournalEntryStudentDto dto = EntityUtil.bindToDto(journalEntryStudent, new JournalEntryStudentDto(), "journalEntryStudentHistories");
+        dto.journalEntryStudentHistories = journalEntryStudent.getJournalEntryStudentHistories().stream().map(JournalEntryStudentHistoryDto::of).collect(Collectors.toList());
         return dto;
     }
 
@@ -67,5 +73,12 @@ public class JournalEntryStudentDto {
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
     }
+    public List<JournalEntryStudentHistoryDto> getJournalEntryStudentHistories() {
+        return journalEntryStudentHistories;
+    }
+    public void setJournalEntryStudentHistories(List<JournalEntryStudentHistoryDto> journalEntryStudentHistories) {
+        this.journalEntryStudentHistories = journalEntryStudentHistories;
+    }
+
 
 }

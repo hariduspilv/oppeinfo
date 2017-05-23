@@ -76,13 +76,15 @@ public class CurriculumController {
     }
 
     @PostMapping
-    public CurriculumDto create(HoisUserDetails user, @RequestBody CurriculumForm curriculumForm) {
+    public CurriculumDto create(HoisUserDetails user, @Valid @RequestBody CurriculumForm curriculumForm) {
+        UserUtil.assertIsSchoolAdmin(user);
         return CurriculumDto.of(curriculumService.create(user, curriculumForm));
     }
 
     @PutMapping("/{id:\\d+}")
     public CurriculumDto update(HoisUserDetails user, @NotNull @Valid @RequestBody CurriculumForm curriculumForm, @WithEntity("id") Curriculum curriculum) {
         assertSameOrJoinSchool(user, curriculum);
+        UserUtil.assertIsSchoolAdmin(user);
         return CurriculumDto.of(curriculumService.save(curriculum, curriculumForm));
     }
 
@@ -102,21 +104,25 @@ public class CurriculumController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
         UserUtil.assertSameSchool(user, curriculum.getSchool());
+        UserUtil.assertIsSchoolAdmin(user);
     	curriculumService.delete(curriculum);
     }
     
     @PostMapping("/speciality")
-    public CurriculumSpecialityDto createCurriculumSpeciality(HoisUserDetails user, @RequestBody CurriculumSpecialityDto form) {
+    public CurriculumSpecialityDto createCurriculumSpeciality(HoisUserDetails user, @Valid @RequestBody CurriculumSpecialityDto form) {
+        UserUtil.assertIsSchoolAdmin(user);
         return CurriculumSpecialityDto.of(curriculumService.createCurriculumSpeciality(user, form));
     }
 
     @PutMapping("/speciality/{id:\\d+}")
     public CurriculumSpecialityDto updateCurriculumSpeciality(HoisUserDetails user, @NotNull @Valid @RequestBody CurriculumSpecialityDto form, @WithEntity("id") CurriculumSpeciality speciality) {
+        UserUtil.assertIsSchoolAdmin(user);
         return CurriculumSpecialityDto.of(curriculumService.saveCurriculumSpeciality(speciality, form));
     }
     
     @DeleteMapping("/speciality/{id:\\d+}")
     public void deleteCurriculumSpeciality(HoisUserDetails user, @WithEntity("id") CurriculumSpeciality speciality) {
+        UserUtil.assertIsSchoolAdmin(user);
         curriculumService.deleteSpeciality(speciality);
     }
 
@@ -130,6 +136,7 @@ public class CurriculumController {
     public CurriculumVersionDto createVersion(HoisUserDetails user, @WithEntity(value = "curriculumId") Curriculum curriculum,
             @Valid @RequestBody CurriculumVersionDto dto) {
         assertSameOrJoinSchool(user, curriculum);
+        UserUtil.assertIsSchoolAdmin(user);
         return curriculumService.create(curriculum, dto);
     }
 
@@ -137,12 +144,14 @@ public class CurriculumController {
     public CurriculumVersionDto updateVersion(HoisUserDetails user, @WithEntity(value = "id") CurriculumVersion curriculumVersion,
             @Valid @RequestBody CurriculumVersionDto curriculumVersionDto) {
         assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
+        UserUtil.assertIsSchoolAdmin(user);
         return curriculumService.saveVersion(curriculumVersion, curriculumVersionDto);
     }
     
     @DeleteMapping("/{curriculumId:\\d+}/versions/{id:\\d+}")
     public void deleteVersion(HoisUserDetails user, @WithEntity(value = "id") CurriculumVersion curriculumVersion) {
         assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
+        UserUtil.assertIsSchoolAdmin(user);
         curriculumService.deleteVersion(curriculumVersion);
     }
 

@@ -20,6 +20,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.enums.GroupProportion;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodTeacherForm;
@@ -58,6 +59,65 @@ public class SubjectStudyPeriodControllerTest {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+    
+    @Test
+    public void getTeacherOptions() {
+        testSearchWithoutParams(BASE_URL + "/teachers/page");
+    }
+    
+    @Test
+    public void getStudentGroupsForSearchForm() {
+        testSearchWithoutParams(BASE_URL + "/studentGroups/list");
+    }
+    
+    @Test
+    public void getStudentGroupsForEditForm() {
+        testSearchWithoutParams(BASE_URL + "/studentGroups/list/limited/16");
+    }
+    
+    @Test
+    public void subjects() {
+        testSearchWithoutParams(BASE_URL + "/subjects");
+    }
+    
+    @Test
+    public void searchByTeachers() {
+        testSearchWithoutParams(BASE_URL + "/teachers");
+    }
+    
+    @Test
+    public void getTeacherOptionsForEditForm() {
+        testSearchWithoutParams(BASE_URL + "/teachers/list/limited/16");
+    }
+    
+    public void testSearchWithoutParams(String methodUrl) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(methodUrl);
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void getStudentGroupsSspContainer() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/studentGroups/container");
+        uriBuilder.queryParam("studyPeriod", "16");
+        uriBuilder.queryParam("studentGroup", "68");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void getTeachersSspContainer() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/teachers/container");
+        uriBuilder.queryParam("studyPeriod", "16");
+        uriBuilder.queryParam("teacher", "1");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    
     /**
      * TODO: 
      * For now test method does not generate it's own data for testing
@@ -141,7 +201,7 @@ public class SubjectStudyPeriodControllerTest {
         SubjectStudyPeriodForm form = new SubjectStudyPeriodForm();
         form.setStudyPeriod(Long.valueOf(4));
         form.setSubject(Long.valueOf(50));
-        form.setGroupProportion("PAEVIK_GRUPI_JAOTUS_1");
+        form.setGroupProportion(GroupProportion.PAEVIK_GRUPI_JAOTUS_1.name());
         form.setDeclarationType("DEKLARATSIOON_LISA");
         
         SubjectStudyPeriodTeacherForm t1 = new SubjectStudyPeriodTeacherForm();

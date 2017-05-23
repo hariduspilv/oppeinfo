@@ -116,7 +116,7 @@ public class TeacherService {
             throw new ValidationFailedException("person.citizenship", "null");
         }
         person.setCitizenship(citizenship);
-        person.setSex(classifierRepository.findOneByCodeAndMainClassCode(teacherForm.getPerson().getSex(), MainClassCode.SUGU.name()));
+        person.setSex(EntityUtil.validateClassifier(classifierRepository.getOne(teacherForm.getPerson().getSex()), MainClassCode.SUGU));
         // TODO: generate from idcode
         if (personForm.getBirthdate() != null) {
             if (LocalDate.now().isAfter(personForm.getBirthdate())) {

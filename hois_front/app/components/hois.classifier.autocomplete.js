@@ -39,7 +39,7 @@ angular.module('hitsaOis')
             var filteredContent = data.filter(function (item) {
               return item[fieldName].includes(text);
             });
-            deferred.$$resolve(filteredContent);
+            deferred.resolve(filteredContent);
           };
 
           Classifier.queryForDropdown({mainClassCode: scope.mainClassCode, sort: fieldName}, callback);

@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import java.math.BigDecimal;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -22,7 +24,7 @@ public class CurriculumSpecialityDto extends VersionedCommand {
     @Size(max=100)
     private String nameEn;
     @NotNull
-    private Double credits;
+    private BigDecimal credits;
     @Size(max=1000)
     private String description;
     @Size(max=255)
@@ -81,11 +83,11 @@ public class CurriculumSpecialityDto extends VersionedCommand {
         this.nameEn = nameEn;
     }
 
-    public Double getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Double credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

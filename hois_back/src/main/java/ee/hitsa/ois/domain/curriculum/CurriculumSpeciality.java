@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.curriculum;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -33,7 +34,7 @@ public class CurriculumSpeciality extends BaseEntityWithId {
 	@Size(max=100)
 	private String nameEn;
 	@NotNull
-	private Double credits;
+	private BigDecimal credits;
 	@Size(max=1000)
 	private String description;
 	@Size(max=255)
@@ -92,11 +93,11 @@ public class CurriculumSpeciality extends BaseEntityWithId {
 		this.nameEn = nameEn;
 	}
 
-	public Double getCredits() {
+	public BigDecimal getCredits() {
 		return credits;
 	}
 
-	public void setCredits(Double credits) {
+	public void setCredits(BigDecimal credits) {
 		this.credits = credits;
 	}
 

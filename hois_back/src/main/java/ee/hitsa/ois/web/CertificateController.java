@@ -73,11 +73,11 @@ public class CertificateController {
         // TODO validation of idcode
         return certificateService.getOtherPerson(user.getSchoolId(), idcode);
     }
-    
+
     @GetMapping("/student")
     public AutocompleteResult getStudent(HoisUserDetails user) {
         if(user.getStudentId() != null) {
-            Student s = studentRepository.findOne(user.getStudentId());
+            Student s = studentRepository.getOne(user.getStudentId());
             // FIXME maybe should use AutocompleteResult.of(s) ?
             String name = s.getPerson().getFullname();
             return new AutocompleteResult(s.getId(), name, name);

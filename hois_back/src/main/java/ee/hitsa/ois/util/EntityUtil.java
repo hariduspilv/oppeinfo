@@ -262,7 +262,9 @@ public abstract class EntityUtil {
     public static void bindClassifiers(Object command, Object entity, Map<String, ClassifierRestriction> properties, ClassifierRepository loader) {
         PropertyAccessor source = PropertyAccessorFactory.forBeanPropertyAccess(command);
         PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);
-        properties.forEach((p, r) -> {
+        for(Map.Entry<String, ClassifierRestriction> me : properties.entrySet()) {
+            String p = me.getKey();
+            ClassifierRestriction r = me.getValue();
             MainClassCode[] t = r.value();
 
             String classCodeOrValue = (String)source.getPropertyValue(p);
@@ -291,7 +293,7 @@ public abstract class EntityUtil {
                 }
                 destination.setPropertyValue(p, c);
             }
-        });
+        }
     }
 
     public static Classifier validateClassifier(Classifier c, MainClassCode... domains) {

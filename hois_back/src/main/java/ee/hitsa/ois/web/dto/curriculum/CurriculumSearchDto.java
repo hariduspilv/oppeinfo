@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -10,7 +11,7 @@ public class CurriculumSearchDto {
     private Long id;
     private String nameEt;
     private String nameEn;
-    private Long credits;
+    private BigDecimal credits;
     private LocalDate validFrom;
     private LocalDate validThru;
     private Boolean higher;
@@ -22,13 +23,13 @@ public class CurriculumSearchDto {
     public CurriculumSearchDto() {
     }
 
-    public CurriculumSearchDto(Long id, String nameEt, String nameEn, Double credits, LocalDate validFrom,
+    public CurriculumSearchDto(Long id, String nameEt, String nameEn, BigDecimal credits, LocalDate validFrom,
             LocalDate validThru, Boolean higher, String status, String origStudyLevel,
             Long schoolId, String schoolNameEt, String schoolNameEn) {
         this.id = id;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
-        this.credits = credits != null ? Long.valueOf(credits.longValue()) : null;
+        this.credits = credits;
         this.validFrom = validFrom;
         this.validThru = validThru;
         this.higher = higher;
@@ -69,11 +70,11 @@ public class CurriculumSearchDto {
         this.nameEn = nameEn;
     }
 
-    public Long getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Long credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('LoginController', function (message, $rootScope, $scope, $http, AuthService, AUTH_EVENTS, $location, config, $mdDialog) {
+  .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog) {
 
     var authenticate = function(credentials) {
       var headers = credentials ? {authorization : "Basic " +

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', function ($scope, $sessionStorage, QueryUtils, DataUtils) {
-$scope.currentNavItem = 'teachers';
+    $scope.currentNavItem = 'teachers';
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods/teachers', {order: 'id'});
 
@@ -14,7 +14,6 @@ $scope.currentNavItem = 'teachers';
 
     QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
         $scope.studyPeriods = response;
-        DataUtils.sortStudyYearsOrPeriods(response);
         setCurrentStudyPeriod();
     });
 
@@ -26,16 +25,11 @@ $scope.currentNavItem = 'teachers';
     );
 
     $scope.$watch('criteria.teacherObject', function() {
-            if($scope.criteria.teacherObject) {
-                $scope.criteria.teacher = $scope.criteria.teacherObject.id;
-            }
+            $scope.criteria.teacher = $scope.criteria.teacherObject ? $scope.criteria.teacherObject.id : null;
         }
     );
 
-}]).controller('SubjectStudyPeriodTeacherEditController', ['$scope', 'DataUtils','QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$location', '$q', '$rootScope', 'Classifier',  'SspCapacities', function ($scope, DataUtils, QueryUtils, ArrayUtils, $route, dialogService, message, $location, $q, $rootScope, Classifier, SspCapacities) {
-    $scope.record = {
-        subjectStudyPeriodDtos: []
-    };
+}]).controller('SubjectStudyPeriodTeacherEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'message', 'Classifier', 'SspCapacities', function ($scope, QueryUtils, ArrayUtils, $route, message, Classifier, SspCapacities) {
     var studyPeriodId = parseInt($route.current.params.studyPeriodId);
     var teacher = $route.current.params.teacherId ? parseInt($route.current.params.teacherId) : null;
     $scope.isNew = teacher === null;
@@ -45,14 +39,8 @@ $scope.currentNavItem = 'teachers';
         $scope.capacityTypes = response;
     });
 
-    function setCurrentStudyPeriod() {
-        $scope.record.studyPeriod = studyPeriodId ? studyPeriodId : DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
-    }
-
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
-        $scope.studyPeriods = response;
-        DataUtils.sortStudyYearsOrPeriods(response);
-        setCurrentStudyPeriod();
+    QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId}).$promise.then(function(response) {
+        $scope.studyPeriod = response;
     });
 
     if(teacher) {
@@ -65,7 +53,7 @@ $scope.currentNavItem = 'teachers';
         });
     } else {
         $scope.record = new Endpoint({studyPeriod: studyPeriodId, subjectStudyPeriodDtos: []});
-        QueryUtils.endpoint('/subjectStudyPeriods/teachers/list/new/' + studyPeriodId).query(function(result) {
+        QueryUtils.endpoint('/subjectStudyPeriods/teachers/list/limited/' + studyPeriodId).query(function(result) {
             $scope.teachers = result;
         });
     }
@@ -76,29 +64,11 @@ $scope.currentNavItem = 'teachers';
             message.error('subjectStudyPeriod.error.noDataForSaving');
             return;
         }
-        // var wrongSubjects = $scope.record.subjects.filter(function(el){
-        //     return !$scope.subjectsLoadValid(el.id);
-        // });
-        // if(!ArrayUtils.isEmpty(wrongSubjects)) {
-        //     var subjectsNames = wrongSubjects.map(function(el){
-        //         return $rootScope.currentLanguageNameField(el);
-        //     }).join(", ");
-        //     dialogService.confirmDialog({
-        //         prompt: 'subjectStudyPeriod.error.subjectLoad', 
-        //         subject: subjectsNames
-        //     }, save);
-        //     return;
-        // }
-        save();
-    };
-
-    function save() {
-        $scope.capacitiesUtil.filterEmptyCapacities();        
+        $scope.record.studyPeriod = studyPeriodId;
+        $scope.capacitiesUtil.filterEmptyCapacities();
         $scope.record.$put().then(function(response){
             message.updateSuccess();
             $scope.record = response;
         });
-    }
-
-
+    };
 }]);

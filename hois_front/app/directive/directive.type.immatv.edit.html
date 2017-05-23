@@ -28,7 +28,7 @@
           <hois-classifier-value ng-model="row.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
         </td>
         <td md-cell>
-          <hois-value value="'main.formattedDate' | translate: {date: row.nominalStudyEnd}"></hois-value>
+          <hois-value value="row.nominalStudyEnd | hoisDate"></hois-value>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>

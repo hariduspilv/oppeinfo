@@ -131,7 +131,7 @@ public class ClassifierConnectControllerTest {
         uriBuilder.queryParam("classifierCode", "");
         uriBuilder.queryParam("connectClassifierCode", "");
         uriBuilder.queryParam("mainClassifierCode", "");
-        uriBuilder.queryParam("connectClassifierCodes", Arrays.asList("", ""));
+        uriBuilder.queryParam("connectClassifierCode", Arrays.asList("", ""));
         String uri = uriBuilder.build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
 
@@ -140,11 +140,11 @@ public class ClassifierConnectControllerTest {
     }
 
     @Test
-    public void testSearch() {
+    public void testSearchAllWithNoParametersFail() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/classifierConnect");
         String uri = uriBuilder.build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
     }
 }

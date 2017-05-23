@@ -1,11 +1,15 @@
 package ee.hitsa.ois.domain;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoField;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 @Entity
 public class StudyPeriod extends BaseEntityWithId {
@@ -66,5 +70,17 @@ public class StudyPeriod extends BaseEntityWithId {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    @Transient
+    public List<Long> getWeekNrs() {
+        List<Long> weekNrs = new ArrayList<>();
+        LocalDate start = startDate;
+
+        do {
+            weekNrs.add(Long.valueOf(start.get(ChronoField.ALIGNED_WEEK_OF_YEAR)));
+            start = start.plusDays(7);
+        } while(!start.isAfter(endDate) || (start.getYear() == endDate.getYear() && start.get(ChronoField.ALIGNED_WEEK_OF_YEAR) == endDate.get(ChronoField.ALIGNED_WEEK_OF_YEAR)));
+        return weekNrs;
     }
 }

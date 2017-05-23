@@ -7,8 +7,10 @@ angular.module('hitsaOis')
       templateUrl: function (elem, attr) {
         if (angular.isDefined(attr.multiple)) {
           return 'components/hois.chip.autocomplete.html';
-        } else {
+        } else if (angular.isDefined(attr.label) && attr.label.length > 0) {
           return 'components/hois.autocomplete.html';
+        } else {
+          return 'components/hois.autocomplete.nolabel.html';
         }
       },
       restrict: 'E',
@@ -65,7 +67,7 @@ angular.module('hitsaOis')
                 angular.extend(query, scope.additionalQueryParams);
             }
             lookup.search(query, function (data) {
-              deferred.$$resolve(data.content);
+              deferred.resolve(data.content);
             });
             return deferred.promise;
 

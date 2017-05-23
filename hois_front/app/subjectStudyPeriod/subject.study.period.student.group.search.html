@@ -1,6 +1,7 @@
-<md-nav-bar md-selected-nav-item="currentNavItem">
+<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'subjectStudyPeriod.label.options' | translate}}">
   <md-nav-item md-nav-href="#/subjectStudyPeriods/studentGroups?_menu" name="studentGroups">{{'subjectStudyPeriod.label.studentGroups' | translate}}</md-nav-item>
   <md-nav-item md-nav-href="#/subjectStudyPeriods/teachers?_menu" name="teachers">{{'subjectStudyPeriod.label.teachers' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/subjectStudyPeriods/subjects?_menu" name="subjects">{{'subjectStudyPeriod.label.subjects' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
@@ -23,7 +24,7 @@
                     <md-select ng-model="criteria.curriculum">
                      <md-option ng-value="null">
                      </md-option>
-                      <md-option ng-value="option.id" ng-repeat="option in curricula | filter: filterCurriculums">
+                      <md-option ng-value="option.id" ng-repeat="option in curricula | filter: filterCurriculums | orderBy: currentLanguageNameField()">
                         {{currentLanguageNameField(option)}}
                      </md-option>
                     </md-select>
@@ -31,10 +32,10 @@
                 <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.studentGroup' | translate}}</label>
                     <!--<hois-select ng-model="criteria.studentGroup" values="studentGroups"></hois-select>-->
-                    <md-select ng-model="criteria.studentGroupId">
+                    <md-select ng-model="criteria.studentGroup">
                      <md-option ng-value="null">
                      </md-option>
-                      <md-option ng-value="option.id" ng-repeat="option in studentGroups | filter: filterStudentGroups">
+                      <md-option ng-value="option.id" ng-repeat="option in studentGroups | filter: filterStudentGroups | orderBy: currentLanguageNameField()">
                         {{currentLanguageNameField(option)}}
                      </md-option>
                     </md-select>

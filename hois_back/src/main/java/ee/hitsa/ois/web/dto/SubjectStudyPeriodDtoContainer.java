@@ -20,6 +20,7 @@ public class SubjectStudyPeriodDtoContainer {
      */
     private Long studentGroup;    
     private Long teacher;
+    private Long subject;
 
     @Valid
     private List<SubjectStudyPeriodDto> subjectStudyPeriodDtos;
@@ -27,6 +28,14 @@ public class SubjectStudyPeriodDtoContainer {
     private List<AutocompleteResult> subjects;
 
     private List<SubjectStudyPeriodPlanDto> subjectStudyPeriodPlans;
+
+    public Long getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Long subject) {
+        this.subject = subject;
+    }
 
     public Long getTeacher() {
         return teacher;

@@ -1,5 +1,9 @@
 package ee.hitsa.ois.web;
 
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Map;
+
 import javax.transaction.Transactional;
 
 import org.junit.After;
@@ -20,7 +24,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.timetable.Journal;
+import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.repository.JournalEntryRepository;
+import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 
 @Transactional
@@ -36,12 +44,22 @@ public class JournalControllerTests {
     private TestConfigurationService testConfigurationService;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private JournalRepository journalRepository;
+    @Autowired
+    private JournalEntryRepository journalEntryRepository;
+
+
+    private Journal journal;
+    private JournalEntry journalEntry;
 
 
     @Before
     public void setUp() {
         testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
         JacksonTester.initFields(this, objectMapper);
+        journal = journalRepository.findAll().get(0);
+        journalEntry = journalEntryRepository.findAll().get(0);
     }
 
     @After
@@ -62,10 +80,102 @@ public class JournalControllerTests {
         uriBuilder.queryParam("module", Long.valueOf(1L), Long.valueOf(2L));
         uriBuilder.queryParam("journal", Long.valueOf(1L));
         uriBuilder.queryParam("status", "PAEVIK_STAATUS_T");
-        String url = uriBuilder.build().toUriString();
 
-        responseEntity = restTemplate.getForEntity(url, JournalSearchDto.class);
+        responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), JournalSearchDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+
+    @Test
+    public void get() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journal.getId().toString());
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void saveEndDate() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journal.getId().toString(), "saveEndDate");
+        Map<String, LocalDate> postData = Collections.singletonMap("endDate", journal.getEndDate());
+        ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), postData, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getJournalEntries() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journal.getId().toString(), "journalEntry");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getJournalEntry() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journalEntry.getJournal().getId().toString(), "journalEntry", journalEntry.getId().toString());
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getOtherStudents() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journal.getId().toString(), "otherStudents");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getSuitedStudents() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journal.getId().toString(), "suitedStudents");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getJournalStudents() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journal.getId().toString(), "journalStudents");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getJournalStudentsByDate() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journal.getId().toString(), "journalEntriesByDate");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getJournalLessonInfo() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journal.getId().toString(), "journalEntry", "lessonInfo");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getCurrentYear() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment("currentStudyYear");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    //TODO: test save endpoints
 
 }

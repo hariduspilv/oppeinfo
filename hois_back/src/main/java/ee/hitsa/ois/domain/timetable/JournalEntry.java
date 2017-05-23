@@ -32,11 +32,11 @@ public class JournalEntry extends BaseEntityWithId {
     private LocalDate homeworkDuedate;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "journal_entry_id", nullable = false, updatable = false)
+    @JoinColumn(name = "journal_entry_id", nullable = false, updatable = true)
     private Set<JournalEntryCapacityType> journalEntryCapacityTypes = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "journal_entry_id", nullable = false, updatable = false)
+    @JoinColumn(name = "journal_entry_id", nullable = false, updatable = true)
     private Set<JournalEntryStudent> journalEntryStudents = new HashSet<>();
 
     public Journal getJournal() {

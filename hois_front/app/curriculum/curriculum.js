@@ -13,6 +13,13 @@ angular.module('hitsaOis')
     function Curriculum() {
     }
 
+    Curriculum.STATUS = {
+        ENTERING: 'OPPEKAVA_STAATUS_S',     //Sisestamisel
+        PROCEEDING: 'OPPEKAVA_STAATUS_M',   //Menetlemisel
+        VERIFIED: 'OPPEKAVA_STAATUS_K',     //Kinnitatud
+        CLOSED: 'OPPEKAVA_STAATUS_C'        //Suletud
+    };
+
     Curriculum.query = function(params, successCallback) {
       var resource = $resource(config.apiUrl+'/curriculum');
       var queryParams = QueryUtils.getQueryParams(params);

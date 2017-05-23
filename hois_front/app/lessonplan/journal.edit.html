@@ -3,19 +3,75 @@
     <form name="journalForm" class="nomargin">
       <div layout="row">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
-          <label class="textInput">{{'directive.student.curriculumVersion' | translate}}</label>
-          <hois-select ng-model="formState.curriculumVersion" multiple values="formState.saisCurriculumVersions"></hois-select>
+          <label class="textInput">{{'lessonplan.journal.theme' | translate}}</label>
+          <hois-select ng-model="formState.theme" values="formState.themes"></hois-select>
+          <md-button ng-show="formState.theme" ng-click="addTheme()" class="md-raised md-primary">{{'main.button.add' | translate}}</md-button>
         </md-input-container>
 
         <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <label class="textInput">{{'directive.student.studyLevel' | translate}}</label>
-          <hois-classifier-select ng-model="record.studyLevel" multiple main-classifier-code="HINDAMISVIIS" model-value-attr="code"></hois-classifier-select>
+          <label class="textInput">{{'lessonplan.journal.assessment' | translate}}</label>
+          <hois-classifier-select ng-model="record.assessment" required main-classifier-code="KUTSEHINDAMISVIIS" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
       </div>
 
       <div layout="row">
+        <md-list>
+          <md-list-item ng-repeat="theme in record.journalOccupationModuleThemes">
+            <p>{{currentLanguageNameField(formState.themeMap[theme])}}</p>
+            <md-button ng-click="deleteTheme(theme)" class="md-raised md-primary">{{'main.button.delete' | translate}}</md-button>
+          </md-list-item>
+        </md-list>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'lessonplan.journal.name' | translate}}</label>
+          <input type="text" ng-model="record.nameEt" required>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'lessonplan.journal.groupProportion' | translate}}</label>
+          <hois-classifier-select ng-model="record.groupProportion" required main-classifier-code="PAEVIK_GRUPI_JAOTUS" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-list>
+          <md-list-item ng-repeat="capacityType in formState.capacityTypes">
+            <span>
+              <md-checkbox ng-model="capacityType._selected">
+                {{currentLanguageNameField(capacityType)}}
+              </md-checkbox>
+            </span>
+          </md-list-item>
+        </md-list>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <hois-autocomplete label="lessonplan.journal.teacher" ng-model="formState.teacher" method="teachers"></hois-autocomplete>
+          <md-button ng-show="formState.teacher" ng-click="addTeacher()" class="md-raised md-primary">{{'main.button.add' | translate}}</md-button>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-list>
+          <md-list-item ng-repeat="teacher in record.teachers">
+            <md-input-container flex>
+              <label class="textInput">{{currentLanguageNameField(teacher)}}</label>
+              <input ng-model="equipment.equipmentCount">
+            </md-input-container>
+            <md-input-container flex>
+              <md-button ng-click="deleteTeacher(teacher)" class="md-raised md-primary">{{'main.button.delete' | translate}}</md-button>
+            </md-input-container>
+          </md-list-item>
+        </md-list>
+      </div>
+
+      <div layout="row">
         <md-button class="md-raised" ng-click="update()">{{'main.button.save' | translate}}</md-button>
-        <md-button ng-href="#/lessonplans/vocational/{{formState.lessonplan}}/edit" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-href="#/lessonplans/vocational/{{record.lessonPlan}}/edit" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
   </div>

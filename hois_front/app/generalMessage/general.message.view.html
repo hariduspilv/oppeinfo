@@ -1,4 +1,4 @@
-<div layout="column" layout-padding>
+<div layout="column" layout-padding class="form-readonly">
   <div>
     <form name="generalMessageForm">
       <md-input-container class="md-block">
@@ -17,10 +17,10 @@
         </md-input-container>
         <div flex="33">
           <md-input-container flex>
-            <hois-value value="'main.formattedDate' | translate: {date: record.validFrom} "></hois-value>
+            <hois-value value="record.validFrom | hoisDate"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <hois-value value="'main.formattedDate' | translate: {date: record.validThru} "></hois-value>
+            <hois-value value="record.validThru | hoisDate"></hois-value>
           </md-input-container>
         </div>
       </div>

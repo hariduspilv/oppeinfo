@@ -18,6 +18,7 @@ public class JournalCapacity extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private JournalCapacityType journalCapacityType;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private StudyPeriod studyPeriod;
     private Integer weekNr;
     //academic hours count

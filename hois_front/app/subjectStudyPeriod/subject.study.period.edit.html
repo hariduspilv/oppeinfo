@@ -4,11 +4,11 @@
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="45" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" disabled></hois-select>
+                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" disabled required></hois-select>
                 </md-input-container>
                 <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                     <label>{{'subjectStudyPeriod.nameCode' | translate}}</label>
-                    <hois-select ng-model="record.subject" values="subjects" ng-disabled="disableSubject"></hois-select>
+                    <hois-select ng-model="record.subject" values="subjects" ng-disabled="disableSubject" required></hois-select>
                 </md-input-container>
             </div>
 
@@ -44,7 +44,7 @@
                 <tbody md-body>
                     <tr md-row ng-repeat="teacher in record.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
                         <td md-cell>{{teacher.name}}</td>
-                        <td md-cell>
+                        <td md-cell ng-hide="record.teachers.length === 1">
                             <md-checkbox ng-model="teacher.isSignatory" aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}">
                                 {{'subjectStudyPeriodTeacher.isSignatory' | translate}}
                             </md-checkbox>
@@ -73,11 +73,11 @@
                     <hois-classifier-select ng-model="record.groupProportion" model-value-attr="code" main-classifier-code="PAEVIK_GRUPI_JAOTUS" required></hois-classifier-select>
                 </md-input-container>
             </div>
-            <md-input-container flex>
+            <md-input-container>
                 <label>{{'subjectStudyPeriod.addInfo' | translate}}</label>
                 <textarea ng-model="record.addInfo" md-maxlength="20000" max-rows="2"></textarea>
             </md-input-container>
-            <md-input-container flex>
+            <md-input-container>
                 <label>{{'subjectStudyPeriod.declaration' | translate}}</label>
                 <hois-classifier-select ng-model="record.declarationType" model-value-attr="code" main-classifier-code="DEKLARATSIOON"></hois-classifier-select>
             </md-input-container>

@@ -1,0 +1,14 @@
+<md-autocomplete flex
+                 md-input-minlength="2"
+                 md-no-cache="true"
+                 md-selected-item="ngModel"
+                 md-selected-item-change="selectedItemChange()"
+                 md-search-text="searchText"
+                 md-items="item in search(searchText)"
+                 md-item-text="getChipText(item)"
+                 md-require-match
+                 ng-required="required">
+  <md-item-template>
+    <span md-highlight-text="searchText">{{$root.currentLanguageNameField(item)}}</span>
+  </md-item-template>
+</md-autocomplete>

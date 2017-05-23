@@ -1,6 +1,6 @@
 <div layout="column" layout-padding>
     <form name="certificateEditForm">
-        <div layout="column">
+        <div layout="column" class="form-readonly">
             <md-input-container>
                 <label>{{'certificate.type' | translate}}</label>
                 <hois-classifier-value ng-model="record.type" main-classifier-code="TOEND_LIIK"></hois-classifier-value>

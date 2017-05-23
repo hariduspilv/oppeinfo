@@ -15,7 +15,10 @@ angular.module('hitsaOis')
         //{name: 'Õppejõud'},
         {
           name: 'Õppeained',
-          url: "/subject?_menu"
+          url: "/subject?_menu",
+          studyLevel: {
+              higher: true
+          }
         },
         //{name: 'Tunniplaan', access: ['']},
         //{name: 'Vilistlased'},
@@ -27,11 +30,17 @@ angular.module('hitsaOis')
         //{name: 'Õppekavade otsing', url: "/curriculum"},
         {
           name: 'Kutseõppe õk sisestamine',
-          url: "/vocationalCurriculum/new"
+          url: "/vocationalCurriculum/new",
+          studyLevel: {
+              vocational: true
+          }
         },
         {
           name: 'Kõrgharidusõppe õk sisestamine',
-          url: "/higherEducationCurriculum/new"
+          url: "/higherCurriculum/new",
+          studyLevel: {
+              higher: true
+          }
         }
       ]
     });
@@ -68,11 +77,17 @@ angular.module('hitsaOis')
           },
           {
             name: 'Esindajate avaldused',
-            url: "/studentrepresentatives/applications?_menu"
+            url: "/studentrepresentatives/applications?_menu",
+            studyLevel: {
+                vocational: true
+            }
           },
           {
             name: 'Esindajaks saamise avaldus',
-            url: "/studentrepresentatives/applications/new?_menu"
+            url: "/studentrepresentatives/applications/new?_menu",
+            studyLevel: {
+                vocational: true
+            }
           }
         ]
       });
@@ -205,10 +220,20 @@ angular.module('hitsaOis')
           url: "/reception/saisAdmission/search?_menu"
         },
         {
+          name: 'main.menu.reception.saisAdmission.importSais',
+          id: 'receptionSaisAdmissionImport',
+          url: "/reception/saisAdmission/import?_menu"
+        },
+        {
           name: 'main.menu.reception.saisApplication.search',
           id: 'receptionSaisApplicationSearch',
           url: "/reception/saisApplication/search?_menu"
-        }
+        },
+        {
+          name: 'main.menu.reception.saisApplication.importSais',
+          id: 'receptionSaisApplicationImport',
+          url: "/reception/saisApplication/import?_menu"
+        },
       ]
     });
 
@@ -355,9 +380,21 @@ angular.module('hitsaOis')
     }
 
 
-    function addSubmenuItem(pages, section, roles) {
+    function studyLevelMatch(section, school) { 
+        if(angular.isDefined(section.studyLevel) && angular.isDefined(school)) {
+            return school.higher && section.studyLevel.higher ||
+                   school.vocational && section.studyLevel.vocational;
+        }
+        return true;
+    }
+
+
+    function addSubmenuItem(pages, section, roles, school) {
       if (!_canAccess(section, roles) || !section.url) {
         return;
+      } 
+      if (!studyLevelMatch(section, school)) {
+          return;
       }
 
       pages.push({
@@ -375,7 +412,7 @@ angular.module('hitsaOis')
         var pages = [];
         if (sections[i].pages.length > 0) {
           for (var j = 0; j < sections[i].pages.length; j++) {
-            addSubmenuItem(pages, sections[i].pages[j], roles);
+            addSubmenuItem(pages, sections[i].pages[j], roles, auth.school);
           }
         }
         if (pages.length > 0) {

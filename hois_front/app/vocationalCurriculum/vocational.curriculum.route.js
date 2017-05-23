@@ -25,6 +25,20 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       })
+      .when('/vocationalCurriculum/:id/view', {
+        templateUrl: 'vocationalCurriculum/vocational.curriculum.html',
+        controller: 'VocationalCurriculumController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          entity: function(QueryUtils, $route) {
+            return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
+          }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        }
+      })
       .when('/vocationalCurriculum/:id/edit/moduleImplementationPlan/new', {
         templateUrl: 'vocationalCurriculum/module.implementation.plan.html',
         controller: 'VocationalCurriculumModuleImplementationPlanController',
@@ -43,6 +57,20 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       })
       .when('/vocationalCurriculum/:id/edit/moduleImplementationPlan/:versionId/edit', {
+        templateUrl: 'vocationalCurriculum/module.implementation.plan.html',
+        controller: 'VocationalCurriculumModuleImplementationPlanController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          curriculum: function(QueryUtils, $route) {
+            return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
+          }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        }
+      })
+      .when('/vocationalCurriculum/:id/view/moduleImplementationPlan/:versionId/view', {
         templateUrl: 'vocationalCurriculum/module.implementation.plan.html',
         controller: 'VocationalCurriculumModuleImplementationPlanController',
         controllerAs: 'controller',

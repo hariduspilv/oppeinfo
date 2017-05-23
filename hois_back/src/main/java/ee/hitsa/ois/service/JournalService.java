@@ -5,12 +5,12 @@ import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
@@ -28,9 +28,11 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntry;
+import ee.hitsa.ois.domain.timetable.JournalEntryCapacityType;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudent;
 import ee.hitsa.ois.domain.timetable.JournalEntryStudentHistory;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
+import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -42,18 +44,21 @@ import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.JournalEntryValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEndDateCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
+import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsSearchCommand;
-import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
-import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentResultDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 
@@ -77,37 +82,23 @@ public class JournalService {
 
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
         return journalRepository.findAll((root, query, cb) -> {
-            root.fetch("journalOccupationModuleThemes").fetch("lessonPlanModule", JoinType.LEFT).fetch("lessonPlan", JoinType.LEFT).fetch("studentGroup", JoinType.LEFT);
-            root.fetch("journalOccupationModuleThemes").fetch("curriculumVersionOccupationModuleTheme", JoinType.LEFT).fetch("module", JoinType.LEFT).fetch("curriculumModule", JoinType.LEFT).fetch("curriculum", JoinType.LEFT);
-            root.fetch("journalOccupationModuleThemes").fetch("curriculumVersionOccupationModuleTheme", JoinType.LEFT).fetch("module", JoinType.LEFT).fetch("curriculumModule", JoinType.LEFT).fetch("module", JoinType.LEFT);
-            root.fetch("journalCapacities", JoinType.LEFT);
-            root.fetch("journalTeachers", JoinType.LEFT).fetch("teacher", JoinType.LEFT).fetch("person", JoinType.LEFT);
-            root.fetch("journalEntries", JoinType.LEFT);
-
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
 
-            if (command.getStudentGroup() != null || !CollectionUtils.isEmpty(command.getModule())) {
-                Join<Object, Object> journalOmoduleThemesJoin = root.join("journalOccupationModuleThemes", JoinType.INNER);
-                if (command.getStudentGroup() != null) {
-                    filters.add(cb.equal(journalOmoduleThemesJoin.get("lessonPlanModule").get("lessonPlan")
-                            .get("studentGroup").get("id"), command.getStudentGroup()));
-                }
+            if (command.getStudentGroup() != null) {
+                searchByStudentGroupCriteria(command, root, query, cb, filters);
+            }
 
-                if (!CollectionUtils.isEmpty(command.getModule())) {
-                    filters.add(journalOmoduleThemesJoin.get("curriculumVersionOccupationModuleTheme").get("module")
-                            .get("curriculumModule").get("id").in(command.getModule()));
-                }
+            if (!CollectionUtils.isEmpty(command.getModule())) {
+                searchByModuleCriteria(command, root, query, cb, filters);
             }
 
             if (command.getTeacher() != null) {
-                Join<Object, Object> teacherJoin = root.join("journalTeachers", JoinType.INNER);
-                filters.add(cb.equal(teacherJoin.get("teacher").get("id"), command.getTeacher()));
+                searchByTeacherCriteria(command, root, query, cb, filters);
             }
 
             if (user.isTeacher()) {
-                Join<Object, Object> teacherJoin = root.join("journalTeachers", JoinType.INNER);
-                filters.add(cb.equal(teacherJoin.get("teacher").get("person").get("id"), user.getPersonId()));
+                searchByTeacherPersonCriteria(user, root, query, cb, filters);
             }
 
             if (command.getJournal() != null) {
@@ -118,9 +109,62 @@ public class JournalService {
                 filters.add(cb.equal(root.get("status").get("code"), command.getStatus()));
             }
 
+            if (command.getStudyYear() != null) {
+                filters.add(cb.equal(root.get("studyYear").get("id"), command.getStudyYear()));
+            }
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(JournalSearchDto::of);
+    }
+
+    private void searchByTeacherPersonCriteria(HoisUserDetails user, Root<Journal> root, CriteriaQuery<?> query,
+            CriteriaBuilder cb, List<Predicate> filters) {
+        Subquery<Long> journalTeachersQuery = query.subquery(Long.class);
+        Root<Journal> journalRoot = journalTeachersQuery.from(Journal.class);
+        Join<Object, Object> journalTeachersJoin = journalRoot.join("journalTeachers");
+        journalTeachersQuery.select(journalRoot.get("id"))
+        .where(cb.and(
+                cb.equal(journalRoot.get("id"), root.get("id")),
+                cb.equal(journalTeachersJoin.get("teacher").get("person").get("id"), user.getPersonId())));
+        filters.add(cb.exists(journalTeachersQuery));
+    }
+
+    private void searchByTeacherCriteria(JournalSearchCommand command, Root<Journal> root, CriteriaQuery<?> query,
+            CriteriaBuilder cb, List<Predicate> filters) {
+        Subquery<Long> journalTeachersQuery = query.subquery(Long.class);
+        Root<Journal> journalRoot = journalTeachersQuery.from(Journal.class);
+        Join<Object, Object> journalTeachersJoin = journalRoot.join("journalTeachers");
+        journalTeachersQuery.select(journalRoot.get("id"))
+        .where(cb.and(
+                cb.equal(journalRoot.get("id"), root.get("id")),
+                cb.equal(journalTeachersJoin.get("teacher").get("id"), command.getTeacher())));
+        filters.add(cb.exists(journalTeachersQuery));
+    }
+
+    private void searchByModuleCriteria(JournalSearchCommand command, Root<Journal> root, CriteriaQuery<?> query,
+            CriteriaBuilder cb, List<Predicate> filters) {
+        Subquery<Long> curriculumModulesQuery = query.subquery(Long.class);
+        Root<Journal> journalRoot = curriculumModulesQuery.from(Journal.class);
+        Join<Object, Object> journalOmoduleThemesJoin = journalRoot.join("journalOccupationModuleThemes", JoinType.INNER);
+        curriculumModulesQuery.select(journalRoot.get("id"))
+            .where(cb.and(
+                    cb.equal(journalRoot.get("id"), root.get("id")),
+                    journalOmoduleThemesJoin.get("curriculumVersionOccupationModuleTheme").get("module")
+                    .get("curriculumModule").get("id").in(command.getModule())));
+        filters.add(cb.exists(curriculumModulesQuery));
+    }
+
+    private void searchByStudentGroupCriteria(JournalSearchCommand command, Root<Journal> root, CriteriaQuery<?> query,
+            CriteriaBuilder cb, List<Predicate> filters) {
+        Subquery<Long> studentGroupsQuery = query.subquery(Long.class);
+        Root<Journal> journalRoot = studentGroupsQuery.from(Journal.class);
+        Join<Object, Object> journalOmoduleThemesJoin = journalRoot.join("journalOccupationModuleThemes", JoinType.INNER);
+        studentGroupsQuery.select(journalRoot.get("id"))
+            .where(cb.and(
+                    cb.equal(journalRoot.get("id"), root.get("id")),
+                    cb.equal(journalOmoduleThemesJoin.get("lessonPlanModule").get("lessonPlan")
+                            .get("studentGroup").get("id"), command.getStudentGroup())));
+        filters.add(cb.exists(studentGroupsQuery));
     }
 
     public JournalDto get(Journal journal) {
@@ -210,19 +254,19 @@ public class JournalService {
         return journalRepository.save(journal);
     }
 
-    public Journal saveJournalEntry(Journal journal, JournalEntryForm journalEntryForm) {
+    public Journal saveJournalEntry(HoisUserDetails user, Journal journal, JournalEntryForm journalEntryForm) {
         validateJournalEntry(journalEntryForm);
-        JournalEntry journalEntry = EntityUtil.bindToEntity(journalEntryForm, new JournalEntry(), classifierRepository, "journalEntryStudents");
+        JournalEntry journalEntry = EntityUtil.bindToEntity(journalEntryForm, new JournalEntry(), classifierRepository, "journalEntryStudents", "journalEntryCapacityTypes");
         journal.getJournalEntries().add(journalEntry);
-        saveJournalEntryStudents(journalEntryForm, journalEntry);
+        saveJournalEntryStudents(user, journalEntryForm, journalEntry);
         return journalRepository.save(journal);
     }
 
-    public void updateJournalEntry(JournalEntryForm journalEntryForm, Long journalEntrylId) {
+    public void updateJournalEntry(HoisUserDetails user, JournalEntryForm journalEntryForm, Long journalEntrylId) {
         validateJournalEntry(journalEntryForm);
         JournalEntry journalEntry = journalEntryRepository.getOne(journalEntrylId);
-        EntityUtil.bindToEntity(journalEntryForm, journalEntry, classifierRepository, "journalEntryStudents");
-        saveJournalEntryStudents(journalEntryForm, journalEntry);
+        EntityUtil.bindToEntity(journalEntryForm, journalEntry, classifierRepository, "journalEntryStudents", "journalEntryCapacityTypes");
+        saveJournalEntryStudents(user, journalEntryForm, journalEntry);
         journalEntryRepository.save(journalEntry);
     }
 
@@ -242,37 +286,72 @@ public class JournalService {
         }
     }
 
-    private void saveJournalEntryStudents(JournalEntryForm journalEntryForm, JournalEntry journalEntry) {
-        for (JournalEntryStudentDto journalEntryStudentDto : journalEntryForm.getJournalEntryStudents()) {
-            if (journalEntryStudentDto.getId() != null) {
-                updateJournalStudentEntry(journalEntryStudentDto);
+    private void saveJournalEntryStudents(HoisUserDetails user, JournalEntryForm journalEntryForm, JournalEntry journalEntry) {
+        for (JournalEntryStudentForm journalEntryStudentForm : journalEntryForm.getJournalEntryStudents()) {
+            if (journalEntryStudentForm.getId() != null) {
+                updateJournalStudentEntry(user, journalEntryStudentForm);
             } else {
-                saveJournalStudentEntry(journalEntry, journalEntryStudentDto);
+                saveJournalStudentEntry(user, journalEntry, journalEntryStudentForm);
             }
         }
+        EntityUtil.bindEntityCollection(
+                journalEntry.getJournalEntryCapacityTypes(),
+                type -> type.getCapacityType().getCode(),
+                journalEntryForm.getJournalEntryCapacityTypes(), it -> {
+                    JournalEntryCapacityType type = new JournalEntryCapacityType();
+                    type.setCapacityType(classifierRepository.getOne(it));
+                    return type;
+                });
     }
 
-    private void updateJournalStudentEntry(JournalEntryStudentDto journalEntryStudentDto) {
-        JournalEntryStudent journalEntryStudent = journalEntryStudentRepository.getOne(journalEntryStudentDto.getId());
-        if (journalEntryStudent.getGrade() != null && !EntityUtil.getCode(journalEntryStudent.getGrade()).equals(journalEntryStudentDto.getGrade())) {
+    private void updateJournalStudentEntry(HoisUserDetails user, JournalEntryStudentForm journalEntryStudentForm) {
+        JournalEntryStudent journalEntryStudent = journalEntryStudentRepository.getOne(journalEntryStudentForm.getId());
+        assertJournalEntryStudentRules(user, journalEntryStudent.getJournalStudent(), journalEntryStudent, journalEntryStudentForm);
+
+        if (journalEntryStudent.getGrade() != null && !EntityUtil.getCode(journalEntryStudent.getGrade()).equals(journalEntryStudentForm.getGrade())) {
             JournalEntryStudentHistory journalEntryStudentHistory = new JournalEntryStudentHistory();
             journalEntryStudentHistory.setGrade(journalEntryStudent.getGrade());
             journalEntryStudentHistory.setGradeInserted(journalEntryStudent.getGradeInserted());
             journalEntryStudent.getJournalEntryStudentHistories().add(journalEntryStudentHistory);
         }
-        if (journalEntryStudentDto.getGrade() != null && !journalEntryStudentDto.getGrade().equals(EntityUtil.getCode(journalEntryStudent.getGrade()))) {
+        if (journalEntryStudentForm.getGrade() != null && !journalEntryStudentForm.getGrade().equals(EntityUtil.getNullableCode(journalEntryStudent.getGrade()))) {
             journalEntryStudent.setGradeInserted(LocalDateTime.now());
         }
-        EntityUtil.bindToEntity(journalEntryStudentDto, journalEntryStudent,
+        EntityUtil.bindToEntity(journalEntryStudentForm, journalEntryStudent,
                 classifierRepository, "journalEntryStudentHistories", "gradeInserted");
     }
 
-    private void saveJournalStudentEntry(JournalEntry journalEntry, JournalEntryStudentDto journalEntryStudentDto) {
-        JournalStudent journalStudent = journalStudentRepository.getOne(journalEntryStudentDto.getJournalStudent());
-        JournalEntryStudent journalEntryStudent = EntityUtil.bindToEntity(journalEntryStudentDto, new JournalEntryStudent(),
+    private static void assertJournalEntryStudentRules(HoisUserDetails user, JournalStudent journaStudent,
+            JournalEntryStudent journalEntryStudent, JournalEntryStudentForm journalEntryStudentForm) {
+
+        // Mitteõppivate, kuid päevikuga seotud õppurite õppetulemusi muuta ei saa
+        if (!StudentUtil.isStudying(journaStudent.getStudent())) {
+            throw new ValidationFailedException("journal.messages.changeIsNotAllowedStudentIsNotStudying");
+        }
+
+        // Õpetaja ja administratiivne töötaja saavad märkida ainult põhjuseta puudumist
+        if ((user.isTeacher() || user.isSchoolAdmin()) && journalEntryStudentForm.getAbsence() != null  && Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence()) &&
+                (journalEntryStudent == null || !Absence.PUUDUMINE_V.name().equals(EntityUtil.getCode(journalEntryStudent.getAbsence())))) {
+            throw new ValidationFailedException("journal.messages.absenceValueIsNotAllowed");
+        }
+
+        // Kui puudumine on rühmajuhataja poolt muudetud põhjendatuks, siis hiljem hilinemise ega puudumise andmeid vastava sissekande juures muuta ei saa
+        if (journalEntryStudent != null && journalEntryStudent.getAbsence() != null && Absence.PUUDUMINE_V.name().equals(EntityUtil.getCode(journalEntryStudent.getAbsence()))) {
+            if(!Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence())) {
+                throw new ValidationFailedException("journal.messages.changingAbsenceIsNotAllowed");
+            }
+        }
+    }
+
+    private void saveJournalStudentEntry(HoisUserDetails user, JournalEntry journalEntry, JournalEntryStudentForm journalEntryStudentForm) {
+        JournalStudent journalStudent = journalStudentRepository.getOne(journalEntryStudentForm.getJournalStudent());
+        assertJournalEntryStudentRules(user, journalStudent, null, journalEntryStudentForm);
+
+        JournalEntryStudent journalEntryStudent = EntityUtil.bindToEntity(journalEntryStudentForm, new JournalEntryStudent(),
                 classifierRepository, "journalEntryStudentHistories", "gradeInserted");
+
         journalEntryStudent.setJournalStudent(journalStudent);
-        if (journalEntryStudentDto.getGrade() != null) {
+        if (journalEntryStudentForm.getGrade() != null) {
             journalEntryStudent.setGradeInserted(LocalDateTime.now());
         }
         List<Long> existingJournalStudentEntries = journalEntry.getJournalEntryStudents().stream().map(it -> EntityUtil.getId(it.getJournalStudent())).collect(Collectors.toList());
@@ -307,19 +386,32 @@ public class JournalService {
         return JournalEntryDto.of(journalEntry);
     }
 
-    public Map<LocalDate, Map<Long, ClassifierSelection>> journalEntriesByDate(Journal journal) {
-        Map<LocalDate, Map<Long, ClassifierSelection>> result = new HashMap<>();
+    public List<JournalEntryByDateDto> journalEntriesByDate(Journal journal, Boolean allStudents) {
+        List<JournalEntryByDateDto> result = new ArrayList<>();
+
         for (JournalEntry journalEntry : journal.getJournalEntries()) {
-            Map<Long, ClassifierSelection> journalEntryStudents = result.computeIfAbsent(journalEntry.getInserted().toLocalDate(), (date) -> new HashMap<>());
+            LocalDate journalEntryDate = journalEntry.getInserted().toLocalDate();
+            JournalEntryByDateDto journalEntryByDateDto = EntityUtil.bindToDto(journalEntry, new JournalEntryByDateDto());
+            journalEntryByDateDto.setTeacher(PersonUtil.stripIdcodeFromFullnameAndIdcode(journalEntry.getInsertedBy()));
+            journalEntryByDateDto.setDate(journalEntryDate);
+
             for (JournalEntryStudent journalEntryStudent : journalEntry.getJournalEntryStudents()) {
-                if (journalEntryStudent.getAbsence() != null) {
-                    journalEntryStudents.put(journalEntryStudent.getJournalStudent().getId(), ClassifierSelection.of(journalEntryStudent.getAbsence()));
-                } else if (journalEntryStudent.getGrade() != null) {
-                    journalEntryStudents.put(journalEntryStudent.getJournalStudent().getId(), ClassifierSelection.of(journalEntryStudent.getGrade()));
+                if (Boolean.TRUE.equals(allStudents) || StudentUtil.isStudying(journalEntryStudent.getJournalStudent().getStudent())) {
+                    List<JournalEntryStudentResultDto> studentresults = journalEntryByDateDto.getJournalStudentResults()
+                            .computeIfAbsent(journalEntryStudent.getJournalStudent().getId(), (id) -> new ArrayList<>());
+                    JournalEntryStudentResultDto dto = EntityUtil.bindToDto(journalEntryStudent, new JournalEntryStudentResultDto());
+                    studentresults.add(dto);
                 }
             }
+            result.add(journalEntryByDateDto);
         }
         return result;
+    }
+
+    public List<JournalStudentDto> journalStudents(Journal journal, Boolean allStudents) {
+        return journal.getJournalStudents().stream()
+                .filter(jt -> Boolean.TRUE.equals(allStudents) ? true : StudentUtil.isStudying(jt.getStudent()))
+                .map(JournalStudentDto::of).collect(Collectors.toList());
     }
 
 }

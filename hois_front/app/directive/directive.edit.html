@@ -64,7 +64,7 @@
 
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.inserted' | translate}}</label>
-          <hois-value value="'main.formattedDate' | translate: {date: record.inserted}"></hois-value>
+          <hois-value value="record.inserted | hoisDate"></hois-value>
         </md-input-container>
 
         <md-input-container class="md-block">

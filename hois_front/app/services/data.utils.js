@@ -36,9 +36,8 @@ angular.module('hitsaOis').factory('DataUtils',
         for(var i = 0; i < list.length; i++) {
             convertStringToDates(list[i], ["startDate", "endDate"]);
         }
-        // return list.sort(function(el1, el2){
         list.sort(function(el1, el2){
-            return el1.startDate >= el2.startDate;
+            return el1.endDate - el2.endDate;   //el1.endDate >= el2.endDate did not work in IE11
         });
     }
     /**
@@ -50,11 +49,15 @@ angular.module('hitsaOis').factory('DataUtils',
             return date <= item.endDate;
         });
     }
-
+    /**
+     * Beware that using this method changes the order of initial array
+     */
     function getCurrentStudyYearOrPeriod(list) {
         return getStudyYearOrPeriodAt(new Date(), list);
     }
-
+    /**
+     * Beware that using this method changes the order of initial array
+     */
     function isPastStudyYearOrPeriod(period) {
         convertStringToDates(period, ["endDate"]);
         return new Date() >= period.endDate;

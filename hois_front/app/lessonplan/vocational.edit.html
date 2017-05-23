@@ -1,15 +1,42 @@
 <div layout-padding ng-cloak>
   <!-- header -->
-  <table>
+  <p>
+    <md-checkbox ng-model="record.isUsable">
+      {{'lessonplan.isUsable' | translate}}
+    </md-checkbox>
+
+    <span ng-repeat="c in formState.capacityTypes">
+      <span ng-if="$index !== 0">|</span>
+      {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
+    </span>
+  </p>
+  <table border=0 width="100%">
     <!-- table header -->
+    <tr>
+      <td>&nbsp;</td><td colspan=2>{{'lessonplan.total' | translate}}</td>
+      <td colspan={{::sp.weekNrs.length}} ng-repeat="sp in formState.studyPeriods">{{currentLanguageNameField(sp)}}</td>
+    </tr>
+    <tr>
+      <td colspan=3>
+        <md-checkbox ng-model="record.showWeeks">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
+        <md-checkbox ng-model="formState.showTotals">{{'lessonplan.showTotals' | translate}}</md-checkbox>
+      </td>
+      <td ng-repeat="w in formState.weekNrs track by $index">{{w}}</td>
+    </tr>
+    <!-- modules -->
     <tbody ng-repeat="module in record.modules">
       <tr>
-        <td>{{currentLanguageNameField(module)}}</td><td><md-button md-no-ink class="md-primary change-button" ng-click="newJournal(module)">{{'lessonplan.addjournal' | translate}}</md-button></td><td>{{'lessonplan.teacher' | translate}}</td><td><hois-autocomplete ng-model="module.teacher" method="teachers"></hois-autocomplete></td>
+        <td colspan=3>{{currentLanguageNameField(module)}}&nbsp;<md-button md-no-ink class="md-primary change-button" ng-click="newJournal(module)">{{'lessonplan.addjournal' | translate}}</md-button></td>
+        <td colspan={{::formState.weekNrs.length}}>{{'lessonplan.responsibleformodule' | translate}}<hois-autocomplete ng-model="module.teacher" method="teachers"></hois-autocomplete></td>
       </tr>
-      <tr ng-repeat="journal in module">
-        <td colspan="2"></td>
+      <tr>
+        <td colspan={{::formState.weekNrs.length+3}}>{{'lessonplan.modulehours' | translate}}: {{::module.totalHours}}</td>
+      </tr>
+      <tr ng-repeat="journal in module.journals">
+        <td colspan={{::formState.weekNrs.length+3}}>{{::journal.nameEt}}: <span ng-repeat="theme in journal.themes"><span ng-if="$index !== 0">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}}&nbsp;({{::theme.hours}})<span></td>
       </tr>
     </tbody>
+    <!-- totals -->
   </table>
   <md-button class="md-raised" ng-click="update()">{{'main.button.save' | translate}}</md-button>
   <md-button ng-click="back('#/lessonplans/vocational')" class="md-raised">{{'main.button.back' | translate}}</md-button>

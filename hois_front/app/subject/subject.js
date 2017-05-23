@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('SubjectEditController',
-    function ($scope, $route, $resource, $location, $translate, $q, config, dialogService, message, QueryUtils) {
+    function ($scope, $rootScope, $route, $resource, $location, $translate, $q, config, dialogService, message, QueryUtils) {
       var id = $route.current.params.id;
 
       var backUrl = $route.current.params.backUrl;
@@ -23,9 +23,29 @@ angular.module('hitsaOis')
         $scope.subject.status = 'AINESTAATUS_S';
       }
 
+      var checkConnections = function (ids, array) {
+        var inValid = false;
+        for (var i = 0; i < array.length; i++) {
+          if (ids.indexOf(array[i].id) > -1) {
+            $translate('subject.alreadyConnected', {subject: $rootScope.currentLanguageNameField(array[i])})
+              .then(function (translated) {
+                message.error(translated);
+              });
+            inValid = true;
+          }
+          ids.push(array[i].id);
+        }
+        return inValid;
+      };
+
       $scope.update = function () {
         $scope.subjectForm.$setSubmitted();
-        if ($scope.subjectForm.$valid) {
+        var ids = [];
+        var inValid = checkConnections(ids, $scope.subject.mandatoryPrerequisiteSubjects) ||
+            checkConnections(ids, $scope.subject.recommendedPrerequisiteSubjects) ||
+            checkConnections(ids, $scope.subject.substituteSubjects)
+        ;
+        if ($scope.subjectForm.$valid && !inValid) {
           if ($scope.subject.id) {
             $scope.subject.$update().then(message.updateSuccess);
           } else {

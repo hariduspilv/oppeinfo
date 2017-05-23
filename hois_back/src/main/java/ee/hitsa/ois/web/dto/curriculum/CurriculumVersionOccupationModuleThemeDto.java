@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,12 +24,12 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
     private String nameEt;
 
     @NotNull
-    private Double credits;
+    private BigDecimal credits;
 
     @NotNull
     private Integer hours;
 
-    private Double proportion;
+    private BigDecimal proportion;
     private String subthemes;
     private Integer studyYearNumber;
 
@@ -73,11 +74,11 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         this.nameEt = nameEt;
     }
 
-    public Double getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Double credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 
@@ -89,11 +90,11 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         this.hours = hours;
     }
 
-    public Double getProportion() {
+    public BigDecimal getProportion() {
         return proportion;
     }
 
-    public void setProportion(Double proportion) {
+    public void setProportion(BigDecimal proportion) {
         this.proportion = proportion;
     }
 

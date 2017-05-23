@@ -32,7 +32,7 @@
 
     $scope.edit = function(curriculum) {
       if(curriculum.higher) {
-        $location.path('/higherEducationCurriculum/' + curriculum.id + '/edit');
+        $location.path('/higherCurriculum/' + curriculum.id + '/edit');
       } else {
         $location.path('/vocationalCurriculum/' + curriculum.id + '/edit');
       }
@@ -40,9 +40,13 @@
 
     $scope.view = function(curriculum) {
       if(curriculum.higher) {
-        $location.path('/higherEducationCurriculum/' + curriculum.id + '/view');
+        $location.path('/higherCurriculum/' + curriculum.id + '/view');
       } else {
-        $location.path('/vocationalCurriculum/' + curriculum.id + '/edit');
+        $location.path('/vocationalCurriculum/' + curriculum.id + '/view');
       }
+    };
+
+    $scope.canBeEdited = function (curriculum){
+        return curriculum.status.code !== 'OPPEKAVA_STAATUS_C' && curriculum.status.code !== 'OPPEKAVA_STAATUS_K';
     };
 }]);

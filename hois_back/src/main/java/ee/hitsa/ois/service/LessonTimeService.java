@@ -198,6 +198,7 @@ public class LessonTimeService {
         if (previousGroup != null) {
             previousGroup.setValidThru(savedGroup.getValidFrom().minusDays(1));
             lessonTimeBuildingGroupRepository.save(previousGroup);
+            // TODO avoid use of String.format
             log.info(String.format("lesson time building group %d valid thru updated, new value is %s", previousGroup.getId(), previousGroup.getValidThru().toString()));
         }
     }

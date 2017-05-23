@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.commandobject;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.enums.MainClassCode;
@@ -10,7 +11,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.NotEmpty;
 
 public class SubjectStudyPeriodForm  extends VersionedCommand {
-
+    @Valid
     private List<SubjectStudyPeriodTeacherForm> teachers;
     @NotNull
     private Long studyPeriod;

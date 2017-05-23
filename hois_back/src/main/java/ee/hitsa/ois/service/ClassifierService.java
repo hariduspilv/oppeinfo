@@ -113,16 +113,18 @@ public class ClassifierService {
     }
 
     public List<Classifier> getPossibleConnections(String code) {
-        Map<String, List<String>> possibleConnections = new HashMap<>();
-        possibleConnections.put("OPPEASTE", Arrays.asList("HARIDUSTASE", "EKR"));
-        possibleConnections.put("KUTSE", Arrays.asList("EKR"));
-        possibleConnections.put("OSAKUTSE", Arrays.asList("KUTSE"));
-        possibleConnections.put("SPETSKUTSE", Arrays.asList("KUTSE"));
-        possibleConnections.put("ISCED_RYHM", Arrays.asList("ISCED_SUUN","OPPEKAVAGRUPP"));
-        possibleConnections.put("ISCED_SUUN", Arrays.asList("ISCED_VALD"));
-        possibleConnections.put("KOMPETENTS", Arrays.asList("OSAKUTSE", "SPETSKUTSE", "KUTSE"));
+        List<String> requiredCodes = POSSIBLE_CONNECTIONS.get(code);
+        return StreamUtil.toMappedList(classifierRepository::getOne, requiredCodes);
+    }
 
-        List<String> requiredCodes = possibleConnections.get(code);
-        return StreamUtil.toMappedList(classifierRepository::findOne, requiredCodes);
+    private static final Map<String, List<String>> POSSIBLE_CONNECTIONS = new HashMap<>();
+    static {
+        POSSIBLE_CONNECTIONS.put("OPPEASTE", Arrays.asList("HARIDUSTASE", "EKR"));
+        POSSIBLE_CONNECTIONS.put("KUTSE", Arrays.asList("EKR"));
+        POSSIBLE_CONNECTIONS.put("OSAKUTSE", Arrays.asList("KUTSE"));
+        POSSIBLE_CONNECTIONS.put("SPETSKUTSE", Arrays.asList("KUTSE"));
+        POSSIBLE_CONNECTIONS.put("ISCED_RYHM", Arrays.asList("ISCED_SUUN","OPPEKAVAGRUPP"));
+        POSSIBLE_CONNECTIONS.put("ISCED_SUUN", Arrays.asList("ISCED_VALD"));
+        POSSIBLE_CONNECTIONS.put("KOMPETENTS", Arrays.asList("OSAKUTSE", "SPETSKUTSE", "KUTSE"));
     }
 }

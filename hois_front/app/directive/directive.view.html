@@ -35,11 +35,11 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
             <label>{{'directive.inserted' | translate}}</label>
-            <hois-value value="'main.formattedDate' | translate: {date: record.inserted}"></hois-value>
+            <hois-value value="record.inserted | hoisDate"></hois-value>
           </md-input-container>
           <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'directive.confirmDate' | translate}}</label>
-            <hois-value value="'main.formattedDate' | translate: {date: record.confirmDate}"></hois-value>
+            <hois-value value="record.confirmDate | hoisDate"></hois-value>
           </md-input-container>
         </div>
 

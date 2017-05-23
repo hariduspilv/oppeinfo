@@ -55,12 +55,12 @@
             <td md-cell>{{currentLanguageNameField(row.relation)}}</td>
             <td md-cell>{{::row.phone}}</td>
             <td md-cell>{{::row.email}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
+            <td md-cell>{{::row.inserted | hoisDate}}</td>
             <td md-cell>
               <md-tooltip ng-if="row.status.code === 'AVALDUS_ESINDAJA_STAATUS_T'">{{::row.rejectReason}}</md-tooltip>
               {{currentLanguageNameField(row.status)}}
             </td>
-            <td md-cell ng-if="formState.status !== 'AVALDUS_ESINDAJA_STAATUS_E'">{{'main.formattedDate' | translate: {date: (row.confirmDate || row.declineDate)} }}</td>
+            <td md-cell ng-if="formState.status !== 'AVALDUS_ESINDAJA_STAATUS_E'">{{(row.confirmDate || row.declineDate) | hoisDate}}</td>
             <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.studentId}}/main">{{::row.studentFullname}}</md-button></td>
             <td md-cell>{{::row.studentIdcode}}</td>
             <td md-cell>

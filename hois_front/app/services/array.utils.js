@@ -21,7 +21,7 @@ angular.module('hitsaOis')
         }
       },
       isEmpty: function(array) {
-        return !angular.isDefined(array) || array === null || array.length === 0;
+        return !angular.isArray(array) || array.length === 0;
       },
       includes: function(array, searchElement , fromIndex) {
         // based on example from

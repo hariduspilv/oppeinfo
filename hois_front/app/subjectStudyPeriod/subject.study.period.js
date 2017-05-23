@@ -20,7 +20,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
 
 
 
-}]).controller('SubjectStudyPeriodEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$location', '$q', '$rootScope', function ($scope, QueryUtils, ArrayUtils, $route, dialogService, message, $location, $q, $rootScope) {
+}]).controller('SubjectStudyPeriodEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$q', '$rootScope', function ($scope, QueryUtils, ArrayUtils, $route, dialogService, message, $q, $rootScope) {
 
     var baseUrl = '/subjectStudyPeriods';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -83,7 +83,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         });
     });
 
-    QueryUtils.endpoint('/subjectStudyPeriods/subjects').query(function(result) {
+    QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query(function(result) {
         $scope.subjects = result;
     });
 
@@ -107,7 +107,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         lookup.search({
             name: text
         }, function (data) {
-            deferred.$$resolve(data.content);
+            deferred.resolve(data.content);
         });
         return deferred.promise;
     };
@@ -132,6 +132,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         if(studentGroupId) {
             $scope.record.studentGroups.push(studentGroupId);
         }
+        if($scope.record.teachers.length === 1) {
+            $scope.record.teachers[0].isSignatory = true;
+        }
         if($scope.record.id) {
             $scope.record.$update().then(message.updateSuccess);
         } else {
@@ -143,6 +146,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
                     });
                 } else if(teacherId && studyPeriodId) {
                     $rootScope.replaceLastUrl("#/subjectStudyPeriods/teachers/" + teacherId + "/" + studyPeriodId + "/edit", function(lastUrl){
+                        return lastUrl.indexOf("new") !== -1;
+                    });
+                } else if (subjectId && studyPeriodId && !studentGroupId && !teacherId) {
+                    $rootScope.replaceLastUrl("#/subjectStudyPeriods/subjects/" + subjectId + "/" + studyPeriodId + "/edit", function(lastUrl){
                         return lastUrl.indexOf("new") !== -1;
                     });
                 }

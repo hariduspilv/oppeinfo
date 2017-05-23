@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalController', function ($scope, $route, QueryUtils, ArrayUtils, message, dialogService) {
+angular.module('hitsaOis').controller('JournalController', function ($scope, $route, QueryUtils, ArrayUtils, message) {
   $scope.auth = $route.current.locals.auth;
 
   function entityToForm(entity) {

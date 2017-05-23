@@ -49,8 +49,8 @@
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-href="#/generalmessages/{{::row.id}}/view">{{::row.title}}</md-button>
             </td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.validFrom} }}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
+            <td md-cell>{{::row.validFrom | hoisDate}}</td>
+            <td md-cell>{{::row.validThru | hoisDate}}</td>
             <td md-cell>
               <table>
                 <tr ng-repeat="role in row.targets | orderBy: 'nameEt'">

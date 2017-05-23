@@ -29,9 +29,7 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier) {
     });
 
     $scope.$watch('criteria.subjectObject', function() {
-            if($scope.criteria.subjectObject) {
-                $scope.criteria.subject = $scope.criteria.subjectObject.id;
-            }
+            $scope.criteria.subject = $scope.criteria.subjectObject ? $scope.criteria.subjectObject.id : null;
         }
     );
 

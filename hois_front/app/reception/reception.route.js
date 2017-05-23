@@ -29,6 +29,18 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       })
+      .when('/reception/saisAdmission/import', {
+        templateUrl: 'reception/reception.saisAdmission.import.html',
+        controller: 'ReceptionSaisAdmissionImportController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        }
+      })
       .when('/reception/saisApplication/search', {
         templateUrl: 'reception/reception.saisApplication.list.html',
         controller: 'ReceptionSaisApplicationListController',
@@ -51,6 +63,18 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           entity: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/saisApplications').get({id: $route.current.params.id}).$promise;
           }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        }
+      })
+      .when('/reception/saisApplication/import', {
+        templateUrl: 'reception/reception.saisApplication.import.html',
+        controller: 'ReceptionSaisApplicationImportController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

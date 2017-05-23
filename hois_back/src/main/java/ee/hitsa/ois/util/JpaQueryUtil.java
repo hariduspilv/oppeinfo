@@ -1,5 +1,6 @@
 package ee.hitsa.ois.util;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -361,6 +362,11 @@ public abstract class JpaQueryUtil {
     public static Boolean resultAsBoolean(Object row, int index) {
         Object value = getValue(row, index);
         return (Boolean)value;
+    }
+
+    public static BigDecimal resultAsDecimal(Object row, int index) {
+        Object value = getValue(row, index);
+        return (BigDecimal)value;
     }
 
     public static Integer resultAsInteger(Object row, int index) {

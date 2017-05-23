@@ -2,6 +2,7 @@ package ee.hitsa.ois.domain.timetable;
 
 import java.time.LocalDate;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import javax.persistence.CascadeType;
@@ -36,23 +37,24 @@ public class Journal extends BaseEntityWithId {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
-    private Set<JournalTeacher> journalTeachers = new HashSet<>();
+    private List<JournalTeacher> journalTeachers;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    // cannot delete journal when there are students
+    @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
     private Set<JournalStudent> journalStudents = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
-    private Set<JournalOccupationModuleTheme> journalOccupationModuleThemes = new HashSet<>();
+    private List<JournalOccupationModuleTheme> journalOccupationModuleThemes;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
-    private Set<JournalCapacity> journalCapacities = new HashSet<>();
+    private List<JournalCapacity> journalCapacities;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
-    private Set<JournalCapacityType> journalCapacityTypes = new HashSet<>();
+    private List<JournalCapacityType> journalCapacityTypes;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
@@ -115,11 +117,11 @@ public class Journal extends BaseEntityWithId {
         this.endDate = endDate;
     }
 
-    public Set<JournalTeacher> getJournalTeachers() {
+    public List<JournalTeacher> getJournalTeachers() {
         return journalTeachers;
     }
 
-    public void setJournalTeachers(Set<JournalTeacher> journalTeachers) {
+    public void setJournalTeachers(List<JournalTeacher> journalTeachers) {
         this.journalTeachers = journalTeachers;
     }
 
@@ -131,27 +133,27 @@ public class Journal extends BaseEntityWithId {
         this.journalStudents = journalStudents;
     }
 
-    public Set<JournalOccupationModuleTheme> getJournalOccupationModuleThemes() {
+    public List<JournalOccupationModuleTheme> getJournalOccupationModuleThemes() {
         return journalOccupationModuleThemes;
     }
 
-    public void setJournalOccupationModuleThemes(Set<JournalOccupationModuleTheme> journalOccupationModuleThemes) {
+    public void setJournalOccupationModuleThemes(List<JournalOccupationModuleTheme> journalOccupationModuleThemes) {
         this.journalOccupationModuleThemes = journalOccupationModuleThemes;
     }
 
-    public Set<JournalCapacity> getJournalCapacities() {
+    public List<JournalCapacity> getJournalCapacities() {
         return journalCapacities;
     }
 
-    public void setJournalCapacities(Set<JournalCapacity> journalCapacities) {
+    public void setJournalCapacities(List<JournalCapacity> journalCapacities) {
         this.journalCapacities = journalCapacities;
     }
 
-    public Set<JournalCapacityType> getJournalCapacityTypes() {
+    public List<JournalCapacityType> getJournalCapacityTypes() {
         return journalCapacityTypes;
     }
 
-    public void setJournalCapacityTypes(Set<JournalCapacityType> journalCapacityTypes) {
+    public void setJournalCapacityTypes(List<JournalCapacityType> journalCapacityTypes) {
         this.journalCapacityTypes = journalCapacityTypes;
     }
 

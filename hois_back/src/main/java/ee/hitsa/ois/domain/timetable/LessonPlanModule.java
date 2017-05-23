@@ -1,9 +1,12 @@
 package ee.hitsa.ois.domain.timetable;
 
+import java.util.List;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
@@ -20,6 +23,8 @@ public class LessonPlanModule extends BaseEntityWithId {
     private CurriculumVersionOccupationModule curriculumVersionOccupationModule;
     @ManyToOne(fetch = FetchType.LAZY)
     private Teacher teacher;
+    @OneToMany(mappedBy = "lessonPlanModule")
+    private List<JournalOccupationModuleTheme> journalOccupationModuleThemes;
 
     public LessonPlan getLessonPlan() {
         return lessonPlan;
@@ -43,5 +48,13 @@ public class LessonPlanModule extends BaseEntityWithId {
 
     public void setTeacher(Teacher teacher) {
         this.teacher = teacher;
+    }
+
+    public List<JournalOccupationModuleTheme> getJournalOccupationModuleThemes() {
+        return journalOccupationModuleThemes;
+    }
+
+    public void setJournalOccupationModuleThemes(List<JournalOccupationModuleTheme> journalOccupationModuleThemes) {
+        this.journalOccupationModuleThemes = journalOccupationModuleThemes;
     }
 }

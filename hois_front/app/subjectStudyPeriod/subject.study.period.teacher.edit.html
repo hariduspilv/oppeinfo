@@ -8,10 +8,10 @@
         </p>
         <br>
         <div layout="column">
-            <div layout="row" layout-sm="column" layout-xs="column">
+            <div layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
                 <md-input-container flex="25" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" required disabled></hois-select>
+                    <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
                 </md-input-container>
                 <md-input-container ng-if="isNew" flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.teacher' | translate}}</label>
@@ -48,7 +48,6 @@
                         </tr>
                         <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }">
                             <td class="cell">
-                                <!-- ng-class="{'invalid': !teachersLoadOk(ssp)}" -->
                                 <span ng-repeat="studentGroup in ssp.studentGroupObjects">
                                     <span ng-if="$index > 0">, </span>
                                     {{studentGroup.nameEt}}

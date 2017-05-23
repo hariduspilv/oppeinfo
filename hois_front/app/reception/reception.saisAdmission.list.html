@@ -57,7 +57,7 @@
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell><a ng-href="/#/reception/saisAdmission/{{::row.id}}/view">{{::row.code}}</a></td>
+          <td md-cell><a ng-href="#/reception/saisAdmission/{{::row.id}}/view">{{::row.code}}</a></td>
           <td md-cell>{{row.curriculumVersion[currentLanguageNameField()]}}</td>
           <td md-cell>{{::row.places}}</td>
           <td md-cell>{{row.language[currentLanguageNameField()]}}</td>

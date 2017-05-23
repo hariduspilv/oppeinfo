@@ -14,7 +14,7 @@
         </td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>
-          <hois-value value="'main.formattedDate' | translate: {date: row.startDate}"></hois-value>
+          <hois-value value="row.startDate | hoisDate"></hois-value>
         </td>
       </tr>
     </tbody>

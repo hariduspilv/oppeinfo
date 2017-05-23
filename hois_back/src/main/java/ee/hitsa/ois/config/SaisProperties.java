@@ -1,10 +1,12 @@
 package ee.hitsa.ois.config;
 
-import org.hibernate.validator.constraints.NotEmpty;
+import ee.hitsa.ois.validation.NotEmpty;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.annotation.Validated;
 
 @Component
+@Validated
 @ConfigurationProperties("sais")
 public class SaisProperties {
 
@@ -15,7 +17,7 @@ public class SaisProperties {
     @NotEmpty
     private String producer;
     @NotEmpty
-    private String useridcode;
+    private String useridprefix;
 
     public String getEndpoint() {
         return endpoint;
@@ -41,12 +43,12 @@ public class SaisProperties {
         this.producer = producer;
     }
 
-    public String getUseridcode() {
-        return useridcode;
+    public String getUseridprefix() {
+        return useridprefix;
     }
 
-    public void setUseridcode(String useridcode) {
-        this.useridcode = useridcode;
+    public void setUseridprefix(String useridprefix) {
+        this.useridprefix = useridprefix;
     }
 
 }

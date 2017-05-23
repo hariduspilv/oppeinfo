@@ -7,11 +7,11 @@
             </span>
         </p>
         <br>
-        <div layout="column">
+        <div layout="column" class="form-readonly">
             <div layout="row" layout-sm="column" layout-xs="column">
                 <md-input-container flex="25" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" required disabled></hois-select>
+                    <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
                 </md-input-container>
                 <md-input-container ng-if="isEditing" flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.studentGroup' | translate}}</label>
@@ -23,7 +23,7 @@
                 </md-input-container>
                 <md-input-container ng-if="!isEditing" flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.studentGroup' | translate}}</label>
-                    <input type="text" ng-model="studentGroup.code" readonly>
+                    <hois-value value="studentGroup.code"></hois-value>
                 </md-input-container>
                 <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.course' | translate}}</label>
@@ -36,8 +36,8 @@
                     <hois-value value="currentLanguageNameField(curriculum)"></hois-value>
                 </md-input-container>
                 <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-                    <label>{{'subjectStudyPeriod.curriculumStudyPeriod' | translate}}</label>
-                    <hois-value value="curriculumStudyPeriod"></hois-value>
+                    <label>{{'subjectStudyPeriod.curriculumStudyPeriod.label' | translate}}</label>
+                    <hois-value value="'subjectStudyPeriod.curriculumStudyPeriod.value' | translate:curriculumStudyPeriod"></hois-value>
                 </md-input-container>
             </div>
             <br>
@@ -68,7 +68,7 @@
                         </tr>
                         <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }">
                             <td class="cell">
-                                <span ng-repeat="teacher in ssp.teachers" ng-class="{'invalid': !teachersLoadOk(ssp)}">
+                                <span ng-repeat="teacher in ssp.teachers" ng-class="{'invalid': !capacitiesUtil.teachersLoadOk(ssp)}">
                                     <span ng-if="$index > 0">, </span>
                                     {{teacher.name}}
                                 </span>

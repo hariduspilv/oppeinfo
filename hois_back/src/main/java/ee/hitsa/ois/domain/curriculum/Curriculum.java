@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.curriculum;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -11,10 +12,6 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
-
-import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -25,123 +22,53 @@ import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 public class Curriculum extends BaseEntityWithId {
     private static final long serialVersionUID = -7063602940937795603L;
 
-    @NotNull
     @Column(name = "is_higher")
     private Boolean higher;
-
-    @NotBlank
-    @Size(max = 255)
     private String nameEt;
-
-    @NotBlank
-    @Size(max = 255)
     private String nameEn;
-    @Size(max = 255)
     private String nameRu;
-
-    @NotBlank
-    @Size(max = 25)
     private String code;
-
-    @Size(max = 10)
     private String merCode;
     private LocalDate approval;
-
-    @Size(max = 50)
     private String approvalDokNr;
-
-    @Size(max = 20000)
     private String outcomesEt;
-
-    @Size(max = 20000)
     private String outcomesEn;
-
-    @Size(max = 4000)
     private String structure;
-
-    @Size(max = 20000)
     private String admissionRequirementsEt;
-
-    @Size(max = 20000)
     private String admissionRequirementsEn;
-
-    @Size(max = 20000)
     private String graduationRequirementsEt;
-
-    @Size(max = 20000)
     private String graduationRequirementsEn;
-
-    private Double credits;
-
-    @Size(max = 4000)
+    private BigDecimal credits;
     private String draftText;
-
-    @Size(max = 4000)
     private String specialization;
-
-    @Size(max = 20000)
     private String practiceDescription;
-
-    @Size(max = 4000)
     private String finalExamDescription;
-
-    @Size(max = 4000)
     private String optionalStudyDescription;
-
-    @Size(max = 20000)
     private String description;
     private LocalDate ehisChanged;
-
-    @Size(max = 1000)
     private String contactPerson;
-
-    @Size(max = 255)
     private String nameGenitiveEt;
-
-    @Size(max = 255)
     private String nameGenitiveEn;
-
-    @Size(max = 1000)
     private String languageDescription;
-
-    @Size(max = 1000)
     private String otherLanguages;
-
-    @Size(max = 20000)
     private String objectivesEt;
-
-    @Size(max = 20000)
     private String objectivesEn;
-
-    @Size(max = 20000)
     private String addInfo;
-
     private LocalDate merRegDate;
     private LocalDate accreditationDate;
-
-    @Size(max = 1000)
     private String accreditationResolution;
     private LocalDate accreditationValidDate;
-
-    @Size(max = 1000)
     private String accreditationNr;
 
-    @NotNull
     @Column(name = "is_occupation")
     private Boolean occupation;
-
-    // Study period in months
-    @NotNull
+    /**
+     * Study period in months
+     */
     private Integer studyPeriod;
-
-    @NotNull
     @Column(name = "is_joint")
     private Boolean joint;
-
-    @NotNull
     private Integer optionalStudyCredits;
-
-    @NotNull
     private LocalDate validFrom;
     private LocalDate validThru;
 
@@ -421,11 +348,11 @@ public class Curriculum extends BaseEntityWithId {
         this.graduationRequirementsEn = graduationRequirementsEn;
     }
 
-    public Double getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Double credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

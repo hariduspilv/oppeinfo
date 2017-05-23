@@ -12,7 +12,14 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     private Long curriculum;
     private Long department;
     private Long teacher;
+    private Long subject;
 
+    public Long getSubject() {
+        return subject;
+    }
+    public void setSubject(Long subject) {
+        this.subject = subject;
+    }
     public Long getStudyPeriod() {
         return studyPeriod;
     }

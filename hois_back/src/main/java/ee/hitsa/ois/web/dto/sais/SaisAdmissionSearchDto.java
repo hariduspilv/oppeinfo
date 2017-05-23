@@ -16,10 +16,37 @@ public class SaisAdmissionSearchDto {
     private LocalDate periodStart;
     private LocalDate periodEnd;
     private String studyForm;
+    private Boolean failed;
+    private String error;
 
     public static SaisAdmissionSearchDto of(SaisAdmission saisAdmission) {
         SaisAdmissionSearchDto dto = EntityUtil.bindToDto(saisAdmission, new SaisAdmissionSearchDto());
         return dto;
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("code: ");
+        sb.append(code);
+        if (!Boolean.TRUE.equals(failed)) {
+            sb.append(";places: ");
+            sb.append(places);
+            sb.append(";language: ");
+            sb.append(language);
+            sb.append(";periodStard: ");
+            sb.append(periodStart.toString());
+            sb.append(";periodEnd: ");
+            sb.append(periodEnd.toString());
+            sb.append(";studyForm: ");
+            sb.append(studyForm);
+        } else {
+            sb.append(";failed: ");
+            sb.append(failed.toString());
+            sb.append(";error: ");
+            sb.append(error);
+        }
+        return sb.toString();
     }
 
     public Long getId() {
@@ -84,6 +111,22 @@ public class SaisAdmissionSearchDto {
 
     public void setPeriodEnd(LocalDate periodEnd) {
         this.periodEnd = periodEnd;
+    }
+
+    public Boolean getFailed() {
+        return failed;
+    }
+
+    public void setFailed(Boolean failed) {
+        this.failed = failed;
+    }
+
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
     }
 
 }

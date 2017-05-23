@@ -106,7 +106,6 @@ public class AutomaticMessageService {
         }
     }
 
-
     private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean, Message existingMessage) {
         Classifier status = classifierRepository.getOne(MessageStatus.TEATESTAATUS_U.name());
         List<MessageReceiver> messageReceivers = StreamUtil.toMappedList(person -> {
@@ -126,12 +125,14 @@ public class AutomaticMessageService {
 
     private Message getMessage(MessageType type, School school, Object dataBean) {
         if (!type.validBean(dataBean)) {
+            // TODO meaningful exception class
             throw new RuntimeException(String.format("invalid data bean for template %s", type.name()));
         }
 
         Long schoolId = EntityUtil.getId(school);
         MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
         if (template == null) {
+            // TODO meaningful exception class
             throw new RuntimeException(String.format("no message template %s found for school %d", type.name(), schoolId));
         }
 
@@ -142,6 +143,7 @@ public class AutomaticMessageService {
             message.setContent(content);
             return message;
         } catch (Exception e) {
+            // TODO avoid use of String.format
             log.error(String.format("message %s could not be sent for school %d", type.name(), schoolId), e);
         }
         return null;
@@ -149,6 +151,7 @@ public class AutomaticMessageService {
 
     private Message sendTemplateMessage(MessageType type, School school, Person sender, List<MessageReceiver> messageReceivers, Object dataBean, Message existingMessage) {
         if (!type.validBean(dataBean)) {
+            // TODO meaningful exception class
             throw new RuntimeException(String.format("invalid data bean for template %s", type.name()));
         }
 
@@ -168,8 +171,4 @@ public class AutomaticMessageService {
 
         return message;
     }
-
-
-
-
 }

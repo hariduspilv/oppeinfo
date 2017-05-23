@@ -1,8 +1,17 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+
+import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
@@ -15,51 +24,87 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumOccupationDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 
-/*
- * TODO: apply @Valid validation to child classes
- */
 @DateRange
 public class CurriculumForm extends VersionedCommand {
-
+    
+    @NotNull
     private Boolean higher;
+    @NotBlank
+    @Size(max = 255)
     private String nameEt;
+    @NotBlank
+    @Size(max = 255)
     private String nameEn;
+    @Size(max = 255)
     private String nameRu;
+    @NotBlank
+    @Size(max = 25)
     private String code;
+    @Size(max = 10)
     private String merCode;
     private LocalDate approval;
+    @Size(max = 50)
     private String approvalDokNr;
+    @Size(max = 20000)
     private String outcomesEt;
+    @Size(max = 20000)
     private String outcomesEn;
+    @Size(max = 4000)
     private String structure;
+    @Size(max = 20000)
     private String admissionRequirementsEt;
+    @Size(max = 20000)
     private String admissionRequirementsEn;
+    @Size(max = 20000)
     private String graduationRequirementsEt;
+    @Size(max = 20000)
     private String graduationRequirementsEn;
-    private Double credits;
+    private BigDecimal credits;
+    @Size(max = 4000)
     private String draftText;
+    @Size(max = 4000)
     private String specialization;
+    @Size(max = 20000)
     private String practiceDescription;
+    @Size(max = 4000)
     private String finalExamDescription;
+    @Size(max = 4000)
     private String optionalStudyDescription;
+    @Size(max = 20000)
     private String description;
     private LocalDate ehisChanged;
+    @Size(max = 1000)
     private String contactPerson;
+    @Size(max = 255)
     private String nameGenitiveEt;
+    @Size(max = 255)
     private String nameGenitiveEn;
+    @Size(max = 1000)
     private String languageDescription;
+    @Size(max = 1000)
     private String otherLanguages;
+    @Size(max = 20000)
     private String objectivesEt;
+    @Size(max = 20000)
     private String objectivesEn;
+    @Size(max = 20000)
     private String addInfo;
     private LocalDate merRegDate;
     private LocalDate accreditationDate;
+    @Size(max = 1000)
     private String accreditationResolution;
     private LocalDate accreditationValidDate;
+    @Size(max = 1000)
     private String accreditationNr;
-    private Boolean occupation;
+    private Boolean occupation = Boolean.FALSE;
+    @NotNull
+    @Min(0)
+    @Max(10000)
     private Integer studyPeriod;
+    @NotNull
     private Boolean joint;
+    @Min(0)
+    @Max(1000)
     private Integer optionalStudyCredits;
     private LocalDate validFrom;
     private LocalDate validThru;
@@ -71,27 +116,37 @@ public class CurriculumForm extends VersionedCommand {
     private String ehisStatus;
     @ClassifierRestriction(MainClassCode.EHIS_KOOL)
     private String jointMentor;
+    @NotNull
     @ClassifierRestriction(MainClassCode.OPPEKAVA_TYPE)
     private String consecution;
+    @NotNull
     @ClassifierRestriction({MainClassCode.EKR, MainClassCode.OPPEASTE})
     private String origStudyLevel;
     @ClassifierRestriction({MainClassCode.ISCED_RYHM, MainClassCode.ISCED_VALD, MainClassCode.ISCED_SUUN})
     private String iscedClass;
+    @NotNull
     @ClassifierRestriction(MainClassCode.OPPEKAVA_STAATUS)
     private String status;
+    @NotNull
     @ClassifierRestriction(MainClassCode.OPPEKAVA_LOOMISE_VIIS)
     private String draft;
 
     private Set<String> studyLanguages;
     private Set<String> studyForms;
     private Set<Long> schoolDepartments;
-
+    @Valid
     private Set<CurriculumFileDto> files;
+    @Valid
     private Set<CurriculumGradeDto> grades;
+    @Valid
     private Set<CurriculumJointPartnerDto> jointPartners;
+    @Valid
     private Set<CurriculumSpecialityDto> specialities;
+    @Valid
     private Set<CurriculumModuleDto> modules;
+    @Valid
     private Set<CurriculumOccupationDto> occupations;
+    @Valid
     private Set<CurriculumVersionDto> versions;
 
     private String contractEt;
@@ -282,11 +337,11 @@ public class CurriculumForm extends VersionedCommand {
         this.graduationRequirementsEn = graduationRequirementsEn;
     }
 
-    public Double getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Double credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

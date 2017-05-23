@@ -31,7 +31,8 @@ public class ApplicationUtil {
         long daysToUse = DAYS_IN_YEAR * years - daysUsed;
 
         if (daysToUse < applicationDays) {
-            log.debug(String.format("Application period is %d days, maximum time is %d years, but %d days are allready used",
+            // TODO avoid use of String.format
+            log.debug(String.format("Application period is %d days, maximum time is %d years, but %d days are already used",
                     Long.valueOf(applicationDays), Long.valueOf(years), Long.valueOf(daysUsed)));
             throw new ValidationFailedException("application.messages.periodIsTooLong");
         }

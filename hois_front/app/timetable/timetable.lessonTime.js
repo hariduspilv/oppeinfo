@@ -61,8 +61,17 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
   }
   function initialBlock() {
     var block = {lessonTimes: [], selectedBuildings: {}};
+    var initialLessonTime = {
+      dayMon: true,
+      dayTue: true,
+      dayWed: true,
+      dayThu: true,
+      dayFri: true,
+      daySat: true,
+      daySun: true
+    };
     for(var i = 0; i < INITIAL_BLOCK_COUNT; i++) {
-      block.lessonTimes.push({});
+      block.lessonTimes.push(angular.extend({}, initialLessonTime));
     }
     $scope.buildings.forEach(function(it) {
       if (!angular.isDefined($scope.usedBuildings[it.id])) {
@@ -98,10 +107,20 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
     }
   }
 
+  function removeEmptyLessonTimeRows(lessonTimes) {
+    var i = lessonTimes.length;
+    while (i--) {
+      if (!$scope.isLessonTimeRowFilled(lessonTimes[i])) {
+        lessonTimes.splice(i, 1);
+      }
+    }
+  }
+
   function dtoToEntity(scope) {
     var entity = {validFrom: scope.validFrom, lessonTimeBuildingGroups: []};
     if (angular.isArray(scope.blocks)) {
       scope.blocks.forEach(function(it) {
+        removeEmptyLessonTimeRows(it.lessonTimes);
         var lessonTimeBuildingGroup = {id: it.id, lessonTimes: it.lessonTimes, buildings: []};
         if (angular.isObject(it.selectedBuildings)) {
           for (var p in it.selectedBuildings) {
@@ -145,6 +164,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
       return false;
     }
   };
+
   $scope.selectedBuildingsLength = function(block) {
     var count = 0;
     for (var p in block.selectedBuildings) {
@@ -156,6 +176,25 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
       return count;
     };
     return getterSetter;
+  };
+
+/**
+ * at least one field is filled and one day is selected
+ */
+  $scope.isLessonTimeRowFilled = function(lessonTime) {
+    if (angular.isObject(lessonTime)) {
+      return !!lessonTime.lessonNr ||
+        !!lessonTime.startTime ||
+        !!lessonTime.endTime && (
+        lessonTime.dayMon === true ||
+        lessonTime.dayTue === true ||
+        lessonTime.dayWed === true ||
+        lessonTime.dayThu === true ||
+        lessonTime.dayFri === true ||
+        lessonTime.daySat === true ||
+        lessonTime.daySun === true);
+    }
+    return false;
   };
 
 

@@ -33,12 +33,12 @@ public class MailService {
 
     //IKE - emails are always sent together with system messages but we do not have to guarantee their arrival
     public void sendMail(String from, String to, String subject, String message) {
-
         if(Boolean.TRUE.equals(disable)) {
             return;
         }
 
         if (!StringUtils.hasText(from) || !StringUtils.hasText(to)) {
+            // TODO avoid use of String.format
             log.error(String.format("mail has no from (%s) or receivers (%s)", from, to));
             return;
         }
@@ -56,10 +56,12 @@ public class MailService {
                 mail.setText(message);
                 executorLocal.get().submit(() -> {
                     mailSender.send(mail);
+                    // TODO avoid use of String.format
                     log.info(String.format("email %s sent to %s", subject, receivers));
                 });
             });
         } catch (Exception e) {
+            // TODO avoid use of String.format
             log.error(String.format("sending email %s to %s failed", subject, receivers), e);
         }
     }
@@ -67,5 +69,4 @@ public class MailService {
     public void sendMail(String from, List<String> receivers, String subject, String message) {
         sendMail(from, String.join(",", receivers), subject, message);
     }
-
 }

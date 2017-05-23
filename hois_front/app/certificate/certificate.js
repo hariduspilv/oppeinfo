@@ -121,7 +121,7 @@ angular.module('hitsaOis')
                 lang: $translate.use().toUpperCase(),
                 name: text
             }, function (data) {
-                deferred.$$resolve(data.content);
+                deferred.resolve(data.content);
             });
             return deferred.promise;
         }

@@ -1,10 +1,22 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('StateCurriculumController', function ($q, $route, $scope, message, Classifier, $location, classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils) {
+  .controller('StateCurriculumController', function ($route, $scope, message, Classifier, $location, classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils) {
+
+
+    $scope.STATUS = {
+        ENTERING: 'OPPEKAVA_STAATUS_S', //Sisestamisel
+        VERIFIED: 'OPPEKAVA_STAATUS_K', //Kinnitatud
+        CLOSED: 'OPPEKAVA_STAATUS_C'    //Suletud
+    };
+
+    $scope.MODULE_TYPE = {
+        BASIC: 'KUTSEMOODUL_P',
+        GENERAL: 'KUTSEMOODUL_Y'
+    };
 
     var initialStateCurriculum = {
-        status: 'OPPEKAVA_STAATUS_S',
+        status: $scope.STATUS.ENTERING,
         modules: [],
         occupations: [],
         validFrom: new Date()
@@ -25,6 +37,7 @@ angular.module('hitsaOis')
         });
       } else {
         $scope.stateCurriculum = new Endpoint(initialStateCurriculum);
+        $scope.currentStatus = $scope.STATUS.ENTERING;
       }
     }
     getStateCurriculum();
@@ -64,57 +77,76 @@ angular.module('hitsaOis')
     };
 
     $scope.save = function () {
-
-      $scope.stateCurriculumForm.$setSubmitted();
-
-      if (!stateCurriculumFormIsValid()) {
-        message.error('main.messages.form-has-errors');
-        return;
-      }
-
-      if(!allOccuppationsValid()) {
-          message.error('stateCurriculum.error.occupationsCredids');
-          return;
-      }
-      if(!allSpetsOccupationsValid()) {
-          message.error('stateCurriculum.error.spetsOccupationsCredids');
-          return;
-      }
-
-      createOrUpdate().then(function() {
-         setVariablesForExistingStateCurriculum();
-         message.info('main.messages.create.success');
-         $scope.stateCurriculumForm.$setPristine();
-         if($scope.stateCurriculum.status === 'OPPEKAVA_STAATUS_C') {
-             $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/view');
-         }
-      });
+        $scope.stateCurriculum.status = $scope.currentStatus;
+        // setTimeout is needed for validation of ng-required fields
+        setTimeout(save, 0);
     };
+
+    function save() {
+        $scope.stateCurriculumForm.$setSubmitted();
+
+        if (!stateCurriculumFormIsValid()) {
+            message.error('main.messages.form-has-errors');
+            return;
+        }
+        if($scope.strictValidation()) {
+            if(!allOccuppationsValid()) {
+                message.error('stateCurriculum.error.occupationsCredids');
+                return;
+            }
+            if(!allSpetsOccupationsValid()) {
+                message.error('stateCurriculum.error.spetsOccupationsCredids');
+                return;
+            }
+        }
+
+        if(id) {
+            $scope.stateCurriculum.$update().then(function(){
+                setVariablesForExistingStateCurriculum();
+                message.info('main.messages.create.success');
+                $scope.stateCurriculumForm.$setPristine();
+                if($scope.stateCurriculum.status === $scope.STATUS.CLOSED) {
+                    $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/view');
+                }
+            });
+        } else {
+            $scope.stateCurriculum.$save().then(function(){
+                DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
+                message.updateSuccess();
+                $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit');
+            });
+        }
+    }
 
     $scope.confirmCurriculum = function() {
         dialogService.confirmDialog({prompt: 'stateCurriculum.confirmconfirm'}, function() {
-            $scope.stateCurriculum.status = 'OPPEKAVA_STAATUS_K';
-            $scope.save();
+            $scope.stateCurriculum.status = $scope.STATUS.VERIFIED;
+            // setTimeout is needed for validation of ng-required fields
+            setTimeout(save, 0);
         });
     };
 
 
     $scope.closeCurriculum = function() {
         dialogService.confirmDialog({prompt: 'stateCurriculum.closeconfirm'}, function() {
-            $scope.stateCurriculum.status = 'OPPEKAVA_STAATUS_C';
-            $scope.save();
+            $scope.stateCurriculum.status = $scope.STATUS.CLOSED;
+            // setTimeout is needed for validation of ng-required fields
+            setTimeout(save, 0);
         });
     };
 
-    function createOrUpdate() {
-        return $scope.stateCurriculum.id ? $scope.stateCurriculum.$update() : $scope.stateCurriculum.$save();
-    }
+    $scope.getStar = function() {
+        return $scope.strictValidation() ? '' : ' *';
+    };
 
+    $scope.strictValidation = function() {
+        return $scope.stateCurriculum && $scope.stateCurriculum.status === $scope.STATUS.VERIFIED;
+    };
 
     // validation
 
     function stateCurriculumFormIsValid() {
-        return $scope.stateCurriculumForm.$valid && $scope.stateCurriculum.occupations.length > 0 && allOcupationsHavePModule() && allSubOccupationsHavePModule();
+        return $scope.stateCurriculumForm.$valid && (!$scope.strictValidation() || $scope.stateCurriculum.occupations.length > 0 && allOcupationsHavePModule() && allSubOccupationsHavePModule());
     }
 
     function allOcupationsHavePModule() {
@@ -140,7 +172,7 @@ angular.module('hitsaOis')
             return true;
         }
         for(var i = 0; i < $scope.stateCurriculum.modules.length; i++) {
-            if($scope.stateCurriculum.modules[i].module === 'KUTSEMOODUL_P' &&
+            if($scope.stateCurriculum.modules[i].module === $scope.MODULE_TYPE.BASIC &&
             ArrayUtils.includes($scope.stateCurriculum.modules[i].moduleOccupations, occupation)) {
                 return false;
             }
@@ -419,7 +451,7 @@ angular.module('hitsaOis')
                 var list = $scope.subOccupations[o].map(function(e){return e.code;});
                 scope.occupations = scope.occupations.concat(list);
             });
-            scope.allowedModuleTypes = ['KUTSEMOODUL_P', 'KUTSEMOODUL_Y'];
+            scope.allowedModuleTypes = [$scope.MODULE_TYPE.BASIC, $scope.MODULE_TYPE.GENERAL];
 
             scope.filterOccupations = function(mainClassCode) {
                 return function (occupaionCode) {

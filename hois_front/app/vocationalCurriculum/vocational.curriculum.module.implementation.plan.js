@@ -8,6 +8,10 @@ angular.module('hitsaOis')
     $scope.initializing = true;
     var capacitiesData = [];
 
+    $scope.formState = {
+        readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1
+    };
+
     var entity = {curriculum: curriculumEntity.id, occupationModules: []};
     var initialImplementationPlan = {
       status: 'OPPEKAVA_VERSIOON_STAATUS_S',
@@ -88,12 +92,10 @@ angular.module('hitsaOis')
           });
           promises.push(promise);
 
-          var partOccupationsPromise = ClassifierConnect.queryAll({connectClassifierCode: it.occupation}, function(result) {
+          var partOccupationsPromise = ClassifierConnect.queryAll({connectClassifierCode: it.occupation, classifierMainClassCode: 'OSAKUTSE'}, function(result) {
             var partOccupations = [];
             result.forEach(function(classifierConnect) {
-              if(classifierConnect.classifier.mainClassCode === 'OSAKUTSE') {
                 partOccupations.push(classifierConnect.classifier);
-              }
             });
             angular.extend(occupation, {partOccupations: partOccupations});
           }).$promise;
@@ -223,8 +225,8 @@ angular.module('hitsaOis')
     $scope.openAddModuleDataDialog = function(curriculumModule, moduleData) {
       dialogService.showDialog('vocationalCurriculum/module.data.add.dialog.html',
       function(dialogScope) {
-
         dialogScope.capacities = capacitiesData;
+        dialogScope.formState = $scope.formState;
         var occupationModule;
         entity.occupationModules.forEach(function(it) {
           if (angular.isDefined(curriculumModule) && it.curriculumModule === curriculumModule.id) {
@@ -335,7 +337,7 @@ angular.module('hitsaOis')
         }
 
       } else {
-          console.log($scope.vocationalCurriculumModuleImplementationPlanForm.$error);
+          message.error('main.messages.form-has-errors');
       }
     };
   });

@@ -21,13 +21,27 @@ public abstract class StreamUtil {
         return data.stream().collect(Collectors.toMap(keyMapper, it -> it));
     }
 
+    /**
+     * Shortcut for mapping stream. Guaranteed to return ArrayList.
+     *
+     * @param mapper
+     * @param data
+     * @return
+     */
     public static <T, R> List<R> toMappedList(Function<T, R> mapper, Stream<T> data) {
         if(data == null) {
             return new ArrayList<>();
         }
-        return data.map(mapper).collect(Collectors.toList());
+        return data.map(mapper).collect(Collectors.toCollection(ArrayList::new));
     }
 
+    /**
+     * Shortcut for mapping stream. Guaranteed to return ArrayList.
+     *
+     * @param mapper
+     * @param data
+     * @return
+     */
     public static <T, R> List<R> toMappedList(Function<T, R> mapper, Collection<T> data) {
         if(data == null) {
             return new ArrayList<>();
@@ -35,11 +49,18 @@ public abstract class StreamUtil {
         return toMappedList(mapper, data.stream());
     }
 
+    /**
+     * Shortcut for mapping stream. Guaranteed to return HashSet.
+     *
+     * @param mapper
+     * @param data
+     * @return
+     */
     public static <T, R> Set<R> toMappedSet(Function<T, R> mapper, Collection<T> data) {
         if(data == null) {
             return new HashSet<>();
         }
-        return data.stream().map(mapper).collect(Collectors.toSet());
+        return data.stream().map(mapper).collect(Collectors.toCollection(HashSet::new));
     }
 
     public static <T> List<T> nullSafeList(List<T> data) {

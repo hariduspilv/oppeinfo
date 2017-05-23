@@ -7,6 +7,7 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.sais.SaisAdmission;
 import ee.hitsa.ois.domain.school.School;
@@ -17,7 +18,6 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
-import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -60,12 +60,19 @@ public class AutocompleteResult extends EntityConnectionCommand {
         return new AutocompleteResult(curriculumVersion.getId(), CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEt()), CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEn()));
     }
 
+    public static AutocompleteResult of(CurriculumVersionOccupationModuleTheme theme) {
+        String nameEt = theme.getNameEt();
+        return new AutocompleteResult(theme.getId(), nameEt, nameEt);
+    }
+
     public static AutocompleteResult of(DirectiveCoordinator coordinator) {
-        return new AutocompleteResult(coordinator.getId(), coordinator.getName(), coordinator.getName());
+        String name = coordinator.getName();
+        return new AutocompleteResult(coordinator.getId(), name, name);
     }
 
     public static AutocompleteResult of(SaisAdmission saisAdmission) {
-        return new AutocompleteResult(saisAdmission.getId(), saisAdmission.getCode(), saisAdmission.getCode());
+        String code = saisAdmission.getCode();
+        return new AutocompleteResult(saisAdmission.getId(), code, code);
     }
 
     public static AutocompleteResult of(School school) {
@@ -91,7 +98,8 @@ public class AutocompleteResult extends EntityConnectionCommand {
     }
 
     public static AutocompleteResult of(StudentGroup studentGroup) {
-        return new AutocompleteResult(studentGroup.getId(), studentGroup.getCode(), studentGroup.getCode());
+        String code = studentGroup.getCode();
+        return new AutocompleteResult(studentGroup.getId(), code, code);
     }
 
     public static AutocompleteResult of(StudyPeriod studyPeriod) {
@@ -102,8 +110,8 @@ public class AutocompleteResult extends EntityConnectionCommand {
         return new AutocompleteResult(subject.getId(), SubjectUtil.subjectName(subject.getCode(), subject.getNameEt(), subject.getCredits()), SubjectUtil.subjectName(subject.getCode(), subject.getNameEn(), subject.getCredits()));
     }
 
-    public static AutocompleteResult of(SubjectAutocompleteResult subject) {
-        return new AutocompleteResult(subject.getId(), SubjectUtil.subjectName(subject.getCode(), subject.getNameEt()), SubjectUtil.subjectName(subject.getCode(), subject.getNameEn()));
+    public static AutocompleteResult of(SubjectSearchDto subject) {
+        return new AutocompleteResult(subject.getId(), SubjectUtil.subjectName(subject.getCode(), subject.getNameEt(), subject.getCredits()), SubjectUtil.subjectName(subject.getCode(), subject.getNameEn(), subject.getCredits()));
     }
 
     public static AutocompleteResult of(Teacher teacher) {
@@ -125,10 +133,4 @@ public class AutocompleteResult extends EntityConnectionCommand {
                 curriculumModule.getNameEt() + " - " + curriculumModule.getModule().getNameEt() + ", " + curriculumModule.getCurriculum().getCode(),
                 curriculumModule.getNameEn() + " - " + curriculumModule.getModule().getNameEn() + ", " + curriculumModule.getCurriculum().getCode());
     }
-
-    public static AutocompleteResult of(Journal journal) {
-        return new AutocompleteResult(journal.getId(), journal.getNameEt(), journal.getNameEt());
-    }
-
-
 }

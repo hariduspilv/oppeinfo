@@ -2,7 +2,7 @@
   <div flex>
   <form layout="column" ng-cloak  ng-submit="loadData()" 	class="nomargin" >
   <fieldset tabindex="1">
-				<legend md-colors="{color: 'primary-800'}" class="md-title-small">Otsinguparameetrid</legend>
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!auth.school">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'school.label' | translate}}</label>
@@ -190,7 +190,7 @@
         <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
         <td md-cell>{{currentLanguageNameField(row.status)}}</td>
         <td md-cell>
-            <md-button md-no-ink class="md-primary change-button" ng-click="edit(row)" ng-if="row.status.code !== 'OPPEKAVA_STAATUS_C'">{{'main.button.change' | translate}}</md-button>
+            <md-button md-no-ink class="md-primary change-button" ng-click="edit(row)" ng-if="canBeEdited(row)">{{'main.button.change' | translate}}</md-button>
         </td>
     </tr>
     </tbody>

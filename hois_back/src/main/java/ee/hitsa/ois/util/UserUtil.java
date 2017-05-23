@@ -119,6 +119,10 @@ public abstract class UserUtil {
     public static void assertIsSchoolAdmin(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(), "User is not school admin");
     }
+    
+    public static void assertIsMainAdmin(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isMainAdmin(), "User is not main admin");
+    }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user, School school) {
         AssertionFailedException.throwIf(!isSchoolAdmin(user, school), "User is not school admin in given school");

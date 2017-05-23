@@ -8,18 +8,16 @@ import ee.hitsa.ois.enums.StudentStatus;
 public class StudentUtil {
 
     public static boolean isActive(Student student) {
-        StudentStatus status = student.getStatus() != null ? StudentStatus.valueOf(EntityUtil.getCode(student.getStatus())) : null;
-        return status == StudentStatus.OPPURSTAATUS_O || status == StudentStatus.OPPURSTAATUS_A || status == StudentStatus.OPPURSTAATUS_V;
+        String status = EntityUtil.getNullableCode(student.getStatus());
+        return status != null && StudentStatus.STUDENT_STATUS_ACTIVE.contains(status);
     }
 
     public static boolean isStudying(Student student) {
-        StudentStatus status = student.getStatus() != null ? StudentStatus.valueOf(EntityUtil.getCode(student.getStatus())) : null;
-        return status == StudentStatus.OPPURSTAATUS_O;
+        return StudentStatus.OPPURSTAATUS_O.name().equals(EntityUtil.getNullableCode(student.getStatus()));
     }
 
     public static boolean isOnAcademicLeave(Student student) {
-        StudentStatus status = student.getStatus() != null ? StudentStatus.valueOf(EntityUtil.getCode(student.getStatus())) : null;
-        return status == StudentStatus.OPPURSTAATUS_A;
+        return StudentStatus.OPPURSTAATUS_A.name().equals(EntityUtil.getNullableCode(student.getStatus()));
     }
 
     public static boolean isNominalStudy(Student student) {

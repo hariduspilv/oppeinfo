@@ -13,7 +13,7 @@ import ee.hitsa.ois.domain.school.School;
 @Entity
 public class WsSaisLog extends BaseEntityWithId {
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(optional = true, fetch = FetchType.LAZY)
     private School school;
     private String wsName;
     private LocalDate queryDateFrom;

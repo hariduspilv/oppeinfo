@@ -22,8 +22,10 @@ import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 import ee.hitsa.ois.web.dto.ClassifierSearchDto;
 import ee.hitsa.ois.web.dto.ClassifierWithCount;
 
@@ -40,27 +42,27 @@ public class ClassifierController {
      * For creating new classifier
      */
     @PostMapping("")
-    public Classifier create(HoisUserDetails user, @Valid @RequestBody Classifier classifier) {
+    public ClassifierDto create(HoisUserDetails user, @Valid @RequestBody Classifier classifier) {
         AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can create classifiers");
-        return classifierService.save(classifier);
+        return get(classifierService.save(classifier));
     }
 
     /**
      * For updating existing classifier
      */
     @PutMapping("/{code}")
-    public Classifier update(HoisUserDetails user, @WithEntity("code") Classifier classifier, @Valid @RequestBody Classifier newClassifier) {
+    public ClassifierDto update(HoisUserDetails user, @WithEntity("code") Classifier classifier, @Valid @RequestBody Classifier newClassifier) {
         AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can update classifiers");
         EntityUtil.bindToEntity(newClassifier, classifier);
-        return classifierService.save(classifier);
+        return get(classifierService.save(classifier));
     }
 
     /**
      * Getting single classifier by code
      */
     @GetMapping("/{code}")
-    public Classifier get(@WithEntity("code") Classifier classifier) {
-        return classifier;
+    public ClassifierDto get(@WithEntity("code") Classifier classifier) {
+        return ClassifierDto.of(classifier);
     }
 
     /**
@@ -79,8 +81,8 @@ public class ClassifierController {
 
     // TODO move into AutocompleteController
     @GetMapping("/getPossibleParentClassifiers")
-    public List<Classifier> searchForAuto(ClassifierSearchCommand classifierSearchCommand) {
-        return autocompleteService.classifierForAutocomplete(classifierSearchCommand);
+    public List<ClassifierDto> searchForAuto(ClassifierSearchCommand classifierSearchCommand) {
+        return StreamUtil.toMappedList(ClassifierDto::of, autocompleteService.classifierForAutocomplete(classifierSearchCommand));
     }
 
     /**
@@ -94,24 +96,24 @@ public class ClassifierController {
     }
 
     @GetMapping("/connections/{code}")
-    public List<Classifier> getPossibleConnections(@PathVariable("code") String code) {
-        return classifierService.getPossibleConnections(code);
+    public List<ClassifierDto> getPossibleConnections(@PathVariable("code") String code) {
+        return StreamUtil.toMappedList(ClassifierDto::of, classifierService.getPossibleConnections(code));
     }
 
     @GetMapping("/parents/{code}")
-    public List<Classifier> getParents(@PathVariable("code") String code) {
-        return classifierService.getParents(code);
+    public List<ClassifierDto> getParents(@PathVariable("code") String code) {
+        return StreamUtil.toMappedList(ClassifierDto::of, classifierService.getParents(code));
     }
 
     @GetMapping("/parents/{parentsMainClassifierCode}/{code}")
-    public List<Classifier> getParentsByMainClassifier(
+    public List<ClassifierDto> getParentsByMainClassifier(
             @PathVariable("parentsMainClassifierCode") String parentsMainClassifierCode,
             @PathVariable("code") String code) {
-        return classifierService.getParentsByMainClassifier(code, parentsMainClassifierCode);
+        return StreamUtil.toMappedList(ClassifierDto::of, classifierService.getParentsByMainClassifier(code, parentsMainClassifierCode));
     }
 
     @GetMapping("/children/{code}")
-    public List<Classifier> getChildren(@PathVariable("code") String code) {
-        return classifierService.findChildren(code);
+    public List<ClassifierDto> getChildren(@PathVariable("code") String code) {
+        return StreamUtil.toMappedList(ClassifierDto::of, classifierService.findChildren(code));
     }
 }

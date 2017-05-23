@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.validation.constraints.NotNull;
@@ -11,7 +10,6 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.JournalEntryValidation.Homework;
 import ee.hitsa.ois.validation.JournalEntryValidation.Lesson;
 import ee.hitsa.ois.validation.NotEmpty;
-import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentDto;
 
 public class JournalEntryForm {
 
@@ -32,8 +30,8 @@ public class JournalEntryForm {
     private String homework;
     @NotNull(groups = {Homework.class})
     private LocalDate homeworkDuedate;
-    private List<String> journalEntryCapacityTypes = new ArrayList<>();
-    private List<JournalEntryStudentDto> journalEntryStudents = new ArrayList<>();
+    private List<String> journalEntryCapacityTypes;
+    private List<JournalEntryStudentForm> journalEntryStudents;
 
     public String getEntryType() {
         return entryType;
@@ -89,10 +87,10 @@ public class JournalEntryForm {
     public void setJournalEntryCapacityTypes(List<String> journalEntryCapacityTypes) {
         this.journalEntryCapacityTypes = journalEntryCapacityTypes;
     }
-    public List<JournalEntryStudentDto> getJournalEntryStudents() {
+    public List<JournalEntryStudentForm> getJournalEntryStudents() {
         return journalEntryStudents;
     }
-    public void setJournalEntryStudents(List<JournalEntryStudentDto> journalEntryStudents) {
+    public void setJournalEntryStudents(List<JournalEntryStudentForm> journalEntryStudents) {
         this.journalEntryStudents = journalEntryStudents;
     }
 

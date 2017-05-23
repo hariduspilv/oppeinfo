@@ -18,6 +18,7 @@ import ee.hitsa.ois.service.SaisApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.commandobject.SaisApplicationImportForm;
 import ee.hitsa.ois.web.commandobject.sais.SaisApplicationImportCsvCommand;
 import ee.hitsa.ois.web.commandobject.sais.SaisApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationDto;
@@ -50,6 +51,12 @@ public class SaisApplicationController {
     public SaisApplicationImportResultDto importCsv(@RequestBody SaisApplicationImportCsvCommand command, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return saisApplicationService.importCsv(command.getFile().getFdata(), user);
+    }
+    
+    @PostMapping("importSais")
+    public SaisApplicationImportResultDto importSais(@RequestBody SaisApplicationImportForm form, HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return saisApplicationService.importFromSais(form,  user);
     }
 
 

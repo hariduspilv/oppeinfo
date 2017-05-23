@@ -6,7 +6,7 @@ public class SubjectStudyPeriodTeacherForm extends VersionedCommand {
     @NotNull
     private Long teacherId;
     @NotNull
-    private Boolean isSignatory;
+    private Boolean isSignatory = Boolean.FALSE;
 
     public Long getTeacherId() {
         return teacherId;

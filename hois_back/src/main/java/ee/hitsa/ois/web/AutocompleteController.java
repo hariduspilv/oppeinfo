@@ -20,6 +20,7 @@ import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
+import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.PersonDto;
@@ -28,6 +29,7 @@ import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
+import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
 
 @RestController
@@ -94,8 +96,8 @@ public class AutocompleteController {
     }
 
     @GetMapping("/teachers")
-    public Page<AutocompleteResult> teachers(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
-        return autocompleteService.teachers(user.getSchoolId(), lookup);
+    public Page<AutocompleteResult> teachers(HoisUserDetails user, @Valid TeacherAutocompleteCommand lookup) {
+        return asPage(autocompleteService.teachers(user.getSchoolId(), lookup));
     }
 
     @GetMapping("/students")
@@ -118,6 +120,11 @@ public class AutocompleteController {
         return autocompleteService.saisAdmissionCodes(user.getSchoolId());
     }
 
+    @GetMapping("/saisClassifiers")
+    public List<SaisClassifierSearchDto> saisClassifiers(@RequestParam(name = "parentCode") String parentCode) {
+        return autocompleteService.saisClassifiers(parentCode);
+    }
+
     @GetMapping("/vocationalmodules")
     public Page<AutocompleteResult> vocationalModules(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
         return autocompleteService.vocationalModules(user.getSchoolId(), lookup);
@@ -125,7 +132,7 @@ public class AutocompleteController {
 
     @GetMapping("/journals")
     public List<AutocompleteResult> journals(HoisUserDetails user) {
-        return autocompleteService.journals(user.getSchoolId(), user);
+        return autocompleteService.journals(user);
     }
 
     private static <R> Page<R> asPage(List<R> data) {

@@ -18,6 +18,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
@@ -188,8 +190,11 @@ public class StudentService {
     public List<AutocompleteResult> subjects(Student student) {
         //TODO single query
         List<AutocompleteResult> subjects = new ArrayList<>();
-        student.getCurriculumVersion().getModules().forEach(
-                m -> m.getSubjects().forEach(s -> subjects.add(AutocompleteResult.of(s.getSubject()))));
+        for(CurriculumVersionHigherModule m : student.getCurriculumVersion().getModules()) {
+            for(CurriculumVersionHigherModuleSubject s : m.getSubjects()) {
+                subjects.add(AutocompleteResult.of(s.getSubject()));
+            }
+        }
         return subjects;
     }
 }

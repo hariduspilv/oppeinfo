@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -21,29 +22,40 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalCapacityType;
+import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
+import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
+import ee.hitsa.ois.enums.GroupProportion;
+import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.JournalRepository;
+import ee.hitsa.ois.repository.LessonPlanModuleRepository;
 import ee.hitsa.ois.repository.LessonPlanRepository;
+import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.LessonPlanUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
+import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleForm;
+import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchTeacherDto;
 
@@ -60,7 +72,11 @@ public class LessonPlanService {
     @Autowired
     private JournalRepository journalRepository;
     @Autowired
+    private LessonPlanModuleRepository lessonPlanModuleRepository;
+    @Autowired
     private LessonPlanRepository lessonPlanRepository;
+    @Autowired
+    private TeacherRepository teacherRepository;
 
     public LessonPlan create(HoisUserDetails user, LessonPlanCreateForm form) {
         StudentGroup studentGroup = em.getReference(StudentGroup.class, form.getStudentGroup());
@@ -95,14 +111,27 @@ public class LessonPlanService {
         Map<Long, LessonPlanModule> modules = StreamUtil.toMap(LessonPlanModule::getId, lessonPlan.getLessonPlanModules());
         List<? extends LessonPlanModuleForm> formModules = form.getModules();
         if(formModules != null) {
+            LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());
+
             for(LessonPlanModuleForm formModule : formModules) {
                 LessonPlanModule lpm = modules.remove(formModule.getId());
                 AssertionFailedException.throwIf(lpm == null, "Unknown lessonplan module");
                 EntityUtil.bindToEntity(formModule, lpm);
+                EntityUtil.setEntityFromRepository(formModule, lpm, teacherRepository, "teacher");
+                // store journal capacities
+                List<? extends LessonPlanModuleJournalForm> formJournals = formModule.getJournals();
+                if(formJournals != null) {
+                    for(LessonPlanModuleJournalForm formJournal : formJournals) {
+                        Journal journal = journalRepository.getOne(formJournal.getId());
+                        // TODO better checks - is journal related to this module
+                        assertSameSchool(journal, lessonPlan.getSchool());
+                        capacityMapper.mapInput(journal, formJournal.getHours());
+                        journalRepository.save(journal);
+                    }
+                }
             }
         }
         AssertionFailedException.throwIf(!modules.isEmpty(), "Unhandled lessonplan module");
-        // TODO hours
         return lessonPlanRepository.save(lessonPlan);
     }
 
@@ -144,28 +173,96 @@ public class LessonPlanService {
 
     public Map<String, ?> searchFormData(Long schoolId) {
         Map<String, Object> data = new HashMap<>();
-        data.put("studyyears", autocompleteService.studyYears(schoolId));
-        data.put("studentgroups", autocompleteService.studentGroups(schoolId, Boolean.TRUE, Boolean.FALSE));
-        data.put("studentgroupmapping", studentgroupsWithLessonPlans(schoolId));
+        data.put("studyYears", autocompleteService.studyYears(schoolId));
+        data.put("studentGroups", autocompleteService.studentGroups(schoolId, Boolean.TRUE, Boolean.FALSE));
+        data.put("studentGroupMapping", studentgroupsWithLessonPlans(schoolId));
         return data;
     }
 
-    public Journal createJournal(HoisUserDetails user, LessonPlan lessonPlan, LessonPlanJournalForm form) {
+    /**
+     * New record for insertion with default values filled
+     *
+     * @param user
+     * @param lessonPlanModuleId
+     * @return
+     */
+    public LessonPlanJournalDto newJournal(HoisUserDetails user, Long lessonPlanModuleId) {
+        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository.getOne(lessonPlanModuleId);
+        UserUtil.assertIsSchoolAdmin(user, lessonPlanModule.getLessonPlan().getSchool());
+
+        Journal journal = new Journal();
+        // default values filled
+        Set<CurriculumVersionOccupationModuleTheme> themes = lessonPlanModule.getCurriculumVersionOccupationModule().getThemes();
+        if(themes.size() == 1) {
+            CurriculumVersionOccupationModuleTheme theme = themes.iterator().next();
+            journal.setAssessment(theme.getAssessment());
+            journal.setNameEt(theme.getNameEt());
+        }
+
+        LessonPlanJournalDto dto = LessonPlanJournalDto.of(journal, lessonPlanModule);
+        dto.setGroupProportion(GroupProportion.PAEVIK_GRUPI_JAOTUS_1.name());  // by default 1/1
+        return dto;
+    }
+
+    public LessonPlanJournalDto getJournal(Journal journal, Long lessonPlanModuleId) {
+        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository.getOne(lessonPlanModuleId);
+        return LessonPlanJournalDto.of(journal, lessonPlanModule);
+    }
+
+    public Journal createJournal(HoisUserDetails user, LessonPlanJournalForm form) {
+        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository.getOne(form.getLessonPlanModuleId());
+        LessonPlan lessonPlan = lessonPlanModule.getLessonPlan();
+        UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
         Journal journal = EntityUtil.bindToEntity(form, new Journal());
         journal.setStudyYear(lessonPlan.getStudyYear());
-        journal.setSchool(em.getReference(School.class, user.getSchoolId()));
+        journal.setSchool(lessonPlan.getSchool());
+        journal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
         return saveJournal(journal, form);
     }
 
     public Journal saveJournal(Journal journal, LessonPlanJournalForm form) {
         EntityUtil.bindToEntity(form, journal, classifierRepository);
-        EntityUtil.bindEntityCollection(journal.getJournalCapacityTypes(), c -> EntityUtil.getCode(c.getCapacityType()), form.getJournalCapacityTypes(), ct -> {
+
+        List<JournalCapacityType> capacityTypes = journal.getJournalCapacityTypes();
+        if(capacityTypes == null) {
+            journal.setJournalCapacityTypes(capacityTypes = new ArrayList<>());
+        }
+        EntityUtil.bindEntityCollection(capacityTypes, c -> EntityUtil.getCode(c.getCapacityType()), form.getJournalCapacityTypes(), ct -> {
             JournalCapacityType jct = new JournalCapacityType();
             jct.setJournal(journal);
             jct.setCapacityType(EntityUtil.validateClassifier(em.getReference(Classifier.class, ct), MainClassCode.MAHT));
             return jct;
         });
-        // TODO teachers, themes
+
+        List<JournalTeacher> teachers = journal.getJournalTeachers();
+        if(teachers == null) {
+            journal.setJournalTeachers(teachers = new ArrayList<>());
+        }
+        EntityUtil.bindEntityCollection(teachers, t -> EntityUtil.getId(t.getTeacher()), form.getJournalTeachers(), jt -> jt.getTeacher().getId(), jtf -> {
+            JournalTeacher jt = new JournalTeacher();
+            EntityUtil.bindToEntity(jtf, jt);
+            jt.setJournal(journal);
+            EntityUtil.setEntityFromRepository(jtf, jt, teacherRepository, "teacher");
+            assertSameSchool(journal, jt.getTeacher().getSchool());
+            return jt;
+        }, (jtf, jt) -> {
+            EntityUtil.bindToEntity(jtf, jt);
+        });
+
+        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository.getOne(form.getLessonPlanModuleId());
+        assertSameSchool(journal, lessonPlanModule.getLessonPlan().getSchool());
+        List<JournalOccupationModuleTheme> themes = journal.getJournalOccupationModuleThemes();
+        if(themes == null) {
+            journal.setJournalOccupationModuleThemes(themes = new ArrayList<>());
+        }
+        EntityUtil.bindEntityCollection(themes, jm -> EntityUtil.getId(jm.getCurriculumVersionOccupationModuleTheme()), form.getJournalOccupationModuleThemes(), jm -> {
+            JournalOccupationModuleTheme jmt = new JournalOccupationModuleTheme();
+            jmt.setJournal(journal);
+            jmt.setLessonPlanModule(lessonPlanModule);
+            jmt.setCurriculumVersionOccupationModuleTheme(em.getReference(CurriculumVersionOccupationModuleTheme.class, jm));
+            // TODO check that theme is from same curriculum version as lesson plan
+            return jmt;
+        });
         return journalRepository.save(journal);
     }
 
@@ -181,5 +278,11 @@ public class LessonPlanService {
 
         List<?> data = qb.select("sy.id, sg.id as sg_id", em).getResultList();
         return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
+    }
+
+    private static void assertSameSchool(Journal journal, School school) {
+        if(school != null && !EntityUtil.getId(journal.getSchool()).equals(EntityUtil.getId(school))) {
+            throw new AssertionFailedException("School mismatch");
+        }
     }
 }

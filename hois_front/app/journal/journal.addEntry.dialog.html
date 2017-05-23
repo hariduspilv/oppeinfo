@@ -17,7 +17,7 @@
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="45">
                 <label>{{'journal.entry.type' | translate}}</label>
-                <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required></hois-classifier-select>
+                <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required ng-change="setJournalEntryDefaultName(journalEntry.entryType)"></hois-classifier-select>
               </md-input-container>
               <md-input-container flex="45" flex-offset="10">
                 <label>{{'journal.entry.name' | translate}}</label>
@@ -26,7 +26,7 @@
             </div>
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container layout="row" layout-align="start center" flex>
-                <md-checkbox ng-repeat="type in capacityTypes" ng-model="journalEntry.capacityTypes[type.code]">{{currentLanguageNameField(type)}}</md-checkbox>
+                <md-checkbox ng-repeat="type in capacityTypes" ng-model="selectedCapacityTypes[type.code]">{{currentLanguageNameField(type)}}</md-checkbox>
               </md-input-container>
             </div>
 
@@ -93,22 +93,31 @@
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <md-radio-group ng-model="journalEntry.journalEntryStudents[$index].absence" layout="row" aria-label="absence">
+                        <div ng-if="journalEntryStudents[row.id].absence === 'PUUDUMINE_V'">
+                          {{absenceOptions["PUUDUMINE_V"].value}}
+                        </div>
+                        <md-radio-group ng-if="journalEntryStudents[row.id].absence !== 'PUUDUMINE_V'" ng-model="journalEntryStudents[row.id].absence" layout="row" aria-label="absence"
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)">
                           <md-radio-button value="PUUDUMINE_H" aria-label="PUUDUMINE_H">{{absenceOptions["PUUDUMINE_H"].value}}</md-radio-button>
                           <md-radio-button value="PUUDUMINE_P" aria-label="PUUDUMINE_P">{{absenceOptions["PUUDUMINE_P"].value}}</md-radio-button>
                         </md-radio-group>
                       </md-input-container>
                     </td>
                     <td md-cell>
+                      <span ng-repeat="gradeHistory in journalEntryStudents[row.id].journalEntryStudentHistories | orderBy: 'gradeInserted'">
+                        {{gradeHistory.grade.value}}
+                        <span ng-if="gradeHistory.grade.value && !$last">/</span>
+                      </span>
+                      &nbsp;
                       <md-input-container>
-                        <hois-classifier-select ng-model="journalEntry.journalEntryStudents[$index].grade"
-                          ng-change="journalEntryStudentChanged(journalEntry, $index, row)" model-value-attr="code" main-classifier-code="KUTSEHINDAMINE" aria-label="grade"></hois-classifier-select>
+                        <hois-classifier-select ng-model="journalEntryStudents[row.id].grade"
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" model-value-attr="code" main-classifier-code="KUTSEHINDAMINE" aria-label="grade"></hois-classifier-select>
                       </md-input-container>
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <input type="text" ng-model="journalEntry.journalEntryStudents[$index].addInfo"
-                          ng-change="journalEntryStudentChanged(journalEntry, $index, row)" aria-label="additional info">
+                        <input type="text" ng-model="journalEntryStudents[row.id].addInfo"
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" aria-label="additional info">
                       </md-input-container>
                     </td>
                   </tr>

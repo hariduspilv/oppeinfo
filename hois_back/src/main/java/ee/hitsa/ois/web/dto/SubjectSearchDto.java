@@ -8,7 +8,7 @@ import ee.hitsa.ois.util.SubjectUtil;
 import java.math.BigDecimal;
 import java.util.Set;
 
-public class SubjectSearchDto implements SubjectAutocompleteResult {
+public class SubjectSearchDto {
     private Long id;
     private String code;
     private String nameEt;
@@ -19,7 +19,6 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
     private String status;
     private AutocompleteResult schoolDepartment;
 
-    @Override
     public Long getId() {
         return id;
     }
@@ -34,7 +33,6 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
         return dto;
     }
 
-    @Override
     public String getCode() {
         return code;
     }
@@ -43,7 +41,6 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
         this.code = code;
     }
 
-    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -52,7 +49,6 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
         this.nameEt = nameEt;
     }
 
-    @Override
     public String getNameEn() {
         return nameEn;
     }

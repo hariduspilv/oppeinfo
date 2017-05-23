@@ -39,8 +39,7 @@ public class Classifier extends BaseEntity {
     private String nameRu;
     private String mainClassCode;
 
-    //lazy load causes - org.springframework.http.converter.HttpMessageNotWritableException: Could not write content: failed to lazily initialize a collection of role: ee.hitsa.ois.domain.Classifier.children, could not initialize proxy - no Session (through reference chain: ee.hitsa.ois.domain.Classifier["children"]);
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "mainClassCode", nullable = false, updatable = false, insertable = false)
     private Set<Classifier> children;
 

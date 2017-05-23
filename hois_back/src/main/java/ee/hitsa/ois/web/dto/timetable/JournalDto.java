@@ -20,6 +20,7 @@ public class JournalDto {
     private List<String> studentGroups = new ArrayList<>();
     private List<String> journalTeachers = new ArrayList<>();
     private List<AutocompleteResult> curriculumModules = new ArrayList<>();
+    private List<JournalModuleDescriptionDto> moduleDescriptions = new ArrayList<>();
     private Integer plannedHours;
     private Integer usedHours;
     private String status;
@@ -33,6 +34,9 @@ public class JournalDto {
         for (JournalOccupationModuleTheme theme : journal.getJournalOccupationModuleThemes()) {
             dto.getStudentGroups().add(theme.getLessonPlanModule().getLessonPlan().getStudentGroup().getCode());
             dto.getCurriculumModules().add(AutocompleteResult.of(theme.getCurriculumVersionOccupationModuleTheme().getModule().getCurriculumModule()));
+
+            JournalModuleDescriptionDto moduleDescription = EntityUtil.bindToDto(theme.getCurriculumVersionOccupationModuleTheme(), new JournalModuleDescriptionDto());
+            dto.moduleDescriptions.add(moduleDescription);
         }
         for (JournalTeacher teacher : journal.getJournalTeachers()) {
             dto.getJournalTeachers().add(PersonUtil.fullname(teacher.getTeacher().getPerson()));
@@ -101,14 +105,6 @@ public class JournalDto {
         this.curriculumModules = curriculumModules;
     }
 
-//    public List<JournalStudentDto> getJournalStudents() {
-//        return journalStudents;
-//    }
-//
-//    public void setJournalStudents(List<JournalStudentDto> journalStudents) {
-//        this.journalStudents = journalStudents;
-//    }
-
     public Integer getPlannedHours() {
         return plannedHours;
     }
@@ -149,5 +145,15 @@ public class JournalDto {
         this.hasJournalStudents = hasJournalStudents;
     }
 
+    public List<JournalModuleDescriptionDto> getModuleDescriptions() {
+        return moduleDescriptions;
+    }
+
+    public void setModuleDescriptions(List<JournalModuleDescriptionDto> moduleDescriptions) {
+        this.moduleDescriptions = moduleDescriptions;
+    }
+
 
 }
+
+

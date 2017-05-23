@@ -87,9 +87,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
   }
 
   function applicationOkava(student, loadFormDeferred) {
-    //TODO: valid to true
     var allCurriculumVersions;
-    Curriculum.queryVersions({valid: false}).$promise.then(function(result) {
+    Curriculum.queryVersions({valid: true}).$promise.then(function(result) {
       allCurriculumVersions = result;
       $scope.curriculumVersions = allCurriculumVersions.filter(function(it) { return it.id !== student.curriculumVersion.id;});
       loadFormDeferred.resolve();

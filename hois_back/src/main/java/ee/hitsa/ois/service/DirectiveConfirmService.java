@@ -145,7 +145,7 @@ public class DirectiveConfirmService {
                 // store student version for undo
                 ds.setStudentHistory(student != null ? student.getStudentHistory() : null);
                 updateApplicationStatus(ds, applicationStatus);
-                updateStudentData(directiveType, ds, studentStatus, student != null ? academicLeaves.get(EntityUtil.getId(student)) : null);
+                updateStudentData(directiveType, ds, studentStatus, student != null ? academicLeaves.get(student.getId()) : null);
             }
         }
         directiveRepository.save(directive);
@@ -248,6 +248,9 @@ public class DirectiveConfirmService {
                     }
                 } else {
                     copyDirectiveProperties(canceledDirectiveType, ds.getStudentHistory(), student, true);
+                    if(KASKKIRI_AKAD.equals(canceledDirectiveType) || KASKKIRI_AKADK.equals(canceledDirectiveType)) {
+                        student.setNominalStudyEnd(ds.getStudentHistory().getNominalStudyEnd());
+                    }
                 }
                 // TODO cancel task from task queue, if there is one for given student and directive
                 studentService.saveWithHistory(student);

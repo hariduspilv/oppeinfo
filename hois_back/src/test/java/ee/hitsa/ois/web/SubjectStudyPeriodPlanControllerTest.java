@@ -17,6 +17,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.enums.CapacityType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanCapacityDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanDto;
@@ -115,7 +116,7 @@ public class SubjectStudyPeriodPlanControllerTest {
         SubjectStudyPeriodPlanCapacityDto dto = new SubjectStudyPeriodPlanCapacityDto();
         dto.setHours(Long.valueOf(1));
         dto.setIsContact(Boolean.FALSE);
-        dto.setCapacityType("MAHT_a");
+        dto.setCapacityType(CapacityType.MAHT_a.name());
         return dto;
     }
 

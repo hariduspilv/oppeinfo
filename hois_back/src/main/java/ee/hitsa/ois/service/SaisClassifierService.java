@@ -91,7 +91,7 @@ public class SaisClassifierService {
         xRoadHeader.setConsumer(sp.getConsumer());
         xRoadHeader.setEndpoint(sp.getEndpoint());
         xRoadHeader.setProducer(sp.getProducer());
-        xRoadHeader.setUserId(sp.getUseridcode() + personRepository.getOne(user.getPersonId()).getIdcode());
+        xRoadHeader.setUserId(sp.getUseridprefix() + personRepository.getOne(user.getPersonId()).getIdcode());
         xRoadHeader.setId(UUID.randomUUID().toString());
         xRoadHeader.setService("sais2.ClassificationsExport.v1");
         SaisClassificationResponse classificationResponse = null;
@@ -127,6 +127,7 @@ public class SaisClassifierService {
                     em.persist(sc);
                 }
             }
+            // TODO calculate count from classificationResponse
             classificationResponse.setRecordCount(saisClassifierRepository.count());
             } catch (Exception e) {
                 classificationResponse.setError(e.getStackTrace().toString());
@@ -140,7 +141,7 @@ public class SaisClassifierService {
             classificationResponse.setError(e.getStackTrace().toString());
             classificationResponse.setxRoadErrors(Boolean.TRUE);
         }
-        saisLogService.insertLog(classificationResponse, user);
+        saisLogService.insertLog(classificationResponse, user, null);
         return list(criteria, pageable);
     }
 

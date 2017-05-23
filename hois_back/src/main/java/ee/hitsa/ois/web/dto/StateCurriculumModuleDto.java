@@ -3,6 +3,13 @@ package ee.hitsa.ois.web.dto;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import org.hibernate.validator.constraints.NotBlank;
+
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -14,13 +21,22 @@ import ee.hitsa.ois.web.commandobject.VersionedCommand;
 public class StateCurriculumModuleDto extends VersionedCommand {
     
     private Long id;
+    @NotNull
     @ClassifierRestriction(MainClassCode.KUTSEMOODUL)
     private String module;  
+    @NotBlank
+    @Size(max=255)
     private String nameEt;
+    @Size(max=255)
     private String nameEn;
+    @NotNull
+    @Min(0)
+    @Max(999)
     private Double credits;
+    @NotBlank
     private String objectivesEt;
     private String objectivesEn;
+    @NotBlank
     private String assessmentsEt;
     private String assessmentsEn;
 

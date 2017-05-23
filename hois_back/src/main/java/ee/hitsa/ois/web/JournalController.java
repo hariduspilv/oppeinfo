@@ -1,11 +1,9 @@
 package ee.hitsa.ois.web;
 
-import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -17,6 +15,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.timetable.Journal;
@@ -33,8 +32,8 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsSearchCommand;
-import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
@@ -64,13 +63,7 @@ public class JournalController {
     @PostMapping("/{id:\\d+}/saveEndDate")
     public void saveEndDate(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalEndDateCommand command) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        if (user.isTeacher()) {
-            Optional<JournalTeacher> teacher =
-                    journal.getJournalTeachers().stream().filter(it -> EntityUtil.getId(it.getTeacher().getPerson()) == user.getPersonId()).findFirst();
-            if (!teacher.isPresent() || !Boolean.TRUE.equals(teacher.get().getIsConfirmer())) {
-                throw new ValidationFailedException("journal.messages.teacherNotAllowedToChangeEndDate");
-            }
-        }
+        assertIsConfirmer(user, journal);
         journalService.saveEndDate(journal, command);
     }
 
@@ -89,30 +82,26 @@ public class JournalController {
     @PostMapping("/{id:\\d+}/journalEntry")
     public void saveJournalEntry(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalEntryForm journalEntryForm) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        journalService.saveJournalEntry(journal, journalEntryForm);
+        journalService.saveJournalEntry(user, journal, journalEntryForm);
     }
 
     @PutMapping("/{id:\\d+}/journalEntry/{journalEntry:\\d+}")
     public void updateJournalEntry(HoisUserDetails user, @RequestBody JournalEntryForm journalEntryForm, @PathVariable("journalEntry") Long journalEntrylId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        journalService.updateJournalEntry(journalEntryForm, journalEntrylId);
+        journalService.updateJournalEntry(user, journalEntryForm, journalEntrylId);
     }
 
     @PostMapping("/{id:\\d+}/addStudentsToJournal")
     public void addStudentsToJournal(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalStudentsCommand command) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        if (!CollectionUtils.isEmpty(journal.getJournalEntries()) && user.isTeacher()) {
-            throw new ValidationFailedException("journal.messages.addingStudentIsNotAllowed");
-        }
+        assertAddStudentsToJournal(user, journal);
         journalService.addStudentsToJournal(journal, command);
     }
 
     @PostMapping("/{id:\\d+}/removeStudentsFromJournal")
     public void removeStudentsFromJournal(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalStudentsCommand command) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        if (!CollectionUtils.isEmpty(journal.getJournalEntries()) && user.isTeacher()) {
-            throw new ValidationFailedException("journal.messages.removingStudentIsNotAllowed");
-        }
+        assertRemoveStudentsFromJournal(user, journal);
         journalService.removeStudentsFromJournal(journal, command);
     }
 
@@ -129,16 +118,15 @@ public class JournalController {
     }
 
     @GetMapping("/{id:\\d+}/journalStudents")
-    public List<JournalStudentDto> journalStudents(HoisUserDetails user, @WithEntity("id") Journal journal) {
+    public List<JournalStudentDto> journalStudents(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestParam(required = false) Boolean allStudents) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return journal.getJournalStudents().stream().map(JournalStudentDto::of).collect(Collectors.toList());
+        return journalService.journalStudents(journal, allStudents);
     }
 
     @GetMapping("/{id:\\d+}/journalEntriesByDate")
-    public Map<LocalDate, Map<Long, ClassifierSelection>> journalEntriesByDate(HoisUserDetails user, @WithEntity("id") Journal journal) {
+    public List<JournalEntryByDateDto> journalEntriesByDate(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestParam(required = false) Boolean allStudents) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        Map<LocalDate, Map<Long, ClassifierSelection>> result = journalService.journalEntriesByDate(journal);
-        return result;
+        return journalService.journalEntriesByDate(journal, allStudents);
     }
 
     @GetMapping("/{id:\\d+}/journalEntry/lessonInfo")
@@ -150,6 +138,28 @@ public class JournalController {
     @GetMapping("currentStudyYear")
     public Map<String, Long> currentPeriod(HoisUserDetails user) {
         return Collections.singletonMap("currentStudyYear", EntityUtil.getNullableId(studyYearService.getCurrentStudyYear(user.getSchoolId())));
+    }
+
+    private static void assertIsConfirmer(HoisUserDetails user, Journal journal) {
+        if (user.isTeacher()) {
+            Optional<JournalTeacher> teacher =
+                    journal.getJournalTeachers().stream().filter(it -> EntityUtil.getId(it.getTeacher().getPerson()) == user.getPersonId()).findFirst();
+            if (!teacher.isPresent() || !Boolean.TRUE.equals(teacher.get().getIsConfirmer())) {
+                throw new ValidationFailedException("journal.messages.teacherNotAllowedToChangeEndDate");
+            }
+        }
+    }
+
+    private static void assertAddStudentsToJournal(HoisUserDetails user, Journal journal) {
+        if (!CollectionUtils.isEmpty(journal.getJournalEntries()) && user.isTeacher()) {
+            throw new ValidationFailedException("journal.messages.addingStudentIsNotAllowed");
+        }
+    }
+
+    private static void assertRemoveStudentsFromJournal(HoisUserDetails user, Journal journal) {
+        if (!CollectionUtils.isEmpty(journal.getJournalEntries()) && user.isTeacher()) {
+            throw new ValidationFailedException("journal.messages.removingStudentIsNotAllowed");
+        }
     }
 
 }

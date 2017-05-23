@@ -64,8 +64,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('StudentGroupEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'Curriculum', 'QueryUtils', 'Session',
-  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Classifier, Curriculum, QueryUtils, Session) {
+]).controller('StudentGroupEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'Curriculum', 'QueryUtils', 'Session', 'DataUtils',
+  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Classifier, Curriculum, QueryUtils, Session, DataUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -129,6 +129,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       $scope.formState.students = clMapper.objectmapper($scope.record.members);
       $scope.formState.selectedStudents = angular.copy($scope.formState.students);
       $scope.curriculumChanged();
+      DataUtils.convertStringToDates($scope.record, ["validFrom", "validThru"]);
     }
 
     if(id) {

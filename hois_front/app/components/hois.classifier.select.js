@@ -68,7 +68,8 @@ angular.module('hitsaOis')
         watchModel: '@',
         connectMainClassifierCode: '@',
         searchFromConnect: '@',
-        selectFirstValue: '@'
+        selectFirstValue: '@',
+        defaultValue: '@'
       },
       link: function postLink(scope, element, attrs, ngModelControllers) {
         scope.isRequired = angular.isDefined(scope.required);
@@ -253,7 +254,7 @@ angular.module('hitsaOis')
                 }
 
                 if(angular.isDefined(scope.selectFirstValue)) {
-                  var value = showOptions.length > 0 ? showOptions[0] : (angular.isString(scope.selectFirstValue) ? scope.selectFirstValue : null);
+                  var value = showOptions.length > 0 ? showOptions[0] : (angular.isDefined(scope.defaultValue) ? scope.defaultValue : null);
                   if (value !== null) {
                     if (angular.isDefined(scope.modelValueAttr)) {
                       scope.value = optionsByCode[value][scope.modelValueAttr];
@@ -264,6 +265,10 @@ angular.module('hitsaOis')
                 }
                 deselectHiddenValue();
               });
+          }
+
+          if (!angular.isDefined(scope.value) && angular.isDefined(scope.defaultValue)) {
+            scope.value = scope.defaultValue;
           }
       }
 

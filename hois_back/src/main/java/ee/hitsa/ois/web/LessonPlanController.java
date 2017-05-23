@@ -80,21 +80,26 @@ public class LessonPlanController {
     }
 
     @PostMapping("/journals")
-    public HttpUtil.CreatedResponse create(HoisUserDetails user, @WithEntity("id") LessonPlan lessonPlan, @Valid @RequestBody LessonPlanJournalForm form) {
+    public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody LessonPlanJournalForm form) {
         UserUtil.assertIsSchoolAdmin(user);
-        return HttpUtil.created(lessonPlanService.createJournal(user, lessonPlan, form));
+        return HttpUtil.created(lessonPlanService.createJournal(user, form));
+    }
+
+    @GetMapping("/journals/new")
+    public LessonPlanJournalDto newJournal(HoisUserDetails user, @RequestParam("lessonPlanModule") Long lessonPlanModuleId) {
+        return lessonPlanService.newJournal(user, lessonPlanModuleId);
     }
 
     @GetMapping("/journals/{id:\\d+}")
-    public LessonPlanJournalDto get(HoisUserDetails user, @WithEntity("id") Journal journal) {
+    public LessonPlanJournalDto get(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestParam("lessonPlanModule") Long lessonPlanModuleId) {
         UserUtil.assertSameSchool(user, journal.getSchool());
-        return LessonPlanJournalDto.of(journal);
+        return lessonPlanService.getJournal(journal, lessonPlanModuleId);
     }
 
     @PutMapping("/journals/{id:\\d+}")
     public LessonPlanJournalDto update(HoisUserDetails user, @WithEntity("id") Journal journal, @Valid @RequestBody LessonPlanJournalForm form) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
-        return get(user, lessonPlanService.saveJournal(journal, form));
+        return get(user, lessonPlanService.saveJournal(journal, form), form.getLessonPlanModuleId());
     }
 
     @DeleteMapping("/journals/{id:\\d+}")

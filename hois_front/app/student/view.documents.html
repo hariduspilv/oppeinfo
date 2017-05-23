@@ -24,9 +24,9 @@
             <td md-cell>
               <a class="md-button md-primary change-button" ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a>
             </td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.submitted} }}</td>
+            <td md-cell>{{::row.submitted | hoisDate}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
+            <td md-cell>{{::row.confirmDate | hoisDate}}</td>
             <td md-cell>
             <a ng-if="(row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
               md-no-ink class="md-button md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</a>
@@ -82,7 +82,7 @@
             </td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
             <td md-cell>{{::row.directiveNr}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
+            <td md-cell>{{::row.confirmDate | hoisDate}}</td>
             <td md-cell>{{::row.insertedBy}}</td>
           </tr>
         </tbody>

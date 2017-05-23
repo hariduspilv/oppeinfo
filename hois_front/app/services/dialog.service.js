@@ -16,7 +16,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils',
     /**
      * For form validation to work dialog form name must be dialogForm
      */
-    this.showDialog = function(templateUrl, dialogController, submitCallback, cancelCallback, userConfig) {
+    this.showDialog = function(templateUrl, dialogController, submitCallback, cancelCallback) { //, userConfig - not used anymore
       var submitted = false;
       //var config = angular.extend({}, userConfig);
       $mdDialog.show({

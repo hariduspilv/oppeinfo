@@ -21,22 +21,22 @@
         <td md-cell>{{row.isPeriod ? 'main.period' : 'main.date' | translate}}</td>
         <td md-cell>
           <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodStart)}}</div>
-          <hois-value ng-if="!row.isPeriod" value="'main.formattedDate' | translate: {date: row.startDate}"></hois-value>
+          <hois-value ng-if="!row.isPeriod" value="row.startDate | hoisDate"></hois-value>
         </td>
         <td md-cell>
           <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodEnd)}}</div>
-          <hois-value ng-if="!row.isPeriod" value="'main.formattedDate' | translate: {date: row.endDate}"></hois-value>
+          <hois-value ng-if="!row.isPeriod" value="row.endDate | hoisDate"></hois-value>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
         </td>
         <td md-cell>
           <div ng-if="row.applicationIsPeriod">{{currentLanguageNameField(row.applicationStudyPeriodStart)}}</div>
-          <hois-value ng-if="!row.applicationIsPeriod" value="'main.formattedDate' | translate: {date: row.applicationStartDate}"></hois-value>
+          <hois-value ng-if="!row.applicationIsPeriod" value="row.applicationStartDate | hoisDate"></hois-value>
         </td>
         <td md-cell>
           <div ng-if="row.applicationIsPeriod">{{currentLanguageNameField(row.applicationStudyPeriodEnd)}}</div>
-          <hois-value ng-if="!row.applicationIsPeriod" value="'main.formattedDate' | translate: {date: row.applicationEndDate}"></hois-value>
+          <hois-value ng-if="!row.applicationIsPeriod" value="row.applicationEndDate | hoisDate"></hois-value>
         </td>
       </tr>
     </tbody>

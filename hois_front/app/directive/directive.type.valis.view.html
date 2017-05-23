@@ -31,11 +31,11 @@
         <td md-cell>{{row.isPeriod ? 'main.period' : 'main.date' | translate}}</td>
         <td md-cell>
           <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodStart)}}</div>
-          <hois-value ng-if="!row.isPeriod" value="'main.formattedDate' | translate: {date: row.startDate}"></hois-value>
+          <hois-value ng-if="!row.isPeriod" value="row.startDate | hoisDate"></hois-value>
         </td>
         <td md-cell>
           <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodEnd)}}</div>
-          <hois-value ng-if="!row.isPeriod" value="'main.formattedDate' | translate: {date: row.endDate}"></hois-value>
+          <hois-value ng-if="!row.isPeriod" value="row.endDate | hoisDate"></hois-value>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"></hois-classifier-value>

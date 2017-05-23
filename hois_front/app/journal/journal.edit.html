@@ -1,6 +1,15 @@
 <div layout-padding>
     <div flex>
-      <h2>{{'journal.entryTabelLegend' | translate}}</h2>
+      <div layout="row" flex>
+        <h2 flex>{{'journal.entryTabelLegend' | translate}}</h2>
+        <div flex="50" layout="row" layout-align="end">
+          <md-input-container>
+              <md-checkbox ng-model="showAllStudentsModel" aria-label="show all students" ng-change="showAllStudents(showAllStudentsModel)">
+                {{'journal.showAll' | translate}}
+              </md-checkbox>
+            </md-input-container>
+        </div>
+      </div>
       <md-table-container>
         <table md-table md-progress="entries.$promise">
           <thead md-head md-on-reorder="loadEntries">
@@ -8,6 +17,18 @@
               <th md-column><span>{{'student.label' | translate}}, {{'journal.studentGroup' | translate}}</span></th>
               <th md-column ng-repeat="journalEntry in journal.journalEntriesByDate | orderBy: 'date'">
                 {{'main.formattedDate' | translate: {date: journalEntry.date} }}
+                <md-tooltip>
+                    {{journalEntry.startLessonNr}}
+                    <span ng-if="journalEntry.startLessonNr">,&nbsp;</span>
+                    {{journalEntry.nameEt}}
+                    <span>,&nbsp;</span>
+                    {{currentLanguageNameField(journalEntry.entryType)}}
+                    <span>,&nbsp;</span>
+                    {{journalEntry.teacher}}
+                </md-tooltip>
+              </th>
+              <th md-column>
+                <span>{{'journal.finalResult' | translate}}</span>
               </th>
               <th md-column></th>
             </tr>
@@ -15,9 +36,24 @@
           <tbody md-body>
             <tr md-row ng-repeat="row in journal.journalStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
               <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.fullname}}</a>, {{row.studentGroup}}</td>
-              <td md-cell ng-repeat="journalEntry in journal.journalEntriesByDate | orderBy: 'date'">
-                {{currentLanguageNameField(journalEntry.journalEntryStudents[row.id])}}
+              <td md-cell ng-repeat="journalEntry in journal.journalEntriesByDate | orderBy: 'date'" md-colors="{background: getEntryColor(journalEntry.entryType.code)}">
+                <span layout="row" layout-align="center center">
+                  <span ng-repeat="result in journalEntry.journalStudentResults[row.id] | orderBy: 'gradeInserted'">
+                    {{result.absence.value}}
+                    <md-tooltip ng-if="result.absence.value">
+                      {{'main.formattedDate' | translate: {date: result.inserted} }}
+                    </md-tooltip>
+                    <span ng-if="result.absence.value">/</span>
+                    {{result.grade.value}}
+                    <md-tooltip ng-if="result.grade.value">
+                      {{'main.formattedDate' | translate: {date: result.gradeInserted} }}
+                      <span ng-if="result.addInfo">,&nbsp;</span>
+                      {{result.addInfo}}
+                    </md-tooltip>
+                  </span>
+                </span>
               </td>
+              <td md-cell md-colors="{background: getEntryColor('SISSEKANNE_L')}"></td>
               <td md-cell layout="row" layout-align="end">
                 <md-button class="remove nomargin" ng-click="removeStudentFromJournal(row.studentId)" >&times;</md-button>
               </td>
@@ -83,7 +119,7 @@
 <div layout-padding>
   <hois-collapsable label="('journal.curriculumVersionModuleOrThemeDescription' | translate)" expanded="false">
     <div ng-repeat="module in journal.moduleDescriptions">
-      {{currentLanguageNameField(module)}}
+      <a href="" class="md-raised" ng-click="moduleDescriptionDialog(module)">{{currentLanguageNameField(module)}}</a>
     </div>
   </hois-collapsable>
 </div>

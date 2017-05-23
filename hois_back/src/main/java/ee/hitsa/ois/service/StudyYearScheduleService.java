@@ -88,24 +88,23 @@ public class StudyYearScheduleService {
     }
 
     private List<StudyYearSchedule> save(StudyYearScheduleDtoContainer schedulesCmd, List<StudyYearScheduleDto> newSchedulesDtos, Long schoolId) {
-        if(!CollectionUtils.isEmpty(newSchedulesDtos)) {
-            List<StudyYearSchedule> newSchedules = new ArrayList<>();
-            School school = schoolRepository.getOne(schoolId);            
-            newSchedulesDtos.forEach(dto -> {
-
-                AssertionFailedException.throwIf(!CollectionUtils.isEmpty(schedulesCmd.getStudentGroups()) &&
-                        !schedulesCmd.getStudentGroups().contains(dto.getStudentGroup()),
-                        "Update command does not contain dto's studentGroup!");  
-                AssertionFailedException.throwIf(!schedulesCmd.getStudyPeriods().contains(dto.getStudyPeriod()),
-                        "Update command does not contain dto's studyPeriod!");
-
-                StudyYearSchedule schedule = getFromDto(dto, school);
-                newSchedules.add(schedule);
-            });
-            List<StudyYearSchedule> list = studyYearScheduleRepository.save(newSchedules);
-            return list;
+        if(CollectionUtils.isEmpty(newSchedulesDtos)) {
+            return new ArrayList<>();
         }
-        return new ArrayList<>();
+
+        School school = schoolRepository.getOne(schoolId);
+        List<StudyYearSchedule> newSchedules = StreamUtil.toMappedList(dto -> {
+            AssertionFailedException.throwIf(!CollectionUtils.isEmpty(schedulesCmd.getStudentGroups()) &&
+                    !schedulesCmd.getStudentGroups().contains(dto.getStudentGroup()),
+                    "Update command does not contain dto's studentGroup!");
+            AssertionFailedException.throwIf(!schedulesCmd.getStudyPeriods().contains(dto.getStudyPeriod()),
+                    "Update command does not contain dto's studyPeriod!");
+
+            StudyYearSchedule schedule = getFromDto(dto, school);
+            return schedule;
+        }, newSchedulesDtos);
+
+        return studyYearScheduleRepository.save(newSchedules);
     }
 
     private StudyYearSchedule getFromDto(StudyYearScheduleDto dto, School school) {

@@ -1,7 +1,7 @@
 <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
   <form name="schoolYearForm" layout="column">
     <div layout="column" flex>
-      <div layout="row" layout-sm="column" layout-xs="column">
+      <div layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
         <md-input-container flex>
           <label class="label">{{'studyYear.year' | translate}}</label>
           <hois-classifier-value ng-model="studyYear.year" main-classifier-code="OPPEAASTA"></hois-classifier-value>

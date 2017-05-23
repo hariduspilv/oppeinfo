@@ -1,0 +1,49 @@
+<div layout-padding>
+  <div flex>
+  <form ng-submit="importApplications()" layout="column" name="applicationImportForm">
+    <div flex>
+        <div flex-xs="100" flex-gt-xs="100" layout="column">
+          <!--div class="indentForToast"></div-->
+          <div layout="row">
+          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'reception.application.saisImportRange' | translate}}</label>
+              <input type="hidden">
+            </md-input-container>
+          <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+              <md-datepicker required ng-model="criteria.applicationDateFrom" md-max-date="criteria.applicationDateTo" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+            </md-input-container>
+          <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+              <md-datepicker required ng-model="criteria.applicationDateTo" md-min-date="criteria.applicationDateFrom" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+            </md-input-container>
+          </div>
+          <div>
+            <md-list flex-xs="100" flex-gt-xs="100" flex="60">
+              <md-list-item ng-repeat="status in statusList">
+                <span>
+                  <md-checkbox ng-model="status._selected">
+                    {{currentLanguageNameField(status)}}
+                  </md-checkbox>
+                </span>
+              </md-list-item>
+            </md-list>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label class="textInput">{{'reception.application.candidateIdCode' | translate}}</label>
+              <input ng-model="criteria.idCode" type="text">
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label class="textInput">{{'reception.admission.code' | translate}}</label>
+              <input ng-model="criteria.admissionCode" type="text">
+            </md-input-container>
+          </div>
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'reception.application.saisImportApplications' | translate}}</md-button>
+          </div>
+      </div>
+    </div>
+  </form>
+  </div>
+</div>

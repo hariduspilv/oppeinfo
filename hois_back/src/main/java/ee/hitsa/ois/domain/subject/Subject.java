@@ -17,11 +17,11 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
-import ee.hitsa.ois.web.dto.SubjectAutocompleteResult;
 
 @Entity
-public class Subject extends BaseEntityWithId implements SubjectAutocompleteResult {
+public class Subject extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
@@ -67,6 +67,17 @@ public class Subject extends BaseEntityWithId implements SubjectAutocompleteResu
     
     @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
     private Set<SubjectStudyPeriodPlan> subjectStudyPeriodPlans;
+    
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    private Set<SubjectStudyPeriod> subjectStudyPeriods;
+
+    public Set<SubjectStudyPeriod> getSubjectStudyPeriods() {
+        return subjectStudyPeriods;
+    }
+
+    public void setSubjectStudyPeriods(Set<SubjectStudyPeriod> subjectStudyPeriods) {
+        this.subjectStudyPeriods = subjectStudyPeriods;
+    }
 
     public Set<SubjectStudyPeriodPlan> getSubjectStudyPeriodPlans() {
         return subjectStudyPeriodPlans != null ? subjectStudyPeriodPlans : (subjectStudyPeriodPlans = new HashSet<>());
@@ -84,7 +95,6 @@ public class Subject extends BaseEntityWithId implements SubjectAutocompleteResu
         this.school = school;
     }
 
-    @Override
     public String getCode() {
         return code;
     }
@@ -93,7 +103,6 @@ public class Subject extends BaseEntityWithId implements SubjectAutocompleteResu
         this.code = code;
     }
 
-    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -102,7 +111,6 @@ public class Subject extends BaseEntityWithId implements SubjectAutocompleteResu
         this.nameEt = nameEt;
     }
 
-    @Override
     public String getNameEn() {
         return nameEn;
     }

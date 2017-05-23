@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -142,7 +141,7 @@ public class ApplicationControllerTests {
         List<Student> students = studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), SCHOOL_ID));
-            filters.add(cb.not(root.get("status").get("code").in(Arrays.asList(StudentStatus.OPPURSTAATUS_O.name(), StudentStatus.OPPURSTAATUS_A.name(), StudentStatus.OPPURSTAATUS_V.name()))));
+            filters.add(cb.not(root.get("status").get("code").in(StudentStatus.STUDENT_STATUS_ACTIVE)));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
 
