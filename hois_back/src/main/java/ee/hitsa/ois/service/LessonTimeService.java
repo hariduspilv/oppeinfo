@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.EnumMap;
@@ -49,7 +50,7 @@ import ee.hitsa.ois.web.dto.timetable.LessonTimeSearchDto;
 @Service
 public class LessonTimeService {
 
-    private static final Logger log = LoggerFactory.getLogger(LessonTimeService.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final EnumMap<Day, String> DAY_MAPPING = new EnumMap<>(Day.class);
 
@@ -174,7 +175,7 @@ public class LessonTimeService {
     public LocalDate minValidFrom(Set<Long> buildings, Long lessonTimeId) {
         if (lessonTimeId != null) {
             LessonTime lessonTime = lessonTimeRepository.getOne(lessonTimeId);
-            Set<Long> savedBuildings = lessonTime.getLessonTimeBuildingGroup().getBuildings().stream().map(ltb -> ltb.getBuilding().getId()).collect(Collectors.toSet());
+            Set<Long> savedBuildings = lessonTime.getLessonTimeBuildingGroup().getBuildings().stream().map(ltb -> EntityUtil.getId(ltb.getBuilding())).collect(Collectors.toSet());
             if (savedBuildings.containsAll(buildings)) {
                 return previousValidFrom(buildings, lessonTime.getLessonTimeBuildingGroup().getValidFrom().minusDays(1));
             }
@@ -198,8 +199,7 @@ public class LessonTimeService {
         if (previousGroup != null) {
             previousGroup.setValidThru(savedGroup.getValidFrom().minusDays(1));
             lessonTimeBuildingGroupRepository.save(previousGroup);
-            // TODO avoid use of String.format
-            log.info(String.format("lesson time building group %d valid thru updated, new value is %s", previousGroup.getId(), previousGroup.getValidThru().toString()));
+            log.info("lesson time building group {} valid thru updated, new value is {}", previousGroup.getId(), previousGroup.getValidThru().toString());
         }
     }
 

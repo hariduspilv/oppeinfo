@@ -1,14 +1,10 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('StateCurriculumController', function ($route, $scope, message, Classifier, $location, classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils) {
+  .controller('StateCurriculumController', function ($route, $scope, message, Classifier, $location, classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils, Curriculum) {
 
 
-    $scope.STATUS = {
-        ENTERING: 'OPPEKAVA_STAATUS_S', //Sisestamisel
-        VERIFIED: 'OPPEKAVA_STAATUS_K', //Kinnitatud
-        CLOSED: 'OPPEKAVA_STAATUS_C'    //Suletud
-    };
+    $scope.STATUS = Curriculum.STATUS;
 
     $scope.MODULE_TYPE = {
         BASIC: 'KUTSEMOODUL_P',
@@ -68,6 +64,10 @@ angular.module('hitsaOis')
 
 
     $scope.delete = function() {
+        if(!ArrayUtils.isEmpty($scope.stateCurriculum.curricula)) {
+            message.error("stateCurriculum.error.hasCurricula");
+            return;
+        }
         dialogService.confirmDialog({prompt: 'stateCurriculum.deleteconfirm'}, function() {
             $scope.stateCurriculum.$delete().then(function() {
                 message.info('main.messages.delete.success');
@@ -403,6 +403,8 @@ angular.module('hitsaOis')
                 };
             }
 
+            scope.editing = angular.isDefined(editingModule);
+
             /**
              * Module cannot be simultaneously in occupation and its spets-occupation
              */
@@ -418,6 +420,21 @@ angular.module('hitsaOis')
                     }
                 }
                 return true;
+            };
+
+            scope.delete = function() {
+               dialogService.confirmDialog({prompt: 'curriculum.moduleDeleteConfirm'}, function() {
+                   ArrayUtils.remove($scope.stateCurriculum.modules, editingModule);
+                    if(scope.data.id) {
+                         var ModuleEndpoint = QueryUtils.endpoint('/stateCurriculum/modules');
+                         var deletedModule = new ModuleEndpoint($scope.stateCurriculum);
+                         deletedModule.$update().then(function(response) {
+                                message.info('main.messages.delete.success');
+                                $scope.stateCurriculum.modules = response.modules;
+                        });
+                    }
+                    scope.cancel();
+                });
             };
 
              /**
@@ -466,6 +483,15 @@ angular.module('hitsaOis')
                     angular.extend(editingModule, data);
                 } else {
                     $scope.stateCurriculum.modules.push(data);
+                }
+                if($scope.stateCurriculum.id) {
+                    var ModuleEndpoint = QueryUtils.endpoint('/stateCurriculum/modules');
+                    var savedModule = new ModuleEndpoint($scope.stateCurriculum);
+                    savedModule.$update().then(function(response) {
+                        message.info('main.messages.create.success');
+                        $scope.stateCurriculum.modules = response.modules;
+                        $scope.stateCurriculum.occupations = response.occupations;
+                    });
                 }
             });
         };

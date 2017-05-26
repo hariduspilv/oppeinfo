@@ -1,6 +1,8 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
     <form ng-submit="loadData()" novalidate class="nomargin" >
+	<fieldset tabindex="1">
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'directive.type' | translate}}</label>
@@ -47,6 +49,7 @@
         <md-button class="md-raised" ng-href="#/directives/new">{{'directive.create' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+	  </fieldset>
     </form>
   </div>
 </div>
@@ -68,7 +71,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/view">{{::row.headline}}</md-button>
+              <a md-class="md-primary change-button" ng-href="#/directives/{{::row.id}}/view">{{::row.headline}}</a>
             </td>
             <td md-cell>{{::row.directiveNr}}</td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>

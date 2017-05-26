@@ -33,6 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.NullHandling;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
@@ -322,6 +323,12 @@ public abstract class JpaQueryUtil {
                     }
                     orderBy.append(camelCaseToUnderScore(order.getProperty()));
                     orderBy.append(order.isAscending() ? "" : " desc");
+                    NullHandling nullhandling = order.getNullHandling();
+                    if(NullHandling.NULLS_FIRST.equals(nullhandling)) {
+                        orderBy.append(" NULLS FIRST");
+                    } else if(NullHandling.NULLS_LAST.equals(nullhandling)) {
+                        orderBy.append(" NULLS LAST");
+                    }
                 }
                 if(orderBy.length() > 0) {
                     sql.append(" order by ");

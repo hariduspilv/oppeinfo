@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,7 +37,7 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 @ControllerAdvice
 public class ControllerErrorHandler {
     private static final String POSTGRESQL_UNIQUE_VIOLATION = "23505";
-    private static final Logger log = LoggerFactory.getLogger(ControllerErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @ExceptionHandler
     public ResponseEntity<ErrorInfo> handleException(Exception e) {

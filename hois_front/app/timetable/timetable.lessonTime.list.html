@@ -66,8 +66,8 @@
           <td md-cell>{{row.endTime}}</td>
           <td md-cell>{{displayWeekdays(row)}}</td>
           <td md-cell>{{displayBuildings(row.buildings)}}</td>
-          <td md-cell>{{ 'main.formattedDate' | translate: {date: row.validFrom} }}</td>
-          <td md-cell>{{ 'main.formattedDate' | translate: {date: row.validThru} }}</td>
+          <td md-cell>{{row.validFrom | hoisDate}}</td>
+          <td md-cell>{{row.validThru | hoisDate}}</td>
           <td md-cell>
             <a class="md-button md-primary" ng-href="/#/timetable/lessonTime/{{::row.id}}/{{hasPassed(row) ? 'view' : 'edit'}}">{{'main.button.' + (hasPassed(row) ? 'view' : 'edit') | translate}}</a>
           </td>

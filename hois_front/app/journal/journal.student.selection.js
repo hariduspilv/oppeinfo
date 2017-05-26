@@ -26,8 +26,14 @@ angular.module('hitsaOis').controller('JournalStudentSelectionController', funct
       submittedDialogScope.tabledata.content.forEach(function(it) {
         if (submittedDialogScope.selectedStudents.indexOf(it.studentId) !== -1) {
           $scope.tabledata.content.push(it);
+          $scope.selectedStudents.push(it.studentId);
         }
       });
     });
+  };
+
+  $scope.removeStudent = function(row) {
+    ArrayUtils.remove($scope.selectedStudents, row.studentId);
+    ArrayUtils.remove($scope.tabledata.content, row);
   };
 });

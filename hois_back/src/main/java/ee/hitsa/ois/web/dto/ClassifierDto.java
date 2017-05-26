@@ -14,6 +14,7 @@ public class ClassifierDto extends InsertedChangedVersionDto {
     private Boolean valid;
     private String mainClassCode;
     private String value;
+    private String value2;
     private String description;
     private LocalDate validFrom;
     private LocalDate validThru;
@@ -25,6 +26,14 @@ public class ClassifierDto extends InsertedChangedVersionDto {
 
     public static ClassifierDto of(Classifier classifier) {
         return EntityUtil.bindToDto(classifier, new ClassifierDto());
+    }
+
+    public String getValue2() {
+        return value2;
+    }
+
+    public void setValue2(String value2) {
+        this.value2 = value2;
     }
 
     public String getCode() {

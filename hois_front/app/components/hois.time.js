@@ -4,7 +4,7 @@ angular.module('hitsaOis')
   .directive('hoisTime', function () {
 
     return {
-      template: '<input class="md-input" type="text">', //placeholder="HH:mm" should be added by component user
+      template: '<input style="min-width:3em;" class="md-input" type="text">', //placeholder="HH:mm" should be added by component user
       restrict: 'E',
       require: ['ngModel'],
       replace: true,

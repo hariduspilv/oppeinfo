@@ -37,12 +37,12 @@
 <div layout="row" layout-sm="column" layout-xs="column">
   <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
     <label>{{'application.confirmationDate' | translate}}</label>
-    <hois-value value="'main.formattedDate' | translate: {date: application.status === 'AVALDUS_STAATUS_KINNITATUD' ? application.changed : null}"></hois-value>
+    <hois-value value="application.status === 'AVALDUS_STAATUS_KINNITATUD' ? (application.changed | hoisDate) : ''"></hois-value>
   </md-input-container>
 </div>
 <div layout="row" layout-sm="column" layout-xs="column">
   <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
     <label>{{'application.submissionDate' | translate}}</label>
-    <hois-value value="'main.formattedDate' | translate: {date: application.submitted}"></hois-value>
+    <hois-value value="application.submitted | hoisDate"></hois-value>
   </md-input-container>
 </div>

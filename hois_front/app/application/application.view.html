@@ -20,9 +20,8 @@
         </div>
 
         <div layout="column" flex>
-          <div layout="row" class="top-margin">
-            <h2>{{'main.relatedFiles' | translate}} </h2>
-          </div>
+		<fieldset>
+		<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
           <table md-table class="secondary-table">
             <thead md-head>
               <tr md-row>
@@ -38,7 +37,7 @@
                   <a ng-href="{{getUrl(file.oisFile)}}" target="_blank"><md-icon md-font-set="material-icons">file_download</md-icon></a>
                 </td>
                 <td md-cell>
-                  {{'main.formattedDateTime' | translate: {date: file.inserted} }}
+                  {{file.inserted | hoisDateTime}}
                 </td>
                 <td md-cell>
                   {{file.insertedBy}}
@@ -46,9 +45,10 @@
               </tr>
             </tbody>
           </table>
+		  </fieldset>
         </div>
       </div>
-      <br/>
+      <div>&nbsp;</div>
 
 
       <div layout="row">

@@ -75,8 +75,8 @@
             <td md-cell>{{::row.curriculumVersion.nameEt}}</td>
             <td md-cell>{{::row.places}}</td>
             <td md-cell>{{row.language[currentLanguageNameField()]}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.periodStart} }}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.periodEnd} }}</td>
+            <td md-cell>{{row.periodStart | hoisDate}}</td>
+            <td md-cell>{{row.periodEnd | hoisDate}}</td>
             <td md-cell>{{row.studyForm[currentLanguageNameField()]}}</td>
           </tr>
         </tbody>

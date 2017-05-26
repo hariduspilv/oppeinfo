@@ -1,18 +1,20 @@
 <div>
-  <md-input-container flex="60" flex-sm="100" flex-xs="100">
-    <label>{{'application.reason' | translate}}</label>
-    <hois-classifier-value ng-model="application.academicApplication.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
-  </md-input-container>
+  <div class="form-readonly">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'application.reason' | translate}}</label>
+      <hois-classifier-value ng-model="application.academicApplication.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+    </md-input-container>
+  </div>
 
-  <div ng-show="!application.academicApplication.isPeriod" layout="row" layout-xs="column">
+  <div ng-show="!application.academicApplication.isPeriod" layout="row" layout-xs="column" class="form-readonly">
     <md-input-container  flex="20" flex-sm="100" flex-xs="100">
       <label>{{'application.academicLeaveStart' | translate}}</label>
-      <hois-value value="'main.formattedDate' | translate: {date: application.academicApplication.directiveStudent ? application.academicApplication.directiveStudent.startDate : application.academicApplication.startDate}"></hois-value>
+      <hois-value value="(application.academicApplication.directiveStudent ? application.academicApplication.directiveStudent.startDate : application.academicApplication.startDate) | hoisDate"></hois-value>
     </md-input-container>
 
     <md-input-container style="margin-left: 0px" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
       <label>{{'application.academicLeaveEnd' | translate}}</label>
-      <hois-value value="'main.formattedDate' | translate: {date: application.academicApplication.directiveStudent ? application.academicApplication.directiveStudent.endDate : application.academicApplication.endDate}"></hois-value>
+      <hois-value value="(application.academicApplication.directiveStudent ? application.academicApplication.directiveStudent.endDate : application.academicApplication.endDate) | hoisDate"></hois-value>
     </md-input-container>
   </div>
 

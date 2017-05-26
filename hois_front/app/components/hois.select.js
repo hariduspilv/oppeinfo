@@ -10,8 +10,8 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
   return {
     template: '<md-select>'+
       '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>'+
-      '<md-option ng-repeat="option in options | orderBy: $root.currentLanguageNameField()" ng-value="option[valueProperty]"'+
-      'aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-option></md-select>',
+      '<md-option ng-repeat="option in options | orderBy: showProperty ? showProperty : $root.currentLanguageNameField()" ng-value="option[valueProperty]"'+
+      'aria-label="{{$root.currentLanguageNameField(option)}}">{{showProperty ? option[showProperty] : $root.currentLanguageNameField(option)}}</md-option></md-select>',
     restrict: 'E',
     replace: true,
     scope: {
@@ -20,7 +20,8 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
       ngRequired:'=',
       required:'@',
       values: '@',
-      valueProperty: '@'
+      valueProperty: '@',
+      showProperty: '@'
     },
     link: function postLink(scope, element, attrs) {
       scope.isMultiple = angular.isDefined(scope.multiple);

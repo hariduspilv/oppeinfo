@@ -1,7 +1,7 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <form name="schoolForm">
-    <p class="textInput">{{'school.name' | translate}}&nbsp;*</p>
-    <md-autocomplete required md-selected-item="school._ehisSchool" md-search-text="queryText"
+    <!--p class="textInput">{{'school.name' | translate}}&nbsp;*</p-->
+    <md-autocomplete md-floating-label="{{'school.name' | translate}}" required md-selected-item="school._ehisSchool" md-search-text="queryText"
           md-items="item in querySearch(queryText)"
           md-item-text="currentLanguage()==='en' ? (item.nameEn || item.nameEt) : item.nameEt"
           md-min-length="0" md-no-cache

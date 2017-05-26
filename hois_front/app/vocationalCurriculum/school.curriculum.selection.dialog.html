@@ -27,8 +27,8 @@
                 <td md-cell>{{curriculum.nameEt}}</td>
                 <td md-cell>{{curriculum.origStudyLevel.nameEt}}</td>
                 <td md-cell>{{curriculum.credits}}</td>
-                <td md-cell>{{'main.formattedDate' | translate: {date: curriculum.validFrom} }}</td>
-                <td md-cell>{{'main.formattedDate' | translate: {date: curriculum.validThru} }}</td>
+                <td md-cell>{{curriculum.validFrom | hoisDate}}</td>
+                <td md-cell>{{curriculum.validThru | hoisDate}}</td>
                 <td md-cell>{{curriculum.status.nameEt}}</td>
             </tr>
             </tbody>

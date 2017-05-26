@@ -45,8 +45,8 @@ angular
     });
     $translateProvider.preferredLanguage('et');
     $translateProvider.fallbackLanguage('et');
+    $translateProvider.useSanitizeValueStrategy('sanitizeParameters');
     //$translateProvider.useSanitizeValueStrategy('sce');
-	$translateProvider.useSanitizeValueStrategy('sanitizeParameters');
   })
   .config(function($compileProvider){
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|tel|file|blob|data):/);

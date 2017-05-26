@@ -11,6 +11,7 @@ import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -38,6 +40,7 @@ import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
@@ -58,7 +61,7 @@ public class CurriculumController {
 
 	@GetMapping("/{id:\\d+}")
     public CurriculumDto get(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
-	    // External expert can watch curriculum 
+	    // External expert can watch curriculum
 	    if(!user.isExternalExpert()) {
 	        assertSameOrJoinSchool(user, curriculum);
 	    }
@@ -107,11 +110,11 @@ public class CurriculumController {
         UserUtil.assertIsSchoolAdmin(user);
     	curriculumService.delete(curriculum);
     }
-    
+
     @PostMapping("/speciality")
     public CurriculumSpecialityDto createCurriculumSpeciality(HoisUserDetails user, @Valid @RequestBody CurriculumSpecialityDto form) {
         UserUtil.assertIsSchoolAdmin(user);
-        return CurriculumSpecialityDto.of(curriculumService.createCurriculumSpeciality(user, form));
+        return CurriculumSpecialityDto.of(curriculumService.createCurriculumSpeciality(form));
     }
 
     @PutMapping("/speciality/{id:\\d+}")
@@ -119,7 +122,7 @@ public class CurriculumController {
         UserUtil.assertIsSchoolAdmin(user);
         return CurriculumSpecialityDto.of(curriculumService.saveCurriculumSpeciality(speciality, form));
     }
-    
+
     @DeleteMapping("/speciality/{id:\\d+}")
     public void deleteCurriculumSpeciality(HoisUserDetails user, @WithEntity("id") CurriculumSpeciality speciality) {
         UserUtil.assertIsSchoolAdmin(user);
@@ -147,7 +150,7 @@ public class CurriculumController {
         UserUtil.assertIsSchoolAdmin(user);
         return curriculumService.saveVersion(curriculumVersion, curriculumVersionDto);
     }
-    
+
     @DeleteMapping("/{curriculumId:\\d+}/versions/{id:\\d+}")
     public void deleteVersion(HoisUserDetails user, @WithEntity(value = "id") CurriculumVersion curriculumVersion) {
         assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
@@ -183,5 +186,34 @@ public class CurriculumController {
         List<ClassifierSelection> otherTypes = curriculumService.getCurriculumVersionHmoduleTypes(user.getSchoolId());
         classifiers.addAll(otherTypes);
         return classifiers;
+    }
+    
+    /**
+     * 
+     * @param stateCurriculumSearchCommand
+     * @param sort
+     * @return
+     */
+    @GetMapping("/stateCurricula")
+    public List<AutocompleteResult> getStateCurricula(Sort sort) {
+        return StreamUtil.toMappedList(AutocompleteResult::of, curriculumService.getStateCurricula(sort));
+    }
+
+    @PutMapping("/module/{id:\\d+}")
+    public CurriculumDto updateCurriculumModule(HoisUserDetails user, @NotNull @RequestBody CurriculumDto form, @WithEntity("id") Curriculum curriculum) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return CurriculumDto.of(curriculumService.saveCurriculumModule(curriculum, form));
+    }
+
+    @DeleteMapping("/module/{id:\\d+}")
+    public void deleteCurriculumModule(HoisUserDetails user, @WithEntity("id") CurriculumModule module) {
+        UserUtil.assertIsSchoolAdmin(user);
+        curriculumService.deleteModule(module);
+    }
+    
+    @PutMapping("/higher/version/modules/{id:\\d+}")
+    public CurriculumVersionDto updateHigherCurriculumVersionModules(HoisUserDetails user, @NotNull @RequestBody CurriculumVersionDto form, @WithEntity("id") CurriculumVersion curriculumVersion) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return CurriculumVersionDto.of(curriculumService.updateHigherCurriculumVersionModules(curriculumVersion, form));
     }
 }

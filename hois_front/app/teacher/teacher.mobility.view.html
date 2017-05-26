@@ -7,11 +7,11 @@
           <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="25" flex-sm="100" flex-offset-sm="0">
               <label>{{'teacher.mobility.start' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: mobility.start}"></hois-value>
+              <hois-value value="mobility.start | hoisDate"></hois-value>
             </md-input-container>
             <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-sm="0">
               <label>{{'teacher.mobility.end' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: mobility.end}"></hois-value>
+              <hois-value value="mobility.end | hoisDate"></hois-value>
             </md-input-container>
             <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-sm="0">
               <label>{{'teacher.mobility.state' | translate}}</label>

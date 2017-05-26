@@ -3,6 +3,7 @@ package ee.hitsa.ois.enums;
 public enum MainClassCode {
 
     AINESTAATUS,
+    AKAD_KRAAD,
     AKADPUHKUS_POHJUS,
     AVALDUS_LIIK,
     AVALDUS_STAATUS,

@@ -1,8 +1,8 @@
         <div>
-          <div flex="60" flex-sm="100" flex-xs="100" layout="row" class="horizontal-radio-group">
-            <md-input-container flex="20" flex-xs="100">
-              <label class="md-required common-label">{{'main.abroadStudies' | translate}}</label>
-            </md-input-container>
+          <div flex>
+            <fieldset tabindex="1">
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.abroadStudies' | translate}} *</legend>
+             <div layout="column">
             <md-input-container layout="row" layout-align="start center" flex="60">
               <md-radio-group name="isAbroad" ng-model="application.isAbroad" ng-change="isAbroadChanged()" required layout="row">
                 <md-radio-button ng-value="false" aria-label="estonian educational institution">{{ 'application.inEstonianEducationalInstitution' | translate }}</md-radio-button>
@@ -12,7 +12,6 @@
             <div layout="row" flex="20" md-colors="{color: 'warn-A400'}"  ng-if="applicationForm.$submitted" ng-messages="applicationForm.isAbroad.$error" >
               <div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
             </div>
-          </div>
 
 
           <div layout="row" layout-sm="column" layout-xs="column" ng-hide="application.isAbroad">
@@ -58,14 +57,15 @@
                 model-value-attr="code" required></hois-classifier-select>
             </md-input-container>
           </div>
+		  </div>
+		  </fieldset>
         </div>
 
-        <div>
+        <div>&nbsp;<div>
           <div layout="column" flex>
-            <div layout="row" class="top-margin">
-              <h2>{{'main.subjects' | translate}} </h2>
-              <a class="md-button md-primary" href="" ng-click="addPlannedSubjectRow()">{{'main.button.addRow' | translate}}</a>
-            </div>
+            <fieldset tabindex="1">
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.subjects' | translate}}</legend>
+              <md-button class="md-raised" href="" ng-click="addPlannedSubjectRow()">{{'main.button.addRow' | translate}}</md-button>
             <div layout="row" class="top-margin">
 
 
@@ -100,5 +100,7 @@
                 </tr>
               </tbody>
             </table>
+		</fieldset>	
           </div>
         </div>
+		<div>&nbsp;<div>

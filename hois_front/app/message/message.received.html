@@ -57,7 +57,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell><a href="#/message/{{row.id}}/view?backUrl=received" ng-class="{bold: !row.isRead}">{{::row.subject}}</a></td>
-            <td md-cell>{{'main.formattedDateTime' | translate: {date: row.dateSent} }}</td>
+            <td md-cell>{{row.dateSent | hoisDateTime}}</td>
             <td md-cell>{{::row.sender}}</td>
           </tr>
         </tbody>

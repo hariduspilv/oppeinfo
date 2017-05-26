@@ -75,7 +75,7 @@
         </md-input-container>
         
         <fieldset>
-			<legend md-colors="{color: 'primary-800'}" ng-class="{invalid: dialogForm.$submitted && data.subjects.length == 0}" class="md-title-small">{{'module.optionals' | translate}}</legend>
+			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
 			<div layout="row" layout-sm="column" layout-xs="column" ng-show="!readOnly">
 				<md-input-container flex>
 					<label>{{'module.optionalNameEt' | translate}}</label>
@@ -104,29 +104,33 @@
 		<md-input-container flex>
             <label>{{'module.optionalModulesNumber' | translate}}</label>
             <input name="electiveModulesNumber" ng-model="data.electiveModulesNumber" type="number" 
-            required min="0" max="{{data.electiveModules.length}}" ng-readonly="readOnly">
+            required min="0" max="999" ng-readonly="readOnly">
+            <!--max="{{data.electiveModules.length}}"-->
             <div ng-messages="dialogForm.electiveModulesNumber.$error" ng-show="dialogForm.electiveModulesNumber.$dirty">
                 <div ng-message="min">
                     {{'main.messages.error.positive' | translate}}
                 </div>
-                <div ng-message="max">
+                <!--<div ng-message="max">
                     {{'curriculum.error.numberOfElectiveModules' | translate}}
+                </div>-->
+                <div ng-message="max">
+                    {{'curriculum.error.max999' | translate}}
                 </div>
             </div>
         </md-input-container>
 
         <fieldset>
-			<legend md-colors="{color: 'primary-800'}" ng-class="{invalid: dialogForm.$submitted && data.subjects.length == 0}" class="md-title-small">{{'subject.subjects' | translate}}&nbsp;*</legend>
+			<legend md-colors="{color: 'primary-800'}" ng-class="{invalid: dialogForm.$submitted && data.subjects.length == 0}" class="md-title-small">{{'curriculum.version.subjects' | translate}}&nbsp;*</legend>
 			<md-input-container hide>
 				<input ng-model="data.subjectAdded" type="text" required md-maxlength="255">
 			</md-input-container>
 			<div layout="row">
 				<md-input-container flex>
-                <label>{{'subject.nameCode' | translate}}</label>
+                <label>{{'curriculum.version.subjectsName' | translate}}</label>
                 <!--TODO: required, multiple-->
                 <md-select ng-model="data.selectedSubject" ng-change="addSubject()" ng-disabled="readOnly">
                     <md-option ng-repeat="option in subjects | orderBy: currentLanguageNameField()" ng-value="option">
-                         {{option[currentLanguageNameField()]}} ({{option.code}}) 
+                         {{option.code}} - {{option[currentLanguageNameField()]}}
                          <!--<span ng-if="myEhisSchool !== option.ehisSchoolCode">{{option.schoolCode}}</span>-->
                     </md-option>
                 </md-select>
@@ -135,7 +139,7 @@
 			<table md-table class="secondary-table" ng-show="data.subjects.length > 0">
             <thead md-head>
                 <tr md-row>
-                    <th md-column>{{'subject.nameCode' | translate}}</th>
+                    <th md-column>{{'curriculum.version.subjectsName' | translate}}</th>
                     <th md-column>EAP</th>
                     <th md-column>{{'module.optionalSubject' | translate}}</th>
                     <th md-column>{{'module.linkOptional' | translate}}</th>
@@ -144,7 +148,7 @@
             </thead>
             <tbody md-body>
             <tr md-row ng-repeat="subject in data.subjects | orderBy: currentLanguageNameField()">
-                <td md-cell>{{subject[currentLanguageNameField()]}} ({{subject.code}})</td>
+                <td md-cell>{{subject.code}} - {{subject[currentLanguageNameField()]}}</td>
                 <td md-cell>{{subject.credits}}</td>
                 <td md-cell>
                     <md-checkbox ng-model="subject.optional" aria-label="subject is mandatory" 
@@ -197,6 +201,7 @@
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
       <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!readOnly">{{"main.button.save" | translate}}</md-button>
+      <md-button ng-click="delete()" ng-if="editing && !readOnly" class="md-raised">{{"main.button.delete" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

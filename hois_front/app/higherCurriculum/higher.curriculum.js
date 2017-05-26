@@ -4,7 +4,14 @@ angular.module('hitsaOis')
   .controller('HigherCurriculumController', function ($scope, Classifier, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, DataUtils, $rootScope) {
 
     $scope.auth = $route.current.locals.auth;
-    $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
+
+    $scope.STATUS = Curriculum.STATUS;
+
+    $scope.formState = {
+        readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
+        sentToEhis: angular.isDefined($route.current.params._sentToEhis)
+    };
+
     $scope.removeFromArray = function(array, item) {
         dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
             ArrayUtils.remove(array, item);
@@ -25,7 +32,7 @@ angular.module('hitsaOis')
       versions: [],
       jointPartners: [],
       higher: true,
-      status: 'OPPEKAVA_STAATUS_S',
+      status: Curriculum.STATUS.ENTERING,
       consecution: 'OPPEKAVA_TYPE_E',
       draft: 'OPPEKAVA_LOOMISE_VIIS_PUUDUB',
       joint: false,
@@ -85,7 +92,7 @@ angular.module('hitsaOis')
       } else {
         $scope.curriculum = new Endpoint(initialCurriculumScope);
          getEhisSchoolsSelection();
-         $scope.currentStatus = 'OPPEKAVA_STAATUS_S';
+         $scope.currentStatus = Curriculum.STATUS.ENTERING;
       }
     }
     getCurriculum();
@@ -99,7 +106,7 @@ angular.module('hitsaOis')
         getEhisSchoolsSelection();
         $scope.curriculum.abroad = false;
 
-        $scope.notEditableBasicData = $scope.curriculum.status === 'OPPEKAVA_STAATUS_K';
+        $scope.formState.notEditableBasicData = $scope.curriculum.status === Curriculum.STATUS.VERIFIED;
         $scope.currentStatus = $scope.curriculum.status;
     }
 
@@ -179,10 +186,7 @@ angular.module('hitsaOis')
 
     // --- Save and Delete
 
-    function save() {
-        if($scope.readOnly) {
-            return;
-        }
+    function save(messages) {
       $scope.higherCurriculumForm.$setSubmitted();
 
       if($scope.curriculum.joint) {
@@ -193,9 +197,13 @@ angular.module('hitsaOis')
       }
 
       if (!curriculumFormIsValid()) {
-        message.error('main.messages.form-has-errors');
-        return;
-      }
+          var errorMessage = messages && messages.errorMessage ? messages.errorMessage : 'main.messages.form-has-errors';
+          message.error(errorMessage);
+          return;
+      } else if ($scope.curriculum.status === Curriculum.STATUS.PROCEEDING && ArrayUtils.isEmpty($scope.curriculum.versions)) {
+          message.error('curriculum.error.noVersion');
+          return;
+      } 
       clearGradesIfNecessary();
         $scope.curriculum.iscedClass = $scope.curriculum.fieldOfStudy ?
         $scope.curriculum.fieldOfStudy : $scope.curriculum.areaOfStudy;
@@ -205,10 +213,11 @@ angular.module('hitsaOis')
 
         if($scope.curriculum.id) {
             $scope.curriculum.$update().then(function(){
-                message.updateSuccess();
+                var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
+                message.info(updateSuccess);
                 setVariablesForExistingCurriculum();
-                if($scope.curriculum.status === 'OPPEKAVA_STAATUS_C') {
-                    $location.path('/higherCurriculum/'+ $scope.curriculum.id +'/view');
+                if($scope.curriculum.status === Curriculum.STATUS.CLOSED) {
+                    $location.path('/higherCurriculum/'+ $scope.curriculum.id +'/view').search({});
                 }
             });
         } else {
@@ -229,8 +238,8 @@ angular.module('hitsaOis')
     };
 
     $scope.strictValidation = function() {
-        // return $scope.curriculum && ($scope.curriculum.status !== 'OPPEKAVA_STAATUS_S' || $scope.curriculum.status !== 'OPPEKAVA_STAATUS_C');
-        return $scope.curriculum && ($scope.curriculum.status === 'OPPEKAVA_STAATUS_K' || $scope.curriculum.status === 'OPPEKAVA_STAATUS_M');
+        // return $scope.curriculum && ($scope.curriculum.status !== Curriculum.STATUS.ENTERING || $scope.curriculum.status !== Curriculum.STATUS.CLOSED);
+        return $scope.curriculum && ($scope.curriculum.status === Curriculum.STATUS.VERIFIED || $scope.curriculum.status === Curriculum.STATUS.PROCEEDING);
     };
 
     $scope.changeJointMentors = function() {
@@ -315,7 +324,7 @@ angular.module('hitsaOis')
             scope.data =  angular.extend({}, editedSpecialty);
         }
         scope.maxCredits = $scope.curriculum.credits ? $scope.curriculum.credits : 0;
-        scope.readOnly = $scope.readOnly;
+        scope.readOnly = $scope.formState.readOnly;
       };
 
       dialogService.showDialog('higherCurriculum/higher.curriculum.specialty.add.dialog.html', DialogController,
@@ -400,7 +409,7 @@ angular.module('hitsaOis')
       if (editingGrade) {
         DialogController = function (scope) {
           scope.data = angular.extend({}, editingGrade);
-          scope.readOnly = $scope.readOnly;
+          scope.readOnly = $scope.formState.readOnly;
         };
       }
       dialogService.showDialog('higherCurriculum/higher.curriculum.grade.add.dialog.html', DialogController,
@@ -432,50 +441,38 @@ angular.module('hitsaOis')
 
     // --- Statuses
 
-    $scope.setStatus = function(newStatus) {
-        var prompt;
-        if(newStatus === 'OPPEKAVA_STAATUS_M') {
-            prompt = 'curriculum.statuschange.higher.proceed';
-        } else if(newStatus === 'OPPEKAVA_STAATUS_K') {
-            prompt = 'curriculum.statuschange.higher.verify';
-        } else if(newStatus === 'OPPEKAVA_STAATUS_C') {
-            prompt = 'curriculum.statuschange.higher.close';
-        }
-        dialogService.confirmDialog({prompt: prompt}, function() {
+   function setStatus(newStatus, messages) {
+        dialogService.confirmDialog({prompt: messages.prompt}, function() {
             $scope.curriculum.status = newStatus;
             // setTimeout is needed for validation of ng-required fields
-            setTimeout(save, 0);
+            setTimeout(function(){
+                save(messages);
+            }, 0);
         });
-    };
+    }
 
-    $scope.statuses = [
-        {code: 'OPPEKAVA_STAATUS_S', button: 'main.button.status.edit'},
-        {code: 'OPPEKAVA_STAATUS_M', button: 'main.button.status.approving'},
-        {code: 'OPPEKAVA_STAATUS_K', button: 'main.button.status.confirm'},
-        {code: 'OPPEKAVA_STAATUS_C', button: 'main.button.status.close'}
-    ];
-
-    $scope.filterStatusChangeOptions = function(status) {
-        if(!$scope.curriculum || !$scope.currentStatus || !status) {
-            return false;
-        }
-        var currentStatusCode = $scope.currentStatus;
-        var enabledStatusesToChange = {
-            'OPPEKAVA_STAATUS_S': ['OPPEKAVA_STAATUS_M', 'OPPEKAVA_STAATUS_C'],
-            'OPPEKAVA_STAATUS_M': ['OPPEKAVA_STAATUS_K', 'OPPEKAVA_STAATUS_C'],
-            'OPPEKAVA_STAATUS_K': ['OPPEKAVA_STAATUS_C'],
-            'OPPEKAVA_STAATUS_C': [],
+    $scope.setStatusProceed = function() {
+        var messages = {
+            prompt: $scope.formState.readOnly ? 'curriculum.statuschangeReadOnly.higher.proceed' : 'curriculum.statuschange.higher.proceed',
+            errorMessage: 'curriculum.error.inputFieldsNotFilledOnProcede',
+            updateSuccess: 'curriculum.success.proceed'
         };
-        return enabledStatusesToChange[currentStatusCode].indexOf(status.code) !== -1;
+        setStatus(Curriculum.STATUS.PROCEEDING, messages);
+    };
+
+    $scope.setStatusClosed = function() {
+        var messages = {
+            prompt: $scope.formState.readOnly ? 'curriculum.statuschangeReadOnly.higher.close' : 'curriculum.statuschange.higher.close'
+        };
+        setStatus(Curriculum.STATUS.CLOSED, messages);
     };
 
 
-
-    $scope.edit = function() {
+    $scope.goToEditForm = function() {
         if(!$scope.curriculum) {
             return;
         }
-        if($scope.curriculum.status === 'OPPEKAVA_STAATUS_K') {
+        if($scope.curriculum.status === Curriculum.STATUS.VERIFIED) {
             dialogService.confirmDialog({
             prompt: 'curriculum.prompt.editAccepted', 
             }, function(){
@@ -489,7 +486,26 @@ angular.module('hitsaOis')
     $scope.canBeEdited = function (){
         //TODO: add user role check
         var status = $scope.curriculum ? $scope.curriculum.status : null;
-        return $scope.readOnly && (status === 'OPPEKAVA_STAATUS_S' || status === 'OPPEKAVA_STAATUS_M' || status === 'OPPEKAVA_STAATUS_K');
+        return $scope.formState.readOnly && (status === Curriculum.STATUS.ENTERING || status === Curriculum.STATUS.PROCEEDING || status === Curriculum.STATUS.VERIFIED);
+    };
+
+    $scope.sendToEhis = function() {
+        message.info("curriculum.sentToEhis");
+        // $location.path('/vocationalCurriculum/' + $scope.curriculum.id + '/view?_senttoehis');
+        $location.path('/higherCurriculum/' + $scope.curriculum.id + '/view').search({_sentToEhis: true});
+    };
+
+    $scope.updateFromEhis = function() {
+        $scope.curriculum.status = Curriculum.STATUS.VERIFIED;
+        save({updateSuccess: "curriculum.message.statusUpdated"});
+    };
+
+    $scope.goToVersionForm = function(version) {
+        if($scope.formState.readOnly || version.status !== Curriculum.VERSION_STATUS.S) {
+            $location.path('/higherCurriculum/' + $scope.curriculum.id + '/version/' + version.id + '/view');
+        } else {
+            $location.path('/higherCurriculum/' + $scope.curriculum.id + '/version/' + version.id + '/edit');
+        }
     };
 
 

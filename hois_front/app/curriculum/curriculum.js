@@ -20,6 +20,12 @@ angular.module('hitsaOis')
         CLOSED: 'OPPEKAVA_STAATUS_C'        //Suletud
     };
 
+    Curriculum.VERSION_STATUS = {
+        S: 'OPPEKAVA_VERSIOON_STAATUS_S',   //Sisestamisel
+        K: 'OPPEKAVA_VERSIOON_STAATUS_K',   //Kinnitatud
+        C: 'OPPEKAVA_VERSIOON_STAATUS_C'    //Suletud
+    };
+
     Curriculum.query = function(params, successCallback) {
       var resource = $resource(config.apiUrl+'/curriculum');
       var queryParams = QueryUtils.getQueryParams(params);

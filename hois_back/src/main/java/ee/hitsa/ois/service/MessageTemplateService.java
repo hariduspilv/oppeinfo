@@ -2,6 +2,7 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +40,7 @@ import ee.hitsa.ois.web.dto.MessageTemplateDto;
 @Service
 public class MessageTemplateService {
 
-    private static final Logger log = LoggerFactory.getLogger(MessageTemplateService.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Autowired
     private MessageTemplateRepository messageTemplateRepository;
@@ -104,11 +105,9 @@ public class MessageTemplateService {
         });
 
         if (templates.isEmpty()) {
-            // TODO avoid use of String.format
-            log.error(String.format("no %s templates found for school %d", type.name(), schoolId));
+            log.error("no {} templates found for school {}", type.name(), schoolId);
         } else if (templates.size() > 1) {
-            // TODO avoid use of String.format
-            log.error(String.format("Multiple %s templates found for school %d", type.name(), schoolId));
+            log.error("Multiple {} templates found for school {}", type.name(), schoolId);
         }
 
         return templates.isEmpty() ? null : templates.get(0);

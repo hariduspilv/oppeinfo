@@ -1,10 +1,10 @@
 'use strict';
 
-angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, QueryUtils, ArrayUtils, DataUtils, Classifier, message, dialogService) {
+angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, QueryUtils, ArrayUtils, DataUtils, Classifier, message, dialogService) {
   var classifierMapper = Classifier.valuemapper({entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE', absence: 'PUUDUMINE'});
 
   function loadJournalEntries() {
-    $scope.journalEntriesCriteria = {size: 10, page: 1};
+    $scope.journalEntriesCriteria = {size: 20, page: 1};
     if (!angular.isDefined($scope.journalEntries)) {
       $scope.journalEntries = {};
     }
@@ -21,12 +21,24 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     $scope.loadJournalEntries();
   }
 
+  function dateComparator(v1, v2) {
+    if (v1.type !== 'string' || v2.type !== 'string') {
+      return (v1.index < v2.index) ? -1 : 1;
+    }
+    if(v1.value === null) {
+      return -1;
+    }
+    if(v2.value === null) {
+      return 1;
+    }
+    return $filter('hoisDate')(v1.value) > $filter('hoisDate')(v2.value) ? 1 : -1;
+  }
+
   function loadJournalStudents(showNonStudying) {
     var journalStudentsQueryPromise = QueryUtils.endpoint('/journals/' + entity.id + '/journalStudents').query({allStudents: !!showNonStudying}).$promise;
 
     QueryUtils.endpoint('/journals/' + entity.id + '/journalEntriesByDate').query({allStudents: !!showNonStudying}, function(result) {
       var journalEntriesByDate = result;
-      DataUtils.convertStringToDates(journalEntriesByDate, ["date"]);
       classifierMapper.objectmapper(journalEntriesByDate);
       journalEntriesByDate.forEach(function(it) {
         for (var p in it.journalStudentResults) {
@@ -35,7 +47,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           }
         }
       });
-      $scope.journal.journalEntriesByDate = journalEntriesByDate;
+      $scope.journal.journalEntriesByDate = $filter('orderBy')(journalEntriesByDate, 'entryDate', false, dateComparator);
 
       journalStudentsQueryPromise.then(function(result) {
         $scope.journal.journalStudents = result;
@@ -170,6 +182,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           dialogScope.journalEntry.nameEt = holder.entryType.nameEt;
         }
       };
+      dialogScope.grades = Classifier.queryForDropdown({mainClassCode: 'KUTSEHINDAMINE'});
     }, function(submittedDialogScope) {
       var newEntity = angular.extend({}, submittedDialogScope.journalEntry);
       journalEntryStudentsToArray(submittedDialogScope.journalEntryStudents, newEntity);

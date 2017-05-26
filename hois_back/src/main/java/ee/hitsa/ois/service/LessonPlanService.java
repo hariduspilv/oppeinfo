@@ -221,7 +221,7 @@ public class LessonPlanService {
     }
 
     public Journal saveJournal(Journal journal, LessonPlanJournalForm form) {
-        EntityUtil.bindToEntity(form, journal, classifierRepository);
+        EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers", "journalOccupationModuleThemes");
 
         List<JournalCapacityType> capacityTypes = journal.getJournalCapacityTypes();
         if(capacityTypes == null) {

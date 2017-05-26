@@ -247,7 +247,8 @@ angular.module('hitsaOis')
                   showOptions.push(code);
                 });
 
-                if (showOptions.length > 0 && (angular.isDefined(scope.showOnlyValues) || angular.isDefined(scope.filterValues))) {
+                //removed "showOptions.length > 0" for hiding all values if no connections found?
+                if ((angular.isDefined(scope.showOnlyValues) || angular.isDefined(scope.filterValues))) {
                   for(var key in scope.optionsByCode) {
                     scope.optionsByCode[key].hide = (showOptions.indexOf(key) === -1);
                   }

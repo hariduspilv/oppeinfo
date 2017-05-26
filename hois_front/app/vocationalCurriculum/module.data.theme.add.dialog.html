@@ -26,17 +26,41 @@
 
             <md-input-container flex="10">
               <label>EKAP</label>
-              <input ng-model="occupationModuleTheme.credits" type="number" ng-model-options='{ debounce: 500 }' ng-change="setDefaultHours()" required>
+              <input ng-model="occupationModuleTheme.credits" name="credits" type="number" min="0" max="999" ng-model-options='{ debounce: 500 }' ng-change="setDefaultHours()" required>
+                  <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
+                    <div ng-message="min">
+                        {{'main.messages.error.positive' | translate}}
+                    </div>
+                        <div ng-message="max">
+                        {{'curriculum.error.max999' | translate}}
+                    </div>
+                </div>
             </md-input-container>
 
             <md-input-container flex="10">
               <label>{{'main.hour' | translate}}</label>
-              <input ng-model="occupationModuleTheme.hours" type="number" required>
+              <input ng-model="occupationModuleTheme.hours" name="hours" type="number" min="0" max="999" required>
+                 <div ng-messages="dialogForm.hours.$error" ng-show="dialogForm.hours.$dirty">
+                    <div ng-message="min">
+                        {{'main.messages.error.positive' | translate}}
+                    </div>
+                        <div ng-message="max">
+                        {{'curriculum.error.max999' | translate}}
+                    </div>
+                </div>
             </md-input-container>
 
             <md-input-container flex="30">
               <label>{{'theme.proportionInModule' | translate}}</label>
-              <input ng-model="occupationModuleTheme.proportion" type="number" >
+              <input ng-model="occupationModuleTheme.proportion" type="number" name="proportion" min="0" max="999">
+                <div ng-messages="dialogForm.proportion.$error" ng-show="dialogForm.proportion.$dirty">
+                    <div ng-message="min">
+                        {{'main.messages.error.positive' | translate}}
+                    </div>
+                        <div ng-message="max">
+                        {{'curriculum.error.max999' | translate}}
+                    </div>
+                </div>
             </md-input-container>
 
             <md-input-container flex="20">
@@ -58,7 +82,7 @@
 				  <div flex="30">{{item[currentLanguageNameField()]}}</div>
 				  <div flex="30">
 					<md-input-container  flex>
-					  <input ng-model="occupationModuleTheme.capacities[$index].hours" type="number" aria-label="capacity hours" class="small-input"
+					  <input ng-model="occupationModuleTheme.capacities[$index].hours" type="number" min="0" max="999" aria-label="capacity hours" class="small-input"
                     ng-change="occupationModuleTheme.capacities[$index].capacityType = item.code" ng-required="occupationModuleTheme.capacities[$index].contact!==undefined">
 					</md-input-container>
 				  </div>

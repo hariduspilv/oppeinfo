@@ -1,5 +1,5 @@
-<div class="ois-form-layout-padding form-readonly" layout="column" ng-cloak>
-  <form name="personForm" class="ois-form-layout nomargin">
+<div class="ois-form-layout-padding form-readonly" ng-cloak>
+  <form name="personForm" class="ois-form-layout">
    <div layout="column" flex>
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100">
@@ -14,7 +14,7 @@
       <div layout="row">
         <md-input-container flex="20" flex-sm="100">
           <label>{{'teacher.person.birthdate' | translate}}</label>
-          <hois-value value="'main.formattedDate' | translate: {date: person.birthdate}"></hois-value>
+          <hois-value value="person.birthdate | hoisDate"></hois-value>
         </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
@@ -42,12 +42,15 @@
     <md-button ng-click="back('#/persons')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </form>
   <div ng-if="person.id">
+  <div>&nbsp;</div>
+   <fieldset>
+   <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'user.role' | translate}}</legend>
     <div layout="row" class="align-center">
-      <h2>{{'user.role' | translate}}</h2>
-      <md-button class="md-primary" ng-if="person.id" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
+      <md-button class="md-raised" ng-if="person.id" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
     </div >
     <div layout="row">
       <div ng-include="'persons/users.table.html'" flex></div>
     </div>
+	</fieldset>
   </div>
 </div>

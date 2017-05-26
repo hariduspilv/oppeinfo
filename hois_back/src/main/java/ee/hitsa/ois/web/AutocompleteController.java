@@ -20,6 +20,7 @@ import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
+import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -52,6 +53,16 @@ public class AutocompleteController {
         }
         List<String> codes = mainClassCodes != null ? mainClassCodes : Collections.singletonList(mainClassCode);
         return autocompleteService.classifiers(codes);
+    }
+
+    @GetMapping("/classifiers/withparents")
+    public List<ClassifierSelection> classifiersWithParents(@RequestParam(name = "mainClassCode", required = false) String mainClassCode,
+            @RequestParam(name = "mainClassCodes", required = false) List<String> mainClassCodes) {
+        if (mainClassCode == null && mainClassCodes == null) {
+            throw new IllegalArgumentException("mainClassCode or mainClassCodes must be specified");
+        }
+        List<String> codes = mainClassCodes != null ? mainClassCodes : Collections.singletonList(mainClassCode);
+        return autocompleteService.classifiersWithParents(codes);
     }
 
     @GetMapping("/curriculums")
@@ -101,7 +112,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/students")
-    public Page<AutocompleteResult> students(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+    public Page<AutocompleteResult> students(HoisUserDetails user, @Valid StudentAutocompleteCommand lookup) {
         return asPage(autocompleteService.students(user.getSchoolId(), lookup));
     }
 

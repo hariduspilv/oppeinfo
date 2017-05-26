@@ -61,7 +61,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</md-button>
+              <a md-no-ink class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
             </td>
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>

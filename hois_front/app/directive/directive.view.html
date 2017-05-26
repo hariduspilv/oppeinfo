@@ -56,7 +56,13 @@
       </div>
     </div>
 
-    <div ng-include="formState.templateUrl"></div>
+	
+		 <md-table-container>
+			<fieldset>
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'directive.studentList' | translate}}</legend>
+				<div ng-include="formState.templateUrl" flex></div>
+			</fieldset>	
+		</md-table-container>
 
     <md-button ng-click="back('#/directives')" class="md-raised">{{'main.button.back' | translate}}</md-button>
     <md-button ng-click="confirmDirective()" ng-if="record.status === 'KASKKIRI_STAATUS_KINNITAMISEL'" class="md-raised">{{'directive.confirmDuringTest' | translate}}</md-button>

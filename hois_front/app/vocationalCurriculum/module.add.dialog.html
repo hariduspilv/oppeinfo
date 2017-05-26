@@ -17,13 +17,13 @@
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
 				<div layout="column">
 				  <div ng-repeat="item in occupations">
-					<md-checkbox ng-model="occupationsSelected[item.occupation.code]" aria-label="{{item.occupation[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
+					<md-checkbox ng-model="occupationsSelected[item.occupation.code]" ng-change="validateOccupations()" aria-label="{{item.occupation[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
 					  {{item.occupation[currentLanguageNameField()]}}
 					</md-checkbox>
 					<div layout="column">
 						<div ng-repeat="partOccupation in item.partOccupations" flex layout="row">
 							<div flex="5">&nbsp;</div>
-							<md-checkbox ng-model="occupationsSelected[partOccupation.code]" aria-label="{{partOccupation[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
+							<md-checkbox ng-model="occupationsSelected[partOccupation.code]" ng-change="validateOccupations()" aria-label="{{partOccupation[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
 							  {{partOccupation[currentLanguageNameField()]}}
 							</md-checkbox>
 						 </div>
@@ -32,13 +32,17 @@
 					<div layout="column">
 					  <div ng-repeat="speciality in item.specialities"  layout="row">
 						<div flex="5">&nbsp;</div>
-							<md-checkbox ng-model="specialitiesSelected[speciality.code]" aria-label="{{speciality[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
+							<md-checkbox ng-model="specialitiesSelected[speciality.code]" ng-change="validateOccupations()" aria-label="{{speciality[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
 							  {{speciality[currentLanguageNameField()]}}
 							</md-checkbox>
 						</div>
 					</div>
 				  </div>
 				</div>
+                <md-input-container hide>
+                    <input ng-model="occupationsValid" type="text" required>
+                </md-input-container>
+                <p ng-show="dialogForm.$submitted && !occupationsValid" class="invalid">{{'curriculum.error.moduleOccupations' | translate}}</p>
 			</fieldset>
 			<div>&nbsp;</div>
 			<div layout="row" flex>
@@ -49,7 +53,15 @@
 			  </md-input-container>
 			  <md-input-container  flex="10" flex-offset="5">
 				<label>{{'module.credits' | translate}}</label>
-				<input ng-model="module.credits" type="number" min="0" max="999" required ng-readonly="formState.readOnly">
+				<input ng-model="module.credits" type="number" name="credits" min="0" max="999" required ng-readonly="formState.readOnly">
+                <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
+                    <div ng-message="min">
+                        {{'main.messages.error.positive' | translate}}
+                    </div>
+                        <div ng-message="max">
+                        {{'curriculum.error.max999' | translate}}
+                    </div>
+                </div>
 			  </md-input-container>
 		  </div>
           <md-input-container  flex>
@@ -77,7 +89,7 @@
               </div>
 			<div layout="row" flex>
                   <md-input-container flex="45">
-                    <label>{{'studyOutcome.nameEt' | translate}}</label>
+                    <label>{{'studyOutcome.nameEt' | translate}} *</label>
                     <textarea ng-model="outcomeEt" md-maxlength="20000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
                   </md-input-container>
                   <md-input-container flex="40" flex-offset="5">
@@ -151,6 +163,7 @@
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">
       <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!formState.readOnly">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="delete()" ng-if="!isNew && !formState.readOnly">{{"main.button.delete" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

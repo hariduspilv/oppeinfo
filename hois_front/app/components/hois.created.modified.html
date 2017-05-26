@@ -14,17 +14,17 @@
 				<tbody md-body>
 					<tr md-row ng-if="object.inserted" class="odd">
 						<td md-cell>{{'main.inserted' | translate}}</td>
-						<td md-cell>{{'main.formattedDateTime' | translate: {date: object.inserted} }}</td>
+						<td md-cell>{{object.inserted | hoisDateTime}}</td>
 						<td md-cell>{{object.insertedBy}}</td>
 					</tr>
 					<tr md-row ng-if="object.changed" class="even">
 						<td md-cell>{{'main.changed' | translate}}</td>
-						<td md-cell>{{'main.formattedDateTime' | translate: {date: object.changed} }}</td>
+						<td md-cell>{{object.changed | hoisDateTime}}</td>
 						<td md-cell>{{object.changedBy}}</td>
 					</tr>
 				</tbody>
 			</table>
 		</md-table-container>
-	</fieldset>		
+	</fieldset>
   <!--/md-card-->
 </div>

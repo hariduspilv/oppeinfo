@@ -9,17 +9,13 @@
             <input ng-model="criteria.headline" type="text">
         </md-input-container>
         <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex="20" flex-sm="100" flex-xs="100">
-                <label>{{'messageTemplate.validDate' | translate}}</label>
-                <input type="hidden">
-            </md-input-container>
-            <div flex="33">
+            <div flex="1//">
                 <md-input-container flex>
-                    <label>{{'main.from' | translate}}</label>
+                    <label>{{'messageTemplate.validFrom' | translate}}</label>
                     <md-datepicker ng-model="criteria.validFrom"></md-datepicker>
                 </md-input-container>
-                <md-input-container flex>
-                    <label>{{'main.thru' | translate}}</label>
+                <md-input-container flex flex-offset="5"	>
+                    <label>{{'messageTemplate.validThru' | translate}}</label>
                     <md-datepicker ng-model="criteria.validThru"></md-datepicker>
                 </md-input-container>
             </div>

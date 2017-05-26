@@ -203,4 +203,10 @@ public class StateCurriculumService {
             return new StateCurriculumModuleOccupation(c);
         });
     }
+
+    public StateCurriculum updateStateCurriculumModules(StateCurriculum stateCurriculum, StateCurriculumForm form) {
+        updateOccupations(stateCurriculum, form.getOccupations());
+        updateModules(stateCurriculum, form.getModules());
+        return stateCurriculumRepository.save(stateCurriculum);
+    }
 }

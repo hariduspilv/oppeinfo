@@ -1,5 +1,5 @@
 <md-table-container>
-  <table md-table>
+  <table md-table class="secondary-table">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
@@ -22,7 +22,7 @@
           <hois-classifier-select ng-model="row.finSpecific" filter-values="[row.oldFinSpecific]" model-value-attr="code" main-classifier-code="FINTAPSUSTUS" aria-label="{{'directive.student.finSpecific' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
-          <md-button ng-click="deleteStudent(row.idcode)" md-no-ink class="md-primary change-button">{{'main.button.delete' | translate}}</md-button>
+          <a ng-click="deleteStudent(row.idcode)" md-no-ink  class="remove">&times;</a>
         </td>
       </tr>
     </tbody>

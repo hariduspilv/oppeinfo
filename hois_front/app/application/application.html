@@ -1,4 +1,4 @@
-<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+<div class="ois-form-layout-padding" ng-cloak>
 
   <div flex>
     <form ng-submit="loadData()" layout="column" name="applicationForm">
@@ -6,7 +6,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label>{{'application.type' | translate}}</label>
-              <hois-classifier-select ng-model="application.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK" ng-change="application.student=undefined"></hois-classifier-select>
+              <hois-classifier-select ng-model="application.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK" ng-change="application.student=undefined"></hois-classifier-select> 
             </md-input-container>
         </div>
 
@@ -14,18 +14,18 @@
             <div flex="60" flex-sm="100" flex-xs="100">
               <hois-autocomplete ng-model="application.student" method="students" name="student"
                 label="student.label"></hois-autocomplete>
-            </div>
-        </div>
-      </div>
+            </div> 
+        </div> 
+      </div> 
 
-      <div ng-if="applicationEditView" style="padding-top: 1em">
-        <div ng-include="'application/templates/application.html'"></div>
+      <div ng-if="applicationEditView" style="padding-top: 1em">  
+        <div ng-include="'application/templates/application.html'"></div> 
       </div>
       <br/>
 
 
       <div ng-show="applicationEditView" layout="row">
-        <md-button ng-if="application.status === 'AVALDUS_STAATUS_KOOST' || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())" class="md-raised" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-if="application.status === 'AVALDUS_STAATUS_KOOST' || (application.status === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())" class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
         <div ng-include="'application/templates/action.buttons.html'"></div>
         <md-button ng-if="auth.isStudent()" ng-href="#/applications/student" class="md-raised">{{'main.button.back' | translate}}</md-button>
         <md-button ng-if="!auth.isStudent()" ng-click="back('#/applications/', applicationForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
@@ -34,5 +34,5 @@
         <md-button ng-click="back('#/applications/')" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
-  </div>
-</div>
+  </div> 
+</div>  

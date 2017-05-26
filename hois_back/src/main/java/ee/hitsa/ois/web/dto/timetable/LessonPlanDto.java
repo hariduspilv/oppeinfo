@@ -77,7 +77,7 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setNameEt(cm.getNameEt());
             dto.setNameEn(cm.getNameEn());
             dto.setTeacher(lessonPlanModule.getTeacher() != null ? AutocompleteResult.of(lessonPlanModule.getTeacher()) : null);
-            dto.setJournals(StreamUtil.toMappedList(r -> LessonPlanModuleJournalDto.of(r, capacityMapper), lessonPlanModule.getJournalOccupationModuleThemes().stream().map(r -> r.getJournal()).distinct()));
+            dto.setJournals(StreamUtil.toMappedList(r -> LessonPlanModuleJournalDto.of(r, lessonPlanModule, capacityMapper), lessonPlanModule.getJournalOccupationModuleThemes().stream().map(r -> r.getJournal()).distinct()));
             dto.setTotalHours(Integer.valueOf(lessonPlanModule.getCurriculumVersionOccupationModule().getCapacities().stream().mapToInt(CurriculumVersionOccupationModuleCapacity::getHours).sum()));
             return dto;
         }
@@ -108,18 +108,29 @@ public class LessonPlanDto extends LessonPlanForm {
     }
 
     public static class LessonPlanModuleJournalDto extends LessonPlanModuleJournalForm {
+
+        private Long lessonPlanModule;
         private String nameEt;
         private List<LessonPlanModuleJournalThemeDto> themes;
         private List<LessonPlanModuleJournalTeacherDto> teachers;
 
-        public static LessonPlanModuleJournalDto of(Journal journal, LessonPlanCapacityMapper capacityMapper) {
+        public static LessonPlanModuleJournalDto of(Journal journal, LessonPlanModule lessonPlanModule, LessonPlanCapacityMapper capacityMapper) {
             LessonPlanModuleJournalDto dto = EntityUtil.bindToDto(journal, new LessonPlanModuleJournalDto());
+            dto.setLessonPlanModule(EntityUtil.getId(lessonPlanModule));
             dto.setThemes(StreamUtil.toMappedList(r -> LessonPlanModuleJournalThemeDto.of(r.getCurriculumVersionOccupationModuleTheme()), journal.getJournalOccupationModuleThemes()));
             dto.setTeachers(StreamUtil.toMappedList(LessonPlanModuleJournalTeacherDto::of, journal.getJournalTeachers()));
 
             // all hours mapped by capacity type and week nr
             dto.setHours(capacityMapper.mapOutput(journal));
             return dto;
+        }
+
+        public Long getLessonPlanModule() {
+            return lessonPlanModule;
+        }
+
+        public void setLessonPlanModule(Long lessonPlanModule) {
+            this.lessonPlanModule = lessonPlanModule;
         }
 
         public String getNameEt() {
@@ -148,6 +159,7 @@ public class LessonPlanDto extends LessonPlanForm {
     }
 
     public static class LessonPlanModuleJournalThemeDto {
+
         private String nameEt;
         private BigDecimal credits;
         private String hours;
@@ -185,6 +197,7 @@ public class LessonPlanDto extends LessonPlanForm {
     }
 
     public static class LessonPlanModuleJournalTeacherDto {
+
         private AutocompleteResult teacher;
 
         public static LessonPlanModuleJournalTeacherDto of(JournalTeacher journalTeacher) {
@@ -202,6 +215,7 @@ public class LessonPlanDto extends LessonPlanForm {
     }
 
     public static class StudyPeriodDto {
+
         private Long id;
         private String nameEt;
         private String nameEn;

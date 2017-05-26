@@ -4,7 +4,7 @@ import ee.hitsa.ois.domain.Classifier;
 
 public class CurriculumUtil {
 
-    private static final char SCHOOL_STUDY_LEVEL = '5';
+    public static final char SCHOOL_STUDY_LEVEL = '5';
 
     /**
      *  Magic value here is 500(also contains weird values such as 7R)

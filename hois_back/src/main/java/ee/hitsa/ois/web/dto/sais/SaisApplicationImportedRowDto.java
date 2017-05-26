@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.dto.sais;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.sais.SaisApplication;
@@ -14,8 +14,8 @@ public class SaisApplicationImportedRowDto {
     private String firstName;
     private String lastName;
     private String admissionCode;
-    private Classifier applicationStatus;
-    private LocalDateTime applicationDate;
+    private String applicationStatus;
+    private LocalDate applicationDate;
 
     public SaisApplicationImportedRowDto() {
     }
@@ -29,16 +29,22 @@ public class SaisApplicationImportedRowDto {
         this.applicationNr = applicationNr;
         this.message = message;
     }
+    
+    public SaisApplicationImportedRowDto(String applicationNr, LocalDate applicationDate, String message) {
+        this.applicationNr = applicationNr;
+        this.applicationDate = applicationDate;
+        this.message = message;
+    }
 
     public SaisApplicationImportedRowDto(SaisApplication application, String message) {
-        this.applicationDate = application.getChanged();
+        this.applicationDate = application.getSubmitted();
         this.message = message;
         this.applicationNr = application.getApplicationNr();
         this.idCode = application.getIdcode();
         this.firstName = application.getFirstname();
         this.lastName = application.getLastname();
         this.admissionCode = application.getSaisAdmission().getCode();
-        this.applicationStatus = application.getStatus();
+        this.applicationStatus = application.getStatus().getCode();
     }
     
     
@@ -47,7 +53,7 @@ public class SaisApplicationImportedRowDto {
         StringBuilder sb = new StringBuilder();
         sb.append("applicationNr: ");
         sb.append(applicationNr);
-        if (message.isEmpty()) {
+        if (message != null && message.isEmpty()) {
             sb.append(";firstName: ");
             sb.append(firstName);
             sb.append(";lastName: ");
@@ -57,6 +63,8 @@ public class SaisApplicationImportedRowDto {
             sb.append(";admissionCode: ");
             sb.append(admissionCode);
         } else {
+            sb.append(";applicationDate: ");
+            sb.append(applicationDate);
             sb.append(";message: ");
             sb.append(message);
         }
@@ -80,11 +88,11 @@ public class SaisApplicationImportedRowDto {
         this.message = message;
     }
 
-    public LocalDateTime getApplicationDate() {
+    public LocalDate getApplicationDate() {
         return applicationDate;
     }
 
-    public void setApplicationDate(LocalDateTime applicationDate) {
+    public void setApplicationDate(LocalDate applicationDate) {
         this.applicationDate = applicationDate;
     }
 
@@ -128,11 +136,11 @@ public class SaisApplicationImportedRowDto {
         this.admissionCode = admissionCode;
     }
 
-    public Classifier getApplicationStatus() {
+    public String getApplicationStatus() {
         return applicationStatus;
     }
 
-    public void setApplicationStatus(Classifier applicationStatus) {
+    public void setApplicationStatus(String applicationStatus) {
         this.applicationStatus = applicationStatus;
     }
 

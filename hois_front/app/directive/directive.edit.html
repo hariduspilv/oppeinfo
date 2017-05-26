@@ -9,6 +9,7 @@
       </div>
 
       <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students && record.type !== 'KASKKIRI_IMMAT' && record.type !== 'KASKKIRI_IMMATV'">
+	    <div>&nbsp;</div>
         <md-table-container>
           <table md-table md-row-select multiple ng-model="formState.selectedStudents">
             <thead md-head>
@@ -61,20 +62,23 @@
           <label class="textInput">{{'directive.headline' | translate}}</label>
           <input type="text" ng-model="record.headline" name="headline" required md-maxlength="500">
         </md-input-container>
-
-        <md-input-container class="md-block">
-          <label class="textInput">{{'directive.inserted' | translate}}</label>
-          <hois-value value="record.inserted | hoisDate"></hois-value>
-        </md-input-container>
-
+		
+		<div class="form-readonly top-margin">
+			<md-input-container class="md-block">
+			  <label class="textInput">{{'directive.inserted' | translate}}</label>
+			  <hois-value value="record.inserted | hoisDate"></hois-value>
+			</md-input-container>
+		</div>
+		<div class="form-readonly top-margin">
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.insertedBy' | translate}}</label>
           <hois-value value="record.insertedBy"></hois-value>
         </md-input-container>
+		</div>
 
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.addInfo' | translate}}</label>
-          <textarea ng-model="record.addInfo" md-maxlength="4000"></textarea>
+          <textarea ng-model="record.addInfo" md-maxlength="4000" max-rows="10"></textarea>
         </md-input-container>
 
         <md-input-container class="md-block">
@@ -87,15 +91,25 @@
           <hois-classifier-select ng-model="formState.cancelType" ng-required="record.type === 'KASKKIRI_TYHIST'" main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
 
-        <div layout="row" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">
+        <!--div layout="row" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">
           <h3>{{'directive.studentList' | translate}}</h3>
           <md-button class="md-raised" ng-click="addStudents()">{{'directive.addStudents' | translate}}</md-button>
-        </div>
+        </div-->
+		
+		 <div>&nbsp;</div>
+		 <md-table-container>
+			<fieldset>
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'directive.studentList' | translate}}</legend>
+				<md-button class="md-raised" ng-click="addStudents()">{{'directive.addStudents' | translate}}</md-button>
+				<div ng-include="formState.templateUrl" flex></div>
+			</fieldset>	
+		</md-table-container>
+	</div>
 
-        <div ng-include="formState.templateUrl"></div>
+        <!--div ng-include="formState.templateUrl"></div-->
 
         <div layout="row">
-          <md-button class="md-raised" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm()">{{'directive.sendToConfirm' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
           <md-button ng-href="#/directives" class="md-raised">{{'main.button.back' | translate}}</md-button>

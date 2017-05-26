@@ -1,5 +1,6 @@
 package ee.hitsa.ois.util;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 
 public class ApplicationUtil {
 
-    private static final Logger log = LoggerFactory.getLogger(ApplicationUtil.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final long DAYS_IN_YEAR = 365L;
 
@@ -31,9 +32,8 @@ public class ApplicationUtil {
         long daysToUse = DAYS_IN_YEAR * years - daysUsed;
 
         if (daysToUse < applicationDays) {
-            // TODO avoid use of String.format
-            log.debug(String.format("Application period is %d days, maximum time is %d years, but %d days are already used",
-                    Long.valueOf(applicationDays), Long.valueOf(years), Long.valueOf(daysUsed)));
+            log.debug("Application period is {} days, maximum time is {} years, but {} days are already used",
+                    Long.valueOf(applicationDays), Long.valueOf(years), Long.valueOf(daysUsed));
             throw new ValidationFailedException("application.messages.periodIsTooLong");
         }
     }

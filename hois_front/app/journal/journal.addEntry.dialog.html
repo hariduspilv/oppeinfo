@@ -11,8 +11,7 @@
     </md-toolbar>
 
     <md-dialog-content>
-      <span flex></span>
-      <div class="ois-form-layout" layout="column" layout-margin>
+      <div class="md-dialog-content">
         <div flex>
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="45">
@@ -110,8 +109,8 @@
                       </span>
                       &nbsp;
                       <md-input-container>
-                        <hois-classifier-select ng-model="journalEntryStudents[row.id].grade"
-                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" model-value-attr="code" main-classifier-code="KUTSEHINDAMINE" aria-label="grade"></hois-classifier-select>
+                        <hois-select ng-model="journalEntryStudents[row.id].grade" values="grades" show-property="value" value-property="code"
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)" aria-label="grade"></hois-select>
                       </md-input-container>
                     </td>
                     <td md-cell>

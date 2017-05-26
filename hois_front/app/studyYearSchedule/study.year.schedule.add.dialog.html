@@ -13,11 +13,11 @@
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
           <span flex></span>
-          <h2>{{week.weekNr}}. {{"studyYearSchedule.week" | translate}}: {{'main.formattedDate' | translate: {date: week.start} }} - {{'main.formattedDate' | translate: {date: week.end} }}</h2>
+          <h2>{{week.weekNr}}. {{"studyYearSchedule.week" | translate}}: {{week.start | hoisDate}} - {{week.end | hoisDate}}</h2>
           <br>
 
         <md-input-container layout="row">
-            <md-radio-group ng-model="data.legend" layout="row"> 
+            <md-radio-group ng-model="data.legend" layout="row">
                 <span class="label">{{'studyYearSchedule.studyType' | translate}}</span>
                 <md-radio-button ng-value="null" aria-label="{{ 'select color' }}" layout="column">
                         <div class="colorCell" style="background: 'white'"></div>

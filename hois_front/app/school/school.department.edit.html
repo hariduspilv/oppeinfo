@@ -2,9 +2,7 @@
   <div>
     <form name="schoolDepartmentForm">
 
-      <div class="indentForToast"></div>
-
-      <md-input-container class="md-block">
+       <md-input-container class="md-block">
         <label>{{'school.department.code' | translate}}</label>
         <input ng-model="schoolDepartment.code" name="code" type="text" required md-maxlength="50">
       </md-input-container>
@@ -25,16 +23,14 @@
       </md-input-container>
 
       <div layout="row">
-        <md-input-container flex="20">
-          <label>{{'main.validityPeriod' | translate}}</label>
-          <input type="hidden">
-        </md-input-container>
-        <div flex="33">
+        <div flex="100">
           <md-input-container flex>
-            <md-datepicker ng-model="schoolDepartment.validFrom" md-placeholder="{{'school.department.validFrom' | translate}}" required></md-datepicker>
+            <label>{{'school.department.validFrom' | translate}}</label>
+			<md-datepicker ng-model="schoolDepartment.validFrom" required></md-datepicker>
           </md-input-container>
           <md-input-container flex>
-            <md-datepicker ng-model="schoolDepartment.validThru" md-min-date="schoolDepartment.validFrom" md-placeholder="{{'school.department.validThru' | translate}}"></md-datepicker>
+            <label>{{'school.department.validThru' | translate}}</label>
+			<md-datepicker ng-model="schoolDepartment.validThru" md-min-date="schoolDepartment.validFrom"></md-datepicker>
           </md-input-container>
         </div>
       </div>

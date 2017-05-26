@@ -14,6 +14,7 @@ import javax.persistence.Transient;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
 
 @Entity
 public class StateCurriculum extends BaseEntityWithId {
@@ -60,8 +61,19 @@ public class StateCurriculum extends BaseEntityWithId {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true)
 	@JoinColumn(name = "state_curriculum_id", nullable=false, updatable = false)
 	private Set<StateCurriculumOccupation> occupations = new HashSet<>();
+	
+    @OneToMany(mappedBy = "stateCurriculum")
+    private Set<Curriculum> curricula;
 
-	public String getEkrLevel() {
+    public Set<Curriculum> getCurricula() {
+        return curricula;
+    }
+
+    public void setCurricula(Set<Curriculum> curricula) {
+        this.curricula = curricula;
+    }
+
+    public String getEkrLevel() {
 		return ekrLevel;
 	}
 

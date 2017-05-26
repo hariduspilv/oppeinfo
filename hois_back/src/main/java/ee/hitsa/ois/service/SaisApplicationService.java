@@ -4,6 +4,9 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
 import java.nio.charset.CharsetDecoder;
@@ -17,6 +20,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -67,9 +71,11 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.SaisApplicationImportForm;
 import ee.hitsa.ois.web.commandobject.sais.SaisApplicationClassifiersCsv;
 import ee.hitsa.ois.web.commandobject.sais.SaisApplicationCsvRow;
@@ -79,6 +85,7 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationImportResultDto;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationImportedRowDto;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 import ee.hois.xroad.helpers.XRoadHeader;
+import ee.hois.xroad.helpers.sais.SaisAdmissionResponse;
 import ee.hois.xroad.helpers.sais.SaisApplicationResponse;
 import ee.hois.xroad.sais2.generated.AllAppsExportRequest;
 import ee.hois.xroad.sais2.generated.Application;
@@ -96,7 +103,7 @@ import ee.hois.xroad.sais2.service.SaisService;
 @Transactional
 @Service
 public class SaisApplicationService {
-    private static final Logger log = LoggerFactory.getLogger(SaisApplicationService.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String ESTONIAN = "ESTONIAN";
 
     private static final List<String> REVOKED_APPLICATION_STATUSES = Arrays.asList(SaisApplicationStatus.SAIS_AVALDUSESTAATUS_AL.name(),
@@ -136,6 +143,8 @@ public class SaisApplicationService {
     private Validator validator;
     @Autowired
     private SaisProperties sp;
+    @Autowired
+    private DirectiveService directiveService;
 
     private final SaisService saisService = new SaisService();
     private final CsvMapper csvMapper = new CsvMapper();
@@ -410,8 +419,7 @@ public class SaisApplicationService {
 
         Long admissionSchool = EntityUtil.getId(saisAdmission.getCurriculumVersion().getCurriculum().getSchool());
         if (!admissionSchool.equals(schoolId)) {
-            // TODO avoid use of String.format
-            log.error(String.format(messageForOther + "seotud õppekava/rakenduskava kool %d ei kuulu kasutaja koolile %d.", admissionSchool, schoolId));
+            log.error(messageForOther + "seotud õppekava/rakenduskava kool {} ei kuulu kasutaja koolile {}.", admissionSchool, schoolId);
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther + "seotud õppekava/rakenduskava kool ei ühti kasutaja kooliga."));
             return;
         }
@@ -419,8 +427,9 @@ public class SaisApplicationService {
         if (existingSaisApplication == null) {
             Set<ConstraintViolation<SaisApplication>> saisApplicationErrors = validator.validate(saisApplication, Default.class);
             if (!saisApplicationErrors.isEmpty()) {
-                // TODO avoid use of String building by hand. Use log.error() with string parameters
-                log.error("sais application validation failed: ["+ String.join("; ", StreamUtil.toMappedList(error -> error.getPropertyPath() + ": " + error.getMessage(), saisApplicationErrors)) + "]");
+                if(log.isErrorEnabled()) {
+                    log.error("sais application validation failed: [{}]", saisApplicationErrors.stream().map(error -> error.getPropertyPath() + ": " + error.getMessage()).collect(Collectors.joining("; ")));
+                }
                 failed.add(new SaisApplicationImportedRowDto(rowNr, "avalduse andmed on puudulikud salvestamiseks."));
                 return;
             }
@@ -429,8 +438,9 @@ public class SaisApplicationService {
         if (existingSaisAdmission == null) {
             Set<ConstraintViolation<SaisAdmission>> saisAdmissionErrors = validator.validate(saisAdmission, Default.class);
             if (!saisAdmissionErrors.isEmpty()) {
-                // XXX avoid use of String building by hand. Use log.error() with string parameters
-                log.error("sais admission validation failed: ["+ String.join("; ", StreamUtil.toMappedList(error -> error.getPropertyPath() + ": " + error.getMessage(), saisAdmissionErrors)) + "]");
+                if(log.isErrorEnabled()) {
+                    log.error("sais admission validation failed: [{}]", saisAdmissionErrors.stream().map(error -> error.getPropertyPath() + ": " + error.getMessage()).collect(Collectors.joining("; ")));
+                }
                 failed.add(new SaisApplicationImportedRowDto(rowNr, "konkursi andmed on puudulikud salvestamiseks."));
                 return;
             }
@@ -470,44 +480,73 @@ public class SaisApplicationService {
     public SaisApplicationImportResultDto importFromSais(SaisApplicationImportForm form, HoisUserDetails user) {
         SaisApplicationResponse applicationResponse = null;
         SaisApplicationImportResultDto dto = new SaisApplicationImportResultDto();
+        ClassifierCache classifiers = new ClassifierCache(classifierRepository);
 
         try {
             XRoadHeader xRoadHeader = getHeader(user);
-            AllAppsExportRequest request = getRequest(form, user);
+            AllAppsExportRequest request = getRequest(form, user, classifiers);
             applicationResponse = saisService.applicationsExport(xRoadHeader, request);
-            ClassifierCache classifiers = new ClassifierCache(classifierRepository);
-            EstonianIdCodeValidator idCodeValidator = new EstonianIdCodeValidator();
-            Map<String, SaisAdmission> admissionMap = new HashMap<>();
-            List<String> previousApplicationNrs = new ArrayList<>();
-            for(Application application : applicationResponse.getAppExportResponse().getApplications().getApplication()) {
-                previousApplicationNrs.add(application.getApplicationNumber());
-            }
-            Map<String, SaisApplication> previousApplications= saisApplicationRepository.findAllByApplicationNrIn(previousApplicationNrs)
-                    .stream().collect(Collectors.toMap(SaisApplication::getApplicationNr, a -> a));
-            
-            for(Application application : applicationResponse.getAppExportResponse().getApplications().getApplication()) {
-                SaisApplication prevApp = previousApplications.get(application.getApplicationNumber());
-                processApplication(application, prevApp, dto, classifiers, admissionMap, idCodeValidator);
+            applicationResponse.setQueryStart(LocalDateTime.now());
+            if(applicationResponse.getxRoadErrors() == null || applicationResponse.getxRoadErrors() != null && applicationResponse.getxRoadErrors()) {
+                EstonianIdCodeValidator idCodeValidator = new EstonianIdCodeValidator();
+                List<String> previousApplicationNrs = new ArrayList<>();
+                Map<String, SaisAdmission> admissionMap = new HashMap<>();
+                //look for all the application numbers to find previously imported applications with one query
+                for(Application application : applicationResponse.getAppExportResponse().getApplications().getApplication()) {
+                    previousApplicationNrs.add(application.getApplicationNumber());
+                }
+                Map<String, SaisApplication> previousApplications= saisApplicationRepository.findAllByApplicationNrIn(previousApplicationNrs)
+                        .stream().collect(Collectors.toMap(SaisApplication::getApplicationNr, a -> a));
+                Map<Long, Long> prevDirectives = null;
+                if(!previousApplications.isEmpty()) {
+                    prevDirectives = directiveService.directiveStudentsWithSaisApplication(previousApplications.values().stream().map(SaisApplication::getId).collect(Collectors.toList()));
+                }
+                for(Application application : applicationResponse.getAppExportResponse().getApplications().getApplication()) {
+                    SaisApplication prevApp = previousApplications.get(application.getApplicationNumber());
+                    if(prevApp != null && prevDirectives != null && prevDirectives.containsKey(prevApp.getId())) {
+                        String error = String.format("Avaldusega nr %s on seotud käskkiri - seda ei uuendata.", application.getApplicationNumber());
+                        dto.getFailed().add(new SaisApplicationImportedRowDto(application.getApplicationNumber(), error));
+                    } else {
+                        SaisApplicationImportedRowDto importedRow = processApplication(application, prevApp, classifiers, admissionMap, idCodeValidator);
+                        if(importedRow.getMessage() == null || importedRow.getMessage().isEmpty()) {
+                            dto.getSuccessful().add(importedRow);
+                        } else {
+                            dto.getFailed().add(importedRow);
+                        }
+                    }
+                }
+                applicationResponse.setQueryEnd(LocalDateTime.now());
+            } else {
+                throw new ValidationFailedException("reception.saisApplication.xRoadCommunication");
             }
         } catch (Exception e) {
-            log.error(e.getMessage(), e);
+            if(applicationResponse == null) {
+                applicationResponse = new SaisApplicationResponse();
+            }
+            applicationResponse.setError("Avalduste importimisel tekkis exception: " + ExceptionUtil.exceptionToStackTraceString(e));
+            applicationResponse.setxRoadErrors(Boolean.TRUE);
+            applicationResponse.setQueryName("sais2.AllApplicationsExport.v1");
+            log.error("Exception in SaisApplicationService.importFromSais: ", e);
         }
-        List<SaisApplicationImportedRowDto> result = Stream.concat(dto.getFailed().stream(), dto.getSuccessful().stream()).collect(Collectors.toList());
-        saisLogService.insertLog(applicationResponse, user, result.stream().collect(Collectors.toMap(SaisApplicationImportedRowDto::getApplicationNr, SaisApplicationImportedRowDto::toString)).toString());
+        List<SaisApplicationImportedRowDto> result = Stream.concat(dto.getFailed().stream(), dto.getSuccessful().stream())
+                .collect(Collectors.toList());
+        saisLogService.insertLog(applicationResponse, user, result.stream().collect(Collectors
+                .toMap(SaisApplicationImportedRowDto::getApplicationNr, SaisApplicationImportedRowDto::toString)).toString());
 
         return dto;
     }
-    
-    private void processApplication(Application application, SaisApplication prevApp,
-            SaisApplicationImportResultDto dto, ClassifierCache classifiers, Map<String, SaisAdmission> admissionMap,
+
+    private SaisApplicationImportedRowDto processApplication(Application application, SaisApplication prevApp, ClassifierCache classifiers, 
+            Map<String, SaisAdmission> admissionMap,
             EstonianIdCodeValidator idCodeValidator) {
         SaisApplication saisApplication;
-        if(prevApp != null && prevApp.getIdcode() == application.getIdCode()) {
+        SaisAdmission saisAdmission = null;
+        if(prevApp != null && prevApp.getIdcode().equals(application.getIdCode())) {
             saisApplication = prevApp;
         } else {
             saisApplication = new SaisApplication();
         }
-        
+
         saisApplication.setApplicationNr(application.getApplicationNumber());
         if(admissionMap.get(application.getAdmissionCode()) == null) {
             SaisAdmission admission = saisAdmissionRepository.findByCode(application.getAdmissionCode());
@@ -516,34 +555,35 @@ public class SaisApplicationService {
             }
         }
         saisApplication.setSaisAdmission(admissionMap.get(application.getAdmissionCode()));
+        saisAdmission = admissionMap.get(application.getAdmissionCode());
         saisApplication.setStatus(classifiers.getByEhisValue(application.getApplicationStatus().getValue(), MainClassCode.SAIS_AVALDUSESTAATUS));
         saisApplication.setFirstname(application.getFirstName());
         saisApplication.setLastname(application.getLastName());
         if(application.getDateModified() != null) {
             Date modifiedDate = application.getDateModified().toGregorianCalendar().getTime();
-            saisApplication.setSaisChanged(LocalDateTime.ofInstant(modifiedDate.toInstant(), ZoneId.systemDefault()).toLocalDate());
+            saisApplication.setChanged(LocalDateTime.ofInstant(modifiedDate.toInstant(), ZoneId.systemDefault()));
+            saisApplication.setSubmitted(LocalDateTime.ofInstant(modifiedDate.toInstant(), ZoneId.systemDefault()).toLocalDate());
         }
         saisApplication.setIdcode(application.getIdCode());
-        
+
         //siia validate et ei tootleks mottetult avaldusi
         String error = "";
-        error = validate(saisApplication, prevApp, idCodeValidator);
+        error = validate(saisApplication, saisAdmission, prevApp, idCodeValidator);
         if(!error.isEmpty()) {
-            dto.getFailed().add(new SaisApplicationImportedRowDto(saisApplication.getApplicationNr(), error));
-            return;
+            return new SaisApplicationImportedRowDto(saisApplication.getApplicationNr(), saisApplication.getSubmitted(), error);
         }
-        
+
         saisApplication.setSaisId(application.getId());
         if(application.getBirthday() != null) {
             Date startDate = application.getBirthday().toGregorianCalendar().getTime();
             saisApplication.setBirthdate(LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault()).toLocalDate());
         }
-        
+
         if(application.getOtherIdNumber() != null) {
             saisApplication.setForeignIdcode(application.getOtherIdNumber());
         }
-        
-        String address = new String();
+
+        String address = "";
         for(CandidateAddress currAddress : application.getCandidateAddresses().getCandidateAddress()) {
             if(currAddress != null) {
                 address += currAddress.getAddress();
@@ -553,7 +593,7 @@ public class SaisApplicationService {
             }
         }
         saisApplication.setAddress(address);
-        
+
         String sexCode = EstonianIdCodeValidator.sexFromIdcode(application.getSexClassification().getValue());
         if (StringUtils.hasText(sexCode)) {
             saisApplication.setSex(classifiers.getByCode(sexCode, MainClassCode.SUGU));
@@ -565,10 +605,18 @@ public class SaisApplicationService {
         saisApplication.setPoints(application.getApplicationTotalPoints());
         saisApplication.setCitizenship(classifiers.get(application.getCitizenshipCountry().getValue(), MainClassCode.RIIK));
         saisApplication.setStudyLoad(classifiers.getByCode((Boolean.TRUE.equals(application.isIsFullLoad()) ? StudyLoad.OPPEKOORMUS_TAIS : StudyLoad.OPPEKOORMUS_OSA).name(), MainClassCode.OPPEKOORMUS));
-        saisApplication.setResidenceCountry(classifiers.get(application.getResidenceCountry().getValue(), MainClassCode.RIIK));
+        if(application.getResidenceCountry() != null) {
+            saisApplication.setResidenceCountry(classifiers.get(application.getResidenceCountry().getValue(), MainClassCode.RIIK));
+        } else {
+            saisApplication.setResidenceCountry(classifiers.get("EST", MainClassCode.RIIK));
+        }
         saisApplication.setStudyForm(classifiers.get(application.getStudyForm().getValue(), MainClassCode.OPPEVORM));
-        saisApplication.setLanguage(saisApplication.getSaisAdmission().getLanguage());
-        
+        saisApplication.setLanguage(saisAdmission.getLanguage());
+
+        saisApplication.getGrades().clear();
+        saisApplication.getGraduatedSchools().clear();;
+        saisApplication.getOtherData().clear();
+
         for(CandidateEducation education : application.getCandidateEducations().getCandidateEducation()) {
             processEducation(education, saisApplication, classifiers);
         }
@@ -578,16 +626,20 @@ public class SaisApplicationService {
         for(ApplicationFormData data : application.getApplicationFormData().getApplicationFormData()) {
             processData(data, saisApplication);
         }
-        saisApplicationRepository.save(saisApplication);
-        dto.getSuccessful().add(new SaisApplicationImportedRowDto(saisApplication, null));
+        
+        saisAdmission.getApplications().add(saisApplication);
+        saisAdmissionRepository.save(saisAdmission);
+
+        return new SaisApplicationImportedRowDto(saisApplication, null);
     }
     
     //if returned string is empty then there is no error, otherwise returns a string containing the error message
-    private static String validate(SaisApplication application, SaisApplication previousApplication, EstonianIdCodeValidator idCodeValidator) {
+    private static String validate(SaisApplication application, SaisAdmission saisAdmission, 
+            SaisApplication previousApplication, EstonianIdCodeValidator idCodeValidator) {
         String messageForMissing = String.format("Avaldusel nr %s puudub ", application.getApplicationNr());
         String messageForOther = String.format("Avaldusega nr %s ", application.getApplicationNr());
-        
-        if(application.getSaisAdmission() == null) {
+
+        if(saisAdmission == null) {
             return String.format("Avaldusele nr %s ei leitud konkurssi.", application.getApplicationNr());
         }
         if(application.getStatus() == null) {
@@ -599,93 +651,79 @@ public class SaisApplicationService {
         if(application.getLastname() == null) {
             return messageForMissing + "kandideerija perekonnanimi";
         }
-        if(application.getChanged() == null) {
+        if(application.getSubmitted() == null) {
             return messageForMissing + "esitamise kuupäev";
         }
         if(!idCodeValidator.isValid(application.getIdcode(), null)) {
             return messageForOther + "seotud isiku isikukood ei ole korrektne";
         }
-        if(previousApplication != null && application.getIdcode() != previousApplication.getIdcode()) {
+        if(previousApplication != null && !application.getIdcode().equals(previousApplication.getIdcode())) {
             return String.format("Avaldus nr %s on süsteemis juba seotud teise isikuga (%s)", application.getApplicationNr(), previousApplication.getIdcode());
         }
-        
+
         return "";
     }
-    
-    private void processEducation(CandidateEducation education, SaisApplication application, ClassifierCache classifiers) {
+
+    private static void processEducation(CandidateEducation education, SaisApplication application, ClassifierCache classifiers) {
         SaisApplicationGraduatedSchool graduated = new SaisApplicationGraduatedSchool();
-        graduated.setSaisApplication(application);
         graduated.setName(education.getInstitutionName());
-        Date startDate = education.getStudyBeginDate().toGregorianCalendar().getTime();
-        graduated.setStartDate(LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault()));
-        Date endDate = education.getStudyEndDate().toGregorianCalendar().getTime();
-        graduated.setEndDate(LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault()));
+        if(education.getStudyBeginDate() != null) {
+            Date startDate = education.getStudyBeginDate().toGregorianCalendar().getTime();
+            graduated.setStartDate(LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault()));
+        }
+        if(education.getStudyEndDate() != null) {
+            Date endDate = education.getStudyEndDate().toGregorianCalendar().getTime();
+            graduated.setEndDate(LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault()));
+        }
         graduated.setRegCode(education.getInstitutionRegNr() != null ? education.getInstitutionRegNr().toString() : "");
         graduated.setIsAbroad(education.getInstitutionCountry() == null || "EST".equals(education.getInstitutionCountry().getValue()) ? Boolean.FALSE : Boolean.TRUE);
         graduated.setStudyLevel(classifiers.get(education.getEhisLevel().getValue(), MainClassCode.OPPEASTE));
-        graduated.setStudyForm(classifiers.get(education.getStudyFormClassification().getValue(), MainClassCode.OPPEVORM));
-        
-        em.persist(graduated);
-        
+        if(education.getStudyFormClassification() != null) {
+            graduated.setStudyForm(classifiers.get(education.getStudyFormClassification().getValue(), MainClassCode.OPPEVORM));
+        }
         for(CandidateGrade grade : education.getCandidateGrades().getCandidateGrade()) {
             processGrade(grade, application);
         }
+        application.getGraduatedSchools().add(graduated);
     }
-    
-    private void processGrade(CandidateGrade grade, SaisApplication application) {
+
+    private static void processGrade(CandidateGrade grade, SaisApplication application) {
         SaisApplicationGrade applicationGrade = new SaisApplicationGrade();
-        applicationGrade.setSaisApplication(application);
-        // XXX refactor to generic Kvp handling
-        for(Kvp kvp : grade.getCurriculumClassification().getTranslations().getKvp()) {
-            if(ESTONIAN.equals(kvp.getKey().toUpperCase())) {
-                applicationGrade.setSubjectName(kvp.getValue());
-            }
-        }
+        applicationGrade.setSubjectName(kvpHandler(grade.getCurriculumClassification().getTranslations().getKvp(), ESTONIAN));
         applicationGrade.setSubjectName(grade.getCurriculumClassification().getClassificationTypeName());
         applicationGrade.setGrade(grade.getGrade() != null ? grade.getGrade().toString() : "");
-        
-        em.persist(applicationGrade);
+        application.getGrades().add(applicationGrade);
     }
-    
-    private void processExam(CandidateStateExam exam, SaisApplication application) {
+
+    private static void processExam(CandidateStateExam exam, SaisApplication application) {
         SaisApplicationGrade applicationGrade = new SaisApplicationGrade();
-        applicationGrade.setSaisApplication(application);
-        // XXX refactor to generic Kvp handling
-        for(Kvp kvp : exam.getStateExamClassification().getTranslations().getKvp()) {
-            if(ESTONIAN.equals(kvp.getKey().toUpperCase())) {
-                applicationGrade.setSubjectName(kvp.getValue());
-            }
-        }
+        applicationGrade.setSubjectName(kvpHandler(exam.getStateExamClassification().getTranslations().getKvp(), ESTONIAN));
         applicationGrade.setSubjectName(exam.getStateExamClassification().getClassificationTypeName());
-        applicationGrade.setGrade(new Integer(exam.getResult()).toString());
-        
-        em.persist(applicationGrade);
+        applicationGrade.setGrade(Integer.toString(exam.getResult()));
+        application.getGrades().add(applicationGrade);
+    }
+
+    private static void processData(ApplicationFormData data, SaisApplication application) {
+        SaisApplicationOtherData otherData = new SaisApplicationOtherData();
+        otherData.setOtherDataName(kvpHandler(data.getFieldName().getKvp(), ESTONIAN));
+        for(FormFieldOption ffo : data.getSelectedOptions().getFormFieldOption()) {
+            otherData.setOtherDataValue(kvpHandler(ffo.getName().getKvp(), ESTONIAN));
+        }
+        application.getOtherData().add(otherData);
     }
     
-    private void processData(ApplicationFormData data, SaisApplication application) {
-        SaisApplicationOtherData otherData = new SaisApplicationOtherData();
-        otherData.setSaisApplication(application);
-        // XXX refactor to generic Kvp handling
-        for(Kvp kvp : data.getFieldName().getKvp()) {
-            if(kvp.getKey().toUpperCase().equals(ESTONIAN)) {
-                otherData.setOtherDataName(kvp.getValue());
+    private static String kvpHandler(List<Kvp> kvpList, String targetLanguage) {
+        for(Kvp kvp : kvpList) {
+            if(kvp.getKey().toUpperCase().equals(targetLanguage)) {
+                return kvp.getValue();
             }
         }
-        for(FormFieldOption ffo : data.getSelectedOptions().getFormFieldOption()) {
-            // XXX refactor to generic Kvp handling
-            for(Kvp kvp : ffo.getName().getKvp()) {
-                if(kvp.getKey().toUpperCase().equals(ESTONIAN)) {
-                    otherData.setOtherDataValue(kvp.getValue());
-                }
-            }
-        }
-        
-        em.persist(otherData);
+        return null;
     }
 
     private XRoadHeader getHeader(HoisUserDetails user) {
         XRoadHeader xRoadHeader = new XRoadHeader();
- 
+
         xRoadHeader.setConsumer(sp.getConsumer());
         xRoadHeader.setEndpoint(sp.getEndpoint());
         xRoadHeader.setProducer(sp.getProducer());
@@ -694,8 +732,8 @@ public class SaisApplicationService {
         xRoadHeader.setService("sais2.AllApplicationsExport.v1");
         return xRoadHeader;
     }
-    
-    private AllAppsExportRequest getRequest(SaisApplicationImportForm form, HoisUserDetails user) {
+
+    private AllAppsExportRequest getRequest(SaisApplicationImportForm form, HoisUserDetails user, ClassifierCache classifiers) {
         AllAppsExportRequest request = new AllAppsExportRequest();
         try {
             if (form.getApplicationDateFrom() != null && form.getApplicationDateTo() != null) {
@@ -704,18 +742,18 @@ public class SaisApplicationService {
                 gcal = GregorianCalendar.from(form.getApplicationDateTo().atStartOfDay(ZoneId.systemDefault()));
                 request.setStatusChangeDateTo(DatatypeFactory.newInstance().newXMLGregorianCalendar(gcal));
             }
-            if(form.getIdCode() != null) {
+            if(form.getIdCode() != null && !form.getIdCode().equals("")) {
                 request.setIdCode(form.getIdCode());
             }
             if(form.getStatus() != null) {
                 ArrayOfString aos = new ArrayOfString();
                 for(String value : form.getStatus()) {
-                    aos.getString().add(value);
+                    aos.getString().add(classifiers.getByCode(value, MainClassCode.SAIS_AVALDUSESTAATUS).getEhisValue());
                 }
                 request.setApplicationStatusValues(aos);
             }
             if(form.getAdmissionCode() != null) {
-                request.setAdmissionId(form.getAdmissionCode());
+                request.setAdmissionId(saisAdmissionRepository.findByCode(form.getAdmissionCode()).getSaisId());
             }
             ArrayOfInt aoi = new ArrayOfInt();
             Classifier ehisSchool = schoolRepository.getOne(user.getSchoolId()).getEhisSchool();
@@ -766,7 +804,7 @@ class ClassifierCache {
     public Classifier getByCode(String value, MainClassCode mainClassCode) {
         return get(value, mainClassCode, Boolean.TRUE);
     }
-    
+
     public Classifier getByEhisValue(String ehisValue, MainClassCode mainClassCode) {
         Map<String, Classifier> cache = classifiers.computeIfAbsent(mainClassCode, key -> new HashMap<>());
         Classifier c = cache.get(ehisValue);

@@ -51,12 +51,12 @@
         <div layout="row" layout-sm="column" layout-xs="column">
             <md-input-container class="label-only" flex="30" flex-sm="100" flex-xs="100">
               <label>{{'studyYear.startDate' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: saisAdmission.periodStart}" ></hois-value>
+              <hois-value value="saisAdmission.periodStart | hoisDate" ></hois-value>
             </md-input-container>
 
             <md-input-container flex="30" flex-sm="100" flex-xs="100">
               <label>{{'studyYear.endDate' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: saisAdmission.periodEnd}"></hois-value>
+              <hois-value value="saisAdmission.periodEnd | hoisDate"></hois-value>
             </md-input-container>
         </div>
       <br/>

@@ -113,18 +113,18 @@ public class StudyYearScheduleService {
         schedule.setSchool(school);
         
         StudyPeriod studyPeriod = studyPeriodRepository.getOne(dto.getStudyPeriod());
-        AssertionFailedException.throwIf(!studyPeriod.getStudyYear().getSchool().getId().equals(school.getId()),
+        AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(school.getId()),
         "Wrong studyPeriod's school!");
         schedule.setStudyPeriod(studyPeriod);
         
         StudentGroup sg = studentGroupRepository.getOne(dto.getStudentGroup());
-        AssertionFailedException.throwIf(!sg.getSchool().getId().equals(school.getId()),
+        AssertionFailedException.throwIf(!EntityUtil.getId(sg.getSchool()).equals(school.getId()),
         "Wrong studentGroups's school!");
         schedule.setStudentGroup(sg);
         
         StudyYearScheduleLegend legend = studyYearScheduleLegendRepository
                 .getOne(dto.getStudyYearScheduleLegend());
-        AssertionFailedException.throwIf(!legend.getSchool().getId().equals(school.getId()),
+        AssertionFailedException.throwIf(!EntityUtil.getId(legend.getSchool()).equals(school.getId()),
         "Wrong legend's school!");
         schedule.setStudyYearScheduleLegend(legend);
         

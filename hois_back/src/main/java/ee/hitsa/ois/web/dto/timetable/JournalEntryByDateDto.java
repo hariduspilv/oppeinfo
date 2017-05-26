@@ -10,22 +10,21 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class JournalEntryByDateDto {
 
-    private LocalDate date;
+    private LocalDate entryDate;
     private Integer startLessonNr;
     private String nameEt;
     @ClassifierRestriction(MainClassCode.SISSEKANNE)
     private String entryType;
     private String teacher;
-    //Key is JournalStudent ID
+    // Key is JournalStudent ID
     private Map<Long, List<JournalEntryStudentResultDto>> journalStudentResults = new HashMap<>();
 
-
-    public LocalDate getDate() {
-        return date;
+    public LocalDate getEntryDate() {
+        return entryDate;
     }
 
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setEntryDate(LocalDate entryDate) {
+        this.entryDate = entryDate;
     }
 
     public Integer getStartLessonNr() {
@@ -67,6 +66,5 @@ public class JournalEntryByDateDto {
     public void setJournalStudentResults(Map<Long, List<JournalEntryStudentResultDto>> journalStudentResults) {
         this.journalStudentResults = journalStudentResults;
     }
-
 
 }

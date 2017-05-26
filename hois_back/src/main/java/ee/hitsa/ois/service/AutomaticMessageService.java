@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 
@@ -38,7 +39,7 @@ import ee.hitsa.ois.util.StudentUtil;
 @Service
 public class AutomaticMessageService {
 
-    private static final Logger log = LoggerFactory.getLogger(AutomaticMessageService.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private final ExpressionParser spelParser = new SpelExpressionParser();
 
@@ -143,8 +144,9 @@ public class AutomaticMessageService {
             message.setContent(content);
             return message;
         } catch (Exception e) {
-            // TODO avoid use of String.format
-            log.error(String.format("message %s could not be sent for school %d", type.name(), schoolId), e);
+            if(log.isErrorEnabled()) {
+                log.error(String.format("message %s could not be sent for school %d", type.name(), schoolId), e);
+            }
         }
         return null;
     }

@@ -24,6 +24,7 @@ import ee.hitsa.ois.domain.sais.SaisClassifier;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.sais.SaisClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
@@ -130,7 +131,7 @@ public class SaisClassifierService {
             // TODO calculate count from classificationResponse
             classificationResponse.setRecordCount(saisClassifierRepository.count());
             } catch (Exception e) {
-                classificationResponse.setError(e.getStackTrace().toString());
+                classificationResponse.setError(ExceptionUtil.exceptionToStackTraceString(e));
                 classificationResponse.setProcessingErrors(Boolean.TRUE);
             }
             classificationResponse.setQueryEnd(LocalDateTime.now());
@@ -138,7 +139,7 @@ public class SaisClassifierService {
             if(classificationResponse == null) {
                 classificationResponse = new SaisClassificationResponse();
             }
-            classificationResponse.setError(e.getStackTrace().toString());
+            classificationResponse.setError(ExceptionUtil.exceptionToStackTraceString(e));
             classificationResponse.setxRoadErrors(Boolean.TRUE);
         }
         saisLogService.insertLog(classificationResponse, user, null);

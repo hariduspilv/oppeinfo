@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalTime;
 
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.timetable.LessonTime;
@@ -17,6 +18,7 @@ public class LessonTimeDto {
     @NotNull
     private LocalTime endTime;
     @NotNull
+    @Min(1)
     private Integer lessonNr;
     private Boolean dayMon;
     private Boolean dayTue;

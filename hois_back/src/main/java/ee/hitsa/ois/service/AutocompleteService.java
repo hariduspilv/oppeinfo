@@ -25,6 +25,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumModuleRepository;
@@ -41,6 +42,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
+import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -118,6 +120,28 @@ public class AutocompleteService {
         }
         return result;
     }
+    /**
+     * Get list of classifiers with parents (bound via ClassifierConnect) for filtering in front-end
+     */
+    public List<ClassifierSelection> classifiersWithParents(List<String> mainClassCodes) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from classifier c left join (select array_agg(cc.connect_classifier_code) as parent, cc.classifier_code from classifier_connect cc group by cc.classifier_code) parents on c.code = parents.classifier_code");
+        qb.requiredCriteria("c.main_class_code in :mainClassCodes", "mainClassCodes", mainClassCodes);
+        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value, array_to_string(parents.parent, ', ')", em).getResultList();
+        List<ClassifierSelection> result = StreamUtil.toMappedList(r -> {
+            ClassifierSelection c = new ClassifierSelection(resultAsString(r, 0),
+                    resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
+                    resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
+                    resultAsString(r, 7), resultAsString(r, 8));
+            String parents = resultAsString(r, 9);
+            if(parents != null) {
+                c.setParents(Arrays.asList(parents.split(", ")));
+            }
+            return c;
+        }, data);
+        if(mainClassCodes.size() == 1) {
+            ClassifierUtil.sort(mainClassCodes.get(0), result);
+        }
+        return result;    }
 
     public List<AutocompleteResult> curriculums(Long schoolId, AutocompleteCommand term) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum c");
@@ -220,13 +244,33 @@ public class AutocompleteService {
         }, data);
     }
 
-    public List<AutocompleteResult> students(Long schoolId, AutocompleteCommand lookup) {
+    public List<AutocompleteResult> students(Long schoolId, StudentAutocompleteCommand lookup) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from student s inner join person p on s.person_id = p.id").sort("p.lastname", "p.firstname");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", lookup.getName());
         qb.optionalCriteria("s.id = :studentId", "studentId", lookup.getId());
+
+        if (Boolean.TRUE.equals(lookup.getActive())) {
+            qb.requiredCriteria("s.status_code in :statusCodes", "statusCodes", StudentStatus.STUDENT_STATUS_ACTIVE);
+        }
+        if (Boolean.TRUE.equals(lookup.getStudying())) {
+            qb.requiredCriteria("s.status_code = :statusCode", "statusCode", StudentStatus.OPPURSTAATUS_O);
+        }
+        if (Boolean.TRUE.equals(lookup.getAcademicLeave())) {
+            qb.requiredCriteria("s.status_code = :statusCode", "statusCode", StudentStatus.OPPURSTAATUS_A);
+        }
+        if (Boolean.TRUE.equals(lookup.getNominalStudy())) {
+            qb.requiredCriteria("s.nominal_study_end > :currentDate", "currentDate", LocalDate.now());
+        }
+        if (Boolean.TRUE.equals(lookup.getHigher())) {
+            qb.requiredCriteria("exists (select c.id from curriculum c "
+                    + "inner join classifier osl on osl.code = c.orig_study_level_code "
+                    + "inner join curriculum_version cv on cv.curriculum_id = c.id "
+                    + "where s.curriculum_version_id = cv.id and "
+                    + "cast(substring(osl.value, 1, 1) as int) >= :higherLevelStudyStartCode)", "higherLevelStudyStartCode", Long.valueOf(String.valueOf(CurriculumUtil.SCHOOL_STUDY_LEVEL)));
+        }
 
         List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
         return StreamUtil.toMappedList(r -> {

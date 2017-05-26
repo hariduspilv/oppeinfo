@@ -1,5 +1,5 @@
 <div class="ois-form-layout-padding form-readonly" layout="column" ng-cloak>
-  <form name="userForm" class="ois-form-layout nomargin">
+  <form name="userForm" class="ois-form-layout">
     <div layout="column" flex>
       <div layout="row" flex>
         <md-input-container flex>
@@ -21,17 +21,17 @@
       </md-input-container>
       <md-input-container flex>
         <label>{{'user.validFrom' | translate}}</label>
-        <hois-value value="'main.formattedDate' | translate: {date: user.validFrom}"></hois-value>
+        <hois-value value="user.validFrom | hoisDate"></hois-value>
       </md-input-container>
       <md-input-container flex>
         <label>{{'user.validThru' | translate}}</label>
-        <hois-value value="'main.formattedDate' | translate: {date: user.validThru}"></hois-value>
+        <hois-value value="user.validThru | hoisDate"></hois-value>
       </md-input-container>
     </div>
     <div layout-padding>
       <div flex>
         <md-table-container>
-          <table md-table ng-show="user.role">
+          <table md-table ng-show="user.role" class="secondary-table">
             <thead md-head>
             <tr md-row>
               <th md-column>{{'user.rights.right' | translate}}</th>

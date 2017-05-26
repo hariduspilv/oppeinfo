@@ -1,9 +1,8 @@
-<div layout="column" layout-padding>
+<div layout="column" class="ois-form-layout-padding">
   <div>
     <form name="studentGroupForm">
 
-      <div class="indentForToast"></div>
-
+    <div layout="column">
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'studentGroup.code' | translate}}</label>
@@ -43,8 +42,10 @@
           <hois-classifier-select ng-model="record.language" name="language" ng-disabled="record.id" main-classifier-code="OPPEKEEL" show-only-values="formState.languages" model-value-attr="code" required></hois-classifier-select>
         </md-input-container>
 
-        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-          <hois-classifier-value ng-model="formState.origStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
+		
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" class="readonly top-margin">
+          <label>{{'student.studyLevel' | translate}}</label>
+		  <hois-classifier-value ng-model="formState.origStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
         </md-input-container>
       </div>
 
@@ -60,22 +61,21 @@
       </div>
 
       <div layout="row">
-        <md-input-container flex="20">
-          <label>{{'main.validityPeriod' | translate}}</label>
-          <input type="hidden">
-        </md-input-container>
         <div flex="33">
           <md-input-container flex>
-            <md-datepicker ng-model="record.validFrom" md-placeholder="{{'main.validFrom' | translate}}"></md-datepicker>
+			<label>{{'main.validFrom' | translate}}</label>
+            <md-datepicker ng-model="record.validFrom"></md-datepicker>
           </md-input-container>
           <md-input-container flex>
-            <md-datepicker ng-model="record.validThru" md-min-date="record.validFrom" md-placeholder="{{'main.validThru' | translate}}"></md-datepicker>
+            <label>{{'main.validThru' | translate}}</label>
+			<md-datepicker ng-model="record.validThru" md-min-date="record.validFrom"></md-datepicker>
           </md-input-container>
         </div>
       </div>
-
+</div>
     </form>
 
+	<div>&nbsp;</div>
     <md-table-container ng-if="formState.students">
       <table md-table md-row-select="!record.id" multiple ng-model="formState.selectedStudents">
         <thead md-head md-order="criteria.order">
@@ -89,12 +89,12 @@
         <tbody md-body>
           <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <md-button ng-disabled="!record.id" md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</md-button>
+              <a ng-disabled="!record.id"class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
             </td>
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
             <td md-cell>
-              <md-button ng-if="record.id" md-no-ink class="md-primary change-button" ng-click="removeStudent(row.id)">{{'main.button.delete' | translate}}</md-button>
+              <a ng-if="record.id" md-no-ink class="remove" ng-click="removeStudent(row.id)">&times;</a>
             </td>
           </tr>
         </tbody>

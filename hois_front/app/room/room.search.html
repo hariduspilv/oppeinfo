@@ -1,8 +1,11 @@
 <div  class="ois-form-layout-padding">
   <div flex>
     <form ng-submit="loadData()" novalidate layout="column" class="nomargin">
+	<fieldset tabindex="1">
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+        
       <div layout="row" layout-sm="column" layout-xs="column">
-        <!--div class="indentForToast"></div-->
+	    <!--div class="indentForToast"></div-->
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'building.name' | translate}}</label>
           <input ng-model="criteria.buildingName" name="buildingName" type="text">
@@ -23,7 +26,7 @@
           <input ng-model="criteria.code" name="code" type="text">
         </md-input-container>
       </div>
-
+</fieldset>
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>

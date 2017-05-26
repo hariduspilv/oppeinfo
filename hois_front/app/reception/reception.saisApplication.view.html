@@ -1,4 +1,4 @@
-<div class="ois-form-layout-padding" ng-cloak>
+<div class="ois-form-layout-padding form-readonly" ng-cloak>
   <div>
     <form>
       <div style="padding-top: 1em">
@@ -84,11 +84,11 @@
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex>
                 <label>{{'reception.application.submissionDate' | translate}}</label>
-                <hois-value value="'main.formattedDate' | translate: {date: saisApplication.submitted}"></hois-value>
+                <hois-value value="saisApplication.submitted | hoisDate"></hois-value>
               </md-input-container>
               <md-input-container flex>
                 <label>{{'reception.application.changeDate' | translate}}</label>
-                <hois-value value="'main.formattedDate' | translate: {date: saisApplication.saisChanged}"></hois-value>
+                <hois-value value="saisApplication.saisChanged | hoisDate"></hois-value>
               </md-input-container>
             </div>
 
@@ -115,8 +115,8 @@
             <tbody md-body>
               <tr md-row flex ng-repeat="graduatedSchool in saisApplication.graduatedSchools | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{graduatedSchool.name}}</td>
-                <td md-cell>{{'main.formattedDate' | translate: {date: graduatedSchool.startDate} }}</td>
-                <td md-cell>{{'main.formattedDate' | translate: {date: graduatedSchool.endDate} }}</td>
+                <td md-cell>{{graduatedSchool.startDate | hoisDate}}</td>
+                <td md-cell>{{graduatedSchool.endDate | hoisDate}}</td>
               </tr>
             </tbody>
           </table>

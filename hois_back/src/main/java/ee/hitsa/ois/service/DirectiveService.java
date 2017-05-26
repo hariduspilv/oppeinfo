@@ -560,7 +560,15 @@ public class DirectiveService {
         List<?> data = qb.select("s.id", em).getResultList();
         return StreamUtil.toMappedList(r -> Long.valueOf(((Number)r).longValue()), data);
     }
-    
+
+    Map<Long, Long> directiveStudentsWithSaisApplication(List<Long> saisApplicationIds) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_student ds");
+        qb.requiredCriteria("ds.sais_application_id in (:saisApplicationIds)", "saisApplicationIds", saisApplicationIds);
+
+        List<?> data = qb.select("ds.sais_application_id, ds.id", em).getResultList();
+        return data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsLong(r, 1), (o, n) -> o));
+    }
+
     private void setApplication(Long studentId, Long applicationId, DirectiveStudent student) {
         if(applicationId != null) {
             // verify application to be linked

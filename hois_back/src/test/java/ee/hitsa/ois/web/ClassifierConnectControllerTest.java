@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 
 import javax.transaction.Transactional;
@@ -16,13 +17,13 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.web.dto.ClassifierConnectSelection;
+import ee.hitsa.ois.web.dto.ClassifierSelection;
 
 @Transactional
 @RunWith(SpringRunner.class)
@@ -35,7 +36,7 @@ public class ClassifierConnectControllerTest {
     private ClassifierRepository classifierRepository;
 
     @Test
-    public void testChangeListOfParents() {
+    public void testChangeListOfParents() throws RestClientException, ClassNotFoundException {
 
         Classifier child = classifierRepository.findOne("OPPEKAVA_STAATUS_S");
         Classifier parent1 = classifierRepository.findOne("OPPEKAVA_STAATUS_M");
@@ -48,30 +49,28 @@ public class ClassifierConnectControllerTest {
         Assert.assertNotNull(parent3);
 
         // save initial list of parents
-
         ResponseEntity<Boolean> responseEntity = this.restTemplate.postForEntity(
                 "/classifierConnect/changeParents/" + child.getCode(), asList(parent1, parent2), Boolean.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         // check that only parent1 and parent2 are in list of parents
-
-         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/classifierConnect/all");
-         uriBuilder.queryParam("classifierCode", child.getCode());
-         String uri = uriBuilder.build().toUriString();
-         ResponseEntity<Object[]> searchResponseEntity = restTemplate.getForEntity(uri, Object[].class);
+         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/classifierConnect/all").queryParam("classifierCode", child.getCode());
+         String uri = uriBuilder.toUriString();
+         ResponseEntity<Object> searchResponseEntity = restTemplate.getForEntity(uri, Object.class);
          Assert.assertNotNull(searchResponseEntity);
          Assert.assertEquals(HttpStatus.OK, searchResponseEntity.getStatusCode());
-         Assert.assertTrue(searchResponseEntity.getBody().length == 2);
-         ObjectMapper mapper = new ObjectMapper();
 
-         ClassifierConnect cc1 = mapper.convertValue(searchResponseEntity.getBody()[0], ClassifierConnect.class);
-         Assert.assertTrue(cc1.getClassifier().getCode().equals(child.getCode()));
+         List<ClassifierConnectSelection> searchResponse = getResponseEntity(searchResponseEntity.getBody());
+         Assert.assertEquals(2, searchResponse.size());
+
+         ClassifierConnectSelection cc1 = searchResponse.get(0);
+         Assert.assertEquals(child.getCode(), cc1.getClassifier().getCode());
          Assert.assertTrue(cc1.getConnectClassifier().getCode().equals(parent1.getCode()) ||
                  cc1.getConnectClassifier().getCode().equals(parent2.getCode()));
 
-         ClassifierConnect cc2 = mapper.convertValue(searchResponseEntity.getBody()[1], ClassifierConnect.class);
-         Assert.assertTrue(cc2.getClassifier().getCode().equals(child.getCode()));
+         ClassifierConnectSelection cc2 = searchResponse.get(1);
+         Assert.assertEquals(child.getCode(), cc2.getClassifier().getCode());
          Assert.assertTrue(cc2.getConnectClassifier().getCode().equals(parent1.getCode()) ||
                  cc2.getConnectClassifier().getCode().equals(parent2.getCode()) &&
                  !cc2.getConnectClassifier().getCode().equals(cc1.getConnectClassifier().getCode()));
@@ -86,18 +85,20 @@ public class ClassifierConnectControllerTest {
 
         // check that only parent1 and parent3 are in list of parents
 
-        searchResponseEntity = restTemplate.getForEntity(uri, Object[].class);
+        searchResponseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(searchResponseEntity);
         Assert.assertEquals(HttpStatus.OK, searchResponseEntity.getStatusCode());
-        Assert.assertTrue(searchResponseEntity.getBody().length == 2);
 
-        cc1 = mapper.convertValue(searchResponseEntity.getBody()[0], ClassifierConnect.class);
-        Assert.assertTrue(cc1.getClassifier().getCode().equals(child.getCode()));
+        searchResponse = getResponseEntity(searchResponseEntity.getBody());
+        Assert.assertEquals(2, searchResponse.size());
+
+        cc1 = searchResponse.get(0);
+        Assert.assertEquals(child.getCode(), cc1.getClassifier().getCode());
         Assert.assertTrue(cc1.getConnectClassifier().getCode().equals(parent1.getCode()) ||
                 cc1.getConnectClassifier().getCode().equals(parent3.getCode()));
 
-        cc2 = mapper.convertValue(searchResponseEntity.getBody()[1], ClassifierConnect.class);
-        Assert.assertTrue(cc2.getClassifier().getCode().equals(child.getCode()));
+        cc2 = searchResponse.get(1);
+        Assert.assertEquals(child.getCode(), cc2.getClassifier().getCode());
         Assert.assertTrue(cc2.getConnectClassifier().getCode().equals(parent1.getCode()) ||
                 cc2.getConnectClassifier().getCode().equals(parent3.getCode()) &&
                 !cc2.getConnectClassifier().getCode().equals(cc1.getConnectClassifier().getCode()));
@@ -111,10 +112,32 @@ public class ClassifierConnectControllerTest {
 
         // check that list of parents is empty
 
-        searchResponseEntity = restTemplate.getForEntity(uri, Object[].class);
+        searchResponseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(searchResponseEntity);
         Assert.assertEquals(HttpStatus.OK, searchResponseEntity.getStatusCode());
-        Assert.assertTrue(searchResponseEntity.getBody().length == 0);
+
+        searchResponse = getResponseEntity(searchResponseEntity.getBody());
+        Assert.assertTrue(searchResponse.isEmpty());
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<ClassifierConnectSelection> getResponseEntity(Object body) {
+        List<ClassifierConnectSelection> response = new ArrayList<>();
+        for (LinkedHashMap<String, Object> classifierConnectSelection : (List<LinkedHashMap<String, Object>>)body) {
+            response.add(new ClassifierConnectSelection(
+                    getClassifierSelection(classifierConnectSelection.get("classifier")),
+                    getClassifierSelection(classifierConnectSelection.get("connectClassifier")),
+                    (String)classifierConnectSelection.get("mainClassifierCode")));
+        }
+        return response;
+    }
+
+    @SuppressWarnings("unchecked")
+    private ClassifierSelection getClassifierSelection(Object object) {
+        LinkedHashMap<String, Object> classifierSelectionObject = (LinkedHashMap<String, Object>) object;
+        ClassifierSelection classifierSelection = new ClassifierSelection((String)classifierSelectionObject.get("code"),
+                null, null, null, null, null, null, null, null);
+        return classifierSelection;
     }
 
     private static List<Classifier> asList(Classifier...classifiers) {

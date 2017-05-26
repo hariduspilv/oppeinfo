@@ -6,10 +6,6 @@
       "et": "Est",
       "en": "Eng"
     },
-    "formattedDate": "{{date|date:'dd.MM.yyyy'}}",
-    "formattedDateTime": "{{date|date:'dd.MM.yyyy HH:mm:ss'}}",
-    "formattedDateMinTime": "{{date|date:'dd.MM.yyyy HH:mm'}}",
-    "formattedTime": "{{date|date:'HH:mm'}}",
 	"searchlabel": "Otsinguparameetrid",
     "button": {
       "add": "Lisa",
@@ -71,12 +67,12 @@
         "selectFile": "Valige fail",
         "inputFieldIsRequired": "Valik väli on kohustuslik",
         "mustBeUnique": "Peab olema unikaalne!",
-        "positive": "Peab olema positiivne!",
+        "positive": "Peab olema mittenegatiivne number!",
         "atLeastOneShouldBeAdded": "Vähemalt üks peab olema lisatud",
         "atLeastOneMustBeSelected": "Vähemalt üks peab olema valitud",
         "unique": "Kirje pole unikaalne",
         "fileAlreadyExists": "Sama fail juba eksisteerib",
-        "integer": "Peab olema täisarv"
+        "integer": "Peab olema täisarv!"
       },
       "form-has-errors" : "Vormil on vigu",
       "record": {
@@ -506,12 +502,12 @@
     "student": {
       "abroadProgramme": "Õppeprogramm",
       "abroadPurpose": "Õpingute eesmärk",
-      "akadCancelDate": "Akadeemilise puhkuse katkestamise kuupäev",
-      "akadEndDate": "Akadeemilise puhkuse lõpp",
-      "akadStartDate": "Akadeemilise puhkuse algus",
+      "akadCancelDate": "Akad. puhkuse katkestamise kuupäev",
+      "akadEndDate": "Akad. puhkuse lõpp",
+      "akadStartDate": "Akad. puhkuse algus",
       "alreadyexist": "Õppur on juba käskkirjal",
-      "applicationAkadEndDate": "Akadeemilise puhkuse lõpp avaldusel",
-      "applicationAkadStartDate": "Akadeemilise puhkuse algus avaldusel",
+      "applicationAkadEndDate": "Lõpp avaldusel",
+      "applicationAkadStartDate": "Algus avaldusel",
       "country": "Riik",
       "curriculum": "Õppekava",
       "curriculumGrade": "Omistatav kraad",
@@ -557,16 +553,18 @@
     "deleteconfirm": "Kas oled kindel, et soovid üldteate kustutada?",
     "targets": "Sihtgrupp",
     "title": "Pealkiri",
-    "validFrom": "Üldteate kuvamise alguskuupäev",
-    "validThru": "Üldteate kuvamise lõppkuupäev"
+    "validFrom": "Kuvamise alguskuupäev",
+    "validThru": "Kuvamise lõppkuupäev"
   },
   "lessonplan": {
     "addjournal": "Lisa uus päevik",
     "credits": "EKAP",
     "curriculumVersion": "Õppekava",
+    "grandTotal": "KÕIK KOKKU",
     "isUsable": "on kasutatav",
     "journalreference": "Viide tunniplaanile",
     "modulehours": "Mooduli maht",
+    "moduleTotal": "kokku",
     "responsibleformodule": "Mooduli vastutaja",
     "schoolDepartment": "Struktuuriüksus",
     "showTotals": "kuva kokku read",
@@ -649,6 +647,7 @@
       "signatoriesMissing": "Tõendi allkirjastad puuduvad, palun pöördu õppespetsialisti poole"
   },
   "stateCurriculum": {
+    "curricula": "Seotud kutseõppe õppekavad",
     "statusButton": {
         "approving": "Menetle",
         "close": "Sulge ÕK",
@@ -676,9 +675,9 @@
       "graduation.requirementsEn": "Nõuded õpingute lõpetamiseks inglise keeles",
       "credits" : {
         "credits": "Õppekava maht EKAP",
-        "positive": "Peab olema positiivne!",
-        "max": "Peab olema väiksem, kui 1000 EKAP",
-        "integer": "Peab olema täisarv"
+        "positive": "Peab olema mittenegatiivne number!",
+        "max": "Peab olema kuni 3-kohaline number!",
+        "integer": "Peab olema täisarv!"
       },
       "ROKclassifier": "EHISe RÕK klassifikaator",
       "practice": "Praktika kirjeldus",
@@ -704,8 +703,8 @@
         "outcome": "Õpiväljund",
         "descriptionEt": "kirjeldus eesti keeles (tekst)",
         "descriptionEn": "kirjeldus inglise keeles (tekst)",
-        "outcomeLabelEt": "Õpiväljund eesti keeles" ,
-        "outcomeLabelEn": "Õpiväljund inglise keeles"
+        "outcomeLabelEt": "Õpiväljundid eesti keeles" ,
+        "outcomeLabelEn": "Õpiväljundid inglise keeles"
       },
       "module": {
         "modules": "Õpetatavad moodulid",
@@ -714,9 +713,11 @@
         "type": "Mooduli liik",
         "nameEt": "Mooduli nimetus eesti keeles",
         "nameEn": "Mooduli nimetus inglise keeles",
-        "credits": "Maht EKAP",
+        "credits": "Mooduli maht EKAP",
         "objectiveEt": "Mooduli eesmärk eesti keeles",
         "objectiveEn": "Mooduli eesmärk inglise keeles",
+        "outcomesEt": "Mooduli õpiväljundid eesti keeles",
+        "outcomesEn": "Mooduli õpiväljundid inglise keeles",
         "outcomes": "Mooduli õpiväljundid",
         "criteriaEt": "Mooduli hindamiskriteeriumid eesti keeles",
         "criteriaEn": "Mooduli hindamiskriteeriumid inglise keeles",
@@ -735,7 +736,8 @@
       "spetsOccupationsCredids": "Spetsialiseerumise moodulite maht (koos kutse- ja valikmoodulite mahuga) ei ole vastavuses õppekava kogu mahuga!",
       "decimalPresision": "Arv peab olema täpsusega üks koht peale koma",
       "specialtiesInvalid": "Moodul ei saa olla seotud nii kutse, kui ka selle kutse spetsialiseerumisega",
-      "partAndSpecOccupationsInvalid": "Moodul ei saa olla seotud ühe kutse spetsialiseerumise ja osakutsega"
+      "partAndSpecOccupationsInvalid": "Moodul ei saa olla seotud ühe kutse spetsialiseerumise ja osakutsega",
+      "hasCurricula": "Riiklik õppekava on seotud kutseõppe õppekavaga, ei saa kustutada."
     },
     "info": {
       "createdOccupationalCurriculums": "Riikliku õppekava alusel loodud kutseõppe koolide õppekavad",
@@ -763,9 +765,9 @@
     "merCode": "Õppekava HTM kood",
     "credits": "Õppekava maht EKAP",
     "creditsEap": "Õppekava maht EAP",
-    "creditsEapEkap": "Õppekava maht (EAP/EKAP)",
+    "creditsEapEkap": "Õppekava mahu vahemik (EAP/EKAP)",
     "studyPeriod": "Õppeaeg",
-    "studyForm": "Õppekava vorm",
+    "studyForm": "Õppevorm",
     "ehisRokClassifier": "EHISe RÕK klassifikaator",
     "approving": "Õppekava kinnitamine",
     "approvalDate": "Kinnitamise kuupäev",
@@ -828,13 +830,14 @@
     "accreditationDesision": "Akrediteerimise otsus",
     "accreditationDesisionNumber": "Akrediteerimise otsuse number",
     "versions": "Õppekava versioonid",
-    "versionName": "Versiooni nimi",
+    "versionName": "Versiooni kood",
     "inserted": "Sisestatud",
     "changed": "Muudetud",
     "curriculumInsertions": "Sisestamised/viimati muudetud",
     "deleteconfirm": "Kas oled kindel, et soovid kutseõppe õppekava kustutada?",
     "deleteconfirmHigher": "Kas oled kindel, et soovid kõrgharidusõppe õppekava kustutada?",
     "itemDeleteConfirm": "Kas soovid kustutada?",
+    "moduleDeleteConfirm": "Kas oled kindel, et soovid mooduli kustutada?",
 	"additionalInfo": "Muu info",
 	"approvalInfo":"Õppeasutuse kinnitamise info",
 	"sentToEhis":"Õppekava on EHISesse saadetud",
@@ -847,7 +850,8 @@
 	"occupationTable": {
 	  "order":"Jrk",
 	  "occupation":"Kutse",
-	  "partOccupation":"Osakutsed",
+	  "partOccupation":"Osakutse",
+	  "partOccupations":"Osakutsed",
 	  "speciality":"Spetsialiseerumised"
 	},
     "specialty": {
@@ -895,21 +899,31 @@
         "copy": "Loo uus antud RK alusel",
         "deleteconfirm": "Kas oled kindel, et soovid õppekava versiooni kustutada?",
         "classifiers": "Klassifikaatorid",
-        "othersModuleTypes": "Eelnevalt süsteemi sisestatud mooduli liigid"
-
+        "othersModuleTypes": "Eelnevalt süsteemi sisestatud mooduli liigid",
+        "subjects": "Õppeained",
+        "subjectsName": "Õppeaine kood - Nimetus"
+    },
+    "message": {
+        "statusUpdated": "Staatus on uuendatud"
     },
     "error": {
-        "numberOfElectiveModules": "Number peab olema mitte suurem, kui valikmoodulite arv",
+        "numberOfElectiveModules": "Ei tohi olla suurem kui valikmoodulite arv",
         "specAddedToVersion": "Peaeriala on seotud õppekava versiooniga",
-        "max999": "Peab olema väiksem, kui 1000",
-        "monthsMax11": "Kuude arv peab olema väiksem, kui 12",
+        "max999": "Peab olema kuni 3-kohaline number!",
+        "monthsMax11": "Peab olema kuni 11!",
         "curriculumModuleCantBeDeleted": "Moodul on lisatud rakenduskavasse ja ei saa olla kustutatud",
         "inputFieldsNotFilledOnConfirm": "Andmete salvestamine ja kinnitamine ebaõnnestus. Kohustuslikud väljad on täitmata.",
-        "inputFieldsNotFilledOnProcede": "Andmete salvestamine ja menetlemine ebaõnnestus. Kohustuslikud väljad on täitmata."
+        "inputFieldsNotFilledOnProcede": "Andmete salvestamine ja menetlemine ebaõnnestus. Kohustuslikud väljad on täitmata.",
+        "notAllModulesHaveOccupation": "Kõik moodulid peavad olema seotud vähemalt ühe kutse või osakutsega.",
+        "noImplementationPlan": "Vähemalt üks rakenduskava peab olema lisatud õppekavasse.",
+        "noVersion": "Vähemalt üks versioon peab olema lisatud õppekavasse.",
+        "moduleOccupations": "Üks ja sama moodul ei tohi olla samaaegselt seotud nii kutse/osakutsega ja spetsialiseerumisega."
     },
     "prompt": {
         "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
-        "editAccepted": "Õppekava on EHISes kinnitatud. Kas soovid jätkata?"
+        "editAccepted": "Õppekava on EHISes kinnitatud. Kas soovid jätkata?",
+        "hasOccupations": "Õppekava on seotud kutsetega. Soovid neid kustutada?",
+        "hasSubOccupations": "Õppekava on seotud osakutsetega. Soovid neid kustutada? "
     },
     "success": {
         "verified": "Õppekava on kinnitatud",
@@ -922,9 +936,63 @@
             "close": "Kas oled kindel, et soovid kõrghariduse õppekava salvestada ja sulgeda?"
         },
         "vocational": {
-            "proceed": "Kas oled kindel, et soovid kutsehariduse õppekava salvestada ja menetleda?",
-            "verify": "Kas oled kindel, et soovid kutsehariduse õppekava salvestada ja kinnitada?",
-            "close": "Kas oled kindel, et soovid kutsehariduse õppekava salvestada ja sulgeda?"
+            "proceed": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja menetleda?",
+            "verify": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja kinnitada?",
+            "close": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja sulgeda?"
+        }, 
+        "version": {
+            "button": {
+                "verify": "Kinnita",
+                "close": "Sulge VR"
+            },
+            "prompt": {
+                "verify": "Kas oled kindel, et soovid õppekava versiooni salvestada ja kinnitada?",
+                "close": "Kas oled kindel, et soovid õppekava versiooni salvestada ja sulgeda?",
+                "editAccepted": "Õppekava versioon on EHISes kinnitatud. Kas soovid jätkata?"
+            },
+            "success": {
+                "verified": "Õppekava versioon on kinnitatud",
+                "closed": "Õppekava versioon on suletud"
+            }
+        }, 
+        "implementationPlan": {
+            "button": {
+                "verify": "Kinnita",
+                "close": "Sulge RK"
+            },
+            "prompt": {
+                "verify": "Kas oled kindel, et soovid rakenduskava salvestada ja kinnitada?",
+                "close": "Kas oled kindel, et soovid rakenduskava salvestada ja sulgeda?",
+                "editAccepted": "Rakenduskava on EHISes kinnitatud. Kas soovid jätkata?"
+            },
+            "success": {
+                "verified": "Rakenduskava on kinnitatud",
+                "closed": "Rakenduskava on suletud"
+            }
+        }
+    },
+    "statuschangeReadOnly" : {
+        "higher": {
+            "proceed": "Kas oled kindel, et soovid kõrghariduse õppekava menetleda?",
+            "verify": "Kas oled kindel, et soovid kõrghariduse õppekava kinnitada?",
+            "close": "Kas oled kindel, et soovid kõrghariduse õppekava sulgeda?"
+        },
+        "vocational": {
+            "proceed": "Kas oled kindel, et soovid kutseõppe õppekava menetleda?",
+            "verify": "Kas oled kindel, et soovid kutseõppe õppekava kinnitada?",
+            "close": "Kas oled kindel, et soovid kutseõppe õppekava sulgeda?"
+        },
+        "version": {
+            "prompt": {
+                "verify": "Kas oled kindel, et soovid õppekava versiooni kinnitada?",
+                "close": "Kas oled kindel, et soovid õppekava versiooni sulgeda?"
+            }
+        }, 
+        "implementationPlan": {
+            "prompt": {
+                "verify": "Kas oled kindel, et soovid rakenduskava kinnitada?",
+                "close": "Kas oled kindel, et soovid rakenduskava sulgeda?"
+            }
         }
     }
   },
@@ -1125,6 +1193,7 @@
       "subTitle":"Rakenduskava põhiandmed",
 	  "name": "Rakenduskava nimi",
       "codeOrName": "Rakenduskava kood või nimetus",
+      "code": "Rakenduskava kood",
       "targetGroup": "Sihtrühm",
       "teachers": "Õpetajad",
       "teachingDepartment": "Õpetav struktuuriüksus",
@@ -1133,7 +1202,7 @@
       "admissionYear": "Vastuvõtu aasta",
       "type": "Rakenduskava liik",
       "insertModuleData": "Sisesta mooduli andmed",
-      "viewUpdateModuleData": "Vaata/Muuda mooduli andmeid",
+      "viewUpdateModuleData": "Muuda mooduli andmed",
 	  "moduleName": "Mooduli nimi",
 	  "moduleCapacity": "Maht",
 	  "moduleOK": "Korras?"
@@ -1192,7 +1261,7 @@
         "teachers": "Õpetajad (kõrg)",
         "subjects": "Õppeained"
     },
-    "nameCode": "Õppeaine kood - nimetus",
+    "nameCode": "Õppeaine kood - Nimetus",
     "studyPeriod": "Õppeperiood",
     "teachersFullname": "Õpetaja ees- ja perekonnanimi",
     "declaredStudentsNumber": "Deklareerinud",
@@ -1287,7 +1356,7 @@
     "addStudents": "Lisa õppurid",
     "code": "Tähis",
     "course": "Õppeaasta (kursus)",
-    "curriculum": "Õppekava",
+    "curriculum": "Õppekava *",
     "curriculumVersion": "Õppekava versioon",
     "curriculumVersionBoth": "Õppekava versioon / Rakenduskava",
     "curriculumVersionHigher": "Õppekava versioon",
@@ -1318,7 +1387,11 @@
   "application": {
     "type": "Avalduse liik",
     "insertionDate": "Koostamise kuupäev",
+	"insertionDateA": "Koostamise algus kpv",
+	"insertionDateK": "Koostamise lõpp kpv",
     "submissionDate": "Esitamise kuupäev",
+	"submissionDateA": "Esitamise algus kpv",
+	"submissionDateK": "Esitamise lõpp kpv",
     "confirmationDate": "Kinnitamise kuupäev",
     "student": "Õppur",
     "studentName": "Õppuri nimi",
@@ -1417,7 +1490,16 @@
       "gradesResults": "Hinded/Tulemused",
       "otherData": "Täiendav informatsioon",
       "saisImportRange": "Konkursi siestamise/muutmise kuupäevade vahemik",
-      "saisImportApplications": "Impordi SAISist"
+      "saisImportApplications": "Impordi SAISist",
+      "date": "Avalduse kuupäev",
+      "message": "Teade",
+      "successfullyImported": "Imporditud avaldused:",
+      "idCode": "Isikukood",
+      "firstName": "Eesnimi",
+      "lastName": "Perekonnanimi",
+      "admissionCode": "Konkursi kood",
+      "importFinished": "Importimine lõpetatud",
+      "form-has-errors": "Üks kolmest kohustuslikust väljast peab olema täidetud"
     }
   },
   "studyYearSchedule": {

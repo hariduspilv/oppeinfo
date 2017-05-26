@@ -1,5 +1,5 @@
 <md-table-container>
-  <table md-table md-row-select="formState.cancelSelect" multiple ng-model="formState.selectedStudents">
+  <table md-table md-row-select="formState.cancelSelect" multiple ng-model="formState.selectedStudents" class="secondary-table">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
@@ -13,7 +13,7 @@
     <tbody md-body>
       <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>
-          <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</md-button>
+          <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
         </td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>

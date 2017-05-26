@@ -44,20 +44,20 @@
                 </tr>
                 </thead>
                 <tbody md-body>
-                <tr md-row ng-repeat="lessonTime in block.lessonTimes | orderBy: 'lessonNr'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <tr md-row ng-repeat="lessonTime in block.lessonTimes | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>
                     <md-input-container>
-                      <input style="width:2em;" ng-model="lessonTime.lessonNr" aria-label="{{'main.nr' | translate}}" type="text" ng-required="isLessonTimeRowFilled(lessonTime)">
+                      <input style="width:2em;" ng-model="lessonTime.lessonNr" ng-pattern="/^[1-9]\d*$/" aria-label="{{'main.nr' | translate}}" type="text" ng-required="isLessonTimeRowFilled(lessonTime)">
                     </md-input-container>
                   </td>
                   <td md-cell>
                     <md-input-container>
-                      <input type="time" ng-model="lessonTime.startTime" ng-max="lessonTime.endTime" aria-label="{{'main.start' | translate}}" ng-required="isLessonTimeRowFilled(lessonTime)">
+                      <hois-time ng-model="lessonTime.startTime" ng-max="lessonTime.endTime" aria-label="{{'main.start' | translate}}" ng-required="isLessonTimeRowFilled(lessonTime)"></hois-time>
                     </md-input-container>
                   </td>
                   <td md-cell>
                     <md-input-container>
-                      <input type="time" ng-model="lessonTime.endTime" ng-min="lessonTime.startTime" aria-label="{{'main.end' | translate}}" ng-required="isLessonTimeRowFilled(lessonTime)">
+                      <hois-time ng-model="lessonTime.endTime" ng-min="lessonTime.startTime" aria-label="{{'main.end' | translate}}" ng-required="isLessonTimeRowFilled(lessonTime)"></hois-time>
                     </md-input-container>
                   </td>
                   <td md-cell>
@@ -82,12 +82,12 @@
                   </td>
                   <td md-cell>
                     <md-input-container>
-                      <md-checkbox ng-model-options="{ debounce: 1000 }" ng-model="lessonTime.dayThu" aria-label="{{'main.thursdayShort' | translate}}"></md-checkbox>
+                      <md-checkbox ng-model="lessonTime.dayThu" aria-label="{{'main.thursdayShort' | translate}}"></md-checkbox>
                     </md-input-container>
                   </td>
                   <td md-cell>
                     <md-input-container>
-                      <md-checkbox ng-model-options="{ debounce: 1000 }" ng-model="lessonTime.dayFri" aria-label="{{'main.fridayShort' | translate}}"></md-checkbox>
+                      <md-checkbox ng-model="lessonTime.dayFri" aria-label="{{'main.fridayShort' | translate}}"></md-checkbox>
                     </md-input-container>
                   </td>
                   <td md-cell>

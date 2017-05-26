@@ -8,13 +8,17 @@
                 <th md-column><span>{{'student.label' | translate}}</span></th>
                 <th md-column><span>{{'journal.studentGroup' | translate}}</span></th>
                 <th md-column><span>{{'curriculum.code' | translate}}</span></th>
+                <th md-column></th>
               </tr>
             </thead>
             <tbody md-body>
-              <tr md-row md-select="row.studentId" md-auto-select ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+              <tr md-row md-select="row.studentId" ng-repeat="row in tabledata.content | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>{{row.fullname}}</td>
                 <td md-cell>{{row.studentGroup}}</td>
                 <td md-cell>{{row.curriculum}}</td>
+                <td md-cell layout="row" layout-align="end">
+                  <md-button class="remove nomargin" ng-click="removeStudent(row)" >&times;</md-button>
+                </td>
               </tr>
             </tbody>
           </table>

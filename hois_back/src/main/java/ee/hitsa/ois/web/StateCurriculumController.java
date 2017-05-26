@@ -3,6 +3,7 @@ package ee.hitsa.ois.web;
 import java.util.List;
 
 import javax.validation.Valid;
+import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -76,4 +77,11 @@ public class StateCurriculumController {
     public List<AutocompleteResult> searchAll(StateCurriculumSearchCommand stateCurriculumSearchCommand, Sort sort) {
         return StreamUtil.toMappedList(AutocompleteResult::of, stateCurriculumService.searchAll(stateCurriculumSearchCommand, sort));
     }
+    
+    @PutMapping("/modules/{id:\\d+}")
+    public StateCurriculumDto updateCurriculumModule(HoisUserDetails user, @NotNull @RequestBody StateCurriculumForm form, @WithEntity("id") StateCurriculum stateCurriculum) {
+        UserUtil.assertIsMainAdmin(user);
+        return StateCurriculumDto.of(stateCurriculumService.updateStateCurriculumModules(stateCurriculum, form));
+    }
+
 }

@@ -16,7 +16,6 @@ public class CurriculumJointPartnerDto extends VersionedCommand {
     @NotNull
     private Boolean abroad;
 
-    @NotNull
     @Size(max=1000)
     private String contractEt;
 

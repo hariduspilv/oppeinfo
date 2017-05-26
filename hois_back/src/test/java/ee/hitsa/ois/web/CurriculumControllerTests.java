@@ -840,7 +840,7 @@ public class CurriculumControllerTests {
         dto.setNameEt("CurriculumControllerTest");
         dto.setNameEn("CurriculumControllerTest");
         dto.setNameGenitiveEt("CurriculumControllerTest");
-        dto.setEhisGrade("EKR_8");
+        dto.setEhisGrade("AKAD_KRAAD_AJM");
         return dto;
     }
 

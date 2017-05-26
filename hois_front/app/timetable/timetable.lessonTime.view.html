@@ -5,7 +5,7 @@
         <div layout="row" layout-sm="column" layout-xs="column" flex-sm="100" flex-xs="100">
             <md-input-container flex>
               <label>{{'timetable.lessonTime.validFrom' | translate}}</label>
-              <hois-value value="'main.formattedDate' | translate: {date: validFrom} "></hois-value>
+              <hois-value value="validFrom | hoisDate"></hois-value>
             </md-input-container>
         </div>
 
@@ -42,10 +42,10 @@
                     <span>{{::lessonTime.lessonNr}}</span>
                 </td>
                 <td md-cell>
-                  <span>{{'main.formattedTime' | translate: {date: lessonTime.startTime} }}</span>
+                  <span>{{lessonTime.startTime | hoisTime}}</span>
                 </td>
                 <td md-cell>
-                  <span>{{'main.formattedTime' | translate: {date: lessonTime.endTime} }}</span>
+                  <span>{{lessonTime.endTime | hoisTime}}</span>
                 </td>
                 <td md-cell>
                   <span>{{calculateAcademicHours(lessonTime.startTime, lessonTime.endTime)}}</span>

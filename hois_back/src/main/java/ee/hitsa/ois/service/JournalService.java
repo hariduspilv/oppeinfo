@@ -1,14 +1,17 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -21,7 +24,12 @@ import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
+import org.springframework.data.domain.Sort.NullHandling;
+import org.springframework.data.domain.Sort.Order;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
@@ -59,6 +67,7 @@ import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryStudentResultDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 
@@ -77,6 +86,8 @@ public class JournalService {
     private StudentRepository studentRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private EntityManager em;
     @Autowired
     private Validator validator;
 
@@ -117,7 +128,7 @@ public class JournalService {
         }, pageable).map(JournalSearchDto::of);
     }
 
-    private void searchByTeacherPersonCriteria(HoisUserDetails user, Root<Journal> root, CriteriaQuery<?> query,
+    private static void searchByTeacherPersonCriteria(HoisUserDetails user, Root<Journal> root, CriteriaQuery<?> query,
             CriteriaBuilder cb, List<Predicate> filters) {
         Subquery<Long> journalTeachersQuery = query.subquery(Long.class);
         Root<Journal> journalRoot = journalTeachersQuery.from(Journal.class);
@@ -129,7 +140,7 @@ public class JournalService {
         filters.add(cb.exists(journalTeachersQuery));
     }
 
-    private void searchByTeacherCriteria(JournalSearchCommand command, Root<Journal> root, CriteriaQuery<?> query,
+    private static void searchByTeacherCriteria(JournalSearchCommand command, Root<Journal> root, CriteriaQuery<?> query,
             CriteriaBuilder cb, List<Predicate> filters) {
         Subquery<Long> journalTeachersQuery = query.subquery(Long.class);
         Root<Journal> journalRoot = journalTeachersQuery.from(Journal.class);
@@ -141,7 +152,7 @@ public class JournalService {
         filters.add(cb.exists(journalTeachersQuery));
     }
 
-    private void searchByModuleCriteria(JournalSearchCommand command, Root<Journal> root, CriteriaQuery<?> query,
+    private static void searchByModuleCriteria(JournalSearchCommand command, Root<Journal> root, CriteriaQuery<?> query,
             CriteriaBuilder cb, List<Predicate> filters) {
         Subquery<Long> curriculumModulesQuery = query.subquery(Long.class);
         Root<Journal> journalRoot = curriculumModulesQuery.from(Journal.class);
@@ -154,7 +165,7 @@ public class JournalService {
         filters.add(cb.exists(curriculumModulesQuery));
     }
 
-    private void searchByStudentGroupCriteria(JournalSearchCommand command, Root<Journal> root, CriteriaQuery<?> query,
+    private static void searchByStudentGroupCriteria(JournalSearchCommand command, Root<Journal> root, CriteriaQuery<?> query,
             CriteriaBuilder cb, List<Predicate> filters) {
         Subquery<Long> studentGroupsQuery = query.subquery(Long.class);
         Root<Journal> journalRoot = studentGroupsQuery.from(Journal.class);
@@ -368,12 +379,27 @@ public class JournalService {
         return dto;
     }
 
-    public Page<JournalEntryDto> journalEntries(Long journalId, Pageable pageable) {
-        return journalEntryRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("journal").get("id"), journalId));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(JournalEntryDto::of);
+    public Page<JournalEntryTableDto> journalTableEntries(Long journalId, Pageable pageable) {
+        //TODO: If we make NULLS_LAST default, we can remove this hacky line
+        PageRequest sortedByEntryDateNullsLast = new PageRequest(pageable.getPageNumber(), pageable.getPageSize(),
+                new Sort(new Order(Direction.DESC, "entryDate", NullHandling.NULLS_LAST)));
+
+        JpaQueryUtil.NativeQueryBuilder jeQb = new JpaQueryUtil.NativeQueryBuilder("from journal_entry je")
+                .sort(sortedByEntryDateNullsLast);
+
+        jeQb.requiredCriteria("je.journal_id=:journalId", "journalId", journalId);
+
+        return JpaQueryUtil.pagingResult(jeQb, "je.id, je.entry_type_code, je.entry_date, "
+                + "je.content, je.homework, je.homework_duedate", em, pageable).map(r -> {
+            JournalEntryTableDto dto = new JournalEntryTableDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setEntryType(resultAsString(r, 1));
+            dto.setEntryDate(resultAsLocalDate(r, 2));
+            dto.setContent(resultAsString(r, 3));
+            dto.setHomework(resultAsString(r, 4));
+            dto.setHomeworkDuedate(resultAsLocalDate(r, 5));
+            return dto;
+        });
     }
 
     public JournalEntryDto journalEntry(Long journalId, Long journalEntrylId) {
@@ -390,15 +416,14 @@ public class JournalService {
         List<JournalEntryByDateDto> result = new ArrayList<>();
 
         for (JournalEntry journalEntry : journal.getJournalEntries()) {
-            LocalDate journalEntryDate = journalEntry.getInserted().toLocalDate();
             JournalEntryByDateDto journalEntryByDateDto = EntityUtil.bindToDto(journalEntry, new JournalEntryByDateDto());
             journalEntryByDateDto.setTeacher(PersonUtil.stripIdcodeFromFullnameAndIdcode(journalEntry.getInsertedBy()));
-            journalEntryByDateDto.setDate(journalEntryDate);
+            journalEntryByDateDto.setEntryDate(journalEntry.getEntryDate());
 
             for (JournalEntryStudent journalEntryStudent : journalEntry.getJournalEntryStudents()) {
                 if (Boolean.TRUE.equals(allStudents) || StudentUtil.isStudying(journalEntryStudent.getJournalStudent().getStudent())) {
                     List<JournalEntryStudentResultDto> studentresults = journalEntryByDateDto.getJournalStudentResults()
-                            .computeIfAbsent(journalEntryStudent.getJournalStudent().getId(), (id) -> new ArrayList<>());
+                            .computeIfAbsent(EntityUtil.getId(journalEntryStudent.getJournalStudent()), (id) -> new ArrayList<>());
                     JournalEntryStudentResultDto dto = EntityUtil.bindToDto(journalEntryStudent, new JournalEntryStudentResultDto());
                     studentresults.add(dto);
                 }

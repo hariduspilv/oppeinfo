@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import java.lang.invoke.MethodHandles;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -17,7 +18,7 @@ import org.springframework.util.StringUtils;
 @Service
 public class MailService {
 
-    private static final Logger log = LoggerFactory.getLogger(MailService.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Value("${hois.mail.receivers:#{null}}")
     private String testReceivers;
@@ -38,8 +39,7 @@ public class MailService {
         }
 
         if (!StringUtils.hasText(from) || !StringUtils.hasText(to)) {
-            // TODO avoid use of String.format
-            log.error(String.format("mail has no from (%s) or receivers (%s)", from, to));
+            log.error("mail has no from ({}) or receivers ({})", from, to);
             return;
         }
 
@@ -56,13 +56,13 @@ public class MailService {
                 mail.setText(message);
                 executorLocal.get().submit(() -> {
                     mailSender.send(mail);
-                    // TODO avoid use of String.format
-                    log.info(String.format("email %s sent to %s", subject, receivers));
+                    log.info("email {} sent to {}", subject, receivers);
                 });
             });
         } catch (Exception e) {
-            // TODO avoid use of String.format
-            log.error(String.format("sending email %s to %s failed", subject, receivers), e);
+            if(log.isErrorEnabled()) {
+                log.error(String.format("sending email %s to %s failed", subject, receivers), e);
+            }
         }
     }
 

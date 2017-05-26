@@ -18,9 +18,9 @@ public enum DirectiveType {
     KASKKIRI_VALIS(StudentStatus.OPPURSTAATUS_V, DirectiveValidation.Valis.class),
     KASKKIRI_IMMAT(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Immat.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel", "nominalStudyEnd"),
     KASKKIRI_IMMATV(StudentStatus.OPPURSTAATUS_O, DirectiveValidation.Immat.class, "curriculumVersion", "studyLoad", "studyForm", "fin", "finSpecific", "language", "studentGroup", "previousStudyLevel"),
-    KASKKIRI_TYHIST(null, null),
+    KASKKIRI_TYHIST(null, null);
     // TODO not yet implemented
-    KASKKIRI_KYLALIS(null, null, "nominalStudyEnd");
+    // KASKKIRI_KYLALIS(null, null, "nominalStudyEnd");
 
     private final StudentStatus studentStatus;
     private final Class<? extends DirectiveValidation> validationGroup;

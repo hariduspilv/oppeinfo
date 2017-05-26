@@ -12,7 +12,7 @@
     <md-dialog-content>
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
-          <span flex></span>
+          <div layout="column">
           <md-input-container>
             <label>{{'stateCurriculum.enter.module.occupation' | translate}}</label>
             <md-select ng-model="data.moduleOccupations" multiple="true" required  ng-disabled="readOnly" ng-change="validateOccupations()">
@@ -73,35 +73,38 @@
 				   </div>
               </div>
           </md-input-container>
-          <md-input-container  flex>
+          <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.objectiveEt' | translate}}</label>
-            <textarea ng-model="data.objectivesEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
+            <textarea ng-model="data.objectivesEt" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-          <md-input-container  flex>
+          <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.objectiveEn' | translate}}</label>
-            <textarea ng-model="data.objectivesEn" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
+            <textarea ng-model="data.objectivesEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
           <md-input-container  flex>
-            <label>{{'stateCurriculum.enter.outcome.outcomeLabelEt' | translate}}</label>
-            <textarea ng-model="data.outcomesEt" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
+            <label>{{'stateCurriculum.enter.module.outcomesEt' | translate}}</label>
+            <textarea ng-model="data.outcomesEt" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-          <md-input-container  flex>
-            <label>{{'stateCurriculum.enter.outcome.outcomeLabelEn' | translate}}</label>
-            <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
+          <md-input-container flex>
+            <label>{{'stateCurriculum.enter.module.outcomesEn' | translate}}</label>
+            <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-          <md-input-container  flex>
+          <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>
-            <input ng-model="data.assessmentsEt" type="text" required md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
+            <input ng-model="data.assessmentsEt" type="text" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-          <md-input-container  flex>
+          <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.criteriaEn' | translate}}</label>
-            <textarea ng-model="data.assessmentsEn" md-maxlength="20000" max-rows="2" ng-readonly="readOnly"></textarea>
+            <textarea ng-model="data.assessmentsEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-        <span flex></span>
+        </div>
       </div>
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
       <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!readOnly">{{"main.button.save" | translate}}</md-button>
+      <md-button ng-click="delete()"
+               ng-if="editing && !readOnly" class="md-raised">
+               {{'main.button.delete' | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

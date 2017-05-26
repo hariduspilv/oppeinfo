@@ -14,12 +14,12 @@
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell><a ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
-          <td md-cell>{{'main.formattedDate' | translate: {date: row.submitted} }}</td>
+          <td md-cell>{{row.submitted | hoisDate}}</td>
           <td md-cell>
               {{currentLanguageNameField(row.status)}}
               <md-tooltip ng-if="row.status.code === 'AVALDUS_STAATUS_TAGASI' && row.rejectReason">{{row.rejectReason}}</md-tooltip>
           </td>
-          <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
+          <td md-cell>{{row.confirmDate | hoisDate}}</td>
         </tr>
         </tbody>
       </table>

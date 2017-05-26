@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.Collection;
+
 import ee.hitsa.ois.domain.Classifier;
 
 /**
@@ -16,6 +18,7 @@ public class ClassifierSelection {
     private final Boolean vocational;
     private final Boolean higher;
     private final String value;
+    private Collection<String> parents;
 
     public ClassifierSelection(String code, String nameEt, String nameEn, String nameRu, Boolean valid, Boolean higher, Boolean vocational, String mainClassCode, String value) {
         this.code = code;
@@ -33,6 +36,14 @@ public class ClassifierSelection {
         return new ClassifierSelection(c.getCode(), c.getNameEt(), c.getNameEn(), c.getNameRu(),
                 Boolean.valueOf(c.isValid()), Boolean.valueOf(c.isHigher()), Boolean.valueOf(c.isVocational()),
                 c.getMainClassCode(), c.getValue());
+    }
+
+    public Collection<String> getParents() {
+        return parents;
+    }
+
+    public void setParents(Collection<String> parents) {
+        this.parents = parents;
     }
 
     public String getValue() {

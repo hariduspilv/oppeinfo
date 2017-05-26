@@ -36,6 +36,7 @@ import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
+import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 
@@ -68,9 +69,9 @@ public class JournalController {
     }
 
     @GetMapping("/{id:\\d+}/journalEntry")
-    public Page<JournalEntryDto> journalEntries(HoisUserDetails user, @PathVariable("id") Long journalId, Pageable pageable) {
+    public Page<JournalEntryTableDto> journalEntries(HoisUserDetails user, @PathVariable("id") Long journalId, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return journalService.journalEntries(journalId, pageable);
+        return journalService.journalTableEntries(journalId, pageable);
     }
 
     @GetMapping("/{id:\\d+}/journalEntry/{journalEntry:\\d+}")

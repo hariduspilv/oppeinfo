@@ -135,7 +135,7 @@ public class ApplicationControllerTests {
         restTemplate.delete(uri);
     }
 
-    @SuppressWarnings({ "rawtypes", "unchecked" })
+    @SuppressWarnings("unchecked")
     @Test
     public void applicable() {
         List<Student> students = studentRepository.findAll((root, query, cb) -> {
@@ -152,12 +152,18 @@ public class ApplicationControllerTests {
             ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
             Assert.assertNotNull(responseEntity);
             Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-            Map<String, Map> result = (Map<String, Map>) responseEntity.getBody();
+            Map<String, Map<?, ?>> result = (Map<String, Map<?, ?>>) responseEntity.getBody();
             for (String key : result.keySet()) {
                 Assert.assertFalse(Boolean.TRUE.equals(result.get(key).get("isAllowed")));
             }
         }
-
     }
 
+    @Test
+    public void validAcademicLeave() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/applications/student/"+student.getId()+"/validAcademicLeave");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

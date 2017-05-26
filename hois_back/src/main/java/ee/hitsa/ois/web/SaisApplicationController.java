@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.lang.invoke.MethodHandles;
 import java.nio.charset.StandardCharsets;
 
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 @RequestMapping("/saisApplications")
 public class SaisApplicationController {
 
-    private static final Logger log = LoggerFactory.getLogger(SaisApplicationController.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final byte[] UTF8_BOM = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     @Autowired
@@ -52,7 +53,7 @@ public class SaisApplicationController {
         UserUtil.assertIsSchoolAdmin(user);
         return saisApplicationService.importCsv(command.getFile().getFdata(), user);
     }
-    
+
     @PostMapping("importSais")
     public SaisApplicationImportResultDto importSais(@RequestBody SaisApplicationImportForm form, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);

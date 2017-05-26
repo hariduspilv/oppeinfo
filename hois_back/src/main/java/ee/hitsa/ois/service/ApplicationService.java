@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -75,7 +76,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 @Service
 public class ApplicationService {
 
-    private static final Logger log = LoggerFactory.getLogger(ApplicationService.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     private static final String APPLICATION_FROM = "from application a inner join student student on a.student_id = student.id "+
             "inner join person person on student.person_id = person.id inner join classifier type on a.type_code = type.code "+
@@ -339,19 +340,16 @@ public class ApplicationService {
         Student student = application.getStudent();
         ConfirmationNeededMessage data = new ConfirmationNeededMessage(application);
         if (student.getRepresentatives() != null && !student.getRepresentatives().isEmpty()) {
-            // TODO avoid use of String.format
-            log.info(String.format("rejection notification message sent to student %d representatives", EntityUtil.getId(application.getStudent())));
+            log.info("rejection notification message sent to student {} representatives", EntityUtil.getId(application.getStudent()));
             automaticMessageService.sendMessageToStudentRepresentatives(MessageType.TEATE_LIIK_AV_KINNIT, student, data);
         } else {
-            // TODO avoid use of String.format
-            log.info(String.format("rejection notification message sent to student %d school", EntityUtil.getId(application.getStudent())));
+            log.info("rejection notification message sent to student {} school", EntityUtil.getId(application.getStudent()));
             automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, student.getSchool(), data);
         }
     }
 
     public void sendRejectionNotificationMessage(Application application, HoisUserDetails user) {
-        // TODO avoid use of String.format
-        log.info(String.format("rejection notification message sent to student %d", EntityUtil.getId(application.getStudent())));
+        log.info("rejection notification message sent to student {}", EntityUtil.getId(application.getStudent()));
         StudentApplicationRejectedMessage data = new StudentApplicationRejectedMessage(application);
         automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data, user);
     }

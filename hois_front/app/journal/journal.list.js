@@ -29,4 +29,9 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
   $scope.$watchCollection("search.module", function(value) {
     $scope.criteria.module = angular.isArray(value) ? value.map(function(it) {return it.id;}) : value;
   });
+
+  $scope.clearSearch = function() {
+    $scope.clearCriteria();
+    $scope.search = {};
+  };
 });
