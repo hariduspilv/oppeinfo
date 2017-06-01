@@ -64,6 +64,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumDepartmentRepository;
+import ee.hitsa.ois.repository.CurriculumModuleOutcomeRepository;
 import ee.hitsa.ois.repository.CurriculumModuleRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.CurriculumSpecialityRepository;
@@ -97,7 +98,6 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleCapacityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleDto;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleOutcomeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeCapacityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleYearCapacityDto;
@@ -129,7 +129,8 @@ public class CurriculumService {
     private StateCurriculumRepository stateCurriculumRepository;
     @Autowired
     private CurriculumModuleRepository curriculumModuleRepository;
-    
+    @Autowired
+    private CurriculumModuleOutcomeRepository curriculumVersionOccupationModuleOutcomeRepository;
 
     @SuppressWarnings("unchecked")
     public Page<CurriculumSearchDto> search(Long schoolId, CurriculumSearchCommand criteria, Pageable pageable) {
@@ -138,7 +139,8 @@ public class CurriculumService {
                 root.get("id"), root.get("nameEt"), root.get("nameEn"),
                 root.get("credits"), root.get("validFrom"), root.get("validThru"), root.get("higher"),
                 root.get("status").get("code"), root.get("origStudyLevel").get("code"),
-                root.get("school").get("id"), root.get("school").get("nameEt"), root.get("school").get("nameEn")));
+                root.get("school").get("id"), root.get("school").get("nameEt"), root.get("school").get("nameEn"), 
+                root.get("ehisStatus").get("code"), root.get("code"), root.get("merCode")));
 
             List<Predicate> filters = new ArrayList<>();
 
@@ -291,6 +293,9 @@ public class CurriculumService {
     public Curriculum create(HoisUserDetails user, CurriculumForm curriculumForm) {
         Curriculum curriculum = new Curriculum();
         curriculum.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        if(curriculumForm.getStateCurriculum() != null) {
+            curriculum.setStateCurriculum(stateCurriculumRepository.getOne(curriculumForm.getStateCurriculum()));
+        }
         return save(curriculum, curriculumForm);
     }
 
@@ -482,21 +487,21 @@ public class CurriculumService {
                 .map(capacityDto -> updateThemeCapacities(capacityDto, updatedTheme)).collect(Collectors.toSet());
 
         updatedTheme.setCapacities(newOccupationModuleThemeCapacities);
-
-        Set<CurriculumVersionOccupationModuleOutcome> newOccupationModuleThemeOutcome = new HashSet<>();
-        for(CurriculumVersionOccupationModuleOutcomeDto it : dto.getOutcomes()) {
-            newOccupationModuleThemeOutcome.add(updateThemeOutcomes(it, updatedTheme, updatedOccupationModule.getCurriculumModule().getOutcomes()));
-        }
-        updatedTheme.setOutcomes(newOccupationModuleThemeOutcome);
-
+        updateModuleThemeOutcomes(updatedTheme, dto.getOutcomes());
         return updatedTheme;
+    }
+    
+    private void updateModuleThemeOutcomes(CurriculumVersionOccupationModuleTheme theme,  Set<Long> newOutcomes) {
+      EntityUtil.bindEntityCollection(theme.getOutcomes(), o -> EntityUtil.getId(o.getOutcome()), newOutcomes, d -> {
+          CurriculumVersionOccupationModuleOutcome outcome = new CurriculumVersionOccupationModuleOutcome();
+          outcome.setOutcome(curriculumVersionOccupationModuleOutcomeRepository.getOne(d));
+          return outcome;
+      });
     }
 
     private CurriculumVersionOccupationModuleCapacity updateCapacities(CurriculumVersionOccupationModuleCapacityDto dto,
             CurriculumVersionOccupationModule updatedOccupationModule) {
         
-//        CurriculumVersionOccupationModuleCapacity capacity = dto.getId() == null ? new CurriculumVersionOccupationModuleCapacity() :
-//            updatedOccupationModule.getCapacities().stream().filter(c -> c.getId().equals(dto.getId())).findFirst().get();
         Optional<CurriculumVersionOccupationModuleCapacity> o = dto.getId() == null ? Optional.of(new CurriculumVersionOccupationModuleCapacity()) :
             updatedOccupationModule.getCapacities().stream().filter(c -> c.getId().equals(dto.getId())).findFirst();
         
@@ -519,22 +524,6 @@ public class CurriculumService {
         CurriculumVersionOccupationModuleThemeCapacity capacity = dto.getId() == null ? new CurriculumVersionOccupationModuleThemeCapacity() :
             updatedTheme.getCapacities().stream().filter(c -> c.getId().equals(dto.getId())).findFirst().get();
         return EntityUtil.bindToEntity(dto, capacity, classifierRepository);
-    }
-
-
-    private CurriculumVersionOccupationModuleOutcome updateThemeOutcomes(CurriculumVersionOccupationModuleOutcomeDto dto,
-            CurriculumVersionOccupationModuleTheme updatedTheme, Set<CurriculumModuleOutcome> outcomes) {
-        CurriculumVersionOccupationModuleOutcome outcome = dto.getId() == null ? new CurriculumVersionOccupationModuleOutcome() :
-            updatedTheme.getOutcomes().stream().filter(c -> c.getId().equals(dto.getId())).findFirst().get();
-
-        CurriculumVersionOccupationModuleOutcome updatedThemeOutcome = EntityUtil.bindToEntity(dto, outcome, classifierRepository);
-
-        Optional<CurriculumModuleOutcome> curriculumOutcome = outcomes.stream().filter(it -> it.getId().equals(dto.getOutcome())).findFirst();
-        if (curriculumOutcome.isPresent()) {
-            updatedThemeOutcome.setOutcome(curriculumOutcome.get());
-        }
-
-        return updatedThemeOutcome;
     }
 
     private static void updateVersionModuleSpecialities(CurriculumVersion version,
@@ -856,6 +845,13 @@ public class CurriculumService {
             CurriculumVersionDto form) {
         updateCurriculumVersionSpecialities(curriculumVersion.getCurriculum().getSpecialities(), curriculumVersion, form.getSpecialitiesReferenceNumbers());
         updateCurriculumVersionModules(curriculumVersion, form.getModules());
+        return curriculumVersionRepository.save(curriculumVersion);
+    }
+
+    public CurriculumVersion updateVocationalCurriculumImplementationPlanModules(CurriculumVersion curriculumVersion,
+            CurriculumVersionDto form) {
+        // TODO Auto-generated method stub
+        updateCurriculumVersionOccupationalModules(curriculumVersion, form.getOccupationModules());
         return curriculumVersionRepository.save(curriculumVersion);
     }
 }

@@ -75,7 +75,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     var onlyvocational = !school.higher && school.vocational;
     $scope.formState = {allCurriculumVersions: Curriculum.queryVersions(), curriculumVersions: [],
                         languages: [], studyForms: [], specialities: [], selectedStudents: [],
-                        curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyvocational: onlyvocational};
+                        curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyvocational: onlyvocational, isVocational: school.vocational};
 
     if(onlyvocational) {
       $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionVocational';
@@ -93,6 +93,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       $scope.formState.language = $scope.record.language;
       $scope.formState.studyForm = $scope.record.studyForm;
       $scope.formState.speciality = $scope.record.speciality;
+      $scope.formState.curriculumVersion = $scope.record.curriculumVersion;
 
       var afterCurriculumChange = function(result) {
         $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions.filter(function(cv) { return cv.curriculum === curriculumId;});
@@ -106,6 +107,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) !== -1 ? $scope.formState.language : null;
         $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
         $scope.record.speciality = $scope.formState.specialities.indexOf($scope.formState.speciality) !== -1 ? $scope.formState.speciality : null;
+        $scope.record.curriculumVersion = $scope.formState.curriculumVersions.find(function(it) {return it.id === $scope.formState.curriculumVersion;}) !== undefined ? $scope.formState.curriculumVersion : null;
       };
       if(curriculumId) {
         QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: curriculumId}, afterCurriculumChange);
@@ -181,7 +183,11 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
             return;
           }
           $q.all(clMapper.promises).then(function() {
-            scope.formState.students = clMapper.objectmapper(result);
+            var students = clMapper.objectmapper(result);
+            if (angular.isNumber($scope.formState.curriculumVersion)) {
+              students = students.filter(function(student) {return student.curriculumVersion.id === $scope.formState.curriculumVersion;});
+            }
+            scope.formState.students = students;
           });
         });
       };

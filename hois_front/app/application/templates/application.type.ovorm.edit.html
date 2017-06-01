@@ -10,7 +10,7 @@
     <md-input-container flex="60" flex-sm="100" flex-xs="100">
       <label>{{'application.newStudyForm' | translate}}</label>
       <hois-classifier-select ng-model="application.newStudyForm" model-value-attr="code"
-        main-classifier-code="OPPEVORM" filter-values="[application.oldStudyForm]" required></hois-classifier-select>
+        main-classifier-code="OPPEVORM" criteria="{higher: true}" filter-values="[application.oldStudyForm]" required></hois-classifier-select>
     </md-input-container>
   </div>
 </div>

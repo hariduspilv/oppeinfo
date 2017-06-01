@@ -6,12 +6,11 @@
       <table md-table md-progress="generalmessages.$promise">
         <tbody md-body>
           <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{::row.inserted | hoisDate}}</td>
-            <td md-cell><h4>{{::row.title}}</h4><pre ng-show="row.clicked">{{::row.content}}</pre></td>
+            <td md-cell width="10%">{{::row.inserted | hoisDate}}</td>
+            <td md-cell width="40%"><h4>{{::row.title}}</h4><div ng-show="row.clicked">{{::row.content}}</div></td>
             <td md-cell>
-                <md-button class="md-primary" ng-click="openCloseDetails(row)" aria-label="{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}">
-                    <span>{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}</span>
-                </md-button></td>
+                <a class="md-primary" ng-click="openCloseDetails(row)" aria-label="{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}"><span>{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}</span></a>
+			</td>
           </tr>
         </tbody>
       </table>
@@ -26,8 +25,8 @@
       <table md-table md-progress="unreadMessages.$promise">
         <tbody md-body>
           <tr md-row ng-repeat="row in unreadMessages.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="readMessage(row)">
-            <td md-cell>{{::row.dateSent | hoisDateTime}}</td>
-            <td md-cell><h4>{{::row.subject}}</h4>
+            <td md-cell width="10%">{{::row.dateSent | hoisDateTime}}</td>
+            <td md-cell width="90%"><h4>{{::row.subject}}</h4>
                 <div ng-show="row.clicked">
                     <pre>{{::row.content}}</pre>
                     <p>{{'message.messageSender' | translate}}: {{::row.sender}}</p>

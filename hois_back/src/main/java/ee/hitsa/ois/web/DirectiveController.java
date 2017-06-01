@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.service.ehis.EhisStudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
@@ -45,6 +46,8 @@ public class DirectiveController {
     private DirectiveConfirmService directiveConfirmService;
     @Autowired
     private DirectiveService directiveService;
+    @Autowired
+    private EhisStudentService ehisStudentService;
 
     @GetMapping
     public Page<DirectiveSearchDto> search(HoisUserDetails user, @Valid DirectiveSearchCommand criteria, Pageable pageable) {
@@ -92,7 +95,8 @@ public class DirectiveController {
     @PutMapping("/confirm/{id:\\d+}")
     public DirectiveDto confirm(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
-        directiveConfirmService.confirm(user, directive, LocalDate.now());
+        // start requests after save has been successful
+        ehisStudentService.updateStudents(directiveConfirmService.confirm(user, directive, LocalDate.now()));
         return get(user, directive);
     }
 

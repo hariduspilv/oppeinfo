@@ -89,7 +89,7 @@
         <tbody md-body>
           <tr md-row md-select="row" md-select-id="id" md-auto-select ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <a ng-disabled="!record.id"class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
+              <a ng-disabled="!record.id" class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
             </td>
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>

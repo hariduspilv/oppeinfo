@@ -16,16 +16,19 @@ public class CurriculumSearchDto {
     private LocalDate validThru;
     private Boolean higher;
     private String status;
+    private String ehisStatus;
     private String origStudyLevel;
     private AutocompleteResult school;
     private List<Long> departments;
+    private String code;
+    private String merCode;
 
     public CurriculumSearchDto() {
     }
 
     public CurriculumSearchDto(Long id, String nameEt, String nameEn, BigDecimal credits, LocalDate validFrom,
             LocalDate validThru, Boolean higher, String status, String origStudyLevel,
-            Long schoolId, String schoolNameEt, String schoolNameEn) {
+            Long schoolId, String schoolNameEt, String schoolNameEn, String ehisStatus, String code, String merCode) {
         this.id = id;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
@@ -36,6 +39,33 @@ public class CurriculumSearchDto {
         this.status = status;
         this.origStudyLevel = origStudyLevel;
         this.school = new AutocompleteResult(schoolId, schoolNameEt, schoolNameEn);
+        this.ehisStatus = ehisStatus;
+        this.code = code;
+        this.merCode = merCode;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getMerCode() {
+        return merCode;
+    }
+
+    public void setMerCode(String merCode) {
+        this.merCode = merCode;
+    }
+
+    public String getEhisStatus() {
+        return ehisStatus;
+    }
+
+    public void setEhisStatus(String ehisStatus) {
+        this.ehisStatus = ehisStatus;
     }
 
     public List<Long> getDepartments() {

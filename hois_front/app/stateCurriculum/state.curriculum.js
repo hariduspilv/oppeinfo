@@ -20,7 +20,6 @@ angular.module('hitsaOis')
     var baseUrl = '/stateCurriculum';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
-    $scope.readOnly = false;
     $scope.removeFromArray = ArrayUtils.remove;
     $scope.subOccupations = {};
     $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
@@ -43,6 +42,7 @@ angular.module('hitsaOis')
         fillCascadeDropdowns();
         getAllSuboccupations();
         $scope.currentStatus = $scope.stateCurriculum.status;
+        $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1 || $scope.currentStatus === Curriculum.STATUS.VERIFIED;
     }
 
 
@@ -82,11 +82,19 @@ angular.module('hitsaOis')
         setTimeout(save, 0);
     };
 
-    function save() {
+    $scope.modulesValid = function() {
+        if(!$scope.stateCurriculum) {
+            return true;
+        }
+        return !$scope.strictValidation() || $scope.stateCurriculum.occupations.length !== 0 && $scope.stateCurriculum.modules.length !== 0  && allOccuppationsValid() && allSpetsOccupationsValid();
+    };
+
+    function save(messages) {
         $scope.stateCurriculumForm.$setSubmitted();
 
         if (!stateCurriculumFormIsValid()) {
-            message.error('main.messages.form-has-errors');
+            var errorMessage = messages && messages.errorMessage ? messages.errorMessage : 'main.messages.form-has-errors';
+            message.error(errorMessage);
             return;
         }
         if($scope.strictValidation()) {
@@ -103,36 +111,49 @@ angular.module('hitsaOis')
         if(id) {
             $scope.stateCurriculum.$update().then(function(){
                 setVariablesForExistingStateCurriculum();
-                message.info('main.messages.create.success');
+                var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
+                message.info(updateSuccess);
                 $scope.stateCurriculumForm.$setPristine();
-                if($scope.stateCurriculum.status === $scope.STATUS.CLOSED) {
-                    $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/view');
+                if($scope.stateCurriculum.status === $scope.STATUS.CLOSED || $scope.stateCurriculum.status === $scope.STATUS.VERIFIED) {
+                    $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/view').search({_noback: true});
                 }
             });
         } else {
             $scope.stateCurriculum.$save().then(function(){
                 DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
                 message.updateSuccess();
-                $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit');
+                $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit').search({_noback: true});
             });
         }
     }
 
-    $scope.confirmCurriculum = function() {
-        dialogService.confirmDialog({prompt: 'stateCurriculum.confirmconfirm'}, function() {
-            $scope.stateCurriculum.status = $scope.STATUS.VERIFIED;
+    function setStatus(newStatus, messages) {
+        dialogService.confirmDialog({prompt: messages.prompt}, function() {
+            $scope.stateCurriculum.status = newStatus;
             // setTimeout is needed for validation of ng-required fields
-            setTimeout(save, 0);
+            setTimeout(function(){
+                save(messages);
+            }, 0);
         });
+    }
+
+    $scope.confirmCurriculum = function() {
+        var messages = {
+            prompt: $scope.readOnly ? 'stateCurriculum.prompt.viewForm.verify' : 'stateCurriculum.prompt.editForm.verify',
+            updateSuccess: 'stateCurriculum.statuschange.verified',
+            errorMessage: $scope.readOnly ? 'stateCurriculum.statuschange.fail.verifyReadOnly' : 'stateCurriculum.statuschange.fail.verify'
+        };
+        setStatus($scope.STATUS.VERIFIED, messages);
     };
 
 
     $scope.closeCurriculum = function() {
-        dialogService.confirmDialog({prompt: 'stateCurriculum.closeconfirm'}, function() {
-            $scope.stateCurriculum.status = $scope.STATUS.CLOSED;
-            // setTimeout is needed for validation of ng-required fields
-            setTimeout(save, 0);
-        });
+        var messages = {
+            prompt: $scope.readOnly ? 'stateCurriculum.prompt.viewForm.close' : 'stateCurriculum.prompt.editForm.close',
+            updateSuccess: 'stateCurriculum.statuschange.closed',
+            errorMessage: $scope.readOnly ? 'stateCurriculum.statuschange.fail.closeReadOnly' : 'stateCurriculum.statuschange.fail.close'
+        };        
+        setStatus($scope.STATUS.CLOSED, messages);
     };
 
     $scope.getStar = function() {

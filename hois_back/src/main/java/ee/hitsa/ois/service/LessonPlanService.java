@@ -108,6 +108,8 @@ public class LessonPlanService {
     }
 
     public LessonPlan save(LessonPlan lessonPlan, LessonPlanForm form) {
+        EntityUtil.bindToEntity(form, lessonPlan);
+
         Map<Long, LessonPlanModule> modules = StreamUtil.toMap(LessonPlanModule::getId, lessonPlan.getLessonPlanModules());
         List<? extends LessonPlanModuleForm> formModules = form.getModules();
         if(formModules != null) {
@@ -214,6 +216,9 @@ public class LessonPlanService {
         LessonPlan lessonPlan = lessonPlanModule.getLessonPlan();
         UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
         Journal journal = EntityUtil.bindToEntity(form, new Journal());
+        journal.setJournalCapacityTypes(null);
+        journal.setJournalTeachers(null);
+        journal.setJournalOccupationModuleThemes(null);
         journal.setStudyYear(lessonPlan.getStudyYear());
         journal.setSchool(lessonPlan.getSchool());
         journal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
@@ -238,9 +243,8 @@ public class LessonPlanService {
         if(teachers == null) {
             journal.setJournalTeachers(teachers = new ArrayList<>());
         }
-        EntityUtil.bindEntityCollection(teachers, t -> EntityUtil.getId(t.getTeacher()), form.getJournalTeachers(), jt -> jt.getTeacher().getId(), jtf -> {
-            JournalTeacher jt = new JournalTeacher();
-            EntityUtil.bindToEntity(jtf, jt);
+        EntityUtil.bindEntityCollection(teachers, EntityUtil::getId, form.getJournalTeachers(), jt -> jt.getId(), jtf -> {
+            JournalTeacher jt = EntityUtil.bindToEntity(jtf, new JournalTeacher());
             jt.setJournal(journal);
             EntityUtil.setEntityFromRepository(jtf, jt, teacherRepository, "teacher");
             assertSameSchool(journal, jt.getTeacher().getSchool());

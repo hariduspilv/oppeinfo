@@ -6,6 +6,7 @@
       "et": "Est",
       "en": "Eng"
     },
+    "timePlaceholder": "tt:mm",
 	"searchlabel": "Otsinguparameetrid",
     "button": {
       "add": "Lisa",
@@ -576,11 +577,15 @@
     "journal": {
       "assessment": "Hindamisviis",
       "deleteconfirm": "Kas oled kindel, et soovid päeviku kustutada?",
+      "duplicateteacher": "Õpetaja on juba olemas",
       "duplicatetheme": "Teema on juba päevikus",
+      "isConfirmer": "kinnitaja",
+      "isFiller": "täitja",
       "groupProportion": "Osakaal",
       "name": "Päeviku nimi",
       "teacher": "Õpetaja",
-      "theme": "Õpetatav teema"
+      "theme": "Õpetatav teema",
+      "capacity-type": "Õppetöö liik"
     },
     "search": {
       "vocational": "Õpperühmad (kutse)",
@@ -653,6 +658,26 @@
         "close": "Sulge ÕK",
         "confirm": "Kinnita",
         "edit": "Sisesta õk"
+    },
+    "prompt":{
+        "viewForm": {
+            "verify": "Kas oled kindel, et soovid riikliku õppekava kinnitada?",
+            "close": "Kas oled kindel, et soovid riikliku õppekava sulgeda?"
+        },
+        "editForm": {
+            "verify": "Kas oled kindel, et soovid riikliku õppekava salvestada ja kinnitada?",
+            "close": "Kas oled kindel, et soovid riikliku õppekava salvestada ja sulgeda?"
+        }
+    },
+    "statuschange": {
+        "verified": "Õppekava on kinnitatud",
+        "closed": "Õppekava on suletud",
+        "fail": {
+            "verify": "Andmete salvestamine ja kinnitamine ebaõnnestus. Kohustuslikud väljad on täitmata.",
+            "verifyReadOnly": "Andmete kinnitamine ebaõnnestus.",
+            "close": "Andmete salvestamine ja sulgemine ebaõnnestus. Kohustuslikud väljad on täitmata.",
+            "closeReadOnly": "Andmete sulgemine ebaõnnestus."
+        }
     },
     "deleteconfirm": "Kas oled kindel, et soovid riikliku õppekava kustutada?",
     "confirmconfirm": "Kas oled kindel, et soovid riikliku õppekava salvestada ja kinnitada?",
@@ -750,6 +775,7 @@
   "curriculum" : {
     "draft": "Õppekava loomise viis",
 	"mainData": "Põhiandmed",
+	"versionMainData": "Õppekava versiooni põhiandmed",
 	"commonData": "Üldinfo",
     "name": "Õppekava nimetus",
     "nameEt": "Õppekava nimetus eesti keeles",
@@ -842,6 +868,8 @@
 	"approvalInfo":"Õppeasutuse kinnitamise info",
 	"sentToEhis":"Õppekava on EHISesse saadetud",
 	"statuses":"Õppekava kehtivus ja staatused",
+	"versionStatus":"Õppekava versiooni kehtivus ja staatus",
+	"implementationPlanStatus":"Rakenduskava kehtivus ja staatus",
     "consecution": {
       "primary": "Esmaõppe õppekava",
       "secondary": "Jätkuõppe õppekava"
@@ -904,7 +932,8 @@
         "subjectsName": "Õppeaine kood - Nimetus"
     },
     "message": {
-        "statusUpdated": "Staatus on uuendatud"
+        "statusUpdated": "Staatus on uuendatud",
+        "ehisStatusUpdated": "Staatus on EHISest uuendatud"
     },
     "error": {
         "numberOfElectiveModules": "Ei tohi olla suurem kui valikmoodulite arv",
@@ -915,31 +944,39 @@
         "inputFieldsNotFilledOnConfirm": "Andmete salvestamine ja kinnitamine ebaõnnestus. Kohustuslikud väljad on täitmata.",
         "inputFieldsNotFilledOnProcede": "Andmete salvestamine ja menetlemine ebaõnnestus. Kohustuslikud väljad on täitmata.",
         "notAllModulesHaveOccupation": "Kõik moodulid peavad olema seotud vähemalt ühe kutse või osakutsega.",
+        "noBasicModule": "Vähemalt üks põhiõpingute  moodul peab olema lisatud",
         "noImplementationPlan": "Vähemalt üks rakenduskava peab olema lisatud õppekavasse.",
         "noVersion": "Vähemalt üks versioon peab olema lisatud õppekavasse.",
-        "moduleOccupations": "Üks ja sama moodul ei tohi olla samaaegselt seotud nii kutse/osakutsega ja spetsialiseerumisega."
+        "noOccupation": "Vähemalt üks kutse/osakutse peab olema lisatud õppekavasse.",
+        "noPModules": "Igale kutsele/osakutsele/spetsialiseerumisele peab olema lisatud vähemalt üks põhiõpingute moodul.",
+        "noModule": "Vähemalt üks moodul peab olema lisatud õppekavasse.",
+        "moduleOccupations": "Üks ja sama moodul ei tohi olla samaaegselt seotud nii kutse/osakutsega ja spetsialiseerumisega.",
+        "occupationNotSelected": "Vähemalt üks kutse või osakutse peab olema valitud."
     },
     "prompt": {
         "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
         "editAccepted": "Õppekava on EHISes kinnitatud. Kas soovid jätkata?",
         "hasOccupations": "Õppekava on seotud kutsetega. Soovid neid kustutada?",
-        "hasSubOccupations": "Õppekava on seotud osakutsetega. Soovid neid kustutada? "
+        "hasSubOccupations": "Õppekava on seotud osakutsetega. Soovid neid kustutada? ",
+        "deleteImplementationPlan": "Kas oled kindel, et soovid rakenduskava kustutada?",
+        "goToVersionForm": "Veendu, et õppekava andmed on salvestatud. Kas soovid jätkata?"
     },
     "success": {
         "verified": "Õppekava on kinnitatud",
-        "proceed": "Õppekava on menetlemisel"
+        "proceed": "Õppekava on menetlemisel",
+        "closed": "Õppekava on suletud"
     },
     "statuschange" : {
         "higher": {
-            "proceed": "Kas oled kindel, et soovid kõrghariduse õppekava salvestada ja menetleda?",
-            "verify": "Kas oled kindel, et soovid kõrghariduse õppekava salvestada ja kinnitada?",
-            "close": "Kas oled kindel, et soovid kõrghariduse õppekava salvestada ja sulgeda?"
+            "proceed": "Kas oled kindel, et soovid kõrgharidusõppe õppekava salvestada ja menetleda?",
+            "verify": "Kas oled kindel, et soovid kõrgharidusõppe õppekava salvestada ja kinnitada?",
+            "close": "Kas oled kindel, et soovid kõrgharidusõppe õppekava salvestada ja sulgeda?"
         },
         "vocational": {
             "proceed": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja menetleda?",
             "verify": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja kinnitada?",
             "close": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja sulgeda?"
-        }, 
+        },
         "version": {
             "button": {
                 "verify": "Kinnita",
@@ -948,13 +985,13 @@
             "prompt": {
                 "verify": "Kas oled kindel, et soovid õppekava versiooni salvestada ja kinnitada?",
                 "close": "Kas oled kindel, et soovid õppekava versiooni salvestada ja sulgeda?",
-                "editAccepted": "Õppekava versioon on EHISes kinnitatud. Kas soovid jätkata?"
+                "editAccepted": "Õppekava versioon on kinnitatud. Kas soovid jätkata?"
             },
             "success": {
                 "verified": "Õppekava versioon on kinnitatud",
                 "closed": "Õppekava versioon on suletud"
             }
-        }, 
+        },
         "implementationPlan": {
             "button": {
                 "verify": "Kinnita",
@@ -963,7 +1000,7 @@
             "prompt": {
                 "verify": "Kas oled kindel, et soovid rakenduskava salvestada ja kinnitada?",
                 "close": "Kas oled kindel, et soovid rakenduskava salvestada ja sulgeda?",
-                "editAccepted": "Rakenduskava on EHISes kinnitatud. Kas soovid jätkata?"
+                "editAccepted": "Rakenduskava on kinnitatud. Kas soovid jätkata?"
             },
             "success": {
                 "verified": "Rakenduskava on kinnitatud",
@@ -973,9 +1010,9 @@
     },
     "statuschangeReadOnly" : {
         "higher": {
-            "proceed": "Kas oled kindel, et soovid kõrghariduse õppekava menetleda?",
-            "verify": "Kas oled kindel, et soovid kõrghariduse õppekava kinnitada?",
-            "close": "Kas oled kindel, et soovid kõrghariduse õppekava sulgeda?"
+            "proceed": "Kas oled kindel, et soovid kõrgharidusõppe õppekava menetleda?",
+            "verify": "Kas oled kindel, et soovid kõrgharidusõppe õppekava kinnitada?",
+            "close": "Kas oled kindel, et soovid kõrgharidusõppe õppekava sulgeda?"
         },
         "vocational": {
             "proceed": "Kas oled kindel, et soovid kutseõppe õppekava menetleda?",
@@ -987,7 +1024,7 @@
                 "verify": "Kas oled kindel, et soovid õppekava versiooni kinnitada?",
                 "close": "Kas oled kindel, et soovid õppekava versiooni sulgeda?"
             }
-        }, 
+        },
         "implementationPlan": {
             "prompt": {
                 "verify": "Kas oled kindel, et soovid rakenduskava kinnitada?",
@@ -1203,6 +1240,7 @@
       "type": "Rakenduskava liik",
       "insertModuleData": "Sisesta mooduli andmed",
       "viewUpdateModuleData": "Muuda mooduli andmed",
+      "viewModuleData": "Vaata mooduli andmed",
 	  "moduleName": "Mooduli nimi",
 	  "moduleCapacity": "Maht",
 	  "moduleOK": "Korras?"

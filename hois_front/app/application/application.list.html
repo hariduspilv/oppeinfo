@@ -4,7 +4,7 @@
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label>{{'application.type' | translate}}</label>
-            <hois-classifier-select multiple ng-model="criteria.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
+            <hois-classifier-select multiple ng-model="criteria.type" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" model-value-attr="code" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
           </md-input-container>
       </div>
 
@@ -17,7 +17,7 @@
             <md-datepicker ng-model="criteria.insertedFrom" md-open-on-focus></md-datepicker>
           </md-input-container>
 
-            <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start"  layout-align-xs="start start" layout-align-sm="start start">
+            <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start" layout-align-sm="start start">
                 <md-input-container flex>
                   <label>{{'application.insertionDateK' | translate}}</label>
                   <md-datepicker ng-model="criteria.insertedThru" md-open-on-focus></md-datepicker>

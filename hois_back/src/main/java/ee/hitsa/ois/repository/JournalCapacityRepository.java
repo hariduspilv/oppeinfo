@@ -9,5 +9,5 @@ import ee.hitsa.ois.domain.timetable.JournalCapacity;
 
 public interface JournalCapacityRepository extends JpaRepository<JournalCapacity, Long> {
 
-    Long deleteByStudyPeriodAndWeekNrNotIn(StudyPeriod studyPlan, List<Long> weekNrs);
+    Long deleteByStudyPeriodAndWeekNrNotIn(StudyPeriod studyPlan, List<Integer> weekNrs);
 }

@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
@@ -20,9 +22,11 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
         dto.setLessonPlanModuleId(lessonPlanModule.getId());
         dto.setJournalCapacityTypes(StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getCapacityType()), journal.getJournalCapacityTypes()));
         dto.setJournalOccupationModuleThemes(StreamUtil.toMappedList(r -> EntityUtil.getId(r.getCurriculumVersionOccupationModuleTheme()), journal.getJournalOccupationModuleThemes()));
-        dto.setJournalTeachers(StreamUtil.toMappedList(LessonPlanJournalForm.LessonPlanJournalTeacherForm::of, journal.getJournalTeachers()));
+        if(journal.getJournalTeachers() != null) {
+            dto.setJournalTeachers(journal.getJournalTeachers().stream().map(LessonPlanJournalForm.LessonPlanJournalTeacherForm::of).sorted(Comparator.comparing(r -> ((AutocompleteResult)r.getTeacher()).getNameEt().toLowerCase())).collect(Collectors.toList()));
+        }
         dto.setLessonPlan(EntityUtil.getId(lessonPlanModule.getLessonPlan()));
-        dto.setThemes(StreamUtil.toMappedList(AutocompleteResult::of, lessonPlanModule.getCurriculumVersionOccupationModule().getThemes()));
+        dto.setThemes(lessonPlanModule.getCurriculumVersionOccupationModule().getThemes().stream().map(AutocompleteResult::of).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
         return dto;
     }
 

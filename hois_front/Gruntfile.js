@@ -45,6 +45,13 @@ module.exports = function (grunt) {
           livereload: '<%= connect.options.livereload %>'
         }
       },
+      html: {
+        files: ['<%= yeoman.app %>/*/{,*/}*.html'],
+        tasks: ['newer:htmlhint:all'],
+        options: {
+          livereload: '<%= connect.options.livereload %>'
+        }
+      },
       jsTest: {
         files: ['test/spec/{,*/}*.js'],
         tasks: ['newer:jshint:test', 'newer:jscs:test', 'karma']
@@ -153,6 +160,20 @@ module.exports = function (grunt) {
           jshintrc: 'test/.jshintrc'
         },
         src: ['test/spec/{,*/}*.js']
+      }
+    },
+
+    htmlhint: {
+      all: {
+        options: {
+          'tag-pair': true,
+          'attr-value-double-quotes': true,
+          'attr-no-duplication': true,
+          'tag-self-close': false,
+          'spec-char-escape': true,
+          'tagname-lowercase': true
+        },
+        src: ['<%= yeoman.app %>/{,*/}*.html']
       }
     },
 
@@ -502,6 +523,7 @@ module.exports = function (grunt) {
   grunt.registerTask('default', [
     'newer:jshint',
     'newer:jscs',
+    'newer:htmlhint',
     'test',
     'build'
   ]);

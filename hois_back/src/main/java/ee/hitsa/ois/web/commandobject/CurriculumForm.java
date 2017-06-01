@@ -105,7 +105,7 @@ public class CurriculumForm extends VersionedCommand {
     private Boolean joint;
     @Min(0)
     @Max(1000)
-    private Integer optionalStudyCredits;
+    private Double optionalStudyCredits;
     private LocalDate validFrom;
     private LocalDate validThru;
 
@@ -537,11 +537,11 @@ public class CurriculumForm extends VersionedCommand {
         this.joint = joint;
     }
 
-    public Integer getOptionalStudyCredits() {
+    public Double getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+    public void setOptionalStudyCredits(Double optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 

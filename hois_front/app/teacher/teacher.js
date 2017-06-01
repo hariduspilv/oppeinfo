@@ -241,7 +241,22 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
         $scope.teacherOccupations = result;
     });
 
-  $scope.removeDuplicates = ArrayUtils.removeDuplicates;
+  function setContains(set, item) {
+    var ids = set.map(function(el){
+      return el.id;
+    });
+    return ArrayUtils.includes(ids, item.id);
+  }
+
+  $scope.removeDuplicateDepartments = function(departments) {
+    var set = [];
+    departments.forEach(function(el){
+      if(!setContains(set, el)) {
+        set.push(el);
+      }
+    });
+    return set;
+  };
 
   $scope.loadData();
 }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {

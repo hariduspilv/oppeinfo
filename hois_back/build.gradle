@@ -42,6 +42,10 @@ sourceCompatibility = 1.8
 targetCompatibility = 1.8
 
 repositories {
+	// todo: see if there is a need for more dynamic solution
+	flatDir {
+		dirs 'libs'
+	}
 	mavenCentral()
 }
 
@@ -60,6 +64,7 @@ dependencies {
 	compile('org.postgresql:postgresql')
 	compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.7')
     compile('com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.8.7')
+	compile(':hois_ws')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile('com.h2database:h2')
 	testCompile('org.springframework.security:spring-security-test')

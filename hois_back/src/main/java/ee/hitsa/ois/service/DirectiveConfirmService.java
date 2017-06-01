@@ -125,7 +125,7 @@ public class DirectiveConfirmService {
         directiveRepository.save(directive);
     }
 
-    public void confirm(HoisUserDetails user, Directive directive, LocalDate confirmDate) {
+    public Directive confirm(HoisUserDetails user, Directive directive, LocalDate confirmDate) {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus()), "Invalid directive status");
 
         // update directive fields
@@ -148,7 +148,7 @@ public class DirectiveConfirmService {
                 updateStudentData(directiveType, ds, studentStatus, student != null ? academicLeaves.get(student.getId()) : null);
             }
         }
-        directiveRepository.save(directive);
+        return directiveRepository.save(directive);
     }
 
     private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent, Classifier studentStatus, DirectiveStudent academicLeave) {

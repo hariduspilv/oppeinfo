@@ -3,12 +3,12 @@
     <div flex>
       <md-input-container class="md-block">
         <label class="textInput">{{'lessonplan.studyYear' | translate}}</label>
-        <hois-select values="formState.studyYears" ng-model="record.studyYear" md-autofocus>
+        <hois-select values="formState.studyYears" ng-model="record.studyYear" md-autofocus></hois-select>
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'lessonplan.studentGroup' | translate}}</label>
-        <hois-select values="formState.studentgroups[record.studyYear]" ng-model="record.studentGroup">
+        <hois-select values="formState.studentgroups[record.studyYear]" ng-model="record.studentGroup"></hois-select>
       </md-input-container>
     </div>
 

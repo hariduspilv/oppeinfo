@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.curriculum;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -38,15 +39,19 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     private String typeNameEn;
     @NotNull
     @Min(0)
-    private Integer totalCredits;
+    @Max(999)
+    private Double totalCredits;
     @NotNull
     @Min(0)
-    private Integer optionalStudyCredits;
+    @Max(999)
+    private Double optionalStudyCredits;
     @NotNull
     @Min(0)
-    private Integer compulsoryStudyCredits;
+    @Max(999)
+    private Double compulsoryStudyCredits;
     @NotNull
     @Min(0)
+    @Max(999)
     private Integer electiveModulesNumber;
     @NotNull
     private Boolean minorSpeciality;
@@ -152,27 +157,27 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         this.typeNameEn = typeNameEn;
     }
 
-    public Integer getTotalCredits() {
+    public Double getTotalCredits() {
         return totalCredits;
     }
 
-    public void setTotalCredits(Integer totalCredits) {
+    public void setTotalCredits(Double totalCredits) {
         this.totalCredits = totalCredits;
     }
 
-    public Integer getOptionalStudyCredits() {
+    public Double getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+    public void setOptionalStudyCredits(Double optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 
-    public Integer getCompulsoryStudyCredits() {
+    public Double getCompulsoryStudyCredits() {
         return compulsoryStudyCredits;
     }
 
-    public void setCompulsoryStudyCredits(Integer compulsoryStudyCredits) {
+    public void setCompulsoryStudyCredits(Double compulsoryStudyCredits) {
         this.compulsoryStudyCredits = compulsoryStudyCredits;
     }
 

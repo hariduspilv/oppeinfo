@@ -155,13 +155,15 @@
                     ng-change="setCompulsoryStudyCredits(subject)" ng-disabled="readOnly"></md-checkbox>
                 </td>
                 <td md-cell>
-                    <div ng-if="subject.optional && data.electiveModules.length > 0" layout="row">
-                        <span>{{'module.optional' | translate}}</span>
+                    <div ng-if="subject.optional && data.electiveModules.length > 0" layout="row" flex>
+						<md-input-container flex>
+                        <label>{{'module.optional' | translate}}</label>
                         <md-select ng-model="subject.electiveModule" ng-change="addSubjectToElectiveModule(subject)" ng-disabled="readOnly">
                             <md-option ng-repeat="option in data.electiveModules | orderBy: currentLanguageNameField()" ng-value="option.referenceNumber">
                                 {{option[currentLanguageNameField()]}}
                             </md-option>
                         </md-select>
+						</md-input-container>
                     </div>
                 </td>
                 <td md-cell>

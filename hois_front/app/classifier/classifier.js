@@ -46,12 +46,19 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
         // make copy to avoid modifying cached value
         for(var i = 0, cnt = data.length;i < cnt;i ++)  {
           // filter data by optional parameters
-          if(params.higher !== undefined && params.higher !== data[i].higher) {
+          if(params.higher !== undefined && params.vocational === undefined && params.higher !== data[i].higher) {
             continue;
           }
-          if(params.vocational !== undefined && params.vocational !== data[i].vocational) {
+
+          if(params.vocational !== undefined && params.higher === undefined && params.vocational !== data[i].vocational) {
             continue;
           }
+
+          if(params.vocational !== undefined && params.higher !== undefined && (params.vocational !== data[i].vocational && params.higher !== data[i].higher)) {
+            continue;
+          }
+
+
           result.push(angular.copy(data[i]));
         }
         var order = params.order;

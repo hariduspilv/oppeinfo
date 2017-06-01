@@ -21,13 +21,20 @@
           </md-select>
         </md-input-container>
 
+        <div ng-show="stateCurriculumSelect">
+            <md-input-container>
+                <input style="display:none" readonly ng-model="occupationsAndPartOccupationsCount" name="occupationsAndPartOccupationsCount" type="number" min="1">
+                <div ng-messages="dialogForm.occupationsAndPartOccupationsCount.$error">
+                  	<div ng-if="dialogForm.$submitted" ng-message="min">{{'curriculum.error.occupationNotSelected' | translate}}</div>
+                </div>
+            </md-input-container>
+        </div>
+
           <div style="height: 100%;">
             <div layout="column">
               <div ng-repeat="item in stateCurriculumOccupations">
-
-
                 <md-checkbox ng-model="selectedStateCurriculumOccupations[item.occupation.code]" ng-change="occupationSelected(item.occupation.code)"
-                  aria-label="{{item.occupation[currentLanguageNameField()]}}">
+                  aria-label="{{item.occupation[currentLanguageNameField()]}}" ng-disabled="occupationsCount === 0 && partOccupationsCount !== 0">
                   {{item.occupation[currentLanguageNameField()]}}
                 </md-checkbox>
                 <div layout="column">
@@ -40,7 +47,7 @@
                       <div ng-repeat="partOccupation in item.partOccupations" flex layout="row">
                         <div flex="5">&nbsp;</div>
 						<md-checkbox ng-model="selectedStateCurriculumPartOccupations[partOccupation.code]" aria-label="{{partOccupation[currentLanguageNameField()]}}"
-                        ng-disabled="selectedStateCurriculumOccupations[item.occupation.code]">
+                        ng-disabled="selectedStateCurriculumOccupations[item.occupation.code] || occupationsCount !== 0" ng-change="countOccupationsAndPartOccupationsSelected()">
                           {{partOccupation[currentLanguageNameField()]}}
                         </md-checkbox>
                       </div>
@@ -84,6 +91,7 @@
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
       <md-button class="md-primary md-raised" ng-click="submit()">{{"main.button.choose" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>
 </md-dialog>

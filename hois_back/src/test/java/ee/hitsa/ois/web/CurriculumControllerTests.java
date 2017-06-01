@@ -621,7 +621,7 @@ public class CurriculumControllerTests {
         Long curriculumModuleOutcomeId = testCurriculum.getModules().stream().findFirst().get()
                 .getOutcomes().stream().findFirst().get().getId();
         themeOutcome.setOutcome(curriculumModuleOutcomeId);
-        theme.getOutcomes().add(themeOutcome);
+//        theme.getOutcomes().add(themeOutcome);
 
         savedOccupationModule.getThemes().add(theme);
 
@@ -746,7 +746,7 @@ public class CurriculumControllerTests {
     private static CurriculumForm getForm(LocalDate validFrom) {
         CurriculumForm curriculumForm = new CurriculumForm();
         curriculumForm.setCode("testCode");
-        curriculumForm.setOptionalStudyCredits(Integer.valueOf(1));
+        curriculumForm.setOptionalStudyCredits(Double.valueOf(1));
         curriculumForm.setStudyPeriod(Integer.valueOf(1));
         curriculumForm.setNameEn("nameEn");
         curriculumForm.setNameEt("nameEt");
@@ -895,13 +895,13 @@ public class CurriculumControllerTests {
 
     private static CurriculumVersionHigherModuleDto getCurriculumVersionHigherModuleDto() {
         CurriculumVersionHigherModuleDto dto = new CurriculumVersionHigherModuleDto();
-        dto.setTotalCredits(Integer.valueOf(1));
-        dto.setOptionalStudyCredits(Integer.valueOf(1));
+        dto.setTotalCredits(Double.valueOf(1));
+        dto.setOptionalStudyCredits(Double.valueOf(1));
         dto.setType("KORGMOODUL_F");
         dto.setNameEn("CurriculumControllerTest");
         dto.setNameEt("CurriculumControllerTest");
         dto.setElectiveModulesNumber(Integer.valueOf(1));
-        dto.setCompulsoryStudyCredits(Integer.valueOf(1));
+        dto.setCompulsoryStudyCredits(Double.valueOf(1));
         return dto;
     }
 

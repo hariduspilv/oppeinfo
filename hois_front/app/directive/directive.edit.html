@@ -9,7 +9,7 @@
       </div>
 
       <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students && record.type !== 'KASKKIRI_IMMAT' && record.type !== 'KASKKIRI_IMMATV'">
-	    <div>&nbsp;</div>
+        <div>&nbsp;</div>
         <md-table-container>
           <table md-table md-row-select multiple ng-model="formState.selectedStudents">
             <thead md-head>
@@ -83,7 +83,7 @@
 
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.directiveCoordinator' | translate}}</label>
-          <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator" criteria="{isDirective: true}"></hois-value>
+          <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator" criteria="{isDirective: true}"></hois-select>
         </md-input-container>
 
         <md-input-container class="md-block" ng-if="record.type === 'KASKKIRI_TYHIST'">
@@ -104,7 +104,6 @@
 				<div ng-include="formState.templateUrl" flex></div>
 			</fieldset>	
 		</md-table-container>
-	</div>
 
         <!--div ng-include="formState.templateUrl"></div-->
 

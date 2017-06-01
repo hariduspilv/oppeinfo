@@ -49,7 +49,7 @@
 			  <md-input-container flex="45">
 				<label>{{'module.type' | translate}}</label>
 				<hois-classifier-select name="module" ng-model="module.module" filter-values="filteredModuleValues"
-				main-classifier-code="KUTSEMOODUL" required ng-disabled="formState.readOnly"></hois-classifier-select>
+				main-classifier-code="KUTSEMOODUL" required ng-disabled="formState.readOnly || module.id && formState.typePreselected"></hois-classifier-select>
 			  </md-input-container>
 			  <md-input-container  flex="10" flex-offset="5">
 				<label>{{'module.credits' | translate}}</label>
@@ -97,7 +97,7 @@
                     <textarea ng-model="outcomeEn" md-maxlength="20000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
                   </md-input-container>
 					<md-button class="md-primary" ng-click="addOutcome()" ng-if="!formState.readOnly">{{'main.button.add' | translate}}</md-button>
-			</div>	
+			</div>
 			<div layout="column">
             <!--md-list flex-->
               <div ng-repeat="item in module.outcomes" class="occupation-row align-center" layout="row" flex>
@@ -106,8 +106,8 @@
               </div>
             <!--/md-list-->
           </div>
-			
-		</fieldset>	
+
+		</fieldset>
 		<div>&nbsp;</div>
 
           <!--div layout="column">
@@ -148,7 +148,7 @@
 
           <md-input-container flex>
             <label>{{'module.competencesAquired' | translate}}</label>
-            <md-select multiple="true" ng-model="module.competences" ng-disabled="module.module.code !== 'KUTSEMOODUL_P' || formState.readOnly">
+            <md-select multiple="true" ng-model="module.competences" ng-disabled="module.module.code !== 'KUTSEMOODUL_P' || formState.readOnly || competences.length === 0">
               <md-option ng-repeat="option in competences track by $index" ng-value="option.code" aria-label="{{option[currentLanguageNameField()]}}">
                 {{option[currentLanguageNameField()]}}</md-option>
             </md-select>

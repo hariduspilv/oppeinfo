@@ -72,7 +72,7 @@
           <td md-cell ng-if="!showSchool">{{currentLanguageNameField(row.teacherOccupation)}}</td>
           <td md-cell ng-if="schoolHigher && !showSchool">
             <table>
-                <tr ng-repeat="department in removeDuplicates(row.schoolDepartments, 'id')">
+                <tr ng-repeat="department in removeDuplicateDepartments(row.schoolDepartments) | orderBy: 'nameEt'">
                     <td>{{currentLanguageNameField(department)}}</td>
                 </tr>
             </table>

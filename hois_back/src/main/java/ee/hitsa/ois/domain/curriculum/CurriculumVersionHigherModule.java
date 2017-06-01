@@ -45,10 +45,10 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
     private String typeNameEn;
 
     @NotNull
-    private Integer totalCredits;
+    private Double totalCredits;
     @NotNull
-    private Integer optionalStudyCredits;
-    private Integer compulsoryStudyCredits;
+    private Double optionalStudyCredits;
+    private Double compulsoryStudyCredits;
     private Integer electiveModulesNumber;
 
     @NotNull
@@ -88,11 +88,11 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
         this.electiveModulesNumber = electiveModulesNumber;
     }
 
-    public Integer getCompulsoryStudyCredits() {
+    public Double getCompulsoryStudyCredits() {
         return compulsoryStudyCredits;
     }
 
-    public void setCompulsoryStudyCredits(Integer compulsoryStudyCredits) {
+    public void setCompulsoryStudyCredits(Double compulsoryStudyCredits) {
         this.compulsoryStudyCredits = compulsoryStudyCredits;
     }
 
@@ -160,19 +160,19 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
         this.typeNameEn = typeNameEn;
     }
 
-    public Integer getTotalCredits() {
+    public Double getTotalCredits() {
         return totalCredits;
     }
 
-    public void setTotalCredits(Integer totalCredits) {
+    public void setTotalCredits(Double totalCredits) {
         this.totalCredits = totalCredits;
     }
 
-    public Integer getOptionalStudyCredits() {
+    public Double getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+    public void setOptionalStudyCredits(Double optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 

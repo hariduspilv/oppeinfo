@@ -46,7 +46,7 @@ public class TestData {
         c.setCode(STRING);
         
         c.setStudyPeriod(Integer.valueOf(1));
-        c.setOptionalStudyCredits(Integer.valueOf(1));
+        c.setOptionalStudyCredits(Double.valueOf(1));
         
         c.setHigher(Boolean.FALSE);
         c.setJoint(Boolean.FALSE);

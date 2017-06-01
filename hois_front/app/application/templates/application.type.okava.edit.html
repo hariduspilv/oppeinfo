@@ -23,8 +23,7 @@
   <div layout="row" layout-sm="column" layout-xs="column">
     <md-input-container flex="60" flex-sm="100" flex-xs="100">
       <label>{{'application.newStudyForm' | translate}}</label>
-      <hois-classifier-select ng-model="application.newStudyForm" model-value-attr="code"
-        main-classifier-code="OPPEVORM" required></hois-classifier-select>
+      <hois-select ng-model="application.newStudyForm" values="studyForms" value-property="code" required></hois-select>
     </md-input-container>
   </div>
 </div>

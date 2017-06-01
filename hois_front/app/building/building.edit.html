@@ -3,12 +3,12 @@
     <form name="buildingForm">
       <md-input-container class="md-block">
         <label>{{'building.name' | translate}}</label>
-        <input ng-model="record.name" name="name" type="text" required md-maxlength="255" required>
+        <input ng-model="record.name" name="name" type="text" md-maxlength="255" required>
       </md-input-container>
 
       <md-input-container class="md-block">
         <label class="textInput">{{'building.code' | translate}}</label>
-        <input ng-model="record.code" name="code" type="text" required md-maxlength="20">
+        <input ng-model="record.code" name="code" type="text" md-maxlength="20" required>
       </md-input-container>
 
       <md-input-container class="md-block">

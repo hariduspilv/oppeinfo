@@ -1,5 +1,5 @@
 .invalid{
-	color: red;
+	color: red !important;
 }
 
 a, a:visited, a:hover
@@ -231,7 +231,7 @@ md-input-container label:not(.md-no-float):not(.md-container-ignore), md-input-c
 transform: translate3d(3px, 28px, 0) scale(1);
 }
 
-md-input-container label
+._md-datepicker-floating-label label
 {
 	overflow: visible !important;
 }

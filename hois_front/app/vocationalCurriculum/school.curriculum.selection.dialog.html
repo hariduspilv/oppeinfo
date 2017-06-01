@@ -14,33 +14,30 @@
             <table md-table md-row-select="true" ng-model="curriculumSelected" md-progress="tabledata.$promise">
             <thead md-head md-order="criteria.order" md-on-reorder="loadData">
             <tr md-row>
-                <th md-column md-order-by="name{{currentLanguage()=='en' ? 'En' : 'Et'}}">{{'curriculum.name' | translate}}</th>
-                <th md-column md-order-by="studyLevel">{{'curriculum.studyLevel' | translate}}</th>
-                <th md-column md-order-by="credits">{{'curriculum.creditsEapEkap' | translate}}</th>
-                <th md-column md-order-by="validFrom">{{'stateCurriculum.validFrom' | translate}}</th>
-                <th md-column md-order-by="validThru">{{'stateCurriculum.validThru' | translate}}</th>
-                <th md-column md-order-by="status">{{'stateCurriculum.status' | translate}}</th>
+                <th md-column md-order-by="{{currentLanguageNameField()}}">{{'curriculum.name' | translate}}</th>
+                <th md-column md-order-by="code">{{'curriculum.code' | translate}}</th>
+                <th md-column md-order-by="merCode">{{'curriculum.merCode' | translate}}</th>
+                <th md-column md-order-by="credits">{{'stateCurriculum.credits' | translate}}</th>
             </tr>
             </thead>
             <tbody md-body>
             <tr md-row md-select="curriculum" md-select-id="curriculum.id" ng-repeat="curriculum in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>{{curriculum.nameEt}}</td>
-                <td md-cell>{{curriculum.origStudyLevel.nameEt}}</td>
+                <td md-cell>{{currentLanguageNameField(curriculum)}}</td>
+                <td md-cell>{{curriculum.code}}</td>
+                <td md-cell>{{curriculum.merCode}}</td>
                 <td md-cell>{{curriculum.credits}}</td>
-                <td md-cell>{{curriculum.validFrom | hoisDate}}</td>
-                <td md-cell>{{curriculum.validThru | hoisDate}}</td>
-                <td md-cell>{{curriculum.status.nameEt}}</td>
             </tr>
             </tbody>
             </table>
         </md-table-container>
-        <md-table-pagination  md-limit="criteria.size" md-limit-options="[10, 25, 50]"
+        <md-table-pagination  md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                                 md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                                 md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }"  md-page-select></md-table-pagination>
 
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
       <md-button class="md-primary md-raised" ng-disabled="curriculumSelected.length !== 1" ng-click="submit()">{{"main.button.choose" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>
 </md-dialog>

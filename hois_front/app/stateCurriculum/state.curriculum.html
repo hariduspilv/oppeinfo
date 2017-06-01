@@ -164,10 +164,7 @@
 						</fieldset>
 						<div>&nbsp;</div>
 						<fieldset tabindex="3" flex>
-							<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'stateCurriculum.enter.module.modules' | translate}}&nbsp;*</legend>
-
-
-
+							<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: stateCurriculumForm.$submitted && !modulesValid()}">{{'stateCurriculum.enter.module.modules' | translate}}&nbsp;*</legend>
 							<div layout="row" ng-if="stateCurriculum.occupations.length > 0">
 								<!--h2>{{'stateCurriculum.enter.module.modules' | translate}}&nbsp;*</h2-->
 								<md-button class="md-raised" ng-click="openAddModuleDialog()" ng-if="!readOnly">{{'stateCurriculum.enter.module.add' | translate}}</md-button>
@@ -348,7 +345,8 @@
                                         <tbody md-body>
                                             <tr md-row ng-repeat="curriculum in stateCurriculum.curricula | orderBy: currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
                                                 <td md-cell>{{currentLanguageNameField(curriculum.school)}}</td>
-                                                <td md-cell><a class="md-primary" ng-href="#/vocationalCurriculum/{{curriculum.id}}/view">{{currentLanguageNameField(curriculum)}}</a></td>
+                                                <!--<td md-cell><a class="md-primary" ng-href="#/vocationalCurriculum/{{curriculum.id}}/view">{{currentLanguageNameField(curriculum)}}</a></td>-->
+                                                <td md-cell>{{currentLanguageNameField(curriculum)}}</td>
                                                 <td md-cell><hois-classifier-value ng-model="curriculum.origStudyLevel" main-classifier-codes="OPPEASTE,EKR"></hois-classifier-value></td>
                                                 <td md-cell>{{curriculum.credits}}</td>
                                                 <td md-cell>{{curriculum.validFrom | hoisDate}}</td>
@@ -363,22 +361,52 @@
 								<hois-created-modified object="stateCurriculum"></hois-created-modified>
 							</form>
 							<div layout="row">
-								<md-button ng-if="readOnly && (stateCurriculum.status === STATUS.ENTERING)"
-            ng-href="#/stateCurriculum/{{stateCurriculum.id}}/edit?_noback"
-                 class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
-								<md-button ng-click="save()" ng-if="!readOnly && currentStatus !== STATUS.CLOSED"
-                 class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+                                <div ng-show="currentStatus === STATUS.ENTERING">
+                                    <div ng-show="!stateCurriculum.id">
+                                        <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+                                    </div>
+                                    <div ng-show="readOnly">
+                                        <md-button ng-href="#/stateCurriculum/{{stateCurriculum.id}}/edit?_noback"
+                                            class="md-raised md-primary">{{'main.button.change' | translate}}
+                                        </md-button>
+                                    </div>
+                                    <div ng-show="!readOnly && stateCurriculum.id">
+                                        <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+                                        <md-button class="md-raised md-default" ng-click="confirmCurriculum()">
+                                            {{'stateCurriculum.statusButton.confirm' | translate}}
+                                        </md-button>
+                                        <md-button class="md-raised md-default" ng-click="closeCurriculum()">
+                                            {{'stateCurriculum.statusButton.close' | translate}}
+                                        </md-button>
+                                        <md-button ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+                                    </div>
+                                </div>
+
+                                <div ng-show="currentStatus === STATUS.VERIFIED">
+                                    <md-button class="md-raised md-default" ng-click="closeCurriculum()">
+                                        {{'stateCurriculum.statusButton.close' | translate}}
+                                    </md-button>
+                                </div>
+
+								<md-button ng-click="back('#/stateCurriculum', stateCurriculumForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+
+
+
+
+
+								<!--<md-button ng-click="save()" ng-if="!readOnly && currentStatus !== STATUS.CLOSED"
+                                    class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
 
 								<md-button ng-if="!readOnly && stateCurriculum.id && currentStatus === STATUS.ENTERING"
-            class="md-raised md-default" ng-click="confirmCurriculum()">{{'stateCurriculum.statusButton.confirm' | translate}}</md-button>
+                                    class="md-raised md-default" ng-click="confirmCurriculum()">{{'stateCurriculum.statusButton.confirm' | translate}}</md-button>
 								<md-button ng-if="readOnly && (currentStatus === STATUS.VERIFIED || currentStatus === STATUS.ENTERING)"
-            class="md-raised md-default" ng-click="closeCurriculum()">{{'stateCurriculum.statusButton.close' | translate}}</md-button>
+                                    class="md-raised md-default" ng-click="closeCurriculum()">{{'stateCurriculum.statusButton.close' | translate}}</md-button>
 
 								<md-button ng-click="delete()"
-               ng-if="stateCurriculum.id && currentStatus === STATUS.ENTERING && !readOnly" class="md-raised">
-               {{'main.button.delete' | translate}}</md-button>
+                                    ng-if="stateCurriculum.id && currentStatus === STATUS.ENTERING && !readOnly" class="md-raised">
+                                    {{'main.button.delete' | translate}}</md-button>
 								<md-button ng-click="back('#/stateCurriculum', stateCurriculumForm)"
-                 class="md-raised">{{'main.button.back' | translate}}</md-button>
+                                    class="md-raised">{{'main.button.back' | translate}}</md-button>-->
 							</div>
 						</div>
 					</div>

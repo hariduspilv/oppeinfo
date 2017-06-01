@@ -11,6 +11,7 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
+import ee.hois.xroad.ehis.service.EhisXroadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -90,6 +91,11 @@ public class Application {
 
     @Bean CustomRequestMappingHandler requestMappingHandler() {
         return new CustomRequestMappingHandler();
+    }
+
+    @Bean
+    public EhisXroadService ehisXroadService() {
+        return new EhisXroadService();
     }
 
     @Bean

@@ -131,7 +131,7 @@ public class CurriculumServiceTest {
         curriculum.setCode(name);
         curriculum.setStudyPeriod(number);
         curriculum.setJoint(Boolean.TRUE);
-        curriculum.setOptionalStudyCredits(number);
+        curriculum.setOptionalStudyCredits(Double.valueOf(number));
         curriculum.setOccupation(Boolean.TRUE);
         curriculum.setValidFrom(LocalDate.now());
         curriculum.setConsecution(classifier);

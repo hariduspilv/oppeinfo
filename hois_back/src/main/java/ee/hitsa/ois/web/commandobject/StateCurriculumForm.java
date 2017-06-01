@@ -28,9 +28,7 @@ public class StateCurriculumForm extends VersionedCommand {
     private String outcomesEn;
     private String admissionRequirementsEt;
     private String admissionRequirementsEn;
-    @Size(max=50) //TODO
     private String graduationRequirementsEt;
-    @Size(max=50) //TODO
     private String graduationRequirementsEn;
     @NotNull
     @Min(0)

@@ -1,8 +1,5 @@
 # HITSA OIS
 
-## Packages
-Angular 1.4.8 (upgrading to 1.5.x or 1.6.x currently has some problems)
-
 ## Requirements
 
 For development run `npm install -g grunt-cli bower`

@@ -10,10 +10,9 @@
       </div>
     </md-toolbar>
     <md-dialog-content>
-	  <span flex></span>
       <div class="md-dialog-content" layout="column" ng-cloak>
 		   <fieldset tabindex="1">
-		   <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.capacityDistribution' | translate}}</legend>
+		   <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.capacityDistribution' | translate}}</legend>
 			  <div layout="row" style="padding-bottom:1em" flex class="secondary-table-header">
 				<div flex="30">&nbsp;</div>
 				<div flex="30">{{'module.capacity' | translate}}</div>
@@ -65,7 +64,7 @@
             <label>{{'module.totalGradeDescription' | translate}}</label>
             <textarea ng-model="occupationModule.totalGradeDescription" md-maxlength="20000" max-rows="2" md-select-on-focus required ng-readonly="formState.readOnly"></textarea>
           </md-input-container>
-		  
+
 
           <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'" layout="column">
 			<!--legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.gradeAssessments' | translate}}</legend-->
@@ -82,7 +81,7 @@
               <textarea ng-model="occupationModule.grade5Description" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModule.assessment === 'KUTSEHINDAMISVIIS_E'" ng-readonly="formState.readOnly"></textarea>
             </md-input-container>
           </div>
-		  
+
 		  <div ng-show="occupationModule.assessment === 'KUTSEHINDAMISVIIS_M'" layout="column" flex>
 			<md-input-container flex>
               <label>{{'module.gradeADescription' | translate}}</label>
@@ -101,8 +100,8 @@
 
 
           <fieldset layout="column">
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.themes' | translate}}</legend>
-			<md-button class="md-raised" ng-click="openAddThemeDialog()" ng-if="!formState.readOnly">{{'main.button.add' | translate}}</md-button>
+			<legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.themes' | translate}}</legend>
+			<md-button class="md-raised" ng-click="openAddThemeDialog()" ng-if="!formState.readOnly" flex="10">{{'main.button.add' | translate}}</md-button>
               <table md-table class="secondary-table">
                 <thead md-head>
                 <tr md-row>
@@ -116,8 +115,7 @@
                 <tbody md-body>
                 <tr md-row ng-repeat="theme in occupationModule.themes | orderBy: 'id'">
                   <td md-cell>
-                    <a class="md-primary" ng-click="openAddThemeDialog(theme)" ng-if="!formState.readOnly">{{theme.nameEt}}</a>
-                    <a class="md-primary" ng-if="formState.readOnly">{{theme.nameEt}}</a>
+                    <a class="md-primary" ng-click="openAddThemeDialog(theme)">{{theme.nameEt}}</a>
                   </td>
                   <td md-cell>
                     {{theme.credits}}/{{theme.hours}}
@@ -139,7 +137,7 @@
 		  </fieldset>
 		  <div>&nbsp;</div>
 		  <fieldset layout="column">
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.proportionPerStudyYear' | translate}}</legend>
+			<legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.proportionPerStudyYear' | translate}}</legend>
 			 <div layout="row">
             <md-input-container flex>
               <label>{{'module.firstStudyYear' | translate}}</label>
@@ -183,8 +181,8 @@
                 </div>
             </md-input-container>
           </div>
-		  </fieldset>	
-         
+		  </fieldset>
+
 
           <br/>
 

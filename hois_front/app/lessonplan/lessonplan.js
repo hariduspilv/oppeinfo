@@ -63,11 +63,19 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
     var id = $route.current.params.id;
     var baseUrl = '/lessonplans';
     $scope.formState = {capacityTypes: Classifier.queryForDropdown({mainClassCode: 'MAHT'})};
-    $scope.Object = Object;
+    $scope.keys = Object.keys;
 
     function rowSum(row) {
       return row.reduce(function(acc, item) { if(item !== null && isFinite(item) && item > 0) { acc += item; } return acc; }, 0);
     }
+    
+    $scope.getCapacityValue = function(type) {
+      for (var i = 0; i < $scope.formState.capacityTypes.length; i++) { 
+        if($scope.formState.capacityTypes[i].code === type) {
+          return $scope.formState.capacityTypes[i].value.toUpperCase();
+        }
+      }
+    };
 
     function createTotalsRow() {
       var row = [];
@@ -98,6 +106,20 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
       totals.__ = rowSum(totals._);
     }
 
+    function updateTotals(totals, capacityType, index) {
+      totals._[capacityType] = rowSum(totals[capacityType]);
+      var sum = 0;
+      $scope.formState.capacityTypes.forEach(function(c) {
+        var capacityType = c.code;
+        var hours = totals[capacityType];
+        if(hours !== undefined) {
+          sum += hours[index];
+        }
+      });
+      totals._._[index] = sum;
+      totals.__ = rowSum(totals._._);
+    }
+
     function updateModuleTotals(module, capacityType, index) {
       var moduleTotals = $scope.formState.moduleTotals[module.id];
       var sum = 0;
@@ -108,17 +130,7 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
         }
       });
       moduleTotals[capacityType][index] = sum;
-      moduleTotals._[capacityType] = rowSum(moduleTotals[capacityType]);
-      sum = 0;
-      $scope.formState.capacityTypes.forEach(function(c) {
-        var capacityType = c.code;
-        var hours = moduleTotals[capacityType];
-        if(hours !== undefined) {
-          sum += hours[index];
-        }
-      });
-      moduleTotals._._[index] = sum;
-      moduleTotals.__ = rowSum(moduleTotals._._);
+      updateTotals(moduleTotals, capacityType, index);
     }
 
     function updateGrandTotals(capacityType, index) {
@@ -132,17 +144,7 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
       });
       var grandTotals = $scope.formState.grandTotals;
       grandTotals[capacityType][index] = sum;
-      grandTotals._[capacityType] = rowSum(grandTotals[capacityType]);
-      sum = 0;
-      $scope.formState.capacityTypes.forEach(function(c) {
-        var capacityType = c.code;
-        var hours = grandTotals[capacityType];
-        if(hours !== undefined) {
-          sum += hours[index];
-        }
-      });
-      grandTotals._._[index] = sum;
-      grandTotals.__ = rowSum(grandTotals._._);
+      updateTotals(grandTotals, capacityType, index);
     }
 
     QueryUtils.endpoint(baseUrl).get({id: id}).$promise.then(function(result) {
@@ -296,6 +298,30 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
       var index = $scope.record.journalOccupationModuleThemes.indexOf(themeId);
       if(index !== -1) {
         $scope.record.journalOccupationModuleThemes.splice(index, 1);
+      }
+    };
+
+    $scope.addTeacher = function() {
+      if($scope.record.journalTeachers === null) {
+        $scope.record.journalTeachers = [];
+      }
+      if($scope.record.journalTeachers.some(function(e) { return e.teacher.id === $scope.formState.teacher.id; })) {
+        message.error('lessonplan.journal.duplicateteacher');
+        return;
+      }
+      $scope.record.journalTeachers.push({teacher: $scope.formState.teacher});
+      $scope.formState.teacher = undefined;
+    };
+
+    $scope.deleteTeacher = function(teacher) {
+      var teacherIndex = -1;
+      $scope.record.journalTeachers.forEach(function(item, index) {
+        if(item.id === teacher.id) {
+          teacherIndex = index;
+        }
+      });
+      if(teacherIndex !== -1) {
+        $scope.record.journalTeachers.splice(teacherIndex, 1);
       }
     };
   }

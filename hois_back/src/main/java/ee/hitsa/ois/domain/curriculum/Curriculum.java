@@ -68,7 +68,7 @@ public class Curriculum extends BaseEntityWithId {
     private Integer studyPeriod;
     @Column(name = "is_joint")
     private Boolean joint;
-    private Integer optionalStudyCredits;
+    private Double optionalStudyCredits;
     private LocalDate validFrom;
     private LocalDate validThru;
 
@@ -228,11 +228,11 @@ public class Curriculum extends BaseEntityWithId {
         this.studyPeriod = studyPeriod;
     }
 
-    public Integer getOptionalStudyCredits() {
+    public Double getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+    public void setOptionalStudyCredits(Double optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 

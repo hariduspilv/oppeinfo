@@ -42,8 +42,9 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
     private String grade4Description;
     private String grade5Description;
 
-    @Valid
-    private Set<CurriculumVersionOccupationModuleOutcomeDto> outcomes;
+//    @Valid
+//    private Set<CurriculumVersionOccupationModuleOutcomeDto> outcomes;
+    private Set<Long> outcomes;
 
     @Valid
     private Set<CurriculumVersionOccupationModuleThemeCapacityDto> capacities;
@@ -53,7 +54,8 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
                 "capacities", "outcomes");
 
         dto.setCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeCapacityDto::of, theme.getCapacities()));
-        dto.setOutcomes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleOutcomeDto::of, theme.getOutcomes()));
+//        dto.setOutcomes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleOutcomeDto::of, theme.getOutcomes()));
+        dto.setOutcomes(StreamUtil.toMappedSet(o -> o.getOutcome().getId(), theme.getOutcomes()));
 
         return dto;
     }
@@ -114,11 +116,11 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         this.studyYearNumber = studyYearNumber;
     }
 
-    public Set<CurriculumVersionOccupationModuleOutcomeDto> getOutcomes() {
-        return outcomes != null ? outcomes : (outcomes = new HashSet<>());
+    public Set<Long> getOutcomes() {
+        return outcomes != null ? outcomes : (new HashSet<>());
     }
 
-    public void setOutcomes(Set<CurriculumVersionOccupationModuleOutcomeDto> outcomes) {
+    public void setOutcomes(Set<Long> outcomes) {
         this.outcomes = outcomes;
     }
 

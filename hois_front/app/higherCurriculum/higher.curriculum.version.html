@@ -1,7 +1,7 @@
 <div class="ois-form-layout" layout="column" layout-margin ng-cloak ng-show="!showMainForm">
     <form name="higherCurriculumVersionForm" layout="column">
 		<fieldset tabindex="1">
-		<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.mainData' | translate}}</legend>
+		<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.versionMainData' | translate}}</legend>
 			<div layout="column">
 				<md-input-container flex ng-if="!showMainForm">
 					<label>{{'curriculum.version.code' | translate}}</label>
@@ -42,21 +42,14 @@
 					</div>
 				</div>
                 <br>
-                <div class="form-readonly">
-                	<md-input-container flex>
-						<label>{{'main.status' | translate}}</label>
-                        <hois-classifier-value ng-model="currentStatus" main-classifier-code="OPPEKAVA_VERSIOON_STAATUS"></hois-classifier-value>	
-    				</md-input-container>
-                </div>
-
 		</fieldset>
 		<div>&nbsp;</div>
-		<fieldset tabindex="1" flex>
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.modules' | translate}}&nbsp;*</legend>
+		<fieldset tabindex="2" flex>
+			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: higherCurriculumVersionForm.$submitted && strictValidation() && !allSpecialitiesValid()}">{{'module.modules' | translate}}&nbsp;*</legend>
 			<md-button class="md-raised" ng-click="openAddModuleDialog()" ng-if="!formState.readOnly && version.specialitiesReferenceNumbers.length > 0">{{'module.add' | translate}}</md-button>
 
             <div ng-repeat="spectiality in curriculum.specialities | filter: filterSpecialities | orderBy: currentLanguageNameField()" layout="column" flex>
-                <h2 class="md-title-small">{{'curriculum.specialty.specialty' | translate}} {{$index + 1}}: {{currentLanguageNameField(spectiality)}}</h2>
+                <h2 class="md-title-small" ng-class="{invalid: higherCurriculumVersionForm.$submitted && strictValidation() && !specialityValid(spectiality.id)}">{{'curriculum.specialty.specialty' | translate}} {{$index + 1}}: {{currentLanguageNameField(spectiality)}}</h2>
 				<div flex class="secondary-table-header" layout="row">
 					<div flex="5">&nbsp;</div>
 					<div flex="35">{{'subject.name' | translate}}</div>
@@ -67,7 +60,7 @@
 
                 <div layout="column" flex ng-repeat="module in version.modules | filter: {minorSpeciality: false} | filter: filterModulesBySpeciality(spectiality) | orderBy: currentLanguageNameField()">
                     <div layout="row" flex class="occupation-header" layout-align="start center">
-                        <a href="" ng-click="openAddModuleDialog(module)" flex="70">
+                        <a href="" ng-click="openAddModuleDialog(module)" flex="70" ng-class="{invalid: higherCurriculumVersionForm.$submitted && !moduleHasSubjects(module) && strictValidation()}">
                                 {{'curriculum.module' | translate}} {{module[currentLanguageNameField()]}} {{module.totalCredits}} EAP
                                 <!--<span ng-if="module.type !== 'KORGMOODUL_M'">(<hois-classifier-value ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value>)</span>-->
                                 <span ng-if="module.type === 'KORGMOODUL_M'">({{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}})</span>
@@ -134,13 +127,13 @@
         
         </fieldset>
 		<div>&nbsp;</div>
-		<fieldset tabindex="1">
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.minorSpecialty.minorSpecialties' | translate}}</legend>
+		<fieldset tabindex="3">
+			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: higherCurriculumVersionForm.$submitted && !allMinorSpecialitiesValid()}">{{'curriculum.minorSpecialty.minorSpecialties' | translate}}</legend>
 			<md-button class="md-raised" ng-click="openAddMinorSpecialtyDialog()" ng-if="!formState.readOnly">{{'curriculum.minorSpecialty.add' | translate}}</md-button>
 			
 			<div layout="column" flex ng-repeat="module in version.modules | filter: {minorSpeciality: true} | orderBy: currentLanguageNameField()">
                 <div layout="row" flex class="occupation-header" layout-align="start center">
-                     <a href="" ng-click="openAddMinorSpecialtyDialog(module)" flex="70">
+                     <a href="" ng-click="openAddMinorSpecialtyDialog(module)" flex="70" ng-class="{invalid: higherCurriculumVersionForm.$submitted && !moduleHasSubjects(module) && strictValidation()}">
                                 {{'curriculum.minorSpecialty.minorSpecialty' | translate}} {{module[currentLanguageNameField()]}} {{module.totalCredits}} EAP</span>
                      </a>
                      <!--<a class="remove nomargin" ng-click="removeModule(version.modules, module)" ng-if="!formState.readOnly">&times;</a>-->
@@ -199,17 +192,75 @@
 					</div>	
             </div>
 		</fieldset>
+         <div>&nbsp;</div>
+         <fieldset tabindex="4">
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.versionStatus' | translate}}</legend>
+            <div layout="row" flex="100">		
+            <md-input-container flex="30" flex-sm="100" flex-xs="100">
+                <label>{{'main.validFrom' | translate}}</label>
+                <md-datepicker ng-model="version.validFrom" md-open-on-focus required ng-disabled="formState.readOnly"></md-datepicker>
+            </md-input-container>
+
+            <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
+                <label>{{'main.validTo' | translate}}</label>
+                <md-datepicker ng-model="version.validThru" md-min-date="version.validFrom" md-open-on-focus ng-disabled="formState.readOnly"></md-datepicker>
+            </md-input-container>
+            </div>
+            <div layout="row" class="top-margin form-readonly">
+            <md-input-container flex="30" flex-sm="100">
+                <label>{{'main.status' | translate}}</label>
+                <hois-classifier-value ng-model="currentStatus"  main-classifier-code="OPPEKAVA_VERSIOON_STAATUS"></hois-classifier-value>
+            </md-input-container>
+            </div>
+        </fieldset>
+        <hois-created-modified object="version"></hois-created-modified>
     </form>
-    <div layout="row">
+    <!--<div layout="row">
         <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="formState.readOnly && currentStatus !== VERSION_STATUS.C">{{'main.button.change' | translate}}</md-button>
         <md-button class="md-raised md-primary" ng-click="save()" ng-if="!formState.readOnly && currentStatus !== VERSION_STATUS.C">{{'main.button.save' | translate}}</md-button>
 
         <md-button ng-show="version.id && currentStatus === VERSION_STATUS.S " ng-click="setStatusVerified()" class="md-raised">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
-        <md-button ng-if="(currentStatus === VERSION_STATUS.S || currentStatus === VERSION_STATUS.K) && version.id" ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+        <md-button ng-if="(currentStatus === VERSION_STATUS.S || currentStatus === VERSION_STATUS.K && !formState.readOnly) && version.id" ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
 
         <md-button class="md-raised md-default" ng-click="copy()" ng-if="version.id">{{'main.button.copy' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="delete()" ng-if="version.id && currentStatus === VERSION_STATUS.S && !formState.readOnly">{{'main.button.delete' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="back('#/higherCurriculum/' + version.curriculum + '/edit', higherCurriculumVersionForm)">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="back('#/higherCurriculum/' + version.curriculum + '/edit')">{{'main.button.back' | translate}}</md-button>
+    </div>-->
+
+     <div layout="row">
+         <div ng-show="currentStatus === VERSION_STATUS.S">
+            <div ng-show="!version.id">
+                <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+            </div>
+            <div ng-show="!formState.readOnly && version.id">
+                <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+                <md-button ng-click="setStatusVerified()" class="md-raised">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
+                <md-button ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+                <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+                <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+            </div>
+            <div ng-show="formState.readOnly">
+                <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+                <md-button ng-click="setStatusVerified()" class="md-raised">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
+                <md-button ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+                <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+            </div>
+         </div>
+         <div ng-show="currentStatus === VERSION_STATUS.K">
+             <div ng-show="!formState.readOnly">
+                <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+             </div>
+             <div ng-show="formState.readOnly">
+                <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+                <md-button ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+                <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+             </div>
+         </div>
+         <div ng-show="currentStatus === VERSION_STATUS.C">
+            <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+         </div>
+
+        <md-button class="md-raised md-default" ng-click="back('#/higherCurriculum/' + version.curriculum + '/edit')">{{'main.button.back' | translate}}</md-button>
     </div>
  </div>
  

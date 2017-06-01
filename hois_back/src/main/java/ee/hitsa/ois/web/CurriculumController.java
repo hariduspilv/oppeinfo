@@ -62,9 +62,9 @@ public class CurriculumController {
 	@GetMapping("/{id:\\d+}")
     public CurriculumDto get(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
 	    // External expert can watch curriculum
-	    if(!user.isExternalExpert()) {
-	        assertSameOrJoinSchool(user, curriculum);
-	    }
+//	    if(!user.isExternalExpert()) {
+//	        assertSameOrJoinSchool(user, curriculum);
+//	    }
         return CurriculumDto.of(curriculum);
     }
 
@@ -215,5 +215,11 @@ public class CurriculumController {
     public CurriculumVersionDto updateHigherCurriculumVersionModules(HoisUserDetails user, @NotNull @RequestBody CurriculumVersionDto form, @WithEntity("id") CurriculumVersion curriculumVersion) {
         UserUtil.assertIsSchoolAdmin(user);
         return CurriculumVersionDto.of(curriculumService.updateHigherCurriculumVersionModules(curriculumVersion, form));
+    }
+    
+    @PutMapping("/vocational/implementationPlan/modules/{id:\\d+}")
+    public CurriculumVersionDto updateVocationalCurriculumImplementationPlanModules(HoisUserDetails user, @NotNull @RequestBody CurriculumVersionDto form, @WithEntity("id") CurriculumVersion curriculumVersion) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return CurriculumVersionDto.of(curriculumService.updateVocationalCurriculumImplementationPlanModules(curriculumVersion, form));
     }
 }

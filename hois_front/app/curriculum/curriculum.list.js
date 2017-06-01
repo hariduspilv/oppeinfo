@@ -47,6 +47,6 @@
     };
 
     $scope.canBeEdited = function (curriculum){
-        return curriculum.status.code !== 'OPPEKAVA_STAATUS_C' && curriculum.status.code !== 'OPPEKAVA_STAATUS_K';
+        return curriculum.status.code !== 'OPPEKAVA_STAATUS_C' && curriculum.status.code !== 'OPPEKAVA_STAATUS_K' && curriculum.ehisStatus !== 'OPPEKAVA_EHIS_STAATUS_A' && curriculum.ehisStatus !== 'OPPEKAVA_EHIS_STAATUS_M';
     };
 }]);

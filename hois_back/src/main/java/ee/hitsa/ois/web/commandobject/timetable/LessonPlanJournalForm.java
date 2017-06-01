@@ -7,11 +7,11 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class LessonPlanJournalForm extends VersionedCommand {
 
@@ -91,13 +91,28 @@ public class LessonPlanJournalForm extends VersionedCommand {
     }
 
     public static class LessonPlanJournalTeacherForm {
+
+        private Long id;
         @NotNull
         private EntityConnectionCommand teacher;
         private Boolean isFiller;
         private Boolean isConfirmer;
 
         public static LessonPlanJournalTeacherForm of(JournalTeacher journalTeacher) {
-            return EntityUtil.bindToDto(journalTeacher, new LessonPlanJournalTeacherForm());
+            LessonPlanJournalTeacherForm dto = new LessonPlanJournalTeacherForm();
+            dto.setId(journalTeacher.getId());
+            dto.setTeacher(AutocompleteResult.of(journalTeacher.getTeacher()));
+            dto.setIsFiller(journalTeacher.getIsFiller());
+            dto.setIsConfirmer(journalTeacher.getIsConfirmer());
+            return dto;
+        }
+
+        public Long getId() {
+            return id;
+        }
+
+        public void setId(Long id) {
+            this.id = id;
         }
 
         public EntityConnectionCommand getTeacher() {
