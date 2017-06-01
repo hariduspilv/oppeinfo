@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject.student;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import javax.validation.constraints.Min;
@@ -8,10 +9,12 @@ import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
+@DateRange
 public class StudentGroupForm extends VersionedCommand {
 
     @NotEmpty
@@ -32,6 +35,10 @@ public class StudentGroupForm extends VersionedCommand {
     private AutocompleteResult teacher;
     @ClassifierRestriction(MainClassCode.SPETSKUTSE)
     private String speciality;
+    @Min(1)
+    private Integer places;
+    private LocalDate validFrom;
+    private LocalDate validThru;
     private List<Long> students;
 
     public String getCode() {
@@ -96,6 +103,30 @@ public class StudentGroupForm extends VersionedCommand {
 
     public void setSpeciality(String speciality) {
         this.speciality = speciality;
+    }
+
+    public Integer getPlaces() {
+        return places;
+    }
+
+    public void setPlaces(Integer places) {
+        this.places = places;
+    }
+
+    public LocalDate getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
+    }
+
+    public LocalDate getValidThru() {
+        return validThru;
+    }
+
+    public void setValidThru(LocalDate validThru) {
+        this.validThru = validThru;
     }
 
     public List<Long> getStudents() {

@@ -65,8 +65,9 @@ public class CurriculumVersion extends BaseEntityWithId {
     private LocalDate validFrom;
     private LocalDate validThru;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false)
+//    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JoinColumn(name = "curriculum_version_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "curriculumVersion", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumVersionHigherModule> modules = new HashSet<>();
 
     @OneToMany(mappedBy = "curriculumVersion", cascade = CascadeType.ALL, orphanRemoval = true)

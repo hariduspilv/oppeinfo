@@ -24,31 +24,39 @@ public class Classifier extends BaseEntity {
     private static final long serialVersionUID = 3111361264166192650L;
 
     @Id
-    @Size(max = 200)
+    @Size(max = 100)
     @NotEmpty
     // https://hibernate.atlassian.net/browse/HHH-3718
     private String code;
 
     @NotEmpty
+    @Size(max = 50)
     private String value;
+    @Size(max = 50)
     private String value2;
 
     @NotEmpty
+    @Size(max = 1000)
     private String nameEt;
+    @Size(max = 1000)
     private String nameEn;
+    @Size(max = 1000)
     private String nameRu;
+    @Size(max = 100)
     private String mainClassCode;
 
-    //lazy load causes - org.springframework.http.converter.HttpMessageNotWritableException: Could not write content: failed to lazily initialize a collection of role: ee.hitsa.ois.domain.Classifier.children, could not initialize proxy - no Session (through reference chain: ee.hitsa.ois.domain.Classifier["children"]);
-    @OneToMany(fetch = FetchType.EAGER)
+    @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "mainClassCode", nullable = false, updatable = false, insertable = false)
     private Set<Classifier> children;
-
+    @Size(max = 1000)
     private String description;
     private LocalDate validFrom;
     private LocalDate validThru;
+    @Size(max = 100)
     private String extraval1;
+    @Size(max = 100)
     private String extraval2;
+    @Size(max = 100)
     private String ehisValue;
     @Column(name="is_vocational")
     private boolean vocational;

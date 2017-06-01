@@ -1,0 +1,69 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'subjectStudyPeriod.label.options' | translate}}">
+  <md-nav-item md-nav-href="#/subjectStudyPeriods/studentGroups?_menu" name="studentGroups">{{'subjectStudyPeriod.label.studentGroups' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/subjectStudyPeriods/teachers?_menu" name="teachers">{{'subjectStudyPeriod.label.teachers' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/subjectStudyPeriods/subjects?_menu" name="subjects">{{'subjectStudyPeriod.label.subjects' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <form ng-submit="loadData()" layout="column" novalidate >
+            <div layout="row" layout-sm="column" layout-xs="column">
+
+                <md-input-container flex="25" flex-sm="100" flex-xs="100">
+                    <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+                    <hois-select ng-model="criteria.studyPeriod" values="studyPeriods" required></hois-select>
+                </md-input-container>
+
+                <hois-autocomplete flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
+                ng-model="criteria.teacherObject" url="/subjectStudyPeriods/teachers/page" name="teacher"
+                label="subjectStudyPeriod.teacher"></hois-autocomplete>
+
+                <hois-autocomplete flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"
+                ng-model="criteria.subjectObject" url="/autocomplete/subjects" name="subject"
+                label="subjectStudyPeriod.subject"></hois-autocomplete>
+            </div>
+        <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+            <md-button class="md-raised" href="#/subjectStudyPeriods/subjects/{{criteria.studyPeriod}}/new">{{'main.button.create' | translate}}</md-button>
+        </div>
+    </form>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="code,{{currentLanguageNameField()}}">{{'subjectStudyPeriod.nameCode' | translate}}</th>
+            <th md-column>{{'subjectStudyPeriod.hoursTotal' | translate}}</th>
+            <th md-column>{{'subjectStudyPeriod.teacher' | translate}}</th>
+            <th md-column>{{'subjectStudyPeriod.linkToTimetable' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
+            <td md-cell>{{row.hours}}</td>
+            <td md-cell>
+                <table>
+                    <tr ng-repeat="teacher in row.teachers | orderBy">
+                        <td>{{teacher}}</td>
+                    </tr>
+                </table>
+            </td>
+            <td md-cell><a href=""></a></td>
+            <td md-cell>
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriods/subjects/{{row.subject.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
+                </md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

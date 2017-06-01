@@ -8,7 +8,8 @@
         </md-input-container>
       </div>
 
-      <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students && record.type !== 'KASKKIRI_IMMAT'">
+      <div flex ng-if="formState.state === 'CHOOSETYPE' && formState.students && record.type !== 'KASKKIRI_IMMAT' && record.type !== 'KASKKIRI_IMMATV'">
+        <div>&nbsp;</div>
         <md-table-container>
           <table md-table md-row-select multiple ng-model="formState.selectedStudents">
             <thead md-head>
@@ -22,15 +23,27 @@
             <tbody md-body>
               <tr md-row md-select="row" md-select-id="id" ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
                 <td md-cell>
-                  <md-button md-no-ink class="md-primary change-button" ng-href="#/student/{{::row.id}}/main?backUrl=directive">{{::row.fullname}}</md-button>
+                  <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</md-button>
                 </td>
                 <td md-cell>{{::row.idcode}}</td>
-                <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{currentLanguageNameField(row.curriculum)}}</td>
+                <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{currentLanguageNameField(row.curriculumVersion)}}</td>
                 <td md-cell ng-show="record.type === 'KASKKIRI_LOPET'">{{::row.studentGroup}}</td>
               </tr>
             </tbody>
           </table>
         </md-table-container>
+      </div>
+
+      <div layout="row" ng-if="formState.state === 'CHOOSETYPE' && record.type === 'KASKKIRI_IMMATV'">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'directive.student.curriculumVersion' | translate}}</label>
+          <hois-select ng-model="formState.curriculumVersion" multiple values="formState.saisCurriculumVersions"></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'directive.student.studyLevel' | translate}}</label>
+          <hois-classifier-select ng-model="formState.studyLevel" multiple main-classifier-code="OPPEASTE" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
       </div>
 
       <div layout="row" ng-if="formState.state === 'CHOOSETYPE'">
@@ -40,40 +53,62 @@
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
 
       <div flex ng-if="formState.state === 'EDIT'">
+        <md-input-container class="md-block" ng-if="record.type === 'KASKKIRI_TYHIST'">
+          <label class="textInput">{{'directive.canceledDirective' | translate}}</label>
+          <hois-value value="formState.canceledDirective.nameEt" href-value="'#/directives/' + formState.canceledDirective.id + '/view'"></hois-value>
+        </md-input-container>
+
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.headline' | translate}}</label>
-          <input type="text" ng-model="record.headline" name="headline" required md-maxlength="500"></input>
+          <input type="text" ng-model="record.headline" name="headline" required md-maxlength="500">
         </md-input-container>
-
-        <md-input-container class="md-block">
-          <label class="textInput">{{'directive.inserted' | translate}}</label>
-          <hois-value value="'main.formattedDate' | translate: {date: record.inserted}"></hois-value>
-        </md-input-container>
-
+		
+		<div class="form-readonly top-margin">
+			<md-input-container class="md-block">
+			  <label class="textInput">{{'directive.inserted' | translate}}</label>
+			  <hois-value value="record.inserted | hoisDate"></hois-value>
+			</md-input-container>
+		</div>
+		<div class="form-readonly top-margin">
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.insertedBy' | translate}}</label>
           <hois-value value="record.insertedBy"></hois-value>
         </md-input-container>
+		</div>
 
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.addInfo' | translate}}</label>
-          <textarea ng-model="record.addInfo" md-maxlength="4000"></textarea>
+          <textarea ng-model="record.addInfo" md-maxlength="4000" max-rows="10"></textarea>
         </md-input-container>
 
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.directiveCoordinator' | translate}}</label>
-          <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator"></hois-value>
+          <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator" criteria="{isDirective: true}"></hois-select>
         </md-input-container>
 
-        <div layout="row">
+        <md-input-container class="md-block" ng-if="record.type === 'KASKKIRI_TYHIST'">
+          <label class="textInput">{{'directive.cancelType' | translate}}</label>
+          <hois-classifier-select ng-model="formState.cancelType" ng-required="record.type === 'KASKKIRI_TYHIST'" main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+
+        <!--div layout="row" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">
           <h3>{{'directive.studentList' | translate}}</h3>
           <md-button class="md-raised" ng-click="addStudents()">{{'directive.addStudents' | translate}}</md-button>
-        </div>
+        </div-->
+		
+		 <div>&nbsp;</div>
+		 <md-table-container>
+			<fieldset>
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'directive.studentList' | translate}}</legend>
+				<md-button class="md-raised" ng-click="addStudents()">{{'directive.addStudents' | translate}}</md-button>
+				<div ng-include="formState.templateUrl" flex></div>
+			</fieldset>	
+		</md-table-container>
 
-        <div ng-include="formState.templateUrl"></div>
+        <!--div ng-include="formState.templateUrl"></div-->
 
         <div layout="row">
-          <md-button class="md-raised" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm()">{{'directive.sendToConfirm' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
           <md-button ng-href="#/directives" class="md-raised">{{'main.button.back' | translate}}</md-button>

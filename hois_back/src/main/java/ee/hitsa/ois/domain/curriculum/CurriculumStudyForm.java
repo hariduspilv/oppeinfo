@@ -43,6 +43,13 @@ public class CurriculumStudyForm extends BaseEntityWithId {
 
     @Override
     public boolean equals(Object obj) {
+        if (this == obj) {
+            return true;
+        } else if (obj == null) {
+            return false;
+        }
+
+        // TODO other can be any object
         CurriculumStudyForm other = (CurriculumStudyForm) obj;
         if (studyForm == null) {
             if (other.studyForm != null)

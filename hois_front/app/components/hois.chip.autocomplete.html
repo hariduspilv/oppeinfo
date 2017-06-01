@@ -1,7 +1,8 @@
 <md-chips ng-model="ngModel" md-autocomplete-snap
           md-transform-chip="transformChip($chip)"
           md-require-match="true"
-          md-max-chips="{{maxChips}}">
+          md-max-chips="{{maxChips}}"
+          readonly="readonly">
   <md-autocomplete
     md-selected-item="selectedItem"
     md-selected-item-change="selectedItemChange()"

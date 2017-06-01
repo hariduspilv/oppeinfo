@@ -65,7 +65,7 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
     $scope.delete = function() {
       dialogService.confirmDialog({prompt: 'school.deleteconfirm'}, function() {
         $scope.school.$delete().then(function() {
-          $location.path(baseUrl);
+          $location.url(baseUrl);
         });
       });
     };

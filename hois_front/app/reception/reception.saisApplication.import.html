@@ -1,0 +1,112 @@
+<div layout-padding>
+  <div flex>
+  <form ng-submit="importApplications()" layout="column" name="applicationImportForm" novalidate>
+    <div flex>
+        <div flex-xs="100" flex-gt-xs="100" layout="column">
+          <!--div class="indentForToast"></div-->
+          <div layout="row">
+          <md-input-container flex="35" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'reception.application.saisImportRange' | translate}}</label>
+              <input type="hidden">
+            </md-input-container>
+          <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)" ng-model="criteria.applicationDateFrom" md-max-date="criteria.applicationDateTo" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+            </md-input-container>
+          <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+              <md-datepicker  ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)" ng-model="criteria.applicationDateTo" md-min-date="criteria.applicationDateFrom" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+            </md-input-container>
+          </div>
+          <div>
+            <md-list flex-xs="100" flex-gt-xs="100" flex="60">
+              <md-list-item ng-repeat="status in statusList">
+                <span>
+                  <md-checkbox ng-model="status._selected">
+                    {{currentLanguageNameField(status)}}
+                  </md-checkbox>
+                </span>
+              </md-list-item>
+            </md-list>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label class="textInput">{{'reception.application.candidateIdCode' | translate}}</label>
+              <input ng-model="criteria.idCode" type="text" ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)">
+            </md-input-container>
+          </div>
+          <div layout="row" layout-sm="column" layout-xs="column"  >
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label class="textInput">{{'reception.admission.code' | translate}}</label>
+              <hois-select ng-model="criteria.admissionCode" values="saisAdmissionCodes" value-property="nameEt" ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)"></hois-select>
+            </md-input-container>
+          </div>
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'reception.application.saisImportApplications' | translate}}</md-button>
+          </div>
+      </div>
+    </div>
+  </form>
+  </div>
+</div>
+<div ng-if="failed.length > 0">
+  <div layout-padding>
+    <div flex>
+      {{'reception.admission.failedImport' | translate}}
+    </div>
+  </div>
+  <div layout-padding >
+    <div flex>
+      <md-table-container>
+        <table md-table md-progress="fail">
+          <thead md-head>
+            <tr md-row>
+              <th md-column >{{'reception.application.date' | translate}}</th>
+              <th md-column >{{'reception.application.message' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in failed" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{row.applicationDate | hoisDate}}</td>
+              <td md-cell>{{row.message | translate}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </div>
+  </div>
+</div>
+<div ng-if="successful.length > 0">
+  <div layout-padding >
+    <div flex>
+      {{'reception.application.successfullyImported' | translate}}
+    </div>
+  </div>
+  <div layout-padding >
+    <div flex>
+      <md-table-container>
+        <table md-table>
+          <thead md-head>
+            <tr md-row>
+              <th md-column >{{'reception.application.nr' | translate}}</th>
+              <th md-column >{{'reception.application.idCode' | translate}}</th>
+              <th md-column >{{'reception.application.firstName' | translate}}</th>
+              <th md-column >{{'reception.application.lastName' | translate}}</th>
+              <th md-column >{{'reception.application.admissionCode' | translate}}</th>
+              <th md-column >{{'reception.application.status' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in successful" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{::row.applicationNr}}</td>
+              <td md-cell>{{::row.idCode}}</td>
+              <td md-cell>{{::row.firstName}}</td>
+              <td md-cell>{{::row.lastName}}</td>
+              <td md-cell>{{::row.admissionCode}}</td>
+              <td md-cell>{{row.applicationStatus[currentLanguageNameField()]}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+    </div>
+  </div>
+</div>
+

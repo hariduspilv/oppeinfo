@@ -1,0 +1,36 @@
+<div>
+  <md-input-container flex="60" flex-sm="100" flex-xs="100">
+    <label>{{'application.reason' | translate}}</label>
+    <hois-classifier-value ng-model="application.academicApplication.reason" main-classifier-code="AKADPUHKUS_POHJUS"></hois-classifier-value>
+  </md-input-container>
+
+  <div ng-show="!application.academicApplication.isPeriod" layout="row" layout-xs="column">
+    <md-input-container  flex="20" flex-sm="100" flex-xs="100">
+      <label>{{'application.academicLeaveStart' | translate}}</label>
+      <hois-value value="(application.academicApplication.directiveStudent ? application.academicApplication.directiveStudent.startDate : application.academicApplication.startDate) | hoisDate"></hois-value>
+    </md-input-container>
+
+    <md-input-container style="margin-left: 0px" flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+      <label>{{'application.academicLeaveEnd' | translate}}</label>
+      <hois-value value="(application.academicApplication.directiveStudent ? application.academicApplication.directiveStudent.endDate : application.academicApplication.endDate) | hoisDate"></hois-value>
+    </md-input-container>
+  </div>
+
+  <div ng-show="application.academicApplication.isPeriod" layout="row" layout-xs="column">
+    <md-input-container  flex="20" flex-sm="100" flex-xs="100">
+      <label>{{'application.academicLeaveStart' | translate}}</label>
+      <hois-select ng-model="application.academicApplication.studyPeriodStart" values="studyPeriods" disabled></hois-select>
+    </md-input-container>
+    <md-input-container  flex="20" flex-sm="100" flex-xs="100">
+      <label>{{'application.academicLeaveEnd' | translate}}</label>
+      <hois-select ng-model="application.academicApplication.studyPeriodEnd" values="studyPeriods" disabled></hois-select>
+    </md-input-container>
+  </div>
+
+  <div layout="row" layout-xs="column">
+    <md-input-container  flex="20" flex-sm="100" flex-xs="100">
+      <label>{{'application.academicLeaveRevocationDate' | translate}}</label>
+      <hois-value value="application.startDate | hoisDate"></hois-value>
+    </md-input-container>
+  </div>
+</div>

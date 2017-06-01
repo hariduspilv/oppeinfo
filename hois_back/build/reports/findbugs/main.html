@@ -1,0 +1,1125 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<title>FindBugs Report</title>
+<style type="text/css">
+		.tablerow0 {
+			background: #EEEEEE;
+		}
+
+		.tablerow1 {
+			background: white;
+		}
+
+		.detailrow0 {
+			background: #EEEEEE;
+		}
+
+		.detailrow1 {
+			background: white;
+		}
+
+		.tableheader {
+			background: #b9b9fe;
+			font-size: larger;
+		}
+
+		.tablerow0:hover, .tablerow1:hover {
+			background: #aaffaa;
+		}
+
+		.priority-1 {
+		    color: red;
+		    font-weight: bold;
+		}
+		.priority-2 {
+		    color: orange;
+		    font-weight: bold;
+		}
+		.priority-3 {
+		    color: green;
+		    font-weight: bold;
+		}
+		.priority-4 {
+		    color: blue;
+		    font-weight: bold;
+		}
+		</style>
+<script type="text/javascript">
+			function toggleRow(elid) {
+				if (document.getElementById) {
+					element = document.getElementById(elid);
+					if (element) {
+						if (element.style.display == 'none') {
+							element.style.display = 'block';
+							//window.status = 'Toggle on!';
+						} else {
+							element.style.display = 'none';
+							//window.status = 'Toggle off!';
+						}
+					}
+				}
+			}
+		</script>
+</head>
+<body>
+<h1>
+<a href="http://findbugs.sourceforge.net">FindBugs</a> Report</h1>
+<h2>Project Information</h2>
+<p>Project: 
+		</p>
+<p>FindBugs version: 3.0.1</p>
+<p>Code analyzed:</p>
+<ul>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application$WebMvcConfig.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application$CustomRequestMappingHandler.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application$VersionedRequestMappingHandlerAdapter.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application$1.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application$2.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application$3.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application$4.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application$5.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application$6.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/Application.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/config/SaisProperties.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/config/SecurityConfiguration.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/security/HoisUserDetailsService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/security/HoisUserDetails.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/security/AuthenticatedSchool.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/security/AuthenticatedUser.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/UserService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/ApplicationService$1.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/ApplicationService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/AutomaticMessageService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/MessageTemplateService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/MailService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/AutocompleteService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/SubjectService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/BuildingService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/CertificateService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/ClassifierConnectService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/ClassifierService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/CurriculumService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/DirectiveConfirmService$1.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/DirectiveConfirmService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/StudentService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/DirectiveService$1.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/DirectiveService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/ehis/EhisStudentService$1.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/ehis/EhisStudentService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/GeneralMessageService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/JournalService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/LessonPlanService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/LessonTimeService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/MessageService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/PersonService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/SaisAdmissionService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/SaisLogService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/SaisApplicationService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/ClassifierCache.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/SaisClassifierService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/SchoolDepartmentService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/SchoolService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/StateCurriculumService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/StudentGroupService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/StudentRepresentativeService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/StudyYearScheduleService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/StudyYearService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/SubjectStudyPeriodPlanService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/SubjectStudyPeriodService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/TeacherOccupationService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/service/TeacherService.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/PersonRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/UserRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/UserRolesRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/ClassifierRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/ApplicationRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/BuildingRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/CertificateRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/ClassifierConnectRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/CurriculumDepartmentRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/CurriculumModuleOutcomeRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/CurriculumModuleRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/CurriculumRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/CurriculumSpecialityRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/CurriculumVersionRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/DirectiveCoordinatorRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/DirectiveRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/GeneralMessageRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/JournalCapacityRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/JournalEntryRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/JournalEntryStudentRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/JournalRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/JournalStudentRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/LessonPlanModuleRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/LessonPlanRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/LessonTimeBuildingGroupRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/LessonTimeBuildingRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/LessonTimeRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/MessageRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/MessageTemplateRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/OisFileRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/RoomRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/SaisAdmissionRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/SaisApplicationRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/SaisClassifierRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/SchoolDepartmentRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/SchoolRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/specification/ClassifierConnectSpecification.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StateCurriculumRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudentAbsenceRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudentGroupRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudentRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudentRepresentativeApplicationRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudentRepresentativeRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudyPeriodEventRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudyPeriodRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudyYearRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudyYearScheduleLegendRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/StudyYearScheduleRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/SubjectRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/SubjectStudyPeriodPlanRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/SubjectStudyPeriodRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/TeacherMobilityRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/TeacherOccupationRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/TeacherPositionEhisRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/TeacherQualificationRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/TeacherRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/UserRolesDefaultRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/repository/WsEhisStudentLogRepository.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/Person.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/BaseEntityWithId.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/BaseEntity.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/User.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/UserRights.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/Classifier.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/school/School.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/school/SchoolStudyLevel.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/school/SchoolDepartment.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/school/StudyYearScheduleLegend.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/school/StudyYearSchedule.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/student/Student.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/student/StudentBase.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/student/StudentHistory.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/student/StudentRepresentative.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/student/StudentGroup.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/student/StudentAbsence.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/student/StudentRepresentativeApplication.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/ClassifierConnect.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/OisFile.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersion.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumSpeciality.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/Curriculum.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumStudyForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionHigherModule.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionSpeciality.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionOccupationModule.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumStudyLanguage.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumDepartment.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumFile.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumGrade.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumJointPartner.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumModule.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumOccupation.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionHigherModuleSubject.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionElectiveModule.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionHigherModuleSpeciality.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionOccupationModuleCapacity.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionOccupationModuleTheme.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionOccupationModuleYearCapacity.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumModuleOccupation.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumModuleCompetence.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumModuleOutcome.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumOccupationSpeciality.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionOccupationModuleOutcome.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/curriculum/CurriculumVersionOccupationModuleThemeCapacity.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/teacher/Teacher.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/teacher/TeacherOccupation.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/teacher/TeacherPositionEhis.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/teacher/TeacherMobility.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/teacher/TeacherQualification.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/SubjectStudyPeriodStudentGroup.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/SubjectStudyPeriodCapacity.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/SubjectStudyPeriodPlan.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/SubjectStudyPeriodPlanCapacity.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/SubjectStudyPeriodPlanCurriculum.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/SubjectStudyPeriodPlanStudyform.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/Journal.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/JournalTeacher.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/JournalStudent.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/JournalOccupationModuleTheme.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/JournalCapacity.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/JournalCapacityType.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/JournalEntry.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/JournalEntryStudent.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/LessonPlanModule.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/JournalEntryCapacityType.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/JournalEntryStudentHistory.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/LessonPlan.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/LessonTime.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/LessonTimeBuildingGroup.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/timetable/LessonTimeBuilding.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/statecurriculum/StateCurriculum.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/statecurriculum/StateCurriculumModule.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/statecurriculum/StateCurriculumOccupation.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/statecurriculum/StateCurriculumModuleOccupation.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/statecurriculum/StateCurriculumModuleOutcome.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/subject/studyperiod/SubjectStudyPeriodTeacher.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/subject/studyperiod/SubjectStudyPeriod.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/subject/Subject.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/subject/SubjectLanguage.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/subject/SubjectConnect.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/StudyPeriod.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/StudyYear.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/StudyPeriodEvent.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/application/Application.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/application/ApplicationFile.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/application/ApplicationPlannedSubject.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/application/ApplicationPlannedSubjectEquivalent.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/directive/DirectiveStudent.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/directive/Directive.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/directive/DirectiveCoordinator.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/sais/SaisApplication.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/sais/SaisAdmission.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/sais/SaisApplicationGraduatedSchool.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/sais/SaisApplicationGrade.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/sais/SaisApplicationOtherData.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/sais/SaisClassifier.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/sais/WsSaisLog.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/sais/WsSaisLogDetail.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/Building.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/Room.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/RoomEquipment.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/Certificate.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/ClassifierConnectPk.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/GeneralMessage.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/GeneralMessageTarget.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/Message.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/MessageReceiver.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/MessageTemplate.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/UserRoleDefault.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/domain/WsEhisStudentLog.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/Versioned.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/JpaQueryUtil$NativeQueryBuilder.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/JpaQueryUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/Period.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/EntityUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/LessonPlanUtil$LessonPlanCapacityMapper.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/LessonPlanUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/ApplicationUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/AssertionFailedException.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/ClassifierUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/CurriculumUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/DateUtils.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/EntityRemoveException.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/ExceptionUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/HttpUtil$CreatedResponse.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/HttpUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/PersonUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/SchoolUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/StreamUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/StudentUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/SubjectUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/TeacherUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/UserUtil.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/WithEntity.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/util/WithVersionedEntity.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/UserProjection.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SchoolWithoutLogo.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/AutocompleteResult.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ApplicationSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/InsertedChangedVersionDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ApplicationPlannedSubjectDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ApplicationDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ApplicationApplicableDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ApplicationFileDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ApplicationPlannedSubjectEquivalentDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveStudentDto$1.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveStudentDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveDto$DirectiveCancelDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveViewDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveStudentSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveCoordinatorDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveViewStudentDto$1.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/directive/DirectiveViewStudentDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/MessageTemplateDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ClassifierSelection.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionResult.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionHigherModuleDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionOccupationModuleDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionOccupationModuleThemeDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionOccupationModuleCapacityDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionOccupationModuleYearCapacityDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionOccupationModuleThemeCapacityDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionHigherModuleSubjectDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionElectiveModuleDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumModuleDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumModuleOutcomeDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumOccupationDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumJointPartnerDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumSpecialityDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumGradeDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumFileDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionHigherModuleSpecialityDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/curriculum/CurriculumVersionOccupationModuleOutcomeDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SchoolDepartmentResult.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentGroupResult.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentAbsenceDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentApplicationDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentDirectiveDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentGroupSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentGroupStudentDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentRepresentativeDto$StudentRepresentativePersonDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentRepresentativeDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentRepresentativeApplicationDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentGroupDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentViewDto$StudentViewPersonDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/student/StudentViewDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/StudyPeriodDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/StudyYearSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisClassifierSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisAdmissionSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisApplicationSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisApplicationImportResultDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisApplicationImportedRowDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisAdmissionDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisApplicationDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisApplicationGraduatedSchoolDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisApplicationGradeDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisApplicationOtherDataDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/sais/SaisClassifierDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/RoomSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/RoomDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/CertificateSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ClassifierWithCount.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ClassifierSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/GeneralMessageDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalStudentDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalEntryLessonInfoDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalEntryTableDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalEntryDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalEntryByDateDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalModuleDescriptionDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalEntryStudentDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalEntryStudentResultDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/JournalEntryStudentHistoryDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonPlanSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonPlanSearchTeacherDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonPlanJournalDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonTimeSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonTimeGroupsDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonTimeBuildingGroupDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonTimeDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonPlanDto$LessonPlanModuleDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonPlanDto$LessonPlanModuleJournalDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonPlanDto$LessonPlanModuleJournalThemeDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonPlanDto$LessonPlanModuleJournalTeacherDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonPlanDto$StudyPeriodDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonPlanDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/timetable/LessonTimesDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/MessageSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/MessageReceiverDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/UsersSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/UserDto$PersonMinDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/UserDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SchoolDepartmentDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SchoolDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/StudyYearScheduleLegendDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/StateCurriculumSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/StateCurriculumModuleDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/StudyYearScheduleDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/StudyYearDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/StudyPeriodEventDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectStudyPeriodPlanSearchDtoContainer.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectStudyPeriodPlanDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectStudyPeriodPlanCapacityDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectStudyPeriodPlanSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectStudyPeriodSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectStudyPeriodDtoContainer.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/TeacherSearchDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectStudyPeriodDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectStudyPeriodTeacherDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectStudyPeriodCapacityDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/TeacherOccupationDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/TeacherDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/PersonDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/BuildingDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/CertificateDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ClassifierConnectSelection.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/ClassifierDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/MessageDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/PersonWithUsersDto$UsersDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/PersonWithUsersDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/StateCurriculumDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/SubjectDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/UserRolesDto$UserRoleRightDefaultDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/dto/UserRolesDto.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/EntityConnectionCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/ClassifierConnectSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/ApplicationSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/ApplicationForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/VersionedCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/ApplicationRejectForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/directive/DirectiveForm$DirectiveFormStudent.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/directive/DirectiveForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/directive/DirectiveSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/directive/DirectiveDataCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/directive/DirectiveStudentSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/directive/DirectiveCoordinatorForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/MessageTemplateForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/MessageTemplateSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/OisFileCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/ClassifierSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/AutocompleteCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/PersonLookupCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/StudentAutocompleteCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/TeacherAutocompleteCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/StudyPeriodForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SubjectForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SubjectSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/BuildingForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/RoomSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/RoomForm$RoomEquipmentCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/RoomForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/CertificateSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/CertificateForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/CurriculumSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/UniqueCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/CurriculumForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentForm$StudentPersonForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentAbsenceForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentGroupSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentGroupForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentGroupSearchStudentsCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentRepresentativeForm$StudentRepresentativePersonForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentRepresentativeForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentRepresentativeApplicationSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentRepresentativeApplicationForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/student/StudentRepresentativeApplicationDeclineForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/GeneralMessageForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/GeneralMessageSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/JournalSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/JournalStudentsSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/JournalEndDateCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/JournalStudentsCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/JournalEntryForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/JournalEntryStudentForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/LessonPlanForm$LessonPlanModuleForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/LessonPlanForm$LessonPlanModuleJournalForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/LessonPlanForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/LessonPlanCreateForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/LessonPlanSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/LessonPlanSearchTeacherCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/LessonPlanJournalForm$LessonPlanJournalTeacherForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/LessonPlanJournalForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/timetable/LessonTimeSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/MessageSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/MessageForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/UsersSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/UserForm$UserRight.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/UserForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/PersonForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/sais/SaisAdmissionSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/sais/SaisApplicationSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/sais/SaisApplicationCsvRow.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/sais/SaisClassifierSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/sais/SaisApplicationClassifiersCsv.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/sais/SaisApplicationLocalDateDeserializer.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/sais/SaisApplicationImportCsvCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SaisAdmissionImportForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SaisApplicationImportForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SchoolDepartmentSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SchoolDepartmentForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SchoolForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SchoolSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SchoolUpdateStudyLevelsCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SchoolUpdateStudyYearScheduleLegendsCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/StateCurriculumSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/StateCurriculumForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/StudyYearScheduleDtoContainer.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/StudyYearForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/StudyPeriodEventForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SubjectStudyPeriodPlanSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SubjectStudyPeriodPlanUniqueCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SubjectStudyPeriodSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SubjectStudyPeriodForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/SubjectStudyPeriodTeacherForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/TeacherOccupationSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/TeacherOccupationForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/teacher/TeacherForm$TeacherPersonForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/teacher/TeacherForm$TeacherPositionEhisForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/teacher/TeacherForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/teacher/TeacherMobilityForm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/teacher/TeacherQualificationFrom.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/teacher/TeacherSearchCommand.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/teacher/TeacherMobilityFormWrapper.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/commandobject/teacher/TeacherQualificationFromWrapper.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/ControllerErrorHandler$ErrorInfo$Error.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/ControllerErrorHandler$ErrorInfo$ErrorForField.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/ControllerErrorHandler$ErrorInfo.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/ControllerErrorHandler.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/ApplicationController$1.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/ApplicationController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/AuthenticationController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/AutocompleteController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/BuildingController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/CertificateController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/ClassifierConnectController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/ClassifierController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/CurriculumController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/DirectiveController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/FakeController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/GeneralMessageController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/JournalController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/LessonPlanController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/LessonTimeController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/MessageController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/MessageTemplateController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/PersonController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/SaisAdmissionController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/SaisApplicationController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/SaisClassifierController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/SchoolController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/StateCurriculumController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/StudentController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/StudentGroupController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/StudentRepresentativeController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/StudyYearScheduleController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/SubjectController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/SubjectStudyPeriodController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/SubjectStudyPeriodPlanController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/TeacherController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/web/UsersController.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/Role.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/Absence.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/AcademicLeaveReason.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/ApplicationStatus.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/ApplicationType.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/DirectiveType.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/StudentStatus.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/CapacityType.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/CurriculumVersionStatus.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/Day.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/DirectiveStatus.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/ExmatriculationReason.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/FinSource.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/FinSpecific.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/GroupProportion.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/JournalEntryType.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/JournalStatus.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/Language.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/MainClassCode.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/MessageStatus.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/MessageType.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/Permission.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/SaisApplicationStatus.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/StudentRepresentativeApplicationStatus.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/StudyLoad.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/SubjectConnection.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/enums/SubjectStatus.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ApplicationValidation$Finm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ApplicationValidation$Ovorm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ApplicationValidation$Okava.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ApplicationValidation$Valis.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ApplicationValidation$Eksmat.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ApplicationValidation$Akadk.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ApplicationValidation$Akad.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ApplicationValidation.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/PeriodRange.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DateRange.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/StudyPeriodRange.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Akad.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Akadk.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Eksmat.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Ennist.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Finm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Immat.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Lopet.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Okava.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Okoorm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Ovorm.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation$Valis.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DirectiveValidation.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ClassifierRestriction.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/JournalEntryValidation$Lesson.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/JournalEntryValidation$Homework.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/JournalEntryValidation.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DateTimeRange.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/TimeRange.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/EstonianIdCode.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/EstonianIdCodeValidator$PersonValidator.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/EstonianIdCodeValidator.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DateRanges.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DateRangeValidator.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DateTimeRanges.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/DateTimeRangeValidator.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/NotEmpty.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/PeriodRangeValidator.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/StudyPeriodRanges.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/StudyPeriodRangeValidator.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/TimeRanges.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/TimeRangeValidator.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/validation/ValidationFailedException.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/HoisUserDetailsArgumentResolver.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/message/ConfirmationNeededMessage.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/message/StudentMessage.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/message/StudentAbsenceCreated.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/message/StudentApplicationRejectedMessage.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/message/StudentDirectiveCreated.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/message/StudentRepresentativeApplicationAccepted.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/message/StudentRepresentativeApplicationCreated.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/message/StudentRepresentativeApplicationRejectedMessage.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/VersionedInvocableHandlerMethod.class</li>
+<li>/opt/hois/hois_back/build/classes/main/ee/hitsa/ois/WithEntityMethodArgumentResolver.class</li>
+</ul>
+<p>
+<br/>
+<br/>
+</p>
+<h2>Metrics</h2>
+<p>25875 lines of code analyzed,
+	in 612 classes, 
+	in 36 packages.</p>
+<table width="500" cellpadding="5" cellspacing="2">
+<tr class="tableheader">
+<th align="left">Metric</th>
+<th align="right">Total</th>
+<th align="right">Density*</th>
+</tr>
+<tr class="tablerow0">
+<td>High Priority Warnings</td>
+<td align="right">2</td>
+<td align="right">0.08</td>
+</tr>
+<tr class="tablerow1">
+<td>Medium Priority Warnings</td>
+<td align="right">13</td>
+<td align="right">0.50</td>
+</tr>
+<tr class="$totalClass">
+<td>
+<b>Total Warnings</b>
+</td>
+<td align="right">
+<b>15</b>
+</td>
+<td align="right">
+<b>0.58</b>
+</td>
+</tr>
+</table>
+<p>
+<i>(* Defects per Thousand lines of non-commenting source statements)</i>
+</p>
+<p>
+<br/>
+<br/>
+</p>
+<h2>Contents</h2>
+<ul>
+<li>
+<a href="#Warnings_BAD_PRACTICE">Bad practice Warnings</a>
+</li>
+<li>
+<a href="#Warnings_I18N">Internationalization Warnings</a>
+</li>
+<li>
+<a href="#Warnings_MALICIOUS_CODE">Malicious code vulnerability Warnings</a>
+</li>
+<li>
+<a href="#Warnings_STYLE">Dodgy code Warnings</a>
+</li>
+<li>
+<a href="#Details">Details</a>
+</li>
+</ul>
+<h1>Summary</h1>
+<table width="500" cellpadding="5" cellspacing="2">
+<tr class="tableheader">
+<th align="left">Warning Type</th>
+<th align="right">Number</th>
+</tr>
+<tr class="tablerow0">
+<td>
+<a href="#Warnings_BAD_PRACTICE">Bad practice Warnings</a>
+</td>
+<td align="right">5</td>
+</tr>
+<tr class="tablerow1">
+<td>
+<a href="#Warnings_I18N">Internationalization Warnings</a>
+</td>
+<td align="right">1</td>
+</tr>
+<tr class="tablerow0">
+<td>
+<a href="#Warnings_MALICIOUS_CODE">Malicious code vulnerability Warnings</a>
+</td>
+<td align="right">6</td>
+</tr>
+<tr class="tablerow1">
+<td>
+<a href="#Warnings_STYLE">Dodgy code Warnings</a>
+</td>
+<td align="right">3</td>
+</tr>
+<tr class="tablerow0">
+<td>
+<b>Total</b>
+</td>
+<td align="right">
+<b>15</b>
+</td>
+</tr>
+</table>
+<h1>Warnings</h1>
+<p>Click on a warning row to see full context information.</p>
+<h2>
+<a name="Warnings_BAD_PRACTICE">Bad practice Warnings</a>
+</h2>
+<table class="warningtable" width="100%" cellspacing="0">
+<tr class="tableheader">
+<th align="left">Code</th>
+<th align="left">Warning</th>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N68010');">
+<td>
+<span class="priority-2">BC</span>
+</td>
+<td>Equals method for ee.hitsa.ois.domain.BaseEntityWithId assumes the argument is of type BaseEntityWithId</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N68010" style="display: none;">
+<a href="#BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS">Bug type BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS (click for details)</a>
+<br/>In class ee.hitsa.ois.domain.BaseEntityWithId<br/>In method ee.hitsa.ois.domain.BaseEntityWithId.equals(Object)<br/>At BaseEntityWithId.java:[line 43]</p>
+</td>
+</tr>
+<tr class="tablerow0" onclick="toggleRow('N68063');">
+<td>
+<span class="priority-2">BC</span>
+</td>
+<td>Equals method for ee.hitsa.ois.domain.Classifier assumes the argument is of type Classifier</td>
+</tr>
+<tr class="detailrow0">
+<td/>
+<td>
+<p id="N68063" style="display: none;">
+<a href="#BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS">Bug type BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS (click for details)</a>
+<br/>In class ee.hitsa.ois.domain.Classifier<br/>In method ee.hitsa.ois.domain.Classifier.equals(Object)<br/>At Classifier.java:[line 86]</p>
+</td>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N68259');">
+<td>
+<span class="priority-2">BC</span>
+</td>
+<td>Equals method for ee.hitsa.ois.domain.curriculum.CurriculumDepartment assumes the argument is of type CurriculumDepartment</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N68259" style="display: none;">
+<a href="#BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS">Bug type BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS (click for details)</a>
+<br/>In class ee.hitsa.ois.domain.curriculum.CurriculumDepartment<br/>In method ee.hitsa.ois.domain.curriculum.CurriculumDepartment.equals(Object)<br/>At CurriculumDepartment.java:[line 57]</p>
+</td>
+</tr>
+<tr class="tablerow0" onclick="toggleRow('N68312');">
+<td>
+<span class="priority-2">BC</span>
+</td>
+<td>Equals method for ee.hitsa.ois.domain.curriculum.CurriculumStudyForm assumes the argument is of type CurriculumStudyForm</td>
+</tr>
+<tr class="detailrow0">
+<td/>
+<td>
+<p id="N68312" style="display: none;">
+<a href="#BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS">Bug type BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS (click for details)</a>
+<br/>In class ee.hitsa.ois.domain.curriculum.CurriculumStudyForm<br/>In method ee.hitsa.ois.domain.curriculum.CurriculumStudyForm.equals(Object)<br/>At CurriculumStudyForm.java:[line 53]</p>
+</td>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N68365');">
+<td>
+<span class="priority-2">BC</span>
+</td>
+<td>Equals method for ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage assumes the argument is of type CurriculumStudyLanguage</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N68365" style="display: none;">
+<a href="#BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS">Bug type BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS (click for details)</a>
+<br/>In class ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage<br/>In method ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage.equals(Object)<br/>At CurriculumStudyLanguage.java:[line 59]</p>
+</td>
+</tr>
+</table>
+<h2>
+<a name="Warnings_I18N">Internationalization Warnings</a>
+</h2>
+<table class="warningtable" width="100%" cellspacing="0">
+<tr class="tableheader">
+<th align="left">Code</th>
+<th align="left">Warning</th>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N68699');">
+<td>
+<span class="priority-1">Dm</span>
+</td>
+<td>Found reliance on default encoding in ee.hitsa.ois.web.SaisApplicationController.getFileBytes(String): String.getBytes()</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N68699" style="display: none;">
+<a href="#DM_DEFAULT_ENCODING">Bug type DM_DEFAULT_ENCODING (click for details)</a>
+<br/>In class ee.hitsa.ois.web.SaisApplicationController<br/>In method ee.hitsa.ois.web.SaisApplicationController.getFileBytes(String)<br/>Called method String.getBytes()<br/>At SaisApplicationController.java:[line 85]</p>
+</td>
+</tr>
+</table>
+<h2>
+<a name="Warnings_MALICIOUS_CODE">Malicious code vulnerability Warnings</a>
+</h2>
+<table class="warningtable" width="100%" cellspacing="0">
+<tr class="tableheader">
+<th align="left">Code</th>
+<th align="left">Warning</th>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N68116');">
+<td>
+<span class="priority-2">EI</span>
+</td>
+<td>ee.hitsa.ois.domain.OisFile.getFdata() may expose internal representation by returning OisFile.fdata</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N68116" style="display: none;">
+<a href="#EI_EXPOSE_REP">Bug type EI_EXPOSE_REP (click for details)</a>
+<br/>In class ee.hitsa.ois.domain.OisFile<br/>In method ee.hitsa.ois.domain.OisFile.getFdata()<br/>Field ee.hitsa.ois.domain.OisFile.fdata<br/>At OisFile.java:[line 13]</p>
+</td>
+</tr>
+<tr class="tablerow0" onclick="toggleRow('N68418');">
+<td>
+<span class="priority-2">EI</span>
+</td>
+<td>ee.hitsa.ois.enums.DirectiveType.updatedFields() may expose internal representation by returning DirectiveType.updatedFields</td>
+</tr>
+<tr class="detailrow0">
+<td/>
+<td>
+<p id="N68418" style="display: none;">
+<a href="#EI_EXPOSE_REP">Bug type EI_EXPOSE_REP (click for details)</a>
+<br/>In class ee.hitsa.ois.enums.DirectiveType<br/>In method ee.hitsa.ois.enums.DirectiveType.updatedFields()<br/>Field ee.hitsa.ois.enums.DirectiveType.updatedFields<br/>At DirectiveType.java:[line 44]</p>
+</td>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N68768');">
+<td>
+<span class="priority-2">EI</span>
+</td>
+<td>ee.hitsa.ois.web.commandobject.OisFileCommand.getFdata() may expose internal representation by returning OisFileCommand.fdata</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N68768" style="display: none;">
+<a href="#EI_EXPOSE_REP">Bug type EI_EXPOSE_REP (click for details)</a>
+<br/>In class ee.hitsa.ois.web.commandobject.OisFileCommand<br/>In method ee.hitsa.ois.web.commandobject.OisFileCommand.getFdata()<br/>Field ee.hitsa.ois.web.commandobject.OisFileCommand.fdata<br/>At OisFileCommand.java:[line 17]</p>
+</td>
+</tr>
+<tr class="tablerow0" onclick="toggleRow('N68184');">
+<td>
+<span class="priority-2">EI2</span>
+</td>
+<td>ee.hitsa.ois.domain.OisFile.setFdata(byte[]) may expose internal representation by storing an externally mutable object into OisFile.fdata</td>
+</tr>
+<tr class="detailrow0">
+<td/>
+<td>
+<p id="N68184" style="display: none;">
+<a href="#EI_EXPOSE_REP2">Bug type EI_EXPOSE_REP2 (click for details)</a>
+<br/>In class ee.hitsa.ois.domain.OisFile<br/>In method ee.hitsa.ois.domain.OisFile.setFdata(byte[])<br/>Field ee.hitsa.ois.domain.OisFile.fdata<br/>Local variable named fdata<br/>At OisFile.java:[line 17]</p>
+</td>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N68836');">
+<td>
+<span class="priority-2">EI2</span>
+</td>
+<td>ee.hitsa.ois.web.commandobject.OisFileCommand.setFdata(byte[]) may expose internal representation by storing an externally mutable object into OisFileCommand.fdata</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N68836" style="display: none;">
+<a href="#EI_EXPOSE_REP2">Bug type EI_EXPOSE_REP2 (click for details)</a>
+<br/>In class ee.hitsa.ois.web.commandobject.OisFileCommand<br/>In method ee.hitsa.ois.web.commandobject.OisFileCommand.setFdata(byte[])<br/>Field ee.hitsa.ois.web.commandobject.OisFileCommand.fdata<br/>Local variable named fdata<br/>At OisFileCommand.java:[line 21]</p>
+</td>
+</tr>
+<tr class="tablerow0" onclick="toggleRow('N68486');">
+<td>
+<span class="priority-1">MS</span>
+</td>
+<td>ee.hitsa.ois.enums.StudentStatus.STUDENT_STATUS_ACTIVE is a mutable collection</td>
+</tr>
+<tr class="detailrow0">
+<td/>
+<td>
+<p id="N68486" style="display: none;">
+<a href="#MS_MUTABLE_COLLECTION">Bug type MS_MUTABLE_COLLECTION (click for details)</a>
+<br/>In class ee.hitsa.ois.enums.StudentStatus<br/>Field ee.hitsa.ois.enums.StudentStatus.STUDENT_STATUS_ACTIVE<br/>At StudentStatus.java:[line 14]</p>
+</td>
+</tr>
+</table>
+<h2>
+<a name="Warnings_STYLE">Dodgy code Warnings</a>
+</h2>
+<table class="warningtable" width="100%" cellspacing="0">
+<tr class="tableheader">
+<th align="left">Code</th>
+<th align="left">Warning</th>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N68645');">
+<td>
+<span class="priority-2">Eq</span>
+</td>
+<td>ee.hitsa.ois.service.security.HoisUserDetails doesn't override org.springframework.security.core.userdetails.User.equals(Object)</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N68645" style="display: none;">
+<a href="#EQ_DOESNT_OVERRIDE_EQUALS">Bug type EQ_DOESNT_OVERRIDE_EQUALS (click for details)</a>
+<br/>In class ee.hitsa.ois.service.security.HoisUserDetails<br/>At HoisUserDetails.java:[line 1]<br/>Did you intend to override org.springframework.security.core.userdetails.User.equals(Object)</p>
+</td>
+</tr>
+<tr class="tablerow0" onclick="toggleRow('N68538');">
+<td>
+<span class="priority-2">SF</span>
+</td>
+<td>Switch statement found in ee.hitsa.ois.service.DirectiveConfirmService.updateStudentData(DirectiveType, DirectiveStudent, Classifier, DirectiveStudent) where one case falls through to the next case</td>
+</tr>
+<tr class="detailrow0">
+<td/>
+<td>
+<p id="N68538" style="display: none;">
+<a href="#SF_SWITCH_FALLTHROUGH">Bug type SF_SWITCH_FALLTHROUGH (click for details)</a>
+<br/>In class ee.hitsa.ois.service.DirectiveConfirmService<br/>In method ee.hitsa.ois.service.DirectiveConfirmService.updateStudentData(DirectiveType, DirectiveStudent, Classifier, DirectiveStudent)<br/>At DirectiveConfirmService.java:[lines 200-203]</p>
+</td>
+</tr>
+<tr class="tablerow1" onclick="toggleRow('N68592');">
+<td>
+<span class="priority-2">SF</span>
+</td>
+<td>Switch statement found in ee.hitsa.ois.service.SaisClassifierService.importClassifiers(SaisClassifierSearchCommand, Pageable, HoisUserDetails) where default case is missing</td>
+</tr>
+<tr class="detailrow1">
+<td/>
+<td>
+<p id="N68592" style="display: none;">
+<a href="#SF_SWITCH_NO_DEFAULT">Bug type SF_SWITCH_NO_DEFAULT (click for details)</a>
+<br/>In class ee.hitsa.ois.service.SaisClassifierService<br/>In method ee.hitsa.ois.service.SaisClassifierService.importClassifiers(SaisClassifierSearchCommand, Pageable, HoisUserDetails)<br/>At SaisClassifierService.java:[lines 119-124]</p>
+</td>
+</tr>
+</table>
+<h1>
+<a name="Details">Details</a>
+</h1>
+<h2>
+<a name="BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS">BC_EQUALS_METHOD_SHOULD_WORK_FOR_ALL_OBJECTS: Equals method should not assume anything about the type of its argument</a>
+</h2>
+
+<p>
+The <code>equals(Object o)</code> method shouldn't make any assumptions
+about the type of <code>o</code>. It should simply return
+false if <code>o</code> is not the same type as <code>this</code>.
+</p>
+
+    
+<h2>
+<a name="DM_DEFAULT_ENCODING">DM_DEFAULT_ENCODING: Reliance on default encoding</a>
+</h2>
+
+<p> Found a call to a method which will perform a byte to String (or String to byte) conversion, and will assume that the default platform encoding is suitable. This will cause the application behaviour to vary between platforms. Use an alternative API and specify a charset name or Charset object explicitly.  </p>
+
+      
+<h2>
+<a name="EI_EXPOSE_REP">EI_EXPOSE_REP: May expose internal representation by returning reference to mutable object</a>
+</h2>
+
+  <p> Returning a reference to a mutable object value stored in one of the object's fields
+  exposes the internal representation of the object.&nbsp;
+   If instances
+   are accessed by untrusted code, and unchecked changes to
+   the mutable object would compromise security or other
+   important properties, you will need to do something different.
+  Returning a new copy of the object is better approach in many situations.</p>
+
+    
+<h2>
+<a name="EI_EXPOSE_REP2">EI_EXPOSE_REP2: May expose internal representation by incorporating reference to mutable object</a>
+</h2>
+
+  <p> This code stores a reference to an externally mutable object into the
+  internal representation of the object.&nbsp;
+   If instances
+   are accessed by untrusted code, and unchecked changes to
+   the mutable object would compromise security or other
+   important properties, you will need to do something different.
+  Storing a copy of the object is better approach in many situations.</p>
+
+    
+<h2>
+<a name="EQ_DOESNT_OVERRIDE_EQUALS">EQ_DOESNT_OVERRIDE_EQUALS: Class doesn't override equals in superclass</a>
+</h2>
+
+  <p> This class extends a class that defines an equals method and adds fields, but doesn't
+define an equals method itself. Thus, equality on instances of this class will
+ignore the identity of the subclass and the added fields. Be sure this is what is intended,
+and that you don't need to override the equals method. Even if you don't need to override
+the equals method, consider overriding it anyway to document the fact
+that the equals method for the subclass just return the result of
+invoking super.equals(o).
+  </p>
+
+    
+<h2>
+<a name="MS_MUTABLE_COLLECTION">MS_MUTABLE_COLLECTION: Field is a mutable collection</a>
+</h2>
+
+ <p>A mutable collection instance is assigned to a final static field, 
+   thus can be changed by malicious code or by accident from another package.
+   Consider wrapping this field into Collections.unmodifiableSet/List/Map/etc.
+   to avoid this vulnerability.</p>
+
+    
+<h2>
+<a name="SF_SWITCH_NO_DEFAULT">SF_SWITCH_NO_DEFAULT: Switch statement found where default case is missing</a>
+</h2>
+
+  <p> This method contains a switch statement where default case is missing.
+  Usually you need to provide a default case.</p>
+  <p>Because the analysis only looks at the generated bytecode, this warning can be incorrect triggered if
+the default case is at the end of the switch statement and the switch statement doesn't contain break statements for other
+cases.
+
+    
+<h2>
+<a name="SF_SWITCH_FALLTHROUGH">SF_SWITCH_FALLTHROUGH: Switch statement found where one case falls through to the next case</a>
+</h2>
+
+  <p> This method contains a switch statement where one case branch will fall through to the next case.
+  Usually you need to end this case with a break or return.</p>
+
+    </body>
+</html>

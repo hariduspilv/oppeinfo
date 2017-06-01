@@ -2,7 +2,9 @@ package ee.hitsa.ois.web;
 
 import java.util.Arrays;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.GeneralMessageForm;
 import ee.hitsa.ois.web.dto.GeneralMessageDto;
@@ -26,6 +29,18 @@ public class GeneralMessageControllerTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
+    @Autowired
+    private TestConfigurationService testConfigurationService;
+
+    @Before
+    public void setUp() {
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
+    }
 
     @Test
     public void show() {

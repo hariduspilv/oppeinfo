@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', '$stateProvider', function ($routeProvider, USER_ROLES) {
+angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
     .when('/applications/student', {
         templateUrl: 'application/student/application.student.list.html',
@@ -20,7 +20,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', '$stateProvid
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          isCreate: function (){return true;}
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

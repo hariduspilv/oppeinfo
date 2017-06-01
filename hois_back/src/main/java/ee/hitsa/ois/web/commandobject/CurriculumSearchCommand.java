@@ -13,9 +13,12 @@ public class CurriculumSearchCommand extends SearchCommand {
 	private List<String> ekrLevel;
 	private String merCode;
 	private List<String> iscedClassCode;
+	private List<String> iscedSuun;
+	private List<String> curriculumGroup;
+	private String iscedVald;
 	private List<String> studyLanguage;
-	private Double creditsMin;
-	private Double creditsMax;
+	private Long creditsMin;
+	private Long creditsMax;
 	private LocalDate validFrom;
 	private LocalDate validThru;
 	private List<String> status;
@@ -23,8 +26,41 @@ public class CurriculumSearchCommand extends SearchCommand {
 	private Boolean isJoint;
 	private List<Long> department;
 	private Boolean isVocational;
+	private List<Long> subjects;
+		
+	public List<Long> getSubjects() {
+        return subjects;
+    }
 
-	public String getMerCode() {
+    public void setSubjects(List<Long> subjects) {
+        this.subjects = subjects;
+    }
+
+    public List<String> getCurriculumGroup() {
+        return curriculumGroup;
+    }
+
+    public void setCurriculumGroup(List<String> curriculumGroup) {
+        this.curriculumGroup = curriculumGroup;
+    }
+
+    public List<String> getIscedSuun() {
+        return iscedSuun;
+    }
+
+    public void setIscedSuun(List<String> iscedSuun) {
+        this.iscedSuun = iscedSuun;
+    }
+
+    public String getIscedVald() {
+        return iscedVald;
+    }
+
+    public void setIscedVald(String iscedVald) {
+        this.iscedVald = iscedVald;
+    }
+
+    public String getMerCode() {
         return merCode;
     }
 
@@ -32,19 +68,19 @@ public class CurriculumSearchCommand extends SearchCommand {
         this.merCode = merCode;
     }
 
-    public Double getCreditsMin() {
+    public Long getCreditsMin() {
 		return creditsMin;
 	}
 
-	public void setCreditsMin(Double creditsMin) {
+	public void setCreditsMin(Long creditsMin) {
 		this.creditsMin = creditsMin;
 	}
 
-	public Double getCreditsMax() {
+	public Long getCreditsMax() {
 		return creditsMax;
 	}
 
-	public void setCreditsMax(Double creditsMax) {
+	public void setCreditsMax(Long creditsMax) {
 		this.creditsMax = creditsMax;
 	}
 

@@ -32,8 +32,7 @@
                 </md-input-container>
         </div>
         <div layout="row">
-            <md-button class="md-raised md-primary" ng-show="!isSent" ng-href="/#/message/{{record.id}}/respond">{{'message.respond' | translate}}</md-button>
-            <!--<md-button class="md-raised">{{'main.button.delete' | translate}}</md-button>-->
+            <md-button class="md-raised md-primary" ng-if="!isSent && record.sendersId !== -1" ng-href="/#/message/{{record.id}}/respond">{{'message.respond' | translate}}</md-button>
             <md-button class="md-raised" ng-href="{{::formState.backUrl}}">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>

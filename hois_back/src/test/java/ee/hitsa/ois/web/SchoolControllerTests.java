@@ -1,7 +1,10 @@
 package ee.hitsa.ois.web;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -22,6 +25,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
+
 import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.School;
@@ -30,8 +35,11 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyLevelsCommand;
+import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyYearScheduleLegendsCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
+import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -128,7 +136,97 @@ public class SchoolControllerTests {
     }
 
     private List<String> getStudyLevels() {
-        return autocompleteService.classifiers(Collections.singletonList(MainClassCode.OPPEASTE.name())).stream().map(ClassifierSelection::getCode)
-                .collect(Collectors.toList());
+        return StreamUtil.toMappedList(ClassifierSelection::getCode, autocompleteService.classifiers(Collections.singletonList(MainClassCode.OPPEASTE.name())));
+    }
+    
+    @Test
+    public void studyYearScheduleLegends() {
+        String uri = UriComponentsBuilder.fromUriString("/school/studyYearScheduleLegends").build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    /**
+     * This test deletes all StudyYearScheduleLegends of school with id = 1
+     */
+    @Test
+    public void updateStudyYearScheduleLegends() {
+
+        final String URL = "/school/studyYearScheduleLegends";
+        final String CODE_1 = "A";
+        final String CODE_2 = "B";
+        final String CODE_3 = "C";
+        SchoolUpdateStudyYearScheduleLegendsCommand request = new SchoolUpdateStudyYearScheduleLegendsCommand();
+        request.setLegends(Arrays.asList(getlegendDto(CODE_1), getlegendDto(CODE_2)));
+        
+        ResponseEntity<Object> responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
+                new HttpEntity<>(request), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());   
+        List<StudyYearScheduleLegendDto> responseDtos = getUpdateLegendsResult(responseEntity.getBody());
+        Assert.assertEquals(2, responseDtos.size());
+        
+        //remove one
+        responseDtos = responseDtos.stream().filter(l -> l.getCode().equals(CODE_2)).collect(Collectors.toList());
+        request.setLegends(responseDtos);
+        responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
+                new HttpEntity<>(request), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        responseDtos = getUpdateLegendsResult(responseEntity.getBody());
+        Assert.assertEquals(1, responseDtos.size());
+
+        // update one
+        StudyYearScheduleLegendDto item = responseDtos.get(0);
+        item.setCode(CODE_3);
+        request.setLegends(Arrays.asList(item));
+        responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
+                new HttpEntity<>(request), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        responseDtos = getUpdateLegendsResult(responseEntity.getBody());
+        
+        Assert.assertEquals(1, responseDtos.size());
+        item = responseDtos.get(0);
+        Assert.assertTrue(item.getCode().equals(CODE_3));  
+    }
+
+    @Test
+    public void studyYears() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/studyYears", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void teacherOccupations() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/teacheroccupations/all", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<StudyYearScheduleLegendDto> getUpdateLegendsResult(Object body) {
+        Map<String, ?> map = (Map<String, ?>) body;
+        List<Object> legends = (List<Object>) map.get("legends");
+        if(legends == null || legends.isEmpty()) {
+            return new ArrayList<>();
+        }
+        List<StudyYearScheduleLegendDto> output = new ArrayList<>();
+        ObjectMapper mapper = new ObjectMapper();
+        for(Object o : legends) {
+           StudyYearScheduleLegendDto item = mapper.convertValue(o, StudyYearScheduleLegendDto.class);
+           output.add(item);
+        }
+        return output;
+    }
+
+    private static StudyYearScheduleLegendDto getlegendDto(String code) {
+        StudyYearScheduleLegendDto dto = new StudyYearScheduleLegendDto();
+        dto.setCode(code);
+        dto.setNameEt("StudyYearScheduleLegendsTest");
+        dto.setColor("#FFFFFF");
+        return dto;
     }
 }

@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -9,31 +11,69 @@ public class CurriculumSearchDto {
     private Long id;
     private String nameEt;
     private String nameEn;
-    private Integer credits;
+    private BigDecimal credits;
     private LocalDate validFrom;
     private LocalDate validThru;
     private Boolean higher;
     private String status;
+    private String ehisStatus;
     private String origStudyLevel;
     private AutocompleteResult school;
+    private List<Long> departments;
+    private String code;
+    private String merCode;
 
     public CurriculumSearchDto() {
     }
 
-    public CurriculumSearchDto(Long id, String nameEt, String nameEn, Double credits, LocalDate validFrom,
+    public CurriculumSearchDto(Long id, String nameEt, String nameEn, BigDecimal credits, LocalDate validFrom,
             LocalDate validThru, Boolean higher, String status, String origStudyLevel,
-            Long schoolId, String schoolNameEt, String schoolNameEn) {
+            Long schoolId, String schoolNameEt, String schoolNameEn, String ehisStatus, String code, String merCode) {
         this.id = id;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
-        // FIXME why integer?
-        this.credits = credits != null ? Integer.valueOf(credits.intValue()) : null;
+        this.credits = credits;
         this.validFrom = validFrom;
         this.validThru = validThru;
         this.higher = higher;
         this.status = status;
         this.origStudyLevel = origStudyLevel;
         this.school = new AutocompleteResult(schoolId, schoolNameEt, schoolNameEn);
+        this.ehisStatus = ehisStatus;
+        this.code = code;
+        this.merCode = merCode;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public String getMerCode() {
+        return merCode;
+    }
+
+    public void setMerCode(String merCode) {
+        this.merCode = merCode;
+    }
+
+    public String getEhisStatus() {
+        return ehisStatus;
+    }
+
+    public void setEhisStatus(String ehisStatus) {
+        this.ehisStatus = ehisStatus;
+    }
+
+    public List<Long> getDepartments() {
+        return departments;
+    }
+
+    public void setDepartments(List<Long> departments) {
+        this.departments = departments;
     }
 
     public Long getId() {
@@ -60,11 +100,11 @@ public class CurriculumSearchDto {
         this.nameEn = nameEn;
     }
 
-    public Integer getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Integer credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

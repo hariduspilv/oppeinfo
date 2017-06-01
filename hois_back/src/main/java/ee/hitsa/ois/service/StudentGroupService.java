@@ -5,14 +5,12 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Path;
@@ -41,12 +39,12 @@ import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchStudentsCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
 
@@ -54,7 +52,6 @@ import ee.hitsa.ois.web.dto.student.StudentGroupStudentDto;
 @Service
 public class StudentGroupService {
 
-    private static final List<String> STUDENT_STATUS_ACTIVE = Arrays.asList(StudentStatus.OPPURSTAATUS_O.name(), StudentStatus.OPPURSTAATUS_A.name(), StudentStatus.OPPURSTAATUS_V.name());
     private static final String STUDENT_GROUP_LIST_SELECT =
             "sg.id, sg.code, sg.study_form_code, sg.course, curriculum.id as curriculum_id, "+
             "curriculum.name_et, curriculum.name_en, "+
@@ -79,7 +76,7 @@ public class StudentGroupService {
     private StudentService studentService;
 
     public Page<StudentGroupSearchDto> search(Long schoolId, StudentGroupSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_GROUP_LIST_FROM, pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_GROUP_LIST_FROM).sort(pageable);
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
 
@@ -89,8 +86,12 @@ public class StudentGroupService {
         qb.optionalCriteria("sg.curriculum_version_id in (:curriculumVersion)", "curriculumVersion", criteria.getCurriculumVersion());
         qb.optionalCriteria("sg.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("sg.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
+        qb.optionalCriteria("sg.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeachers());
+        qb.optionalCriteria("sg.teacher_id in (select t.id from teacher t where t.person_id = :teacherPerson and t.school_id = :schoolId)", "teacherPerson", criteria.getTeacherPerson());
+        qb.optionalCriteria("sg.valid_thru >= :validFrom", "validFrom", criteria.getValidFrom());
+        qb.optionalCriteria("sg.valid_from <= :validThru", "validThru", criteria.getValidThru());
 
-        return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
+        return JpaQueryUtil.pagingResult(qb.select(STUDENT_GROUP_LIST_SELECT, em, Collections.singletonMap("studentStatus", StudentStatus.STUDENT_STATUS_ACTIVE)), pageable, () -> qb.count(em)).map(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setCode(resultAsString(r, 1));
@@ -171,7 +172,7 @@ public class StudentGroupService {
     }
 
     public List<StudentGroupStudentDto> searchStudents(Long schoolId, StudentGroupSearchStudentsCommand criteria) {
-        return studentRepository.findAll((root, query, cb) -> {
+        return StreamUtil.toMappedList(StudentGroupStudentDto::of, studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
@@ -190,18 +191,17 @@ public class StudentGroupService {
             filters.add(cb.equal(root.get("studyForm").get("code"), criteria.getStudyForm()));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().map(StudentGroupStudentDto::of).collect(Collectors.toList());
+        }));
     }
 
     public Map<String, ?> curriculumData(Curriculum curriculum) {
         Map<String, Object> data = new HashMap<>();
-        data.put("curriculumVersions", curriculum.getVersions().stream().map(CurriculumVersionResult::of).collect(Collectors.toList()));
-        data.put("languages", curriculum.getStudyLanguages().stream().map(r -> EntityUtil.getCode(r.getStudyLang())).collect(Collectors.toList()));
+        data.put("languages", StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getStudyLang()), curriculum.getStudyLanguages()));
         List<String> studyForms;
         if(CurriculumUtil.isHigher(curriculum.getOrigStudyLevel())) {
             studyForms = classifierRepository.findAllCodesByMainClassCode(MainClassCode.OPPEVORM.name());
         } else {
-            studyForms = curriculum.getStudyForms().stream().map(r -> EntityUtil.getCode(r.getStudyForm())).collect(Collectors.toList());
+            studyForms = StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getStudyForm()), curriculum.getStudyForms());
         }
         data.put("studyForms", studyForms);
         data.put("origStudyLevel", EntityUtil.getCode(curriculum.getOrigStudyLevel()));

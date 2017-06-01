@@ -1,8 +1,9 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -33,6 +34,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.BuildingForm;
 import ee.hitsa.ois.web.commandobject.RoomForm;
@@ -85,7 +87,7 @@ public class BuildingService {
         }, pageable, em);
 
         // load room equipment with single query
-        List<Long> roomIds = data.getContent().stream().filter(r -> r[1] != null).map(r -> ((Room)r[1]).getId()).collect(Collectors.toList());
+        List<Long> roomIds = StreamUtil.toMappedList(r -> ((Room)r[1]).getId(), data.getContent().stream().filter(r -> r[1] != null));
         Map<Long, List<RoomEquipment>> equipment = JpaQueryUtil.loadRelationChilds(RoomEquipment.class, roomIds, em, "room", "id").stream().collect(Collectors.groupingBy(re -> EntityUtil.getId(re.getRoom())));
 
         return data.map(r -> RoomSearchDto.of((Building)r[0], (Room)r[1], equipment.get(EntityUtil.getNullableId((Room)r[1]))));
@@ -104,43 +106,38 @@ public class BuildingService {
         }
 
         List<RoomForm.RoomEquipmentCommand> newRoomEquipment = form.getRoomEquipment();
-        if(newRoomEquipment != null) {
-            // check for duplicate rows
-            if(newRoomEquipment.stream().map(RoomForm.RoomEquipmentCommand::getEquipment).collect(Collectors.toSet()).size() != newRoomEquipment.size()) {
-                throw new AssertionFailedException("Duplicate values in equipment list");
-            }
-
-            List<RoomEquipment> storedRoomEquipment = room.getRoomEquipment();
-            if(storedRoomEquipment == null) {
-                room.setRoomEquipment(storedRoomEquipment = new ArrayList<>());
-            }
-            Map<String, RoomEquipment> roomEquipmentCodes = storedRoomEquipment.stream().collect(Collectors.toMap(re -> EntityUtil.getCode(re.getEquipment()), re -> re));
-
-            for(RoomForm.RoomEquipmentCommand roomEquipment : newRoomEquipment) {
-                String roomEquipmentCode = roomEquipment.getEquipment();
-                RoomEquipment re = roomEquipmentCodes.remove(roomEquipmentCode);
-                if(re == null) {
-                    // add new equipment to room
-                    re = new RoomEquipment();
-                    re.setRoom(room);
-                    re.setEquipment(EntityUtil.validateClassifier(em.getReference(Classifier.class, roomEquipmentCode), MainClassCode.SEADMED));
-                    re.setEquipmentCount(roomEquipment.getEquipmentCount());
-                    storedRoomEquipment.add(re);
-                } else if(!re.getEquipmentCount().equals(roomEquipment.getEquipmentCount())) {
-                    // update count for existing
-                    re.setEquipmentCount(roomEquipment.getEquipmentCount());
-                }
-            }
-
-            // remove possible letfovers
-            Set<String> newRoomEquipmentCodes = newRoomEquipment.stream().map(RoomForm.RoomEquipmentCommand::getEquipment).collect(Collectors.toSet());
-            storedRoomEquipment.removeIf(re -> !newRoomEquipmentCodes.contains(EntityUtil.getCode(re.getEquipment())));
+        if(newRoomEquipment == null) {
+            newRoomEquipment = Collections.emptyList();
         }
 
+        // check for duplicate rows
+        AssertionFailedException.throwIf(StreamUtil.toMappedSet(RoomForm.RoomEquipmentCommand::getEquipment, newRoomEquipment).size() != newRoomEquipment.size(), "Duplicate values in equipment list");
+
+        List<RoomEquipment> storedRoomEquipment = room.getRoomEquipment();
+        if(storedRoomEquipment == null) {
+            room.setRoomEquipment(storedRoomEquipment = new ArrayList<>());
+        }
+        Map<String, RoomEquipment> roomEquipmentCodes = StreamUtil.toMap(re -> EntityUtil.getCode(re.getEquipment()), storedRoomEquipment);
+        for(RoomForm.RoomEquipmentCommand roomEquipment : newRoomEquipment) {
+            String roomEquipmentCode = roomEquipment.getEquipment();
+            RoomEquipment re = roomEquipmentCodes.remove(roomEquipmentCode);
+            if(re == null) {
+                // add new equipment to room
+                re = new RoomEquipment();
+                re.setRoom(room);
+                re.setEquipment(EntityUtil.validateClassifier(em.getReference(Classifier.class, roomEquipmentCode), MainClassCode.SEADMED));
+                storedRoomEquipment.add(re);
+            }
+            // update count
+            re.setEquipmentCount(roomEquipment.getEquipmentCount());
+        }
+        // remove possible leftovers
+        Set<String> newRoomEquipmentCodes = StreamUtil.toMappedSet(RoomForm.RoomEquipmentCommand::getEquipment, newRoomEquipment);
+        storedRoomEquipment.removeIf(re -> !newRoomEquipmentCodes.contains(EntityUtil.getCode(re.getEquipment())));
         return roomRepository.save(room);
     }
 
     public void delete(Room room) {
-        roomRepository.delete(room);
+        EntityUtil.deleteEntity(roomRepository, room);
     }
 }

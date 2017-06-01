@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.student;
 
+import java.util.List;
+
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class StudentGroupSearchDto {
@@ -10,6 +12,11 @@ public class StudentGroupSearchDto {
     private String studyForm;
     private Integer course;
     private Long studentCount;
+    private List<Long> schoolDepartments;
+    /**
+     * Planned number of hours in studyPeriod
+     */
+    private Long hours;
 
     public Long getId() {
         return id;
@@ -57,5 +64,21 @@ public class StudentGroupSearchDto {
 
     public void setStudentCount(Long studentCount) {
         this.studentCount = studentCount;
+    }
+
+    public List<Long> getSchoolDepartments() {
+        return schoolDepartments;
+    }
+
+    public void setSchoolDepartments(List<Long> schoolDepartments) {
+        this.schoolDepartments = schoolDepartments;
+    }
+
+    public Long getHours() {
+        return hours;
+    }
+
+    public void setHours(Long hours) {
+        this.hours = hours;
     }
 }

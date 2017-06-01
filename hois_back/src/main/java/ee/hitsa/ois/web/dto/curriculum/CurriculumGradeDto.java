@@ -27,12 +27,11 @@ public class CurriculumGradeDto extends VersionedCommand {
     private String nameGenitiveEt;
 
     @NotEmpty
-    @ClassifierRestriction(MainClassCode.EKR)
+    @ClassifierRestriction(MainClassCode.AKAD_KRAAD)
     private String ehisGrade;
 
     public static CurriculumGradeDto of(CurriculumGrade grade) {
-        CurriculumGradeDto dto = EntityUtil.bindToDto(grade, new CurriculumGradeDto(), "ehisGrade");
-        dto.setEhisGrade(grade.getEhisGrade() != null ? EntityUtil.getCode(grade.getEhisGrade()) : null);
+        CurriculumGradeDto dto = EntityUtil.bindToDto(grade, new CurriculumGradeDto());
         return dto;
     }
 

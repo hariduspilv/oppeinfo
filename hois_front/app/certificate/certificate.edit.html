@@ -1,17 +1,13 @@
 <div layout="column" layout-padding>
     <form name="certificateEditForm">
         <div layout="column">
-            <md-input-container ng-if="auth.isStudent()">
-                <label>{{'certificate.type' | translate}}</label>
-                <hois-classifier-select filter-values="['TOEND_LIIK_MUU']"ng-model="record.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" required></hois-classifier-select>
-            </md-input-container>
-            <md-input-container ng-if="!auth.isStudent()">
+            <md-input-container>
                 <label>{{'certificate.type' | translate}}</label>
                 <hois-classifier-select ng-model="record.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" required></hois-classifier-select>
             </md-input-container>
 
             <!--<hois-autocomplete ng-show="record.type !== 'TOEND_LIIK_MUU'" label="certificate.student" ng-model="student" method="students" md-selected-item-change="studentChanged()" required></hois-autocomplete>-->
-            <div ng-show="record.type !== 'TOEND_LIIK_MUU' && !auth.isStudent()">
+            <div ng-show="record.type !== 'TOEND_LIIK_MUU'">
                 <md-autocomplete
                     md-input-minlength="2"
                     name="student"
@@ -24,7 +20,7 @@
                     md-no-cache
                     class="small-margin"
                     md-selected-item-change="studentChanged()"
-                    ng-required="record.type !== 'TOEND_LIIK_MUU' && !auth.isStudent()"
+                    ng-required="record.type !== 'TOEND_LIIK_MUU'"
                     >
 
                     <md-item-template>
@@ -38,7 +34,7 @@
                 </md-autocomplete>
             </div>
 
-            <div ng-if="record.type === 'TOEND_LIIK_MUU'" ng-if="!auth.isStudent()">
+            <div ng-if="record.type === 'TOEND_LIIK_MUU'">
                 <md-input-container class="md-block">
                     <label>{{'certificate.otherIdcode' | translate}}</label>
                     <input type="text" ng-model="record.otherIdcode" name="idcode" required ng-pattern="idcodePattern" md-maxlength="11">
@@ -55,7 +51,7 @@
             </div>
             <md-input-container>
                 <label>{{'certificate.headline' | translate}}</label>
-                <textarea ng-model="record.headline" required md-maxlength="1000" max-rows="2" ng-readonly="auth.isStudent()"></textarea>
+                <textarea ng-model="record.headline" required md-maxlength="1000" max-rows="2"></textarea>
             </md-input-container>
             <md-input-container>
                 <label>{{'certificate.whom' | translate}}</label>
@@ -70,7 +66,7 @@
                  </md-option>
                 </md-select>
             </md-input-container>
-            <md-input-container ng-if="!auth.isStudent()">
+            <md-input-container>
                 <label>{{'certificate.content' | translate}}</label>
                 <textarea ng-model="record.content" required md-maxlength="2000" max-rows="2" ng-readonly="record.type !== 'TOEND_LIIK_MUU'"></textarea>
             </md-input-container>

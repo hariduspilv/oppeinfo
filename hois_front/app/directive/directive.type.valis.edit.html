@@ -1,5 +1,5 @@
 <md-table-container>
-  <table md-table>
+  <table md-table class="secondary-table">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
@@ -20,17 +20,18 @@
         <td md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>
-          <md-radio-group name="isAbroad" ng-model="row.isAbroad" layout="row">
+          <md-radio-group name="isAbroad" ng-model="row.isAbroad" layout="row" ng-change="abroadChanged(row)">
             <md-radio-button ng-value="true" aria-label="foreign">{{ 'directive.student.foreignEducationalInstitute' | translate }}</md-radio-button>
             <md-radio-button ng-value="false" aria-label="estonian">{{ 'directive.student.estonianEducationalInstitute' | translate }}</md-radio-button>
           </md-radio-group>
         </td>
         <td md-cell>
           <hois-classifier-select ng-if="!row.isAbroad" ng-model="row.ehisSchool" main-classifier-code="EHIS_KOOL" model-value-attr="code" aria-label="{{'directive.student.school' | translate}}"></hois-classifier-select>
-          <input type="text" ng-if="row.isAbroad" ng-model="row.abroadSchool"></input>
+          <input type="text" ng-if="row.isAbroad" ng-model="row.abroadSchool">
         </td>
         <td md-cell>
-          <hois-classifier-select ng-model="row.country" model-value-attr="code" filtered-value="['EST']" main-classifier-code="RIIK" aria-label="{{'directive.student.country' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-if="row.isAbroad" ng-model="row.country" model-value-attr="code" filter-values="['RIIK_EST']" main-classifier-code="RIIK" aria-label="{{'directive.student.country' | translate}}"></hois-classifier-select>
+          <hois-classifier-value ng-if="!row.isAbroad" ng-model="row.country" main-classifier-code="RIIK"></hois-classifier-value>
         </td>
         <td md-cell>
           <md-radio-group name="isPeriod" ng-model="row.isPeriod" layout="row">
@@ -53,7 +54,7 @@
           <hois-classifier-select ng-model="row.abroadProgramme" model-value-attr="code" main-classifier-code="VALISKOOL_PROGRAMM" aria-label="{{'directive.student.abroadProgramme' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
-          <md-button ng-click="deleteStudent(row.idcode)" md-no-ink class="md-primary change-button">{{'main.button.delete' | translate}}</md-button>
+          <a ng-click="deleteStudent(row.idcode)" md-no-ink class="remove">&times;</a>
         </td>
       </tr>
     </tbody>

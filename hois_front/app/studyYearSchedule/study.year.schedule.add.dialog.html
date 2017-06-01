@@ -1,0 +1,71 @@
+<md-dialog aria-label="module add dialog" flex="40" flex-sm="80" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"studyYearSchedule.studentGroup" | translate}} {{studentGroup.code}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+          <span flex></span>
+          <h2>{{week.weekNr}}. {{"studyYearSchedule.week" | translate}}: {{week.start | hoisDate}} - {{week.end | hoisDate}}</h2>
+          <br>
+
+        <md-input-container layout="row">
+            <md-radio-group ng-model="data.legend" layout="row">
+                <span class="label">{{'studyYearSchedule.studyType' | translate}}</span>
+                <md-radio-button ng-value="null" aria-label="{{ 'select color' }}" layout="column">
+                        <div class="colorCell" style="background: 'white'"></div>
+                </md-radio-button>
+                <md-radio-button ng-repeat="legend in legends" ng-value="legend.id" aria-label="{{ 'select color' }}">
+                        <div class="colorCell" ng-style="{ background: true ? legend.color : 'white' }">
+                            <span>&nbsp;{{ legend.code }}</span>
+                        </div>
+                </md-radio-button>
+            </md-radio-group>
+        </md-input-container>
+        <br>
+        <div layout="row">
+          <md-input-container flex="35" flex-sm="50" flex-xs="50">
+            <label>{{'studyYearSchedule.durationInWeeks' | translate}}</label>
+            <input type="number" ng-model="data.weeks" min="1" max="{{translationData.weeks}}" required name="weeks" step="1" pattern="^\d+$">
+            <div ng-messages="dialogForm.weeks.$error" ng-show="dialogForm.weeks.$dirty">
+                <div ng-message="min">
+                    {{'studyYearSchedule.error.minWeeks' | translate}}
+                </div>
+                <div ng-message="max">
+                    {{'studyYearSchedule.error.maxWeeks' | translate:translationData}}
+                </div>
+                <div ng-message="pattern">
+                    {{'main.messages.error.integer' | translate}}
+                </div>
+            </div>
+          </md-input-container>
+        </div>
+
+        <span flex></span>
+      </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>
+
+<style>
+
+.colorCell {
+    width: 20px;
+    height: 20px;
+    border: 1px solid black;
+}
+md-radio-button {
+    padding-right: 20px;
+}
+</style>

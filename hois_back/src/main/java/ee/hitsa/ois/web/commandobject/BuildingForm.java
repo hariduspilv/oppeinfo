@@ -9,7 +9,6 @@ public class BuildingForm extends VersionedCommand {
     @NotEmpty
     @Size(max = 20)
     private String code;
-    @NotEmpty
     @Size(max = 255)
     private String name;
     @Size(max = 255)

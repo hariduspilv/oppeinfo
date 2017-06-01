@@ -1,12 +1,19 @@
 package ee.hitsa.ois.repository;
 
+import java.util.List;
+
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
-import ee.hitsa.ois.domain.SaisApplication;
+import ee.hitsa.ois.domain.sais.SaisApplication;
 
 public interface SaisApplicationRepository extends JpaRepository<SaisApplication, Long>, JpaSpecificationExecutor<SaisApplication> {
 
-    SaisApplication findByApplicationNr(String applicationNr);
+    // XXX not used?
+    SaisApplication findByApplicationNrAndSaisAdmissionCodeAndSaisAdmissionCurriculumVersionCurriculumSchoolId(String applicationNr, String saisAdmissionCode, Long schoolId);
+
+    SaisApplication findByApplicationNrAndSaisAdmissionCode(String applicationNr, String code);
+    
+    List<SaisApplication> findAllByApplicationNrIn(List<String> applicationNrList);
 
 }

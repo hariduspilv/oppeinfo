@@ -5,9 +5,12 @@
     <md-table-container>
       <table md-table md-progress="generalmessages.$promise">
         <tbody md-body>
-          <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="openCloseDetails(row)">
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
-            <td md-cell><h4>{{::row.title}}</h4><pre ng-show="row.clicked">{{::row.content}}</pre></td>
+          <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell width="10%">{{::row.inserted | hoisDate}}</td>
+            <td md-cell width="40%"><h4>{{::row.title}}</h4><div ng-show="row.clicked">{{::row.content}}</div></td>
+            <td md-cell>
+                <a class="md-primary" ng-click="openCloseDetails(row)" aria-label="{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}"><span>{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}</span></a>
+			</td>
           </tr>
         </tbody>
       </table>
@@ -16,21 +19,24 @@
                          md-page="criteria.page" md-total="{{generalmessages.totalElements}}" md-on-paginate="loadGeneralMessages"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
     
-    <h3>{{'message.messages' | translate}}</h3>
-    <h5 ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5>
-    <md-table-container>
+    <h3 ng-show="showUnreadMessages">{{'message.messages' | translate}}</h3>
+    <h5 ng-show="showUnreadMessages" ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5>
+    <md-table-container ng-show="showUnreadMessages">
       <table md-table md-progress="unreadMessages.$promise">
         <tbody md-body>
           <tr md-row ng-repeat="row in unreadMessages.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="readMessage(row)">
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.dateSent} }}</td>
-            <td md-cell><h4>{{::row.subject}}</h4>
+            <td md-cell width="10%">{{::row.dateSent | hoisDateTime}}</td>
+            <td md-cell width="90%"><h4>{{::row.subject}}</h4>
                 <div ng-show="row.clicked">
-                    <pre>{{row.content}}</pre>
-                    <p>{{'message.messageSender' | translate}}: {{row.sender}}</p>
+                    <pre>{{::row.content}}</pre>
+                    <p>{{'message.messageSender' | translate}}: {{::row.sender}}</p>
                 </div>
             </td>
-            <td md-cell><md-button class="md-primary" ng-href="/#/message/{{row.id}}/respond?backUrl=home" ng-click="readMessage()">{{'message.respond' | translate}}</md-button></td>
-            <!--<td md-cell><md-button>{{'main.button.delete' | translate}}</md-button></td>-->
+            <td md-cell>
+                <md-button class="md-primary" ng-href="/#/message/{{row.id}}/respond?backUrl=home" ng-if="row.sendersId !== -1" ng-click="readMessage()">
+                    {{'message.respond' | translate}}
+                </md-button>
+            </td>
           </tr>
         </tbody>
       </table>

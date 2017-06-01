@@ -15,6 +15,7 @@ angular.module('hitsaOis').controller('TeacherOccupationEditController', ['$loca
     }
 
     $scope.update = function() {
+      $scope.teacherOccupationForm.$setSubmitted();
       if(!$scope.teacherOccupationForm.$valid) {
         message.error('main.messages.form-has-errors');
         return;
@@ -25,7 +26,7 @@ angular.module('hitsaOis').controller('TeacherOccupationEditController', ['$loca
       }else{
         $scope.teacherOccupation.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.teacherOccupation.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.teacherOccupation.id + '/edit');
         });
       }
     };
@@ -34,7 +35,7 @@ angular.module('hitsaOis').controller('TeacherOccupationEditController', ['$loca
       dialogService.confirmDialog({prompt: 'teacher.occupation.deleteconfirm'}, function() {
         $scope.teacherOccupation.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path(baseUrl);
+          $location.url(baseUrl);
         });
       });
     };

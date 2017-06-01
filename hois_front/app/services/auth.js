@@ -1,12 +1,26 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('AuthService', function ($http, Session, Menu, config) {
+  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier) {
     var authService = {};
+    var roleMapper = Classifier.valuemapper({role: 'ROLL'});
 
     var newUser = function (response) {
       Menu.setMenu(response.data);
       if (response.data && response.data.user) {
+        roleMapper.objectmapper(response.data.users);
+        $q.all(roleMapper.promises).then(function () {
+          for (var i = 0; i < response.data.users.length; i++) {
+            response.data.users[i].nameEn = response.data.users[i].role.nameEn;
+            response.data.users[i].nameEt = response.data.users[i].role.nameEt;
+            response.data.users[i].nameRu = response.data.users[i].role.nameRu;
+            if (response.data.users[i].schoolCode) {
+              response.data.users[i].nameEn = response.data.users[i].nameEn + ' ' + response.data.users[i].schoolCode;
+              response.data.users[i].nameEt = response.data.users[i].nameEt + ' ' + response.data.users[i].schoolCode;
+              response.data.users[i].nameRu = response.data.users[i].nameRu + ' ' + response.data.users[i].schoolCode;
+            }
+          }
+        });
         Session.create(response.data.user, response.data.authorizedRoles, response.data.school, response.data.roleCode);
         return response.data;
       } else {

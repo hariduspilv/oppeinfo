@@ -1,0 +1,72 @@
+<md-nav-bar md-selected-nav-item="currentNavItem">
+  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational" name="lessonplan.vocational">{{'lessonplan.search.vocational' | translate}}</md-nav-item>
+  <md-nav-item ng-if="formState.vocational" md-nav-href="#/lessonplans/vocational/byteacher" name="lessonplan.vocational-byteacher">{{'lessonplan.search.vocational-byteacher' | translate}}</md-nav-item>
+<!--  <md-nav-item ng-if="formState.higher" md-nav-href="#/lessonplans/higher" name="lessonplan.higher">{{'lessonplan.higher' | translate}}</md-nav-item>
+  <md-nav-item ng-if="formState.higher" md-nav-href="#/lessonplans/higher/byteacher" name="lessonplan.higher-byteacher">{{'lessonplan.higher-byteacher' | translate}}</md-nav-item>  -->
+</md-nav-bar>
+
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="loadData()" novalidate class="nomargin" >
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'lessonplan.studyYear' | translate}}</label>
+          <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'lessonplan.schoolDepartment' | translate}}</label>
+          <hois-select ng-model="criteria.schoolDepartment" type="schooldepartment"></hois-select>
+        </md-input-container>
+      </div>
+
+	  <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label>{{'lessonplan.curriculumVersion' | translate}}</label>
+          <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion" criteria="{valid: true}"></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'lessonplan.studentGroup' | translate}}</label>
+          <hois-select ng-model="criteria.studentGroup" type="studentgroup"></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="newLessonplan()">{{'main.button.create' | translate}}</md-button>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="sg.code">{{'lessonplan.studentGroup' | translate}}</th>
+            <th md-column md-order-by="cv.code">{{'lessonplan.curriculumVersion' | translate}}</th>
+            <th md-column>{{'lessonplan.journalreference' | translate}}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.studentGroup}}</td>
+            <td md-cell>{{::row.curriculumVersion}}</td>
+            <td md-cell>vt. tunniplaani</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/lessonplans/vocational/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

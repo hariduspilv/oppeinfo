@@ -4,22 +4,22 @@
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label>{{'application.type' | translate}}</label>
-            <hois-classifier-select multiple ng-model="criteria.type" model-value-attr="code" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
+            <hois-classifier-select multiple ng-model="criteria.type" criteria="{higher: auth.school.higher ? true : undefined, vocational: auth.school.vocational ? true : undefined}" model-value-attr="code" main-classifier-code="AVALDUS_LIIK"></hois-classifier-select>
           </md-input-container>
       </div>
 
       <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
-          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <!--md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
             <label>{{'application.insertionDate' | translate}}</label>
-          </md-input-container>
+          </md-input-container-->
           <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'main.from' | translate}}</label>
+            <label>{{'application.insertionDateA' | translate}}</label>
             <md-datepicker ng-model="criteria.insertedFrom" md-open-on-focus></md-datepicker>
           </md-input-container>
 
-            <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start"  layout-align-xs="start start" layout-align-sm="start start">
+            <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start" layout-align-sm="start start">
                 <md-input-container flex>
-                  <label>{{'main.thru' | translate}}</label>
+                  <label>{{'application.insertionDateK' | translate}}</label>
                   <md-datepicker ng-model="criteria.insertedThru" md-open-on-focus></md-datepicker>
                 </md-input-container>
             </div>
@@ -27,17 +27,17 @@
       </div>
 
       <div layout="row" layout-md="column" layout-sm="column" layout-xs="column">
-          <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
+          <!--md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
             <label>{{'application.submissionDate' | translate}}</label>
-          </md-input-container>
+          </md-input-container-->
           <md-input-container flex="20" flex-md="100" flex-sm="100" flex-xs="100">
-            <label>{{'main.from' | translate}}</label>
+            <label>{{'application.submissionDateA' | translate}}</label>
             <md-datepicker ng-model="criteria.submittedFrom" md-open-on-focus></md-datepicker>
           </md-input-container>
 
           <div layout="column" flex="20" flex-md="100" flex-sm="100" flex-xs="100" layout-align="start end" layout-align-md="start start" layout-align-xs="start start" layout-align-sm="start start">
             <md-input-container flex>
-              <label>{{'main.thru' | translate}}</label>
+              <label>{{'application.submissionDateK' | translate}}</label>
               <md-datepicker ng-model="criteria.submittedThru" md-open-on-focus></md-datepicker>
             </md-input-container>
           </div>
@@ -94,10 +94,10 @@
           <td md-cell><a ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
           <td md-cell>
             {{currentLanguageNameField(row.status)}}
-            <md-tooltip ng-if="row.status.code === 'AVALDUS_STAATUS_TAGASI'">{{row.rejectReason}}</md-tooltip>
+            <md-tooltip ng-if="row.status.code === 'AVALDUS_STAATUS_TAGASI' && row.rejectReason">{{row.rejectReason}}</md-tooltip>
           </td>
-          <td md-cell>{{'main.formattedDateTime' | translate: {date: row.inserted} }}</td>
-          <td md-cell>{{'main.formattedDateTime' | translate: {date: row.submitted} }}</td>
+          <td md-cell>{{row.inserted | hoisDateTime}}</td>
+          <td md-cell>{{row.submitted | hoisDateTime}}</td>
           <td md-cell>
             <md-button ng-if="(row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
               md-no-ink class="md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>

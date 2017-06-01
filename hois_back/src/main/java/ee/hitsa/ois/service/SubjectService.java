@@ -1,6 +1,6 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.math.BigDecimal;
 
@@ -45,6 +45,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 
 @Transactional
 @Service
@@ -72,11 +73,11 @@ public class SubjectService {
         EntityUtil.bindToEntity(newSubject, subject, classifierRepository /*, "status"*/);
         subject.setSchool(schoolRepository.getOne(user.getSchoolId()));
         SchoolDepartment schoolDepartment = null;
-        if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().longValue() > 0) {
-            schoolDepartment = schoolDepartmentRepository.getOne(newSubject.getSchoolDepartment());
+        if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().getId() != null && newSubject.getSchoolDepartment().getId().longValue() > 0) {
+            schoolDepartment = schoolDepartmentRepository.getOne(newSubject.getSchoolDepartment().getId());
         }
         subject.setSchoolDepartment(schoolDepartment);
-        EntityUtil.bindClassifierCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {
+        EntityUtil.bindEntityCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {
             SubjectLanguage subjectLanguage = new SubjectLanguage();
             subjectLanguage.setSubject(subject);
             subjectLanguage.setLanguage(EntityUtil.validateClassifier(classifierRepository.getOne(code), MainClassCode.OPPEKEEL));
@@ -88,9 +89,9 @@ public class SubjectService {
 
     private void bindConnections(Subject target, SubjectForm source) {
         Set<Long> subjectIds = new HashSet<>();
-        Collection<Long> mandatory = source.getMandatoryPrerequisiteSubjects().stream().map(EntityConnectionCommand::getId).collect(Collectors.toSet());
-        Collection<Long> recommended = source.getRecommendedPrerequisiteSubjects().stream().map(EntityConnectionCommand::getId).collect(Collectors.toSet());
-        Collection<Long> substitute = source.getSubstituteSubjects().stream().map(EntityConnectionCommand::getId).collect(Collectors.toSet());
+        Collection<Long> mandatory = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getMandatoryPrerequisiteSubjects());
+        Collection<Long> recommended = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getRecommendedPrerequisiteSubjects());
+        Collection<Long> substitute = StreamUtil.toMappedSet(EntityConnectionCommand::getId, source.getSubstituteSubjects());
 
         subjectIds.addAll(mandatory);
         subjectIds.addAll(recommended);
@@ -118,12 +119,14 @@ public class SubjectService {
     }
 
     private static void bindSubjectConnect(Subject primarySubject, Classifier connectionType, Set<SubjectConnect> connections, Set<SubjectConnect> newConnections, Collection<Subject> connectSubjects) {
+        // TODO use EntityUtil.bindEntityCollection
         Map<Long, SubjectConnect> m = connections.stream()
                 .filter(it -> Objects.equals(EntityUtil.getCode(it.getConnection()), EntityUtil.getCode(connectionType)))
-                .collect(Collectors.toMap(k -> k.getConnectSubject().getId(), v -> v));
+                .collect(Collectors.toMap(k -> EntityUtil.getId(k.getConnectSubject()), v -> v));
         for (Subject connected : connectSubjects) {
-            if (m.keySet().contains(connected.getId())) {
-                newConnections.add(m.get(connected.getId()));
+            SubjectConnect sc = m.get(connected.getId());
+            if (sc != null) {
+                newConnections.add(sc);
             } else {
                 newConnections.add(new SubjectConnect(primarySubject, connected, connectionType));
             }
@@ -156,7 +159,7 @@ public class SubjectService {
                 Root<CurriculumVersion> curriculumVersionRoot = curriculaQuery.from(CurriculumVersion.class);
                 curriculaQuery = curriculaQuery
                         .select(curriculumVersionRoot.join("modules").join("subjects").get("subject").get("id"))
-                        .where(curriculumVersionRoot.get("id").in(curricula));
+                        .where(curriculumVersionRoot.get("curriculum").get("id").in(curricula));
                 filters.add(root.get("id").in(curriculaQuery));
             }
 

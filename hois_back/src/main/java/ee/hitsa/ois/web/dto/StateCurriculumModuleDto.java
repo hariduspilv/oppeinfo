@@ -2,24 +2,41 @@ package ee.hitsa.ois.web.dto;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
+
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class StateCurriculumModuleDto extends VersionedCommand {
     
     private Long id;
+    @NotNull
     @ClassifierRestriction(MainClassCode.KUTSEMOODUL)
     private String module;  
+    @NotBlank
+    @Size(max=255)
     private String nameEt;
+    @Size(max=255)
     private String nameEn;
-    private Integer credits;
+    @NotNull
+    @Min(0)
+    @Max(999)
+    private Double credits;
+    @NotBlank
     private String objectivesEt;
     private String objectivesEn;
+    @NotBlank
     private String assessmentsEt;
     private String assessmentsEn;
 
@@ -32,16 +49,14 @@ public class StateCurriculumModuleDto extends VersionedCommand {
     public static StateCurriculumModuleDto of(StateCurriculumModule module) {
         StateCurriculumModuleDto dto = EntityUtil.bindToDto
                 (module, new StateCurriculumModuleDto(), "moduleOccupations", "outcomesEt", "outcomesEt", "outcome");
-        
-        Set<String> moduleOccupations = module.getModuleOccupations().stream().
-                map(occupation -> EntityUtil.getNullableCode(occupation.getOccupation())).collect(Collectors.toSet());
-        dto.setModuleOccupations(moduleOccupations);
-        
-        if(module.getOutcome() != null) {
-            dto.setOutcomesEt(module.getOutcome().getOutcomesEt());
-            dto.setOutcomesEn(module.getOutcome().getOutcomesEn());
+
+        dto.setModuleOccupations(StreamUtil.toMappedSet(o -> EntityUtil.getNullableCode(o.getOccupation()), module.getModuleOccupations()));
+        StateCurriculumModuleOutcome outcome = module.getOutcome();
+        if(outcome != null) {
+            dto.setOutcomesEt(outcome.getOutcomesEt());
+            dto.setOutcomesEn(outcome.getOutcomesEn());
         }
-        
+
         return dto;
     }
 
@@ -77,11 +92,11 @@ public class StateCurriculumModuleDto extends VersionedCommand {
         this.nameEn = nameEn;
     }
 
-    public Integer getCredits() {
+    public Double getCredits() {
         return credits;
     }
 
-    public void setCredits(Integer credits) {
+    public void setCredits(Double credits) {
         this.credits = credits;
     }
 

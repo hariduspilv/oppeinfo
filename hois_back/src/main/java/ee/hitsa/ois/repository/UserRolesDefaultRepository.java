@@ -1,7 +1,8 @@
 package ee.hitsa.ois.repository;
 
 import ee.hitsa.ois.domain.UserRoleDefault;
-import org.springframework.data.repository.CrudRepository;
 
-public interface UserRolesDefaultRepository extends CrudRepository<UserRoleDefault, String> {
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface UserRolesDefaultRepository extends JpaRepository<UserRoleDefault, String> {
 }

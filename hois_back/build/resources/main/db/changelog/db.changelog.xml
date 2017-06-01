@@ -1,0 +1,1611 @@
+<?xml version="1.1" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:ext="http://www.liquibase.org/xml/ns/dbchangelog-ext" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+    <changeSet author="anonymous (generated)" id="1484236566727-1">
+        <createSequence sequenceName="state_curriculum_module_occupation_state_curriculum_module_occu"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-2">
+        <createSequence sequenceName="state_curriculum_module_outcomes_state_curriculum_module_outcom"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-3">
+        <createTable remarks="hooned" tableName="building">
+            <column autoIncrement="true" name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_building"/>
+            </column>
+            <column name="name" remarks="hoone nimetus" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="school_id" remarks="viide õpepasutusele" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" remarks="hoone kood" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address" remarks="aadress, peaks olema viide ADS klassifikaatorile" type="VARCHAR(255)"/>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-4">
+        <createTable remarks="Permanent data storage" tableName="classifier">
+            <column name="code" remarks="klassifikaatori kood, nt HINDAMISVIIS, HINDMISVIIS_A jne" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value" remarks="klassifikaatori väärtus (HINDMISVIIS, A, B jne)" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="value2" remarks="teine klassifikaatori väärtus, nr tiikide puhul võib olla kahetäheline riigi kood" type="VARCHAR(50)"/>
+            <column name="name_et" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_en" type="VARCHAR(1000)"/>
+            <column name="name_ru" type="VARCHAR(1000)"/>
+            <column name="parent_class_code" remarks="seos teise klassifikaatoriga, nt OPEPVALDKOND_A jne" type="VARCHAR(100)"/>
+            <column name="main_class_code" remarks="peaklassifikaatori kood või liik, nt OPPEVALDKOND, HINDAMISVIIS" type="VARCHAR(100)"/>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="valid" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(1000)"/>
+            <column name="valid_from" remarks="kehtib alates" type="date"/>
+            <column name="valid_thru" remarks="kehtib kuni" type="date"/>
+            <column name="extraval1" remarks="lisaväli lisaväärtuste hoidmiseks" type="VARCHAR(100)"/>
+            <column name="extraval2" remarks="lisaväli lisaväärtuste hoidmiseks" type="VARCHAR(100)"/>
+            <column name="ehis_value" remarks="klassifikaatori väärtus EHISe jaoks" type="VARCHAR(100)"/>
+            <column name="is_vocational" remarks="kas on kutseõppe klassifikaator" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_higher" remarks="kas on kõrgharidusõppe klassifikaator" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-5">
+        <createTable remarks="klassifikaatorite mitu-mitmele seosed, kasutatakse eeskätt kompetentside juures" tableName="classifier_connect">
+            <column name="classifier_code" remarks="peaklassifikaatori kood, nt kompetents" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="connect_classifier_code" remarks="seotud klassi kood, nt osakutse, kutse, spetsialiseerumine" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="main_classifier_code" remarks="klassifikaatori liik, millega see seotud on" type="VARCHAR(100)"/>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-6">
+        <createTable remarks="õppekava" tableName="curriculum">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum"/>
+            </column>
+            <column name="is_higher" remarks="õppekava liik: kutseõppekava (false) või kõrgharidusõppe õppekava (true)" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_et" remarks="õppekava nimi e.k." type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state_curriculum_id" remarks="viide riiklikule õppekavale" type="INT"/>
+            <column name="name_en" remarks="õppekava nimi i.k." type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_ru" remarks="õppekava nimi v.k." type="VARCHAR(255)"/>
+            <column name="code" remarks="õppekava kood sisemiseks kasutamiseks" type="VARCHAR(25)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="consecution_code" remarks="õppekava järgnevus: 1) esmaõppe õppekava 2) jätkuõppe õppekava 0) puudub" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="orig_study_level_code" remarks="õppeastme kklassifikaator, nt 412, 511 jne" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_occupation" remarks="kas omandatakse vähemalt 1 kutse: false - ei omandata true - omandatakse" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="isced_class_code" remarks="ISCED 2013 klassifikaator, õppekavarühma kood" type="VARCHAR(100)"/>
+            <column name="mer_code" remarks="HTM või EHISe kood" type="VARCHAR(10)"/>
+            <column name="approval" remarks="õppekava õppeasutuse skinnitamise kp" type="date"/>
+            <column name="approval_dok_nr" remarks="õppekava õppeasutuses kinnitamise dok. nr" type="VARCHAR(50)"/>
+            <column name="outcomes_et" remarks="õpiväljundid" type="VARCHAR(20000)"/>
+            <column name="outcomes_en" remarks="õpiväljundid i.k." type="VARCHAR(20000)"/>
+            <column name="sturcture" remarks="õppekava struktuur" type="VARCHAR(4000)"/>
+            <column name="admission_requirements_et" remarks="nõuded õpingute alustamiseks  või juurdepääsu tingimused" type="VARCHAR(20000)"/>
+            <column name="admission_requirements_en" remarks="nõuded õpingute alustamiseks i.k. või juurdepääsu tingimused" type="VARCHAR(20000)"/>
+            <column name="graduation_requirements_et" remarks="nõuded õpingute lõpetamiseks või lõpetamistingimused" type="VARCHAR(20000)"/>
+            <column name="graduation_requirements_en" remarks="nõuded õpingute lõpetamiseks i.k. või lõpetamistingimused" type="VARCHAR(20000)"/>
+            <column name="credits" remarks="õppekava maht EKAP/EAP" type="numeric(4, 1)"/>
+            <column name="study_period" remarks="õppeaeg kuudes" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="draft_text" remarks="õppekava koostamise alus tekstina" type="VARCHAR(4000)"/>
+            <column name="specialization" remarks="spetsialiseerumise võimalused või -&#9;valikuvõimalused õppekava läbimiseks" type="VARCHAR(4000)"/>
+            <column name="is_joint" remarks="kas tegemist on ühisõppekavaga false - ei true - jah" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="optional_study_credits" remarks="valikõpingute maht kokku" type="numeric(4, 1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="practice_description" remarks="praktika kirjeldus" type="VARCHAR(20000)"/>
+            <column name="final_exam_description" remarks="lõpueksami lühikirjeldus" type="VARCHAR(4000)"/>
+            <column name="optional_study_descr" remarks="valikõpingute valimise võimalused" type="VARCHAR(4000)"/>
+            <column name="ehis_changed" remarks="EHISe staatuse mutumise viimane kuupäev" type="date"/>
+            <column name="description" remarks="märkused" type="VARCHAR(20000)"/>
+            <column name="ehis_status_code" remarks="õppekava EHISe staatus" type="VARCHAR(100)"/>
+            <column name="contact_person" remarks="kontaktisiku nimi, telefon, e-mail" type="VARCHAR(1000)"/>
+            <column name="valid_from" remarks="kehtivuse algus" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_thru" remarks="kehtivuse lõpp" type="date"/>
+            <column name="status_code" remarks="õppekava staatus, viide klassifikaatorile" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="joint_mentor_code" remarks="ühisõppekava hoidja, täidetakse juhul kui tegemist on ühisõppekavaga ja on olemas vähemalt 1 mitte välismaine partner, viide ehise koolide klassifikaatorile, valida saab kas enda õppeasutuse või eelnevalt sisestatud partnerite hulgast" type="VARCHAR(100)"/>
+            <column name="school_id" remarks="õppekavaga seotud nö peaõppeasutus" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="draft_code" remarks="koostamise alus, viide õppekava loomise aluse klassifikaatorile: tööandjate toetuskiri, riiklik õppekava, kutsestandard, puudub" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+            <column name="name_genitive_et" type="VARCHAR(255)"/>
+            <column name="name_genitive_en" remarks="Õppekava nimetus omastavas inglise keeles" type="VARCHAR(255)"/>
+            <column name="group_code" remarks="õppekava grupp, klassifikaator OPPEKAVAGRUPP" type="VARCHAR(100)"/>
+            <column name="language_description" remarks="õppekeele lisainfo" type="VARCHAR(1000)"/>
+            <column name="other_languages" remarks="Õpiväljundite saavutamiseks vajalikud teised keeled" type="VARCHAR(1000)"/>
+            <column name="objectives_et" remarks="õppekava eesmärgid eesti keeles" type="VARCHAR(20000)"/>
+            <column name="objectives_en" remarks="õppekava eesmärgid inglise keeles" type="VARCHAR(20000)"/>
+            <column name="add_info" remarks="täiendav informatsioon" type="VARCHAR(20000)"/>
+            <column name="MER_reg_date" remarks="Õppekava registreerimine HTMis" type="date"/>
+            <column name="accreditation_date" remarks="Õppekava akrediteerimise kuupäev" type="date"/>
+            <column name="accreditation_resolution" remarks="Õppekava akrediteerimise otsus" type="VARCHAR(1000)"/>
+            <column name="accreditation_valid_date" remarks="Õppekava akrediteerimise kehtivuskuupäev" type="date"/>
+            <column name="accreditation_nr" remarks="Õppekava akrediteerimise otsuse number" type="VARCHAR(1000)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-7">
+        <createTable remarks="õppekava seos õppeasutuse struktuuriüksusega" tableName="curriculum_department">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_department"/>
+            </column>
+            <column name="curriculum_id" remarks="viide õppekavale" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column defaultValueComputed="now()" name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="school_department_id" remarks="viide struktuuriüksusele" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT"/>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-8">
+        <createTable tableName="curriculum_files">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_files"/>
+            </column>
+            <column name="is_ehis" remarks="kas EHISest tulnuv või ÕISi käsitsi üles laetud: false - käsitsi üles laetud true - EHISest tulnud" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="send_ehis" remarks="kas fail saadetakse EHISesse või mitte false - ei saadeta EHIS - saadetakse" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ehis_file_code" remarks="EHISe faili liikide klassifikaator" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ois_file_id" remarks="viide failile" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="curriculum_id" remarks="viide õppekavale" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-9">
+        <createTable remarks="õppekava kraadid" tableName="curriculum_grade">
+            <column autoIncrement="true" name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_grade"/>
+            </column>
+            <column name="curriculum_id" remarks="viide õppekavale" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_et" remarks="kraadi nimi e.k." type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_en" remarks="kraadi nimi i.k." type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_genitive_et" remarks="kraadi nimi omastavas" type="VARCHAR(255)"/>
+            <column name="ehis_grade_code" remarks="EHISe kraad,viide klassifikaatorile (AKAD_KRAAD)" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="inserted_by" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="VARCHAR(100)"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-10">
+        <createTable tableName="curriculum_joint_partners">
+            <column autoIncrement="true" name="id" remarks="ühisõppekava partnerid" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_joint_partners"/>
+            </column>
+            <column name="is_abroad" remarks="kas partner on eesti või välismaa kool false - eesti kool true - välismaa" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contract_et" remarks="koostöölepingu info" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="contract_en" remarks="koostöölepingu info i.k." type="VARCHAR(1000)"/>
+            <column name="supervisor" remarks="vastutav isik" type="VARCHAR(255)"/>
+            <column name="name_et" remarks="partnerkooli nimi, sisestatakse ainult juhul kui is_abroad=true" type="VARCHAR(255)"/>
+            <column name="name_en" remarks="partnerkooli nimi i.k., sisestatakse ainult juhul kui is_abroad=true" type="VARCHAR(255)"/>
+            <column name="curriculum_id" remarks="viide õppekavale" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ehis_school_code" remarks="viide eesti õppeasutuste klassifikaatorile" type="VARCHAR(100)"/>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-11">
+        <createTable remarks="õppekava moodulid" tableName="curriculum_module">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_module"/>
+            </column>
+            <column name="name_et" remarks="mooduli nimetus" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_en" remarks="mooduli nimetus i.k." type="VARCHAR(255)"/>
+            <column name="credits" remarks="mooduli maht EKAP" type="numeric(4, 1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="objectives_et" remarks="mooduli eesmärk" type="VARCHAR(10000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="objectives_en" remarks="mooduli eesmärk i.k." type="VARCHAR(10000)"/>
+            <column name="outcomes_et" remarks="mooduli õpiväljundid" type="VARCHAR(10000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="outcomes_en" remarks="mooduli õpiväljundid i.k." type="VARCHAR(10000)"/>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="module_code" remarks="kutseõppekava mooduli klassifikaator" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="curriculum_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_practice" remarks="kas tegemist on praktikaga false - ei ole praktika moodul true - praktika moodul" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-12">
+        <createTable remarks="õppekava mooduli kompetentsid" tableName="curriculum_module_competence">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_Table1"/>
+            </column>
+            <column name="curriculum_module_id" remarks="viide õppekava moodulile" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="competence_code" remarks="viide kompetentside klassifikaatorile" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-13">
+        <createTable remarks="õppekava mooduli ja õppekava kutse/spetsialiseerumise/osakutse seos" tableName="curriculum_module_occupation">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_module_occupation"/>
+            </column>
+            <column name="curriculum_module_id" remarks="viide õppekava moodulile" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occupation_code" remarks="viide kutse/osakutse/spetsialiseerumise klassifikaatorile" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-14">
+        <createTable remarks="õppekava seos kutsete või osakutsetega" tableName="curriculum_occupation">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_occupation"/>
+            </column>
+            <column name="curriculum_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occupation_code" remarks="viide kutse või osakutse klaasifikaatorile" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_occupation_grant" remarks="kas õppeasutusel on kutse andmise õigus false - ei ole true - saab anda kutset" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="specialization_list" remarks="antud kutse raames õpetatavad spetsialiseerumised (spetsialiseerumiste klassifikaatorite koodid eraldatud komadega)" type="VARCHAR(1000)"/>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-15">
+        <createTable remarks="õppekava peaerialad" tableName="curriculum_speciality">
+            <column autoIncrement="true" name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_speciality"/>
+            </column>
+            <column name="curriculum_id" remarks="viide õppekavale" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_et" remarks="nimi e.k." type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_en" remarks="nimi i.k." type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="credits" remarks="maht eap-des" type="numeric(4, 1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" remarks="lisainfo" type="VARCHAR(1000)"/>
+            <column name="occupation_code" remarks="antavkutse, klassifikaator (KUTSE)" type="VARCHAR(100)"/>
+            <column name="occupation_et" remarks="Akadeemilisele õiendile trükitav kutse eesti keeles" type="VARCHAR(255)"/>
+            <column name="occupation_en" remarks="Akadeemilisele õiendile trükitav kutse inglise keeles" type="VARCHAR(255)"/>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="inserted_by" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed_by" type="VARCHAR(50)"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-16">
+        <createTable remarks="õppekava õppevormid" tableName="curriculum_study_form">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_study_form"/>
+            </column>
+            <column name="curriculum_id" remarks="viide õppekavale" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="study_form_code" remarks="viide õppevormi klassifikaatorile" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-17">
+        <createTable remarks="õppekava õppekeeled" tableName="curriculum_study_lang">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_curriculum_study_lang"/>
+            </column>
+            <column name="curriculum_id" remarks="viide õppekavale" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="study_lang_code" remarks="viide õppekeele klassifikaatorile" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-18">
+        <createTable remarks="Failide tabel" tableName="ois_file">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_Ois_file"/>
+            </column>
+            <column name="fdata" remarks="üles laetud fail" type="BYTEA">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fname" remarks="faili nimi (originaal)" type="VARCHAR(1000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="ftype" remarks="faili andmeüüp, nt  application/json application/x-www-form-urlencoded application/pdf multipart/form-data text/html image/png image/jpeg image/bmp image/gif" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fdescription" remarks="täiendav kirjeldus" type="VARCHAR(1000)"/>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-19">
+        <createTable remarks="isikute tabel" tableName="person">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_PERSON_ID"/>
+            </column>
+            <column name="firstname" remarks="eesnimi" type="VARCHAR(100)"/>
+            <column name="lastname" remarks="perekonnanimi" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="idcode" remarks="eesti isikukood" type="VARCHAR(11)"/>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-20">
+        <createTable remarks="ruumid" tableName="room">
+            <column autoIncrement="true" name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_room"/>
+            </column>
+            <column name="building_id" remarks="viide hoonele" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name" remarks="ruumi nimetus" type="VARCHAR(255)"/>
+            <column name="code" remarks="ruumi kood" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="seats" remarks="kohtade arv" type="INT"/>
+            <column name="is_study" remarks="ruumi kasutatakse õppetöös" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-21">
+        <createTable tableName="room_equipment">
+            <column autoIncrement="true" name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_room_equipment"/>
+            </column>
+            <column name="room_id" remarks="viide ruumile" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="equipment_code" remarks="seade, viide SEADMED klassifikaatorile" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="equipment_count" remarks="seadmete arv" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-22">
+        <createTable remarks="HÕISiga liitunud õppeasutused" tableName="school">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_school"/>
+            </column>
+            <column name="name_et" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_en" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="logo_f" remarks="logo faili nimi" type="VARCHAR(255)"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="code" remarks="kooli lühend" type="VARCHAR(10)"/>
+            <column name="ois_file_id" remarks="viide logo file'le" type="INT"/>
+            <column name="ehis_school_code" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+            <column name="address" type="VARCHAR(1000)"/>
+            <column name="phone" remarks="telefon" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-23">
+        <createTable remarks="õppeasutuse struktuuriüksused" tableName="school_department">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_school_department"/>
+            </column>
+            <column name="name_et" remarks="nimi" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_en" remarks="nimi i.k." type="VARCHAR(255)"/>
+            <column name="code" remarks="struktuuriüksuse kood" type="VARCHAR(50)"/>
+            <column name="school_id" remarks="viide õpepasutusele" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="parent_school_department_id" remarks="viide ülemstruktuuriüksusele" type="INT"/>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_from" remarks="kehtiv alates" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_thru" remarks="kehtiv kuni" type="date"/>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-24">
+        <createTable remarks="Õppeasutuse ja õppeastmete vastavus" tableName="school_study_level">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_school_study_level"/>
+            </column>
+            <column name="school_id" remarks="viide koolile" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="study_level_code" remarks="viide õppeastmele (HARIDUSTASE)" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="date"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-25">
+        <createTable remarks="State curriculum" tableName="state_curriculum">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_state_curriculum"/>
+            </column>
+            <column name="name_et" remarks="state curriculum name in estonian" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_en" remarks="state curriculum name in english" type="VARCHAR(255)"/>
+            <column name="isced_class_code" remarks="ISCED 2013 classifier,detailed (sometimes narrow) field value" type="VARCHAR(100)"/>
+            <column name="objectives_et" remarks="eesmärk eesti keeles" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="objectives_en" type="TEXT"/>
+            <column name="outcomes_et" remarks="õpiväljundid" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="outcomes_en" remarks="õpiväljundid i.k." type="TEXT"/>
+            <column name="admission_requirements_et" remarks="nõuded õpingute alustamiseks" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="admission_requirements_en" remarks="nõuded õpingute alustamiseks i.k." type="TEXT"/>
+            <column name="graduation_requirements_et" remarks="nõuded õpingute lõpetamiseks" type="VARCHAR(50)"/>
+            <column name="graduation_requirements_en" type="VARCHAR(50)"/>
+            <column name="credits" remarks="õppekava maht EKAP-des" type="numeric(4, 1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="practice_description" remarks="praktika kirjeldus" type="TEXT"/>
+            <column name="state_curr_class_code" remarks="viide RÕK EHISe klassifikaatorile" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="final_exam_descriptioon" remarks="lõpueksami kirjeldus" type="TEXT"/>
+            <column name="optional_study_credits" remarks="valikõpingute moodulite maht kokku" type="numeric(4, 1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_from" remarks="kehtivuse algus" type="date">
+                <constraints nullable="false"/>
+            </column>
+            <column name="valid_thru" remarks="kehtivuse lõpp" type="date"/>
+            <column name="description" remarks="märkused" type="TEXT"/>
+            <column name="riigiteataja_url" type="VARCHAR(4000)"/>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status_code" remarks="riikliku õppekava staatus" type="VARCHAR(100)"/>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-26">
+        <createTable remarks="riikliku õppekava moodulid" tableName="state_curriculum_module">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_state_curriculum_module"/>
+            </column>
+            <column name="state_curriculum_id" remarks="viide riiklikule õppekavale" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="module_code" remarks="mooduli liik, klassifikaator" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_et" remarks="mooduli nimetus eesti keeles" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_en" remarks="mooduli niemtus i.k." type="VARCHAR(255)"/>
+            <column name="credits" remarks="mooduli maht EKAP" type="numeric(4, 1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="objectives_et" remarks="mooduli eesmärk" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="objectives_en" remarks="mooduli eesmärk i.k." type="TEXT"/>
+            <column name="assessments_et" remarks="hindamiskriteeriumid" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assessments_en" remarks="hindamiskriteeriumid i.k." type="TEXT"/>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-27">
+        <createTable remarks="riikliku õppekava moodulite ja kutsete/osakutsete/spetsialiseerumiste seos" tableName="state_curriculum_module_occupation">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_state_curriculum_module_occupation"/>
+            </column>
+            <column name="state_curriculum_module_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occupation_code" remarks="kutse, osakutse või spetsialiseerumine" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" remarks="liik (äkki läheb vaja) O - osakutse K - kutse S - spetsialiseerumine" type="CHAR(1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-28">
+        <createTable tableName="state_curriculum_module_outcomes">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_state_curriculum_module_outcomes"/>
+            </column>
+            <column name="outcomes_et" remarks="õpiväljund eesti keeles" type="VARCHAR(4000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state_curriculum_module_id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="outcomes_en" remarks="õpiväljund i.k." type="VARCHAR(4000)"/>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-29">
+        <createTable remarks="riikliku õppekava kutsed" tableName="state_curriculum_occupation">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_state_curriculum_occupation"/>
+            </column>
+            <column name="state_curriculum_id" remarks="riikliku õppekava id" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occupation_code" remarks="kutse klassifikaatori kood" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-30">
+        <createTable remarks="ainete tabel" tableName="subject">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_subject"/>
+            </column>
+            <column name="school_id" remarks="viide õppeasutusele" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="code" remarks="õppeaine kood" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_et" remarks="nimetus e.k." type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="name_en" remarks="nimetus i.k." type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="VARCHAR(4000)"/>
+            <column name="credits" type="numeric(4, 1)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assessment_code" remarks="hindamisviis, klassifikaator HINDAMISVIIS" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="assessment_descr" remarks="hindamisviisi kirjeldus" type="VARCHAR(10000)"/>
+            <column name="objectives_et" remarks="eesmärgid e.k." type="VARCHAR(10000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="objectives_en" remarks="eesmärgid i.k." type="VARCHAR(10000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="outcomes_et" remarks="õpiväljundid e.k." type="VARCHAR(10000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="outcomes_en" remarks="õpiväljundid i.k." type="VARCHAR(10000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description_et" remarks="sisu e.k." type="VARCHAR(4000)"/>
+            <column name="description_en" remarks="sisu e.n." type="VARCHAR(4000)"/>
+            <column name="study_literature" remarks="kirjandus" type="VARCHAR(4000)"/>
+            <column name="evaluation_et" remarks="hindamiskriteeriumid e. k." type="VARCHAR(10000)"/>
+            <column name="evaluation_en" remarks="hindamiskriteeriumid i. k." type="VARCHAR(10000)"/>
+            <column name="independent_study_et" remarks="iseseisev töö e. k." type="VARCHAR(4000)"/>
+            <column name="independent_study_en" remarks="iseseisev töö i. k." type="VARCHAR(4000)"/>
+            <column name="additional_info" remarks="lisainfo" type="VARCHAR(4000)"/>
+            <column name="school_department_id" remarks="viide õppeasutuse struktuuriüksusele" type="INT"/>
+            <column name="status_code" remarks="staatus, klassifikaator AINESTAATUS" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-31">
+        <createTable remarks="ainete seosed: eeldusained (kohustuslikud ja soovituslikud) asendusained" tableName="subject_connect">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_subject_connect"/>
+            </column>
+            <column name="primary_subject_id" remarks="viide peaainele ehk aine, mille kohta sisestatakse eeldus- ja asendusained" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="connect_subject_id" remarks="viide eeldus- või asendusainele" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="connection_code" remarks="seose liik, klassifikaator (AINESEOS)" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-32">
+        <createTable remarks="õppeaine õppetöö keeled" tableName="subject_lang">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_subject_lang"/>
+            </column>
+            <column name="subject_id" remarks="viide õppeainele" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="lang_code" remarks="viide õppekeelele, klassifikaator (OPPEKEEL)" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-33">
+        <createTable remarks="ühe õppeasutuse õpetaja ametid" tableName="teacher_occupation">
+            <column autoIncrement="true" name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_teacher_occupation"/>
+            </column>
+            <column name="occupation_et" remarks="amet eesti keeles" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="school_id" remarks="viide õppeasutusele" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="occupation_en" remarks="amet inglise keeles" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_valid" remarks="kas amet on kehtiv" type="BOOLEAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-34">
+        <createTable remarks="kasutajate tabel" tableName="user_">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="user__pkey"/>
+            </column>
+            <column name="school_id" remarks="viide õppeasutusele" type="INT"/>
+            <column name="person_id" remarks="viide isikule" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="role_code" remarks="kasutaja roll, nt peaadministraator, admin. töötaja jne" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-35">
+        <createTable remarks="kasutaja õiguste tabel" tableName="user_rights">
+            <column autoIncrement="true" name="id" type="SERIAL">
+                <constraints primaryKey="true" primaryKeyName="PK_user_rights"/>
+            </column>
+            <column name="user_id" remarks="viide kasutajale" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="permission_code" remarks="kasutaja õigus vastava teema raames, nt muuda, vaata, kustuta" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="object_code" remarks="teema kood, nt õppekava, ruumid, klassifikaatorid" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted" type="TIMESTAMP(6) WITHOUT TIME ZONE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="changed" type="TIMESTAMP(6) WITHOUT TIME ZONE"/>
+            <column name="version" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="inserted_by" type="VARCHAR(100)"/>
+            <column name="changed_by" type="VARCHAR(100)"/>
+        </createTable>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-36">
+        <addPrimaryKey columnNames="code" constraintName="PK_CLASSIFIER" tableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-37">
+        <addPrimaryKey columnNames="classifier_code, connect_classifier_code" constraintName="PK_classifier_connect" tableName="classifier_connect"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-38">
+        <addUniqueConstraint columnNames="curriculum_id, occupation_code" constraintName="UK" tableName="curriculum_occupation"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-39">
+        <addUniqueConstraint columnNames="curriculum_id, school_department_id" constraintName="UK_curriculum_department" tableName="curriculum_department"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-40">
+        <addUniqueConstraint columnNames="curriculum_module_id, competence_code" constraintName="UK_curriculum_module_competence" tableName="curriculum_module_competence"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-41">
+        <addUniqueConstraint columnNames="curriculum_module_id, occupation_code" constraintName="UK_curriculum_module_occupation" tableName="curriculum_module_occupation"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-42">
+        <addUniqueConstraint columnNames="curriculum_id, study_form_code" constraintName="UK_curriculum_study_form" tableName="curriculum_study_form"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-43">
+        <addUniqueConstraint columnNames="curriculum_id, study_lang_code" constraintName="UK_curriculum_study_lang" tableName="curriculum_study_lang"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-44">
+        <addUniqueConstraint columnNames="permission_code, object_code, user_id" constraintName="UK_user_rights" tableName="user_rights"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-45">
+        <createIndex indexName="IXFK_building_school" tableName="building">
+            <column name="school_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-46">
+        <createIndex indexName="IXFK_classifier_connect_classifier" tableName="classifier_connect">
+            <column name="classifier_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-47">
+        <createIndex indexName="IXFK_classifier_connect_classifier_02" tableName="classifier_connect">
+            <column name="connect_classifier_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-48">
+        <createIndex indexName="IXFK_classifier_main" tableName="classifier">
+            <column name="main_class_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-49">
+        <createIndex indexName="IXFK_classifier_parent_code" tableName="classifier">
+            <column name="parent_class_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-50">
+        <createIndex indexName="IXFK_curriculum_classifier" tableName="curriculum">
+            <column name="orig_study_level_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-51">
+        <createIndex indexName="IXFK_curriculum_classifier_02" tableName="curriculum">
+            <column name="joint_mentor_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-52">
+        <createIndex indexName="IXFK_curriculum_classifier_03" tableName="curriculum">
+            <column name="draft_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-53">
+        <createIndex indexName="IXFK_curriculum_classifier_ehis" tableName="curriculum">
+            <column name="ehis_status_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-54">
+        <createIndex indexName="IXFK_curriculum_classifier_isced" tableName="curriculum">
+            <column name="isced_class_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-55">
+        <createIndex indexName="IXFK_curriculum_classifier_status" tableName="curriculum">
+            <column name="status_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-56">
+        <createIndex indexName="IXFK_curriculum_consecution" tableName="curriculum">
+            <column name="consecution_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-57">
+        <createIndex indexName="IXFK_curriculum_department_curriculum" tableName="curriculum_department">
+            <column name="curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-58">
+        <createIndex indexName="IXFK_curriculum_department_school_department" tableName="curriculum_department">
+            <column name="school_department_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-59">
+        <createIndex indexName="IXFK_curriculum_files_classifier" tableName="curriculum_files">
+            <column name="ehis_file_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-60">
+        <createIndex indexName="IXFK_curriculum_files_curriculum" tableName="curriculum_files">
+            <column name="curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-61">
+        <createIndex indexName="IXFK_curriculum_files_ois_file" tableName="curriculum_files">
+            <column name="ois_file_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-62">
+        <createIndex indexName="IXFK_curriculum_grade_classifier" tableName="curriculum_grade">
+            <column name="ehis_grade_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-63">
+        <createIndex indexName="IXFK_curriculum_grade_curriculum" tableName="curriculum_grade">
+            <column name="curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-64">
+        <createIndex indexName="IXFK_curriculum_joint_partners_classifier" tableName="curriculum_joint_partners">
+            <column name="ehis_school_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-65">
+        <createIndex indexName="IXFK_curriculum_joint_partners_curriculum" tableName="curriculum_joint_partners">
+            <column name="curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-66">
+        <createIndex indexName="IXFK_curriculum_module_classifier" tableName="curriculum_module">
+            <column name="module_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-67">
+        <createIndex indexName="IXFK_curriculum_module_competence_classifier" tableName="curriculum_module_competence">
+            <column name="competence_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-68">
+        <createIndex indexName="IXFK_curriculum_module_competence_curriculum_module" tableName="curriculum_module_competence">
+            <column name="curriculum_module_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-69">
+        <createIndex indexName="IXFK_curriculum_module_curriculum" tableName="curriculum_module">
+            <column name="curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-70">
+        <createIndex indexName="IXFK_curriculum_module_occupation_classifier" tableName="curriculum_module_occupation">
+            <column name="occupation_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-71">
+        <createIndex indexName="IXFK_curriculum_module_occupation_curriculum_module" tableName="curriculum_module_occupation">
+            <column name="curriculum_module_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-72">
+        <createIndex indexName="IXFK_curriculum_occupation_classifier" tableName="curriculum_occupation">
+            <column name="occupation_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-73">
+        <createIndex indexName="IXFK_curriculum_occupation_curriculum" tableName="curriculum_occupation">
+            <column name="curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-74">
+        <createIndex indexName="IXFK_curriculum_school" tableName="curriculum">
+            <column name="school_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-75">
+        <createIndex indexName="IXFK_curriculum_speciality_classifier" tableName="curriculum_speciality">
+            <column name="occupation_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-76">
+        <createIndex indexName="IXFK_curriculum_speciality_curriculum_grade" tableName="curriculum_speciality">
+            <column name="curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-77">
+        <createIndex indexName="IXFK_curriculum_state_curriculum" tableName="curriculum">
+            <column name="state_curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-78">
+        <createIndex indexName="IXFK_curriculum_study_form_classifier" tableName="curriculum_study_form">
+            <column name="study_form_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-79">
+        <createIndex indexName="IXFK_curriculum_study_form_curriculum" tableName="curriculum_study_form">
+            <column name="curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-80">
+        <createIndex indexName="IXFK_curriculum_study_lang_classifier" tableName="curriculum_study_lang">
+            <column name="study_lang_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-81">
+        <createIndex indexName="IXFK_curriculum_study_lang_curriculum" tableName="curriculum_study_lang">
+            <column name="curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-82">
+        <createIndex indexName="IXFK_room_building" tableName="room">
+            <column name="building_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-83">
+        <createIndex indexName="IXFK_room_equipment_classifier" tableName="room_equipment">
+            <column name="equipment_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-84">
+        <createIndex indexName="IXFK_room_equipment_room" tableName="room_equipment">
+            <column name="room_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-85">
+        <createIndex indexName="IXFK_school_OIS_FILE" tableName="school">
+            <column name="ois_file_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-86">
+        <createIndex indexName="IXFK_school_classifier" tableName="school">
+            <column name="ehis_school_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-87">
+        <createIndex indexName="IXFK_school_department_school" tableName="school_department">
+            <column name="school_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-88">
+        <createIndex indexName="IXFK_school_department_school_department" tableName="school_department">
+            <column name="parent_school_department_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-89">
+        <createIndex indexName="IXFK_school_study_level_classifier" tableName="school_study_level">
+            <column name="study_level_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-90">
+        <createIndex indexName="IXFK_school_study_level_school" tableName="school_study_level">
+            <column name="school_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-91">
+        <createIndex indexName="IXFK_state_curriculum_classifier_isced" tableName="state_curriculum">
+            <column name="isced_class_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-92">
+        <createIndex indexName="IXFK_state_curriculum_classifier_state_curr_class" tableName="state_curriculum">
+            <column name="state_curr_class_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-93">
+        <createIndex indexName="IXFK_state_curriculum_classifier_status" tableName="state_curriculum">
+            <column name="status_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-94">
+        <createIndex indexName="IXFK_state_curriculum_module_classifier" tableName="state_curriculum_module">
+            <column name="module_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-95">
+        <createIndex indexName="IXFK_state_curriculum_module_occupation_classifier" tableName="state_curriculum_module_occupation">
+            <column name="occupation_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-96">
+        <createIndex indexName="IXFK_state_curriculum_module_occupation_state_curriculum_module" tableName="state_curriculum_module_occupation">
+            <column name="state_curriculum_module_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-97">
+        <createIndex indexName="IXFK_state_curriculum_module_outcomes_state_curriculum_module" tableName="state_curriculum_module_outcomes">
+            <column name="state_curriculum_module_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-98">
+        <createIndex indexName="IXFK_state_curriculum_module_state_curriculum" tableName="state_curriculum_module">
+            <column name="state_curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-99">
+        <createIndex indexName="IXFK_state_curriculum_occupation_classifier" tableName="state_curriculum_occupation">
+            <column name="occupation_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-100">
+        <createIndex indexName="IXFK_state_curriculum_occupation_state_curriculum" tableName="state_curriculum_occupation">
+            <column name="state_curriculum_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-101">
+        <createIndex indexName="IXFK_subject_classifier" tableName="subject">
+            <column name="assessment_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-102">
+        <createIndex indexName="IXFK_subject_classifier_02" tableName="subject">
+            <column name="status_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-103">
+        <createIndex indexName="IXFK_subject_connect_classifier" tableName="subject_connect">
+            <column name="connection_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-104">
+        <createIndex indexName="IXFK_subject_connect_subject" tableName="subject_connect">
+            <column name="primary_subject_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-105">
+        <createIndex indexName="IXFK_subject_connect_subject_02" tableName="subject_connect">
+            <column name="connect_subject_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-106">
+        <createIndex indexName="IXFK_subject_lang_classifier" tableName="subject_lang">
+            <column name="lang_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-107">
+        <createIndex indexName="IXFK_subject_lang_subject" tableName="subject_lang">
+            <column name="subject_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-108">
+        <createIndex indexName="IXFK_subject_school" tableName="subject">
+            <column name="school_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-109">
+        <createIndex indexName="IXFK_subject_school_department" tableName="subject">
+            <column name="school_department_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-110">
+        <createIndex indexName="IXFK_teacher_occupation_school" tableName="teacher_occupation">
+            <column name="school_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-111">
+        <createIndex indexName="IXFK_user__classifier" tableName="user_">
+            <column name="role_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-112">
+        <createIndex indexName="IXFK_user__person" tableName="user_">
+            <column name="person_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-113">
+        <createIndex indexName="IXFK_user__school" tableName="user_">
+            <column name="school_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-114">
+        <createIndex indexName="IXFK_user_rights_classifier" tableName="user_rights">
+            <column name="permission_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-115">
+        <createIndex indexName="IXFK_user_rights_classifier_02" tableName="user_rights">
+            <column name="object_code"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-116">
+        <createIndex indexName="IXFK_user_rights_user_" tableName="user_rights">
+            <column name="user_id"/>
+        </createIndex>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-117">
+        <addForeignKeyConstraint baseColumnNames="school_id" baseTableName="building" constraintName="FK_building_school" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-118">
+        <addForeignKeyConstraint baseColumnNames="classifier_code" baseTableName="classifier_connect" constraintName="FK_classifier_connect_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-119">
+        <addForeignKeyConstraint baseColumnNames="connect_classifier_code" baseTableName="classifier_connect" constraintName="FK_classifier_connect_classifier_02" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-120">
+        <addForeignKeyConstraint baseColumnNames="main_classifier_code" baseTableName="classifier_connect" constraintName="FK_classifier_connect_classifier_03" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-121">
+        <addForeignKeyConstraint baseColumnNames="main_class_code" baseTableName="classifier" constraintName="FK_classifier_main" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-122">
+        <addForeignKeyConstraint baseColumnNames="parent_class_code" baseTableName="classifier" constraintName="FK_classifier_parent_code" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-123">
+        <addForeignKeyConstraint baseColumnNames="orig_study_level_code" baseTableName="curriculum" constraintName="FK_curriculum_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-124">
+        <addForeignKeyConstraint baseColumnNames="joint_mentor_code" baseTableName="curriculum" constraintName="FK_curriculum_classifier_02" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-125">
+        <addForeignKeyConstraint baseColumnNames="draft_code" baseTableName="curriculum" constraintName="FK_curriculum_classifier_03" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-126">
+        <addForeignKeyConstraint baseColumnNames="ehis_status_code" baseTableName="curriculum" constraintName="FK_curriculum_classifier_ehis" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-127">
+        <addForeignKeyConstraint baseColumnNames="isced_class_code" baseTableName="curriculum" constraintName="FK_curriculum_classifier_isced" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-128">
+        <addForeignKeyConstraint baseColumnNames="status_code" baseTableName="curriculum" constraintName="FK_curriculum_classifier_status" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-129">
+        <addForeignKeyConstraint baseColumnNames="consecution_code" baseTableName="curriculum" constraintName="FK_curriculum_consecution" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-130">
+        <addForeignKeyConstraint baseColumnNames="curriculum_id" baseTableName="curriculum_department" constraintName="FK_curriculum_department_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-131">
+        <addForeignKeyConstraint baseColumnNames="school_department_id" baseTableName="curriculum_department" constraintName="FK_curriculum_department_school_department" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school_department"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-132">
+        <addForeignKeyConstraint baseColumnNames="ehis_file_code" baseTableName="curriculum_files" constraintName="FK_curriculum_files_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-133">
+        <addForeignKeyConstraint baseColumnNames="curriculum_id" baseTableName="curriculum_files" constraintName="FK_curriculum_files_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-134">
+        <addForeignKeyConstraint baseColumnNames="ois_file_id" baseTableName="curriculum_files" constraintName="FK_curriculum_files_ois_file" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="ois_file"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-135">
+        <addForeignKeyConstraint baseColumnNames="ehis_grade_code" baseTableName="curriculum_grade" constraintName="FK_curriculum_grade_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-136">
+        <addForeignKeyConstraint baseColumnNames="curriculum_id" baseTableName="curriculum_grade" constraintName="FK_curriculum_grade_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-137">
+        <addForeignKeyConstraint baseColumnNames="ehis_school_code" baseTableName="curriculum_joint_partners" constraintName="FK_curriculum_joint_partners_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-138">
+        <addForeignKeyConstraint baseColumnNames="curriculum_id" baseTableName="curriculum_joint_partners" constraintName="FK_curriculum_joint_partners_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-139">
+        <addForeignKeyConstraint baseColumnNames="module_code" baseTableName="curriculum_module" constraintName="FK_curriculum_module_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-140">
+        <addForeignKeyConstraint baseColumnNames="competence_code" baseTableName="curriculum_module_competence" constraintName="FK_curriculum_module_competence_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-141">
+        <addForeignKeyConstraint baseColumnNames="curriculum_module_id" baseTableName="curriculum_module_competence" constraintName="FK_curriculum_module_competence_curriculum_module" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum_module"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-142">
+        <addForeignKeyConstraint baseColumnNames="curriculum_id" baseTableName="curriculum_module" constraintName="FK_curriculum_module_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-143">
+        <addForeignKeyConstraint baseColumnNames="occupation_code" baseTableName="curriculum_module_occupation" constraintName="FK_curriculum_module_occupation_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-144">
+        <addForeignKeyConstraint baseColumnNames="curriculum_module_id" baseTableName="curriculum_module_occupation" constraintName="FK_curriculum_module_occupation_curriculum_module" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum_module"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-145">
+        <addForeignKeyConstraint baseColumnNames="occupation_code" baseTableName="curriculum_occupation" constraintName="FK_curriculum_occupation_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-146">
+        <addForeignKeyConstraint baseColumnNames="curriculum_id" baseTableName="curriculum_occupation" constraintName="FK_curriculum_occupation_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-147">
+        <addForeignKeyConstraint baseColumnNames="school_id" baseTableName="curriculum" constraintName="FK_curriculum_school" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-148">
+        <addForeignKeyConstraint baseColumnNames="occupation_code" baseTableName="curriculum_speciality" constraintName="FK_curriculum_speciality_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-149">
+        <addForeignKeyConstraint baseColumnNames="curriculum_id" baseTableName="curriculum_speciality" constraintName="FK_curriculum_speciality_curriculum_grade" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-150">
+        <addForeignKeyConstraint baseColumnNames="state_curriculum_id" baseTableName="curriculum" constraintName="FK_curriculum_state_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="state_curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-151">
+        <addForeignKeyConstraint baseColumnNames="study_form_code" baseTableName="curriculum_study_form" constraintName="FK_curriculum_study_form_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-152">
+        <addForeignKeyConstraint baseColumnNames="study_lang_code" baseTableName="curriculum_study_lang" constraintName="FK_curriculum_study_lang_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-153">
+        <addForeignKeyConstraint baseColumnNames="curriculum_id" baseTableName="curriculum_study_lang" constraintName="FK_curriculum_study_lang_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-154">
+        <addForeignKeyConstraint baseColumnNames="building_id" baseTableName="room" constraintName="FK_room_building" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="building"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-155">
+        <addForeignKeyConstraint baseColumnNames="equipment_code" baseTableName="room_equipment" constraintName="FK_room_equipment_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-156">
+        <addForeignKeyConstraint baseColumnNames="room_id" baseTableName="room_equipment" constraintName="FK_room_equipment_room" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="room"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-157">
+        <addForeignKeyConstraint baseColumnNames="ois_file_id" baseTableName="school" constraintName="FK_school_OIS_FILE" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="ois_file"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-158">
+        <addForeignKeyConstraint baseColumnNames="ehis_school_code" baseTableName="school" constraintName="FK_school_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-159">
+        <addForeignKeyConstraint baseColumnNames="school_id" baseTableName="school_department" constraintName="FK_school_department_school" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-160">
+        <addForeignKeyConstraint baseColumnNames="parent_school_department_id" baseTableName="school_department" constraintName="FK_school_department_school_department" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school_department"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-161">
+        <addForeignKeyConstraint baseColumnNames="study_level_code" baseTableName="school_study_level" constraintName="FK_school_study_level_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-162">
+        <addForeignKeyConstraint baseColumnNames="school_id" baseTableName="school_study_level" constraintName="FK_school_study_level_school" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-163">
+        <addForeignKeyConstraint baseColumnNames="isced_class_code" baseTableName="state_curriculum" constraintName="FK_state_curriculum_classifier_isced" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-164">
+        <addForeignKeyConstraint baseColumnNames="state_curr_class_code" baseTableName="state_curriculum" constraintName="FK_state_curriculum_classifier_state_curr_class" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-165">
+        <addForeignKeyConstraint baseColumnNames="status_code" baseTableName="state_curriculum" constraintName="FK_state_curriculum_classifier_status" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-166">
+        <addForeignKeyConstraint baseColumnNames="module_code" baseTableName="state_curriculum_module" constraintName="FK_state_curriculum_module_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-167">
+        <addForeignKeyConstraint baseColumnNames="occupation_code" baseTableName="state_curriculum_module_occupation" constraintName="FK_state_curriculum_module_occupation_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-168">
+        <addForeignKeyConstraint baseColumnNames="state_curriculum_module_id" baseTableName="state_curriculum_module_occupation" constraintName="FK_state_curriculum_module_occupation_state_curriculum_module" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="state_curriculum_module"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-169">
+        <addForeignKeyConstraint baseColumnNames="state_curriculum_module_id" baseTableName="state_curriculum_module_outcomes" constraintName="FK_state_curriculum_module_outcomes_state_curriculum_module" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="state_curriculum_module"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-170">
+        <addForeignKeyConstraint baseColumnNames="state_curriculum_id" baseTableName="state_curriculum_module" constraintName="FK_state_curriculum_module_state_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="state_curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-171">
+        <addForeignKeyConstraint baseColumnNames="occupation_code" baseTableName="state_curriculum_occupation" constraintName="FK_state_curriculum_occupation_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-172">
+        <addForeignKeyConstraint baseColumnNames="state_curriculum_id" baseTableName="state_curriculum_occupation" constraintName="FK_state_curriculum_occupation_state_curriculum" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="state_curriculum"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-173">
+        <addForeignKeyConstraint baseColumnNames="assessment_code" baseTableName="subject" constraintName="FK_subject_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-174">
+        <addForeignKeyConstraint baseColumnNames="status_code" baseTableName="subject" constraintName="FK_subject_classifier_02" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-175">
+        <addForeignKeyConstraint baseColumnNames="connection_code" baseTableName="subject_connect" constraintName="FK_subject_connect_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-176">
+        <addForeignKeyConstraint baseColumnNames="primary_subject_id" baseTableName="subject_connect" constraintName="FK_subject_connect_subject" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="subject"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-177">
+        <addForeignKeyConstraint baseColumnNames="connect_subject_id" baseTableName="subject_connect" constraintName="FK_subject_connect_subject_02" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="subject"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-178">
+        <addForeignKeyConstraint baseColumnNames="lang_code" baseTableName="subject_lang" constraintName="FK_subject_lang_classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-179">
+        <addForeignKeyConstraint baseColumnNames="subject_id" baseTableName="subject_lang" constraintName="FK_subject_lang_subject" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="subject"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-180">
+        <addForeignKeyConstraint baseColumnNames="school_id" baseTableName="subject" constraintName="FK_subject_school" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-181">
+        <addForeignKeyConstraint baseColumnNames="school_department_id" baseTableName="subject" constraintName="FK_subject_school_department" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school_department"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-182">
+        <addForeignKeyConstraint baseColumnNames="school_id" baseTableName="teacher_occupation" constraintName="FK_teacher_occupation_school" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-183">
+        <addForeignKeyConstraint baseColumnNames="role_code" baseTableName="user_" constraintName="FK_user__classifier" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-184">
+        <addForeignKeyConstraint baseColumnNames="person_id" baseTableName="user_" constraintName="FK_user__person" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="person"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-185">
+        <addForeignKeyConstraint baseColumnNames="school_id" baseTableName="user_" constraintName="FK_user__school" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id" referencedTableName="school"/>
+    </changeSet>
+    <changeSet author="anonymous (generated)" id="1484236566727-186">
+        <addForeignKeyConstraint baseColumnNames="object_code" baseTableName="user_rights" constraintName="FK_user_rights_classifier_02" deferrable="false" initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="code" referencedTableName="classifier"/>
+    </changeSet>
+</databaseChangeLog>

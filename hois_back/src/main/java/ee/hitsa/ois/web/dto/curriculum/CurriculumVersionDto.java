@@ -3,7 +3,6 @@ package ee.hitsa.ois.web.dto.curriculum;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.Min;
@@ -14,6 +13,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
@@ -56,7 +56,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     @Valid
     private Set<CurriculumVersionOccupationModuleDto> occupationModules;
     private Set<Long> specialitiesReferenceNumbers;
-    
+
     /**
      * Curriculum specialities may be also added from curriculum version form
      */
@@ -64,27 +64,19 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
 
     public static CurriculumVersionDto of(CurriculumVersion version) {
         CurriculumVersionDto dto = EntityUtil.bindToDto(version, new CurriculumVersionDto(),
-                "schoolDepartment", "curriculumStudyForm", "modules", "specialities", "occupationModules");
+                "modules", "specialities", "occupationModules", "curriculumStudyForm");
 
-        dto.setSchoolDepartment(version.getSchoolDepartment() != null ? EntityUtil.getNullableId(version.getSchoolDepartment()) : null);
-        dto.setCurriculumStudyForm(version.getCurriculumStudyForm() != null ? EntityUtil.getCode(version.getCurriculumStudyForm().getStudyForm()) : null);
+        dto.setModules(StreamUtil.toMappedSet(CurriculumVersionHigherModuleDto::of, version.getModules()));
+        dto.setOccupationModules(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleDto::of, version.getOccupationModules()));
+        dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getCurriculumSpeciality()), version.getSpecialities()));
 
-        if(version.getModules() != null) {
-            Set<CurriculumVersionHigherModuleDto> modules = version.getModules().stream().
-                    map(m -> CurriculumVersionHigherModuleDto.of(m)).collect(Collectors.toSet());
-            dto.setModules(modules);
+        //CurriculumVersion.curriculumStudyForm is not a Classifier
+        if (version.getCurriculumStudyForm() != null) {
+            dto.setCurriculumStudyForm(EntityUtil.getNullableCode(version.getCurriculumStudyForm().getStudyForm()));
         }
-
-        if (version.getOccupationModules() != null) {
-            Set<CurriculumVersionOccupationModuleDto> occupationModules = version.getOccupationModules().stream().
-                    map(m -> CurriculumVersionOccupationModuleDto.of(m)).collect(Collectors.toSet());
-            dto.setOccupationModules(occupationModules);
-        }
-        Set<Long> specialities = version.getSpecialities().stream().map(s -> EntityUtil.getId(s.getCurriculumSpeciality())).collect(Collectors.toSet());
-        dto.setSpecialitiesReferenceNumbers(specialities);
         return dto;
     }
-    
+
     public Set<CurriculumSpecialityDto> getNewCurriculumSpecialities() {
         return newCurriculumSpecialities;
     }

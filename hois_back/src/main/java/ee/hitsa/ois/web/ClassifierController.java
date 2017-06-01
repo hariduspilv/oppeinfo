@@ -1,14 +1,12 @@
 package ee.hitsa.ois.web;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -21,10 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.ClassifierService;
+import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
-import ee.hitsa.ois.web.dto.ClassifierSelection;
+import ee.hitsa.ois.web.dto.ClassifierDto;
+import ee.hitsa.ois.web.dto.ClassifierSearchDto;
 import ee.hitsa.ois.web.dto.ClassifierWithCount;
 
 @RestController
@@ -40,39 +42,36 @@ public class ClassifierController {
      * For creating new classifier
      */
     @PostMapping("")
-    public Classifier create(@Valid @RequestBody Classifier classifier) {
-        return classifierService.save(classifier);
+    public ClassifierDto create(HoisUserDetails user, @Valid @RequestBody Classifier classifier) {
+        AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can create classifiers");
+        return get(classifierService.save(classifier));
     }
 
     /**
      * For updating existing classifier
      */
     @PutMapping("/{code}")
-    public Classifier update(@WithEntity("code") Classifier classifier, @Valid @RequestBody Classifier newClassifier) {
+    public ClassifierDto update(HoisUserDetails user, @WithEntity("code") Classifier classifier, @Valid @RequestBody Classifier newClassifier) {
+        AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can update classifiers");
         EntityUtil.bindToEntity(newClassifier, classifier);
-        return classifierService.save(classifier);
+        return get(classifierService.save(classifier));
     }
 
     /**
      * Getting single classifier by code
      */
     @GetMapping("/{code}")
-    public Classifier get(@WithEntity("code") Classifier classifier) {
-        return classifier;
+    public ClassifierDto get(@WithEntity("code") Classifier classifier) {
+        return ClassifierDto.of(classifier);
     }
 
     /**
      * Getting classifiers as paginated results
      */
     @GetMapping("")
-    public Page<ClassifierSelection> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
+    public Page<ClassifierSearchDto> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
+        // FIXME: add security constraints
         return classifierService.search(classifierSearchCommand, pageable);
-    }
-
-    @GetMapping("/all")
-    public List<ClassifierSelection> searchAll(ClassifierSearchCommand classifierSearchCommand, Sort sort) {
-        return classifierService.searchAll(classifierSearchCommand, sort)
-                .stream().map(ClassifierSelection::of).collect(Collectors.toList());
     }
 
     @GetMapping("/heads")
@@ -82,36 +81,39 @@ public class ClassifierController {
 
     // TODO move into AutocompleteController
     @GetMapping("/getPossibleParentClassifiers")
-    public List<Classifier> searchForAuto(ClassifierSearchCommand classifierSearchCommand) {
-        return autocompleteService.classifierForAutocomplete(classifierSearchCommand);
+    public List<ClassifierDto> searchForAuto(ClassifierSearchCommand classifierSearchCommand) {
+        return StreamUtil.toMappedList(ClassifierDto::of, autocompleteService.classifierForAutocomplete(classifierSearchCommand));
     }
 
     /**
      * For deleting classifier
      */
     @DeleteMapping("/{code}")
-    public boolean delete(@PathVariable("code") String code) {
+    public boolean delete(HoisUserDetails user, @PathVariable("code") String code) {
+        AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can delete classifiers");
         classifierService.delete(code);
         return true;
     }
 
     @GetMapping("/connections/{code}")
-    public List<Classifier> getPossibleConnections(@PathVariable("code") String code){
-        return classifierService.getPossibleConnections(code);
+    public List<ClassifierDto> getPossibleConnections(@PathVariable("code") String code) {
+        return StreamUtil.toMappedList(ClassifierDto::of, classifierService.getPossibleConnections(code));
     }
 
     @GetMapping("/parents/{code}")
-    public List<Classifier> getParents(@PathVariable("code") String code) {
-        return classifierService.getParents(code);
+    public List<ClassifierDto> getParents(@PathVariable("code") String code) {
+        return StreamUtil.toMappedList(ClassifierDto::of, classifierService.getParents(code));
     }
 
     @GetMapping("/parents/{parentsMainClassifierCode}/{code}")
-    public List<Classifier> getParentsByMainClassifier(@PathVariable("parentsMainClassifierCode") String parentsMainClassifierCode, @PathVariable("code") String code) {
-        return classifierService.getParentsByMainClassifier(code, parentsMainClassifierCode);
+    public List<ClassifierDto> getParentsByMainClassifier(
+            @PathVariable("parentsMainClassifierCode") String parentsMainClassifierCode,
+            @PathVariable("code") String code) {
+        return StreamUtil.toMappedList(ClassifierDto::of, classifierService.getParentsByMainClassifier(code, parentsMainClassifierCode));
     }
 
     @GetMapping("/children/{code}")
-    public List<Classifier> getChildren(@PathVariable("code") String code) {
-        return classifierService.findChildren(code);
+    public List<ClassifierDto> getChildren(@PathVariable("code") String code) {
+        return StreamUtil.toMappedList(ClassifierDto::of, classifierService.findChildren(code));
     }
 }

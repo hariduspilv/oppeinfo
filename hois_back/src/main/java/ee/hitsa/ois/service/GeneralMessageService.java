@@ -1,12 +1,13 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-import static ee.hitsa.ois.util.SearchUtil.propertyContains;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -17,6 +18,7 @@ import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
@@ -50,7 +52,12 @@ public class GeneralMessageService {
     private SchoolRepository schoolRepository;
 
     public Page<GeneralMessageDto> show(HoisUserDetails user, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SHOW_MESSAGES_FROM, pageable);
+        if(user.getSchoolId() == null) {
+            // do now show general messages to users which have no school
+            return new PageImpl<>(Collections.emptyList());
+        }
+
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SHOW_MESSAGES_FROM).sort(pageable);
         qb.parameter("schoolId", user.getSchoolId());
         qb.parameter("userId", user.getUserId());
         Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, "g.id, g.title, g.content, g.inserted", em, pageable);
@@ -67,11 +74,11 @@ public class GeneralMessageService {
             // display periods should overlap
             LocalDate validFrom = criteria.getValidFrom();
             if(validFrom != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), validFrom));
+                filters.add(cb.or(cb.isNull(root.get("validThru")), cb.greaterThanOrEqualTo(root.get("validThru"), validFrom)));
             }
             LocalDate validThru = criteria.getValidThru();
             if(validThru != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("validThru"), validThru));
+                filters.add(cb.or(cb.isNull(root.get("validFrom")), cb.lessThanOrEqualTo(root.get("validFrom"), validThru)));
             }
             List<String> targets = criteria.getTargets();
             if(targets != null && !targets.isEmpty()) {
@@ -93,20 +100,17 @@ public class GeneralMessageService {
 
     public GeneralMessage save(GeneralMessage generalMessage, GeneralMessageForm form) {
         EntityUtil.bindToEntity(form, generalMessage, "targets");
-        List<String> targetCodes = form.getTargets();
-        if(targetCodes != null) {
-            List<GeneralMessageTarget> storedTargets = generalMessage.getTargets();
-            if(storedTargets == null) {
-                generalMessage.setTargets(storedTargets = new ArrayList<>());
-            }
-            EntityUtil.bindClassifierCollection(storedTargets, gmt -> EntityUtil.getCode(gmt.getRole()),targetCodes, roleCode -> {
-                // add new link
-                GeneralMessageTarget sl = new GeneralMessageTarget();
-                sl.setGeneralMessage(generalMessage);
-                sl.setRole(EntityUtil.validateClassifier(classifierRepository.getOne(roleCode), MainClassCode.ROLL));
-                return sl;
-            });
+        List<GeneralMessageTarget> storedTargets = generalMessage.getTargets();
+        if(storedTargets == null) {
+            generalMessage.setTargets(storedTargets = new ArrayList<>());
         }
+        EntityUtil.bindEntityCollection(storedTargets, gmt -> EntityUtil.getCode(gmt.getRole()),form.getTargets(), roleCode -> {
+            // add new link
+            GeneralMessageTarget sl = new GeneralMessageTarget();
+            sl.setGeneralMessage(generalMessage);
+            sl.setRole(EntityUtil.validateClassifier(classifierRepository.getOne(roleCode), MainClassCode.ROLL));
+            return sl;
+        });
         return generalMessageRepository.save(generalMessage);
     }
 

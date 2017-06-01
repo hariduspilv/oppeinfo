@@ -26,19 +26,11 @@ public class StudyPeriodRangeValidator implements ConstraintValidator<StudyPerio
     @Override
     public boolean isValid(Object value, ConstraintValidatorContext context) {
         PropertyAccessor reader = PropertyAccessorFactory.forBeanPropertyAccess(value);
-        Long from = (Long)reader.getPropertyValue(constraint.from());
-        Long thru = (Long)reader.getPropertyValue(constraint.thru());
-        if(from == null || thru == null) {
-            return true;
-        }
 
-        StudyPeriod fromPeriod = studyPeriodRepository.getOne(from);
-        if (fromPeriod == null) {
-            throw new AssertionFailedException("from period not found");
-        }
-        StudyPeriod thruPeriod = studyPeriodRepository.getOne(thru);
-        if (thruPeriod == null) {
-            throw new AssertionFailedException("thru period not found");
+        StudyPeriod fromPeriod = getStudyPeriod(reader.getPropertyValue(constraint.from()), true);
+        StudyPeriod thruPeriod = getStudyPeriod(reader.getPropertyValue(constraint.thru()), false);
+        if (fromPeriod == null || thruPeriod == null) {
+            return true;
         }
 
         return thruPeriod.getStartDate() == null || fromPeriod.getEndDate() == null
@@ -49,4 +41,20 @@ public class StudyPeriodRangeValidator implements ConstraintValidator<StudyPerio
         this.studyPeriodRepository = studyPeriodRepository;
     }
 
+    private StudyPeriod getStudyPeriod(Object value, boolean from) {
+        if (value == null) {
+            return null;
+        }
+        if (value instanceof Long) {
+            StudyPeriod period = studyPeriodRepository.getOne((Long)value);
+            if (period == null) {
+                throw new AssertionFailedException(from ? "from period not found" : "thru period not found");
+            }
+            return period;
+        }
+        if (value instanceof StudyPeriod) {
+            return (StudyPeriod)value;
+        }
+        throw new AssertionFailedException(from ? "unable to load from period" : "unable to load thru period");
+    }
 }

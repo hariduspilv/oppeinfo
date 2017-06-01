@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.student;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import javax.persistence.Entity;
@@ -14,6 +15,7 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 
 @Entity
 public class StudentGroup extends BaseEntityWithId {
@@ -35,8 +37,37 @@ public class StudentGroup extends BaseEntityWithId {
     private Teacher teacher;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier speciality;
+    private Integer places;
     @OneToMany(mappedBy = "studentGroup")
     private List<Student> students;
+    private LocalDate validFrom;
+    private LocalDate validThru;
+    @OneToMany(mappedBy = "studentGroup", fetch = FetchType.LAZY)
+    private List<SubjectStudyPeriodStudentGroup> subjectStudyPeriods;
+
+    public List<SubjectStudyPeriodStudentGroup> getSubjectStudyPeriods() {
+        return subjectStudyPeriods;
+    }
+
+    public void setSubjectStudyPeriods(List<SubjectStudyPeriodStudentGroup> subjectStudyPeriods) {
+        this.subjectStudyPeriods = subjectStudyPeriods;
+    }
+
+    public LocalDate getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
+    }
+
+    public LocalDate getValidThru() {
+        return validThru;
+    }
+
+    public void setValidThru(LocalDate validThru) {
+        this.validThru = validThru;
+    }
 
     public String getCode() {
         return code;
@@ -108,6 +139,14 @@ public class StudentGroup extends BaseEntityWithId {
 
     public void setSpeciality(Classifier speciality) {
         this.speciality = speciality;
+    }
+
+    public Integer getPlaces() {
+        return places;
+    }
+
+    public void setPlaces(Integer places) {
+        this.places = places;
     }
 
     public List<Student> getStudents() {

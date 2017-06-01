@@ -4,7 +4,7 @@
       <div layout="column" flex>
         <md-input-container flex>
           <label>{{'school.label' | translate}}</label>
-          <hois-classifier-select ng-model="criteria.school" ng-hide="!showSchool" main-classifier-code="EHIS_KOOL" model-value-attr="code"></hois-classifier-select>
+          <hois-school-select ng-hide="!showSchool" ng-model="criteria.school"></hois-school-select>
         </md-input-container>
         <md-input-container flex>
           <label>{{'person.name' | translate}}</label>
@@ -42,7 +42,7 @@
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>{{::row.name}}</td>
+          <td md-cell><a href="#/persons/{{::row.id}}">{{::row.name}}</a></td>
           <td md-cell>{{::row.idcode}}</td>
           <td md-cell ng-if="showSchool">{{currentLanguageNameField(row.school)}}</td>
           <td md-cell>{{currentLanguageNameField(row.role)}}</td>

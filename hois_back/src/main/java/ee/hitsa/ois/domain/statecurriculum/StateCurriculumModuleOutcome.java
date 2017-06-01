@@ -19,9 +19,6 @@ public class StateCurriculumModuleOutcome extends BaseEntityWithId {
 	@JoinColumn(name = "state_curriculum_module_id", nullable = false, updatable = false)
 	private StateCurriculumModule module;
 
-	public StateCurriculumModuleOutcome() {
-	}
-
 	public StateCurriculumModule getModule() {
 		return module;
 	}

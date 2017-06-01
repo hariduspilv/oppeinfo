@@ -1,5 +1,6 @@
 {
   "main": {
+    "timePlaceholder": "hh:mm",
     "button": {
       "search": "Search",
       "create": "Create",

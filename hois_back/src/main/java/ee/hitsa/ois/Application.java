@@ -11,8 +11,7 @@ import java.util.List;
 
 import javax.annotation.PostConstruct;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import ee.hois.xroad.ehis.service.EhisXroadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -45,10 +44,13 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonSerializer;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 
 import ee.hitsa.ois.domain.BaseEntity;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 @EntityScan(basePackageClasses = { BaseEntity.class, Jsr310JpaConverters.class })
 @EnableCaching
@@ -92,6 +94,11 @@ public class Application {
     }
 
     @Bean
+    public EhisXroadService ehisXroadService() {
+        return new EhisXroadService();
+    }
+
+    @Bean
     public Jackson2ObjectMapperBuilderCustomizer configureJackson2ObjectMapperBuilder() {
         return jacksonObjectMapperBuilder ->  {
             jacksonObjectMapperBuilder.serializerByType(LocalDate.class, new JsonSerializer<LocalDate>() {
@@ -110,6 +117,14 @@ public class Application {
                 }
             });
 
+            jacksonObjectMapperBuilder.serializerByType(LocalTime.class, new JsonSerializer<LocalTime>() {
+                @Override
+                public void serialize(LocalTime value, JsonGenerator gen, SerializerProvider serializers)
+                        throws IOException, JsonProcessingException {
+                    gen.writeString(value.toString());
+                }
+            });
+
             jacksonObjectMapperBuilder.deserializerByType(LocalDate.class, new JsonDeserializer<LocalDate>() {
                 @Override
                 public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
@@ -124,6 +139,17 @@ public class Application {
                     return LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneId.systemDefault());
                 }
             });
+
+            jacksonObjectMapperBuilder.deserializerByType(LocalTime.class, new JsonDeserializer<LocalTime>() {
+                @Override
+                public LocalTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
+                    try {
+                        return LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneId.systemDefault()).toLocalTime();
+                    } catch (@SuppressWarnings("unused") Exception e) {}
+                    return LocalTimeDeserializer.INSTANCE.deserialize(p, ctxt);
+                }
+            });
+
         };
     }
 

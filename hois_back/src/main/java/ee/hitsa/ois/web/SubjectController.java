@@ -8,7 +8,6 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.SchoolDepartmentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -59,19 +58,19 @@ public class SubjectController {
     }
 
     @GetMapping("/initSearchFormData")
-    public SubjectSearchFormData getSearchForm(HoisUserDetails user) {
+    public Map<String, List<? extends AutocompleteResult>> getSearchForm(HoisUserDetails user) {
         Long schoolId = user.getSchoolId();
-        SubjectSearchFormData searchFormData = new SubjectSearchFormData();
-        searchFormData.departments = autocompleteService.schoolDepartments(schoolId, new SchoolDepartmentAutocompleteCommand());
-        searchFormData.curricula = autocompleteService.curriculumVersions(schoolId, false);
-        return searchFormData;
+        Map<String, List<? extends AutocompleteResult>> result = new HashMap<>();
+        result.put("departments", autocompleteService.schoolDepartments(schoolId));
+        result.put("curricula", autocompleteService.curriculumVersions(schoolId, null, null));
+        return result;
     }
 
     @GetMapping("/initEditFormData")
-    public Map<String, List<AutocompleteResult>> getEditForm(HoisUserDetails user) {
-        Map<String, List<AutocompleteResult>> result = new HashMap<>();
+    public Map<String, List<? extends AutocompleteResult>> getEditForm(HoisUserDetails user) {
         Long schoolId = user.getSchoolId();
-        result.put("departments", autocompleteService.schoolDepartments(schoolId, new SchoolDepartmentAutocompleteCommand()));
+        Map<String, List<? extends AutocompleteResult>> result = new HashMap<>();
+        result.put("departments", autocompleteService.schoolDepartments(schoolId));
         return result;
     }
 
@@ -80,9 +79,4 @@ public class SubjectController {
         UserUtil.assertSameSchool(user, subject.getSchool());
         subjectService.delete(subject);
     }
-}
-
-class SubjectSearchFormData {
-    public List<AutocompleteResult> departments;
-    public List<? extends AutocompleteResult> curricula;
 }

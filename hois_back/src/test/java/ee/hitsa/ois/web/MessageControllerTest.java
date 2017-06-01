@@ -21,13 +21,13 @@ import ee.hitsa.ois.web.dto.MessageDto;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class MessageControllerTest {
-    
+
+    private static final String BASE_URL = "/message";
+    private static final String TEXT = "MessageControllerTest";
+
     @Autowired
     private TestRestTemplate restTemplate;
-    
-    private final String BASE_URL = "/message";
-    private final String TEXT = "MessageControllerTest";
-    
+
     @Test
     public void searchSent() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/sent");
@@ -40,7 +40,20 @@ public class MessageControllerTest {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
+    @Test
+    public void searchSentAutomatic() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/sent/automatic");
+        uriBuilder.queryParam("subject", Boolean.TRUE);
+        uriBuilder.queryParam("sender", "3211212");
+        uriBuilder.queryParam("sentFrom", "2016-12-31T22:00:00.000Z");
+        uriBuilder.queryParam("sentThru", "2017-01-31T22:00:00.000Z");
+        uriBuilder.queryParam("sort", "sender.lastname,sender.firstname,asc");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
     @Test
     public void searchReceived() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/received");
@@ -53,7 +66,7 @@ public class MessageControllerTest {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void searchReceivedForMainPage() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/received/mainPage");
@@ -63,7 +76,7 @@ public class MessageControllerTest {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void crud() {
         // create
@@ -90,6 +103,8 @@ public class MessageControllerTest {
         Assert.assertNotNull(response.getBody());
         Assert.assertNotNull(response.getBody().getId());
         
+        // TODO: Set read
+        
         // There is no need to test update as we do not edit sent messages
         
         // delete
@@ -98,8 +113,32 @@ public class MessageControllerTest {
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);
     }
+    
+    @Test
+    public void getParents() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/parents");
+        uriBuilder.queryParam("studentGroupId", Long.valueOf(39));
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 
-    private MessageForm getForm() {
+    @Test
+    public void searchPersons() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/persons");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void students() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(BASE_URL + "/students", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    private static MessageForm getForm() {
         MessageForm form = new MessageForm();
         form.setSubject(TEXT);
         form.setContent(TEXT);

@@ -2,6 +2,9 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.time.LocalDate;
 
+import ee.hitsa.ois.validation.DateRange;
+
+@DateRange(from = "sentFrom", thru = "sentThru")
 public class MessageSearchCommand {
     
     private String subject;

@@ -1,0 +1,49 @@
+<md-dialog aria-label="module description dialog" flex="50">
+  <form name="dialogForm" ng-submit="loadData()" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"journal.moduleDescription" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <div class="md-dialog-content form-readonly">
+        <div flex>
+            <div layout="column">
+              <md-input-container flex>
+                <label>{{'module.subthemes' | translate}}</label>
+                <hois-value value="moduleDescription.subthemes"></hois-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'module.totalGradeDescription' | translate}}</label>
+                <hois-value value="moduleDescription.totalGradeDescription"></hois-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'module.gradeADescription' | translate}}</label>
+                <hois-value value="moduleDescription.passDescription"></hois-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'module.grade5Description' | translate}}</label>
+                <hois-value value="moduleDescription.grade5Description"></hois-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'module.grade4Description' | translate}}</label>
+                <hois-value value="moduleDescription.grade4Description"></hois-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'module.grade3Description' | translate}}</label>
+                <hois-value value="moduleDescription.grade3Description"></hois-value>
+              </md-input-container>
+            </div>
+        </div>
+        <span flex></span>
+        <md-dialog-actions layout="row" layout-align="start center">
+          <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+        </md-dialog-actions>
+      </div>
+    </md-dialog-content>
+  </form>
+</md-dialog>

@@ -1,0 +1,106 @@
+        <div>
+          <div flex>
+            <fieldset tabindex="1">
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.abroadStudies' | translate}} *</legend>
+             <div layout="column">
+            <md-input-container layout="row" layout-align="start center" flex="60">
+              <md-radio-group name="isAbroad" ng-model="application.isAbroad" ng-change="isAbroadChanged()" required layout="row">
+                <md-radio-button ng-value="false" aria-label="estonian educational institution">{{ 'application.inEstonianEducationalInstitution' | translate }}</md-radio-button>
+                <md-radio-button ng-value="true" aria-label="abroad educational institution">{{ 'application.inAbroadEducationalInstitution' | translate }}</md-radio-button>
+              </md-radio-group>
+            </md-input-container>
+            <div layout="row" flex="20" md-colors="{color: 'warn-A400'}"  ng-if="applicationForm.$submitted" ng-messages="applicationForm.isAbroad.$error" >
+              <div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
+            </div>
+
+
+          <div layout="row" layout-sm="column" layout-xs="column" ng-hide="application.isAbroad">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'main.educationInstitution' | translate}}</label>
+              <hois-classifier-select ng-model="application.ehisSchool" main-classifier-code="EHIS_KOOL"
+              filter-values="[studentEhisSchool]" by-property="ehisSchool" model-value-attr="code" ng-required="!application.isAbroad"></hois-classifier-select>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" ng-hide="!application.isAbroad">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label class="textInput">{{'main.educationInstitution' | translate}}</label>
+              <input type="text" ng-model="application.abroadSchool" ng-required="application.isAbroad">
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" ng-hide="!application.isAbroad">
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'main.country' | translate}}</label>
+              <hois-classifier-select ng-model="application.country" main-classifier-code="RIIK"
+              filter-values="['RIIK_EST']" model-value-attr="code" ng-required="application.isAbroad"></hois-classifier-select>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <div flex="60" flex-sm="100" flex-xs="100" ng-include="'application/templates/period.html'"
+              ng-init="labelStart='application.abroadStudiesStart';labelEnd='application.abroadStudiesEnd'"></div>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" >
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'main.purposeOfStudies' | translate}}</label>
+              <hois-classifier-select ng-model="application.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"
+                model-value-attr="code" required></hois-classifier-select>
+            </md-input-container>
+          </div>
+
+          <div layout="row" layout-sm="column" layout-xs="column" >
+            <md-input-container flex="60" flex-sm="100" flex-xs="100">
+              <label>{{'main.programmeOfStudies' | translate}}</label>
+              <hois-classifier-select ng-model="application.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"
+                model-value-attr="code" required></hois-classifier-select>
+            </md-input-container>
+          </div>
+		  </div>
+		  </fieldset>
+        </div>
+
+        <div>&nbsp;<div>
+          <div layout="column" flex>
+            <fieldset tabindex="1">
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.subjects' | translate}}</legend>
+              <md-button class="md-raised" href="" ng-click="addPlannedSubjectRow()">{{'main.button.addRow' | translate}}</md-button>
+            <div layout="row" class="top-margin">
+
+
+              <input style="display:none" type="number" readonly name="plannedSubjectLength" ng-model="plannedSubjectLength" ng-model-options="{ getterSetter: true }" min="1"  />
+              <div md-colors="{color: 'warn-A400'}" ng-messages="applicationForm.plannedSubjectLength.$error">
+                <div ng-if="applicationForm.$submitted" ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
+              </div>
+            </div>
+            <table md-table class="secondary-table">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column><span>{{'application.plannedSubject' | translate}} *</span></th>
+                  <th md-column><span>{{'application.substitutableSubject' | translate}} *</span></th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="plannedSubject in application.plannedSubjects | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>
+                    <md-input-container>
+                      <input type="text" ng-model="plannedSubject.name" aria-label="planned subject name" required>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <md-input-container>
+                      <hois-select multiple ng-model="plannedSubject.subjectsSelected" ng-change="subjectsSelected(plannedSubject)"  aria-label="planned subject equivalent subject" values="studentSubjects" required></hois-select>
+                    </md-input-container>
+                  </td>
+                  <td md-cell>
+                    <md-button class="remove nomargin" ng-click="removeFromArray(application.plannedSubjects, plannedSubject)">&times;</md-button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+		</fieldset>	
+          </div>
+        </div>
+		<div>&nbsp;<div>

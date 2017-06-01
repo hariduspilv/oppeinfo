@@ -22,6 +22,10 @@ import ee.hitsa.ois.domain.Classifier;
 @Entity
 @Table(name="curriculum_version_hmodule")
 public class CurriculumVersionHigherModule extends BaseEntityWithId {
+    
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
+    private CurriculumVersion curriculumVersion;
 
     @NotBlank
     @Size(max = 255)
@@ -41,10 +45,10 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
     private String typeNameEn;
 
     @NotNull
-    private Integer totalCredits;
+    private Double totalCredits;
     @NotNull
-    private Integer optionalStudyCredits;
-    private Integer compulsoryStudyCredits;
+    private Double optionalStudyCredits;
+    private Double compulsoryStudyCredits;
     private Integer electiveModulesNumber;
 
     @NotNull
@@ -54,8 +58,9 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier type;
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_version_hmodule_id", nullable = false, updatable = false)
+//    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+//    @JoinColumn(name = "curriculum_version_hmodule_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumVersionHigherModuleSubject> subjects = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -67,6 +72,14 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
 //    @JoinColumn(name = "curriculum_version_hmodule_id", nullable = false, updatable = false)
     private Set<CurriculumVersionHigherModuleSpeciality> specialities = new HashSet<>();
 
+    public CurriculumVersion getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(CurriculumVersion curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
+    }
+
     public Integer getElectiveModulesNumber() {
         return electiveModulesNumber;
     }
@@ -75,11 +88,11 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
         this.electiveModulesNumber = electiveModulesNumber;
     }
 
-    public Integer getCompulsoryStudyCredits() {
+    public Double getCompulsoryStudyCredits() {
         return compulsoryStudyCredits;
     }
 
-    public void setCompulsoryStudyCredits(Integer compulsoryStudyCredits) {
+    public void setCompulsoryStudyCredits(Double compulsoryStudyCredits) {
         this.compulsoryStudyCredits = compulsoryStudyCredits;
     }
 
@@ -147,19 +160,19 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
         this.typeNameEn = typeNameEn;
     }
 
-    public Integer getTotalCredits() {
+    public Double getTotalCredits() {
         return totalCredits;
     }
 
-    public void setTotalCredits(Integer totalCredits) {
+    public void setTotalCredits(Double totalCredits) {
         this.totalCredits = totalCredits;
     }
 
-    public Integer getOptionalStudyCredits() {
+    public Double getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+    public void setOptionalStudyCredits(Double optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 

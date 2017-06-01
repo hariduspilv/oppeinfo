@@ -38,15 +38,12 @@ public class VersionedInvocableHandlerMethod extends ServletInvocableHandlerMeth
         if(StringUtils.hasText(definition.versionPathVariable())) {
             annotation = PathVariable.class;
             matchedValue = definition.versionPathVariable();
-            // TODO assert that other version sources are not set
         } else if(StringUtils.hasText(definition.versionRequestParam())) {
             annotation = RequestParam.class;
             matchedValue = definition.versionRequestParam();
-            // TODO assert that other version sources are not set
         } else if(definition.versionRequestBody()) {
             annotation = RequestBody.class;
             matchedValue = null;
-            // TODO assert that other version sources are not set
         } else {
             throw new IllegalStateException("Unable to determine entity version source");
         }

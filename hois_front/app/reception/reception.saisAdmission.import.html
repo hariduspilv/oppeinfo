@@ -1,0 +1,86 @@
+<div layout-padding>
+  <div flex>
+  <form ng-submit="importAdmissions()" layout="column" name="admissionImportForm">
+    <div flex>
+        <div flex-xs="100" flex-gt-xs="100" layout="column">
+          <!--div class="indentForToast"></div-->
+          <div layout="row">
+          <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
+              <label>{{'reception.admission.saisImportRange' | translate}}</label>
+              <input type="hidden">
+            </md-input-container>
+          <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+              <md-datepicker required ng-model="criteria.createDateFrom" md-max-date="criteria.createDateTo" md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+            </md-input-container>
+          <md-input-container flex="15" flex-md="100" flex-sm="100" flex-xs="100">
+              <md-datepicker required ng-model="criteria.createDateTo" md-min-date="criteria.createDateFrom" md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+            </md-input-container>
+          </div>
+          <div layout="row">
+            <md-button type="submit" class="md-raised md-primary">{{'reception.admission.saisImportAdmissions' | translate}}</md-button>
+          </div>
+      </div>
+    </div>
+  </form>
+  </div>
+</div>
+<div layout-padding ng-hide="failEmpty">
+  <div flex>
+    {{'reception.admission.failedImport' | translate}}
+  </div>
+</div>
+<div layout-padding ng-hide="failEmpty">
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="fail">
+        <thead md-head>
+          <tr md-row>
+            <th md-column >{{'reception.admission.code' | translate}}</th>
+            <th md-column >{{'reception.admission.error' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in fail" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.code}}</td>
+            <td md-cell>{{row.error | translate}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </div>
+</div>
+<div layout-padding ng-hide="successEmpty">
+  <div flex>
+    {{'reception.admission.successfullyImported' | translate}}
+  </div>
+</div>
+<div layout-padding ng-hide="successEmpty">
+  <div flex>
+    <md-table-container>
+      <table md-table>
+        <thead md-head>
+          <tr md-row>
+            <th md-column >{{'reception.admission.code' | translate}}</th>
+            <th md-column >{{'reception.admission.curriculumVersion' | translate}}</th>
+            <th md-column >{{'reception.admission.places' | translate}}</th>
+            <th md-column >{{'reception.admission.language' | translate}}</th>
+            <th md-column >{{'reception.admission.startDate' | translate}}</th>
+            <th md-column >{{'reception.admission.endDate' | translate}}</th>
+            <th md-column >{{'reception.admission.studyForm' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in success" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.code}}</td>
+            <td md-cell>{{::row.curriculumVersion.nameEt}}</td>
+            <td md-cell>{{::row.places}}</td>
+            <td md-cell>{{row.language[currentLanguageNameField()]}}</td>
+            <td md-cell>{{row.periodStart | hoisDate}}</td>
+            <td md-cell>{{row.periodEnd | hoisDate}}</td>
+            <td md-cell>{{row.studyForm[currentLanguageNameField()]}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </div>
+</div>

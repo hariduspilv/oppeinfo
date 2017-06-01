@@ -27,5 +27,13 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
         auth: function (AuthResolver) { return AuthResolver.resolve(); }},
       data: authorizedRoles
+    })
+    .when('/teachers/:id', {
+      templateUrl: 'teacher/teacher.view.html',
+      controller: 'TeacherViewController',
+      controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }},
+      data: authorizedRoles
     });
 });

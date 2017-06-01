@@ -14,9 +14,9 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
@@ -80,7 +80,7 @@ public abstract class EntityUtil {
     @SuppressWarnings({ "unchecked", "rawtypes" })
     public static <E> E bindToEntity(Object command, E entity, ClassifierRepository repository, String...ignoredProperties) {
         List<String> ignored = Arrays.asList(ignoredProperties);
-        Map<String, MainClassCode[]> classifierProperties = new HashMap<>();
+        Map<String, ClassifierRestriction> classifierProperties = new HashMap<>();
         for(PropertyDescriptor spd : BeanUtils.getPropertyDescriptors(command.getClass())) {
             Method readMethod = spd.getReadMethod();
             String propertyName = spd.getName();
@@ -95,8 +95,11 @@ public abstract class EntityUtil {
                         if(ClassUtils.isAssignable(writeMethod.getParameterTypes()[0], readMethod.getReturnType())) {
                             Object value = readMethod.invoke(command);
                             // FIXME check for CharSequence?
-                            if (value instanceof String && ((String)value).isEmpty()) {
-                                value = null;
+                            if (value instanceof String) {
+                                value = ((String) value).trim();
+                                if(((String)value).isEmpty()) {
+                                    value = null;
+                                }
                             } else if(Boolean.class.equals(tpd.getPropertyType()) && value == null) {
                                 // convert null Booleans to false
                                 value = Boolean.FALSE;
@@ -121,7 +124,7 @@ public abstract class EntityUtil {
                             Field propertyField = spd.getReadMethod().getDeclaringClass().getDeclaredField(propertyName);
                             ClassifierRestriction restriction = propertyField.getAnnotation(ClassifierRestriction.class);
                             if(restriction != null) {
-                                classifierProperties.put(propertyName, restriction.value());
+                                classifierProperties.put(propertyName, restriction);
                             }
                         }
                     } catch (Throwable e) {
@@ -165,6 +168,10 @@ public abstract class EntityUtil {
                         Class<?> targetPropertyType = writeMethod.getParameterTypes()[0];
                         if(ClassUtils.isAssignable(targetPropertyType, sourcePropertyType)) {
                             Object value = readMethod.invoke(entity);
+                            if("insertedBy".equals(propertyName) || "changedBy".equals(propertyName) && value instanceof String) {
+                                // strip possible idcode from actual value
+                                value = PersonUtil.stripIdcodeFromFullnameAndIdcode((String)value);
+                            }
                             writeMethod.invoke(dto, value);
                         } else {
                             // special handling for Classifier -> String and BaseEntityWithId -> Long and BaseEntityWithId -> AutocompleteResult
@@ -195,38 +202,105 @@ public abstract class EntityUtil {
         return dto;
     }
 
-    public static <SV, ID> void bindClassifierCollection(Collection<SV> storedValues, Function<SV, ID> idExtractor, Collection<ID> newIds, Function<ID, SV> newValueFactory) {
-        Set<ID> storedIds = storedValues.stream().map(idExtractor).collect(Collectors.toSet());
+    /**
+     * child collection binding when only id is required to set (typically classifier reference).
+     *
+     * @param storedValues
+     * @param idExtractor
+     * @param newIds
+     * @param newValueFactory
+     */
+    public static <SV, ID> void bindEntityCollection(Collection<SV> storedValues, Function<SV, ID> idExtractor, Collection<ID> newIds, Function<ID, SV> newValueFactory) {
+        Set<ID> storedIds = StreamUtil.toMappedSet(idExtractor, storedValues);
 
-        for(ID id : newIds) {
-            if(!storedIds.remove(id)) {
-                storedValues.add(newValueFactory.apply(id));
+        if(newIds != null) {
+            for(ID id : newIds) {
+                if(!storedIds.remove(id)) {
+                    storedValues.add(newValueFactory.apply(id));
+                }
             }
         }
 
-        // remove possible letfovers
-        storedValues.removeIf(t -> !newIds.contains(idExtractor.apply(t)));
+        // remove possible leftovers
+        storedValues.removeIf(t -> storedIds.contains(idExtractor.apply(t)));
     }
 
-    public static void bindClassifiers(Object command, Object entity, Map<String, MainClassCode[]> properties, ClassifierRepository loader) {
+    /**
+     * child collection binding with create, update and remove operations.
+     *
+     * @param storedValues
+     * @param storedIdExtractor
+     * @param newValues
+     * @param newIdExtractor
+     * @param newValueFactory
+     * @param updater
+     */
+    public static <SV, ID, NV> void bindEntityCollection(Collection<SV> storedValues, Function<SV, ID> storedIdExtractor, Collection<NV> newValues, Function<NV, ID> newIdExtractor, Function<NV, SV> newValueFactory, BiConsumer<NV, SV> updater) {
+        Map<ID, SV> mappedStoredValues = StreamUtil.toMap(storedIdExtractor, storedValues);
+
+        if(newValues != null) {
+            for(NV newValue : newValues) {
+                ID id = newIdExtractor.apply(newValue);
+                if(id == null) {
+                    storedValues.add(newValueFactory.apply(newValue));
+                } else {
+                    SV storedValue = mappedStoredValues.remove(id);
+                    if(storedValue == null) {
+                        throw new AssertionFailedException("Cannot find existing entity with id: " + id);
+                    }
+                    if(updater != null) {
+                        updater.accept(newValue, storedValue);
+                    }
+                }
+            }
+        }
+
+        // remove possible leftovers
+        storedValues.removeAll(mappedStoredValues.values());
+    }
+
+    public static void bindClassifiers(Object command, Object entity, Map<String, ClassifierRestriction> properties, ClassifierRepository loader) {
         PropertyAccessor source = PropertyAccessorFactory.forBeanPropertyAccess(command);
         PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);
-        properties.forEach((p, t) -> {
-            String classCode = (String)source.getPropertyValue(p);
+        for(Map.Entry<String, ClassifierRestriction> me : properties.entrySet()) {
+            String p = me.getKey();
+            ClassifierRestriction r = me.getValue();
+            MainClassCode[] t = r.value();
+
+            String classCodeOrValue = (String)source.getPropertyValue(p);
             Classifier current = (Classifier)destination.getPropertyValue(p);
-            if(!Objects.equals(classCode, current != null ? EntityUtil.getCode(current) : null)) {
+
+            String currentClassCodeOrValue = null;
+            if (current != null) {
+                currentClassCodeOrValue = r.useClassifierValue() ? current.getValue() : getCode(current);
+            }
+
+            if(!Objects.equals(classCodeOrValue, currentClassCodeOrValue)) {
                 Classifier c;
-                if(classCode == null || classCode.isEmpty()) {
+                if(classCodeOrValue == null || classCodeOrValue.isEmpty()) {
                     c = null;
                 } else {
-                    c = validateClassifier(loader.getOne(classCode), t);
+                    if (r.useClassifierValue()) {
+                        if (t.length != 1) {
+                            throw new RuntimeException("only one mainClassCode is allowed, when useClassifierValue=true.");
+                        }
+                        c = loader.findByValueAndMainClassCode(classCodeOrValue, t[0].name());
+                    } else {
+                        c = loader.getOne(classCodeOrValue);
+                    }
+                    validateClassifier(c, t);
+
                 }
                 destination.setPropertyValue(p, c);
             }
-        });
+        }
     }
 
     public static Classifier validateClassifier(Classifier c, MainClassCode... domains) {
+        if (c == null) {
+            return null;
+        }
+
         String mainClassCode = c.getMainClassCode();
         for(MainClassCode domain : domains) {
             if(domain.name().equals(mainClassCode)) {
@@ -242,7 +316,7 @@ public abstract class EntityUtil {
         PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);
         for(String property : properties) {
             //usually Long is used in DTO classes to have references to other objects, but
-            //sometimes ee.hitsa.ois.web.dto.AutoCompleteResult is also used.
+            //sometimes ee.hitsa.ois.web.dto.AutocompleteResult is also used.
             Long id = getIdFromValue(source.getPropertyValue(property));
             destination.setPropertyValue(property, id != null ? repository.getOne(id) : null);
         }

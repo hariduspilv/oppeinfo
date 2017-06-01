@@ -1,0 +1,65 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form name="journalForm" ng-submit="journalForm.$valid && loadData()" novalidate>
+      <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.studyYear' | translate}}</label>
+          <hois-classifier-value ng-model="journal.studyYear" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'main.status' | translate}}</label>
+          <hois-classifier-value ng-model="journal.status" main-classifier-code="PAEVIK_STAATUS"></hois-classifier-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div class="form-readonly" flex="25" flex-sm="100" flex-xs="100">
+          <md-input-container flex>
+            <label class="textInput">{{'journal.label' | translate}}</label>
+            <hois-value value="journal.nameEt"></hois-value>
+          </md-input-container>
+        </div>
+
+        <div ng-if="auth.isAdmin()" flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container style="margin-top:-1em;">
+            <label>{{'journal.endDate' | translate}}</label>
+            <md-datepicker ng-model="journal.endDate"></md-datepicker>
+          </md-input-container>
+          <a href="" class="md-button" style="margin-top:-1em;" ng-click="saveEndDate()" class="md-raised">{{'journal.saveEndDate' | translate}}</a>
+        </div>
+      </div>
+
+      <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.studentGroups' | translate}}</label>
+          <hois-value value="journal.studentGroups.join(', ')"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.teachers' | translate}}</label>
+          <hois-value value="journal.journalTeachers.join(', ')"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div class="form-readonly" layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'journal.modules' | translate}}</label>
+          <hois-value value="showModuleNames(journal.curriculumModules)"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'journal.plannedAndEnteredCapacities' | translate}}</label>
+          <hois-value value="journal.plannedHours + '/' + journal.usedHours"></hois-value>
+        </md-input-container>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div ng-if="journal.hasJournalStudents">
+  <div ng-include="'journal/journal.edit.html'" ng-controller="JournalEditController as journalEditController"></div>
+</div>
+<div ng-if="!journal.hasJournalStudents">
+  <div ng-include="'journal/journal.student.selection.html'" ng-controller="JournalStudentSelectionController as journalStudentSelectionController"></div>
+</div>

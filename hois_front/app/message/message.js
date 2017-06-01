@@ -1,58 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
-  $routeProvider
-      .when('/messages/sent', {
-        templateUrl: 'message/message.sent.html',
-        controller: 'messageSentController',
-        controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      })
-      .when('/messages/received', {
-        templateUrl: 'message/message.received.html',
-        controller: 'messageReceivedController',
-        controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      }).when('/message/:id/view', {
-        templateUrl: 'message/message.view.html',
-        controller: 'messageViewController',
-        controllerAs: 'controller',
-        resolve: {translationLoaded: function($translate) { return $translate.onReady(); }
-        },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      }).when('/message/:id/respond', {
-        templateUrl: 'message/message.respond.html',
-        controller: 'messageRespondController',
-        controllerAs: 'controller',
-        resolve: {translationLoaded: function($translate) { return $translate.onReady(); }
-        },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      }).when('/message/new', {
-        templateUrl: 'message/message.new.html',
-        controller: 'messageNewController',
-        controllerAs: 'controller',
-        resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); },
-            auth: function (AuthResolver) { return AuthResolver.resolve(); }
-        },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      });
-}]).controller('messageSentController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
+angular.module('hitsaOis')
+.controller('messageSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route', function ($scope, QueryUtils, DataUtils, $route) {
     $scope.currentNavItem = 'message.sent';
     QueryUtils.createQueryForm($scope, '/message/sent', {order: "-inserted"});
     $scope.loadData();
+    DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
+    $scope.auth = $route.current.locals.auth;
+    $scope.backUrlRef = "sent";
 
     $scope.showReceivers = function(row, bool) {
         var name = "";
@@ -66,20 +21,56 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         return name;
     };
 
-}]).controller('messageReceivedController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
+}]).controller('messageAutomaticSentController', ['$scope', 'QueryUtils', 'DataUtils', '$route',function ($scope, QueryUtils, DataUtils, $route) {
+    $scope.currentNavItem = 'message.automaticSent';
+    QueryUtils.createQueryForm($scope, '/message/sent/automatic', {order: "-inserted"});
+    $scope.loadData();
+    DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
+    $scope.auth = $route.current.locals.auth;
+
+    $scope.backUrlRef = "automaticSent";
+
+    $scope.showReceivers = function(row, bool) {
+        var name = "";
+        if( row.receivers) {
+            name = row.receivers.join("; ");
+            var MAX_INITIAL_LENGTH = 20;
+            if(!bool && name.length > MAX_INITIAL_LENGTH) {
+                name = name.substring(0, MAX_INITIAL_LENGTH) + "...";
+            }
+        }
+        return name;
+    };
+
+}]).controller('messageReceivedController', ['$scope', 'QueryUtils', 'DataUtils', '$route', function ($scope, QueryUtils, DataUtils, $route) {
     $scope.currentNavItem = 'message.received';
     QueryUtils.createQueryForm($scope, '/message/received', {order: "-inserted"});
     $scope.loadData();
+    DataUtils.convertStringToDates($scope.criteria, ['sentFrom', 'sentThru']);
+    $scope.auth = $route.current.locals.auth;
+
+
 }]).controller('messageViewController', ['$scope', 'QueryUtils', '$route', 'DataUtils', '$resource', 'config', function ($scope, QueryUtils, $route, DataUtils, $resource, config) {
     var baseUrl = '/message';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
 
     var backUrl = $route.current.params.backUrl;
-    $scope.formState = {
-        backUrl: backUrl === "received" ?  "#/messages/received" : "#/messages/sent"
-    };
-    $scope.isSent = $scope.formState.backUrl === "#/messages/sent";
+    $scope.formState = {};
+    
+    switch(backUrl) {
+        case "received":
+            $scope.formState.backUrl = "#/messages/received";
+            $scope.isSent = false;
+            break;
+        case "automaticSent":
+            $scope.formState.backUrl = "#/messages/automatic/sent";
+            $scope.isSent = true;
+            break;
+        default: 
+            $scope.isSent = true;
+            $scope.formState.backUrl = "#/messages/sent";
+    }
 
     function afterLoad() {
         DataUtils.convertStringToDates($scope.record, ['inserted']);
@@ -148,9 +139,18 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     $scope.auth = $route.current.locals.auth;
 
     var backUrl = $route.current.params.backUrl;
-    $scope.formState = {
-        backUrl: backUrl && backUrl === "received" ? "#/messages/received" : "#/messages/sent"
-    };
+    $scope.formState = {};
+
+    switch(backUrl) {
+        case "received":
+            $scope.formState.backUrl = "#/messages/received";
+            break;
+        case "automaticSent":
+            $scope.formState.backUrl = "#/messages/automatic/sent";
+            break; 
+        default: 
+            $scope.formState.backUrl = "#/messages/sent";
+    }
 
     // $scope.targetGroups = ["ROLL_O", "ROLL_T", "ROLL_L", "ROLL_P"];
     if($scope.auth.isAdmin()) {
@@ -169,7 +169,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     $scope.studyGroupStudentsParents = [];
 
     function getStudentGroups() {
-        $resource(config.apiUrl + '/studentgroups', {curriculums: $scope.curriculum, studyForm: $scope.studyForm, size: 1000, sort: 'code'}).get().$promise.then(function(response){
+        QueryUtils.endpoint('/studentgroups').search({curriculums: $scope.curriculum, studyForm: $scope.studyForm, size: 1000, sort: 'code'}).$promise.then(function(response){
             $scope.studentGroups = response.content.map(function(sg){
                 return {
                     id: sg.id,
@@ -186,17 +186,34 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     }
 
     $scope.addReceiver = function(receiver) {
-        if(receiver && !isPersonAdded(receiver.id)) {
-            $scope.receivers.push({
-                personId: receiver.id,
+        if(receiver && !isPersonAdded(receiver.personId)) {
+            //TODO: array.map is not needed anymore except for addedWithAutocomplete property!!
+            var newReceiver = {
+                studentId: receiver.id,
+                personId: receiver.personId,
                 idcode: receiver.idcode,
-                fullname: receiver.name,
+                fullname: receiver.fullname,
                 role: $scope.targetGroup ? [$scope.targetGroup] : receiver.role,
                 addedWithAutocomplete: true
-            });
+            };
+            if($scope.auth.isTeacher()) {
+                newReceiver.curriculumObject = receiver.curriculum;
+                newReceiver.studentGroupObject = receiver.studentGroup;
+            }
+            $scope.receivers.push(newReceiver);
+            if($scope.targetGroup === 'ROLL_T') {
+                getHisParents(newReceiver);
+            }
         }
         $scope.receiver = undefined;
     };
+
+    function getHisParents(newReceiver) {
+        $resource(config.apiUrl + '/message/' +newReceiver.studentId + '/parents').query().$promise.then(function(response){
+            var list = parentsPageToReceiverOptionList(response, true).filter(function(p){return !isPersonAdded(p.personId);});
+            $scope.receivers = $scope.receivers.concat(list);
+        });
+    }
 
     function isPersonAdded(personId) {
         return $scope.receivers.filter(function (r){return r.personId === personId;}).length > 0;
@@ -204,26 +221,32 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
 
     $scope.removeReceiver = function(receiver) {
         ArrayUtils.remove($scope.receivers, receiver);
+        if(receiver.role.length === 1 && receiver.role[0] === 'ROLL_T') {
+            $scope.receivers = $scope.receivers.filter(function(r){return r.studentId !== receiver.studentId;});
+        }
     };
 
     function getStudents(query) {
         query.size = 1000;
-        $resource(config.apiUrl + "/students", query).get().$promise.then(function(response){
+        $resource(config.apiUrl + "/" + baseUrl + "/students", query).query().$promise.then(function(response){
+            //TODO: array.map is not needed anymore
             var list = studentListToReceiverOption(response).filter(function(s){return !isPersonAdded(s.personId);});
             $scope.receivers = $scope.receivers.concat(list);
         });
     }
 
-    function studentListToReceiverOption(page) {
-        var list = page.content.map(function(s){
+    function studentListToReceiverOption(response) {
+        var list = response.map(function(s){
             return {
+                studentId: s.id,
                 personId: s.personId,
                 idcode: s.idcode,
                 fullname: s.fullname,
-                role: ["ROLL_T"],
-                curriculum: s.curriculum.id,
-                studentGroup: s.studentGroup.id, 
-                studyForm: s.studyForm
+                // role: ["ROLL_T"],
+                role: s.role, 
+                studyForm: s.studyForm,
+                curriculum: s.curriculum,
+                studentGroup: s.studentGroup, 
             };
         });
         return list;
@@ -231,16 +254,30 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
 
     function filterReceivers() {
         $scope.receivers = $scope.receivers.filter(function(r){
-            return includesOrEmpty(r.role, $scope.targetGroup) && (r.addedWithAutocomplete || 
-            includesOrEmpty($scope.curriculum, r.curriculum) && 
-            includesOrEmpty($scope.studentGroup, r.studentGroup) && 
+            return (isStudentsParent(r) || includesOrEmpty(r.role, $scope.targetGroup)) && 
+            (r.addedWithAutocomplete || 
+            includesOrEmpty($scope.curriculum, r.curriculum ? r.curriculum.id : null) && 
+            includesOrEmpty($scope.studentGroup, r.studentGroup ? r.studentGroup.id : null) && 
             includesOrEmpty($scope.studyForm, r.studyForm) && 
-            includesOrEmpty($scope.studyGroupStudentsParents, r.studentGroup));
+            includesOrEmpty($scope.studyGroupStudentsParents, r.studentGroup ? r.studentGroup.id : null));
         });
+    }
+    /**
+     * do not remove student's parents, if student is added with autocomplete
+     */
+    function isStudentsParent(r) {
+        return $scope.targetGroup === 'ROLL_T' && includesOrEmpty(r.role, 'ROLL_L');
     }
 
     $scope.tarGetGroupChanged = function() {
-        filterReceivers();
+        /*
+        filterReceivers() did not work in the following scenario: 
+        user adds a student which has representative and then selects Parents as target group.
+        In that case student's representative hadn't been removed from the list.
+        So now list of receivers is just completely cleared.
+        */
+        // filterReceivers();
+        $scope.receivers = [];
         $scope.curriculum = [];
         $scope.studentGroup = [];
         $scope.studyForm = [];
@@ -293,7 +330,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             } else {
                 filterReceivers();
                 if(anyFilterApplied()) {
-                    getParents({studentGroupId: $scope.studyGroupStudentsParents, size: 1000});
+                    getParents({studentGroupId: $scope.studyGroupStudentsParents});
                 } else {
                     removeAllStudents();
                 }
@@ -302,21 +339,24 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     );
 
     function getParents(query) {
-        $resource(config.apiUrl + '/message/parents', query).get().$promise.then(function(response){
-            console.log(response);
-            var list = parentsPageToReceiverOptionList(response).filter(function(p){return !isPersonAdded(p.personId);});
+        $resource(config.apiUrl + '/message/parents', query).query().$promise.then(function(response){
+            //TODO: array.map is not needed anymore
+            var list = parentsPageToReceiverOptionList(response, false).filter(function(p){return !isPersonAdded(p.personId);});
             $scope.receivers = $scope.receivers.concat(list);
         });
     }
 
-    function parentsPageToReceiverOptionList(page) {
-        var list = page.content.map(function(p){
+    function parentsPageToReceiverOptionList(response, addedWithAutocomplete) {
+        var list = response.map(function(p){
             return {
+                studentId: p.id,
                 personId: p.personId,
                 idcode: p.idcode,
                 fullname: p.fullname,
                 role: ["ROLL_L"],
                 studentGroup: p.studentGroup, 
+                curriculum: p.curriculum,
+                addedWithAutocomplete: addedWithAutocomplete
             };
         });
         return list;
@@ -343,14 +383,14 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     }
 
     $scope.querySearch = function (text) {
-        var lookup = QueryUtils.endpoint('/message/persons');
+        var url = '/message/persons';
+        var lookup = QueryUtils.endpoint(url);
         var deferred = $q.defer();
-        lookup.search({
+        lookup.query({
             role: $scope.targetGroup,
-            name: text,
-            school: $scope.targetGroup === 'ROLL_P' ? undefined : $rootScope.currentUser.school.ehisSchool
+            name: text
         }, function (data) {
-            deferred.$$resolve(data.content);
+            deferred.resolve(data);
         });
         return deferred.promise;
     };

@@ -1,5 +1,5 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <form ng-submit="loadData()" layout="column" novalidate>
+    <form ng-submit="loadData()" layout="column" novalidate ng-if="!auth.isStudent() && !auth.isParent()">
         <md-input-container>
             <label>{{'certificate.type' | translate}}</label>
             <hois-classifier-select ng-model="criteria.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" multiple></hois-classifier-select>
@@ -8,11 +8,11 @@
             <label class="textInput">{{'certificate.headline' | translate}}</label>
             <input ng-model="criteria.headline" type="text">
         </md-input-container>
-        <md-input-container ng-if="!auth.isStudent()">
+        <md-input-container>
             <label class="textInput">{{'certificate.studentName' | translate}}</label>
             <input ng-model="criteria.name" type="text">
         </md-input-container>
-        <md-input-container ng-if="!auth.isStudent()">
+        <md-input-container>
             <label class="textInput">{{'certificate.idcode' | translate}}</label>
             <input ng-model="criteria.idcode" type="text" md-minlength="11" md-maxlength="11">
         </md-input-container>
@@ -55,9 +55,8 @@
             <th md-column md-order-by="c.headline">{{'certificate.headline' | translate}}</th>
             <th md-column md-order-by="c.whom">{{'certificate.whom' | translate}}</th>
             <th md-column md-order-by="c.inserted">{{'certificate.inserted' | translate}}</th>
-            <th md-column md-order-by="" ng-if="!auth.isStudent()">{{'certificate.studentName' | translate}}</th>
-            <th md-column></th>
-            <!--    student.person.lastname,student.person.firstname     -->
+            <th md-column md-order-by="sortablename" ng-if="!auth.isStudent() && !auth.isParent()">{{'certificate.studentName' | translate}}</th>
+            <th md-column ng-if="!auth.isStudent() && !auth.isParent()"></th>
           </tr>
         </thead>
         <tbody md-body>
@@ -66,28 +65,37 @@
             <td md-cell>{{::row.certificateNr}}</td>
             <td md-cell>{{::row.headline}}</td>
             <td md-cell>{{::row.whom}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
+            <td md-cell>{{row.inserted | hoisDate}}</td>
 
-            <td md-cell ng-if="!auth.isStudent()">
+            <td md-cell ng-if="!auth.isStudent() && !auth.isParent()">
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{row.studentId}}/main" ng-disabled="!row.studentId">{{::row.studentFullname}}</md-button>
             </td>
-
-            <!--<td md-cell>
-                <md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.student.id}}/main">{{::row.student.fullname}}</md-button>
-            </td>-->
-            <td md-cell>
+            <td md-cell ng-if="!auth.isStudent() && !auth.isParent()">
               <md-button md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
-
-
-
-
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+    <md-table-pagination ng-if="!auth.isStudent() && !auth.isParent()" md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
   </div>
 </div>
+
+<table md-table class="secondary-table" ng-if="auth.isStudent()">
+    <thead md-head>
+        <tr md-row>
+            <th md-column>{{'certificate.type' | translate}}</th>
+            <th md-column></th>
+        </tr>
+    </thead>
+    <tbody md-body>
+    <tr md-row ng-repeat="type in types" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>{{currentLanguageNameField(type)}}</td>
+        <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::type.code}}/new">{{'certificate.order' | translate}}</md-button>
+        </td>
+    </tr>
+    </tbody>
+</table>

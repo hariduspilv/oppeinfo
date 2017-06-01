@@ -1,0 +1,60 @@
+<md-dialog aria-label="specialty add dialog" flex="30" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"curriculum.specialty.dialogLabel" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+	  <div layout="column">
+        <md-input-container flex>
+            <label>{{'curriculum.specialty.nameEt' | translate}}</label>
+            <input ng-model="data.nameEt" type="text" required md-maxlength="255" ng-readonly="readOnly">
+        </md-input-container>
+        <md-input-container flex>
+            <label>{{'curriculum.specialty.nameEn' | translate}}</label>
+            <input ng-model="data.nameEn" type="text" required md-maxlength="255" ng-readonly="readOnly">
+        </md-input-container>
+        <md-input-container flex>
+            <label>{{'curriculum.specialty.credits' | translate}}</label>
+            <input name="credits" ng-model="data.credits" type="number" required min="0" max="{{maxCredits}}" ng-readonly="readOnly">
+           <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
+                <div ng-message="min">
+                    {{'main.messages.error.positive' | translate}}
+                </div>
+                <div ng-message="max">
+                    {{'curriculum.specialty.creditsError' | translate}} ({{maxCredits}} EAP)
+                </div>
+            </div>
+        </md-input-container>
+        <md-input-container flex>
+            <label>{{'main.additionalInfo' | translate}}</label>
+            <textarea ng-model="data.description" md-maxlength="20000" max-rows="10"  ng-readonly="readOnly"></textarea>
+        </md-input-container>
+        <md-input-container flex>
+        <label>{{'occupation.givenOccupation' | translate}}</label>
+        <hois-classifier-select ng-model="data.occupation" ng-change="occupationSelected()" main-classifier-code="KUTSE" model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
+        </md-input-container>
+        <md-input-container flex ng-show="data.occupation">
+            <label>{{'curriculum.specialty.specialtyReferenceEt' | translate}}</label>
+            <input ng-model="data.occupationEt" type="text" md-maxlength="255" ng-required="data.occupation"  ng-readonly="readOnly">
+        </md-input-container>
+        <md-input-container flex ng-show="data.occupation">
+            <label>{{'curriculum.specialty.specialtyReferenceEn' | translate}}</label>
+            <input ng-model="data.occupationEn" type="text" md-maxlength="255" ng-required="data.occupation" ng-readonly="readOnly">
+        </md-input-container>
+      </div>
+	  </div>
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!readOnly">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

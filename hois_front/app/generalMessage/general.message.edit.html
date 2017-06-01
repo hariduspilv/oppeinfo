@@ -12,30 +12,29 @@
       </md-input-container>
 
       <div layout="row">
-        <md-input-container flex="20">
-          <label>{{'main.validityPeriod' | translate}}</label>
-          <input type="hidden">
-        </md-input-container>
-        <div flex="33">
+        <div flex="100">
           <md-input-container flex>
-            <md-datepicker ng-model="record.validFrom" md-placeholder="{{'generalmessage.validFrom' | translate}}" required></md-datepicker>
+			<label>{{'generalmessage.validFrom' | translate}}</label>
+            <md-datepicker ng-model="record.validFrom"></md-datepicker>
           </md-input-container>
-          <md-input-container flex>
-            <md-datepicker ng-model="record.validThru" md-min-date="record.validFrom" md-placeholder="{{'generalmessage.validThru' | translate}}"></md-datepicker>
+          <md-input-container flex flex-offset="5">
+			<label>{{'generalmessage.validThru' | translate}}</label>
+            <md-datepicker ng-model="record.validThru" md-min-date="record.validFrom"></md-datepicker>
           </md-input-container>
         </div>
       </div>
 
-      <md-list>
-        <md-subheader>{{'generalmessage.targets' | translate}}&nbsp;*</md-subheader>
-        <md-list-item ng-repeat="role in roleDefs">
+      <div>&nbsp;</div>
+	  <fieldset tabindex="1">
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'generalmessage.targets' | translate}} *</legend>
+        <div layout="column" class="common-label" ng-repeat="role in roleDefs">
           <span>
             <md-checkbox ng-model="role._selected">
               {{currentLanguageNameField(role)}}
             </md-checkbox>
           </span>
-        </md-list-item>
-      </md-list>
+		</div>  
+	  </fieldset>
     </form>
 
     <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>

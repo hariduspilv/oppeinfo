@@ -14,6 +14,7 @@ CREATE SEQUENCE user_rights_id_seq START 1010;
 CREATE SEQUENCE curriculum_id_seq START 101;
 CREATE SEQUENCE curriculum_grade_id_seq START 101;
 CREATE SEQUENCE teacher_occupation_id_seq START 101;
+CREATE SEQUENCE journal_entry_capacity_type_id_seq START 101;
 CREATE SEQUENCE building_id_seq START 101;
 CREATE SEQUENCE curriculum_study_lang_id_seq START 101;
 CREATE SEQUENCE curriculum_occupation_id_seq START 101;
@@ -36,16 +37,22 @@ CREATE SEQUENCE curriculum_module_id_seq START 101;
 CREATE SEQUENCE curriculum_module_competence_id_seq START 101;
 CREATE SEQUENCE curriculum_module_occupation_id_seq START 101;
 CREATE SEQUENCE school_school_id_seq START 1020;
+CREATE SEQUENCE lesson_time_building_group_id_seq START 101;
+CREATE SEQUENCE lesson_time_id_seq START 101;
+CREATE SEQUENCE lesson_time_building_id_seq START 101;
 CREATE SEQUENCE curriculum_joint_partners_id_seq START 101;
+CREATE SEQUENCE subject_study_period_student_group_id_seq START 101;
 CREATE SEQUENCE school_study_level_id_seq START 101;
 CREATE SEQUENCE subject_id_seq START 101;
 CREATE SEQUENCE subject_connect_id_seq START 101;
 CREATE SEQUENCE subject_lang_id_seq START 101;
+CREATE SEQUENCE sais_application_grade_id_seq START 101;
 CREATE SEQUENCE curriculum_occupation_speciality_id_seq START 101;
 CREATE SEQUENCE curriculum_module_outcomes_id_seq START 101;
 CREATE SEQUENCE directive_coordinator_id_seq START 101;
 CREATE SEQUENCE general_message_target_id_seq START 101;
 CREATE SEQUENCE general_message_id_seq START 101;
+CREATE SEQUENCE sais_application_other_data_id_seq START 101;
 CREATE SEQUENCE student_id_seq START 101;
 CREATE SEQUENCE student_group_id_seq START 101;
 CREATE SEQUENCE curriculum_version_id_seq START 101;
@@ -54,6 +61,7 @@ CREATE SEQUENCE curriculum_version_hmodule_id_seq START 101;
 CREATE SEQUENCE curriculum_version_elective_module_id_seq START 101;
 CREATE SEQUENCE curriculum_version_hmodule_subject_id_seq START 101;
 CREATE SEQUENCE curriculum_version_hmodule_speciality_id_seq START 101;
+CREATE SEQUENCE subject_study_period_capacity_id_seq START 101;
 CREATE SEQUENCE curriculum_version_omodule_id_seq START 101;
 CREATE SEQUENCE curriculum_version_omodule_theme_id_seq START 101;
 CREATE SEQUENCE curriculum_version_omodule_outcomes_id_seq START 101;
@@ -64,25 +72,50 @@ CREATE SEQUENCE teacher_id_seq START 101;
 CREATE SEQUENCE student_representative_id_seq START 101;
 CREATE SEQUENCE teacher_qualification_id_seq START 101;
 CREATE SEQUENCE directive_id_seq START 101;
+CREATE SEQUENCE ws_sais_log_id_seq START 101;
 CREATE SEQUENCE directive_student_id_seq START 101;
 CREATE SEQUENCE teacher_position_ehis_id_seq START 101;
 CREATE SEQUENCE student_representative_application_id_seq START 101;
 CREATE SEQUENCE teacher_mobility_id_seq START 101;
+CREATE SEQUENCE ws_sais_log_detail_id_seq START 101;
 CREATE SEQUENCE study_period_id_seq START 101;
 CREATE SEQUENCE study_year_id_seq START 101;
 CREATE SEQUENCE study_period_event_id_seq START 101;
+CREATE SEQUENCE lesson_plan_id_seq START 101;
+CREATE SEQUENCE ws_ehis_student_log_id_seq START 101;
+CREATE SEQUENCE lesson_plan_module_id_seq START 101;
+CREATE SEQUENCE journal_id_seq START 101;
 CREATE SEQUENCE application_file_id_seq START 101;
 CREATE SEQUENCE application_planned_subject_id_seq START 101;
 CREATE SEQUENCE application_planned_subject_equivalent_id_seq START 101;
+CREATE SEQUENCE journal_omodule_theme_id_seq START 101;
+CREATE SEQUENCE journal_teacher_id_seq START 101;
+CREATE SEQUENCE journal_capacity_type_id_seq START 101;
+CREATE SEQUENCE journal_capacity_id_seq START 101;
 CREATE SEQUENCE message_template_id_seq START 101;
 CREATE SEQUENCE certificate_id_seq START 101;
 CREATE SEQUENCE student_history_id_seq START 101;
+CREATE SEQUENCE protocol_id_seq START 101;
 CREATE SEQUENCE application_id_seq START 101;
+CREATE SEQUENCE protocol_vdata_id_seq START 101;
+CREATE SEQUENCE protocol_student_id_seq START 101;
+CREATE SEQUENCE protocol_student_history_id_seq START 101;
+CREATE SEQUENCE study_year_schedule_legend_id_seq START 101;
+CREATE SEQUENCE study_year_schedule_id_seq START 101;
 CREATE SEQUENCE message_id_seq START 101;
 CREATE SEQUENCE message_receiver_id_seq START 101;
 CREATE SEQUENCE sais_admission_id_seq START 101;
 CREATE SEQUENCE sais_application_graduated_school_id_seq START 101;
 CREATE SEQUENCE sais_application_id_seq START 101;
+CREATE SEQUENCE ws_ehis_teacher_log_id_seq START 101;
+CREATE SEQUENCE subject_study_period_plan_capacity_id_seq START 101;
+CREATE SEQUENCE subject_study_period_plan_id_seq START 101;
+CREATE SEQUENCE subject_study_period_plan_curriculum_id_seq START 101;
+CREATE SEQUENCE subject_study_period_plan_studyform_id_seq START 101;
+CREATE SEQUENCE journal_student_id_seq START 101;
+CREATE SEQUENCE journal_entry_id_seq START 101;
+CREATE SEQUENCE journal_entry_student_id_seq START 101;
+CREATE SEQUENCE journal_entry_student_history_id_seq START 101;
 
 -- ----------------------------
 -- Table structure for application
@@ -254,7 +287,7 @@ CREATE TABLE "public"."certificate" (
 "content" text COLLATE "default" NOT NULL,
 "certificate_nr" varchar(20) COLLATE "default",
 "signatory_name" varchar(100) COLLATE "default" NOT NULL,
-"signatory_idcode" varchar(20) COLLATE "default" NOT NULL,
+"signatory_idcode" varchar(11) COLLATE "default" NOT NULL,
 "inserted" timestamp(6) NOT NULL,
 "changed" timestamp(6),
 "version" int4 NOT NULL,
@@ -263,7 +296,7 @@ CREATE TABLE "public"."certificate" (
 "wd_id" int8,
 "wd_url" text COLLATE "default",
 "status_code" varchar(100) COLLATE "default" NOT NULL,
-"other_idcode" varchar(20) COLLATE "default",
+"other_idcode" varchar(11) COLLATE "default",
 "other_name" varchar(100) COLLATE "default"
 )
 WITH (OIDS=FALSE)
@@ -385,7 +418,7 @@ CREATE TABLE "public"."curriculum" (
 "draft_text" varchar(4000) COLLATE "default",
 "specialization" varchar(4000) COLLATE "default",
 "is_joint" bool NOT NULL,
-"optional_study_credits" numeric(4,1) NOT NULL,
+"optional_study_credits" numeric(4,1),
 "practice_description" varchar(20000) COLLATE "default",
 "final_exam_description" varchar(4000) COLLATE "default",
 "optional_study_description" varchar(4000) COLLATE "default",
@@ -393,7 +426,7 @@ CREATE TABLE "public"."curriculum" (
 "description" varchar(20000) COLLATE "default",
 "ehis_status_code" varchar(100) COLLATE "default",
 "contact_person" varchar(1000) COLLATE "default",
-"valid_from" date NOT NULL,
+"valid_from" date,
 "valid_thru" date,
 "status_code" varchar(100) COLLATE "default" NOT NULL,
 "joint_mentor_code" varchar(100) COLLATE "default",
@@ -552,7 +585,7 @@ DROP TABLE IF EXISTS "public"."curriculum_joint_partners";
 CREATE TABLE "public"."curriculum_joint_partners" (
 "id" int4 DEFAULT nextval('curriculum_joint_partners_id_seq'::regclass) NOT NULL,
 "is_abroad" bool NOT NULL,
-"contract_et" varchar(1000) COLLATE "default" NOT NULL,
+"contract_et" varchar(1000) COLLATE "default",
 "contract_en" varchar(1000) COLLATE "default",
 "supervisor" varchar(255) COLLATE "default",
 "name_et" varchar(255) COLLATE "default",
@@ -1278,7 +1311,9 @@ CREATE TABLE "public"."directive_student" (
 "abroad_school" varchar(255) COLLATE "default",
 "application_id" int8,
 "person_id" int8,
-"student_history_id" int8
+"student_history_id" int8,
+"sais_application_id" int8,
+"nominal_study_end" date
 )
 WITH (OIDS=FALSE)
 
@@ -1311,6 +1346,7 @@ COMMENT ON COLUMN "public"."directive_student"."abroad_school" IS 'välismaa õp
 COMMENT ON COLUMN "public"."directive_student"."application_id" IS 'viide avaldusele';
 COMMENT ON COLUMN "public"."directive_student"."person_id" IS 'viide isikule, kasutatakse immatr. käskkirja puhul';
 COMMENT ON COLUMN "public"."directive_student"."student_history_id" IS 'viide õppuri ajaloo tabelile';
+COMMENT ON COLUMN "public"."directive_student"."sais_application_id" IS 'viide sais avaldusele';
 
 -- ----------------------------
 -- Table structure for general_message
@@ -1358,6 +1394,400 @@ WITH (OIDS=FALSE)
 COMMENT ON TABLE "public"."general_message_target" IS 'üldteate sihtgrupid';
 COMMENT ON COLUMN "public"."general_message_target"."general_message_id" IS 'viide üldteatele';
 COMMENT ON COLUMN "public"."general_message_target"."role_code" IS 'rollide klassifikaator';
+
+-- ----------------------------
+-- Table structure for journal
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal";
+CREATE TABLE "public"."journal" (
+"id" int8 DEFAULT nextval('journal_id_seq'::regclass) NOT NULL,
+"school_id" int8 NOT NULL,
+"name_et" varchar(255) COLLATE "default" NOT NULL,
+"study_year_id" int8 NOT NULL,
+"assessment_code" varchar(100) COLLATE "default" NOT NULL,
+"group_proportion_code" varchar(100) COLLATE "default" NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"status_code" varchar(100) COLLATE "default" NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"end_date" date
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal" IS 'päevik';
+COMMENT ON COLUMN "public"."journal"."school_id" IS 'viide õppeasutusele';
+COMMENT ON COLUMN "public"."journal"."name_et" IS 'päeviku nimi';
+COMMENT ON COLUMN "public"."journal"."study_year_id" IS 'viide õppeaastale';
+COMMENT ON COLUMN "public"."journal"."assessment_code" IS 'viide klassifikaatorile KUTSEHINDAMISVIIS';
+COMMENT ON COLUMN "public"."journal"."group_proportion_code" IS 'viide klassifikaatorile PAEVIK_GRUPI_JAOTUS';
+COMMENT ON COLUMN "public"."journal"."status_code" IS 'viide klassifikaatorile PAEVIK_STAATUS';
+COMMENT ON COLUMN "public"."journal"."end_date" IS 'päeviku lõppkuupäev';
+
+-- ----------------------------
+-- Table structure for journal_capacity
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal_capacity";
+CREATE TABLE "public"."journal_capacity" (
+"id" int8 DEFAULT nextval('journal_capacity_id_seq'::regclass) NOT NULL,
+"journal_id" int8 NOT NULL,
+"journal_capacity_type_id" int8 NOT NULL,
+"study_period_id" int8 NOT NULL,
+"week_nr" int2,
+"hours" int2 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"version" int4 NOT NULL
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal_capacity" IS 'päeviku mahud';
+COMMENT ON COLUMN "public"."journal_capacity"."journal_id" IS 'viide päevikule';
+COMMENT ON COLUMN "public"."journal_capacity"."journal_capacity_type_id" IS 'viide päeviku mahtude tüüpidele';
+COMMENT ON COLUMN "public"."journal_capacity"."study_period_id" IS 'viide õppeperioodile';
+COMMENT ON COLUMN "public"."journal_capacity"."week_nr" IS 'nädala nr';
+COMMENT ON COLUMN "public"."journal_capacity"."hours" IS 'tundide arv';
+
+-- ----------------------------
+-- Table structure for journal_capacity_type
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal_capacity_type";
+CREATE TABLE "public"."journal_capacity_type" (
+"id" int8 DEFAULT nextval('journal_capacity_type_id_seq'::regclass) NOT NULL,
+"journal_id" int8 NOT NULL,
+"capacity_type_code" varchar(100) COLLATE "default" NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal_capacity_type" IS 'päeviku mahtude tüübid/õppetöö liigid';
+COMMENT ON COLUMN "public"."journal_capacity_type"."journal_id" IS 'viide päevikule';
+COMMENT ON COLUMN "public"."journal_capacity_type"."capacity_type_code" IS 'viide klassifikaatorile MAHT';
+
+-- ----------------------------
+-- Table structure for journal_entry
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal_entry";
+CREATE TABLE "public"."journal_entry" (
+"id" int8 DEFAULT nextval('journal_entry_id_seq'::regclass) NOT NULL,
+"journal_id" int8 NOT NULL,
+"entry_type_code" varchar(100) COLLATE "default" NOT NULL,
+"name_et" varchar(100) COLLATE "default",
+"entry_date" date,
+"start_lesson_nr" int2,
+"lessons" int2,
+"content" text COLLATE "default",
+"homework" text COLLATE "default",
+"homework_duedate" date,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default",
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal_entry" IS 'päeviku sissekanne';
+COMMENT ON COLUMN "public"."journal_entry"."journal_id" IS 'viide päevikule';
+COMMENT ON COLUMN "public"."journal_entry"."entry_type_code" IS 'sissekande liik, viide klassifikaatorile SISSEKANNE';
+COMMENT ON COLUMN "public"."journal_entry"."name_et" IS 'sissekande nimetus';
+COMMENT ON COLUMN "public"."journal_entry"."entry_date" IS 'sissekande kuupäev';
+COMMENT ON COLUMN "public"."journal_entry"."start_lesson_nr" IS 'algustund';
+COMMENT ON COLUMN "public"."journal_entry"."lessons" IS 'tundide arv';
+COMMENT ON COLUMN "public"."journal_entry"."content" IS 'sisu';
+COMMENT ON COLUMN "public"."journal_entry"."homework" IS 'kodutöö';
+COMMENT ON COLUMN "public"."journal_entry"."homework_duedate" IS 'kodutöö tähtaeg';
+
+-- ----------------------------
+-- Table structure for journal_entry_capacity_type
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal_entry_capacity_type";
+CREATE TABLE "public"."journal_entry_capacity_type" (
+"id" int8 DEFAULT nextval('journal_entry_capacity_type_id_seq'::regclass) NOT NULL,
+"journal_entry_id" int8 NOT NULL,
+"capacity_type_code" varchar(100) COLLATE "default" NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal_entry_capacity_type" IS 'sissekande ja mahtude seos';
+COMMENT ON COLUMN "public"."journal_entry_capacity_type"."journal_entry_id" IS 'viide päeviku sissekandele';
+
+-- ----------------------------
+-- Table structure for journal_entry_student
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal_entry_student";
+CREATE TABLE "public"."journal_entry_student" (
+"id" int8 DEFAULT nextval('journal_entry_student_id_seq'::regclass) NOT NULL,
+"journal_entry_id" int8 NOT NULL,
+"journal_student_id" int8 NOT NULL,
+"absence_code" varchar(100) COLLATE "default",
+"absence_inserted" timestamp(6),
+"absence_accepted" timestamp(6),
+"grade_code" varchar(100) COLLATE "default",
+"grade_inserted" timestamp(6),
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"add_info" varchar(1000) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal_entry_student" IS 'sissekande ja õppuri seos';
+COMMENT ON COLUMN "public"."journal_entry_student"."journal_entry_id" IS 'viide päeviku sissekandele';
+COMMENT ON COLUMN "public"."journal_entry_student"."journal_student_id" IS 'viide päevikuga seotud õppurile';
+COMMENT ON COLUMN "public"."journal_entry_student"."absence_code" IS 'puudumise kood, viide klassifikaatorile PUUDUMINE';
+COMMENT ON COLUMN "public"."journal_entry_student"."absence_inserted" IS 'puudumise lisamise aeg';
+COMMENT ON COLUMN "public"."journal_entry_student"."absence_accepted" IS 'puudumise aktsepteerimise aeg';
+COMMENT ON COLUMN "public"."journal_entry_student"."grade_code" IS 'viimane kehtiv hinne, viide klassifikaatorile KUTSEHINDAMINE';
+COMMENT ON COLUMN "public"."journal_entry_student"."grade_inserted" IS 'hinde lisamise kuupäev';
+COMMENT ON COLUMN "public"."journal_entry_student"."inserted_by" IS 'selgitus';
+
+-- ----------------------------
+-- Table structure for journal_entry_student_history
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal_entry_student_history";
+CREATE TABLE "public"."journal_entry_student_history" (
+"id" int8 DEFAULT nextval('journal_entry_student_history_id_seq'::regclass) NOT NULL,
+"journal_entry_student_id" int8 NOT NULL,
+"grade_code" varchar(100) COLLATE "default" NOT NULL,
+"grade_inserted" timestamp(6) NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal_entry_student_history" IS 'õppuri sissekandega seotud eelmised tulemused';
+COMMENT ON COLUMN "public"."journal_entry_student_history"."journal_entry_student_id" IS 'viide õppuri sissekandele';
+COMMENT ON COLUMN "public"."journal_entry_student_history"."grade_code" IS 'viide klassifikaatorile KUTSEHINDAMINE';
+COMMENT ON COLUMN "public"."journal_entry_student_history"."grade_inserted" IS 'hinde lisamise kuupäev';
+
+-- ----------------------------
+-- Table structure for journal_omodule_theme
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal_omodule_theme";
+CREATE TABLE "public"."journal_omodule_theme" (
+"id" int8 DEFAULT nextval('journal_omodule_theme_id_seq'::regclass) NOT NULL,
+"journal_id" int8 NOT NULL,
+"lesson_plan_module_id" int8 NOT NULL,
+"curriculum_version_omodule_theme_id" int8 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal_omodule_theme" IS 'päeviku ja õpetatavate teemade/moodulite/rühmade seos';
+COMMENT ON COLUMN "public"."journal_omodule_theme"."journal_id" IS 'viide päevikule';
+COMMENT ON COLUMN "public"."journal_omodule_theme"."lesson_plan_module_id" IS 'viide planeeritud moodulile ja sealt kaudu ka rühmale';
+COMMENT ON COLUMN "public"."journal_omodule_theme"."curriculum_version_omodule_theme_id" IS 'viide rakenduskava teemale';
+
+-- ----------------------------
+-- Table structure for journal_student
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal_student";
+CREATE TABLE "public"."journal_student" (
+"id" int8 DEFAULT nextval('journal_student_id_seq'::regclass) NOT NULL,
+"journal_id" int8 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"student_id" int8 NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal_student" IS 'päevikuga seotud õppurid';
+COMMENT ON COLUMN "public"."journal_student"."journal_id" IS 'viide päevikule';
+COMMENT ON COLUMN "public"."journal_student"."student_id" IS 'viide õppurile';
+
+-- ----------------------------
+-- Table structure for journal_teacher
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."journal_teacher";
+CREATE TABLE "public"."journal_teacher" (
+"id" int8 DEFAULT nextval('journal_teacher_id_seq'::regclass) NOT NULL,
+"journal_id" int8 NOT NULL,
+"teacher_id" int8 NOT NULL,
+"is_filler" bool NOT NULL,
+"is_confirmer" bool NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."journal_teacher" IS 'päeviku õpetajad';
+COMMENT ON COLUMN "public"."journal_teacher"."journal_id" IS 'viide päevikule';
+COMMENT ON COLUMN "public"."journal_teacher"."teacher_id" IS 'viide õpetajale';
+COMMENT ON COLUMN "public"."journal_teacher"."is_filler" IS 'kas on päeviku täitja true - jah false - ei';
+COMMENT ON COLUMN "public"."journal_teacher"."is_confirmer" IS 'kas on päeviku kinnitaja true - jah false - ei';
+
+-- ----------------------------
+-- Table structure for lesson_plan
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."lesson_plan";
+CREATE TABLE "public"."lesson_plan" (
+"id" int8 DEFAULT nextval('lesson_plan_id_seq'::regclass) NOT NULL,
+"study_year_id" int8 NOT NULL,
+"is_usable" bool NOT NULL,
+"school_id" int8 NOT NULL,
+"show_weeks" bool NOT NULL,
+"student_group_id" int8 NOT NULL,
+"curriculum_version_id" int8 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."lesson_plan" IS 'tunnijaotusplaan';
+COMMENT ON COLUMN "public"."lesson_plan"."study_year_id" IS 'viide õppeaastale';
+COMMENT ON COLUMN "public"."lesson_plan"."is_usable" IS 'kas on kasutatav true - jah false - ei';
+COMMENT ON COLUMN "public"."lesson_plan"."school_id" IS 'viide õppeasutusele';
+COMMENT ON COLUMN "public"."lesson_plan"."show_weeks" IS 'kas kuvada nädalate nr true - jah false - ei';
+COMMENT ON COLUMN "public"."lesson_plan"."student_group_id" IS 'viide õpperühmale';
+COMMENT ON COLUMN "public"."lesson_plan"."curriculum_version_id" IS 'viide rakenduskavale';
+
+-- ----------------------------
+-- Table structure for lesson_plan_module
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."lesson_plan_module";
+CREATE TABLE "public"."lesson_plan_module" (
+"id" int8 DEFAULT nextval('lesson_plan_module_id_seq'::regclass) NOT NULL,
+"lesson_plan_id" int8 NOT NULL,
+"curriculum_version_omodule_id" int8 NOT NULL,
+"teacher_id" int8,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"version" int4 NOT NULL
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."lesson_plan_module" IS 'tunnijaotusplaanis planeeritud moodulid';
+COMMENT ON COLUMN "public"."lesson_plan_module"."lesson_plan_id" IS 'viide tunnijaotusplaanile';
+COMMENT ON COLUMN "public"."lesson_plan_module"."curriculum_version_omodule_id" IS 'viide planeeritud moodulile';
+COMMENT ON COLUMN "public"."lesson_plan_module"."teacher_id" IS 'vastutaja, viide õpetajale';
+
+-- ----------------------------
+-- Table structure for lesson_time
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."lesson_time";
+CREATE TABLE "public"."lesson_time" (
+"id" int8 DEFAULT nextval('lesson_time_id_seq'::regclass) NOT NULL,
+"school_id" int8 NOT NULL,
+"lesson_time_building_group_id" int8 NOT NULL,
+"start_time" time(6) NOT NULL,
+"end_time" time(6) NOT NULL,
+"lesson_nr" int2 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"day_mon" bool NOT NULL,
+"day_tue" bool NOT NULL,
+"day_wed" bool NOT NULL,
+"day_thu" bool NOT NULL,
+"day_fri" bool NOT NULL,
+"day_sat" bool NOT NULL,
+"day_sun" bool NOT NULL
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."lesson_time" IS 'tundide toimumise ajad';
+COMMENT ON COLUMN "public"."lesson_time"."school_id" IS 'viide õppeasutusele';
+COMMENT ON COLUMN "public"."lesson_time"."lesson_time_building_group_id" IS 'viide tundide aegade plokile';
+COMMENT ON COLUMN "public"."lesson_time"."start_time" IS 'algus kellaaeg';
+COMMENT ON COLUMN "public"."lesson_time"."end_time" IS 'lõpp kellaaeg';
+COMMENT ON COLUMN "public"."lesson_time"."lesson_nr" IS 'tunni nr';
+COMMENT ON COLUMN "public"."lesson_time"."day_mon" IS 'kas kehtib esmasp. true - jah false - ei';
+COMMENT ON COLUMN "public"."lesson_time"."day_tue" IS 'kas kehtib teisip. true - jah false - ei';
+COMMENT ON COLUMN "public"."lesson_time"."day_wed" IS 'kas kehtib kolmap. true - jah false - ei';
+COMMENT ON COLUMN "public"."lesson_time"."day_thu" IS 'kas kehtib neljap. true - jah false - ei';
+COMMENT ON COLUMN "public"."lesson_time"."day_fri" IS 'kas kehtib reedel true - jah false - ei';
+COMMENT ON COLUMN "public"."lesson_time"."day_sat" IS 'kas kehtib laup. true - jah false - ei';
+COMMENT ON COLUMN "public"."lesson_time"."day_sun" IS 'kas kehtib pühap. true - jah false - ei';
+
+-- ----------------------------
+-- Table structure for lesson_time_building
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."lesson_time_building";
+CREATE TABLE "public"."lesson_time_building" (
+"id" int8 DEFAULT nextval('lesson_time_building_id_seq'::regclass) NOT NULL,
+"building_id" int8 NOT NULL,
+"lesson_time_building_group_id" int8 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."lesson_time_building" IS 'tunni toimumise koht ja kehtivus';
+COMMENT ON COLUMN "public"."lesson_time_building"."building_id" IS 'viide hoonele';
+COMMENT ON COLUMN "public"."lesson_time_building"."lesson_time_building_group_id" IS 'viide tundide aegade plokile';
+
+-- ----------------------------
+-- Table structure for lesson_time_building_group
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."lesson_time_building_group";
+CREATE TABLE "public"."lesson_time_building_group" (
+"id" int8 DEFAULT nextval('lesson_time_building_group_id_seq'::regclass) NOT NULL,
+"valid_from" date NOT NULL,
+"valid_thru" date,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."lesson_time_building_group" IS 'tundide aegade kehtivuse plokk';
+COMMENT ON COLUMN "public"."lesson_time_building_group"."valid_from" IS 'kehtivuse algus';
+COMMENT ON COLUMN "public"."lesson_time_building_group"."valid_thru" IS 'kehtivuse lõpp';
 
 -- ----------------------------
 -- Table structure for message
@@ -1514,6 +1944,112 @@ COMMENT ON COLUMN "public"."person"."email" IS 'isiku isiklik e-mail, õppuril j
 COMMENT ON COLUMN "public"."person"."native_language" IS 'sünnikuupäev';
 
 -- ----------------------------
+-- Table structure for protocol
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."protocol";
+CREATE TABLE "public"."protocol" (
+"id" int8 DEFAULT nextval('protocol_id_seq'::regclass) NOT NULL,
+"is_vocational" bool NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"school_id" int8 NOT NULL,
+"status_code" varchar(100) COLLATE "default" NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"protocol_nr" varchar(20) COLLATE "default" NOT NULL,
+"confirm_date" date,
+"confirmer" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."protocol" IS 'protokoll';
+COMMENT ON COLUMN "public"."protocol"."is_vocational" IS 'kas on kutseõppe või kõrghtaidusõppe protokoll: true - kutse false - kõrghraidus';
+COMMENT ON COLUMN "public"."protocol"."school_id" IS 'viide õppeasutusele';
+COMMENT ON COLUMN "public"."protocol"."status_code" IS 'viide klassifikaatorile PROTOKOLL_STAATUS';
+COMMENT ON COLUMN "public"."protocol"."protocol_nr" IS 'protokolli number';
+COMMENT ON COLUMN "public"."protocol"."confirm_date" IS 'kinnitamise kuupäev';
+COMMENT ON COLUMN "public"."protocol"."confirmer" IS 'kinnitaja isiku nimi';
+
+-- ----------------------------
+-- Table structure for protocol_student
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."protocol_student";
+CREATE TABLE "public"."protocol_student" (
+"id" int8 DEFAULT nextval('protocol_student_id_seq'::regclass) NOT NULL,
+"protocol_id" int8 NOT NULL,
+"student_id" int8 NOT NULL,
+"grade" varchar(3) COLLATE "default",
+"grade_code" varchar(100) COLLATE "default",
+"grade_mark" int2,
+"grade_date" date,
+"add_info" varchar(255) COLLATE "default",
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."protocol_student" IS 'protokolliga seotud õppurid';
+COMMENT ON COLUMN "public"."protocol_student"."protocol_id" IS 'viide protokollile';
+COMMENT ON COLUMN "public"."protocol_student"."grade" IS 'tulemus kujul ''A'', ''B'', ''5'' jne';
+COMMENT ON COLUMN "public"."protocol_student"."grade_code" IS 'viide klassifikaatorile KORGHINDAMINE või KUTSEHINDAMINE sõltuvalt õppetasemest ja protokollile valitud hindamisviisist';
+COMMENT ON COLUMN "public"."protocol_student"."grade_mark" IS 'numbriline hinne, vajalik KKH arvutamiseks';
+COMMENT ON COLUMN "public"."protocol_student"."grade_date" IS 'hinde kuupäev, vaikimisi hinde lisamise kuupäev';
+COMMENT ON COLUMN "public"."protocol_student"."add_info" IS 'kommentaar hinde kohta';
+
+-- ----------------------------
+-- Table structure for protocol_student_history
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."protocol_student_history";
+CREATE TABLE "public"."protocol_student_history" (
+"id" int8 DEFAULT nextval('protocol_student_history_id_seq'::regclass) NOT NULL,
+"grade_code" varchar(100) COLLATE "default" NOT NULL,
+"protocol_student_id" int8 NOT NULL,
+"add_info" varchar(255) COLLATE "default",
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."protocol_student_history" IS 'protokollil õppuri tulemuste muutmise ajalugu';
+COMMENT ON COLUMN "public"."protocol_student_history"."add_info" IS 'kommentaar hinde muutmise kohta';
+
+-- ----------------------------
+-- Table structure for protocol_vdata
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."protocol_vdata";
+CREATE TABLE "public"."protocol_vdata" (
+"id" int8 DEFAULT nextval('protocol_vdata_id_seq'::regclass) NOT NULL,
+"curriculum_version_omodule_id" int8 NOT NULL,
+"protocol_id" int8 NOT NULL,
+"curriculum_version_id" int8 NOT NULL,
+"study_year_id" int8 NOT NULL,
+"teacher_id" int8 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."protocol_vdata" IS 'kutseõppe protokolli info';
+COMMENT ON COLUMN "public"."protocol_vdata"."curriculum_version_omodule_id" IS 'viide rakenduskava moodulile';
+COMMENT ON COLUMN "public"."protocol_vdata"."curriculum_version_id" IS 'viide rakenduskavale';
+COMMENT ON COLUMN "public"."protocol_vdata"."study_year_id" IS 'viide õpepaastale';
+COMMENT ON COLUMN "public"."protocol_vdata"."teacher_id" IS 'viide õpetajale';
+
+-- ----------------------------
 -- Table structure for room
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."room";
@@ -1584,7 +2120,8 @@ CREATE TABLE "public"."sais_admission" (
 "changed" timestamp(6),
 "version" int4 NOT NULL,
 "inserted_by" varchar(100) COLLATE "default" NOT NULL,
-"changed_by" varchar(100) COLLATE "default"
+"changed_by" varchar(100) COLLATE "default",
+"is_archived" bool
 )
 WITH (OIDS=FALSE)
 
@@ -1602,6 +2139,9 @@ COMMENT ON COLUMN "public"."sais_admission"."period_end" IS 'konkursi lõpp';
 COMMENT ON COLUMN "public"."sais_admission"."study_form_code" IS 'viide klaasifikaatorile OPPEVORM';
 COMMENT ON COLUMN "public"."sais_admission"."study_level_code" IS 'viide klassifikaatorile OPPEASTE';
 COMMENT ON COLUMN "public"."sais_admission"."study_load_code" IS 'viide klassifikaatorile OPPEKOORMUS';
+COMMENT ON COLUMN "public"."sais_admission"."is_archived" IS 'kas arhiveeritud, vaikimisi false
+false - ei 
+true - arhiveeritud';
 
 -- ----------------------------
 -- Table structure for sais_application
@@ -1615,7 +2155,7 @@ CREATE TABLE "public"."sais_application" (
 "firstname" varchar(100) COLLATE "default" NOT NULL,
 "lastname" varchar(100) COLLATE "default" NOT NULL,
 "birthdate" date NOT NULL,
-"idcode" varchar(20) COLLATE "default",
+"idcode" varchar(11) COLLATE "default",
 "foreign_idcode" varchar(50) COLLATE "default",
 "address" varchar(100) COLLATE "default",
 "sex_code" varchar(100) COLLATE "default",
@@ -1626,7 +2166,7 @@ CREATE TABLE "public"."sais_application" (
 "status_code" varchar(100) COLLATE "default" NOT NULL,
 "application_nr" varchar(100) COLLATE "default" NOT NULL,
 "citizenship_code" varchar(100) COLLATE "default" NOT NULL,
-"study_load_code" varchar(100) COLLATE "default" NOT NULL,
+"study_load_code" varchar(100) COLLATE "default",
 "residence_country_code" varchar(100) COLLATE "default" NOT NULL,
 "study_form_code" varchar(100) COLLATE "default" NOT NULL,
 "language_code" varchar(100) COLLATE "default" NOT NULL,
@@ -1635,7 +2175,8 @@ CREATE TABLE "public"."sais_application" (
 "changed" timestamp(6),
 "version" int4 NOT NULL,
 "inserted_by" varchar(100) COLLATE "default" NOT NULL,
-"changed_by" varchar(100) COLLATE "default"
+"changed_by" varchar(100) COLLATE "default",
+"is_archived" bool
 )
 WITH (OIDS=FALSE)
 
@@ -1662,6 +2203,33 @@ COMMENT ON COLUMN "public"."sais_application"."residence_country_code" IS 'eluko
 COMMENT ON COLUMN "public"."sais_application"."study_form_code" IS 'õppevorm, viide klassifikaatorile OPPEVORM';
 COMMENT ON COLUMN "public"."sais_application"."language_code" IS 'õppekeel, viide klassifikaatorile OPPEKEEL';
 COMMENT ON COLUMN "public"."sais_application"."sais_id" IS 'SAISi avalduse id';
+COMMENT ON COLUMN "public"."sais_application"."is_archived" IS 'kas arhiveeritud, vaikimisi false
+false - ei 
+true - arhiveeritud';
+
+-- ----------------------------
+-- Table structure for sais_application_grade
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."sais_application_grade";
+CREATE TABLE "public"."sais_application_grade" (
+"id" int8 DEFAULT nextval('sais_application_grade_id_seq'::regclass) NOT NULL,
+"subject_name" varchar(255) COLLATE "default" NOT NULL,
+"sais_application_id" int8 NOT NULL,
+"subject_type" varchar(100) COLLATE "default",
+"grade" varchar(50) COLLATE "default" NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default",
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."sais_application_grade" IS 'SAISi avaldustega seotud hinded';
+COMMENT ON COLUMN "public"."sais_application_grade"."subject_name" IS 'õppeaine nimetus e. k.';
+COMMENT ON COLUMN "public"."sais_application_grade"."subject_type" IS 'õppeaine liik (ei ole klassifikaator)';
+COMMENT ON COLUMN "public"."sais_application_grade"."grade" IS 'hinne, võib olla ka tekst';
 
 -- ----------------------------
 -- Table structure for sais_application_graduated_school
@@ -1670,7 +2238,7 @@ DROP TABLE IF EXISTS "public"."sais_application_graduated_school";
 CREATE TABLE "public"."sais_application_graduated_school" (
 "id" int8 DEFAULT nextval('sais_application_graduated_school_id_seq'::regclass) NOT NULL,
 "name" varchar(255) COLLATE "default",
-"sais_applucation_id" int8 NOT NULL,
+"sais_application_id" int8 NOT NULL,
 "start_date" date,
 "end_date" date,
 "reg_code" varchar(20) COLLATE "default",
@@ -1688,13 +2256,36 @@ WITH (OIDS=FALSE)
 ;
 COMMENT ON TABLE "public"."sais_application_graduated_school" IS 'SAISi avaldusega seotud lõpetatud koolid';
 COMMENT ON COLUMN "public"."sais_application_graduated_school"."name" IS 'kooli nimi';
-COMMENT ON COLUMN "public"."sais_application_graduated_school"."sais_applucation_id" IS 'viide SAIS avaldusele';
+COMMENT ON COLUMN "public"."sais_application_graduated_school"."sais_application_id" IS 'viide SAIS avaldusele';
 COMMENT ON COLUMN "public"."sais_application_graduated_school"."start_date" IS 'õpingute algus';
 COMMENT ON COLUMN "public"."sais_application_graduated_school"."end_date" IS 'õpingute lõpp';
 COMMENT ON COLUMN "public"."sais_application_graduated_school"."reg_code" IS 'kooli reg. kood';
 COMMENT ON COLUMN "public"."sais_application_graduated_school"."is_abroad" IS 'kas lõpetas välismaal, vaikimisi false false - ei ole välismaa true - välismaa kool';
 COMMENT ON COLUMN "public"."sais_application_graduated_school"."study_level_code" IS 'viide klaasifikaatorile OPPEASTE';
 COMMENT ON COLUMN "public"."sais_application_graduated_school"."study_form_code" IS 'viide klassifikaatorile OPPEVORM';
+
+-- ----------------------------
+-- Table structure for sais_application_other_data
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."sais_application_other_data";
+CREATE TABLE "public"."sais_application_other_data" (
+"id" int8 DEFAULT nextval('sais_application_other_data_id_seq'::regclass) NOT NULL,
+"other_data_name" varchar(255) COLLATE "default" NOT NULL,
+"sais_application_id" int8 NOT NULL,
+"other_data_value" varchar(4000) COLLATE "default" NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default",
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."sais_application_other_data" IS 'saisi avalduse täiendav informatsioon';
+COMMENT ON COLUMN "public"."sais_application_other_data"."other_data_name" IS 'andmevälja nimetus sais avaldusel';
+COMMENT ON COLUMN "public"."sais_application_other_data"."sais_application_id" IS 'viide saisi avaldusele';
+COMMENT ON COLUMN "public"."sais_application_other_data"."other_data_value" IS 'andmevälja väärtus sais avaldusel';
 
 -- ----------------------------
 -- Table structure for sais_classifier
@@ -1813,20 +2404,20 @@ CREATE TABLE "public"."state_curriculum" (
 "name_et" varchar(255) COLLATE "default" NOT NULL,
 "name_en" varchar(255) COLLATE "default",
 "isced_class_code" varchar(100) COLLATE "default",
-"objectives_et" text COLLATE "default" NOT NULL,
+"objectives_et" text COLLATE "default",
 "objectives_en" text COLLATE "default",
-"outcomes_et" text COLLATE "default" NOT NULL,
+"outcomes_et" text COLLATE "default",
 "outcomes_en" text COLLATE "default",
-"admission_requirements_et" text COLLATE "default" NOT NULL,
+"admission_requirements_et" text COLLATE "default",
 "admission_requirements_en" text COLLATE "default",
-"graduation_requirements_et" varchar(50) COLLATE "default",
-"graduation_requirements_en" varchar(50) COLLATE "default",
+"graduation_requirements_et" text COLLATE "default",
+"graduation_requirements_en" text COLLATE "default",
 "credits" numeric(4,1) NOT NULL,
 "practice_description" text COLLATE "default",
 "state_curr_class_code" varchar(100) COLLATE "default" NOT NULL,
 "final_exam_description" text COLLATE "default",
-"optional_study_credits" numeric(4,1) NOT NULL,
-"valid_from" date NOT NULL,
+"optional_study_credits" numeric(4,1),
+"valid_from" date,
 "valid_thru" date,
 "description" text COLLATE "default",
 "riigiteataja_url" varchar(4000) COLLATE "default",
@@ -2068,7 +2659,10 @@ CREATE TABLE "public"."student_group" (
 "study_form_code" varchar(100) COLLATE "default" NOT NULL,
 "language_code" varchar(100) COLLATE "default",
 "teacher_id" int8,
-"speciality_code" varchar(100) COLLATE "default"
+"speciality_code" varchar(100) COLLATE "default",
+"places" int4,
+"valid_from" date,
+"valid_thru" date
 )
 WITH (OIDS=FALSE)
 
@@ -2083,6 +2677,9 @@ COMMENT ON COLUMN "public"."student_group"."study_form_code" IS 'viide klassifik
 COMMENT ON COLUMN "public"."student_group"."language_code" IS 'viide klassifikaatorile OPPEKEEL';
 COMMENT ON COLUMN "public"."student_group"."teacher_id" IS 'viide õpetajae, rühmajuhataja';
 COMMENT ON COLUMN "public"."student_group"."speciality_code" IS 'spetsialiseerumine kutseõppes, viide klassifikaatorile SPETSKUTSE';
+COMMENT ON COLUMN "public"."student_group"."places" IS 'kohtade arv, kasutatakse immat käskkirja tegemisel';
+COMMENT ON COLUMN "public"."student_group"."valid_from" IS 'kehtib alates';
+COMMENT ON COLUMN "public"."student_group"."valid_thru" IS 'kehtib kuni';
 
 -- ----------------------------
 -- Table structure for student_history
@@ -2285,6 +2882,60 @@ COMMENT ON COLUMN "public"."study_year"."year_code" IS 'viide klassifikaatorile 
 COMMENT ON COLUMN "public"."study_year"."end_date" IS 'lõppkuupäev';
 
 -- ----------------------------
+-- Table structure for study_year_schedule
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."study_year_schedule";
+CREATE TABLE "public"."study_year_schedule" (
+"id" int8 DEFAULT nextval('study_year_schedule_id_seq'::regclass) NOT NULL,
+"school_id" int8 NOT NULL,
+"study_year_schedule_legend_id" int8 NOT NULL,
+"study_period_id" int8 NOT NULL,
+"week_nr" int2 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"student_group_id" int8 NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."study_year_schedule" IS 'õppeasutuse õppetöögraafik';
+COMMENT ON COLUMN "public"."study_year_schedule"."school_id" IS 'viide õppeasutusele';
+COMMENT ON COLUMN "public"."study_year_schedule"."study_year_schedule_legend_id" IS 'viide õppetöö liigile/legendile';
+COMMENT ON COLUMN "public"."study_year_schedule"."study_period_id" IS 'viide õppeperioodile';
+COMMENT ON COLUMN "public"."study_year_schedule"."week_nr" IS 'nädala nr, arvutamine algab õppeaasta algusest';
+COMMENT ON COLUMN "public"."study_year_schedule"."student_group_id" IS 'viide õpperühmale';
+
+-- ----------------------------
+-- Table structure for study_year_schedule_legend
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."study_year_schedule_legend";
+CREATE TABLE "public"."study_year_schedule_legend" (
+"id" int8 DEFAULT nextval('study_year_schedule_legend_id_seq'::regclass) NOT NULL,
+"code" varchar(2) COLLATE "default" NOT NULL,
+"school_id" int8 NOT NULL,
+"name_et" varchar(50) COLLATE "default" NOT NULL,
+"name_en" varchar(50) COLLATE "default",
+"color" char(7) COLLATE "default" NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."study_year_schedule_legend" IS 'õppetöögraafiku legendid';
+COMMENT ON COLUMN "public"."study_year_schedule_legend"."code" IS 'legendi kood';
+COMMENT ON COLUMN "public"."study_year_schedule_legend"."school_id" IS 'viide õppeasutusele';
+COMMENT ON COLUMN "public"."study_year_schedule_legend"."name_et" IS 'legendi nimetus e.k.';
+COMMENT ON COLUMN "public"."study_year_schedule_legend"."name_en" IS 'legendi nimetus i.k.';
+COMMENT ON COLUMN "public"."study_year_schedule_legend"."color" IS 'värvikood kujul #FFFFFF';
+
+-- ----------------------------
 -- Table structure for subject
 -- ----------------------------
 DROP TABLE IF EXISTS "public"."subject";
@@ -2393,10 +3044,37 @@ COMMENT ON COLUMN "public"."subject_lang"."lang_code" IS 'viide õppekeelele, kl
 DROP TABLE IF EXISTS "public"."subject_study_period";
 CREATE TABLE "public"."subject_study_period" (
 "id" int8 DEFAULT nextval('subject_study_period_id_seq'::regclass) NOT NULL,
-"teacher_id" int8 NOT NULL,
 "subject_id" int8 NOT NULL,
 "inserted" timestamp(6) NOT NULL,
 "study_period_id" int8 NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"add_info" text COLLATE "default",
+"group_proportion_code" varchar(100) COLLATE "default",
+"declaration_type_code" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."subject_study_period" IS 'aine-õpetaja-perioodid';
+COMMENT ON COLUMN "public"."subject_study_period"."subject_id" IS 'viide õppeainele';
+COMMENT ON COLUMN "public"."subject_study_period"."study_period_id" IS 'viide õppeperioodile';
+COMMENT ON COLUMN "public"."subject_study_period"."add_info" IS 'märkus';
+COMMENT ON COLUMN "public"."subject_study_period"."group_proportion_code" IS 'viide klassifikaatorile PAEVIK_GRUPI_JAOTUS, vaikimisi 1/1';
+COMMENT ON COLUMN "public"."subject_study_period"."declaration_type_code" IS 'viide klassifikatorile DEKLARATSIOON';
+
+-- ----------------------------
+-- Table structure for subject_study_period_capacity
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."subject_study_period_capacity";
+CREATE TABLE "public"."subject_study_period_capacity" (
+"id" int8 DEFAULT nextval('subject_study_period_capacity_id_seq'::regclass) NOT NULL,
+"subject_study_period_id" int8 NOT NULL,
+"capacity_type_code" varchar(100) COLLATE "default" NOT NULL,
+"hours" int2 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
 "changed" timestamp(6),
 "version" int4 NOT NULL,
 "inserted_by" varchar(100) COLLATE "default" NOT NULL,
@@ -2405,10 +3083,118 @@ CREATE TABLE "public"."subject_study_period" (
 WITH (OIDS=FALSE)
 
 ;
-COMMENT ON TABLE "public"."subject_study_period" IS 'aine-õpetaja-perioodid';
-COMMENT ON COLUMN "public"."subject_study_period"."teacher_id" IS 'viide õpetajale';
-COMMENT ON COLUMN "public"."subject_study_period"."subject_id" IS 'viide õppeainele';
-COMMENT ON COLUMN "public"."subject_study_period"."study_period_id" IS 'viide õppeperioodile';
+COMMENT ON TABLE "public"."subject_study_period_capacity" IS 'õppeaine mahujaotus etteantud perioodis';
+COMMENT ON COLUMN "public"."subject_study_period_capacity"."subject_study_period_id" IS 'viide õppeaine-perioodile';
+COMMENT ON COLUMN "public"."subject_study_period_capacity"."capacity_type_code" IS 'viide klassifikaatorile MAHT';
+COMMENT ON COLUMN "public"."subject_study_period_capacity"."hours" IS 'maht tundides';
+
+-- ----------------------------
+-- Table structure for subject_study_period_plan
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."subject_study_period_plan";
+CREATE TABLE "public"."subject_study_period_plan" (
+"id" int8 DEFAULT nextval('subject_study_period_plan_id_seq'::regclass) NOT NULL,
+"subject_id" int8 NOT NULL,
+"study_period_id" int8 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."subject_study_period_plan" IS 'õppeaine koormus õppeperioodis';
+COMMENT ON COLUMN "public"."subject_study_period_plan"."subject_id" IS 'viide õppeainele';
+COMMENT ON COLUMN "public"."subject_study_period_plan"."study_period_id" IS 'viide õppeperioodile';
+
+-- ----------------------------
+-- Table structure for subject_study_period_plan_capacity
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."subject_study_period_plan_capacity";
+CREATE TABLE "public"."subject_study_period_plan_capacity" (
+"id" int8 DEFAULT nextval('subject_study_period_plan_capacity_id_seq'::regclass) NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"subject_study_period_plan_id" int8 NOT NULL,
+"capacity_type_code" varchar(100) COLLATE "default" NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"is_contact" bool NOT NULL,
+"hours" int2
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."subject_study_period_plan_capacity" IS 'õppeaine koormus mahtude kaupa';
+COMMENT ON COLUMN "public"."subject_study_period_plan_capacity"."subject_study_period_plan_id" IS 'viide õppeaine koormuse plaanile';
+COMMENT ON COLUMN "public"."subject_study_period_plan_capacity"."capacity_type_code" IS 'mahu jaotuse liik, viide klassifikaatorile MAHT, peab arvestama ainult nende väärtustega, kus is_higher=true';
+COMMENT ON COLUMN "public"."subject_study_period_plan_capacity"."hours" IS 'maht tundides';
+
+-- ----------------------------
+-- Table structure for subject_study_period_plan_curriculum
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."subject_study_period_plan_curriculum";
+CREATE TABLE "public"."subject_study_period_plan_curriculum" (
+"id" int8 DEFAULT nextval('subject_study_period_plan_curriculum_id_seq'::regclass) NOT NULL,
+"subject_study_period_plan_id" int8 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"curriculum_id" int8 NOT NULL
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."subject_study_period_plan_curriculum" IS 'õppeaine koormus -kehtib õppekavades...';
+COMMENT ON COLUMN "public"."subject_study_period_plan_curriculum"."subject_study_period_plan_id" IS 'viide õppeaine koormusele plaanile';
+COMMENT ON COLUMN "public"."subject_study_period_plan_curriculum"."curriculum_id" IS 'viide kõrgharidusõppekavale';
+
+-- ----------------------------
+-- Table structure for subject_study_period_plan_studyform
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."subject_study_period_plan_studyform";
+CREATE TABLE "public"."subject_study_period_plan_studyform" (
+"id" int8 DEFAULT nextval('subject_study_period_plan_studyform_id_seq'::regclass) NOT NULL,
+"subject_study_period_plan_id" int8 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default",
+"study_form_code" varchar(100) COLLATE "default" NOT NULL
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."subject_study_period_plan_studyform" IS 'õppeaine koormus - kehtib õppevormides';
+COMMENT ON COLUMN "public"."subject_study_period_plan_studyform"."subject_study_period_plan_id" IS 'viide õppeaine õppekoormusele';
+COMMENT ON COLUMN "public"."subject_study_period_plan_studyform"."study_form_code" IS 'viide klassifikaatorile OPPEVORM';
+
+-- ----------------------------
+-- Table structure for subject_study_period_student_group
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."subject_study_period_student_group";
+CREATE TABLE "public"."subject_study_period_student_group" (
+"id" int8 DEFAULT nextval('subject_study_period_student_group_id_seq'::regclass) NOT NULL,
+"subject_study_period_id" int8 NOT NULL,
+"student_group_id" int8 NOT NULL,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."subject_study_period_student_group" IS 'õppeaine ja rühma seos';
+COMMENT ON COLUMN "public"."subject_study_period_student_group"."subject_study_period_id" IS 'viide õppeaine perioodile';
+COMMENT ON COLUMN "public"."subject_study_period_student_group"."student_group_id" IS 'viide õpperühmale';
 
 -- ----------------------------
 -- Table structure for subject_study_period_teacher
@@ -2450,7 +3236,9 @@ CREATE TABLE "public"."teacher" (
 "changed" timestamp(6),
 "version" int4 NOT NULL,
 "inserted_by" varchar(100) COLLATE "default" NOT NULL,
-"changed_by" varchar(100) COLLATE "default"
+"changed_by" varchar(100) COLLATE "default",
+"is_study_period_schedule_load" bool,
+"is_active" bool NOT NULL
 )
 WITH (OIDS=FALSE)
 
@@ -2464,6 +3252,15 @@ COMMENT ON COLUMN "public"."teacher"."is_vocational" IS 'kas tegemist on kutseõ
 COMMENT ON COLUMN "public"."teacher"."is_higher" IS 'kas tegemist on kõrgharidusõppe õpetajaga  true - kõrgharidusõppe õpetaja false - ei ole kõrgharidusõppe õpetaja';
 COMMENT ON COLUMN "public"."teacher"."schedule_load" IS 'tunniplaani koormus, vaikimisi 0';
 COMMENT ON COLUMN "public"."teacher"."teacher_occupation_id" IS 'viide ametikohale õppeasutuses';
+COMMENT ON COLUMN "public"."teacher"."is_study_period_schedule_load" IS 'kas tegemist on õppeperioodi või õppeaasta koormusega:
+true - õppeperioodi koormus
+false - õpepaasta koormus
+
+';
+COMMENT ON COLUMN "public"."teacher"."is_active" IS 'kas õpetaja on aktiivne 
+true - jah 
+false - ei
+';
 
 -- ----------------------------
 -- Table structure for teacher_mobility
@@ -2501,7 +3298,7 @@ CREATE TABLE "public"."teacher_occupation" (
 "id" int8 DEFAULT nextval('teacher_occupation_id_seq'::regclass) NOT NULL,
 "occupation_et" varchar(100) COLLATE "default" NOT NULL,
 "school_id" int4 NOT NULL,
-"occupation_en" varchar(100) COLLATE "default" NOT NULL,
+"occupation_en" varchar(100) COLLATE "default",
 "is_valid" bool NOT NULL,
 "inserted" timestamp(6) NOT NULL,
 "changed" timestamp(6),
@@ -2673,6 +3470,113 @@ WITH (OIDS=FALSE)
 COMMENT ON TABLE "public"."user_role_default" IS 'kasutaja rolli vaikimisi õigused';
 
 -- ----------------------------
+-- Table structure for ws_ehis_student_log
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."ws_ehis_student_log";
+CREATE TABLE "public"."ws_ehis_student_log" (
+"id" int8 DEFAULT nextval('ws_ehis_student_log_id_seq'::regclass) NOT NULL,
+"school_id" int8 NOT NULL,
+"directive_id" int8,
+"ws_name" varchar(255) COLLATE "default",
+"request" text COLLATE "default",
+"response" text COLLATE "default",
+"has_xtee_errors" bool NOT NULL,
+"has_other_errors" bool NOT NULL,
+"log_txt" text COLLATE "default" NOT NULL,
+"inserted" timestamp(6) NOT NULL
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON COLUMN "public"."ws_ehis_student_log"."school_id" IS 'viide õppeasutusele';
+COMMENT ON COLUMN "public"."ws_ehis_student_log"."directive_id" IS 'viide käskkirjale';
+COMMENT ON COLUMN "public"."ws_ehis_student_log"."ws_name" IS 'teenuse nimi';
+COMMENT ON COLUMN "public"."ws_ehis_student_log"."has_other_errors" IS 'kas on vigu, nt vastuses on sõna Viga false - ei true - jah  kui has_xtee_errors=true, siis has_other_errors=false';
+
+-- ----------------------------
+-- Table structure for ws_ehis_teacher_log
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."ws_ehis_teacher_log";
+CREATE TABLE "public"."ws_ehis_teacher_log" (
+"id" int8 DEFAULT nextval('ws_ehis_teacher_log_id_seq'::regclass) NOT NULL,
+"ws_name" varchar(255) COLLATE "default" NOT NULL,
+"request" text COLLATE "default" NOT NULL,
+"response" text COLLATE "default",
+"has_xtee_errors" bool NOT NULL,
+"has_other_errors" bool NOT NULL,
+"log_txt" text COLLATE "default",
+"inserted" timestamp(6),
+"school_id" int8 NOT NULL,
+"teacher_id" int8 NOT NULL
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."ws_ehis_teacher_log" IS 'log tabel õppejõu andmete EHISe edastamsie jaoks';
+COMMENT ON COLUMN "public"."ws_ehis_teacher_log"."ws_name" IS 'teenuse nimi';
+
+-- ----------------------------
+-- Table structure for ws_sais_log
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."ws_sais_log";
+CREATE TABLE "public"."ws_sais_log" (
+"id" int8 DEFAULT nextval('ws_sais_log_id_seq'::regclass) NOT NULL,
+"school_id" int8,
+"ws_name" varchar(255) COLLATE "default" NOT NULL,
+"query_date_from" date,
+"query_date_thru" date,
+"process_query_start" timestamp(6),
+"process_query_end" timestamp(6),
+"request" text COLLATE "default",
+"response" text COLLATE "default",
+"has_xtee_errors" bool NOT NULL,
+"has_other_errors" bool NOT NULL,
+"record_count" int4,
+"first_ws_sais_log_id" int8,
+"inserted" timestamp(6) NOT NULL,
+"changed" timestamp(6),
+"version" int4 NOT NULL,
+"inserted_by" varchar(100) COLLATE "default" NOT NULL,
+"changed_by" varchar(100) COLLATE "default"
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."ws_sais_log" IS 'sais andmevahetuse log';
+COMMENT ON COLUMN "public"."ws_sais_log"."school_id" IS 'päringu esitaja õppeasutus';
+COMMENT ON COLUMN "public"."ws_sais_log"."ws_name" IS 'teenuse nimi';
+COMMENT ON COLUMN "public"."ws_sais_log"."query_date_from" IS 'päringu sisendi algus kp';
+COMMENT ON COLUMN "public"."ws_sais_log"."query_date_thru" IS 'päringu sisendi lõpp kp';
+COMMENT ON COLUMN "public"."ws_sais_log"."process_query_start" IS 'päringu töötlemise algus';
+COMMENT ON COLUMN "public"."ws_sais_log"."process_query_end" IS 'päringu töötlemise lõpp';
+COMMENT ON COLUMN "public"."ws_sais_log"."request" IS 'päringu sisend (xml)';
+COMMENT ON COLUMN "public"."ws_sais_log"."response" IS 'päringu väljund (xml)';
+COMMENT ON COLUMN "public"."ws_sais_log"."has_xtee_errors" IS 'kas on vigu (turvaserver ei vasta, vigane SOAP vms) true - jah false - ei';
+COMMENT ON COLUMN "public"."ws_sais_log"."has_other_errors" IS 'kas on vigu töötlemisel (ei saanud midagi andmebaasi salvestada vms) false - ei true - jah  kui has_xtee_errors=true, siis has_other_errors=false';
+COMMENT ON COLUMN "public"."ws_sais_log"."record_count" IS 'kirjete arv';
+COMMENT ON COLUMN "public"."ws_sais_log"."first_ws_sais_log_id" IS 'kui päring esitatakse mitmekordselt, siis viide esimesele päringule';
+
+-- ----------------------------
+-- Table structure for ws_sais_log_detail
+-- ----------------------------
+DROP TABLE IF EXISTS "public"."ws_sais_log_detail";
+CREATE TABLE "public"."ws_sais_log_detail" (
+"id" int8 DEFAULT nextval('ws_sais_log_detail_id_seq'::regclass) NOT NULL,
+"is_error" bool NOT NULL,
+"ws_sais_log_id" int8 NOT NULL,
+"log_txt" text COLLATE "default" NOT NULL,
+"inserted" timestamp(6) NOT NULL
+)
+WITH (OIDS=FALSE)
+
+;
+COMMENT ON TABLE "public"."ws_sais_log_detail" IS 'täpne veateade või logi rida';
+COMMENT ON COLUMN "public"."ws_sais_log_detail"."is_error" IS 'kas on viga või mitte true - jah false - ei';
+COMMENT ON COLUMN "public"."ws_sais_log_detail"."ws_sais_log_id" IS 'viide päringule ';
+COMMENT ON COLUMN "public"."ws_sais_log_detail"."log_txt" IS 'logi kirje, sh veateade';
+
+
+-- ----------------------------
 -- Alter Sequences Owned By 
 -- ----------------------------
 ALTER SEQUENCE "public"."application_file_id_seq" OWNED BY "application_file"."id";
@@ -2711,16 +3615,37 @@ ALTER SEQUENCE "public"."directive_id_seq" OWNED BY "directive"."id";
 ALTER SEQUENCE "public"."directive_student_id_seq" OWNED BY "directive_student"."id";
 ALTER SEQUENCE "public"."general_message_id_seq" OWNED BY "general_message"."id";
 ALTER SEQUENCE "public"."general_message_target_id_seq" OWNED BY "general_message_target"."id";
+ALTER SEQUENCE "public"."journal_capacity_id_seq" OWNED BY "journal_capacity"."id";
+ALTER SEQUENCE "public"."journal_capacity_type_id_seq" OWNED BY "journal_capacity_type"."id";
+ALTER SEQUENCE "public"."journal_entry_capacity_type_id_seq" OWNED BY "journal_entry_capacity_type"."id";
+ALTER SEQUENCE "public"."journal_entry_id_seq" OWNED BY "journal_entry"."id";
+ALTER SEQUENCE "public"."journal_entry_student_history_id_seq" OWNED BY "journal_entry_student_history"."id";
+ALTER SEQUENCE "public"."journal_entry_student_id_seq" OWNED BY "journal_entry_student"."id";
+ALTER SEQUENCE "public"."journal_id_seq" OWNED BY "journal"."id";
+ALTER SEQUENCE "public"."journal_omodule_theme_id_seq" OWNED BY "journal_omodule_theme"."id";
+ALTER SEQUENCE "public"."journal_student_id_seq" OWNED BY "journal_student"."id";
+ALTER SEQUENCE "public"."journal_teacher_id_seq" OWNED BY "journal_teacher"."id";
+ALTER SEQUENCE "public"."lesson_plan_id_seq" OWNED BY "lesson_plan"."id";
+ALTER SEQUENCE "public"."lesson_plan_module_id_seq" OWNED BY "lesson_plan_module"."id";
+ALTER SEQUENCE "public"."lesson_time_building_group_id_seq" OWNED BY "lesson_time_building_group"."id";
+ALTER SEQUENCE "public"."lesson_time_building_id_seq" OWNED BY "lesson_time_building"."id";
+ALTER SEQUENCE "public"."lesson_time_id_seq" OWNED BY "lesson_time"."id";
 ALTER SEQUENCE "public"."message_id_seq" OWNED BY "message"."id";
 ALTER SEQUENCE "public"."message_receiver_id_seq" OWNED BY "message_receiver"."id";
 ALTER SEQUENCE "public"."message_template_id_seq" OWNED BY "message_template"."id";
 ALTER SEQUENCE "public"."ois_file_id_seq" OWNED BY "ois_file"."id";
 ALTER SEQUENCE "public"."person_id_seq" OWNED BY "person"."id";
+ALTER SEQUENCE "public"."protocol_id_seq" OWNED BY "protocol"."id";
+ALTER SEQUENCE "public"."protocol_student_history_id_seq" OWNED BY "protocol_student_history"."id";
+ALTER SEQUENCE "public"."protocol_student_id_seq" OWNED BY "protocol_student"."id";
+ALTER SEQUENCE "public"."protocol_vdata_id_seq" OWNED BY "protocol_vdata"."id";
 ALTER SEQUENCE "public"."room_equipment_id_seq" OWNED BY "room_equipment"."id";
 ALTER SEQUENCE "public"."room_id_seq" OWNED BY "room"."id";
 ALTER SEQUENCE "public"."sais_admission_id_seq" OWNED BY "sais_admission"."id";
+ALTER SEQUENCE "public"."sais_application_grade_id_seq" OWNED BY "sais_application_grade"."id";
 ALTER SEQUENCE "public"."sais_application_graduated_school_id_seq" OWNED BY "sais_application_graduated_school"."id";
 ALTER SEQUENCE "public"."sais_application_id_seq" OWNED BY "sais_application"."id";
+ALTER SEQUENCE "public"."sais_application_other_data_id_seq" OWNED BY "sais_application_other_data"."id";
 ALTER SEQUENCE "public"."school_department_id_seq" OWNED BY "school_department"."id";
 ALTER SEQUENCE "public"."school_school_id_seq" OWNED BY "school"."id";
 ALTER SEQUENCE "public"."school_study_level_id_seq" OWNED BY "school_study_level"."id";
@@ -2738,10 +3663,18 @@ ALTER SEQUENCE "public"."student_representative_id_seq" OWNED BY "student_repres
 ALTER SEQUENCE "public"."study_period_event_id_seq" OWNED BY "study_period_event"."id";
 ALTER SEQUENCE "public"."study_period_id_seq" OWNED BY "study_period"."id";
 ALTER SEQUENCE "public"."study_year_id_seq" OWNED BY "study_year"."id";
+ALTER SEQUENCE "public"."study_year_schedule_id_seq" OWNED BY "study_year_schedule"."id";
+ALTER SEQUENCE "public"."study_year_schedule_legend_id_seq" OWNED BY "study_year_schedule_legend"."id";
 ALTER SEQUENCE "public"."subject_connect_id_seq" OWNED BY "subject_connect"."id";
 ALTER SEQUENCE "public"."subject_id_seq" OWNED BY "subject"."id";
 ALTER SEQUENCE "public"."subject_lang_id_seq" OWNED BY "subject_lang"."id";
+ALTER SEQUENCE "public"."subject_study_period_capacity_id_seq" OWNED BY "subject_study_period_capacity"."id";
 ALTER SEQUENCE "public"."subject_study_period_id_seq" OWNED BY "subject_study_period"."id";
+ALTER SEQUENCE "public"."subject_study_period_plan_capacity_id_seq" OWNED BY "subject_study_period_plan_capacity"."id";
+ALTER SEQUENCE "public"."subject_study_period_plan_curriculum_id_seq" OWNED BY "subject_study_period_plan_curriculum"."id";
+ALTER SEQUENCE "public"."subject_study_period_plan_id_seq" OWNED BY "subject_study_period_plan"."id";
+ALTER SEQUENCE "public"."subject_study_period_plan_studyform_id_seq" OWNED BY "subject_study_period_plan_studyform"."id";
+ALTER SEQUENCE "public"."subject_study_period_student_group_id_seq" OWNED BY "subject_study_period_student_group"."id";
 ALTER SEQUENCE "public"."subject_study_period_teacher_id_seq" OWNED BY "subject_study_period_teacher"."id";
 ALTER SEQUENCE "public"."teacher_id_seq" OWNED BY "teacher"."id";
 ALTER SEQUENCE "public"."teacher_mobility_id_seq" OWNED BY "teacher_mobility"."id";
@@ -2750,6 +3683,10 @@ ALTER SEQUENCE "public"."teacher_position_ehis_id_seq" OWNED BY "teacher_positio
 ALTER SEQUENCE "public"."teacher_qualification_id_seq" OWNED BY "teacher_qualification"."id";
 ALTER SEQUENCE "public"."user__id_seq" OWNED BY "user_"."id";
 ALTER SEQUENCE "public"."user_rights_id_seq" OWNED BY "user_rights"."id";
+ALTER SEQUENCE "public"."ws_ehis_student_log_id_seq" OWNED BY "ws_ehis_student_log"."id";
+ALTER SEQUENCE "public"."ws_ehis_teacher_log_id_seq" OWNED BY "ws_ehis_teacher_log"."id";
+ALTER SEQUENCE "public"."ws_sais_log_detail_id_seq" OWNED BY "ws_sais_log_detail"."id";
+ALTER SEQUENCE "public"."ws_sais_log_id_seq" OWNED BY "ws_sais_log"."id";
 
 -- ----------------------------
 -- Indexes structure for table application
@@ -2803,8 +3740,8 @@ ALTER TABLE "public"."application_planned_subject" ADD PRIMARY KEY ("id");
 -- ----------------------------
 -- Indexes structure for table application_planned_subject_equivalent
 -- ----------------------------
-CREATE INDEX "IXFK_application_planned_subject_equivalent_application_planne" ON "public"."application_planned_subject_equivalent" USING btree ("application_planned_subject_id");
-CREATE INDEX "IXFK_application_planned_subject_equivalent_subject" ON "public"."application_planned_subject_equivalent" USING btree ("subject_id");
+CREATE INDEX "IXFK_application_planned_subject_equivalent _application_planne" ON "public"."application_planned_subject_equivalent" USING btree ("application_planned_subject_id");
+CREATE INDEX "IXFK_application_planned_subject_equivalent _subject" ON "public"."application_planned_subject_equivalent" USING btree ("subject_id");
 
 -- ----------------------------
 -- Primary Key structure for table application_planned_subject_equivalent
@@ -3238,6 +4175,7 @@ CREATE INDEX "IXFK_directive_student_student_group" ON "public"."directive_stude
 CREATE INDEX "IXFK_directive_student_application" ON "public"."directive_student" USING btree ("application_id");
 CREATE INDEX "IXFK_directive_student_person" ON "public"."directive_student" USING btree ("person_id");
 CREATE INDEX "IXFK_directive_student_history" ON "public"."directive_student" USING btree ("student_history_id");
+CREATE INDEX "IXFK_directive_student_sais_application" ON "public"."directive_student" USING btree ("sais_application_id");
 
 -- ----------------------------
 -- Uniques structure for table directive_student
@@ -3269,6 +4207,175 @@ CREATE INDEX "IXFK_general_message_target_general_message" ON "public"."general_
 -- Primary Key structure for table general_message_target
 -- ----------------------------
 ALTER TABLE "public"."general_message_target" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal
+-- ----------------------------
+CREATE INDEX "IXFK_journal_classifier" ON "public"."journal" USING btree ("assessment_code");
+CREATE INDEX "IXFK_journal_classifier_02" ON "public"."journal" USING btree ("group_proportion_code");
+CREATE INDEX "IXFK_journal_classifier_03" ON "public"."journal" USING btree ("status_code");
+CREATE INDEX "IXFK_journal_school" ON "public"."journal" USING btree ("school_id");
+CREATE INDEX "IXFK_journal_study_year" ON "public"."journal" USING btree ("study_year_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal
+-- ----------------------------
+ALTER TABLE "public"."journal" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal_capacity
+-- ----------------------------
+CREATE INDEX "IXFK_journal_capacity_journal" ON "public"."journal_capacity" USING btree ("journal_id");
+CREATE INDEX "IXFK_journal_capacity_journal_capacity_type" ON "public"."journal_capacity" USING btree ("journal_capacity_type_id");
+CREATE INDEX "IXFK_journal_capacity_study_period" ON "public"."journal_capacity" USING btree ("study_period_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal_capacity
+-- ----------------------------
+ALTER TABLE "public"."journal_capacity" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal_capacity_type
+-- ----------------------------
+CREATE INDEX "IXFK_journal_capacity_type_classifier" ON "public"."journal_capacity_type" USING btree ("capacity_type_code");
+CREATE INDEX "IXFK_journal_capacity_type_journal" ON "public"."journal_capacity_type" USING btree ("journal_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal_capacity_type
+-- ----------------------------
+ALTER TABLE "public"."journal_capacity_type" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal_entry
+-- ----------------------------
+CREATE INDEX "IXFK_journal_entry_classifier" ON "public"."journal_entry" USING btree ("entry_type_code");
+CREATE INDEX "IXFK_journal_entry_journal" ON "public"."journal_entry" USING btree ("journal_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal_entry
+-- ----------------------------
+ALTER TABLE "public"."journal_entry" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal_entry_capacity_type
+-- ----------------------------
+CREATE INDEX "IXFK_journal_entry_capacity_type_classifier" ON "public"."journal_entry_capacity_type" USING btree ("capacity_type_code");
+CREATE INDEX "IXFK_journal_entry_capacity_type_journal_entry" ON "public"."journal_entry_capacity_type" USING btree ("journal_entry_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal_entry_capacity_type
+-- ----------------------------
+ALTER TABLE "public"."journal_entry_capacity_type" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal_entry_student
+-- ----------------------------
+CREATE INDEX "IXFK_journal_entry_student_classifier" ON "public"."journal_entry_student" USING btree ("absence_code");
+CREATE INDEX "IXFK_journal_entry_student_classifier_02" ON "public"."journal_entry_student" USING btree ("grade_code");
+CREATE INDEX "IXFK_journal_entry_student_journal_entry" ON "public"."journal_entry_student" USING btree ("journal_entry_id");
+CREATE INDEX "IXFK_journal_entry_student_journal_student" ON "public"."journal_entry_student" USING btree ("journal_student_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal_entry_student
+-- ----------------------------
+ALTER TABLE "public"."journal_entry_student" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal_entry_student_history
+-- ----------------------------
+CREATE INDEX "IXFK_journal_entry_student_history_classifier" ON "public"."journal_entry_student_history" USING btree ("grade_code");
+CREATE INDEX "IXFK_journal_entry_student_history_journal_entry_student" ON "public"."journal_entry_student_history" USING btree ("journal_entry_student_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal_entry_student_history
+-- ----------------------------
+ALTER TABLE "public"."journal_entry_student_history" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal_omodule_theme
+-- ----------------------------
+CREATE INDEX "IXFK_journal_omodule_theme_curriculum_version_omodule_theme" ON "public"."journal_omodule_theme" USING btree ("curriculum_version_omodule_theme_id");
+CREATE INDEX "IXFK_journal_omodule_theme_journal" ON "public"."journal_omodule_theme" USING btree ("journal_id");
+CREATE INDEX "IXFK_journal_omodule_theme_lesson_plan_module" ON "public"."journal_omodule_theme" USING btree ("lesson_plan_module_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal_omodule_theme
+-- ----------------------------
+ALTER TABLE "public"."journal_omodule_theme" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal_student
+-- ----------------------------
+CREATE INDEX "IXFK_journal_student_journal" ON "public"."journal_student" USING btree ("journal_id");
+CREATE INDEX "IXFK_journal_student_student" ON "public"."journal_student" USING btree ("student_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal_student
+-- ----------------------------
+ALTER TABLE "public"."journal_student" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table journal_teacher
+-- ----------------------------
+CREATE INDEX "IXFK_journal_teacher_journal" ON "public"."journal_teacher" USING btree ("journal_id");
+CREATE INDEX "IXFK_journal_teacher_teacher" ON "public"."journal_teacher" USING btree ("teacher_id");
+
+-- ----------------------------
+-- Primary Key structure for table journal_teacher
+-- ----------------------------
+ALTER TABLE "public"."journal_teacher" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table lesson_plan
+-- ----------------------------
+CREATE INDEX "IXFK_lesson_distribution_plan_curriculum_version" ON "public"."lesson_plan" USING btree ("curriculum_version_id");
+CREATE INDEX "IXFK_lesson_distribution_plan_school" ON "public"."lesson_plan" USING btree ("school_id");
+CREATE INDEX "IXFK_lesson_distribution_plan_student_group" ON "public"."lesson_plan" USING btree ("student_group_id");
+CREATE INDEX "IXFK_lesson_distribution_plan_study_year" ON "public"."lesson_plan" USING btree ("study_year_id");
+
+-- ----------------------------
+-- Primary Key structure for table lesson_plan
+-- ----------------------------
+ALTER TABLE "public"."lesson_plan" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table lesson_plan_module
+-- ----------------------------
+CREATE INDEX "IXFK_lesson_distribution_plan_module_lesson_distribution_plan" ON "public"."lesson_plan_module" USING btree ("lesson_plan_id");
+CREATE INDEX "IXFK_lesson_plan_module_curriculum_version_omodule" ON "public"."lesson_plan_module" USING btree ("curriculum_version_omodule_id");
+CREATE INDEX "IXFK_lesson_plan_module_teacher" ON "public"."lesson_plan_module" USING btree ("teacher_id");
+
+-- ----------------------------
+-- Primary Key structure for table lesson_plan_module
+-- ----------------------------
+ALTER TABLE "public"."lesson_plan_module" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table lesson_time
+-- ----------------------------
+CREATE INDEX "IXFK_lesson_time_lesson_time_building_group" ON "public"."lesson_time" USING btree ("lesson_time_building_group_id");
+CREATE INDEX "IXFK_lesson_time_school" ON "public"."lesson_time" USING btree ("school_id");
+
+-- ----------------------------
+-- Primary Key structure for table lesson_time
+-- ----------------------------
+ALTER TABLE "public"."lesson_time" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table lesson_time_building
+-- ----------------------------
+CREATE INDEX "IXFK_lesson_time_building_lesson_time_building_group" ON "public"."lesson_time_building" USING btree ("lesson_time_building_group_id");
+CREATE INDEX "IXFK_lesson_day_building_building" ON "public"."lesson_time_building" USING btree ("building_id");
+
+-- ----------------------------
+-- Primary Key structure for table lesson_time_building
+-- ----------------------------
+ALTER TABLE "public"."lesson_time_building" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Primary Key structure for table lesson_time_building_group
+-- ----------------------------
+ALTER TABLE "public"."lesson_time_building_group" ADD PRIMARY KEY ("id");
 
 -- ----------------------------
 -- Indexes structure for table message
@@ -3327,6 +4434,54 @@ ALTER TABLE "public"."person" ADD UNIQUE ("idcode");
 ALTER TABLE "public"."person" ADD PRIMARY KEY ("id");
 
 -- ----------------------------
+-- Indexes structure for table protocol
+-- ----------------------------
+CREATE INDEX "IXFK_protocol_classifier" ON "public"."protocol" USING btree ("status_code");
+CREATE INDEX "IXFK_protocol_school" ON "public"."protocol" USING btree ("school_id");
+
+-- ----------------------------
+-- Primary Key structure for table protocol
+-- ----------------------------
+ALTER TABLE "public"."protocol" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table protocol_student
+-- ----------------------------
+CREATE INDEX "IXFK_protocol_student_classifier" ON "public"."protocol_student" USING btree ("grade_code");
+CREATE INDEX "IXFK_protocol_student_protocol" ON "public"."protocol_student" USING btree ("protocol_id");
+CREATE INDEX "IXFK_protocol_student_student" ON "public"."protocol_student" USING btree ("student_id");
+
+-- ----------------------------
+-- Primary Key structure for table protocol_student
+-- ----------------------------
+ALTER TABLE "public"."protocol_student" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table protocol_student_history
+-- ----------------------------
+CREATE INDEX "IXFK_protocol_student_history_classifier" ON "public"."protocol_student_history" USING btree ("grade_code");
+CREATE INDEX "IXFK_protocol_student_history_protocol_student" ON "public"."protocol_student_history" USING btree ("protocol_student_id");
+
+-- ----------------------------
+-- Primary Key structure for table protocol_student_history
+-- ----------------------------
+ALTER TABLE "public"."protocol_student_history" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table protocol_vdata
+-- ----------------------------
+CREATE INDEX "IXFK_protocol_vdata_curriculum_version" ON "public"."protocol_vdata" USING btree ("curriculum_version_id");
+CREATE INDEX "IXFK_protocol_vdata_curriculum_version_omodule" ON "public"."protocol_vdata" USING btree ("curriculum_version_omodule_id");
+CREATE INDEX "IXFK_protocol_vdata_protocol" ON "public"."protocol_vdata" USING btree ("protocol_id");
+CREATE INDEX "IXFK_protocol_vdata_study_year" ON "public"."protocol_vdata" USING btree ("study_year_id");
+CREATE INDEX "IXFK_protocol_vdata_teacher" ON "public"."protocol_vdata" USING btree ("teacher_id");
+
+-- ----------------------------
+-- Primary Key structure for table protocol_vdata
+-- ----------------------------
+ALTER TABLE "public"."protocol_vdata" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
 -- Indexes structure for table room
 -- ----------------------------
 CREATE INDEX "IXFK_room_building" ON "public"."room" USING btree ("building_id");
@@ -3381,16 +4536,36 @@ CREATE INDEX "IXFK_sais_application_sais_admission" ON "public"."sais_applicatio
 ALTER TABLE "public"."sais_application" ADD PRIMARY KEY ("id");
 
 -- ----------------------------
+-- Indexes structure for table sais_application_grade
+-- ----------------------------
+CREATE INDEX "IXFK_sais_application_grade_sais_application" ON "public"."sais_application_grade" USING btree ("sais_application_id");
+
+-- ----------------------------
+-- Primary Key structure for table sais_application_grade
+-- ----------------------------
+ALTER TABLE "public"."sais_application_grade" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
 -- Indexes structure for table sais_application_graduated_school
 -- ----------------------------
 CREATE INDEX "IXFK_sais_application_graduated_school_classifier" ON "public"."sais_application_graduated_school" USING btree ("study_level_code");
 CREATE INDEX "IXFK_sais_application_graduated_school_classifier_02" ON "public"."sais_application_graduated_school" USING btree ("study_form_code");
-CREATE INDEX "IXFK_sais_application_graduated_school_sais_application" ON "public"."sais_application_graduated_school" USING btree ("sais_applucation_id");
+CREATE INDEX "IXFK_sais_application_graduated_school_sais_application" ON "public"."sais_application_graduated_school" USING btree ("sais_application_id");
 
 -- ----------------------------
 -- Primary Key structure for table sais_application_graduated_school
 -- ----------------------------
 ALTER TABLE "public"."sais_application_graduated_school" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table sais_application_other_data
+-- ----------------------------
+CREATE INDEX "IXFK_sais_application_other_data_sais_application" ON "public"."sais_application_other_data" USING btree ("sais_application_id");
+
+-- ----------------------------
+-- Primary Key structure for table sais_application_other_data
+-- ----------------------------
+ALTER TABLE "public"."sais_application_other_data" ADD PRIMARY KEY ("id");
 
 -- ----------------------------
 -- Primary Key structure for table sais_classifier
@@ -3402,6 +4577,11 @@ ALTER TABLE "public"."sais_classifier" ADD PRIMARY KEY ("code");
 -- ----------------------------
 CREATE INDEX "IXFK_school_OIS_FILE" ON "public"."school" USING btree ("ois_file_id");
 CREATE INDEX "IXFK_school_classifier" ON "public"."school" USING btree ("ehis_school_code");
+
+-- ----------------------------
+-- Uniques structure for table school
+-- ----------------------------
+ALTER TABLE "public"."school" ADD UNIQUE ("ehis_school_code");
 
 -- ----------------------------
 -- Primary Key structure for table school
@@ -3633,12 +4813,40 @@ ALTER TABLE "public"."study_year" ADD UNIQUE ("school_id", "year_code");
 ALTER TABLE "public"."study_year" ADD PRIMARY KEY ("id");
 
 -- ----------------------------
+-- Indexes structure for table study_year_schedule
+-- ----------------------------
+CREATE INDEX "IXFK_study_year_schedule_school" ON "public"."study_year_schedule" USING btree ("school_id");
+CREATE INDEX "IXFK_study_year_schedule_student_group" ON "public"."study_year_schedule" USING btree ("student_group_id");
+CREATE INDEX "IXFK_study_year_schedule_study_period" ON "public"."study_year_schedule" USING btree ("study_period_id");
+CREATE INDEX "IXFK_study_year_schedule_study_year_schedule_legend" ON "public"."study_year_schedule" USING btree ("study_year_schedule_legend_id");
+
+-- ----------------------------
+-- Primary Key structure for table study_year_schedule
+-- ----------------------------
+ALTER TABLE "public"."study_year_schedule" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table study_year_schedule_legend
+-- ----------------------------
+CREATE INDEX "IXFK_study_year_schedule_legend_school" ON "public"."study_year_schedule_legend" USING btree ("school_id");
+
+-- ----------------------------
+-- Primary Key structure for table study_year_schedule_legend
+-- ----------------------------
+ALTER TABLE "public"."study_year_schedule_legend" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
 -- Indexes structure for table subject
 -- ----------------------------
 CREATE INDEX "IXFK_subject_classifier" ON "public"."subject" USING btree ("assessment_code");
 CREATE INDEX "IXFK_subject_classifier_02" ON "public"."subject" USING btree ("status_code");
 CREATE INDEX "IXFK_subject_school" ON "public"."subject" USING btree ("school_id");
 CREATE INDEX "IXFK_subject_school_department" ON "public"."subject" USING btree ("school_department_id");
+
+-- ----------------------------
+-- Uniques structure for table subject
+-- ----------------------------
+ALTER TABLE "public"."subject" ADD UNIQUE ("school_id", "code");
 
 -- ----------------------------
 -- Primary Key structure for table subject
@@ -3673,11 +4881,79 @@ ALTER TABLE "public"."subject_lang" ADD PRIMARY KEY ("id");
 -- ----------------------------
 CREATE INDEX "IXFK_subject_teaching_study_period" ON "public"."subject_study_period" USING btree ("study_period_id");
 CREATE INDEX "IXFK_subject_teaching_subject" ON "public"."subject_study_period" USING btree ("subject_id");
+CREATE INDEX "IXFK_subject_study_period_classifier" ON "public"."subject_study_period" USING btree ("group_proportion_code");
+CREATE INDEX "IXFK_subject_study_period_classifier_02" ON "public"."subject_study_period" USING btree ("declaration_type_code");
 
 -- ----------------------------
 -- Primary Key structure for table subject_study_period
 -- ----------------------------
 ALTER TABLE "public"."subject_study_period" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table subject_study_period_capacity
+-- ----------------------------
+CREATE INDEX "IXFK_subject_study_period_capacity_classifier" ON "public"."subject_study_period_capacity" USING btree ("capacity_type_code");
+CREATE INDEX "IXFK_subject_study_period_capacity_subject_study_period" ON "public"."subject_study_period_capacity" USING btree ("subject_study_period_id");
+
+-- ----------------------------
+-- Primary Key structure for table subject_study_period_capacity
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_capacity" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table subject_study_period_plan
+-- ----------------------------
+CREATE INDEX "IXFK_subject_study_period_plan_study_period" ON "public"."subject_study_period_plan" USING btree ("study_period_id");
+CREATE INDEX "IXFK_subject_study_period_plan_subject" ON "public"."subject_study_period_plan" USING btree ("subject_id");
+
+-- ----------------------------
+-- Primary Key structure for table subject_study_period_plan
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_plan" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table subject_study_period_plan_capacity
+-- ----------------------------
+CREATE INDEX "IXFK_subject_study_period_plan_capacity_classifier" ON "public"."subject_study_period_plan_capacity" USING btree ("capacity_type_code");
+CREATE INDEX "IXFK_subject_study_period_plan_capacity_subject_study_period_pl" ON "public"."subject_study_period_plan_capacity" USING btree ("subject_study_period_plan_id");
+
+-- ----------------------------
+-- Primary Key structure for table subject_study_period_plan_capacity
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_plan_capacity" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table subject_study_period_plan_curriculum
+-- ----------------------------
+CREATE INDEX "IXFK_subject_study_period_plan_curriculum_curriculum" ON "public"."subject_study_period_plan_curriculum" USING btree ("curriculum_id");
+CREATE INDEX "IXFK_subject_study_period_plan_curriculum_subject_study_period_" ON "public"."subject_study_period_plan_curriculum" USING btree ("subject_study_period_plan_id");
+
+-- ----------------------------
+-- Primary Key structure for table subject_study_period_plan_curriculum
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_plan_curriculum" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table subject_study_period_plan_studyform
+-- ----------------------------
+CREATE INDEX "IXFK_subject_study_period_plan_studyform_classifier" ON "public"."subject_study_period_plan_studyform" USING btree ("study_form_code");
+CREATE INDEX "IXFK_subject_study_period_plan_studyform_subject_study_period_p" ON "public"."subject_study_period_plan_studyform" USING btree ("subject_study_period_plan_id");
+
+-- ----------------------------
+-- Primary Key structure for table subject_study_period_plan_studyform
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_plan_studyform" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table subject_study_period_student_group
+-- ----------------------------
+CREATE INDEX "IXFK_subject_study_period_student_group_student_group" ON "public"."subject_study_period_student_group" USING btree ("student_group_id");
+CREATE INDEX "IXFK_subject_study_period_student_group_subject_study_period" ON "public"."subject_study_period_student_group" USING btree ("subject_study_period_id");
+
+-- ----------------------------
+-- Primary Key structure for table subject_study_period_student_group
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_student_group" ADD PRIMARY KEY ("id");
 
 -- ----------------------------
 -- Indexes structure for table subject_study_period_teacher
@@ -3800,27 +5076,70 @@ CREATE INDEX "IXFK_user_role_default_classifier" ON "public"."user_role_default"
 ALTER TABLE "public"."user_role_default" ADD PRIMARY KEY ("role_code");
 
 -- ----------------------------
+-- Indexes structure for table ws_ehis_student_log
+-- ----------------------------
+CREATE INDEX "IXFK_ws_ehis_student_log_directive" ON "public"."ws_ehis_student_log" USING btree ("directive_id");
+CREATE INDEX "IXFK_ws_ehis_student_log_school" ON "public"."ws_ehis_student_log" USING btree ("school_id");
+
+-- ----------------------------
+-- Primary Key structure for table ws_ehis_student_log
+-- ----------------------------
+ALTER TABLE "public"."ws_ehis_student_log" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table ws_ehis_teacher_log
+-- ----------------------------
+CREATE INDEX "IXFK_ws_ehis_teacher_log_school" ON "public"."ws_ehis_teacher_log" USING btree ("school_id");
+CREATE INDEX "IXFK_ws_ehis_teacher_log_teacher" ON "public"."ws_ehis_teacher_log" USING btree ("teacher_id");
+
+-- ----------------------------
+-- Primary Key structure for table ws_ehis_teacher_log
+-- ----------------------------
+ALTER TABLE "public"."ws_ehis_teacher_log" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table ws_sais_log
+-- ----------------------------
+CREATE INDEX "IXFK_ws_sais_log_school" ON "public"."ws_sais_log" USING btree ("school_id");
+CREATE INDEX "IXFK_ws_sais_log_ws_sais_log" ON "public"."ws_sais_log" USING btree ("first_ws_sais_log_id");
+
+-- ----------------------------
+-- Primary Key structure for table ws_sais_log
+-- ----------------------------
+ALTER TABLE "public"."ws_sais_log" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
+-- Indexes structure for table ws_sais_log_detail
+-- ----------------------------
+CREATE INDEX "IXFK_ws_sais_log_detail_ws_sais_log" ON "public"."ws_sais_log_detail" USING btree ("ws_sais_log_id");
+
+-- ----------------------------
+-- Primary Key structure for table ws_sais_log_detail
+-- ----------------------------
+ALTER TABLE "public"."ws_sais_log_detail" ADD PRIMARY KEY ("id");
+
+-- ----------------------------
 -- Foreign Key structure for table "public"."application"
 -- ----------------------------
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("old_fin_specific_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("new_fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("old_fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("new_study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("old_study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("reason_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("study_period_start_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("study_period_end_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("new_fin_specific_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("country_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("ehis_school_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("abroad_purpose_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."application" ADD FOREIGN KEY ("abroad_programme_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."application" ADD FOREIGN KEY ("old_curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("new_curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."application" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("old_study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("new_study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("old_fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("new_fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("old_fin_specific_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("new_fin_specific_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("country_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("ehis_school_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("study_period_start_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("study_period_end_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."application" ADD FOREIGN KEY ("academic_application_id") REFERENCES "public"."application" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("new_curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("abroad_purpose_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application" ADD FOREIGN KEY ("reason_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."application_file"
@@ -3830,8 +5149,8 @@ ALTER TABLE "public"."application_file" ADD FOREIGN KEY ("ois_file_id") REFERENC
 -- ----------------------------
 -- Foreign Key structure for table "public"."application_planned_subject_equivalent"
 -- ----------------------------
-ALTER TABLE "public"."application_planned_subject_equivalent" ADD FOREIGN KEY ("subject_id") REFERENCES "public"."subject" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."application_planned_subject_equivalent" ADD FOREIGN KEY ("application_planned_subject_id") REFERENCES "public"."application_planned_subject" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."application_planned_subject_equivalent" ADD FOREIGN KEY ("subject_id") REFERENCES "public"."subject" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."building"
@@ -3841,10 +5160,10 @@ ALTER TABLE "public"."building" ADD FOREIGN KEY ("school_id") REFERENCES "public
 -- ----------------------------
 -- Foreign Key structure for table "public"."certificate"
 -- ----------------------------
-ALTER TABLE "public"."certificate" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."certificate" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."certificate" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."certificate" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."certificate" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."certificate" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."classifier"
@@ -3862,15 +5181,15 @@ ALTER TABLE "public"."classifier_connect" ADD FOREIGN KEY ("main_classifier_code
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum"
 -- ----------------------------
-ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("draft_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("orig_study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("joint_mentor_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("ehis_status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("isced_class_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("state_curriculum_id") REFERENCES "public"."state_curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("orig_study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("consecution_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("state_curriculum_id") REFERENCES "public"."state_curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("isced_class_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("ehis_status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum" ADD FOREIGN KEY ("draft_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_department"
@@ -3900,8 +5219,8 @@ ALTER TABLE "public"."curriculum_joint_partners" ADD FOREIGN KEY ("curriculum_id
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_module"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_module" ADD FOREIGN KEY ("module_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_module" ADD FOREIGN KEY ("curriculum_id") REFERENCES "public"."curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_module" ADD FOREIGN KEY ("module_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_module_competence"
@@ -3912,8 +5231,8 @@ ALTER TABLE "public"."curriculum_module_competence" ADD FOREIGN KEY ("competence
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_module_occupation"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_module_occupation" ADD FOREIGN KEY ("curriculum_module_id") REFERENCES "public"."curriculum_module" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_module_occupation" ADD FOREIGN KEY ("occupation_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_module_occupation" ADD FOREIGN KEY ("curriculum_module_id") REFERENCES "public"."curriculum_module" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_module_outcomes"
@@ -3935,8 +5254,8 @@ ALTER TABLE "public"."curriculum_occupation_speciality" ADD FOREIGN KEY ("specia
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_speciality"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_speciality" ADD FOREIGN KEY ("curriculum_id") REFERENCES "public"."curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_speciality" ADD FOREIGN KEY ("occupation_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_speciality" ADD FOREIGN KEY ("curriculum_id") REFERENCES "public"."curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_study_form"
@@ -3952,11 +5271,11 @@ ALTER TABLE "public"."curriculum_study_lang" ADD FOREIGN KEY ("curriculum_id") R
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_version" ADD FOREIGN KEY ("curriculum_id") REFERENCES "public"."curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."curriculum_version" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."curriculum_version" ADD FOREIGN KEY ("curriculum_study_form_id") REFERENCES "public"."curriculum_study_form" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version" ADD FOREIGN KEY ("school_department_id") REFERENCES "public"."school_department" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_version" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_version" ADD FOREIGN KEY ("curriculum_study_form_id") REFERENCES "public"."curriculum_study_form" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_version" ADD FOREIGN KEY ("curriculum_id") REFERENCES "public"."curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_elective_module"
@@ -3966,8 +5285,8 @@ ALTER TABLE "public"."curriculum_version_elective_module" ADD FOREIGN KEY ("curr
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_hmodule"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_version_hmodule" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version_hmodule" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_version_hmodule" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_hmodule_speciality"
@@ -3978,22 +5297,22 @@ ALTER TABLE "public"."curriculum_version_hmodule_speciality" ADD FOREIGN KEY ("c
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_hmodule_subject"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_version_hmodule_subject" ADD FOREIGN KEY ("curriculum_version_elective_module_id") REFERENCES "public"."curriculum_version_elective_module" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version_hmodule_subject" ADD FOREIGN KEY ("curriculum_version_hmodule_id") REFERENCES "public"."curriculum_version_hmodule" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_version_hmodule_subject" ADD FOREIGN KEY ("curriculum_version_elective_module_id") REFERENCES "public"."curriculum_version_elective_module" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version_hmodule_subject" ADD FOREIGN KEY ("subject_id") REFERENCES "public"."subject" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_omodule"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_version_omodule" ADD FOREIGN KEY ("assessment_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version_omodule" ADD FOREIGN KEY ("curriculum_module_id") REFERENCES "public"."curriculum_module" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version_omodule" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_version_omodule" ADD FOREIGN KEY ("assessment_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_omodule_capacity"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_version_omodule_capacity" ADD FOREIGN KEY ("curriculum_version_omodule_id") REFERENCES "public"."curriculum_version_omodule" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version_omodule_capacity" ADD FOREIGN KEY ("capacity_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_version_omodule_capacity" ADD FOREIGN KEY ("curriculum_version_omodule_id") REFERENCES "public"."curriculum_version_omodule" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_omodule_outcomes"
@@ -4010,8 +5329,8 @@ ALTER TABLE "public"."curriculum_version_omodule_theme" ADD FOREIGN KEY ("assess
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_omodule_theme_capacity"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_version_omodule_theme_capacity" ADD FOREIGN KEY ("curriculum_version_omodule_theme_id") REFERENCES "public"."curriculum_version_omodule_theme" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version_omodule_theme_capacity" ADD FOREIGN KEY ("capacity_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_version_omodule_theme_capacity" ADD FOREIGN KEY ("curriculum_version_omodule_theme_id") REFERENCES "public"."curriculum_version_omodule_theme" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_omodule_year_capacity"
@@ -4021,18 +5340,18 @@ ALTER TABLE "public"."curriculum_version_omodule_year_capacity" ADD FOREIGN KEY 
 -- ----------------------------
 -- Foreign Key structure for table "public"."curriculum_version_speciality"
 -- ----------------------------
-ALTER TABLE "public"."curriculum_version_speciality" ADD FOREIGN KEY ("curriculum_speciality_id") REFERENCES "public"."curriculum_speciality" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."curriculum_version_speciality" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."curriculum_version_speciality" ADD FOREIGN KEY ("curriculum_speciality_id") REFERENCES "public"."curriculum_speciality" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."directive"
 -- ----------------------------
-ALTER TABLE "public"."directive" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive" ADD FOREIGN KEY ("directive_coordinator_id") REFERENCES "public"."directive_coordinator" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive" ADD FOREIGN KEY ("canceled_directive_id") REFERENCES "public"."directive" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive" ADD FOREIGN KEY ("cancel_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."directive" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive" ADD FOREIGN KEY ("cancel_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive" ADD FOREIGN KEY ("canceled_directive_id") REFERENCES "public"."directive" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive" ADD FOREIGN KEY ("directive_coordinator_id") REFERENCES "public"."directive_coordinator" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."directive_coordinator"
@@ -4042,17 +5361,19 @@ ALTER TABLE "public"."directive_coordinator" ADD FOREIGN KEY ("school_id") REFER
 -- ----------------------------
 -- Foreign Key structure for table "public"."directive_student"
 -- ----------------------------
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("previous_study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("state_language_ects_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("curriculum_grade_id") REFERENCES "public"."curriculum_grade" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("directive_id") REFERENCES "public"."directive" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("student_group_id") REFERENCES "public"."student_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("study_period_end_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("study_period_start_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("abroad_purpose_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("sais_application_id") REFERENCES "public"."sais_application" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("student_history_id") REFERENCES "public"."student_history" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("study_period_start_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("study_period_end_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("student_group_id") REFERENCES "public"."student_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("directive_id") REFERENCES "public"."directive" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("curriculum_grade_id") REFERENCES "public"."curriculum_grade" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("state_language_ects_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("previous_study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("reason_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("study_load_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
@@ -4061,7 +5382,6 @@ ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("fin_specific_code") R
 ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("country_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("ehis_school_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("abroad_purpose_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."directive_student" ADD FOREIGN KEY ("abroad_programme_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
@@ -4072,29 +5392,123 @@ ALTER TABLE "public"."general_message" ADD FOREIGN KEY ("school_id") REFERENCES 
 -- ----------------------------
 -- Foreign Key structure for table "public"."general_message_target"
 -- ----------------------------
-ALTER TABLE "public"."general_message_target" ADD FOREIGN KEY ("role_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."general_message_target" ADD FOREIGN KEY ("general_message_id") REFERENCES "public"."general_message" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."general_message_target" ADD FOREIGN KEY ("role_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal"
+-- ----------------------------
+ALTER TABLE "public"."journal" ADD FOREIGN KEY ("assessment_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal" ADD FOREIGN KEY ("group_proportion_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal" ADD FOREIGN KEY ("study_year_id") REFERENCES "public"."study_year" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal_capacity"
+-- ----------------------------
+ALTER TABLE "public"."journal_capacity" ADD FOREIGN KEY ("journal_id") REFERENCES "public"."journal" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_capacity" ADD FOREIGN KEY ("study_period_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_capacity" ADD FOREIGN KEY ("journal_capacity_type_id") REFERENCES "public"."journal_capacity_type" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal_capacity_type"
+-- ----------------------------
+ALTER TABLE "public"."journal_capacity_type" ADD FOREIGN KEY ("capacity_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_capacity_type" ADD FOREIGN KEY ("journal_id") REFERENCES "public"."journal" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal_entry"
+-- ----------------------------
+ALTER TABLE "public"."journal_entry" ADD FOREIGN KEY ("entry_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_entry" ADD FOREIGN KEY ("journal_id") REFERENCES "public"."journal" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal_entry_capacity_type"
+-- ----------------------------
+ALTER TABLE "public"."journal_entry_capacity_type" ADD FOREIGN KEY ("capacity_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_entry_capacity_type" ADD FOREIGN KEY ("journal_entry_id") REFERENCES "public"."journal_entry" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal_entry_student"
+-- ----------------------------
+ALTER TABLE "public"."journal_entry_student" ADD FOREIGN KEY ("absence_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_entry_student" ADD FOREIGN KEY ("journal_entry_id") REFERENCES "public"."journal_entry" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_entry_student" ADD FOREIGN KEY ("journal_student_id") REFERENCES "public"."journal_student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_entry_student" ADD FOREIGN KEY ("grade_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal_entry_student_history"
+-- ----------------------------
+ALTER TABLE "public"."journal_entry_student_history" ADD FOREIGN KEY ("journal_entry_student_id") REFERENCES "public"."journal_entry_student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_entry_student_history" ADD FOREIGN KEY ("grade_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal_omodule_theme"
+-- ----------------------------
+ALTER TABLE "public"."journal_omodule_theme" ADD FOREIGN KEY ("journal_id") REFERENCES "public"."journal" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_omodule_theme" ADD FOREIGN KEY ("lesson_plan_module_id") REFERENCES "public"."lesson_plan_module" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_omodule_theme" ADD FOREIGN KEY ("curriculum_version_omodule_theme_id") REFERENCES "public"."curriculum_version_omodule_theme" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal_student"
+-- ----------------------------
+ALTER TABLE "public"."journal_student" ADD FOREIGN KEY ("journal_id") REFERENCES "public"."journal" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_student" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."journal_teacher"
+-- ----------------------------
+ALTER TABLE "public"."journal_teacher" ADD FOREIGN KEY ("journal_id") REFERENCES "public"."journal" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."journal_teacher" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."lesson_plan"
+-- ----------------------------
+ALTER TABLE "public"."lesson_plan" ADD FOREIGN KEY ("student_group_id") REFERENCES "public"."student_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."lesson_plan" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."lesson_plan" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."lesson_plan" ADD FOREIGN KEY ("study_year_id") REFERENCES "public"."study_year" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."lesson_plan_module"
+-- ----------------------------
+ALTER TABLE "public"."lesson_plan_module" ADD FOREIGN KEY ("curriculum_version_omodule_id") REFERENCES "public"."curriculum_version_omodule" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."lesson_plan_module" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."lesson_plan_module" ADD FOREIGN KEY ("lesson_plan_id") REFERENCES "public"."lesson_plan" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."lesson_time"
+-- ----------------------------
+ALTER TABLE "public"."lesson_time" ADD FOREIGN KEY ("lesson_time_building_group_id") REFERENCES "public"."lesson_time_building_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."lesson_time" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."lesson_time_building"
+-- ----------------------------
+ALTER TABLE "public"."lesson_time_building" ADD FOREIGN KEY ("lesson_time_building_group_id") REFERENCES "public"."lesson_time_building_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."lesson_time_building" ADD FOREIGN KEY ("building_id") REFERENCES "public"."building" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."message"
 -- ----------------------------
-ALTER TABLE "public"."message" ADD FOREIGN KEY ("role_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."message" ADD FOREIGN KEY ("message_id") REFERENCES "public"."message" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."message" ADD FOREIGN KEY ("role_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."message" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."message" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."message_receiver"
 -- ----------------------------
-ALTER TABLE "public"."message_receiver" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."message_receiver" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."message_receiver" ADD FOREIGN KEY ("message_id") REFERENCES "public"."message" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."message_receiver" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."message_receiver" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."message_template"
 -- ----------------------------
-ALTER TABLE "public"."message_template" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."message_template" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."message_template" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."person"
@@ -4103,6 +5517,34 @@ ALTER TABLE "public"."person" ADD FOREIGN KEY ("sex_code") REFERENCES "public"."
 ALTER TABLE "public"."person" ADD FOREIGN KEY ("residence_country_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."person" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."person" ADD FOREIGN KEY ("citizenship_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."protocol"
+-- ----------------------------
+ALTER TABLE "public"."protocol" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."protocol" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."protocol_student"
+-- ----------------------------
+ALTER TABLE "public"."protocol_student" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."protocol_student" ADD FOREIGN KEY ("grade_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."protocol_student" ADD FOREIGN KEY ("protocol_id") REFERENCES "public"."protocol" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."protocol_student_history"
+-- ----------------------------
+ALTER TABLE "public"."protocol_student_history" ADD FOREIGN KEY ("protocol_student_id") REFERENCES "public"."protocol_student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."protocol_student_history" ADD FOREIGN KEY ("grade_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."protocol_vdata"
+-- ----------------------------
+ALTER TABLE "public"."protocol_vdata" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."protocol_vdata" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."protocol_vdata" ADD FOREIGN KEY ("study_year_id") REFERENCES "public"."study_year" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."protocol_vdata" ADD FOREIGN KEY ("protocol_id") REFERENCES "public"."protocol" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."protocol_vdata" ADD FOREIGN KEY ("curriculum_version_omodule_id") REFERENCES "public"."curriculum_version_omodule" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."room"
@@ -4118,69 +5560,79 @@ ALTER TABLE "public"."room_equipment" ADD FOREIGN KEY ("equipment_code") REFEREN
 -- ----------------------------
 -- Foreign Key structure for table "public"."sais_admission"
 -- ----------------------------
+ALTER TABLE "public"."sais_admission" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."sais_admission" ADD FOREIGN KEY ("fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."sais_admission" ADD FOREIGN KEY ("study_load_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."sais_admission" ADD FOREIGN KEY ("study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."sais_admission" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_admission" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."sais_admission" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_admission" ADD FOREIGN KEY ("study_load_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_admission" ADD FOREIGN KEY ("fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."sais_application"
 -- ----------------------------
 ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("sex_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("citizenship_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("study_load_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("residence_country_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("sais_admission_id") REFERENCES "public"."sais_admission" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("sex_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("residence_country_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("study_load_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."sais_application" ADD FOREIGN KEY ("citizenship_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."sais_application_grade"
+-- ----------------------------
+ALTER TABLE "public"."sais_application_grade" ADD FOREIGN KEY ("sais_application_id") REFERENCES "public"."sais_application" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."sais_application_graduated_school"
 -- ----------------------------
+ALTER TABLE "public"."sais_application_graduated_school" ADD FOREIGN KEY ("sais_application_id") REFERENCES "public"."sais_application" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."sais_application_graduated_school" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."sais_application_graduated_school" ADD FOREIGN KEY ("study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."sais_application_graduated_school" ADD FOREIGN KEY ("sais_applucation_id") REFERENCES "public"."sais_application" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."sais_application_other_data"
+-- ----------------------------
+ALTER TABLE "public"."sais_application_other_data" ADD FOREIGN KEY ("sais_application_id") REFERENCES "public"."sais_application" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."school"
 -- ----------------------------
-ALTER TABLE "public"."school" ADD FOREIGN KEY ("ehis_school_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."school" ADD FOREIGN KEY ("ois_file_id") REFERENCES "public"."ois_file" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."school" ADD FOREIGN KEY ("ehis_school_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."school_department"
 -- ----------------------------
-ALTER TABLE "public"."school_department" ADD FOREIGN KEY ("parent_school_department_id") REFERENCES "public"."school_department" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."school_department" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."school_department" ADD FOREIGN KEY ("parent_school_department_id") REFERENCES "public"."school_department" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."school_study_level"
 -- ----------------------------
-ALTER TABLE "public"."school_study_level" ADD FOREIGN KEY ("study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."school_study_level" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."school_study_level" ADD FOREIGN KEY ("study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."state_curriculum"
 -- ----------------------------
-ALTER TABLE "public"."state_curriculum" ADD FOREIGN KEY ("state_curr_class_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."state_curriculum" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."state_curriculum" ADD FOREIGN KEY ("isced_class_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."state_curriculum" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."state_curriculum" ADD FOREIGN KEY ("state_curr_class_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."state_curriculum_module"
 -- ----------------------------
-ALTER TABLE "public"."state_curriculum_module" ADD FOREIGN KEY ("module_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."state_curriculum_module" ADD FOREIGN KEY ("state_curriculum_id") REFERENCES "public"."state_curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."state_curriculum_module" ADD FOREIGN KEY ("module_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."state_curriculum_module_occupation"
 -- ----------------------------
-ALTER TABLE "public"."state_curriculum_module_occupation" ADD FOREIGN KEY ("occupation_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."state_curriculum_module_occupation" ADD FOREIGN KEY ("state_curriculum_module_id") REFERENCES "public"."state_curriculum_module" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."state_curriculum_module_occupation" ADD FOREIGN KEY ("occupation_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."state_curriculum_module_outcomes"
@@ -4190,27 +5642,27 @@ ALTER TABLE "public"."state_curriculum_module_outcomes" ADD FOREIGN KEY ("state_
 -- ----------------------------
 -- Foreign Key structure for table "public"."state_curriculum_occupation"
 -- ----------------------------
-ALTER TABLE "public"."state_curriculum_occupation" ADD FOREIGN KEY ("occupation_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."state_curriculum_occupation" ADD FOREIGN KEY ("state_curriculum_id") REFERENCES "public"."state_curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."state_curriculum_occupation" ADD FOREIGN KEY ("occupation_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."student"
 -- ----------------------------
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("student_history_id") REFERENCES "public"."student_history" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student" ADD FOREIGN KEY ("fin_specific_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("student_group_id") REFERENCES "public"."student_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("special_need_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("curriculum_speciality_id") REFERENCES "public"."curriculum_speciality" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("ois_file_id") REFERENCES "public"."ois_file" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student" ADD FOREIGN KEY ("fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("previous_study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("study_load_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("special_need_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student" ADD FOREIGN KEY ("study_load_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("previous_study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("student_group_id") REFERENCES "public"."student_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("student_history_id") REFERENCES "public"."student_history" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("ois_file_id") REFERENCES "public"."ois_file" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("curriculum_speciality_id") REFERENCES "public"."curriculum_speciality" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."student_absence"
@@ -4220,73 +5672,86 @@ ALTER TABLE "public"."student_absence" ADD FOREIGN KEY ("student_id") REFERENCES
 -- ----------------------------
 -- Foreign Key structure for table "public"."student_group"
 -- ----------------------------
-ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("curriculum_id") REFERENCES "public"."curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("speciality_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("speciality_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student_group" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."student_history"
 -- ----------------------------
-ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("curriculum_speciality_id") REFERENCES "public"."curriculum_speciality" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("special_need_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("previous_study_level_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("study_load_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("fin_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("fin_specific_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("prev_student_history_id") REFERENCES "public"."student_history" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("curriculum_speciality_id") REFERENCES "public"."curriculum_speciality" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("curriculum_version_id") REFERENCES "public"."curriculum_version" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("student_group_id") REFERENCES "public"."student_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("ois_file_id") REFERENCES "public"."ois_file" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("student_group_id") REFERENCES "public"."student_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_history" ADD FOREIGN KEY ("prev_student_history_id") REFERENCES "public"."student_history" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."student_representative"
 -- ----------------------------
-ALTER TABLE "public"."student_representative" ADD FOREIGN KEY ("relation_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_representative" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_representative" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_representative" ADD FOREIGN KEY ("relation_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."student_representative_application"
 -- ----------------------------
-ALTER TABLE "public"."student_representative_application" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_representative_application" ADD FOREIGN KEY ("relation_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."student_representative_application" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_representative_application" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."student_representative_application" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."study_period"
 -- ----------------------------
-ALTER TABLE "public"."study_period" ADD FOREIGN KEY ("study_year_id") REFERENCES "public"."study_year" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."study_period" ADD FOREIGN KEY ("type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."study_period" ADD FOREIGN KEY ("study_year_id") REFERENCES "public"."study_year" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."study_period_event"
 -- ----------------------------
 ALTER TABLE "public"."study_period_event" ADD FOREIGN KEY ("event_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."study_period_event" ADD FOREIGN KEY ("study_year_id") REFERENCES "public"."study_year" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."study_period_event" ADD FOREIGN KEY ("study_period_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."study_period_event" ADD FOREIGN KEY ("study_year_id") REFERENCES "public"."study_year" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."study_year"
 -- ----------------------------
-ALTER TABLE "public"."study_year" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."study_year" ADD FOREIGN KEY ("year_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."study_year" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."study_year_schedule"
+-- ----------------------------
+ALTER TABLE "public"."study_year_schedule" ADD FOREIGN KEY ("study_period_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."study_year_schedule" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."study_year_schedule" ADD FOREIGN KEY ("student_group_id") REFERENCES "public"."student_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."study_year_schedule" ADD FOREIGN KEY ("study_year_schedule_legend_id") REFERENCES "public"."study_year_schedule_legend" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."study_year_schedule_legend"
+-- ----------------------------
+ALTER TABLE "public"."study_year_schedule_legend" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."subject"
 -- ----------------------------
-ALTER TABLE "public"."subject" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."subject" ADD FOREIGN KEY ("assessment_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."subject" ADD FOREIGN KEY ("school_department_id") REFERENCES "public"."school_department" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."subject" ADD FOREIGN KEY ("status_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject" ADD FOREIGN KEY ("assessment_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject" ADD FOREIGN KEY ("school_department_id") REFERENCES "public"."school_department" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."subject_connect"
@@ -4298,33 +5763,71 @@ ALTER TABLE "public"."subject_connect" ADD FOREIGN KEY ("connection_code") REFER
 -- ----------------------------
 -- Foreign Key structure for table "public"."subject_lang"
 -- ----------------------------
-ALTER TABLE "public"."subject_lang" ADD FOREIGN KEY ("lang_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."subject_lang" ADD FOREIGN KEY ("subject_id") REFERENCES "public"."subject" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_lang" ADD FOREIGN KEY ("lang_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."subject_study_period"
 -- ----------------------------
 ALTER TABLE "public"."subject_study_period" ADD FOREIGN KEY ("study_period_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_study_period" ADD FOREIGN KEY ("declaration_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."subject_study_period" ADD FOREIGN KEY ("subject_id") REFERENCES "public"."subject" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_study_period" ADD FOREIGN KEY ("group_proportion_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."subject_study_period_capacity"
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_capacity" ADD FOREIGN KEY ("capacity_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_study_period_capacity" ADD FOREIGN KEY ("subject_study_period_id") REFERENCES "public"."subject_study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."subject_study_period_plan"
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_plan" ADD FOREIGN KEY ("subject_id") REFERENCES "public"."subject" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_study_period_plan" ADD FOREIGN KEY ("study_period_id") REFERENCES "public"."study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."subject_study_period_plan_capacity"
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_plan_capacity" ADD FOREIGN KEY ("capacity_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_study_period_plan_capacity" ADD FOREIGN KEY ("subject_study_period_plan_id") REFERENCES "public"."subject_study_period_plan" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."subject_study_period_plan_curriculum"
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_plan_curriculum" ADD FOREIGN KEY ("curriculum_id") REFERENCES "public"."curriculum" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_study_period_plan_curriculum" ADD FOREIGN KEY ("subject_study_period_plan_id") REFERENCES "public"."subject_study_period_plan" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."subject_study_period_plan_studyform"
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_plan_studyform" ADD FOREIGN KEY ("subject_study_period_plan_id") REFERENCES "public"."subject_study_period_plan" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_study_period_plan_studyform" ADD FOREIGN KEY ("study_form_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."subject_study_period_student_group"
+-- ----------------------------
+ALTER TABLE "public"."subject_study_period_student_group" ADD FOREIGN KEY ("student_group_id") REFERENCES "public"."student_group" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_study_period_student_group" ADD FOREIGN KEY ("subject_study_period_id") REFERENCES "public"."subject_study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."subject_study_period_teacher"
 -- ----------------------------
-ALTER TABLE "public"."subject_study_period_teacher" ADD FOREIGN KEY ("subject_study_period_id") REFERENCES "public"."subject_study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."subject_study_period_teacher" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."subject_study_period_teacher" ADD FOREIGN KEY ("subject_study_period_id") REFERENCES "public"."subject_study_period" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."teacher"
 -- ----------------------------
+ALTER TABLE "public"."teacher" ADD FOREIGN KEY ("teacher_occupation_id") REFERENCES "public"."teacher_occupation" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."teacher" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."teacher" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."teacher" ADD FOREIGN KEY ("teacher_occupation_id") REFERENCES "public"."teacher_occupation" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."teacher_mobility"
 -- ----------------------------
-ALTER TABLE "public"."teacher_mobility" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."teacher_mobility" ADD FOREIGN KEY ("target_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."teacher_mobility" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."teacher_mobility" ADD FOREIGN KEY ("state_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
@@ -4335,30 +5838,30 @@ ALTER TABLE "public"."teacher_occupation" ADD FOREIGN KEY ("school_id") REFERENC
 -- ----------------------------
 -- Foreign Key structure for table "public"."teacher_position_ehis"
 -- ----------------------------
+ALTER TABLE "public"."teacher_position_ehis" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."teacher_position_ehis" ADD FOREIGN KEY ("position_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."teacher_position_ehis" ADD FOREIGN KEY ("contract_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."teacher_position_ehis" ADD FOREIGN KEY ("language_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."teacher_position_ehis" ADD FOREIGN KEY ("employment_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."teacher_position_ehis" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."teacher_position_ehis" ADD FOREIGN KEY ("school_department_id") REFERENCES "public"."school_department" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."teacher_position_ehis" ADD FOREIGN KEY ("contract_type_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."teacher_qualification"
 -- ----------------------------
-ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("ex_school_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("qualification_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("qualification_name_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("state_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("school_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("school_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("state_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("qualification_name_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("qualification_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."teacher_qualification" ADD FOREIGN KEY ("ex_school_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."user_"
 -- ----------------------------
+ALTER TABLE "public"."user_" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."user_" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."user_" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 ALTER TABLE "public"."user_" ADD FOREIGN KEY ("role_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."user_" ADD FOREIGN KEY ("student_id") REFERENCES "public"."student" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
-ALTER TABLE "public"."user_" ADD FOREIGN KEY ("person_id") REFERENCES "public"."person" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
 
 -- ----------------------------
 -- Foreign Key structure for table "public"."user_rights"
@@ -4369,6 +5872,30 @@ ALTER TABLE "public"."user_rights" ADD FOREIGN KEY ("object_code") REFERENCES "p
 -- Foreign Key structure for table "public"."user_role_default"
 -- ----------------------------
 ALTER TABLE "public"."user_role_default" ADD FOREIGN KEY ("role_code") REFERENCES "public"."classifier" ("code") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."ws_ehis_student_log"
+-- ----------------------------
+ALTER TABLE "public"."ws_ehis_student_log" ADD FOREIGN KEY ("directive_id") REFERENCES "public"."directive" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."ws_ehis_student_log" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."ws_ehis_teacher_log"
+-- ----------------------------
+ALTER TABLE "public"."ws_ehis_teacher_log" ADD FOREIGN KEY ("teacher_id") REFERENCES "public"."teacher" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."ws_ehis_teacher_log" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."ws_sais_log"
+-- ----------------------------
+ALTER TABLE "public"."ws_sais_log" ADD FOREIGN KEY ("first_ws_sais_log_id") REFERENCES "public"."ws_sais_log" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+ALTER TABLE "public"."ws_sais_log" ADD FOREIGN KEY ("school_id") REFERENCES "public"."school" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
+-- ----------------------------
+-- Foreign Key structure for table "public"."ws_sais_log_detail"
+-- ----------------------------
+ALTER TABLE "public"."ws_sais_log_detail" ADD FOREIGN KEY ("ws_sais_log_id") REFERENCES "public"."ws_sais_log" ("id") ON DELETE NO ACTION ON UPDATE NO ACTION;
+
 
 
 --INSERT DATA

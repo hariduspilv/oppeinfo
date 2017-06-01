@@ -1,12 +1,12 @@
 package ee.hitsa.ois.web.dto;
 
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class ApplicationPlannedSubjectDto extends VersionedCommand {
@@ -20,10 +20,8 @@ public class ApplicationPlannedSubjectDto extends VersionedCommand {
 
     public static ApplicationPlannedSubjectDto of(ApplicationPlannedSubject plannedSubject) {
         ApplicationPlannedSubjectDto dto = EntityUtil.bindToDto(plannedSubject, new ApplicationPlannedSubjectDto(), "equivalents");
-        if (plannedSubject.getEquivalents() != null) {
-            dto.setEquivalents(plannedSubject.getEquivalents().stream()
-                    .map(ApplicationPlannedSubjectEquivalentDto::of).collect(Collectors.toSet()));
-        }
+        dto.setEquivalents(StreamUtil.toMappedSet(ApplicationPlannedSubjectEquivalentDto::of, plannedSubject.getEquivalents()));
+
         return dto;
     }
 

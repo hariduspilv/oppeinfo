@@ -12,6 +12,7 @@ import org.springframework.security.web.authentication.preauth.PreAuthenticatedA
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.PersonUtil;
 
 
 /**
@@ -28,7 +29,7 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     private Long studentId;
 
     HoisUserDetails(User user, List<String> roles) {
-        super(user.getPerson().getIdcode(), "undefined", getAuthorities(roles));
+        super(PersonUtil.fullnameAndIdcode(user.getPerson()), "undefined", getAuthorities(roles));
         this.userId = EntityUtil.getId(user);
         this.personId = EntityUtil.getId(user.getPerson());
         this.role = EntityUtil.getCode(user.getRole());
@@ -52,20 +53,28 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
         return schoolId;
     }
 
-    public boolean isSchoolAdmin() {
-        return schoolId != null && Role.ROLL_A.name().equals(role);
-    }
-    
-    public boolean isStudent() {
-        return schoolId != null && Role.ROLL_T.name().equals(role) && studentId != null;
-    }
-
     public boolean isExternalExpert() {
         return Role.ROLL_V.name().equals(role);
     }
 
     public boolean isMainAdmin() {
         return Role.ROLL_P.name().equals(role);
+    }
+
+    public boolean isRepresentative() {
+        return Role.ROLL_L.name().equals(role);
+    }
+
+    public boolean isSchoolAdmin() {
+        return schoolId != null && Role.ROLL_A.name().equals(role);
+    }
+
+    public boolean isStudent() {
+        return schoolId != null && Role.ROLL_T.name().equals(role) && studentId != null;
+    }
+
+    public boolean isTeacher() {
+        return Role.ROLL_O.name().equals(role);
     }
 
     public String getRole() {

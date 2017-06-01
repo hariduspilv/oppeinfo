@@ -37,4 +37,18 @@ public class SubjectControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
+
+    @Test
+    public void initEditFormData() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/subject/initEditFormData", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void initSearchFormData() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/subject/initSearchFormData", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

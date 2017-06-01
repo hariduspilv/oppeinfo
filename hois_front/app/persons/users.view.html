@@ -1,0 +1,58 @@
+<div class="ois-form-layout-padding form-readonly" layout="column" ng-cloak>
+  <form name="userForm" class="ois-form-layout">
+    <div layout="column" flex>
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label>{{'person.name' | translate}}</label>
+          <hois-value value="user.person.fullname">
+        </md-input-container>
+        <md-input-container flex>
+          <label>{{'person.idcode' | translate}}</label>
+          <hois-value value="user.person.idcode">
+        </md-input-container>
+      </div>
+      <md-input-container flex>
+        <label>{{'school.label' | translate}}</label>
+        <hois-value value="currentLanguageNameField(user.school)"></hois-value>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'user.role' | translate}}</label>
+        <hois-classifier-value ng-model="user.role" main-classifier-code="ROLL"></hois-classifier-value>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'user.validFrom' | translate}}</label>
+        <hois-value value="user.validFrom | hoisDate"></hois-value>
+      </md-input-container>
+      <md-input-container flex>
+        <label>{{'user.validThru' | translate}}</label>
+        <hois-value value="user.validThru | hoisDate"></hois-value>
+      </md-input-container>
+    </div>
+    <div layout-padding>
+      <div flex>
+        <md-table-container>
+          <table md-table ng-show="user.role" class="secondary-table">
+            <thead md-head>
+            <tr md-row>
+              <th md-column>{{'user.rights.right' | translate}}</th>
+              <th md-column>{{'user.rights.insertModify' | translate}}</th>
+              <th md-column>{{'user.rights.confirmation' | translate}}</th>
+              <th md-column>{{'user.rights.searchOpen' | translate}}</th>
+            </tr>
+            </thead>
+            <tbody md-body>
+            <tr md-row ng-repeat="right in user.rights | orderBy: orderValue" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell><hois-classifier-value ng-model="right.object" main-classifier-code="TEEMAOIGUS"></hois-classifier-value></td>
+              <td md-cell><md-checkbox ng-model="right.oigusM" flex disabled></md-checkbox></td>
+              <td md-cell><md-checkbox ng-model="right.oigusK" flex disabled></md-checkbox></td>
+              <td md-cell><md-checkbox ng-model="right.oigusV" flex disabled></md-checkbox></td>
+            </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </div>
+    <md-button ng-if="user.role !== 'ROLL_T' && user.role !== 'ROLL_L'" ng-href="#/persons/{{::user.person.id}}/users/{{::user.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-click="back('#/persons/' + user.person.id)" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </form>
+</div>

@@ -10,16 +10,18 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
   return {
     template: '<md-select>'+
       '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>'+
-      '<md-option ng-repeat="option in options | orderBy: $root.currentLanguageNameField()" ng-value="option[valueProperty]"'+
-      'aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-option></md-select>',
+      '<md-option ng-repeat="option in options | orderBy: showProperty ? showProperty : $root.currentLanguageNameField()" ng-value="option[valueProperty]"'+
+      'aria-label="{{$root.currentLanguageNameField(option)}}">{{showProperty ? option[showProperty] : $root.currentLanguageNameField(option)}}</md-option></md-select>',
     restrict: 'E',
     replace: true,
     scope: {
+      criteria: '=',
       multiple:'@',
       ngRequired:'=',
       required:'@',
       values: '@',
-      valueProperty: '@'
+      valueProperty: '@',
+      showProperty: '@'
     },
     link: function postLink(scope, element, attrs) {
       scope.isMultiple = angular.isDefined(scope.multiple);
@@ -34,17 +36,21 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
 
       if(angular.isDefined(attrs.type)) {
         if(attrs.type === 'building') {
-          QueryUtils.endpoint('/autocomplete/buildings').search(afterLoad);
+          scope.options = QueryUtils.endpoint('/autocomplete/buildings').query();
         } else if(attrs.type === 'curriculumversion') {
-          Curriculum.queryVersions().$promise.then(afterLoad);
+          scope.options = Curriculum.queryVersions(scope.criteria);
         } else if(attrs.type === 'directivecoordinator') {
-          QueryUtils.endpoint('/autocomplete/directivecoordinators').search(afterLoad);
+          scope.options = QueryUtils.endpoint('/autocomplete/directivecoordinators').query(scope.criteria);
         } else if(attrs.type === 'school') {
           scope.options = School.getAll();
         } else if(attrs.type === 'curriculum') {
           QueryUtils.endpoint('/autocomplete/curriculums').search(afterLoad);
-        } else if(attrs.type === 'studentgroups') {
-          QueryUtils.endpoint('/autocomplete/studentgroups').search(afterLoad);
+        } else if(attrs.type === 'studentgroup') {
+          scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query();
+        } else if(attrs.type === 'studyyear') {
+          scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query();
+        } else if(attrs.type === 'journal') {
+          scope.options = QueryUtils.endpoint('/autocomplete/journals').query();
         }
       } else if(angular.isDefined(scope.values)) {
         scope.$parent.$watchCollection(scope.values, function(values) {

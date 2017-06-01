@@ -1,15 +1,14 @@
 package ee.hitsa.ois.web;
 
 import java.time.LocalDate;
-import java.util.Map;
 
 import javax.validation.Valid;
 
+import ee.hitsa.ois.service.ehis.EhisStudentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -47,6 +46,8 @@ public class DirectiveController {
     private DirectiveConfirmService directiveConfirmService;
     @Autowired
     private DirectiveService directiveService;
+    @Autowired
+    private EhisStudentService ehisStudentService;
 
     @GetMapping
     public Page<DirectiveSearchDto> search(HoisUserDetails user, @Valid DirectiveSearchCommand criteria, Pageable pageable) {
@@ -57,18 +58,17 @@ public class DirectiveController {
     @GetMapping("/{id:\\d+}/view")
     public DirectiveViewDto getForView(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertSameSchool(user, directive.getSchool());
-        // TODO calculate filter: for admin none, for student itself, for representative all students of same school
-        return DirectiveViewDto.of(directive, null);
+        return directiveService.getForView(user, directive);
     }
 
     @GetMapping("/{id:\\d+}")
     public DirectiveDto get(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
-        return DirectiveDto.of(directive);
+        return directiveService.get(directive);
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, ?>> create(HoisUserDetails user, @Valid @RequestBody DirectiveForm form) {
+    public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody DirectiveForm form) {
         UserUtil.assertIsSchoolAdmin(user);
         return HttpUtil.created(directiveService.create(user, form));
     }
@@ -95,7 +95,8 @@ public class DirectiveController {
     @PutMapping("/confirm/{id:\\d+}")
     public DirectiveDto confirm(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
-        directiveConfirmService.confirm(user, directive, LocalDate.now());
+        // start requests after save has been successful
+        ehisStudentService.updateStudents(directiveConfirmService.confirm(user, directive, LocalDate.now()));
         return get(user, directive);
     }
 
@@ -123,7 +124,7 @@ public class DirectiveController {
     }
 
     @PostMapping("/coordinators")
-    public ResponseEntity<Map<String, ?>> createCoordinator(HoisUserDetails user, @Valid @RequestBody DirectiveCoordinatorForm form) {
+    public HttpUtil.CreatedResponse createCoordinator(HoisUserDetails user, @Valid @RequestBody DirectiveCoordinatorForm form) {
         return HttpUtil.created(directiveService.create(user, form));
     }
 

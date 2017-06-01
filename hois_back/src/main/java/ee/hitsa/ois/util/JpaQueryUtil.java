@@ -1,5 +1,6 @@
 package ee.hitsa.ois.util;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -11,6 +12,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 
@@ -31,6 +33,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.NullHandling;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
@@ -123,23 +126,37 @@ public abstract class JpaQueryUtil {
         return entityManager.createQuery(dq.where(path.in(data))).getResultList();
     }
 
+    public static void propertyContains(Supplier<Path<String>> pathSupplier, CriteriaBuilder cb, String value, Consumer<Predicate> consumer) {
+        if(StringUtils.hasText(value)) {
+            consumer.accept(cb.like(cb.upper(pathSupplier.get()), toContains(value)));
+        }
+    }
+
+    public static String toContains(String value) {
+        return "%" + value.trim().toUpperCase() + "%";
+    }
+
     public static class NativeQueryBuilder {
         private final String from;
-        private final Sort sort;
+        private Sort sort;
         private final Map<String, Object> parameters = new HashMap<>();
         private final StringBuilder where = new StringBuilder();
 
         public NativeQueryBuilder(String from) {
-            this(from, (Sort)null);
-        }
-
-        public NativeQueryBuilder(String from, Sort sort) {
             this.from = Objects.requireNonNull(from);
-            this.sort = sort;
         }
 
-        public NativeQueryBuilder(String from, Pageable pageable) {
-            this(from, pageable != null ? pageable.getSort() : null);
+        public NativeQueryBuilder sort(Sort sortFields) {
+            this.sort = sortFields;
+            return this;
+        }
+
+        public NativeQueryBuilder sort(String... sortFields) {
+            return sort(new Sort(sortFields));
+        }
+
+        public NativeQueryBuilder sort(Pageable pageable) {
+            return sort(pageable != null ? pageable.getSort() : null);
         }
 
         public void optionalCriteria(String criteria, String name, Collection<?> value) {
@@ -152,6 +169,13 @@ public abstract class JpaQueryUtil {
             if(StringUtils.hasText(value)) {
                 filter(criteria, name, value);
             }
+        }
+
+        public void optionalCriteria(String criteria, String name, Boolean value) {
+            if(value != null) {
+                filter(criteria, name, value);
+            }
+
         }
 
         public void optionalCriteria(String criteria, String name, String value, Function<String, String> adjuster) {
@@ -203,7 +227,7 @@ public abstract class JpaQueryUtil {
                     sb.append(")");
                 }
 
-                filter(sb.toString(), name, SearchUtil.toContains(value));
+                filter(sb.toString(), name, toContains(value));
             }
         }
 
@@ -214,17 +238,21 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, Collection<?> value) {
-            if(value == null || value.isEmpty()) {
-                throw new AssertionFailedException("Required criteria is missing");
-            }
+            AssertionFailedException.throwIf(value == null || value.isEmpty(), "Required criteria is missing");
+
             filter(criteria, name, value);
         }
 
         public void requiredCriteria(String criteria, String name, EntityConnectionCommand value) {
-            if(value == null || value.getId() == null) {
-                throw new AssertionFailedException("Required criteria is missing");
-            }
+            AssertionFailedException.throwIf(value == null || value.getId() == null, "Required criteria is missing");
+
             filter(criteria, name, value.getId());
+        }
+
+        public void requiredCriteria(String criteria, String name, Enum<?> value) {
+            AssertionFailedException.throwIf(value == null, "Required criteria is missing");
+
+            filter(criteria, name, value.name());
         }
 
         public void requiredCriteria(String criteria, String name, LocalDate value) {
@@ -240,9 +268,8 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, String value) {
-            if(!StringUtils.hasText(value)) {
-                throw new AssertionFailedException("Required criteria is missing");
-            }
+            AssertionFailedException.throwIf(!StringUtils.hasText(value), "Required criteria is missing");
+
             filter(criteria, name, value);
         }
 
@@ -271,7 +298,11 @@ public abstract class JpaQueryUtil {
         }
 
         public Number count(EntityManager em) {
-            return (Number)buildQuery("count(*)", em, false, null).getSingleResult();
+            return count("count(*)", em);
+        }
+
+        public Number count(String expression, EntityManager em) {
+            return (Number)buildQuery(expression, em, false, null).getSingleResult();
         }
 
         private Query buildQuery(String projection, EntityManager em, boolean ordered, Map<String, Object> additionalParameters) {
@@ -292,6 +323,12 @@ public abstract class JpaQueryUtil {
                     }
                     orderBy.append(camelCaseToUnderScore(order.getProperty()));
                     orderBy.append(order.isAscending() ? "" : " desc");
+                    NullHandling nullhandling = order.getNullHandling();
+                    if(NullHandling.NULLS_FIRST.equals(nullhandling)) {
+                        orderBy.append(" NULLS FIRST");
+                    } else if(NullHandling.NULLS_LAST.equals(nullhandling)) {
+                        orderBy.append(" NULLS LAST");
+                    }
                 }
                 if(orderBy.length() > 0) {
                     sql.append(" order by ");
@@ -326,37 +363,51 @@ public abstract class JpaQueryUtil {
             }
             return sb.toString();
         }
+
     }
 
-    public static Boolean resultAsBoolean(Object value, int index) {
-        value = (((Object[])value)[index]);
+    public static Boolean resultAsBoolean(Object row, int index) {
+        Object value = getValue(row, index);
         return (Boolean)value;
     }
 
-    public static Integer resultAsInteger(Object value, int index) {
-        value = (((Object[])value)[index]);
+    public static BigDecimal resultAsDecimal(Object row, int index) {
+        Object value = getValue(row, index);
+        return (BigDecimal)value;
+    }
+
+    public static Integer resultAsInteger(Object row, int index) {
+        Object value = getValue(row, index);
         return value != null ? Integer.valueOf(((Number)value).intValue()) : null;
     }
 
-    public static LocalDate resultAsLocalDate(Object value, int index) {
-        value = (((Object[])value)[index]);
+    public static LocalDate resultAsLocalDate(Object row, int index) {
+        Object value = getValue(row, index);
         if(value instanceof java.sql.Date) {
             return ((java.sql.Date)value).toLocalDate();
         }
         return value != null ? ((java.sql.Timestamp)value).toLocalDateTime().toLocalDate() : null;
     }
 
-    public static LocalDateTime resultAsLocalDateTime(Object value, int index) {
-        value = (((Object[])value)[index]);
+    public static LocalDateTime resultAsLocalDateTime(Object row, int index) {
+        Object value = getValue(row, index);
         return value != null ? ((java.sql.Timestamp)value).toLocalDateTime() : null;
     }
 
-    public static Long resultAsLong(Object value, int index) {
-        value = (((Object[])value)[index]);
+    public static Long resultAsLong(Object row, int index) {
+        Object value = getValue(row, index);
         return value != null ? Long.valueOf(((Number)value).longValue()) : null;
     }
 
-    public static String resultAsString(Object value, int index) {
-        return (String)(((Object[])value)[index]);
+    public static String resultAsString(Object row, int index) {
+        return (String)(getValue(row, index));
+    }
+
+    private static Object getValue(Object row, int index) {
+        Object value = row;
+        if (value instanceof Object[]) {
+            value = ((Object[])value)[index];
+        }
+        return value;
     }
 }

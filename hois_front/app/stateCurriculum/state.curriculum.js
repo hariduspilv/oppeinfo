@@ -1,10 +1,18 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('StateCurriculumController', function ($q, $route, $scope, message, Classifier, $location, classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils) {
+  .controller('StateCurriculumController', function ($route, $scope, message, Classifier, $location, classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils, Curriculum) {
+
+
+    $scope.STATUS = Curriculum.STATUS;
+
+    $scope.MODULE_TYPE = {
+        BASIC: 'KUTSEMOODUL_P',
+        GENERAL: 'KUTSEMOODUL_Y'
+    };
 
     var initialStateCurriculum = {
-        status: 'OPPEKAVA_STAATUS_S',
+        status: $scope.STATUS.ENTERING,
         modules: [],
         occupations: [],
         validFrom: new Date()
@@ -12,9 +20,9 @@ angular.module('hitsaOis')
     var baseUrl = '/stateCurriculum';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
-    $scope.readOnly = false;
     $scope.removeFromArray = ArrayUtils.remove;
     $scope.subOccupations = {};
+    $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
 
     function getStateCurriculum() {
       if (id) {
@@ -24,6 +32,7 @@ angular.module('hitsaOis')
         });
       } else {
         $scope.stateCurriculum = new Endpoint(initialStateCurriculum);
+        $scope.currentStatus = $scope.STATUS.ENTERING;
       }
     }
     getStateCurriculum();
@@ -31,9 +40,11 @@ angular.module('hitsaOis')
     function setVariablesForExistingStateCurriculum() {
         DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
         fillCascadeDropdowns();
-        setReadOnly();
         getAllSuboccupations();
+        $scope.currentStatus = $scope.stateCurriculum.status;
+        $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1 || $scope.currentStatus === Curriculum.STATUS.VERIFIED;
     }
+
 
     function fillCascadeDropdowns() {
         var iscedClass = $scope.stateCurriculum.iscedClass;
@@ -48,14 +59,15 @@ angular.module('hitsaOis')
       });
     }
 
-    function setReadOnly() {
-        $scope.readOnly = $scope.stateCurriculum.status === "OPPEKAVA_STAATUS_C" ||
-        $route.current.$$route.originalPath.indexOf("view") !== -1;
-    }
+    
         // ----------- save and delete
 
 
     $scope.delete = function() {
+        if(!ArrayUtils.isEmpty($scope.stateCurriculum.curricula)) {
+            message.error("stateCurriculum.error.hasCurricula");
+            return;
+        }
         dialogService.confirmDialog({prompt: 'stateCurriculum.deleteconfirm'}, function() {
             $scope.stateCurriculum.$delete().then(function() {
                 message.info('main.messages.delete.success');
@@ -65,30 +77,97 @@ angular.module('hitsaOis')
     };
 
     $scope.save = function () {
-      if($scope.readOnly) {
-         return;
-      }
-      $scope.stateCurriculumForm.$setSubmitted();
-
-      if (!stateCurriculumFormIsValid()) {
-        message.error('main.messages.form-has-errors');
-        return;
-      }
-      createOrUpdate().then(function() {
-         setVariablesForExistingStateCurriculum();
-         message.info('main.messages.create.success');
-      });
+        $scope.stateCurriculum.status = $scope.currentStatus;
+        // setTimeout is needed for validation of ng-required fields
+        setTimeout(save, 0);
     };
 
-    function createOrUpdate() {
-        return $scope.stateCurriculum.id ? $scope.stateCurriculum.$update() : $scope.stateCurriculum.$save();
+    $scope.modulesValid = function() {
+        if(!$scope.stateCurriculum) {
+            return true;
+        }
+        return !$scope.strictValidation() || $scope.stateCurriculum.occupations.length !== 0 && $scope.stateCurriculum.modules.length !== 0  && allOccuppationsValid() && allSpetsOccupationsValid();
+    };
+
+    function save(messages) {
+        $scope.stateCurriculumForm.$setSubmitted();
+
+        if (!stateCurriculumFormIsValid()) {
+            var errorMessage = messages && messages.errorMessage ? messages.errorMessage : 'main.messages.form-has-errors';
+            message.error(errorMessage);
+            return;
+        }
+        if($scope.strictValidation()) {
+            if(!allOccuppationsValid()) {
+                message.error('stateCurriculum.error.occupationsCredids');
+                return;
+            }
+            if(!allSpetsOccupationsValid()) {
+                message.error('stateCurriculum.error.spetsOccupationsCredids');
+                return;
+            }
+        }
+
+        if(id) {
+            $scope.stateCurriculum.$update().then(function(){
+                setVariablesForExistingStateCurriculum();
+                var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
+                message.info(updateSuccess);
+                $scope.stateCurriculumForm.$setPristine();
+                if($scope.stateCurriculum.status === $scope.STATUS.CLOSED || $scope.stateCurriculum.status === $scope.STATUS.VERIFIED) {
+                    $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/view').search({_noback: true});
+                }
+            });
+        } else {
+            $scope.stateCurriculum.$save().then(function(){
+                DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
+                message.updateSuccess();
+                $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit').search({_noback: true});
+            });
+        }
     }
 
+    function setStatus(newStatus, messages) {
+        dialogService.confirmDialog({prompt: messages.prompt}, function() {
+            $scope.stateCurriculum.status = newStatus;
+            // setTimeout is needed for validation of ng-required fields
+            setTimeout(function(){
+                save(messages);
+            }, 0);
+        });
+    }
+
+    $scope.confirmCurriculum = function() {
+        var messages = {
+            prompt: $scope.readOnly ? 'stateCurriculum.prompt.viewForm.verify' : 'stateCurriculum.prompt.editForm.verify',
+            updateSuccess: 'stateCurriculum.statuschange.verified',
+            errorMessage: $scope.readOnly ? 'stateCurriculum.statuschange.fail.verifyReadOnly' : 'stateCurriculum.statuschange.fail.verify'
+        };
+        setStatus($scope.STATUS.VERIFIED, messages);
+    };
+
+
+    $scope.closeCurriculum = function() {
+        var messages = {
+            prompt: $scope.readOnly ? 'stateCurriculum.prompt.viewForm.close' : 'stateCurriculum.prompt.editForm.close',
+            updateSuccess: 'stateCurriculum.statuschange.closed',
+            errorMessage: $scope.readOnly ? 'stateCurriculum.statuschange.fail.closeReadOnly' : 'stateCurriculum.statuschange.fail.close'
+        };        
+        setStatus($scope.STATUS.CLOSED, messages);
+    };
+
+    $scope.getStar = function() {
+        return $scope.strictValidation() ? '' : ' *';
+    };
+
+    $scope.strictValidation = function() {
+        return $scope.stateCurriculum && $scope.stateCurriculum.status === $scope.STATUS.VERIFIED;
+    };
 
     // validation
 
     function stateCurriculumFormIsValid() {
-        return $scope.stateCurriculumForm.$valid && $scope.stateCurriculum.occupations.length > 0 && allOcupationsHavePModule() && allSubOccupationsHavePModule();
+        return $scope.stateCurriculumForm.$valid && (!$scope.strictValidation() || $scope.stateCurriculum.occupations.length > 0 && allOcupationsHavePModule() && allSubOccupationsHavePModule());
     }
 
     function allOcupationsHavePModule() {
@@ -114,7 +193,7 @@ angular.module('hitsaOis')
             return true;
         }
         for(var i = 0; i < $scope.stateCurriculum.modules.length; i++) {
-            if($scope.stateCurriculum.modules[i].module === 'KUTSEMOODUL_P' &&
+            if($scope.stateCurriculum.modules[i].module === $scope.MODULE_TYPE.BASIC &&
             ArrayUtils.includes($scope.stateCurriculum.modules[i].moduleOccupations, occupation)) {
                 return false;
             }
@@ -140,31 +219,100 @@ angular.module('hitsaOis')
       url: $scope.nameEtUniqueQuery.url
     };
 
-    //  statuses
 
-    $scope.setStatus = function(newStatus) {
-      $scope.stateCurriculum.status = newStatus.code;
-    };
+    // ---------- validate credits
 
-    $scope.statuses = [
-        {code: 'OPPEKAVA_STAATUS_S', button: 'main.button.status.edit'},
-        {code: 'OPPEKAVA_STAATUS_K', button: 'main.button.status.confirm'},
-        {code: 'OPPEKAVA_STAATUS_C', button: 'main.button.status.close'}
-    ];
-
-    $scope.filterStatusChangeOptions = function(status) {
-        if(!$scope.stateCurriculum || !$scope.stateCurriculum.status || !status) {
-            return false;
+    function getCreditsOfRepeatingModules(occupation) {
+        var sum = 0;
+        var osakutsed = getOccupationsSubOccupations(occupation, 'OSAKUTSE');
+        var modules = $scope.stateCurriculum.modules;
+        for(var i = 0; i < modules.length; i++) {
+            var commonPart = ArrayUtils.intersection(modules[i].moduleOccupations, osakutsed);
+            if(commonPart.length === 0) {
+                continue;
+            }
+            var addedToOccupation = ArrayUtils.includes(modules[i].moduleOccupations, occupation) ? 1 : 0;
+            sum += modules[i].credits * (commonPart.length + addedToOccupation - 1);
         }
-        var currentStatusCode = $scope.stateCurriculum.status;
-        var enabledStatusesToChange = {
-            'OPPEKAVA_STAATUS_S': ['OPPEKAVA_STAATUS_K'],
-            'OPPEKAVA_STAATUS_K': ['OPPEKAVA_STAATUS_S', 'OPPEKAVA_STAATUS_C'],
-            'OPPEKAVA_STAATUS_C': []
-        };
-        return enabledStatusesToChange[currentStatusCode].indexOf(status.code) !== -1;
+        return sum;
+    }
+
+    $scope.isOccutationValid = function(occupation) {
+        var sum = getCreditsOfOccupationOrSubOccupation(occupation) + $scope.stateCurriculum.optionalStudyCredits;
+
+        var osakutsed = getOccupationsSubOccupations(occupation, 'OSAKUTSE');
+        for(var i = 0; i < osakutsed.length; i++) {
+            sum += getCreditsOfOccupationOrSubOccupation(osakutsed[i]);
+        }
+        sum -= getCreditsOfRepeatingModules(occupation);
+
+        var spetskutse = getOccupationsSubOccupations(occupation, 'SPETSKUTSE');
+        if(spetskutse[0]) {
+            sum += getCreditsOfOccupationOrSubOccupation(spetskutse[0]);
+        }
+
+        return $scope.stateCurriculum.credits === sum;
     };
 
+    function allOccuppationsValid() {
+        var occupation = getOccupations($scope.stateCurriculum.occupations);
+        for(var i = 0; i < occupation.length; i++) {
+            if(!$scope.isOccutationValid(occupation[i])) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function allSpetsOccupationsValid() {
+        var occupations = $scope.stateCurriculum.occupations;
+        for(var i = 0; i < occupations.length; i++) {
+            var spetskutsed = getOccupationsSubOccupations(occupations[i], 'SPETSKUTSE');
+            for(var j = 0; j < spetskutsed.length; j++) {
+                if(!$scope.isSpetsOccupationValid(spetskutsed[j], occupations[i])) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    $scope.isSpetsOccupationValid = function(spetsOccupation, occupation) {
+        var occMod = getCreditsOfOccupationOrSubOccupation(occupation);
+        var subOccMod = getCreditsOfOccupationOrSubOccupation(spetsOccupation);
+        var partOccMod = sumOfPartOccupations(occupation);
+        var bool = occMod + subOccMod + partOccMod + 
+        $scope.stateCurriculum.optionalStudyCredits - getCreditsOfRepeatingModules(occupation) === $scope.stateCurriculum.credits;
+        return bool;
+    };
+
+    function sumOfPartOccupations(occupation) {
+        var partOccupations = getOccupationsSubOccupations(occupation, 'OSAKUTSE');        
+        return partOccupations.reduce(function(sum, val){
+            return sum + getCreditsOfOccupationOrSubOccupation(val);
+        }, 0);
+    }
+
+
+    function getOccupationsSubOccupations(occupation, mainClassCode) {
+        return $scope.subOccupations[occupation] ? $scope.subOccupations[occupation].filter(function(el){
+            return el.mainClassCode === mainClassCode;
+        }).map(function(el){return el.code;}) : [];
+    }
+
+    function getCreditsOfOccupationOrSubOccupation(occupation) {
+        return $scope.stateCurriculum.modules.filter(function(m){
+            return ArrayUtils.includes(m.moduleOccupations, occupation);
+        }).reduce(function(total, val){
+                return total + val.credits;
+        }, 0);
+    }
+
+    function getOccupations(classifierCodes) {
+        return classifierCodes.filter(function(o){
+            return o.indexOf('KUTSE_') === 0;
+        });
+    }
 
 // ------------ Occupations and suboccupations
 
@@ -210,25 +358,27 @@ angular.module('hitsaOis')
     }
 
     $scope.removeOcupation = function(occupation) {
-      $scope.removeFromArray($scope.stateCurriculum.occupations, occupation);
-      var removedSubOccupations = $scope.subOccupations[occupation].map(function(o){return o.code;});
-      delete $scope.subOccupations[occupation];
-      $scope.getSubOccupationsAsList();
+        dialogService.confirmDialog({prompt: 'stateCurriculum.occupationdeleteconfirm'}, function() {
+            $scope.removeFromArray($scope.stateCurriculum.occupations, occupation);
+            var removedSubOccupations = $scope.subOccupations[occupation].map(function(o){return o.code;});
+            delete $scope.subOccupations[occupation];
+            $scope.getSubOccupationsAsList();
 
-      $scope.stateCurriculum.modules.forEach(function(m){
-          $scope.removeFromArray(m.moduleOccupations, occupation);
-          $scope.stateCurriculum.modules.forEach(function(m){
-              deleteModuleWithNoOccupations(m);
-          });
-      });
-      removedSubOccupations.forEach(function(so){
-        $scope.stateCurriculum.modules.forEach(function(m){
-            $scope.removeFromArray(m.moduleOccupations, so);
+            $scope.stateCurriculum.modules.forEach(function(m){
+                $scope.removeFromArray(m.moduleOccupations, occupation);
+                $scope.stateCurriculum.modules.forEach(function(m){
+                    deleteModuleWithNoOccupations(m);
+                });
+            });
+            removedSubOccupations.forEach(function(so){
+                $scope.stateCurriculum.modules.forEach(function(m){
+                    $scope.removeFromArray(m.moduleOccupations, so);
+                });
+                $scope.stateCurriculum.modules.forEach(function(m){
+                    deleteModuleWithNoOccupations(m);
+                });
+            });
         });
-        $scope.stateCurriculum.modules.forEach(function(m){
-            deleteModuleWithNoOccupations(m);
-        });
-      });
     };
 
     $scope.filterSubOccupations = function(occupation, subOccupationType) {
@@ -236,6 +386,9 @@ angular.module('hitsaOis')
             return $scope.subOccupations[occupation] && $scope.subOccupations[occupation].length !== null && ArrayUtils.includes($scope.subOccupations[occupation], subOccupation) && subOccupation.code.indexOf(subOccupationType) !== -1;
         };
     };
+
+
+
 
 
 
@@ -270,12 +423,73 @@ angular.module('hitsaOis')
                     moduleOccupations: []
                 };
             }
+
+            scope.editing = angular.isDefined(editingModule);
+
+            /**
+             * Module cannot be simultaneously in occupation and its spets-occupation
+             */
+            scope.occupationsSelectedCorrectly = function() {
+                if(!scope.data.moduleOccupations) {
+                    return true;
+                }
+                var occupations = getOccupations(scope.data.moduleOccupations);
+                for(var i = 0; i < occupations.length; i++) {
+                    var spetskutsed = getOccupationsSubOccupations(occupations[i], 'SPETSKUTSE');
+                    if(ArrayUtils.intersect(spetskutsed, scope.data.moduleOccupations)) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            scope.delete = function() {
+               dialogService.confirmDialog({prompt: 'curriculum.moduleDeleteConfirm'}, function() {
+                   ArrayUtils.remove($scope.stateCurriculum.modules, editingModule);
+                    if(scope.data.id) {
+                         var ModuleEndpoint = QueryUtils.endpoint('/stateCurriculum/modules');
+                         var deletedModule = new ModuleEndpoint($scope.stateCurriculum);
+                         deletedModule.$update().then(function(response) {
+                                message.info('main.messages.delete.success');
+                                $scope.stateCurriculum.modules = response.modules;
+                        });
+                    }
+                    scope.cancel();
+                });
+            };
+
+             /**
+             * Module cannot be simultaneously in osakutse and spetskutse of the same occupation
+             */
+            scope.suboccupationsSelectedCorrectly = function() {
+                if(!scope.data.moduleOccupations) {
+                    return true;
+                }
+                var occupations = getOccupations($scope.stateCurriculum.occupations);
+                for(var i = 0; i < occupations.length; i++) {
+                    var spetskutsed = getOccupationsSubOccupations(occupations[i], 'SPETSKUTSE');
+                    var osakutsed = getOccupationsSubOccupations(occupations[i], 'OSAKUTSE');
+                    if(ArrayUtils.intersect(spetskutsed, scope.data.moduleOccupations) &&
+                    ArrayUtils.intersect(osakutsed, scope.data.moduleOccupations)) {
+                        return false;
+                    }
+                }
+                return true;
+            };
+
+            scope.validateOccupations = function() {
+                scope.occupationsValid = scope.occupationsSelectedCorrectly() ? true : null;
+                scope.suboccupationsValid = scope.suboccupationsSelectedCorrectly() ? true : null;
+            };
+            scope.validateOccupations();
+
+            scope.readOnly = $scope.readOnly;
             scope.occupations = $scope.stateCurriculum.occupations;
             $scope.stateCurriculum.occupations.forEach(function(o){
                 var list = $scope.subOccupations[o].map(function(e){return e.code;});
                 scope.occupations = scope.occupations.concat(list);
             });
-            scope.allowedModuleTypes = ['KUTSEMOODUL_P', 'KUTSEMOODUL_Y'];
+            scope.allowedModuleTypes = [$scope.MODULE_TYPE.BASIC, $scope.MODULE_TYPE.GENERAL];
 
             scope.filterOccupations = function(mainClassCode) {
                 return function (occupaionCode) {
@@ -290,6 +504,15 @@ angular.module('hitsaOis')
                     angular.extend(editingModule, data);
                 } else {
                     $scope.stateCurriculum.modules.push(data);
+                }
+                if($scope.stateCurriculum.id) {
+                    var ModuleEndpoint = QueryUtils.endpoint('/stateCurriculum/modules');
+                    var savedModule = new ModuleEndpoint($scope.stateCurriculum);
+                    savedModule.$update().then(function(response) {
+                        message.info('main.messages.create.success');
+                        $scope.stateCurriculum.modules = response.modules;
+                        $scope.stateCurriculum.occupations = response.occupations;
+                    });
                 }
             });
         };

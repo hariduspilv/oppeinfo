@@ -13,6 +13,8 @@ import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.repository.UserRolesRepository;
+import ee.hitsa.ois.service.UserService;
+import ee.hitsa.ois.web.dto.UserProjection;
 
 @Transactional
 @Service
@@ -24,6 +26,8 @@ public class HoisUserDetailsService implements UserDetailsService {
     private UserRepository userRepository;
     @Autowired
     private UserRolesRepository userRolesRepository;
+    @Autowired
+    private UserService userService;
 
     @Override
     public HoisUserDetails loadUserByUsername(String idcode) throws UsernameNotFoundException {
@@ -32,10 +36,12 @@ public class HoisUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("No person present with idcode : " + idcode);
         }
 
-        User user = person.getUsers().stream()
-                .filter(u -> !u.getUserRights().isEmpty())
+        UserProjection selectedUser = userService.findAllActiveUsers(person.getId())
+                .stream()
                 .findFirst()
                 .orElseThrow(() -> new UsernameNotFoundException("Person had no rights : " + idcode));
+
+        User user = userRepository.getOne(selectedUser.getId());
         return getHoisUserDetails(user);
     }
 

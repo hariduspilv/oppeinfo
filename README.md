@@ -1,4 +1,4 @@
-VERSIOON: 0.2.1/20170331
+VERSIOON: 0.3.0/20170601
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -6,6 +6,7 @@ README.md - tarne ja installeerimise kirjeldus
 /db - andmebaasi skriptide kaust
 /hois_back - rakenduse backendi kood
 /hois_front - rakenduse frontendi kood
+/hois_ws - rakenduse veebiteenuste kood
 
 
 
@@ -17,7 +18,7 @@ DOK1 - HOIS_analyys_klassifikaatorid_seaded.docx
 		2.2	Õppeasutuse struktuur
 		3.1	Õppeasutuse ja õppeastmete vastavus
 		3.2	Õppesutuse hooned ja ruumid
-		3.3	Õpetaja amet
+		3.3	Õpetaja ametikoht
 		3.4	Automaatsete teadete mallid
 		3.5	Õppeaasta ja õppeperiood
 		3.6	Käskkirjade kooskõlastaja seadistamine
@@ -47,6 +48,7 @@ DOK3 - HOIS_analyys_opilased_liikumised.docx
 DOK4 - HOIS_analyys_opetajad_materjalid.docx
 		2.1	Õpetaja andmete sisestamine süsteemi (va täiendkoolitused, tasemekoolitused, ametijärk)
 		2.2	Õpetajate otsing 
+		2.3 Õpetaja andmete vaatamine
 
 DOK5 - HOIS_analyys_avaldused_kaskkirjad.docx
 	    2.1	Avalduste otsing
@@ -77,16 +79,23 @@ DOK5 - HOIS_analyys_avaldused_kaskkirjad.docx
 		3.11	Immatrikuleerimise käskkirja koostamine
 		3.12	Lõpetamise käskkirja koostamine
 		3.13	Ennistamise käskkirja koostamine 
+		3.16	Käskkirja tühistamine
 		3.17	Käskkirja andmete vaatamine
 		3.18	Käskkirja andmete muutmine
+		3.19	Immatrikuleerimise (vastuvõtt) käskkirja koostamine
 		4.1	Tõendite otsing
 		4.3	Tõendi tellimine (admin. töötaja töökohal, ilma reaalse sisuta)
 
 DOK6 - HOIS_analyys_vastuvott.docx
+		2.1	Klassifikaatorite importimine SAISist
+		2.2	Konkursside importimine SAISist
 		2.3	Konkursi otsing
 		2.4	Konkursi andmete vaatamine
+		2.5	Vastuvõtu avalduste importimine SAISist
 		2.6	Vastuvõtu avalduste otsing
+		2.7	Vastuvõtu avalduse andmete vaatamine
 		2.8	Vastuvõtu avalduse laadimine csv failist
+		2.9	Immatrikuleerimise käskkirja koostamine
 
 DOK7 - HOIS_analyys_kasutajaoigused.docx
 		2.1	Kasutaja otsing
@@ -99,6 +108,39 @@ DOK8 - HOIS_analyys_teated.docx
 		3.1	Teate otsing
 		3.2	Teate saatmine
 		3.3	Teate vaatamine ja teatele vastamine
+
+DOK9 - HOIS_analyys_andmevahetus.docx
+		Andmevahetus EHISega
+		-------------------------------------------
+		3.4.1.1	Õppekoormuse muutmine
+		3.4.1.2	Õppekava vahetamine
+		3.4.1.3	Finantseerimisallika muutmine
+		3.4.1.4	Õppevormi vahetamine
+		
+		Andmevahetus SAIS-iga
+		-------------------------------------------
+		4.1	SAISi klassifikaatorid
+		4.2	Konkursid
+		4.3	Vastuvõtu avaldused
+		
+DOK10 - HOIS_analyys_opitulemused_paevikud.docx
+		Päevikud ja protokollid kutseõppes
+		-----------------------------------
+		2.1	Päevikute otsing
+		2.2	Päevikusse õppurite lisamine
+		2.4	Päeviku täitmine
+
+DOK11 - HOIS_analyys_tunniplaan.docx	
+		2.1	Tundide aegade sisestamine
+		2.2	Tundide aegade otsing
+		3	Õppetöögraafik
+		4.1	Koormuste planeerimise koondvorm
+		4.2	Koormuste sisestamine kutseõppes õpperühmade kaupa
+		4.4	Õppeaine koormuse sisestamine kõrgharidusõppes
+		4.5	Koormuste sisestamine õpperühmade kaupa kõrgharidusõppes
+		4.6	Koormuste sisestamine õpetajate kaupa kõrgharidusõppes
+		4.7	Koormuste sisestamine õppeainete kaupa kõrgharidusõppes
+		4.8	Aine-õpetaja paari  otsing
 	   
 Testisikute kasutajanimed, kellena saab ÕISi sisse logida ja süsteemi testida (kasutajanimi - isiku nimi, rollid):
 37101010003 - Test1 Kasutaja1, peaadministraator, administratiivne töötaja Tallinna Polütehnikumis, Tallinna Tervishoiu Kõrgkoolis ja EBS-s
@@ -115,9 +157,12 @@ Testisikute kasutajanimed, kellena saab ÕISi sisse logida ja süsteemi testida 
 
 Tallinna Polütehnikumis on olemas üks kutseõppe õppekava
 Tallinna Tervishoiu Kõrgkoolis on olemas üks kõrgharidusõppe õppekava
+
+
+NB! Automaatteadete saatmiseks ÕISi on tekitatud kasutaja Hõis Automaatteade, palume seda mitte kustutada
 	   
 
-EELDUS: ver. 0.2.0/20170310
+EELDUS: ver. 0.2.1/20170331
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x
@@ -181,7 +226,7 @@ EELDUS:
 		nginx
 		nginx on confitud teatud urlil otse l2bi saatma (proxy) pärinugid backendi suunas
 		
-		lisaks proxy_backend.conf faili võib lisada järgmised read:
+		lisaks proxy_backend.conf faili võib lisada järgmised read (NB! võrreldes versiooniga 0.2.1/20170331 lisandus uus rida location = /hois_back/classifierConnect/all...):
 		
 		1) proxy_cache_path /tmp keys_zone=classifier_cache:32k max_size=10m inactive=10m use_temp_path=off;
 		2) location = /hois_back/autocomplete/classifiers {	
@@ -245,6 +290,18 @@ EELDUS:
 				proxy_cache_valid 10m;
 				proxy_pass http://backend/$uri;
 			}
+			
+			location = /hois_back/classifierConnect/all {
+				add_header X-Cache-Status $upstream_cache_status;
+				proxy_ignore_headers Cache-Control;
+				proxy_ignore_headers Expires;
+				proxy_cache classifier_cache;
+				proxy_cache_lock on;
+				proxy_cache_use_stale updating;
+				proxy_cache_valid 10m;
+				proxy_pass http://backend/hois_back/classifierConnect/all;
+			}
+
 
 
 
@@ -284,6 +341,19 @@ NB! XXX - frontendi server, nt devhoisfront
 		3. spring.datasource.password - eelnevalt sisestatud andmebaasi kasutaja salasõna
 		4. spring.redis.host - redise asukoht, vaikimisi localhost
 		5. spring.redis.port - redise port, vaikimisi 6379
+		6. spring.mail.host - e-maili saatmise host, vaikimisi mail.neti.ee
+		7. sais.endpoint - SAIS-i veebiteenuste pöördumise url kujul (SAISi veebiteenused hetkel realiseeritud vastu x-tee v5) http://TURVASERVER5/cgi-bin/consumer_proxy, nt 
+		8. sais.consumer - SAIS-i veebiteenuste kliendi reg. kood, nt 90005872
+		9. ehis.client.xRoadInstance - HITSA x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test
+		10. ehis.client.memberClass - HITSA nn memberClass vastavas keskkonaas (arenduses COM ja testis NGO), vaikimisi NGO
+		11. ehis.client.memberCode - HITSA reg. kood, vaikimisi 90005872
+		12. ehis.client.subsystemCode - HITSA allsüsteemi kood, vaikimisi generic-consumer
+		13. ehis.service.xRoadInstance - EHISe x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test, peab olema sama mis ehis.client.xRoadInstance
+		14. ehis.service.memberClass - EHISe nn memberClass vastavas keskkonnas, testis vaikimisi GOV
+		15. ehis.service.memberCode - EHISe reg. kood, vaikimisi 70000740
+		16. ehis.service.subsystemCode - EHISe allsüsteemi kood, vaikimisis ehis
+		18. ehis.user - päringu käivitaja kujul EE+ISIKUKOOD, nt EE38002240211
+		19. ehis.endpoint - EHISe veebiteenuste pöördumise url kujul (EHISe veebiteenused hetkel realiseeritud vastu x-tee v6) http://TURVASERVER6/cgi-bin/consumer_proxy
     4. Tekitada hois kausta frontend.config.js ja muuta backendi url: http://XXX/hois_back, kus XXX asemel kirjutada frontendi server
 	5. Backendi ehitamiseka paigaldamiseks
 		1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta

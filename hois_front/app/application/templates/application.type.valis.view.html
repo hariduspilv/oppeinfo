@@ -1,0 +1,76 @@
+<div>
+  <div layout="row">
+    <md-input-container flex="20" flex-xs="100">
+      <label>{{'main.abroadStudies' | translate}}</label>
+      <hois-value value="application.isAbroad ? ('main.yes' | translate) : ('main.no' | translate)"></hois-value>
+    </md-input-container>
+  </div>
+
+  <div layout="row" layout-sm="column" layout-xs="column" ng-hide="application.isAbroad">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'main.educationInstitution' | translate}}</label>
+      <hois-classifier-value ng-model="application.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value>
+    </md-input-container>
+  </div>
+
+  <div layout="row" layout-sm="column" layout-xs="column" ng-hide="!application.isAbroad">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label class="textInput">{{'main.educationInstitution' | translate}}</label>
+      <hois-value value="application.abroadSchool"></hois-value>
+    </md-input-container>
+  </div>
+
+  <div layout="row" layout-sm="column" layout-xs="column" ng-hide="!application.isAbroad">
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'main.country' | translate}}</label>
+      <hois-classifier-value ng-model="application.country" main-classifier-code="RIIK"></hois-classifier-value>
+    </md-input-container>
+  </div>
+
+  <div layout="row" layout-sm="column" layout-xs="column">
+    <div flex="60" flex-sm="100" flex-xs="100" ng-include="'application/templates/period.view.html'"
+      ng-init="labelStart='application.abroadStudiesStart';labelEnd='application.abroadStudiesEnd'"></div>
+  </div>
+
+  <div layout="row" layout-sm="column" layout-xs="column" >
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'main.purposeOfStudies' | translate}}</label>
+      <hois-classifier-value ng-model="application.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"
+      ></hois-classifier-value>
+    </md-input-container>
+  </div>
+
+  <div layout="row" layout-sm="column" layout-xs="column" >
+    <md-input-container flex="60" flex-sm="100" flex-xs="100">
+      <label>{{'main.programmeOfStudies' | translate}}</label>
+      <hois-classifier-value ng-model="application.abroadProgramme" main-classifier-code="VALISKOOL_PROGRAMM"
+      ></hois-classifier-value>
+    </md-input-container>
+  </div>
+</div>
+
+<div>
+  <div layout="column" flex>
+    <div layout="row" class="top-margin">
+      <h2>{{'main.subjects' | translate}} </h2>
+    </div>
+    <table md-table class="secondary-table">
+      <thead md-head>
+        <tr md-row>
+          <th md-column><span>{{'application.plannedSubject' | translate}} *</span></th>
+          <th md-column><span>{{'application.substitutableSubject' | translate}} *</span></th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="plannedSubject in application.plannedSubjects | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>
+            {{plannedSubject.name}}
+          </td>
+          <td md-cell>
+            {{subjectsListView(plannedSubject)}}
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

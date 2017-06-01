@@ -2,8 +2,8 @@ package ee.hitsa.ois.web.dto.curriculum;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
@@ -13,6 +13,7 @@ import org.hibernate.validator.constraints.NotBlank;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
@@ -38,15 +39,19 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     private String typeNameEn;
     @NotNull
     @Min(0)
-    private Integer totalCredits;
+    @Max(999)
+    private Double totalCredits;
     @NotNull
     @Min(0)
-    private Integer optionalStudyCredits;
+    @Max(999)
+    private Double optionalStudyCredits;
     @NotNull
     @Min(0)
-    private Integer compulsoryStudyCredits;
+    @Max(999)
+    private Double compulsoryStudyCredits;
     @NotNull
     @Min(0)
+    @Max(999)
     private Integer electiveModulesNumber;
     @NotNull
     private Boolean minorSpeciality;
@@ -66,24 +71,11 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         CurriculumVersionHigherModuleDto dto = EntityUtil.bindToDto(module, new CurriculumVersionHigherModuleDto(),
                 "electiveModules", "specialities", "subjects");
 
-        if(module.getElectiveModules() != null) {
-            Set<CurriculumVersionElectiveModuleDto> electiveModules = module.getElectiveModules().stream().
-                    map(m -> CurriculumVersionElectiveModuleDto.of(m)).collect(Collectors.toSet());
-            dto.setElectiveModules(electiveModules);
-        }
-        if(module.getSubjects() != null) {
-            Set<CurriculumVersionHigherModuleSubjectDto> subjects = module.getSubjects().stream().
-                    map(s -> {
-                        return CurriculumVersionHigherModuleSubjectDto.of(s, dto.getElectiveModules());
-                    }).collect(Collectors.toSet());
-            dto.setSubjects(subjects);
-        }
-        Set<Long> specialitiesReferenceNumbers = module.getSpecialities().stream().map(m -> EntityUtil.getId(m.getSpeciality().getCurriculumSpeciality())).collect(Collectors.toSet());
-        dto.setSpecialitiesReferenceNumbers(specialitiesReferenceNumbers);
+        dto.setElectiveModules(StreamUtil.toMappedSet(CurriculumVersionElectiveModuleDto::of, module.getElectiveModules()));
+        dto.setSubjects(StreamUtil.toMappedSet(s -> CurriculumVersionHigherModuleSubjectDto.of(s, dto.getElectiveModules()), module.getSubjects()));
+        dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(m -> EntityUtil.getId(m.getSpeciality().getCurriculumSpeciality()), module.getSpecialities()));
         return dto;
     }
-
-
 
     public Set<Long> getSpecialitiesReferenceNumbers() {
         return specialitiesReferenceNumbers != null ? specialitiesReferenceNumbers : (specialitiesReferenceNumbers = new HashSet<>());
@@ -165,27 +157,27 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         this.typeNameEn = typeNameEn;
     }
 
-    public Integer getTotalCredits() {
+    public Double getTotalCredits() {
         return totalCredits;
     }
 
-    public void setTotalCredits(Integer totalCredits) {
+    public void setTotalCredits(Double totalCredits) {
         this.totalCredits = totalCredits;
     }
 
-    public Integer getOptionalStudyCredits() {
+    public Double getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+    public void setOptionalStudyCredits(Double optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 
-    public Integer getCompulsoryStudyCredits() {
+    public Double getCompulsoryStudyCredits() {
         return compulsoryStudyCredits;
     }
 
-    public void setCompulsoryStudyCredits(Integer compulsoryStudyCredits) {
+    public void setCompulsoryStudyCredits(Double compulsoryStudyCredits) {
         this.compulsoryStudyCredits = compulsoryStudyCredits;
     }
 

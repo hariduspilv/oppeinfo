@@ -5,6 +5,7 @@ import org.springframework.beans.PropertyAccessorFactory;
 
 import javax.validation.ConstraintValidator;
 import javax.validation.ConstraintValidatorContext;
+
 import java.time.LocalDateTime;
 
 public class DateTimeRangeValidator implements ConstraintValidator<DateTimeRange, Object> {
@@ -24,6 +25,6 @@ public class DateTimeRangeValidator implements ConstraintValidator<DateTimeRange
             return true;
         }
         LocalDateTime thru = (LocalDateTime)reader.getPropertyValue(constraint.thru());
-        return thru == null || !thru.isBefore(from);
+        return thru == null || (!thru.isBefore(from) && (constraint.allowPast() || !from.isBefore(LocalDateTime.now())));
     }
 }

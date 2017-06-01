@@ -1,0 +1,175 @@
+<div class="ois-form-layout-padding form-readonly" ng-cloak>
+  <div>
+    <form>
+      <div style="padding-top: 1em">
+        <div layout="column">
+          <div layout="row" layout-sm="column" layout-xs="column">
+            <md-input-container flex>
+              <label>{{'reception.application.nr' | translate}}</label>
+              <hois-value value="saisApplication.applicationNr" ></hois-value>
+            </md-input-container>
+            <md-input-container flex>
+              <label>{{'person.idcode' | translate}}</label>
+              <hois-value value="saisApplication.idcode" ></hois-value>
+            </md-input-container>
+          </div>
+
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex>
+                <label>{{'person.firstname' | translate}}</label>
+                <hois-value value="saisApplication.firstname" ></hois-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'person.lastname' | translate}}</label>
+                <hois-value value="saisApplication.lastname" ></hois-value>
+              </md-input-container>
+            </div>
+
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex>
+                <label>{{'person.sex' | translate}}</label>
+                <hois-classifier-value ng-model="saisApplication.sex" main-classifier-code="SUGU"></hois-classifier-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'student.residenceCountry' | translate}}</label>
+                <hois-classifier-value ng-model="saisApplication.residenceCountry" main-classifier-code="RIIK"></hois-classifier-value>
+              </md-input-container>
+            </div>
+
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex>
+                <label>{{'student.citizenship' | translate}}</label>
+                <hois-classifier-value ng-model="saisApplication.citizenship" main-classifier-code="RIIK"></hois-classifier-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'student.studyLanguage' | translate}}</label>
+                <hois-classifier-value ng-model="saisApplication.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>
+              </md-input-container>
+            </div>
+
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex>
+                <label>{{'reception.application.email' | translate}}</label>
+                <hois-value value="saisApplication.email" ></hois-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'reception.application.address' | translate}}</label>
+                <hois-value value="saisApplication.address" ></hois-value>
+              </md-input-container>
+            </div>
+
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex>
+                <label>{{'student.phone' | translate}}</label>
+                <hois-value value="saisApplication.phone" ></hois-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'reception.application.status' | translate}}</label>
+                <hois-classifier-value ng-model="saisApplication.status" main-classifier-code="SAIS_AVALDUSESTAATUS"></hois-classifier-value>
+              </md-input-container>
+
+            </div>
+
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex>
+                <label>{{'student.studyForm' | translate}}</label>
+                <hois-classifier-value ng-model="saisApplication.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+              </md-input-container>
+              <md-input-container ng-if="saisApplication.isHigher" flex>
+                <label>{{'student.studyLoad' | translate}}</label>
+                <hois-classifier-value ng-model="saisApplication.studyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
+              </md-input-container>
+            </div>
+
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex>
+                <label>{{'reception.application.submissionDate' | translate}}</label>
+                <hois-value value="saisApplication.submitted | hoisDate"></hois-value>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'reception.application.changeDate' | translate}}</label>
+                <hois-value value="saisApplication.saisChanged | hoisDate"></hois-value>
+              </md-input-container>
+            </div>
+
+            <div layout="row" layout-sm="column" layout-xs="column">
+              <md-input-container flex>
+                <label>{{'reception.admission.code' | translate}}</label>
+                <hois-value value="saisApplication.saisAdmissionCode" ></hois-value>
+              </md-input-container>
+            </div>
+        </div>
+
+        <div layout="column">
+          <div layout="row" class="top-margin">
+            <h2>{{'reception.application.graduationHistory' | translate}} </h2>
+          </div>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'school.label' | translate}}</th>
+                <th md-column>{{'student.studyStart' | translate}}</th>
+                <th md-column>{{'student.studyEnd' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row flex ng-repeat="graduatedSchool in saisApplication.graduatedSchools | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{graduatedSchool.name}}</td>
+                <td md-cell>{{graduatedSchool.startDate | hoisDate}}</td>
+                <td md-cell>{{graduatedSchool.endDate | hoisDate}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div layout="column">
+          <div layout="row" class="top-margin">
+            <h2>{{'reception.application.gradesResults' | translate}} </h2>
+          </div>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'subject.name' | translate}}</th>
+                <th md-column>{{'subject.type' | translate}}</th>
+                <th md-column>{{'main.result' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="grade in saisApplication.grades | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{grade.subjectName}}</td>
+                <td md-cell>{{grade.subjectType}}</td>
+                <td md-cell>{{grade.grade}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div layout="column">
+          <div layout="row" class="top-margin">
+            <h2>{{'reception.application.otherData' | translate}} </h2>
+          </div>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column>{{'main.name' | translate}}</th>
+                <th md-column>{{'main.value' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="otherData in saisApplication.otherData | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>{{otherData.otherDataName}}</td>
+                <td md-cell>{{otherData.otherDataValue}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+      <br/>
+
+      <div layout="row">
+        <md-button ng-href="#/reception/saisApplication/search" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+
+    </form>
+  </div>
+</div>

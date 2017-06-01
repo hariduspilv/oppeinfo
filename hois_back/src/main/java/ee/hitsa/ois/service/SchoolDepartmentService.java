@@ -10,7 +10,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -31,6 +30,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentSearchCommand;
 import ee.hitsa.ois.web.dto.SchoolDepartmentDto;
@@ -49,15 +49,13 @@ public class SchoolDepartmentService {
     public Page<SchoolDepartmentDto> findAll(Long schoolId, SchoolDepartmentSearchCommand criteria, Pageable pageable) {
         // load full structure for given school, already sorted
         List<SchoolDepartmentDto> structure = findForTree(schoolId, pageable);
-        Map<Long, SchoolDepartmentDto> mappedStructure = structure.stream().collect(Collectors.toMap(SchoolDepartmentDto::getId, Function.identity()));
+        Map<Long, SchoolDepartmentDto> mappedStructure = StreamUtil.toMap(SchoolDepartmentDto::getId, structure);
         // filter out matched departments and their parents
         LocalDate now = LocalDate.now();
         Set<Long> filtered = structure.stream().filter(sdt -> {
             String code = criteria.getCode();
-            if(StringUtils.hasText(code)) {
-                if(!code.equalsIgnoreCase(sdt.getCode())) {
-                    return false;
-                }
+            if(StringUtils.hasText(code) && !code.equalsIgnoreCase(sdt.getCode())) {
+                return false;
             }
             String name = criteria.getName();
             if(StringUtils.hasText(name)) {
@@ -82,7 +80,7 @@ public class SchoolDepartmentService {
         }).flatMap(ids -> ids.stream()).collect(Collectors.toSet());
 
         Map<Long, List<SchoolDepartmentDto>> children = structure.stream().filter(sd -> sd.getParentSchoolDepartment() != null).collect(Collectors.groupingBy(sd -> sd.getParentSchoolDepartment()));
-        List<SchoolDepartmentDto> items = structure.stream().filter(sd -> sd.getParentSchoolDepartment() == null && filtered.contains(sd.getId())).map(sd -> createTreeItem(sd, children, filtered)).collect(Collectors.toList());
+        List<SchoolDepartmentDto> items = StreamUtil.toMappedList(sd -> createTreeItem(sd, children, filtered), structure.stream().filter(sd -> sd.getParentSchoolDepartment() == null && filtered.contains(sd.getId())));
         int totalCount = items.size();
         int offset = Math.min(pageable.getOffset(), totalCount);
         items = new ArrayList<>(items.subList(offset, Math.min(offset + pageable.getPageSize(), totalCount)));
@@ -133,11 +131,11 @@ public class SchoolDepartmentService {
     }
 
     private List<SchoolDepartmentDto> findForTree(Long schoolId, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd", pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd").sort(pageable);
         qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
 
         List<?> data = qb.select("sd.id, sd.version, sd.code, sd.name_et, sd.name_en, sd.valid_from, sd.valid_thru, sd.parent_school_department_id", em).getResultList();
-        return data.stream().map(r -> {
+        return StreamUtil.toMappedList(r -> {
             SchoolDepartmentDto dto = new SchoolDepartmentDto();
             dto.setId(resultAsLong(r, 0));
             dto.setVersion(resultAsLong(r, 1));
@@ -148,11 +146,11 @@ public class SchoolDepartmentService {
             dto.setValidThru(resultAsLocalDate(r, 6));
             dto.setParentSchoolDepartment(resultAsLong(r, 7));
             return dto;
-        }).collect(Collectors.toList());
+        }, data);
     }
 
     private static SchoolDepartmentDto createTreeItem(SchoolDepartmentDto sd, Map<Long, List<SchoolDepartmentDto>> children, Set<Long> filtered) {
-        sd.setChildren(children.getOrDefault(sd.getId(), Collections.emptyList()).stream().filter(childsd -> filtered.contains(childsd.getId())).map(childsd -> createTreeItem(childsd, children, filtered)).collect(Collectors.toList()));
+        sd.setChildren(StreamUtil.toMappedList(childsd -> createTreeItem(childsd, children, filtered), children.getOrDefault(sd.getId(), Collections.emptyList()).stream().filter(childsd -> filtered.contains(childsd.getId()))));
         return sd;
     }
 }

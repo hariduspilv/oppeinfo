@@ -8,16 +8,9 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
 
     var school = Session.school || {};
     var onlyhigher = school.higher && !school.vocational;
-    $scope.formState = {allCurriculumVersions: [], curriculumVersions: [],
-                        studyForms: [], curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyhigher: onlyhigher};
-
-    Curriculum.queryVersions().$promise.then(function(result) {
-      var data = result.content;
-      var curriculums = $scope.formState.allCurriculumVersions;
-      for(var i = 0, cnt = data.length; i < cnt; i++)  {
-        curriculums.push(data[i]);
-      }
-    });
+    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions(), curriculumVersions: [],
+                        allStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM'}), studyForms: [],
+                        curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyhigher: onlyhigher};
 
     if(onlyhigher) {
       $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionHigher';
@@ -30,27 +23,49 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       // store current values
       $scope.formState.studyForm = $scope.criteria.studyForm;
 
-      var afterCurriculumChange = function(result) {
-        $scope.formState.curriculumVersions = result.curriculumVersions;
+      function afterCurriculumChange(result) {
+        if(curriculumId) {
+          $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions.filter(function(cv) { return cv.curriculum === curriculumId;});
+        } else {
+          // all versions allowed
+          $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions;
+        }
         $scope.formState.studyForms = result.studyForms || [];
         // try to restore values
         $scope.criteria.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
-      };
+      }
+
       if(curriculumId) {
         QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: curriculumId}, afterCurriculumChange);
       } else {
         // curriculum cleared
         afterCurriculumChange({});
-        // all versions allowed
-        $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions;
+      }
+    };
+
+    $scope.curriculumVersionChanged = function() {
+      if(!$scope.criteria.curriculumVersion || $scope.criteria.curriculumVersion.length === 0) {
+        $scope.formState.hiddenStudyForms = undefined;
+      } else {
+        var sf = $scope.formState.curriculumVersions.reduce(function(acc, item) { acc[item.id] = item.studyForm; return acc; }, {});
+        sf = $scope.criteria.curriculumVersion.map(function(it) { return sf[it];});
+        if(sf.indexOf(null) !== -1) {
+          // curriculum version without study form, let user select from all values
+          $scope.formState.hiddenStudyForms = undefined;
+        } else {
+          // allow selection of study forms specified by curriculum versions
+          $scope.formState.hiddenStudyForms = $scope.formState.allStudyForms.filter(function(it) { return sf.indexOf(it.code) === -1; });
+        }
       }
     };
 
     $scope.curriculumChanged();
+    $scope.curriculumVersionChanged();
+
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('StudentGroupEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'Session',
-  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Classifier, QueryUtils, Session) {
+]).controller('StudentGroupEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'Curriculum', 'QueryUtils', 'Session', 'DataUtils',
+  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Classifier, Curriculum, QueryUtils, Session, DataUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -58,8 +73,9 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
 
     var school = Session.school || {};
     var onlyvocational = !school.higher && school.vocational;
-    $scope.formState = {curriculumVersions: [], languages: [], studyForms: [], specialities: [], selectedStudents: [],
-                        curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyvocational: onlyvocational};
+    $scope.formState = {allCurriculumVersions: Curriculum.queryVersions(), curriculumVersions: [],
+                        languages: [], studyForms: [], specialities: [], selectedStudents: [],
+                        curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyvocational: onlyvocational, isVocational: school.vocational};
 
     if(onlyvocational) {
       $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionVocational';
@@ -77,9 +93,10 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       $scope.formState.language = $scope.record.language;
       $scope.formState.studyForm = $scope.record.studyForm;
       $scope.formState.speciality = $scope.record.speciality;
+      $scope.formState.curriculumVersion = $scope.record.curriculumVersion;
 
       var afterCurriculumChange = function(result) {
-        $scope.formState.curriculumVersions = result.curriculumVersions;
+        $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions.filter(function(cv) { return cv.curriculum === curriculumId;});
         $scope.formState.languages = result.languages || [];
         $scope.formState.studyForms = result.studyForms || [];
         $scope.formState.origStudyLevel = result.origStudyLevel;
@@ -90,6 +107,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         $scope.record.language = $scope.formState.languages.indexOf($scope.formState.language) !== -1 ? $scope.formState.language : null;
         $scope.record.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
         $scope.record.speciality = $scope.formState.specialities.indexOf($scope.formState.speciality) !== -1 ? $scope.formState.speciality : null;
+        $scope.record.curriculumVersion = $scope.formState.curriculumVersions.find(function(it) {return it.id === $scope.formState.curriculumVersion;}) !== undefined ? $scope.formState.curriculumVersion : null;
       };
       if(curriculumId) {
         QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: curriculumId}, afterCurriculumChange);
@@ -99,10 +117,21 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       }
     };
 
+    $scope.curriculumVersionChanged = function() {
+      if($scope.record.curriculumVersion) {
+        var sf = $scope.formState.curriculumVersions.reduce(function(acc, item) { acc[item.id] = item.studyForm; return acc; }, {});
+        var v = sf[$scope.record.curriculumVersion];
+        if(v) {
+          $scope.record.studyForm = v;
+        }
+      }
+    };
+
     function afterLoad() {
       $scope.formState.students = clMapper.objectmapper($scope.record.members);
       $scope.formState.selectedStudents = angular.copy($scope.formState.students);
       $scope.curriculumChanged();
+      DataUtils.convertStringToDates($scope.record, ["validFrom", "validThru"]);
     }
 
     if(id) {
@@ -125,7 +154,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       }else{
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
         });
       }
     };
@@ -134,7 +163,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       dialogService.confirmDialog({prompt: 'studentGroup.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path(baseUrl);
+          $location.url(baseUrl);
         });
       });
     };
@@ -154,7 +183,11 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
             return;
           }
           $q.all(clMapper.promises).then(function() {
-            scope.formState.students = clMapper.objectmapper(result);
+            var students = clMapper.objectmapper(result);
+            if (angular.isNumber($scope.formState.curriculumVersion)) {
+              students = students.filter(function(student) {return student.curriculumVersion.id === $scope.formState.curriculumVersion;});
+            }
+            scope.formState.students = students;
           });
         });
       };

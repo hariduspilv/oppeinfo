@@ -1,11 +1,18 @@
 package ee.hitsa.ois.domain;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Set;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Transient;
 
 @Entity
 public class StudyPeriod extends BaseEntityWithId {
@@ -66,5 +73,35 @@ public class StudyPeriod extends BaseEntityWithId {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    @Transient
+    public List<Integer> getWeekNrs() {
+        LocalDate yearStart = studyYear.getStartDate();
+        if(yearStart.getDayOfWeek() != DayOfWeek.MONDAY) {
+            yearStart = yearStart.with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
+        }
+        Integer weekNr = 1;
+        List<Integer> weekNrs = new ArrayList<>();
+        LocalDate spStart = startDate.with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
+        
+        while(!spStart.isEqual(yearStart)) {
+            yearStart = yearStart.plusDays(7);
+            weekNr++;
+        }
+        
+        Set<StudyPeriod> periods = studyYear.getStudyPeriods();
+        for(StudyPeriod period : periods) {
+            if(period.getStartDate().isBefore(spStart) && period.getEndDate().isAfter(spStart) && period != this) {
+                spStart = spStart.plusDays(7);
+                weekNr++;
+            }
+        }
+        
+        while(endDate.isAfter(spStart) || endDate.isEqual(spStart)) {
+            weekNrs.add(weekNr++);
+            spStart = spStart.plusDays(7);
+        }
+        return weekNrs;
     }
 }

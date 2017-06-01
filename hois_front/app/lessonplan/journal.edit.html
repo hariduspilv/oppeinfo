@@ -1,0 +1,105 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="journalForm" class="nomargin">
+      <div layout="row" flex="100" flex-sm="100" flex-xs="100">
+        <md-input-container flex>
+          <label class="textInput">{{'lessonplan.journal.theme' | translate}}</label>
+          <hois-select ng-model="formState.theme" values="formState.themes"></hois-select>
+        </md-input-container>
+          <md-input-container flex="5">
+          <md-button ng-show="formState.theme" ng-click="addTheme()" class="md-icon-button">
+            <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">add</md-icon>
+          </md-button>
+        </md-input-container>
+
+        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'lessonplan.journal.assessment' | translate}}</label>
+          <hois-classifier-select ng-model="record.assessment" required main-classifier-code="KUTSEHINDAMISVIIS" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+      </div>
+
+      <div layout="column" class="common-label" flex="65" ng-repeat="theme in record.journalOccupationModuleThemes">
+		    <div layout="row" flex layout-align="start center">
+				<div flex="5">&nbsp;</div>
+				<div flex="50">{{currentLanguageNameField(formState.themeMap[theme])}}</div>
+				<div><a ng-click="deleteTheme(theme)" class="remove">&times;</a></div>
+			</div>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex="65" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'lessonplan.journal.name' | translate}}</label>
+          <input type="text" ng-model="record.nameEt" required>
+        </md-input-container>
+
+        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="10" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'lessonplan.journal.groupProportion' | translate}}</label>
+          <hois-classifier-select ng-model="record.groupProportion" required main-classifier-code="PAEVIK_GRUPI_JAOTUS" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+      </div>
+
+      <fieldset flex="65">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'lessonplan.journal.capacity-type' | translate}}</legend>
+      
+        <div layout="column" ng-repeat="capacityType in formState.capacityTypes" flex="70" flex-sm="100" flex-xs="100">
+              <div layout="row" flex layout-align="start center">
+                <div flex="5">&nbsp;</div>
+                <div flex>
+                  <md-checkbox ng-model="capacityType._selected">
+                    {{currentLanguageNameField(capacityType)}}
+                </md-checkbox>
+              </div>
+			  </div>
+        </div>
+      </fieldset>
+
+      <div layout="row" flex="70" flex-sm="100" flex-xs="100">
+        <hois-autocomplete label="lessonplan.journal.teacher" ng-model="formState.teacher" method="teachers" flex></hois-autocomplete>
+        <md-input-container flex="5">
+          <md-button ng-if="formState.teacher" ng-show="formState.teacher" ng-click="addTeacher()" class="md-icon-button">
+            <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">add</md-icon>
+          </md-button>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-table-container class="secondary-table">
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column></th>
+                <th md-column>{{'lessonplan.journal.isFiller' | translate}}</th>
+                <th md-column>{{'lessonplan.journal.isConfirmer' | translate}}</th>
+                <th md-column></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="teacher in record.journalTeachers">
+                <td md-cell>{{currentLanguageNameField(teacher.teacher)}}</td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="teacher.isFiller" aria-label="{{'lessonplan.journal.isFiller' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <md-input-container>
+                    <md-checkbox ng-model="teacher.isConfirmer" aria-label="{{'lessonplan.journal.isConfirmer' | translate}}"></md-checkbox>
+                  </md-input-container>
+                </td>
+                <td md-cell>
+                  <a ng-click="deleteTeacher(teacher)" class="remove">&times;</a>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+
+      <div layout="row">
+        <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+        <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button ng-href="#/lessonplans/vocational/{{record.lessonPlan}}/edit" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

@@ -36,6 +36,7 @@ public class Directive extends BaseEntityWithId {
     private Long wdId;
     private String confirmer;
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
     private Directive canceledDirective;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier cancelType;

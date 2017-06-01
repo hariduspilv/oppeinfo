@@ -1,22 +1,28 @@
 <md-table-container>
-  <table md-table>
+  <table md-table md-row-select="formState.cancelSelect" multiple ng-model="formState.selectedStudents" class="secondary-table">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
         <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
-        <th md-column>{{'directive.student.isCumLaude' | translate}}</th>
-        <th md-column>{{'directive.student.curriculumGrade' | translate}}</th>
+        <th md-column>{{formState.school.vocational ? (formState.school.higher ? 'directive.student.isCumLaudeBoth' : 'directive.student.isCumLaudeVoc') : 'directive.student.isCumLaude' | translate}}</th>
+        <th md-column ng-if="formState.school.higher">{{'directive.student.curriculumGrade' | translate}}</th>
+        <th md-column ng-if="formState.school.vocational">{{'directive.student.isOccupationExamPassed' | translate}}</th>
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell>{{::row.fullname}}</td>
-        <td md-cell>{{::row.idcode}}</td>
-        <td md-cell>{{currentLanguageNameField(row.oldCurriculumVersion)}}</td>
-        <td md-cell>{{row.isCumLaude ? 'main.yes' : 'main.no' | translate}}</td>
+      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>
+          <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
+        </td>
+        <td md-cell>{{::row.idcode}}</td>
+        <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+        <td md-cell>{{row.isCumLaude ? 'main.yes' : 'main.no' | translate}}</td>
+        <td md-cell ng-if="formState.school.higher">
           <hois-classifier-value ng-model="row.curriculumGrade" main-classifier-code="EHIS_KRAAD"></hois-classifier-value>
+        </td>
+        <td md-cell ng-if="formState.school.vocational">
+          {{row.isOccupationExamPassed ? 'main.yes' : 'main.no' | translate}}
         </td>
       </tr>
     </tbody>

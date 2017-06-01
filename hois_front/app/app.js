@@ -19,7 +19,6 @@ angular
     'ngMaterial',
     'pascalprecht.translate',
     'md.data.table',
-    'ui.router',
     'lfNgMdFileInput',
     'ngStorage',
     'angular-cache'
@@ -30,6 +29,9 @@ angular
         redirectTo: '/'
       });
   })
+  .config(['$locationProvider', function($locationProvider) {
+    $locationProvider.hashPrefix ('');
+  }])
   .config(function ($translateProvider) {
 
     //later use $translatePartialLoaderProvider
@@ -44,6 +46,7 @@ angular
     $translateProvider.preferredLanguage('et');
     $translateProvider.fallbackLanguage('et');
     $translateProvider.useSanitizeValueStrategy('sanitizeParameters');
+    //$translateProvider.useSanitizeValueStrategy('sce');
   })
   .config(function($compileProvider){
     $compileProvider.aHrefSanitizationWhitelist(/^\s*(https?|ftp|mailto|tel|file|blob|data):/);
@@ -61,9 +64,10 @@ angular
   }])
   .config(function($mdThemingProvider) {
     $mdThemingProvider.theme('default')
-      .primaryPalette('blue', {
-        'default': '900'
-      });
+      .primaryPalette('blue', {'default': '900'})
+	  .accentPalette('pink')
+	  .backgroundPalette('grey')
+	  ;
   }).config(function ($httpProvider) {
   $httpProvider.interceptors.push([
     '$injector',

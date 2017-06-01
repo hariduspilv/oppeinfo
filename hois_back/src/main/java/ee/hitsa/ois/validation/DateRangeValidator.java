@@ -25,6 +25,6 @@ public class DateRangeValidator implements ConstraintValidator<DateRange, Object
             return true;
         }
         LocalDate thru = (LocalDate)reader.getPropertyValue(constraint.thru());
-        return thru == null || !thru.isBefore(from);
+        return thru == null || (!thru.isBefore(from) && (constraint.allowPast() || !from.isBefore(LocalDate.now())));
     }
 }

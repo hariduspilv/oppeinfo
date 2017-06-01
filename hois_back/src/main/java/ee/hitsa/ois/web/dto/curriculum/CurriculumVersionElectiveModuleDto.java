@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.dto.curriculum;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.validation.constraints.Size;
 
@@ -10,34 +9,32 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionElectiveModule;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
-    
+
     private Long id;
-    
     private Long referenceNumber;
-    
     @NotBlank
     @Size(max=255)
     private String nameEt;
     @NotBlank
     @Size(max=255)
     private String nameEn;
-    
+
     private Set<Long> subjects;
-    
+
     public static CurriculumVersionElectiveModuleDto of(CurriculumVersionElectiveModule electiveModule) {
-        CurriculumVersionElectiveModuleDto dto = EntityUtil.bindToDto(electiveModule, new CurriculumVersionElectiveModuleDto(), 
+        CurriculumVersionElectiveModuleDto dto = EntityUtil.bindToDto(electiveModule, new CurriculumVersionElectiveModuleDto(),
                 "subjects");
         if(electiveModule.getSubjects() != null) {
-            Set<Long> subjects = electiveModule.getSubjects().stream().map(em -> em.getSubject().getId()).collect(Collectors.toSet());
-            dto.setSubjects(subjects);
+            dto.setSubjects(StreamUtil.toMappedSet(em -> EntityUtil.getId(em.getSubject()), electiveModule.getSubjects()));
             dto.setReferenceNumber(dto.getId());
         }
         return dto;
     }
-    
+
     public Long getReferenceNumber() {
         return referenceNumber;
     }
@@ -71,7 +68,7 @@ public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
     }
 
     public Set<Long> getSubjects() {
-        return subjects != null ? subjects : (new HashSet<>());
+        return subjects != null ? subjects : new HashSet<>();
     }
 
     public void setSubjects(Set<Long> subjects) {

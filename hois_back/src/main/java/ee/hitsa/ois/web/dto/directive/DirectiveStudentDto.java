@@ -4,11 +4,16 @@ import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.FinSource;
+import ee.hitsa.ois.enums.FinSpecific;
 import ee.hitsa.ois.enums.StudyLoad;
+import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -22,9 +27,9 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
     private String oldFin;
     private String oldFinSpecific;
     private String oldLanguage;
-    private String curriculumGrade;
     private Boolean isCumLaude;
-    private String addInfo;
+    private Boolean isOccupationExamPassed;
+    private String curriculumGrade;
     private Boolean applicationIsPeriod;
     private LocalDate applicationStartDate;
     private LocalDate applicationEndDate;
@@ -87,14 +92,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.oldLanguage = oldLanguage;
     }
 
-    public String getCurriculumGrade() {
-        return curriculumGrade;
-    }
-
-    public void setCurriculumGrade(String curriculumGrade) {
-        this.curriculumGrade = curriculumGrade;
-    }
-
     public Boolean getIsCumLaude() {
         return isCumLaude;
     }
@@ -103,12 +100,20 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         this.isCumLaude = isCumLaude;
     }
 
-    public String getAddInfo() {
-        return addInfo;
+    public Boolean getIsOccupationExamPassed() {
+        return isOccupationExamPassed;
     }
 
-    public void setAddInfo(String addInfo) {
-        this.addInfo = addInfo;
+    public void setIsOccupationExamPassed(Boolean isOccupationExamPassed) {
+        this.isOccupationExamPassed = isOccupationExamPassed;
+    }
+
+    public String getCurriculumGrade() {
+        return curriculumGrade;
+    }
+
+    public void setCurriculumGrade(String curriculumGrade) {
+        this.curriculumGrade = curriculumGrade;
     }
 
     public Boolean getApplicationIsPeriod() {
@@ -174,7 +179,6 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_EKSMAT:
             dto.setReason(EntityUtil.getNullableCode(application.getReason()));
-            dto.setAddInfo(application.getAddInfo());
             break;
         case KASKKIRI_FINM:
             dto.setFinSpecific(EntityUtil.getNullableCode(application.getNewFinSpecific()));
@@ -190,7 +194,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setIsAbroad(application.getIsAbroad());
             dto.setAbroadSchool(application.getAbroadSchool());
             dto.setEhisSchool(EntityUtil.getNullableCode(application.getEhisSchool()));
-            dto.setCountry(EntityUtil.getNullableCode(application.getCountry()));
+            dto.setCountry(!Boolean.TRUE.equals(application.getIsAbroad()) ? ClassifierUtil.COUNTRY_ESTONIA : EntityUtil.getNullableCode(application.getCountry()));
             dto.setIsPeriod(application.getIsPeriod());
             dto.setStartDate(application.getStartDate());
             dto.setEndDate(application.getEndDate());
@@ -225,6 +229,27 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         return EntityUtil.bindToDto(directiveStudent, dto);
     }
 
+    public static DirectiveStudentDto of(SaisApplication application) {
+        DirectiveStudentDto dto = EntityUtil.bindToDto(application, new DirectiveStudentDto());
+        CurriculumVersion cv = application.getSaisAdmission().getCurriculumVersion();
+        dto.setCurriculumVersion(cv.getId());
+        if(!application.getGraduatedSchools().isEmpty()) {
+            dto.setPreviousStudyLevel(EntityUtil.getCode(application.getGraduatedSchools().stream().findFirst().get().getStudyLevel()));
+        }
+        dto.setSaisApplication(application.getId());
+
+        // finSpecific default value
+        boolean higher = CurriculumUtil.isHigher(application.getSaisAdmission().getStudyLevel());
+        FinSpecific s;
+        if(FinSource.isFree(dto.getFin())) {
+            s = higher ? FinSpecific.FINTAPSUSTUS_Y : FinSpecific.FINTAPSUSTUS_R;
+        } else {
+            s = higher ? FinSpecific.FINTAPSUSTUS_X : FinSpecific.FINTAPSUSTUS_T;
+        }
+        dto.setFinSpecific(s.name());
+        return dto;
+    }
+
     public static DirectiveStudentDto of(Student student, DirectiveType directiveType) {
         DirectiveStudentDto dto = new DirectiveStudentDto();
         dto.setStudent(student.getId());
@@ -242,13 +267,13 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_FINM:
             dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
-            boolean free = FinSource.FINALLIKAS_RE.name().equals(EntityUtil.getNullableCode(student.getFin()));
-            dto.setFin(free ? FinSource.FINALLIKAS_REV.name() : FinSource.FINALLIKAS_RE.name());
+            dto.setFin(FinSource.isFree(EntityUtil.getNullableCode(student.getFin())) ? FinSource.FINALLIKAS_REV.name() : FinSource.FINALLIKAS_RE.name());
             break;
         case KASKKIRI_LOPET:
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             // TODO
             // dto.setIsCumLaude(isCumLaude);
+            // dto.setIsOccupationExamPassed(isOccupationExamPassed);
             // dto.setCurriculumGrade(curriculumGrade);
             break;
         case KASKKIRI_OKAVA:
@@ -256,13 +281,15 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             break;
         case KASKKIRI_OKOORM:
-            // we are adding new student to the directive, calculate new study load and fin from existing values
-            boolean partial = StudyLoad.OPPEKOORMUS_OSA.name().equals(EntityUtil.getNullableCode(student.getStudyLoad()));
+            dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
+            // calculate new study load and fin from existing values
+            boolean partial = ClassifierUtil.equals(StudyLoad.OPPEKOORMUS_OSA, student.getStudyLoad());
             dto.setStudyLoad(partial ? StudyLoad.OPPEKOORMUS_TAIS.name() : StudyLoad.OPPEKOORMUS_OSA.name());
             dto.setFin(partial ? FinSource.FINALLIKAS_RE.name() : FinSource.FINALLIKAS_REV.name());
             break;
         case KASKKIRI_OVORM:
             dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+            dto.setStudentGroup(EntityUtil.getNullableId(student.getStudentGroup()));
             break;
         default:
             break;

@@ -36,7 +36,7 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="value">{{'classifier.value' | translate}}</th>
-            <th md-column md-order-by="{{currentLanguage()=='en' ? 'nameEn' : 'nameEt'}}">{{'classifier.name' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'classifier.name' | translate}}</th>
             <th md-column>{{'classifier.valid' | translate}}</th>
             <th md-column></th>
           </tr>

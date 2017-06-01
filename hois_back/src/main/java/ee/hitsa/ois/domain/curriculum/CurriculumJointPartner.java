@@ -16,26 +16,13 @@ public class CurriculumJointPartner extends BaseEntityWithId{
 
 	private static final long serialVersionUID = 6980376403338348043L;
 
-	@NotNull
 	@Column(name="is_abroad")
 	private boolean abroad;
-
-	@NotNull
-	@Size(max=1000)
 	private String contractEt;
-
-	@Size(max=1000)
 	private String contractEn;
-
-	@Size(max=255)
 	private String supervisor;
-
-	@Size(max=255)
 	private String nameEt;
-
-	@Size(max=255)
 	private String nameEn;
-
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Classifier ehisSchool;
 

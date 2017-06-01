@@ -16,6 +16,13 @@ public class ClassifierConnectSelection {
         this.mainClassifierCode = mainClassifierCode;
     }
 
+    public ClassifierConnectSelection(ClassifierSelection classifier, ClassifierSelection connectClassifier,
+            String mainClassifierCode) {
+        this.classifier = classifier;
+        this.connectClassifier = connectClassifier;
+        this.mainClassifierCode = mainClassifierCode;
+    }
+
     public static ClassifierConnectSelection of(ClassifierConnect cc) {
         return new ClassifierConnectSelection(cc.getClassifier(), cc.getConnectClassifier(), cc.getMainClassifierCode());
     }

@@ -9,7 +9,6 @@ public class TeacherOccupationForm extends VersionedCommand {
     @NotEmpty
     @Size(max = 100)
     private String occupationEt;
-    @NotEmpty
     @Size(max = 100)
     private String occupationEn;
     private Boolean isValid;

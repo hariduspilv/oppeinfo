@@ -1,10 +1,10 @@
 <md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/main{{::formState.backRef}}" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences{{::formState.backRef}}" name="student.main">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents{{::formState.backRef}}" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
+  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
 </md-nav-bar>
 
-<div layout-padding ng-cloak>
+<div layout-padding ng-cloak class="form-readonly">
   <div flex>
 
     <div layout="row" layout-xs="column" flex>
@@ -84,11 +84,11 @@
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.studyStart' | translate}}</label>
-            <hois-value value="'main.formattedDate' | translate: {date: student.studyStart} "></hois-value>
+            <hois-value value="student.studyStart | hoisDate"></hois-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.nominalStudyEnd' | translate}}</label>
-            <hois-value value="'main.formattedDate' | translate: {date: student.nominalStudyEnd} "></hois-value>
+            <hois-value value="student.nominalStudyEnd | hoisDate"></hois-value>
           </md-input-container>
         </div>
 
@@ -231,7 +231,7 @@
       </hois-collapsable>
     </div>
 
-    <md-button ng-href="#/students/{{student.id}}/edit" ng-if="student.userCanEditStudent" class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
-    <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-href="#/students/{{student.id}}/edit?_noback" ng-if="student.userCanEditStudent" class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

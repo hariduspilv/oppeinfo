@@ -1,7 +1,7 @@
 <md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/main{{::formState.backRef}}" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences{{::formState.backRef}}" name="student.main">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents{{::formState.backRef}}" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
+  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <div layout-padding>
@@ -14,22 +14,54 @@
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'type.nameEn' : 'type.nameEt'}}">{{'student.application.type' | translate}}</th>
             <th md-column md-order-by="submitted">{{'student.application.created' | translate}}</th>
             <th md-column md-order-by="{{currentLanguage()==='en' ? 'status.nameEn' : 'status.nameEt'}}">{{'student.application.status' | translate}}</th>
-            <th md-column md-order-by="confirmDate">{{'student.application.confirmDate' | translate}}</th>
+            <!--TODO: md-order-by="confirmDate"-->
+            <th md-column>{{'student.application.confirmDate' | translate}}</th>
+            <th md-column></th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in applications.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.submitted} }}</td>
+            <td md-cell>
+              <a class="md-button md-primary change-button" ng-href="#/applications/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a>
+            </td>
+            <td md-cell>{{::row.submitted | hoisDate}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
+            <td md-cell>{{::row.confirmDate | hoisDate}}</td>
+            <td md-cell>
+            <a ng-if="(row.status.code === 'AVALDUS_STAATUS_KOOST') || (row.status.code === 'AVALDUS_STAATUS_YLEVAAT' && auth.isAdmin())"
+              md-no-ink class="md-button md-primary change-button" ng-href="#/applications/{{::row.id}}/edit">{{'main.button.change' | translate}}</a>
+          </td>
           </tr>
         </tbody>
       </table>
     </md-table-container>
-    <md-table-pagination ng-if="applications.totalElements > applicationsCriteria.size" md-limit="applicationsCriteria.size" md-limit-options="[10, 20, 50]"
+    <md-table-pagination ng-if="applications.totalElements > applicationsCriteria.size" md-limit="applicationsCriteria.size" md-limit-options="[5, 10, 20, 50]"
                          md-page="applicationsCriteria.page" md-total="{{applications.totalElements}}" md-on-paginate="loadApplications"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+
+    <br/>
+    <md-table-container>
+      <table md-table md-progress="applicationTypes.$promise">
+        <thead md-head>
+        <tr md-row>
+          <th md-column>{{'application.type' | translate}}</th>
+          <th md-column></th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>{{currentLanguageNameField(row)}}</td>
+          <td md-cell>
+            <div ng-if="applicationTypesApplicable[row.code].isAllowed === true" layout="row" layout-align="end end">
+              <a class="md-button md-primary" ng-href="#/applications/new?student={{studentId}}&type={{row.code}}">{{'main.button.apply' | translate}}</a>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <br/>
+
 
     <h2>{{'student.directive.label' | translate}}</h2>
     <md-table-container>
@@ -46,11 +78,11 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in directives.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/directives/{{::row.id}}/view?backUrl={{'#/students/'+studentId+'/documents' | encodeURIComponent}}">{{::row.headline}}</md-button>
+              <a class="md-button md-primary change-button" ng-href="#/directives/{{::row.id}}/view">{{::row.headline}}</a>
             </td>
             <td md-cell>{{currentLanguageNameField(row.type)}}</td>
             <td md-cell>{{::row.directiveNr}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.confirmDate} }}</td>
+            <td md-cell>{{::row.confirmDate | hoisDate}}</td>
             <td md-cell>{{::row.insertedBy}}</td>
           </tr>
         </tbody>
@@ -60,6 +92,6 @@
                          md-page="directivesCriteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadDirectives"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
-    <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

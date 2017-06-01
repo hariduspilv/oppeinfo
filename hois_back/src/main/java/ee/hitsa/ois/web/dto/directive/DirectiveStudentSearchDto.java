@@ -7,7 +7,7 @@ public class DirectiveStudentSearchDto {
     private Long id;
     private String fullname;
     private String idcode;
-    private AutocompleteResult curriculum;
+    private AutocompleteResult curriculumVersion;
     private String studentGroup;
 
     public Long getId() {
@@ -34,12 +34,12 @@ public class DirectiveStudentSearchDto {
         this.idcode = idcode;
     }
 
-    public AutocompleteResult getCurriculum() {
-        return curriculum;
+    public AutocompleteResult getCurriculumVersion() {
+        return curriculumVersion;
     }
 
-    public void setCurriculum(AutocompleteResult curriculum) {
-        this.curriculum = curriculum;
+    public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 
     public String getStudentGroup() {

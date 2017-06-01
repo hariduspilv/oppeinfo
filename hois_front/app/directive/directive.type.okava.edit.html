@@ -1,5 +1,5 @@
 <md-table-container>
-  <table md-table>
+  <table md-table class="secondary-table">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
@@ -21,16 +21,16 @@
           <hois-classifier-value ng-model="row.oldStudyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
         </td>
         <td md-cell>
-          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersions.content" aria-label="{{'directive.student.newCurriculumVersion' | translate}}"></hois-select>
+          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersions" aria-label="{{'directive.student.newCurriculumVersion' | translate}}"></hois-select>
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" aria-label="{{'directive.student.newStudyForm' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
-          <hois-select ng-model="row.studentGroup" values="formState.studentGroups.content" aria-label="{{'directive.student.newStudentGroup' | translate}}"></hois-select>
+          <hois-select ng-model="row.studentGroup" values="formState.studentGroupMap[row.curriculumVersion]" aria-label="{{'directive.student.newStudentGroup' | translate}}"></hois-select>
         </td>
         <td md-cell>
-          <md-button ng-click="deleteStudent(row.idcode)" md-no-ink class="md-primary change-button">{{'main.button.delete' | translate}}</md-button>
+          <a ng-click="deleteStudent(row.idcode)" md-no-ink  class="remove">&times;</a>
         </td>
       </tr>
     </tbody>

@@ -16,7 +16,8 @@ angular.module('hitsaOis')
       replace: true,
       scope: {
         ngModel: '=',
-        mainClassifierCode: '@'
+        mainClassifierCode: '@',
+        mainClassifierCodes: '@'
       },
       link: function postLink(scope, element) {
         element[0].parentElement.classList.add("md-input-has-value");
@@ -44,7 +45,7 @@ angular.module('hitsaOis')
             };
 
             if(classifiervalues === undefined) {
-              Classifier.queryForDropdown({mainClassCode: scope.mainClassifierCode}, function(result) {
+              Classifier.queryForDropdown({mainClassCode: scope.mainClassifierCode, mainClassCodes: scope.mainClassifierCodes}, function(result) {
                 classifiervalues = result;
                 setter(result);
               });

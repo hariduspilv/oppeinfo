@@ -7,8 +7,10 @@ angular.module('hitsaOis')
       templateUrl: function (elem, attr) {
         if (angular.isDefined(attr.multiple)) {
           return 'components/hois.chip.autocomplete.html';
-        } else {
+        } else if (angular.isDefined(attr.label) && attr.label.length > 0) {
           return 'components/hois.autocomplete.html';
+        } else {
+          return 'components/hois.autocomplete.nolabel.html';
         }
       },
       restrict: 'E',
@@ -20,11 +22,15 @@ angular.module('hitsaOis')
         method: '@',
         multiple: '@',
         required: '=', // todo add chip visuals
-        mdSelectedItemChange: '&?'
+        mdSelectedItemChange: '&?',
+        readonly: '=',
+        additionalQueryParams: '=',
+        url: '@'    // this allows to search from different controllers, not only AutocompleteController
       },
       link: {
         post: function(scope, element, attrs) {
-          var lookup = QueryUtils.endpoint('/autocomplete/'+scope.method);
+          var url =  scope.url ? scope.url : '/autocomplete/' + scope.method;
+          var lookup = QueryUtils.endpoint(url);
 
           if (angular.isDefined(attrs.multiple) && !angular.isArray(scope.ngModel)) {
             scope.ngModel = [];
@@ -43,17 +49,25 @@ angular.module('hitsaOis')
 
           scope.selectedItemChange = function() {
             if(angular.isFunction(scope.mdSelectedItemChange)) {
-              scope.$$postDigest(scope.mdSelectedItemChange);
+              if (angular.isFunction(scope.mdSelectedItemChange())) {
+                scope.$$postDigest(scope.mdSelectedItemChange());
+              } else {
+                scope.$$postDigest(scope.mdSelectedItemChange);
+              }
             }
           };
 
           scope.search = function (text) {
             var deferred = $q.defer();
-            lookup.search({
+            var query = {
               lang: $translate.use().toUpperCase(),
               name: text
-            }, function (data) {
-              deferred.$$resolve(data.content);
+            };
+            if(scope.additionalQueryParams) {
+                angular.extend(query, scope.additionalQueryParams);
+            }
+            lookup.search(query, function (data) {
+              deferred.resolve(data.content);
             });
             return deferred.promise;
 

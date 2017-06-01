@@ -1,0 +1,82 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <div layout="row" layout-sm="column" layout-xs="column" flex="25" flex-sm="100" flex-xs="100">
+            <md-input-container>
+              <label>{{'main.from' | translate}}</label>
+              <md-datepicker ng-model="criteria.from"></md-datepicker>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column" flex="25" flex-sm="100" flex-xs="100">
+            <md-input-container>
+              <label>{{'main.thru' | translate}}</label>
+              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column" flex="20" flex-sm="100" flex-xs="100">
+            <md-input-container flex>
+              <label>{{'timetable.weekday' | translate}}</label>
+              <md-select ng-model="criteria.day" multiple>
+                <md-option ng-repeat="option in days" ng-value="option.code"
+                  aria-label="{{currentLanguageNameField(option)}}">{{currentLanguageNameField(option)}}</md-option>
+              </md-select>
+            </md-input-container>
+        </div>
+
+        <div layout="row" layout-sm="column" layout-xs="column" flex="20" flex-offset="5" flex-sm="100" flex-offset-sm="0" flex-xs="100" flex-offset-xs="0">
+            <md-input-container flex>
+              <label>{{'building.label' | translate}}</label>
+              <hois-select ng-model="criteria.building" type="building" multiple></hois-select>
+            </md-input-container>
+        </div>
+      </div>
+
+      <div layout="row" flex>
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <a class="md-button md-raised" class="md-raised" ng-href="#/timetable/lessonTime">{{'main.button.create' | translate}}</a>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+        <tr md-row>
+          <th md-column md-order-by="lessonNr">{{'main.nr' | translate}}</th>
+          <th md-column md-order-by="startTime">{{'main.start' | translate}}</th>
+          <th md-column md-order-by="endTime">{{'main.end' | translate}}</th>
+          <th md-column>{{'timetable.weekdays' | translate}}</th>
+          <th md-column>{{'timetable.buildings' | translate}}</th>
+          <th md-column>{{'main.validFrom' | translate}}</th>
+          <th md-column>{{'main.validThru' | translate}}</th>
+          <th md-column></th>
+        </tr>
+        </thead>
+        <tbody md-body>
+        <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>{{row.lessonNr}}</td>
+          <td md-cell>{{row.startTime}}</td>
+          <td md-cell>{{row.endTime}}</td>
+          <td md-cell>{{displayWeekdays(row)}}</td>
+          <td md-cell>{{displayBuildings(row.buildings)}}</td>
+          <td md-cell>{{row.validFrom | hoisDate}}</td>
+          <td md-cell>{{row.validThru | hoisDate}}</td>
+          <td md-cell>
+            <a class="md-button md-primary" ng-href="/#/timetable/lessonTime/{{::row.id}}/{{hasPassed(row) ? 'view' : 'edit'}}">{{'main.button.' + (hasPassed(row) ? 'view' : 'edit') | translate}}</a>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

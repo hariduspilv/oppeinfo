@@ -1,0 +1,56 @@
+<div class="ois-form-layout-padding form-readonly" ng-cloak>
+  <form name="personForm" class="ois-form-layout">
+   <div layout="column" flex>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100">
+          <label>{{'person.idcode' | translate}}</label>
+          <hois-value value="person.idcode"></hois-value>
+        </md-input-container>
+        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'person.sex' | translate}}</label>
+          <hois-classifier-value ng-model="person.sex" main-classifier-code="SUGU"></hois-classifier-value>
+        </md-input-container>
+      </div>
+      <div layout="row">
+        <md-input-container flex="20" flex-sm="100">
+          <label>{{'teacher.person.birthdate' | translate}}</label>
+          <hois-value value="person.birthdate | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100">
+          <label>{{'person.firstname' | translate}}</label>
+          <hois-value value="person.firstname"></hois-value>
+        </md-input-container>
+        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'person.lastname' | translate}}</label>
+          <hois-value value="person.lastname"></hois-value>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100">
+          <label>{{'person.email' | translate}}</label>
+          <hois-value value="person.email"></hois-value>
+        </md-input-container>
+        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'person.phone' | translate}}</label>
+          <hois-value value="person.phone"></hois-value>
+        </md-input-container>
+      </div>
+    </div>
+    <md-button ng-href="#/persons/{{::person.id}}/edit?_noback" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-click="back('#/persons')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </form>
+  <div ng-if="person.id">
+  <div>&nbsp;</div>
+   <fieldset>
+   <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'user.role' | translate}}</legend>
+    <div layout="row" class="align-center">
+      <md-button class="md-raised" ng-if="person.id" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
+    </div >
+    <div layout="row">
+      <div ng-include="'persons/users.table.html'" flex></div>
+    </div>
+	</fieldset>
+  </div>
+</div>

@@ -1,0 +1,3 @@
+to build
+
+./gradlew build

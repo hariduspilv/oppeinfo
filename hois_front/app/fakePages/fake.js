@@ -21,5 +21,5 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       });
 }]).controller('fakeController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
-    QueryUtils.endpoint("/fake/get505Error").get();
+    QueryUtils.endpoint("/fake/get505Error").search();
 }]);

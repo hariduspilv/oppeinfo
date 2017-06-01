@@ -1,28 +1,30 @@
 <div layout="column">
-  <h2>{{'main.insertedOrChanged' | translate}}</h2>
-  <!--md-card-->
-    <md-table-container>
-      <table md-table md-progress="promise" class="secondary-table">
-        <thead md-head md-order="query.order" md-on-reorder="getInformationSection">
-        <tr md-row>
-          <th md-column><span>{{'main.status' | translate}}</span></th>
-          <th md-column><span>{{'main.insertOrChangeDate' | translate}}</span></th>
-          <th md-column><span>{{'main.insertedOrChangedByFirstAndLastName' | translate}}</span></th>
-        </tr>
-        </thead>
-        <tbody md-body>
-        <tr md-row ng-if="object.inserted" class="odd">
-          <td md-cell>{{'main.inserted' | translate}}</td>
-          <td md-cell>{{'main.formattedDateTime' | translate: {date: object.inserted} }}</td>
-          <td md-cell>{{object.insertedBy}}</td>
-        </tr>
-        <tr md-row ng-if="object.changed" class="even">
-          <td md-cell>{{'main.changed' | translate}}</td>
-          <td md-cell>{{'main.formattedDateTime' | translate: {date: object.changed} }}</td>
-          <td md-cell>{{object.changedBy}}</td>
-        </tr>
-        </tbody>
-      </table>
-    </md-table-container>
+	<div>&nbsp;</div>
+	<fieldset tabindex="1000">
+		<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.insertedOrChanged' | translate}}</legend>
+		<md-table-container>
+			<table md-table md-progress="promise" class="secondary-table">
+				<thead md-head md-order="query.order" md-on-reorder="getInformationSection">
+					<tr md-row>
+						<th md-column><span>{{'main.state' | translate}}</span></th>
+						<th md-column><span>{{'main.insertOrChangeDate' | translate}}</span></th>
+						<th md-column><span>{{'main.insertedOrChangedByFirstAndLastName' | translate}}</span></th>
+					</tr>
+				</thead>
+				<tbody md-body>
+					<tr md-row ng-if="object.inserted" class="odd">
+						<td md-cell>{{'main.inserted' | translate}}</td>
+						<td md-cell>{{object.inserted | hoisDateTime}}</td>
+						<td md-cell>{{object.insertedBy}}</td>
+					</tr>
+					<tr md-row ng-if="object.changed" class="even">
+						<td md-cell>{{'main.changed' | translate}}</td>
+						<td md-cell>{{object.changed | hoisDateTime}}</td>
+						<td md-cell>{{object.changedBy}}</td>
+					</tr>
+				</tbody>
+			</table>
+		</md-table-container>
+	</fieldset>
   <!--/md-card-->
 </div>

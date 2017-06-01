@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject.directive;
 
+import static ee.hitsa.ois.validation.DirectiveValidation.Immat;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -25,8 +26,12 @@ public class DirectiveForm extends VersionedCommand {
     @Size(max = 4000)
     private String addInfo;
     private Long directiveCoordinator;
+    private Long canceledDirective;
+    @ClassifierRestriction(MainClassCode.KASKKIRI_TYHISTAMISE_VIIS)
+    private String cancelType;
     @Valid
     private List<? extends DirectiveFormStudent> students;
+    private List<Long> selectedStudents;
 
     public String getType() {
         return type;
@@ -60,6 +65,22 @@ public class DirectiveForm extends VersionedCommand {
         this.directiveCoordinator = directiveCoordinator;
     }
 
+    public Long getCanceledDirective() {
+        return canceledDirective;
+    }
+
+    public void setCanceledDirective(Long canceledDirective) {
+        this.canceledDirective = canceledDirective;
+    }
+
+    public String getCancelType() {
+        return cancelType;
+    }
+
+    public void setCancelType(String cancelType) {
+        this.cancelType = cancelType;
+    }
+
     public List<? extends DirectiveFormStudent> getStudents() {
         return students;
     }
@@ -68,14 +89,25 @@ public class DirectiveForm extends VersionedCommand {
         this.students = students;
     }
 
+    public List<Long> getSelectedStudents() {
+        return selectedStudents;
+    }
+
+    public void setSelectedStudents(List<Long> selectedStudents) {
+        this.selectedStudents = selectedStudents;
+    }
+
     @DateRange(from = "startDate", thru = "endDate")
     @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
     public static class DirectiveFormStudent {
         private Long id;
+        @NotEmpty(groups = Immat.class)
         @EstonianIdCode
         private String idcode;
+        @NotEmpty(groups = Immat.class)
         @Size(max = 255)
         private String firstname;
+        @NotEmpty(groups = Immat.class)
         @Size(max = 255)
         private String lastname;
         private LocalDate startDate;
@@ -100,10 +132,12 @@ public class DirectiveForm extends VersionedCommand {
         private Boolean isPeriod;
         private Long studyPeriodStart;
         private Long studyPeriodEnd;
+        private LocalDate nominalStudyEnd;
         private Boolean isAbroad;
         @ClassifierRestriction(MainClassCode.EHIS_KOOL)
         private String ehisSchool;
         private String abroadSchool;
+        @ClassifierRestriction(MainClassCode.RIIK)
         private String country;
         @ClassifierRestriction(MainClassCode.VALISOPE_EESMARK)
         private String abroadPurpose;
@@ -112,6 +146,7 @@ public class DirectiveForm extends VersionedCommand {
 
         private Long application;
         private Long student;
+        private Long saisApplication;
 
         public Long getId() {
             return id;
@@ -265,20 +300,12 @@ public class DirectiveForm extends VersionedCommand {
             this.studyPeriodEnd = studyPeriodEnd;
         }
 
-        public Long getApplication() {
-            return application;
+        public LocalDate getNominalStudyEnd() {
+            return nominalStudyEnd;
         }
 
-        public void setApplication(Long application) {
-            this.application = application;
-        }
-
-        public Long getStudent() {
-            return student;
-        }
-
-        public void setStudent(Long student) {
-            this.student = student;
+        public void setNominalStudyEnd(LocalDate nominalStudyEnd) {
+            this.nominalStudyEnd = nominalStudyEnd;
         }
 
         public Boolean getIsAbroad() {
@@ -327,6 +354,30 @@ public class DirectiveForm extends VersionedCommand {
 
         public void setAbroadProgramme(String abroadProgramme) {
             this.abroadProgramme = abroadProgramme;
+        }
+
+        public Long getApplication() {
+            return application;
+        }
+
+        public void setApplication(Long application) {
+            this.application = application;
+        }
+
+        public Long getStudent() {
+            return student;
+        }
+
+        public void setStudent(Long student) {
+            this.student = student;
+        }
+
+        public Long getSaisApplication() {
+            return saisApplication;
+        }
+
+        public void setSaisApplication(Long saisApplication) {
+            this.saisApplication = saisApplication;
         }
     }
 }

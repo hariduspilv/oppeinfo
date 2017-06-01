@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.curriculum;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,7 +18,7 @@ import ee.hitsa.ois.domain.Classifier;
 
 @Entity
 @Table(name="curriculum_version_omodule_theme")
-public class CurriculumVersionOccupationModuleTheme  extends BaseEntityWithId {
+public class CurriculumVersionOccupationModuleTheme extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false, insertable = false)
@@ -27,12 +28,12 @@ public class CurriculumVersionOccupationModuleTheme  extends BaseEntityWithId {
     private String nameEt;
 
     @Column(nullable = false)
-    private Double credits;
+    private BigDecimal credits;
 
     @Column(nullable = false)
     private Integer hours;
 
-    private Double proportion;
+    private BigDecimal proportion;
     private String subthemes;
     private Integer studyYearNumber;
 
@@ -62,94 +63,122 @@ public class CurriculumVersionOccupationModuleTheme  extends BaseEntityWithId {
     public String getNameEt() {
         return nameEt;
     }
+
     public void setNameEt(String nameEt) {
         this.nameEt = nameEt;
     }
-    public Double getCredits() {
+
+    public BigDecimal getCredits() {
         return credits;
     }
-    public void setCredits(Double credits) {
+
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
+
     public Integer getHours() {
         return hours;
     }
+
     public void setHours(Integer hours) {
         this.hours = hours;
     }
-    public Double getProportion() {
+
+    public BigDecimal getProportion() {
         return proportion;
     }
-    public void setProportion(Double proportion) {
+
+    public void setProportion(BigDecimal proportion) {
         this.proportion = proportion;
     }
+
     public String getSubthemes() {
         return subthemes;
     }
+
     public void setSubthemes(String subthemes) {
         this.subthemes = subthemes;
     }
+
     public Integer getStudyYearNumber() {
         return studyYearNumber;
     }
+
     public void setStudyYearNumber(Integer studyYearNumber) {
         this.studyYearNumber = studyYearNumber;
     }
+
     public Set<CurriculumVersionOccupationModuleThemeCapacity> getCapacities() {
         return capacities;
     }
+
     public void setCapacities(Set<CurriculumVersionOccupationModuleThemeCapacity> capacities) {
         getCapacities().clear();
         getCapacities().addAll(capacities);
     }
+
     public Set<CurriculumVersionOccupationModuleOutcome> getOutcomes() {
         return outcomes;
     }
+
     public void setOutcomes(Set<CurriculumVersionOccupationModuleOutcome> outcomes) {
         getOutcomes().clear();
         getOutcomes().addAll(outcomes);
     }
+
     public CurriculumVersionOccupationModule getModule() {
         return module;
     }
+
     public void setModule(CurriculumVersionOccupationModule module) {
         this.module = module;
     }
+
     public Classifier getAssessment() {
         return assessment;
     }
+
     public void setAssessment(Classifier assessment) {
         this.assessment = assessment;
     }
+
     public String getTotalGradeDescription() {
         return totalGradeDescription;
     }
+
     public void setTotalGradeDescription(String totalGradeDescription) {
         this.totalGradeDescription = totalGradeDescription;
     }
+
     public String getPassDescription() {
         return passDescription;
     }
+
     public void setPassDescription(String passDescription) {
         this.passDescription = passDescription;
     }
+
     public String getGrade3Description() {
         return grade3Description;
     }
+
     public void setGrade3Description(String grade3Description) {
         this.grade3Description = grade3Description;
     }
+
     public String getGrade4Description() {
         return grade4Description;
     }
+
     public void setGrade4Description(String grade4Description) {
         this.grade4Description = grade4Description;
     }
+
     public String getGrade5Description() {
         return grade5Description;
     }
+
     public void setGrade5Description(String grade5Description) {
         this.grade5Description = grade5Description;
     }
-
 }

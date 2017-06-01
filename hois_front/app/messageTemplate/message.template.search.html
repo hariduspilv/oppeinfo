@@ -9,17 +9,13 @@
             <input ng-model="criteria.headline" type="text">
         </md-input-container>
         <div layout="row" layout-sm="column" layout-xs="column">
-            <md-input-container flex="20" flex-sm="100" flex-xs="100">
-                <label>{{'messageTemplate.validDate' | translate}}</label>
-                <input type="hidden">
-            </md-input-container>
-            <div flex="33">
+            <div flex="1//">
                 <md-input-container flex>
-                    <label>{{'main.from' | translate}}</label>
+                    <label>{{'messageTemplate.validFrom' | translate}}</label>
                     <md-datepicker ng-model="criteria.validFrom"></md-datepicker>
                 </md-input-container>
-                <md-input-container flex>
-                    <label>{{'main.thru' | translate}}</label>
+                <md-input-container flex flex-offset="5"	>
+                    <label>{{'messageTemplate.validThru' | translate}}</label>
                     <md-datepicker ng-model="criteria.validThru"></md-datepicker>
                 </md-input-container>
             </div>
@@ -48,16 +44,16 @@
             <th md-column md-order-by="headline">{{'generalmessage.title' | translate}}</th>
             <th md-column md-order-by="validFrom">{{'messageTemplate.validFrom' | translate}}</th>
             <th md-column md-order-by="validThru">{{'messageTemplate.validThru' | translate}}</th>
-            <th md-column md-order-by="">{{'main.status' | translate}}</th>
+            <th md-column>{{'main.status' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+            <td md-cell><a ng-href="#/messageTemplate/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
             <td md-cell>{{::row.headline}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.validFrom} }}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
+            <td md-cell>{{::row.validFrom | hoisDate}}</td>
+            <td md-cell>{{::row.validThru | hoisDate}}</td>
             <td md-cell>{{isValid(row) ? 'main.valid' : 'main.invalid' | translate}}</td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-href="#/messageTemplate/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>

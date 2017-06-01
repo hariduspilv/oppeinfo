@@ -84,7 +84,7 @@ public class StudentController {
     @PostMapping("/{studentId:\\d+}/absences")
     public void createAbsence(HoisUserDetails user, @WithEntity(value = "studentId") Student student, @Valid @RequestBody StudentAbsenceForm form) {
         assertCanCreateAbsence(user, student);
-        studentService.create(student, form);
+        studentService.create(user, student, form);
     }
 
     @PutMapping("/{studentId:\\d+}/absences/{id:\\d+}")
@@ -127,7 +127,7 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/directives")
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
         assertCanView(user, student);
-        return studentService.directives(user, student, pageable);
+        return studentService.directives(student, pageable);
     }
 
     @GetMapping("/{id:\\d+}/subjects")
@@ -137,20 +137,14 @@ public class StudentController {
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {
-        if(!UserUtil.canViewStudent(user, student)) {
-            throw new AssertionFailedException("User cannot view student data");
-        }
+        AssertionFailedException.throwIf(!UserUtil.canViewStudent(user, student), "User cannot view student data");
     }
 
     private static void assertCanCreateAbsence(HoisUserDetails user, Student student) {
-        if(!UserUtil.canAddStudentAbsence(user, student)) {
-            throw new AssertionFailedException("User cannot add student absence");
-        }
+        AssertionFailedException.throwIf(!UserUtil.canAddStudentAbsence(user, student), "User cannot add student absence");
     }
 
     private static void assertCanEditAbsence(HoisUserDetails user, StudentAbsence absence) {
-        if(!UserUtil.canEditStudentAbsence(user, absence)) {
-            throw new AssertionFailedException("User cannot edit student absence");
-        }
+        AssertionFailedException.throwIf(!UserUtil.canEditStudentAbsence(user, absence), "User cannot edit student absence");
     }
 }

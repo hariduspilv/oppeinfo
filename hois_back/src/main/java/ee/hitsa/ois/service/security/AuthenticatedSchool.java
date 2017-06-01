@@ -9,11 +9,8 @@ import ee.hitsa.ois.util.SchoolUtil;
 public class AuthenticatedSchool implements Serializable {
 
     private Long id;
-
     private boolean vocational;
-
     private boolean higher;
-    
     private String ehisSchool;
 
     public AuthenticatedSchool() {

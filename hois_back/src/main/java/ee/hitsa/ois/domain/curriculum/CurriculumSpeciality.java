@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.curriculum;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -17,6 +18,7 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.util.AssertionFailedException;
 @Entity
 public class CurriculumSpeciality extends BaseEntityWithId {
 
@@ -32,7 +34,7 @@ public class CurriculumSpeciality extends BaseEntityWithId {
 	@Size(max=100)
 	private String nameEn;
 	@NotNull
-	private Double credits;
+	private BigDecimal credits;
 	@Size(max=1000)
 	private String description;
 	@Size(max=255)
@@ -59,7 +61,7 @@ public class CurriculumSpeciality extends BaseEntityWithId {
     }
 
     public Long getReferenceNumber() {
-        assert referenceNumber != null || this.getId() != null : "Speciality should whether be saved before or have a reference number!";
+        AssertionFailedException.throwIf(referenceNumber == null && this.getId() == null, "Speciality should whether be saved before or have a reference number!");
         return referenceNumber != null ? referenceNumber : this.getId();
     }
 
@@ -91,11 +93,11 @@ public class CurriculumSpeciality extends BaseEntityWithId {
 		this.nameEn = nameEn;
 	}
 
-	public Double getCredits() {
+	public BigDecimal getCredits() {
 		return credits;
 	}
 
-	public void setCredits(Double credits) {
+	public void setCredits(BigDecimal credits) {
 		this.credits = credits;
 	}
 

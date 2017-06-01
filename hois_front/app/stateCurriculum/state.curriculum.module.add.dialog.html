@@ -12,10 +12,10 @@
     <md-dialog-content>
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
-          <span flex></span>
+          <div layout="column">
           <md-input-container>
             <label>{{'stateCurriculum.enter.module.occupation' | translate}}</label>
-            <md-select ng-model="data.moduleOccupations" multiple="true" required>
+            <md-select ng-model="data.moduleOccupations" multiple="true" required  ng-disabled="readOnly" ng-change="validateOccupations()">
                 <!--TODO: find better solution-->
                 <md-option ng-value="option" ng-repeat="option in occupations | filter: filterOccupations('KUTSE')">
                     <hois-classifier-value ng-model="option" main-classifier-code="KUTSE"></hois-classifier-value>
@@ -28,59 +28,83 @@
                 </md-option>
             </md-select>
           </md-input-container>
+
+        <p class="invalid" ng-show="dialogForm.$submitted && !occupationsValid">
+            {{'stateCurriculum.error.specialtiesInvalid' | translate}}
+        </p>
+        <br>
+        <md-input-container hide>
+            <input ng-model="occupationsValid" type="text" required>
+        </md-input-container>
+
+        <p class="invalid" ng-show="dialogForm.$submitted && !suboccupationsValid">
+            {{'stateCurriculum.error.partAndSpecOccupationsInvalid' | translate}}
+        </p>
+        <br>
+        <md-input-container hide>
+            <input ng-model="suboccupationsValid" type="text" required>
+        </md-input-container>
+
           <md-input-container>
             <label>{{'stateCurriculum.enter.module.type' | translate}}</label>
             <hois-classifier-select ng-model="data.module" main-classifier-code="KUTSEMOODUL"
-                   show-only-values="allowedModuleTypes" required model-value-attr="code"></hois-classifier-select>
+                   show-only-values="allowedModuleTypes" required model-value-attr="code" ng-disabled="readOnly"></hois-classifier-select>
           </md-input-container>
           <md-input-container  flex>
             <label>{{'stateCurriculum.enter.module.nameEt' | translate}}</label>
-            <input ng-model="data.nameEt" type="text" required md-maxlength="255">
+            <input ng-model="data.nameEt" type="text" required md-maxlength="255" ng-readonly="readOnly">
           </md-input-container>
           <md-input-container  flex>
             <label>{{'stateCurriculum.enter.module.nameEn' | translate}}</label>
-            <input ng-model="data.nameEn" type="text" md-maxlength="255">
+            <input ng-model="data.nameEn" type="text" md-maxlength="255" ng-readonly="readOnly">
           </md-input-container>
           <md-input-container  flex>
             <label>{{'stateCurriculum.enter.module.credits' | translate}}</label>
-            <input ng-model="data.credits" type="number" min="0" required name="credits">
+            <input ng-model="data.credits" type="number" min="0" max="999" required name="credits" ng-readonly="readOnly" pattern="^\d+(\.\d{1})?$">
               <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
                   <div ng-message="min">
                     {{'stateCurriculum.enter.credits.positive' | translate}}
                   </div>
+                  <div ng-message="max">
+                    {{'stateCurriculum.enter.credits.max' | translate}}
+                  </div>
+                   <div ng-message="pattern">
+					{{'stateCurriculum.error.decimalPresision' | translate}}
+				   </div>
               </div>
           </md-input-container>
-          <md-input-container  flex>
+          <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.objectiveEt' | translate}}</label>
-            <textarea ng-model="data.objectivesEt" required md-maxlength="20000" max-rows="2"></textarea>
+            <textarea ng-model="data.objectivesEt" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-          <md-input-container  flex>
+          <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.objectiveEn' | translate}}</label>
-            <textarea ng-model="data.objectivesEn" md-maxlength="20000" max-rows="2"></textarea>
+            <textarea ng-model="data.objectivesEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
           <md-input-container  flex>
-            <label>{{'stateCurriculum.enter.outcome.outcomeLabelEt' | translate}}</label>
-            <textarea ng-model="data.outcomesEt" required md-maxlength="20000" max-rows="2"></textarea>
+            <label>{{'stateCurriculum.enter.module.outcomesEt' | translate}}</label>
+            <textarea ng-model="data.outcomesEt" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-          <md-input-container  flex>
-            <label>{{'stateCurriculum.enter.outcome.outcomeLabelEn' | translate}}</label>
-            <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="2"></textarea>
+          <md-input-container flex>
+            <label>{{'stateCurriculum.enter.module.outcomesEn' | translate}}</label>
+            <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-
-
-          <md-input-container  flex>
+          <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>
-            <input ng-model="data.assessmentsEt" type="text" required md-maxlength="20000" max-rows="2"></textarea>
+            <input ng-model="data.assessmentsEt" type="text" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-          <md-input-container  flex>
+          <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.criteriaEn' | translate}}</label>
-            <textarea ng-model="data.assessmentsEn" md-maxlength="20000" max-rows="2"></textarea>
+            <textarea ng-model="data.assessmentsEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
-        <span flex></span>
+        </div>
       </div>
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!readOnly">{{"main.button.save" | translate}}</md-button>
+      <md-button ng-click="delete()"
+               ng-if="editing && !readOnly" class="md-raised">
+               {{'main.button.delete' | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

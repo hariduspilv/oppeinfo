@@ -20,6 +20,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.service.ClassifierService;
+import ee.hitsa.ois.web.dto.ClassifierDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -46,11 +47,11 @@ public class ClassifierControllerTests {
 
 	@Test
 	public void get() {
-		ResponseEntity<Classifier> responseEntity = this.restTemplate.getForEntity("/classifier/{code}", Classifier.class, CLASSIFIER_CODE);
+		ResponseEntity<ClassifierDto> responseEntity = this.restTemplate.getForEntity("/classifier/{code}", ClassifierDto.class, CLASSIFIER_CODE);
 		Assert.assertNotNull(responseEntity);
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-		Classifier classifier = responseEntity.getBody();
+		ClassifierDto classifier = responseEntity.getBody();
 		Assert.assertNotNull(classifier);
 		Assert.assertNotNull(classifier.getCode());
 	}
@@ -59,15 +60,15 @@ public class ClassifierControllerTests {
 	public void createAndDelete() {
 		//create
 		Classifier classifier = getNewClassifierByCode(CLASSIFIER_CODE + "Create");
-		ResponseEntity<Classifier> responseEntity = this.restTemplate.postForEntity("/classifier", classifier, Classifier.class, new HashMap<>());
+		ResponseEntity<ClassifierDto> responseEntity = this.restTemplate.postForEntity("/classifier", classifier, ClassifierDto.class, new HashMap<>());
 		Assert.assertNotNull(responseEntity);
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-		Classifier createdClassifier = responseEntity.getBody();
+		ClassifierDto createdClassifier = responseEntity.getBody();
 		Assert.assertNotNull(createdClassifier);
 		Assert.assertEquals(Long.valueOf(0), createdClassifier.getVersion());
 		Assert.assertNotNull(createdClassifier.getInserted());
-		
+
 		//delete
 		String uri = "";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/classifier").pathSegment(classifier.getCode().toString());
@@ -78,23 +79,23 @@ public class ClassifierControllerTests {
 
 	@Test
 	public void update() {
-		Classifier classifier = this.restTemplate.getForEntity("/classifier/{code}", Classifier.class, CLASSIFIER_CODE).getBody();
+	    ClassifierDto classifier = this.restTemplate.getForEntity("/classifier/{code}", ClassifierDto.class, CLASSIFIER_CODE).getBody();
 		classifier.setNameEt("changed");
 
-		ResponseEntity<Classifier> responseEntity =
-		        this.restTemplate.exchange("/classifier/{code}", HttpMethod.PUT, new HttpEntity<>(classifier), Classifier.class, CLASSIFIER_CODE);
+		ResponseEntity<ClassifierDto> responseEntity =
+		        this.restTemplate.exchange("/classifier/{code}", HttpMethod.PUT, new HttpEntity<>(classifier), ClassifierDto.class, CLASSIFIER_CODE);
 
 		Assert.assertNotNull(responseEntity);
 		Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-		Classifier updatedClassifier = responseEntity.getBody();
+		ClassifierDto updatedClassifier = responseEntity.getBody();
 		Assert.assertNotNull(updatedClassifier);
 		Assert.assertEquals(Long.valueOf(1), updatedClassifier.getVersion());
 		Assert.assertNotNull(updatedClassifier.getInserted());
 		Assert.assertNotNull(updatedClassifier.getChanged());
 		Assert.assertNotEquals(updatedClassifier.getInserted(), updatedClassifier.getChanged());
 	}
-	
+
 	@Test
 	public void testSearch() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier").build().toUriString();
@@ -102,15 +103,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
-	@Test
-	public void testSearchAll() {
-    	String uri = UriComponentsBuilder.fromUriString("/classifier/all").build().toUriString();
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-	}
-	
+
 	@Test
 	public void testSearchTables() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier/heads").build().toUriString();
@@ -118,7 +111,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
+
 	@Test
 	public void testGetPossibleParentClassifiers() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/classifier/getPossibleParentClassifiers");
@@ -139,7 +132,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
+
 	@Test
 	public void testGetParents() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier/parents/ISCED_SUUN_018").build().toUriString();
@@ -147,7 +140,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
+
 	@Test
 	public void testGetChildren() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier/children/ISCED_SUUN_018").build().toUriString();
@@ -163,7 +156,7 @@ public class ClassifierControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 	}
-	
+
 	@Test
 	public void testGetPossibleConnections() {
     	String uri = UriComponentsBuilder.fromUriString("/classifier/connections/OPPEASTE").build().toUriString();

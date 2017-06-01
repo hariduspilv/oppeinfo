@@ -4,12 +4,23 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import org.hibernate.validator.constraints.NotBlank;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
 
 public class StateCurriculumForm extends VersionedCommand {
+    @NotBlank
+    @Size(max=255)
     private String nameEt;
+    @Size(max=255)
     private String nameEn;
     private String objectivesEt;
     private String objectivesEn;
@@ -19,12 +30,18 @@ public class StateCurriculumForm extends VersionedCommand {
     private String admissionRequirementsEn;
     private String graduationRequirementsEt;
     private String graduationRequirementsEn;
-    private Integer credits;
+    @NotNull
+    @Min(0)
+    @Max(999)
+    private Long credits;
     private String practiceDescription;
-    private Integer optionalStudyCredits;
+    @Min(0)
+    @Max(999)
+    private Double optionalStudyCredits;
     private LocalDate validFrom;
     private LocalDate validThru;
     private String description;
+    @Size(max=4000)
     private String riigiteatajaUrl;
     private String finalExamDescription;
     
@@ -32,9 +49,11 @@ public class StateCurriculumForm extends VersionedCommand {
     private String status;
     @ClassifierRestriction(MainClassCode.ISCED_RYHM)
     private String iscedClass;
+    @NotNull
     @ClassifierRestriction(MainClassCode.EHIS_ROK)
     private String stateCurrClass;
     
+    @Valid
     private Set<StateCurriculumModuleDto> modules = new HashSet<>();
     
     private Set<String> occupations = new HashSet<>();
@@ -119,11 +138,11 @@ public class StateCurriculumForm extends VersionedCommand {
         this.graduationRequirementsEn = graduationRequirementsEn;
     }
 
-    public Integer getCredits() {
+    public Long getCredits() {
         return credits;
     }
 
-    public void setCredits(Integer credits) {
+    public void setCredits(Long credits) {
         this.credits = credits;
     }
 
@@ -135,11 +154,11 @@ public class StateCurriculumForm extends VersionedCommand {
         this.practiceDescription = practiceDescription;
     }
 
-    public Integer getOptionalStudyCredits() {
+    public Double getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+    public void setOptionalStudyCredits(Double optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 

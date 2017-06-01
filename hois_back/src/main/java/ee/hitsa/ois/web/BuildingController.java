@@ -1,13 +1,10 @@
 package ee.hitsa.ois.web;
 
-import java.util.Map;
-
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -45,7 +42,7 @@ public class BuildingController {
     }
 
     @PostMapping("/buildings")
-    public ResponseEntity<Map<String, ?>> createBuilding(HoisUserDetails user, @Valid @RequestBody BuildingForm form) {
+    public HttpUtil.CreatedResponse createBuilding(HoisUserDetails user, @Valid @RequestBody BuildingForm form) {
         return HttpUtil.created(buildingService.create(user, form));
     }
 
@@ -74,7 +71,7 @@ public class BuildingController {
     }
 
     @PostMapping("/rooms")
-    public ResponseEntity<Map<String, ?>> createRoom(HoisUserDetails user, @Valid @RequestBody RoomForm form) {
+    public HttpUtil.CreatedResponse createRoom(HoisUserDetails user, @Valid @RequestBody RoomForm form) {
         return HttpUtil.created(buildingService.create(user, form));
     }
 

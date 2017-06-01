@@ -16,6 +16,7 @@ import javax.validation.Payload;
 public @interface DateRange {
     String from() default "validFrom";
     String thru() default "validThru";
+    boolean allowPast() default true;
 
     String message() default "InvalidDateRange";
     Class<?>[] groups() default {};

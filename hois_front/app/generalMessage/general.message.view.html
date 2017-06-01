@@ -1,4 +1,4 @@
-<div layout="column" layout-padding>
+<div layout="column" layout-padding class="form-readonly">
   <div>
     <form name="generalMessageForm">
       <md-input-container class="md-block">
@@ -11,30 +11,29 @@
         <hois-value value="record.content"></hois-value>
       </md-input-container>
 
-      <div layout="row">
+      <div layout="row" flex="100">
         <md-input-container flex="20">
-          <label>{{'main.validityPeriod' | translate}}</label>
+          <label>{{'generalmessage.validFrom' | translate}}</label>
+          <hois-value value="record.validFrom | hoisDate"></hois-value>
         </md-input-container>
-        <div flex="33">
-          <md-input-container flex>
-            <hois-value value="'main.formattedDate' | translate: {date: record.validFrom} "></hois-value>
-          </md-input-container>
-          <md-input-container flex>
-            <hois-value value="'main.formattedDate' | translate: {date: record.validThru} "></hois-value>
-          </md-input-container>
-        </div>
+        <md-input-container flex="20" flex-offset="5">
+          <label>{{'generalmessage.validThru' | translate}}</label>
+          <hois-value value="record.validThru | hoisDate"></hois-value>
+        </md-input-container>
       </div>
 
-      <md-list>
-        <md-subheader>{{'generalmessage.targets' | translate}}</md-subheader>
-        <md-list-item ng-repeat="role in record.targets">
+      <div>&nbsp;</div>
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'generalmessage.targets' | translate}} *</legend>
+
+        <div layout="column" class="common-label" ng-repeat="role in record.targets">
           <span>
             <hois-classifier-value ng-model="role" main-classifier-code="ROLL"></hois-classifier-value>
           </span>
-        </md-list-item>
-      </md-list>
-    </form>
+        </div>
+      </fieldset>
 
-    <md-button ng-href="#/generalmessages" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      <md-button ng-href="#/generalmessages" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    </form>
   </div>
 </div>

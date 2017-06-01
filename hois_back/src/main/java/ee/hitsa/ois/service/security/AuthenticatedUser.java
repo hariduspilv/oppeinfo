@@ -2,33 +2,26 @@ package ee.hitsa.ois.service.security;
 
 import java.io.Serializable;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.springframework.security.core.GrantedAuthority;
 
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.UserProjection;
 
 public class AuthenticatedUser implements Serializable {
 
     private final String name;
-
     private final Long user;
     private final Long student;
-
     // rights?
     private String roleCode;
-
     private AuthenticatedSchool school;
-
     private String fullname;
-
     private Collection<GrantedAuthority> authorizedRoles;
-
     private List<UserProjection> users;
 
     public AuthenticatedUser(String name, Long user, String roleCode, Long student) {
@@ -63,9 +56,7 @@ public class AuthenticatedUser implements Serializable {
     }
 
     public Collection<String> getAuthorizedRoles() {
-        return authorizedRoles != null ?
-                authorizedRoles.stream().map(GrantedAuthority::getAuthority).collect(Collectors.toSet()) :
-                Collections.emptySet();
+        return StreamUtil.toMappedSet(GrantedAuthority::getAuthority, authorizedRoles);
     }
 
     public void setAuthorizedRoles(Collection<GrantedAuthority> authorizedRoles) {
@@ -99,5 +90,4 @@ public class AuthenticatedUser implements Serializable {
     public Long getStudent() {
         return student;
     }
-
 }

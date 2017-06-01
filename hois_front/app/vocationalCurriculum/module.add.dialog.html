@@ -1,4 +1,4 @@
-<md-dialog aria-label="module add dialog" flex="30" flex-xs="100">
+<md-dialog aria-label="module add dialog" flex="60" flex-xs="100">
   <form ng-cloak name="dialogForm">
     <md-toolbar>
       <div class="md-toolbar-tools">
@@ -13,71 +13,104 @@
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
         <div layout="column">
-          <div flex>
-            <span class="label">{{'module.occupationPartOccupationSpecialize' | translate}}</span>
-          </div>
-          <md-input-container style="height: 100%;">
-            <div layout="column">
-              <div ng-repeat="item in occupations">
-                <md-checkbox ng-model="occupationsSelected[item.occupation.code]" aria-label="{{item.occupation[currentLanguageNameField()]}}">
-                  {{item.occupation[currentLanguageNameField()]}}
-                </md-checkbox>
-                <div layout="column" layout-padding>
-                  <md-input-container style="height: 100%;">
-                    <div layout="column">
-                      <div ng-repeat="partOccupation in item.partOccupations" flex>
-                        <md-checkbox ng-model="occupationsSelected[partOccupation.code]" aria-label="{{partOccupation[currentLanguageNameField()]}}">
-                          {{partOccupation[currentLanguageNameField()]}}
-                        </md-checkbox>
-                      </div>
-                    </div>
-                  </md-input-container>
-                </div>
+          <fieldset tabindex="1">
+			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
+				<div layout="column">
+				  <div ng-repeat="item in occupations">
+					<md-checkbox ng-model="occupationsSelected[item.occupation.code]" ng-change="validateOccupations()" aria-label="{{item.occupation[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
+					  {{item.occupation[currentLanguageNameField()]}}
+					</md-checkbox>
+					<div layout="column">
+						<div ng-repeat="partOccupation in item.partOccupations" flex layout="row">
+							<div flex="5">&nbsp;</div>
+							<md-checkbox ng-model="occupationsSelected[partOccupation.code]" ng-change="validateOccupations()" aria-label="{{partOccupation[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
+							  {{partOccupation[currentLanguageNameField()]}}
+							</md-checkbox>
+						 </div>
+					</div>
 
-                <div layout="column" layout-padding>
-                  <md-input-container style="height: 100%;">
-                    <div layout="column">
-                      <div ng-repeat="speciality in item.specialities" flex>
-                        <md-checkbox ng-model="specialitiesSelected[speciality.code]" aria-label="{{speciality[currentLanguageNameField()]}}">
-                          {{speciality[currentLanguageNameField()]}}
-                        </md-checkbox>
-                      </div>
+					<div layout="column">
+					  <div ng-repeat="speciality in item.specialities"  layout="row">
+						<div flex="5">&nbsp;</div>
+							<md-checkbox ng-model="specialitiesSelected[speciality.code]" ng-change="validateOccupations()" aria-label="{{speciality[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
+							  {{speciality[currentLanguageNameField()]}}
+							</md-checkbox>
+						</div>
+					</div>
+				  </div>
+				</div>
+                <md-input-container hide>
+                    <input ng-model="occupationsValid" type="text" required>
+                </md-input-container>
+                <p ng-show="dialogForm.$submitted && !occupationsValid" class="invalid">{{'curriculum.error.moduleOccupations' | translate}}</p>
+			</fieldset>
+			<div>&nbsp;</div>
+			<div layout="row" flex>
+			  <md-input-container flex="45">
+				<label>{{'module.type' | translate}}</label>
+				<hois-classifier-select name="module" ng-model="module.module" filter-values="filteredModuleValues"
+				main-classifier-code="KUTSEMOODUL" required ng-disabled="formState.readOnly || module.id && formState.typePreselected"></hois-classifier-select>
+			  </md-input-container>
+			  <md-input-container  flex="10" flex-offset="5">
+				<label>{{'module.credits' | translate}}</label>
+				<input ng-model="module.credits" type="number" name="credits" min="0" max="999" required ng-readonly="formState.readOnly">
+                <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
+                    <div ng-message="min">
+                        {{'main.messages.error.positive' | translate}}
                     </div>
-                  </md-input-container>
+                        <div ng-message="max">
+                        {{'curriculum.error.max999' | translate}}
+                    </div>
                 </div>
-              </div>
-            </div>
-          </md-input-container>
-          <md-input-container flex>
-            <label>{{'module.type' | translate}}</label>
-            <hois-classifier-select name="module" ng-model="module.module" filter-values="filteredModuleValues"
-            main-classifier-code="KUTSEMOODUL" required></hois-classifier-select>
-          </md-input-container>
+			  </md-input-container>
+		  </div>
           <md-input-container  flex>
             <label>{{'module.nameEt' | translate}}</label>
-            <input ng-model="module.nameEt" type="text" required>
+            <input ng-model="module.nameEt" type="text" required ng-readonly="formState.readOnly">
           </md-input-container>
           <md-input-container  flex>
             <label>{{'module.nameEn' | translate}}</label>
-            <input ng-model="module.nameEn" type="text">
-          </md-input-container>
-          <md-input-container  flex>
-            <label>{{'module.credits' | translate}}</label>
-            <input ng-model="module.credits" type="number" required>
+            <input ng-model="module.nameEn" type="text" ng-readonly="formState.readOnly">
           </md-input-container>
           <md-input-container flex>
             <label>{{'module.objectivesEt' | translate}}</label>
-            <textarea ng-model="module.objectivesEt" md-maxlength="20000" max-rows="2" md-select-on-focus required></textarea>
+            <textarea ng-model="module.objectivesEt" md-maxlength="20000" max-rows="10" md-select-on-focus required ng-readonly="formState.readOnly"></textarea>
           </md-input-container>
           <md-input-container flex>
             <label>{{'module.objectivesEn' | translate}}</label>
-            <textarea ng-model="module.objectivesEn" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+            <textarea ng-model="module.objectivesEn" md-maxlength="20000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
           </md-input-container>
 
+         <fieldset tabindex="1">
+			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}} *</legend>
+			<input style="display:none" type="number" readonly name="outcomesLength" ng-model="module.outcomes.length" min="1"  />
+			<div class="invalid" ng-if="dialogForm.$submitted" ng-messages="dialogForm.outcomesLength.$error">
+                <div ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
+              </div>
+			<div layout="row" flex>
+                  <md-input-container flex="45">
+                    <label>{{'studyOutcome.nameEt' | translate}} *</label>
+                    <textarea ng-model="outcomeEt" md-maxlength="20000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
+                  </md-input-container>
+                  <md-input-container flex="40" flex-offset="5">
+                    <label>{{'studyOutcome.nameEn' | translate}}</label>
+                    <textarea ng-model="outcomeEn" md-maxlength="20000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
+                  </md-input-container>
+					<md-button class="md-primary" ng-click="addOutcome()" ng-if="!formState.readOnly">{{'main.button.add' | translate}}</md-button>
+			</div>
+			<div layout="column">
+            <!--md-list flex-->
+              <div ng-repeat="item in module.outcomes" class="occupation-row align-center" layout="row" flex>
+                <div flex="90">{{item.outcomeEt}} {{item.outcomeEn}}</div>
+                <div><a class="remove" ng-click="removeFromArray(module.outcomes, item)" ng-if="!formState.readOnly">&times;</a></div>
+              </div>
+            <!--/md-list-->
+          </div>
 
+		</fieldset>
+		<div>&nbsp;</div>
 
-
-          <div layout="column">
+          <!--div layout="column">
               <span class="md-headline">{{'module.studyOutcome' | translate}} *</span>
               <input style="display:none" type="number" readonly name="outcomesLength" ng-model="module.outcomes.length" min="1"  />
               <div class="invalid" ng-if="dialogForm.$submitted" ng-messages="dialogForm.outcomesLength.$error">
@@ -88,48 +121,49 @@
                 <div layout="column" flex>
                   <md-input-container flex>
                     <label>{{'studyOutcome.nameEt' | translate}}</label>
-                    <textarea ng-model="outcomeEt" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+                    <textarea ng-model="outcomeEt" md-maxlength="20000" max-rows="2" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
                   </md-input-container>
                   <md-input-container flex>
                     <label>{{'studyOutcome.nameEn' | translate}}</label>
-                    <textarea ng-model="outcomeEn" md-maxlength="20000" max-rows="2" md-select-on-focus></textarea>
+                    <textarea ng-model="outcomeEn" md-maxlength="20000" max-rows="2" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
                   </md-input-container>
                 </div>
                 <div layout="column" layout-align="end end" >
-                    <md-button class="md-primary" ng-click="addOutcome()">{{'main.button.add' | translate}}</md-button>
+                    <md-button class="md-primary" ng-click="addOutcome()" ng-if="!formState.readOnly">{{'main.button.add' | translate}}</md-button>
                 </div>
               </div>
-          </div>
+          </div-->
 
 
-          <div layout="row" layout-padding>
+          <!--div layout="row" layout-padding>
             <md-list flex>
               <md-list-item ng-repeat="item in module.outcomes">
                 <span>{{item.outcomeEt}} {{item.outcomeEn}}</span>
-                <md-button class="md-icon-button" ng-click="removeFromArray(module.outcomes, item)">
+                <md-button class="md-icon-button" ng-click="removeFromArray(module.outcomes, item)" ng-if="!formState.readOnly">
                   <md-icon ng-class="'md-warn md-hue-2'" md-font-set="material-icons">close</md-icon>
                 </md-button>
               </md-list-item>
             </md-list>
-          </div>
+          </div-->
 
           <md-input-container flex>
             <label>{{'module.competencesAquired' | translate}}</label>
-            <md-select multiple="true" ng-model="module.competences" ng-disabled="module.module.code !== 'KUTSEMOODUL_P'">
+            <md-select multiple="true" ng-model="module.competences" ng-disabled="module.module.code !== 'KUTSEMOODUL_P' || formState.readOnly || competences.length === 0">
               <md-option ng-repeat="option in competences track by $index" ng-value="option.code" aria-label="{{option[currentLanguageNameField()]}}">
                 {{option[currentLanguageNameField()]}}</md-option>
             </md-select>
           </md-input-container>
           <br/>
           <md-input-container flex>
-            <md-checkbox ng-model="module.practice" ng-disabled="module.module.code === 'KUTSEMOODUL_L'">{{'module.practice' | translate}}</md-checkbox>
+            <md-checkbox ng-model="module.practice" ng-disabled="module.module.code === 'KUTSEMOODUL_L' || formState.readOnly">{{'module.practice' | translate}}</md-checkbox>
           </md-input-container>
         </div>
       </div>
     </md-dialog-content>
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!formState.readOnly">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="delete()" ng-if="!isNew && !formState.readOnly">{{"main.button.delete" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

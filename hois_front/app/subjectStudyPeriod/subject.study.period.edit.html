@@ -1,0 +1,91 @@
+<div layout="column" layout-padding>
+    <form name="subjectStudyPeriodEditForm">
+        <div layout="column">
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" disabled required></hois-select>
+                </md-input-container>
+                <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'subjectStudyPeriod.nameCode' | translate}}</label>
+                    <hois-select ng-model="record.subject" values="subjects" ng-disabled="disableSubject" required></hois-select>
+                </md-input-container>
+            </div>
+
+            <!--
+                hois-autocomplete is not suitable for this case as it has md-require-match attribute.
+                This autocomplete is supposed to be cleared after selecting an item as multiple teachers can be added
+            -->
+            <!--<hois-autocomplete ng-model="teacher" method="teachers" name="teacher"
+                label="subjectStudyPeriodTeacher.teacher" md-selected-item-change="addTeacher(teacher)"></hois-autocomplete>-->
+
+             <md-autocomplete
+                name="teacherInput"
+                md-selected-item="teacher"
+                md-search-text="queryText"
+                md-items="item in querySearch(queryText)"
+                md-item-text="item.nameEt"
+                md-min-length="3"
+                md-floating-label="{{'subjectStudyPeriodTeacher.teacher' | translate}} *"
+                ng-model="queryText"
+                md-no-cache
+                class="small-margin"
+                md-selected-item-change="addTeacher(teacher)"
+                >
+                <md-item-template>
+                    <span md-highlight-text="queryText" md-highlight-flags="^i">{{item.nameEt}}</span>
+                </md-item-template>
+                <md-not-found>
+                    {{'main.messages.error.notFound' | translate}}
+                </md-not-found>
+            </md-autocomplete>
+
+            <table md-table class="secondary-table">
+                <tbody md-body>
+                    <tr md-row ng-repeat="teacher in record.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
+                        <td md-cell>{{teacher.name}}</td>
+                        <td md-cell ng-hide="record.teachers.length === 1">
+                            <md-checkbox ng-model="teacher.isSignatory" aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}">
+                                {{'subjectStudyPeriodTeacher.isSignatory' | translate}}
+                            </md-checkbox>
+                        </td>
+                        <td md-cell>
+                            <md-button class="remove nomargin" ng-click="removeTeacher(teacher)" ng-show="obligatoryTeacher !== teacher.teacherId">&times;</md-button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-if="!hasObligatoryStudentGroup">
+                    <label>{{'subjectStudyPeriod.studentGroups' | translate}}</label>
+                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple></hois-select>
+                </md-input-container>
+                <md-input-container flex="10" flex-sm="100" flex-xs="100" ng-if="hasObligatoryStudentGroup">
+                    <label>{{'subjectStudyPeriod.studentGroupPreselected' | translate}}</label>
+                    <input type="text" ng-model="studentGroup.code" readonly>
+                </md-input-container>
+                <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="hasObligatoryStudentGroup">
+                    <label>{{'subjectStudyPeriod.otherStudentGroups' | translate}}</label>
+                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple></hois-select>
+                </md-input-container>
+                <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'subjectStudyPeriod.proportion' | translate}}</label>
+                    <hois-classifier-select ng-model="record.groupProportion" model-value-attr="code" main-classifier-code="PAEVIK_GRUPI_JAOTUS" required></hois-classifier-select>
+                </md-input-container>
+            </div>
+            <md-input-container>
+                <label>{{'subjectStudyPeriod.addInfo' | translate}}</label>
+                <textarea ng-model="record.addInfo" md-maxlength="20000" max-rows="2"></textarea>
+            </md-input-container>
+            <md-input-container>
+                <label>{{'subjectStudyPeriod.declaration' | translate}}</label>
+                <hois-classifier-select ng-model="record.declarationType" model-value-attr="code" main-classifier-code="DEKLARATSIOON"></hois-classifier-select>
+            </md-input-container>
+        </div>
+        <div layout="row">
+            <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods')">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
+        </div>
+    </form>
+</div>

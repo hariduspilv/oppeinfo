@@ -6,7 +6,7 @@ import org.springframework.data.jpa.repository.Query;
 
 import ee.hitsa.ois.domain.Person;
 
-public interface PersonRepository extends JpaRepository<Person, Long> , JpaSpecificationExecutor<Person>{
+public interface PersonRepository extends JpaRepository<Person, Long>, JpaSpecificationExecutor<Person> {
     Person findByIdcode(String idcode);
 
     @Query("select s.person from Student s where s.person.idcode = ?1")

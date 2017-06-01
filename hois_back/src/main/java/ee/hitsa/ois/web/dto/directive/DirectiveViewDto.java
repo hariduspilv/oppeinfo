@@ -3,10 +3,11 @@ package ee.hitsa.ois.web.dto.directive;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class DirectiveViewDto {
@@ -20,6 +21,8 @@ public class DirectiveViewDto {
     private String status;
     private AutocompleteResult directiveCoordinator;
     private String preamble;
+    private AutocompleteResult canceledDirective;
+    private String canceledDirectiveType;
     private LocalDateTime inserted;
     private List<DirectiveViewStudentDto> students;
 
@@ -95,6 +98,22 @@ public class DirectiveViewDto {
         this.preamble = preamble;
     }
 
+    public AutocompleteResult getCanceledDirective() {
+        return canceledDirective;
+    }
+
+    public void setCanceledDirective(AutocompleteResult canceledDirective) {
+        this.canceledDirective = canceledDirective;
+    }
+
+    public String getCanceledDirectiveType() {
+        return canceledDirectiveType;
+    }
+
+    public void setCanceledDirectiveType(String canceledDirectiveType) {
+        this.canceledDirectiveType = canceledDirectiveType;
+    }
+
     public LocalDateTime getInserted() {
         return inserted;
     }
@@ -111,12 +130,22 @@ public class DirectiveViewDto {
         this.students = students;
     }
 
-    public static DirectiveViewDto of(Directive directive, Long filteredStudentId) {
-        DirectiveViewDto dto = EntityUtil.bindToDto(directive, new DirectiveViewDto());
-        if(directive.getDirectiveCoordinator() != null) {
-            dto.setDirectiveCoordinator(AutocompleteResult.of(directive.getDirectiveCoordinator()));
+    public static DirectiveViewDto of(Directive directive, Set<Long> filteredStudentId) {
+        DirectiveViewDto dto = EntityUtil.bindToDto(directive, new DirectiveViewDto(), "students");
+        dto.setDirectiveCoordinator(directive.getDirectiveCoordinator() != null ? AutocompleteResult.of(directive.getDirectiveCoordinator()) : null);
+
+        Directive canceled = directive.getCanceledDirective();
+        if(canceled != null) {
+            dto.setCanceledDirective(new AutocompleteResult(canceled.getId(), canceled.getHeadline(), null));
+            dto.setCanceledDirectiveType(EntityUtil.getCode(canceled.getType()));
+            Set<Long> studentsOnDirective = StreamUtil.toMappedSet(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
+            if(filteredStudentId != null) {
+                studentsOnDirective.retainAll(filteredStudentId);
+            }
+            dto.setStudents(StreamUtil.toMappedList(DirectiveViewStudentDto::of, canceled.getStudents().stream().filter(r-> studentsOnDirective.contains(EntityUtil.getId(r.getStudent())))));
+        } else{
+            dto.setStudents(StreamUtil.toMappedList(DirectiveViewStudentDto::of, directive.getStudents().stream().filter(r -> filteredStudentId == null || filteredStudentId.contains(EntityUtil.getId(r.getStudent())))));
         }
-        dto.setStudents(directive.getStudents().stream().filter(r -> filteredStudentId == null || filteredStudentId.equals(EntityUtil.getId(r.getStudent()))).map(DirectiveViewStudentDto::of).collect(Collectors.toList()));
         return dto;
     }
 }

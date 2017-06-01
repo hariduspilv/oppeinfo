@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import java.math.BigDecimal;
+
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -22,7 +24,7 @@ public class CurriculumSpecialityDto extends VersionedCommand {
     @Size(max=100)
     private String nameEn;
     @NotNull
-    private Double credits;
+    private BigDecimal credits;
     @Size(max=1000)
     private String description;
     @Size(max=255)
@@ -31,12 +33,23 @@ public class CurriculumSpecialityDto extends VersionedCommand {
     private String occupationEn;
     @ClassifierRestriction(MainClassCode.KUTSE)
     private String occupation;
+    private Long curriculum;
     
 
     public static CurriculumSpecialityDto of(CurriculumSpeciality speciality) {
-        return EntityUtil.bindToDto(speciality, new CurriculumSpecialityDto(), "referenceNumber");
+        CurriculumSpecialityDto dto = EntityUtil.bindToDto(speciality, new CurriculumSpecialityDto(), "referenceNumber", "curriculum");
+        dto.setCurriculum(EntityUtil.getId(speciality.getCurriculum()));
+        return dto;
     }
     
+    public Long getCurriculum() {
+        return curriculum;
+    }
+    
+    public void setCurriculum(Long curriculum) {
+        this.curriculum = curriculum;
+    }
+
     public Long getReferenceNumber() {
         return referenceNumber;
     }
@@ -70,11 +83,11 @@ public class CurriculumSpecialityDto extends VersionedCommand {
         this.nameEn = nameEn;
     }
 
-    public Double getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Double credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

@@ -14,6 +14,7 @@ import javax.persistence.Transient;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
 
 @Entity
 public class StateCurriculum extends BaseEntityWithId {
@@ -30,9 +31,9 @@ public class StateCurriculum extends BaseEntityWithId {
 	private String admissionRequirementsEn;
 	private String graduationRequirementsEt;
 	private String graduationRequirementsEn;
-	private Integer credits;
+	private Long credits;
 	private String practiceDescription;
-	private Integer optionalStudyCredits;
+	private Double optionalStudyCredits;
 	private LocalDate validFrom;
 	private LocalDate validThru;
 
@@ -60,8 +61,19 @@ public class StateCurriculum extends BaseEntityWithId {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true)
 	@JoinColumn(name = "state_curriculum_id", nullable=false, updatable = false)
 	private Set<StateCurriculumOccupation> occupations = new HashSet<>();
+	
+    @OneToMany(mappedBy = "stateCurriculum")
+    private Set<Curriculum> curricula;
 
-	public String getEkrLevel() {
+    public Set<Curriculum> getCurricula() {
+        return curricula;
+    }
+
+    public void setCurricula(Set<Curriculum> curricula) {
+        this.curricula = curricula;
+    }
+
+    public String getEkrLevel() {
 		return ekrLevel;
 	}
 
@@ -173,11 +185,11 @@ public class StateCurriculum extends BaseEntityWithId {
 		this.graduationRequirementsEn = graduationRequirementsEn;
 	}
 
-	public Integer getCredits() {
+	public Long getCredits() {
 		return credits;
 	}
 
-	public void setCredits(Integer credits) {
+	public void setCredits(Long credits) {
 		this.credits = credits;
 	}
 
@@ -197,11 +209,11 @@ public class StateCurriculum extends BaseEntityWithId {
 		this.finalExamDescription = finalExamDescription;
 	}
 
-	public Integer getOptionalStudyCredits() {
+	public Double getOptionalStudyCredits() {
 		return optionalStudyCredits;
 	}
 
-	public void setOptionalStudyCredits(Integer optionalStudyCredits) {
+	public void setOptionalStudyCredits(Double optionalStudyCredits) {
 		this.optionalStudyCredits = optionalStudyCredits;
 	}
 

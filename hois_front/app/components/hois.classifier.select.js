@@ -29,7 +29,7 @@ angular.module('hitsaOis')
         criteria: '=',
         filterValues: '@', //model of array of classifiers (or other objects which contain classifier, then byProperty must be defined )
         byProperty: '@',
-        showOnlyValues: '@', //model of array of classifiers
+        showOnlyValues: '@', //model of array of classifiers (if value === true, all items are shown)
         watchModel: '@',
         watchMultiple: '@',
         searchFromConnect: '@',
@@ -65,7 +65,11 @@ angular.module('hitsaOis')
         disabled:'@',
         modelValueAttr: '@',
         mainClassifierCode: '@',
+        watchModel: '@',
         connectMainClassifierCode: '@',
+        searchFromConnect: '@',
+        selectFirstValue: '@',
+        defaultValue: '@'
       },
       link: function postLink(scope, element, attrs, ngModelControllers) {
         scope.isRequired = angular.isDefined(scope.required);
@@ -172,8 +176,9 @@ angular.module('hitsaOis')
                 }
               });
             }
+            // changedShowOnlyValues value true means "show all items"
             for(var key in scope.optionsByCode) {
-              scope.optionsByCode[key].hide = (showOptions.indexOf(key) === -1);
+              scope.optionsByCode[key].hide = (changedShowOnlyValues !== true && showOptions.indexOf(key) === -1);
             }
             deselectHiddenValue();
           });
@@ -242,21 +247,29 @@ angular.module('hitsaOis')
                   showOptions.push(code);
                 });
 
-                if (showOptions.length > 0) {
+                //removed "showOptions.length > 0" for hiding all values if no connections found?
+                if ((angular.isDefined(scope.showOnlyValues) || angular.isDefined(scope.filterValues))) {
                   for(var key in scope.optionsByCode) {
                     scope.optionsByCode[key].hide = (showOptions.indexOf(key) === -1);
                   }
                 }
 
-                if(angular.isDefined(scope.selectFirstValue) && showOptions.length > 0) {
-                  if (angular.isDefined(scope.modelValueAttr)) {
-                    scope.value = optionsByCode[showOptions[0]][scope.modelValueAttr];
-                  } else {
-                    scope.value = optionsByCode[showOptions[0]];
+                if(angular.isDefined(scope.selectFirstValue)) {
+                  var value = showOptions.length > 0 ? showOptions[0] : (angular.isDefined(scope.defaultValue) ? scope.defaultValue : null);
+                  if (value !== null) {
+                    if (angular.isDefined(scope.modelValueAttr)) {
+                      scope.value = optionsByCode[value][scope.modelValueAttr];
+                    } else {
+                      scope.value = optionsByCode[value];
+                    }
                   }
                 }
                 deselectHiddenValue();
               });
+          }
+
+          if (!angular.isDefined(scope.value) && angular.isDefined(scope.defaultValue)) {
+            scope.value = scope.defaultValue;
           }
       }
 
@@ -268,9 +281,7 @@ angular.module('hitsaOis')
     };
 
     if(params.mainClassCode || params.mainClassCodes) {
-      var paramsCount = Object.keys(params).length;
-      var query = paramsCount === 1 || (paramsCount === 2 && params.order) ? Classifier.queryForDropdown : Classifier.queryAll;
-      query(params, function(arrayResult) {
+      Classifier.queryForDropdown(params, function(arrayResult) {
         arrayResult.forEach(function(classifier) {
           var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
           optionsByCode[option.code] = option;

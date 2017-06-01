@@ -24,4 +24,11 @@ public class DateUtils {
         return firstMomentOfDay(dateTime.toLocalDate());
     }
 
+    public static LocalDate periodStart(Period p) {
+        return Boolean.TRUE.equals(p.getIsPeriod()) ? p.getStudyPeriodStart().getStartDate() : p.getStartDate();
+    }
+
+    public static LocalDate periodEnd(Period p) {
+        return Boolean.TRUE.equals(p.getIsPeriod()) ? p.getStudyPeriodEnd().getEndDate() : p.getEndDate();
+    }
 }

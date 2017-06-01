@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService) {
+  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService) {
 
     var self = this;
 
@@ -27,7 +27,7 @@ angular.module('hitsaOis')
     }
 
     function openPage() {
-      $scope.closeMenu();
+      //$scope.closeMenu();
 
       if (self.autoFocusContent) {
         focusMainContent();
@@ -48,6 +48,49 @@ angular.module('hitsaOis')
     function isSelected(page) {
       return Menu.isPageSelected(page);
     }
+
+
+	/**************************************/
+
+	$scope.$mdMedia = $mdMedia;
+
+    function buildToggler() {
+      var debounceFn = $mdUtil.debounce(function() {
+        /*$mdSidenav(navID)
+          .toggle()
+          .then(function() {
+          });*/
+		  if($mdSidenav('left').isOpen()) {
+            $mdSidenav('left').close();
+          } else {
+            $mdSidenav('left').open();
+          }
+      }, 300);
+
+      return debounceFn;
+    }
+
+	$scope.toggleLeft = buildToggler('left');
+	$scope.lockLeft = true;
+	$scope.isLeftOpen = function() {
+		return $mdSidenav('left').isOpen();
+	};
+
+
+
+$scope.shouldLeftBeOpen = $mdMedia('gt-sm');
+
+/*  .controller('LeftCtrl', function($scope, $timeout, $mdSidenav, $log) {
+    $scope.close = function() {
+      $mdSidenav('left').close()
+        .then(function() {
+          $log.debug("close LEFT is done");
+        });
+
+    };
+  });*/
+
+/**************************************/
 
     function isSectionSelected(section) {
       var selected = false;
@@ -115,14 +158,19 @@ angular.module('hitsaOis')
     $rootScope.currentLanguageNameField = $scope.currentLanguageNameField;
 
     $scope.leftSideNavToggle = function() {
-      $mdSidenav('left').open();
+      //$mdSidenav('left').open();
+	  //$mdSidenav('left').isLockedOpen=true;//open();
+	  $mdSidenav('left').toggle();
     };
 
     $scope.leftSideNavSelect = function(path) {
       $location.path( path );
-      if(!$mdSidenav('left').isLockedOpen()) {
+      /*if(!$mdSidenav('left').isLockedOpen()) {
         $mdSidenav('left').close();
-      }
+      }*/
+	   //if(!$mdSidenav('left').isLockedOpen()) {
+        $mdSidenav('left').close();
+      //}
     };
 
     $scope.Menu = Menu;
@@ -225,22 +273,28 @@ angular.module('hitsaOis')
       var backUrl = oldUrl.substring(oldUrl.indexOf('#'), oldUrl.length);
       history.push(backUrl);
     }
-    function popHistoryState() {
-      if (history.length > 0) {
-        return history.pop();
-      }
-      return null;
-    }
     function goBack(defaultUrl) {
-      var backUrlFromHistory = popHistoryState();
-      var backUrl = backUrlFromHistory ? backUrlFromHistory : defaultUrl;
+      var backUrlFromHistory = history.pop();
+      var backUrl = backUrlFromHistory || defaultUrl;
       isBack = true;
-      $window.location.href = backUrl ? backUrl : defaultUrl;
+      $window.location.href = backUrl;
     }
+
+    /**
+     * TODO: find better solution
+     */
+    $rootScope.replaceLastUrl = function(newUrl, condition) {
+        var lastUrl = history.pop();
+        if(angular.isDefined(condition) && condition(lastUrl) === false) {
+            history.push(lastUrl);
+            return;
+        }
+        history.push(newUrl);
+    };
 
     $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
       //console.log(history, newUrl, oldUrl, isBack)
-      if (newUrl !== oldUrl && !isBack) {
+      if (newUrl !== oldUrl && !isBack && newUrl.indexOf('_noback') === -1) {
         pushHistoryState(oldUrl.replace(/(\?_menu)$/, ''), newUrl.replace(/(\?_menu)$/, ''));
       }
       isBack = false;
@@ -248,6 +302,7 @@ angular.module('hitsaOis')
 
     //usage <md-button ng-click="back("#/someDefaultUrl", formObject)" class="md-raised">{{'main.button.back' | translate}}</md-button>
     //for confirm dialog to work when form.$setSubmitted() is used to submit the form, one has to call form.$setPristine() after successful update
+    //by adding "_noback" to url parameter you can skip adding current url to history stack
     $rootScope.back = function(defaultUrl, form) {
       if (angular.isDefined(form) && form.$dirty === true ) {
         dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function() {

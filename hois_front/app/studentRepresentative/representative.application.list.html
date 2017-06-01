@@ -2,29 +2,27 @@
   <div flex>
     <form ng-submit="loadData()" novalidate class="nomargin">
       <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'student.representative.application.applicantname' | translate}}</label>
-            <input ng-model="criteria.name" name="name" type="text" autofocus>
-          </md-input-container>
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'student.representative.application.applicantname' | translate}}</label>
+          <input ng-model="criteria.name" name="name" type="text" autofocus>
+        </md-input-container>
 
-          <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label class="textInput">{{'student.representative.application.applicantidcode' | translate}}</label>
-            <input ng-model="criteria.idcode" name="idcode" type="text" md-minlength="11" md-maxlength="11">
-          </md-input-container>
-	</div>
-	<div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="45" flex-sm="100" flex-xs="100">
-            <label>{{'student.representative.application.status' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="AVALDUS_ESINDAJA_STAATUS"></hois-classifier-select>
-          </md-input-container>
-	</div>
-          <div layout="row">
-            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          </div>
-        </div>
-        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+        <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'student.representative.application.applicantidcode' | translate}}</label>
+          <input ng-model="criteria.idcode" name="idcode" type="text" md-minlength="11" md-maxlength="11">
+        </md-input-container>
+	  </div>
+	  <div layout="row" layout-sm="column" layout-xs="column">
+         <md-input-container flex="45" flex-sm="100" flex-xs="100">
+           <label>{{'student.representative.application.status' | translate}}</label>
+           <hois-classifier-select ng-model="criteria.status" name="status" model-value-attr="code" main-classifier-code="AVALDUS_ESINDAJA_STAATUS"></hois-classifier-select>
+         </md-input-container>
+	  </div>
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
       </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>
   </div>
 </div>
@@ -55,13 +53,13 @@
             <td md-cell>{{currentLanguageNameField(row.relation)}}</td>
             <td md-cell>{{::row.phone}}</td>
             <td md-cell>{{::row.email}}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.inserted} }}</td>
+            <td md-cell>{{::row.inserted | hoisDate}}</td>
             <td md-cell>
               <md-tooltip ng-if="row.status.code === 'AVALDUS_ESINDAJA_STAATUS_T'">{{::row.rejectReason}}</md-tooltip>
               {{currentLanguageNameField(row.status)}}
             </td>
-            <td md-cell ng-if="formState.status !== 'AVALDUS_ESINDAJA_STAATUS_E'">{{'main.formattedDate' | translate: {date: (row.confirmDate || row.declineDate)} }}</td>
-            <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/students/{{::row.studentId}}/main?backUrl=applications">{{::row.studentFullname}}</md-button></td>
+            <td md-cell ng-if="formState.status !== 'AVALDUS_ESINDAJA_STAATUS_E'">{{(row.confirmDate || row.declineDate) | hoisDate}}</td>
+            <td md-cell><a md-no-ink class="md-primary" ng-href="#/students/{{::row.studentId}}/main">{{::row.studentFullname}}</a></td>
             <td md-cell>{{::row.studentIdcode}}</td>
             <td md-cell>
               <md-button ng-if="row.status.code === 'AVALDUS_ESINDAJA_STAATUS_E'" md-no-ink class="md-primary change-button" ng-click="accept(row)">{{'main.button.confirm' | translate}}</md-button>

@@ -1,5 +1,8 @@
 package ee.hitsa.ois.validation;
 
+/**
+ * Validation rule groups for given directive type
+ */
 public interface DirectiveValidation {
 
     interface Akad extends DirectiveValidation {
@@ -18,6 +21,7 @@ public interface DirectiveValidation {
     }
 
     interface Immat extends DirectiveValidation {
+        // immatv uses same rules
     }
 
     interface Lopet extends DirectiveValidation {

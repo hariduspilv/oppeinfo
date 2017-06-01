@@ -1,70 +1,87 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-  <div flex>
-    <form ng-submit="loadData()" novalidate>
-      <div layout="row">
-        <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="50" layout="column">
-          <md-input-container>
-            <label class="textInput">{{'studentGroup.code' | translate}}</label>
-            <input ng-model="criteria.code" name="code" type="text" autofocus>
-          </md-input-container>
+	<div flex>
+		<form ng-submit="loadData()" novalidate>
+			<fieldset tabindex="1">
+				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
+				<div flex layout="column">
+					<md-input-container flex>
+						<label class="textInput">{{'studentGroup.code' | translate}}</label>
+						<input ng-model="criteria.code" name="code" type="text" autofocus>
+						</md-input-container>
+						<div layout="row" flex>
+							<md-input-container flex="45">
+								<hois-autocomplete ng-model="criteria.curriculum" method="curriculums" name="curriculum" label="studentGroup.curriculum" md-selected-item-change="curriculumChanged()"></hois-autocomplete>
+							</md-input-container>
 
-          <md-input-container>
-            <hois-autocomplete ng-model="criteria.curriculum" method="curriculums" name="curriculum" label="studentGroup.curriculum" md-selected-item-change="curriculumChanged()"></hois-autocomplete>
-          </md-input-container>
+							<md-input-container flex="50" flex-offset="5">
+								<label>{{formState.curriculumVersionLabel | translate}}</label>
+								<hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions" name="curriculumVersion" ng-change="curriculumVersionChanged()" multiple></hois-select>
+							</md-input-container>
+						</div>
+						<div layout="row" flex>
+							<md-input-container flex="45">
+								<label>{{'studentGroup.studyForm' | translate}}</label>
+								<hois-classifier-select ng-model="criteria.studyForm" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" filter-values="formState.hiddenStudyForms" multiple></hois-classifier-select>
+							</md-input-container>
 
-          <md-input-container>
-            <label>{{formState.curriculumVersionLabel | translate}}</label>
-            <hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions" name="curriculumVersion" multiple></hois-select>
-          </md-input-container>
+							<hois-autocomplete label="studentGroup.teacher" ng-if="!formState.onlyhigher" ng-model="criteria.teacher" method="teachers" flex="50" flex-offset="5"></hois-autocomplete>
+						</div>	  
 
-          <md-input-container>
-            <label>{{'studentGroup.studyForm' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.studyForm" name="studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" multiple></hois-classifier-select>
-          </md-input-container>
+						<div layout="row" flex="45">
+							<md-input-container>
+								<label>{{'main.validFrom' | translate}}</label>
+								<md-datepicker ng-model="criteria.validFrom"></md-datepicker>
+							</md-input-container>
+							<md-input-container  flex-offset="5">
+								<label>{{'main.validThru' | translate}}</label>
+								<md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
+							</md-input-container>
+						</div>
 
-          <hois-autocomplete label="studentGroup.teacher" ng-if="!formState.onlyhigher" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
+						<div layout="row">
+							<md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+							<md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+							<md-button class="md-raised" ng-href="#/studentgroups/new">{{'main.button.create' | translate}}</md-button>
+						</div>
+					</div>
 
-          <div layout="row">
-            <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="#/studentgroups/new">{{'main.button.create' | translate}}</md-button>
-          </div>
-        </div>
-        <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
-      </div>
-    </form>
-  </div>
-</div>
-<div layout-padding>
-  <div flex>
-    <md-table-container>
-      <table md-table md-progress="tabledata.$promise">
-        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
-          <tr md-row>
-            <th md-column md-order-by="code">{{'studentGroup.code' | translate}}</th>
-            <th md-column md-order-by="{{currentLanguage()==='en' ? 'curriculum.nameEn' : 'curriculum.nameEt'}}">{{'studentGroup.curriculum' | translate}}</th>
-            <th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'studentGroup.studyForm' | translate}}</th>
-            <th md-column md-numeric md-order-by="course">{{'studentGroup.course' | translate}}</th>
-            <th md-column md-numeric>{{'studentGroup.studentCount' | translate}}</th>
-            <th></th>
-          </tr>
-        </thead>
-        <tbody md-body>
-          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{::row.code}}</td>
-            <td md-cell>{{currentLanguageNameField(row.curriculum)}}</td>
-            <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
-            <td md-cell>{{::row.course}}</td>
-            <td md-cell>{{::row.studentCount}}</td>
-            <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/studentgroups/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </md-table-container>
-    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+				</fieldset>
+
+
+			</form>
+		</div>
+	</div>
+	<div layout-padding>
+		<div flex>
+			<md-table-container>
+				<table md-table md-progress="tabledata.$promise">
+					<thead md-head md-order="criteria.order" md-on-reorder="loadData">
+						<tr md-row>
+							<th md-column md-order-by="code">{{'studentGroup.code' | translate}}</th>
+							<th md-column md-order-by="{{currentLanguage()==='en' ? 'curriculum.nameEn' : 'curriculum.nameEt'}}">{{'studentGroup.curriculum' | translate}}</th>
+							<th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'studentGroup.studyForm' | translate}}</th>
+							<th md-column md-numeric md-order-by="course">{{'studentGroup.course' | translate}}</th>
+							<th md-column md-numeric>{{'studentGroup.studentCount' | translate}}</th>
+							<th></th>
+						</tr>
+					</thead>
+					<tbody md-body>
+						<tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+							<td md-cell>{{::row.code}}</td>
+							<td md-cell>{{currentLanguageNameField(row.curriculum)}}</td>
+							<td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
+							<td md-cell>{{::row.course}}</td>
+							<td md-cell>{{::row.studentCount}}</td>
+							<td md-cell>
+								<md-button md-no-ink class="md-primary change-button" ng-href="#/studentgroups/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+			</md-table-container>
+			<md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
                          md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
-  </div>
-</div>
+		</div>
+	</div>
+	

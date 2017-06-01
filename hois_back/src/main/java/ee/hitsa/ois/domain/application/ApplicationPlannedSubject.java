@@ -9,9 +9,12 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.validation.ApplicationValidation.Valis;
+import ee.hitsa.ois.validation.NotEmpty;
 
 @Entity
 public class ApplicationPlannedSubject extends BaseEntityWithId {
@@ -21,10 +24,13 @@ public class ApplicationPlannedSubject extends BaseEntityWithId {
     private Application application;
 
     @Size(max = 1000)
+    @NotEmpty(groups = {Valis.class})
     private String name;
 
+    @Valid
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "application_planned_subject_id", nullable = false, updatable = false)
+    @NotEmpty(groups = {Valis.class})
     private Set<ApplicationPlannedSubjectEquivalent> equivalents = new HashSet<>();
 
     public Application getApplication() {

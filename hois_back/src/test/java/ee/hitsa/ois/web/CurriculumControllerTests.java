@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -31,8 +32,11 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
+import ee.hitsa.ois.enums.CapacityType;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
@@ -67,6 +71,8 @@ public class CurriculumControllerTests {
     private CurriculumRepository curriculumRepository;
     @Autowired
     private ObjectMapper objectMapper;
+    @Autowired
+    private TestConfigurationService testConfigurationService;
 
     private JacksonTester<CurriculumForm> curriculumFormJson;
 
@@ -77,6 +83,7 @@ public class CurriculumControllerTests {
     @Before
     public void setup() {
         JacksonTester.initFields(this, objectMapper);
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
     }
 
     @After
@@ -84,6 +91,7 @@ public class CurriculumControllerTests {
         if (testCurriculum != null && testCurriculum.getId() != null) {
             this.restTemplate.delete("/curriculum/{id}", testCurriculum.getId());
         }
+        testConfigurationService.setSessionCookie(null);
     }
 
     @Test
@@ -110,8 +118,8 @@ public class CurriculumControllerTests {
         uriBuilder.queryParam("merCode", "code");
         uriBuilder.queryParam("validFrom", "2016-12-31T22:00:00.000Z");
         uriBuilder.queryParam("validThru", "2017-01-31T22:00:00.000Z");
-        uriBuilder.queryParam("creditsMin", "0.0");
-        uriBuilder.queryParam("creditsMax", "100.0");
+        uriBuilder.queryParam("creditsMin", "0");
+        uriBuilder.queryParam("creditsMax", "100");
         uriBuilder.queryParam("isJoint", Boolean.TRUE);
         uriBuilder.queryParam("school", "1", "2", "3");
         uriBuilder.queryParam("status", "S1", "S2");
@@ -387,7 +395,11 @@ public class CurriculumControllerTests {
         Assert.assertTrue(updatedCurriculum.getStatus().equals("OPPEKAVA_STAATUS_M"));
         Assert.assertTrue(updatedCurriculum.getNameEt().equals("newName"));
         Assert.assertTrue(updatedCurriculum.getVersion().equals(Long.valueOf(1)));
-        Assert.assertNotNull(updatedCurriculum.getVersions().stream().findFirst().get().getCurriculumStudyForm());
+        /*
+         * Checking curriculum version removed, 
+         * because now saving curriculum version is done on separate form via its own controller
+         */
+//        Assert.assertNotNull(updatedCurriculum.getVersions().stream().findFirst().get().getCurriculumStudyForm());
 
         // remove collection completely
         updatedCurriculum.setGrades(null);
@@ -589,18 +601,18 @@ public class CurriculumControllerTests {
         savedOccupationModule.setGrade3Description("grade3");
 
         CurriculumVersionOccupationModuleCapacityDto capacity = new CurriculumVersionOccupationModuleCapacityDto();
-        capacity.setCapacityType("MAHT_a");
+        capacity.setCapacityType(CapacityType.MAHT_a.name());
         capacity.setContact(Boolean.TRUE);
         capacity.setHours(Integer.valueOf(2));
         savedOccupationModule.getCapacities().add(capacity);
 
         CurriculumVersionOccupationModuleThemeDto theme = new CurriculumVersionOccupationModuleThemeDto();
         theme.setNameEt("themeNameEt");
-        theme.setCredits(Double.valueOf(1.0));
+        theme.setCredits(new BigDecimal("1.0"));
         theme.setHours(Integer.valueOf(1));
 
         CurriculumVersionOccupationModuleThemeCapacityDto themeCapacity = new CurriculumVersionOccupationModuleThemeCapacityDto();
-        themeCapacity.setCapacityType("MAHT_a");
+        themeCapacity.setCapacityType(CapacityType.MAHT_a.name());
         themeCapacity.setContact(Boolean.TRUE);
         themeCapacity.setHours(Integer.valueOf(2));
         theme.getCapacities().add(themeCapacity);
@@ -609,7 +621,7 @@ public class CurriculumControllerTests {
         Long curriculumModuleOutcomeId = testCurriculum.getModules().stream().findFirst().get()
                 .getOutcomes().stream().findFirst().get().getId();
         themeOutcome.setOutcome(curriculumModuleOutcomeId);
-        theme.getOutcomes().add(themeOutcome);
+//        theme.getOutcomes().add(themeOutcome);
 
         savedOccupationModule.getThemes().add(theme);
 
@@ -734,7 +746,7 @@ public class CurriculumControllerTests {
     private static CurriculumForm getForm(LocalDate validFrom) {
         CurriculumForm curriculumForm = new CurriculumForm();
         curriculumForm.setCode("testCode");
-        curriculumForm.setOptionalStudyCredits(Integer.valueOf(1));
+        curriculumForm.setOptionalStudyCredits(Double.valueOf(1));
         curriculumForm.setStudyPeriod(Integer.valueOf(1));
         curriculumForm.setNameEn("nameEn");
         curriculumForm.setNameEt("nameEt");
@@ -748,6 +760,7 @@ public class CurriculumControllerTests {
         curriculumForm.setStudyLanguages(new HashSet<>());
         curriculumForm.setIscedClass("ISCED_RYHM_0812");
         curriculumForm.setVersions(new HashSet<>());
+        curriculumForm.setJoint(Boolean.FALSE);
         return curriculumForm;
     }
 
@@ -816,7 +829,7 @@ public class CurriculumControllerTests {
         CurriculumSpecialityDto dto = new CurriculumSpecialityDto();
         dto.setNameEt("CurriculumControllerTest");
         dto.setNameEn("CurriculumControllerTest");
-        dto.setCredits(Double.valueOf(1));
+        dto.setCredits(BigDecimal.valueOf(1));
         dto.setOccupation("KUTSE_10491530");
         dto.setReferenceNumber(Long.valueOf(referenceNumber--));
         return dto;
@@ -827,7 +840,7 @@ public class CurriculumControllerTests {
         dto.setNameEt("CurriculumControllerTest");
         dto.setNameEn("CurriculumControllerTest");
         dto.setNameGenitiveEt("CurriculumControllerTest");
-        dto.setEhisGrade("EKR_8");
+        dto.setEhisGrade("AKAD_KRAAD_AJM");
         return dto;
     }
 
@@ -882,13 +895,13 @@ public class CurriculumControllerTests {
 
     private static CurriculumVersionHigherModuleDto getCurriculumVersionHigherModuleDto() {
         CurriculumVersionHigherModuleDto dto = new CurriculumVersionHigherModuleDto();
-        dto.setTotalCredits(Integer.valueOf(1));
-        dto.setOptionalStudyCredits(Integer.valueOf(1));
+        dto.setTotalCredits(Double.valueOf(1));
+        dto.setOptionalStudyCredits(Double.valueOf(1));
         dto.setType("KORGMOODUL_F");
         dto.setNameEn("CurriculumControllerTest");
         dto.setNameEt("CurriculumControllerTest");
         dto.setElectiveModulesNumber(Integer.valueOf(1));
-        dto.setCompulsoryStudyCredits(Integer.valueOf(1));
+        dto.setCompulsoryStudyCredits(Double.valueOf(1));
         return dto;
     }
 

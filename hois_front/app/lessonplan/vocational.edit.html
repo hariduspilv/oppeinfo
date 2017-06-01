@@ -1,0 +1,112 @@
+<div ng-cloak class="ois-form-layout-padding" style="overflow: scroll">
+  <div layout="column">
+    <div flex layout="row">
+      <div flex="30" layout="row" layout-align="start center" >
+        <md-checkbox ng-model="record.isUsable">
+          {{'lessonplan.isUsable' | translate}}
+        </md-checkbox>
+      </div>
+      <div flex="70" layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
+	    <span ng-repeat="c in formState.capacityTypes">
+          <span ng-if="$index !== 0">|</span>
+          {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
+        </span>
+      </div>
+	</div>	
+  </div>
+  <table class="lessonplan">
+    <!-- table header -->
+    <tr>
+      <td>&nbsp;</td><td colspan="2">{{'lessonplan.total' | translate}}</td>
+      <td colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods">{{currentLanguageNameField(sp)}}</td>
+    </tr>
+    <tr>
+      <td colspan="3">
+        <md-checkbox ng-model="record.showWeeks">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
+        <md-checkbox ng-model="formState.showTotals">{{'lessonplan.showTotals' | translate}}</md-checkbox>
+      </td>
+      <td ng-repeat="w in formState.weekNrs track by $index" class="center">{{w}}</td>
+    </tr>
+    <!-- modules -->
+    <tbody ng-repeat="module in record.modules">
+      <tr>
+        <td colspan="{{::formState.weekNrs.length+3}}">
+		<div flex layout="row">
+			<div flex="30"><span md-colors="{color: 'primary-800'}" class="bold">{{currentLanguageNameField(module)}}</span>&nbsp;&nbsp;<a class="md-primary" ng-click="newJournal(module)">{{'lessonplan.addjournal' | translate}}</a></div>
+			<div flex="70"><hois-autocomplete label="{{'lessonplan.responsibleformodule' | translate}}" ng-model="module.teacher" method="teachers"></hois-autocomplete></div>
+		</div>
+		</td>
+      </tr>
+      <tr>
+        <td colspan="{{::formState.weekNrs.length+3}}">{{'lessonplan.modulehours' | translate}}: {{::module.totalHours}}</td>
+      </tr>
+      <tr ng-repeat-start="journal in module.journals">
+        <td colspan="{{::formState.weekNrs.length+3}}">
+          <span class="bold">{{::journal.nameEt}}:</span>&nbsp;<span ng-repeat="theme in journal.themes"><span ng-if="$index !== 0">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}}&nbsp;({{::theme.hours}})</span>
+        </td>
+      </tr>
+      <tr ng-repeat="(type, hour) in journal.hours">
+      <!--<tr ng-repeat="ct in formState.capacityTypes" ng-if="journal.hours[ct.code] !== undefined"><td>{{::ct}}</td>  -->
+        <td rowspan="{{::keys(journal.hours).length+1}}" ng-if="$first">
+         <div>
+            <span style="float:left">
+              <span ng-repeat="teacher in journal.teachers">
+                <br ng-if="$index !== 0">
+                {{teacher.teacher.nameEt}}
+              </span>
+            </span>
+            <span style="float:right">
+              <a class="md-primary change-button" ng-click="editJournal(journal)">{{'main.button.change' | translate}}</a>
+            </span>
+          </div>
+          <div ng-if="journal.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_X'">
+            <label>{{'lessonplan.journal.groupProportion' | translate}}</label>
+            <hois-classifier-value ng-model="journal.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+          </div>
+        </td>
+        <td class="center">{{getCapacityValue(type)}}</td>
+        <td class="center">{{formState.journalTotals[journal.id][type]}}</td>
+        <td ng-repeat="h in journal.hours[type] track by $index" class="center"><input type="text" ng-model="journal.hours[type][$index]" ng-change="updateTotals(journal, type, $index)"></td>
+      </tr>
+      <tr ng-repeat-end>
+        <td>{{'lessonplan.total' | translate}}</td>
+        <td class="center">{{formState.journalTotals[journal.id].__}}</td>
+        <td ng-repeat="w in formState.weekNrs track by $index" class="center">{{formState.journalTotals[journal.id]._[$index]}}</td>
+      </tr>
+      <!-- module totals -->
+      <tr ng-show="formState.showTotals" ng-repeat="ct in formState.capacityTypes" ng-if="formState.moduleTotals[module.id][ct.code] !== undefined">
+        <td rowspan="{{keys(formState.moduleTotals[module.id]).length}}" ng-if="$index === 0">
+          {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.moduleTotal' | translate}}
+        </td>
+        <td>{{ct.value.toUpperCase()}}</td>
+        <td class="center">{{formState.moduleTotals[module.id]._[ct.code]}}</td>
+        <td ng-repeat="h in formState.moduleTotals[module.id][ct.code] track by $index" class="center">{{h}}</td>
+      </tr>
+      <tr ng-show="formState.showTotals">
+        <td>{{'lessonplan.total' | translate}}</td>
+        <td class="center">{{formState.moduleTotals[module.id].__}}</td>
+        <td ng-repeat="h in formState.moduleTotals[module.id]._._ track by $index" class="center">{{h}}</td>
+      </tr>
+    </tbody>
+    <!-- grand totals -->
+    <tbody md-colors="{background: 'background-200'}">
+      <tr ng-repeat="ct in formState.capacityTypes" ng-if="formState.grandTotals[ct.code] !== undefined">
+        <td rowspan="{{keys(formState.grandTotals).length+1}}" ng-if="$index === 0">
+          {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.grandTotal' | translate}}
+        </td>
+        <td>{{ct.value.toUpperCase()}}</td>
+        <td class="center">{{formState.grandTotals._[ct.code]}}</td>
+        <td ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h}}</td>
+      </tr>
+      <tr>
+        <td>{{'lessonplan.total' | translate}}</td>
+        <td class="center">{{formState.grandTotals.__}}</td>
+        <td ng-repeat="h in formState.grandTotals._._ track by $index" class="center">{{h}}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+<div>
+  <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
+  <md-button ng-href="#/lessonplans/vocational" class="md-raised">{{'main.button.back' | translate}}</md-button>
+</div>

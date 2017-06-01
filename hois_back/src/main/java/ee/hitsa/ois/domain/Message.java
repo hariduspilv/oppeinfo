@@ -35,13 +35,14 @@ public class Message extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "message_id")
     private Message responseTo;
-    
+
     @OneToMany(mappedBy = "responseTo", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<Message> responses;
-    
-    @OneToMany(mappedBy = "message", cascade = CascadeType.ALL, orphanRemoval = true)
+
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "message_id", nullable = false, updatable = false)
     private Set<MessageReceiver> receivers;
-    
+
     @Transient
     public Boolean isReadBy(Long personId) {
         boolean read = getReceivers().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(personId) && r.getRead() != null);

@@ -11,13 +11,14 @@
     </md-toolbar>
     <md-dialog-content>
       <span flex></span>
-      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
-        <div layout="row">
-          <md-input-container flex>
+      <div class="ois-form-layout md-dialog-content" layout="column" flex ng-cloak>
+        <div layout="column" flex>
+        <div layout="row" flex layout-align="center center"> 
+          <md-input-container flex="45"  class="readonly">
             <label class="label">{{'studyYear.studyPeriod.year' | translate}}</label>
             <hois-classifier-value ng-model="studyPeriod.year" model-value-attr="code" main-classifier-code="OPPEAASTA"></hois-classifier-value>
           </md-input-container>
-          <md-input-container flex="60" flex-sm="100" flex-xs="100">
+          <md-input-container flex="50" flex-offset="5">
             <label class="textInput">{{'studyYear.studyPeriod.type' | translate}}</label>
             <hois-classifier-select ng-model="studyPeriod.type" model-value-attr="code" ng-change="typeChange()" required main-classifier-code="OPPEPERIOOD"></hois-classifier-select>
           </md-input-container>
@@ -33,7 +34,7 @@
           </md-input-container>-->
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="20" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'studyYear.studyPeriod.startDate' | translate}}</label>
             <md-datepicker ng-model="studyPeriod.startDate" md-max-date="studyPeriod.endDate" required md-open-on-focus></md-datepicker>
           </md-input-container>
@@ -43,6 +44,7 @@
           </md-input-container>
         </div>
       </div>
+	  </div>
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
       <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>

@@ -2,13 +2,13 @@ package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 
 import java.math.BigDecimal;
 import java.util.Set;
-import java.util.stream.Collectors;
 
-public class SubjectSearchDto implements SubjectAutocompleteResult {
+public class SubjectSearchDto {
     private Long id;
     private String code;
     private String nameEt;
@@ -19,7 +19,6 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
     private String status;
     private AutocompleteResult schoolDepartment;
 
-    @Override
     public Long getId() {
         return id;
     }
@@ -30,11 +29,10 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
 
     public static SubjectSearchDto of(Subject subject) {
         SubjectSearchDto dto = EntityUtil.bindToDto(subject, new SubjectSearchDto(), "languages");
-        dto.languages = SubjectUtil.getLanguages(subject).stream().map(EntityUtil::getCode).collect(Collectors.toSet());
+        dto.setLanguages(StreamUtil.toMappedSet(EntityUtil::getCode, SubjectUtil.getLanguages(subject)));
         return dto;
     }
 
-    @Override
     public String getCode() {
         return code;
     }
@@ -43,7 +41,6 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
         this.code = code;
     }
 
-    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -52,7 +49,6 @@ public class SubjectSearchDto implements SubjectAutocompleteResult {
         this.nameEt = nameEt;
     }
 
-    @Override
     public String getNameEn() {
         return nameEn;
     }

@@ -18,6 +18,10 @@ import ee.hitsa.ois.domain.Classifier;
 public class CurriculumModule extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    private Curriculum curriculum;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier module;
 
 	@Column(nullable = false)
@@ -49,6 +53,15 @@ public class CurriculumModule extends BaseEntityWithId {
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false, insertable = false)
     private Set<CurriculumVersionOccupationModule> curriculumVersionOccupationModules = new HashSet<>();
+
+
+    public Curriculum getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(Curriculum curriculum) {
+        this.curriculum = curriculum;
+    }
 
     public Classifier getModule() {
         return module;

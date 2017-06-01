@@ -1,5 +1,5 @@
 <md-table-container>
-  <table md-table>
+  <table md-table md-row-select="formState.cancelSelect" multiple ng-model="formState.selectedStudents" class="secondary-table">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
@@ -15,8 +15,10 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
-        <td md-cell>{{::row.fullname}}</td>
+      <tr md-row ng-disabled="!row.selectable" md-select="row" md-select-id="student" md-auto-select ng-repeat="row in record.students" ng-class-odd="'odd'" ng-class-even="'even'">
+        <td md-cell>
+          <a class="md-primary" ng-href="#/students/{{::row.student}}/main">{{::row.fullname}}</a>
+        </td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{row.isAbroad ? 'directive.student.foreignEducationalInstitute' : 'directive.student.estonianEducationalInstitute' | translate}}</td>
         <td md-cell>
@@ -28,12 +30,12 @@
         </td>
         <td md-cell>{{row.isPeriod ? 'main.period' : 'main.date' | translate}}</td>
         <td md-cell>
-          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodStart)}}></div>
-          <hois-value ng-if="!row.isPeriod" value="'main.formattedDate' | translate: {date: row.startDate}"></hois-value>
+          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodStart)}}</div>
+          <hois-value ng-if="!row.isPeriod" value="row.startDate | hoisDate"></hois-value>
         </td>
         <td md-cell>
-          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodEnd)}}></div>
-          <hois-value ng-if="!row.isPeriod" value="'main.formattedDate' | translate: {date: row.endDate}"></hois-value>
+          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodEnd)}}</div>
+          <hois-value ng-if="!row.isPeriod" value="row.endDate | hoisDate"></hois-value>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.abroadPurpose" main-classifier-code="VALISOPE_EESMARK"></hois-classifier-value>

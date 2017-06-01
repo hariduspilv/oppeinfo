@@ -1,11 +1,8 @@
 package ee.hitsa.ois.domain.subject;
 
-import ee.hitsa.ois.domain.BaseEntityWithId;
-import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.domain.school.SchoolDepartment;
-import ee.hitsa.ois.web.dto.SubjectAutocompleteResult;
-import org.springframework.format.annotation.NumberFormat;
+import java.math.BigDecimal;
+import java.util.HashSet;
+import java.util.Set;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -14,12 +11,17 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
-import java.math.BigDecimal;
-import java.util.HashSet;
-import java.util.Set;
+import org.springframework.format.annotation.NumberFormat;
+
+import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
+import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 
 @Entity
-public class Subject extends BaseEntityWithId implements SubjectAutocompleteResult {
+public class Subject extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
@@ -62,6 +64,28 @@ public class Subject extends BaseEntityWithId implements SubjectAutocompleteResu
 
     @OneToMany(mappedBy = "connectSubject")
     private Set<SubjectConnect> parentConnections;
+    
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    private Set<SubjectStudyPeriodPlan> subjectStudyPeriodPlans;
+    
+    @OneToMany(mappedBy = "subject", fetch = FetchType.LAZY)
+    private Set<SubjectStudyPeriod> subjectStudyPeriods;
+
+    public Set<SubjectStudyPeriod> getSubjectStudyPeriods() {
+        return subjectStudyPeriods;
+    }
+
+    public void setSubjectStudyPeriods(Set<SubjectStudyPeriod> subjectStudyPeriods) {
+        this.subjectStudyPeriods = subjectStudyPeriods;
+    }
+
+    public Set<SubjectStudyPeriodPlan> getSubjectStudyPeriodPlans() {
+        return subjectStudyPeriodPlans != null ? subjectStudyPeriodPlans : (subjectStudyPeriodPlans = new HashSet<>());
+    }
+
+    public void setSubjectStudyPeriodPlans(Set<SubjectStudyPeriodPlan> subjectStudyPeriodPlans) {
+        this.subjectStudyPeriodPlans = subjectStudyPeriodPlans;
+    }
 
     public School getSchool() {
         return school;
@@ -71,7 +95,6 @@ public class Subject extends BaseEntityWithId implements SubjectAutocompleteResu
         this.school = school;
     }
 
-    @Override
     public String getCode() {
         return code;
     }
@@ -80,7 +103,6 @@ public class Subject extends BaseEntityWithId implements SubjectAutocompleteResu
         this.code = code;
     }
 
-    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -89,7 +111,6 @@ public class Subject extends BaseEntityWithId implements SubjectAutocompleteResu
         this.nameEt = nameEt;
     }
 
-    @Override
     public String getNameEn() {
         return nameEn;
     }

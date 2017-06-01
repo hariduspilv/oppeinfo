@@ -1,5 +1,5 @@
 <md-table-container>
-  <table md-table>
+  <table md-table class="secondary-table">
     <thead md-head>
       <tr md-row>
         <th md-column>{{'directive.student.fullname' | translate}}</th>
@@ -8,6 +8,7 @@
         <th md-column>{{'directive.student.studentGroup' | translate}}</th>
         <th md-column>{{'directive.student.studyLoad' | translate}}</th>
         <th md-column>{{'directive.student.studyForm' | translate}}</th>
+        <th md-column>{{'directive.student.nominalStudyEnd' | translate}}</th>
         <th md-column>{{'directive.student.fin' | translate}}</th>
         <th md-column>{{'directive.student.finSpecific' | translate}}</th>
         <th md-column>{{'directive.student.language' | translate}}</th>
@@ -20,13 +21,16 @@
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{currentLanguageNameField(row.oldCurriculumVersion)}}</td>
         <td md-cell>
-          <hois-select ng-model="row.studentGroup" values="formState.studentGroups.content" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <hois-select ng-model="row.studentGroup" values="formState.studentGroupMap[row.oldCurriculumVersion.id]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.oldStudyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.oldStudyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+        </td>
+        <td md-cell>
+          <md-datepicker ng-model="row.nominalStudyEnd" md-placeholder="{{'directive.student.nominalStudyEnd' | translate}}"></md-datepicker>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.oldFin" main-classifier-code="FINALLIKAS"></hois-classifier-value>
@@ -38,7 +42,7 @@
           <hois-classifier-value ng-model="row.oldLanguage" main-classifier-code="OPPEKEEL"></hois-classifier-value>
         </td>
         <td md-cell>
-          <md-button ng-click="deleteStudent(row.idcode)" md-no-ink class="md-primary change-button">{{'main.button.delete' | translate}}</md-button>
+          <a ng-click="deleteStudent(row.idcode)" md-no-ink  class="remove">&times;</a>
         </td>
       </tr>
     </tbody>

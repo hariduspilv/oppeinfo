@@ -5,8 +5,8 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
     $scope.schools = School.getAll();
 
   }
-]).controller('AuthenticatedHomeController', ['$scope', 'AUTH_EVENTS', 'AuthService', 'QueryUtils', '$resource', 'config', 
-  function ($scope, AUTH_EVENTS, AuthService, QueryUtils, $resource, config) {
+]).controller('AuthenticatedHomeController', ['$scope', 'AUTH_EVENTS', 'AuthService', 'QueryUtils', '$resource', 'config', 'Session',
+  function ($scope, AUTH_EVENTS, AuthService, QueryUtils, $resource, config, Session) {
 
     $scope.criteria = {size: 5, page: 1, order: 'inserted, title, id'};
     $scope.generalmessages = {};
@@ -19,7 +19,13 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
     };
     $scope.unreadMessageCriteria = {size: 5, page: 1, order: '-inserted'};
     $scope.unreadMessages = {};
+
     $scope.loadUnreadMessages = function() {
+      var acceptedRoles = ['ROLL_P', 'ROLL_L', 'ROLL_O', 'ROLL_T', 'ROLL_A'];
+      $scope.showUnreadMessages = acceptedRoles.indexOf(Session.roleCode) !== -1;
+      if(!$scope.showUnreadMessages) {
+          return;
+      }
       var query = QueryUtils.getQueryParams($scope.unreadMessageCriteria);
       $scope.unreadMessages.$promise = QueryUtils.endpoint('/message/received/mainPage').search(query, function(result) {
         $scope.unreadMessages.content = result.content;

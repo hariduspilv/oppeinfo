@@ -2,8 +2,6 @@
   <div>
     <form name="teacherOccupationForm">
 
-      <div class="indentForToast"></div>
-
       <md-input-container class="md-block">
         <label>{{'teacher.occupation.occupationEt' | translate}}</label>
         <input ng-model="teacherOccupation.occupationEt" name="occupationEt" type="text" required md-maxlength="100">
@@ -11,7 +9,7 @@
 
       <md-input-container class="md-block">
         <label class="textInput">{{'teacher.occupation.occupationEn' | translate}}</label>
-        <input ng-model="teacherOccupation.occupationEn" name="occupationEn" type="text" required md-maxlength="100">
+        <input ng-model="teacherOccupation.occupationEn" name="occupationEn" type="text" md-maxlength="100">
       </md-input-container>
 
       <md-checkbox ng-model="teacherOccupation.isValid" name="isValid">

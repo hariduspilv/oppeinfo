@@ -1,11 +1,11 @@
 package ee.hitsa.ois.web;
 
+import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
@@ -31,12 +31,13 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityRemoveException;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
 @ControllerAdvice
 public class ControllerErrorHandler {
     private static final String POSTGRESQL_UNIQUE_VIOLATION = "23505";
-    private static final Logger log = LoggerFactory.getLogger(ControllerErrorHandler.class);
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @ExceptionHandler
     public ResponseEntity<ErrorInfo> handleException(Exception e) {
@@ -71,11 +72,9 @@ public class ControllerErrorHandler {
             // if real cause is unique violation, report as "validation failed"
             // otherwise it's internal error - invalid data should not pass validation
             Throwable cause = ((DataIntegrityViolationException) e).getRootCause();
-            if(cause instanceof SQLException) {
-                if(POSTGRESQL_UNIQUE_VIOLATION.equals(((SQLException)cause).getSQLState())) {
-                    status = HttpStatus.PRECONDITION_FAILED;
-                    info = uniqueViolation((SQLException) cause);
-                }
+            if(cause instanceof SQLException && POSTGRESQL_UNIQUE_VIOLATION.equals(((SQLException)cause).getSQLState())) {
+                status = HttpStatus.PRECONDITION_FAILED;
+                info = uniqueViolation((SQLException) cause);
             }
 
             if(status == null) {
@@ -120,35 +119,49 @@ public class ControllerErrorHandler {
         }
 
         public static ErrorInfo of(Errors errors) {
-            List<Error> err = errors.getAllErrors().stream().map(e -> new Error(e.getCode(), e instanceof FieldError ? ((FieldError)e).getField() : null)).collect(Collectors.toList());
+            List<Error> err = StreamUtil.toMappedList(e -> new ErrorForField(e.getCode(), e instanceof FieldError ? ((FieldError)e).getField() : null), errors.getAllErrors());
             return new ErrorInfo(err);
         }
 
         public static ErrorInfo of(String code, String field) {
-            return new ErrorInfo(Collections.singletonList(new Error(code, field)));
+            return new ErrorInfo(Collections.singletonList(new ErrorForField(code, field)));
+        }
+
+        public static ErrorInfo of(String code) {
+            return new ErrorInfo(Collections.singletonList(new Error(code)));
         }
 
         public static ErrorInfo of(List<Map.Entry<String, String>> errors) {
-            return new ErrorInfo(errors.stream().map(me -> new Error(me.getValue(), me.getKey())).collect(Collectors.toList()));
+            return new ErrorInfo(StreamUtil.toMappedList(me -> new ErrorForField(me.getValue(), me.getKey()), errors));
         }
 
-        static class Error {
+        public static class Error {
             private final String code;
-            private final String field;
 
-            public Error(String code, String field) {
+            public Error(String code) {
                 this.code = code;
-                this.field = field;
             }
 
             public String getCode() {
                 return code;
             }
 
+        }
+
+        public static class ErrorForField extends Error {
+            private final String field;
+
+            public ErrorForField(String code, String field) {
+                super(code);
+                this.field = field;
+            }
+
             public String getField() {
                 return field;
             }
         }
+
+
     }
 
     private static Map<String, String> UNIQUE_VIOLATION_MESSAGES = new HashMap<>();
@@ -157,8 +170,10 @@ public class ControllerErrorHandler {
         UNIQUE_VIOLATION_MESSAGES.put("directive_coordinator", "directive.coordinator.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("directive_student", "directive.student.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("room", "room.alreadyexist");
+        UNIQUE_VIOLATION_MESSAGES.put("school", "school.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative", "student.representative.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative_application", "student.representative.application.alreadyexist");
+        UNIQUE_VIOLATION_MESSAGES.put("subject", "subject.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("teacher", "teacher.person.alreadyexist");
     }
 }

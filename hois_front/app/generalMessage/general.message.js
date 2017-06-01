@@ -22,18 +22,17 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
     $scope.roleDefs = Classifier.toMap($scope.roleDefs);
     $scope.loadData();
   });
-}]).controller('GeneralMessageEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'DataUtils', 'QueryUtils',
-  function ($location, $route, $scope, dialogService, message, Classifier, DataUtils, QueryUtils) {
+}]).controller('GeneralMessageEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils',
+  function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/generalmessages';
 
     function afterLoad() {
-      DataUtils.convertStringToDates($scope.record, ['validFrom', 'validThru']);
       Classifier.setSelectedCodes($scope.roleDefs, $scope.record.targets || []);
     }
 
     $scope.roleDefs = Classifier.queryForDropdown({mainClassCode: 'ROLL'}, function() {
-      $scope.roleDefs = $scope.roleDefs.filter(function(i) { return i.code !== 'ROLL_H'; });
+      $scope.roleDefs = $scope.roleDefs.filter(function(i) { return i.code !== 'ROLL_H' && i.code !== 'ROLL_P' && i.code !== 'ROLL_V'; });
 
       var Endpoint = QueryUtils.endpoint(baseUrl);
       if(id) {
@@ -65,7 +64,7 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       }else{
         $scope.record.$save(afterLoad).then(function() {
           message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
         });
       }
     };
@@ -74,7 +73,7 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       dialogService.confirmDialog({prompt: 'generalmessage.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.path(baseUrl);
+          $location.url(baseUrl);
         });
       });
     };

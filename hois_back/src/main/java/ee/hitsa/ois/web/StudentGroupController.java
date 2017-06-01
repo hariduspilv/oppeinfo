@@ -8,7 +8,6 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -22,6 +21,7 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.service.StudentGroupService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -42,6 +42,14 @@ public class StudentGroupController {
 
     @GetMapping
     public Page<StudentGroupSearchDto> search(HoisUserDetails user, @Valid StudentGroupSearchCommand criteria, Pageable pageable) {
+        // school admin or teacher
+        if(user.isTeacher()) {
+            // TODO change frontend, make message compose form to use endpoint /autocomplete/studentgroups
+            // message receivers
+            criteria.setTeacherPerson(user.getPersonId());
+        } else if(!user.isSchoolAdmin()) {
+            throw new AssertionFailedException("User cannot search student groups");
+        }
         return studentGroupService.search(user.getSchoolId(), criteria, pageable);
     }
 
@@ -52,7 +60,7 @@ public class StudentGroupController {
     }
 
     @PostMapping
-    public ResponseEntity<Map<String, ?>> create(HoisUserDetails user, @Valid @RequestBody StudentGroupForm form) {
+    public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody StudentGroupForm form) {
         return HttpUtil.created(studentGroupService.create(user, form));
     }
 

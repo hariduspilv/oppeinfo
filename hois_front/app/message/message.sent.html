@@ -1,7 +1,7 @@
-
 <md-nav-bar md-selected-nav-item="currentNavItem">
   <md-nav-item md-nav-href="#/messages/received?_menu" name="message.received">{{'message.received' | translate}}</md-nav-item>
   <md-nav-item md-nav-href="#/messages/sent?_menu" name="message.sent">{{'message.sent' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/messages/automatic/sent?_menu" name="message.automaticSent" ng-if="auth.isAdmin()">{{'message.automaticSent' | translate}}</md-nav-item>
 </md-nav-bar>
 
 
@@ -32,7 +32,7 @@
         <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="/#/message/new?backUrl=sent">{{'message.send' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="/#/message/new?backUrl={{backUrlRef}}">{{'message.send' | translate}}</md-button>
         </div>
     </form>
 </div>
@@ -50,8 +50,8 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a href="#/message/{{row.id}}/view?backUrl=sent">{{::row.subject}}</a></td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.dateSent} }}</td>
+            <td md-cell><a href="#/message/{{row.id}}/view?backUrl={{backUrlRef}}">{{::row.subject}}</a></td>
+            <td md-cell>{{row.dateSent | hoisDateTime}}</td>
             <td md-cell ng-click="row.clicked = !row.clicked">
                 <span ng-if="!row.clicked">{{showReceivers(row, false)}}</span>
                 <span ng-if="row.clicked">{{showReceivers(row, true)}}</span>

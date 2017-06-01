@@ -16,21 +16,22 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.student.StudentHistory;
+import ee.hitsa.ois.util.Period;
 import ee.hitsa.ois.validation.PeriodRange;
 
 @PeriodRange(groups = {Akad.class, Valis.class})
 @Entity
-public class DirectiveStudent extends BaseEntityWithId {
+public class DirectiveStudent extends BaseEntityWithId implements Period {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private Directive directive;
     @NotNull(groups = {Akad.class, Akadk.class, Eksmat.class, Ennist.class, Finm.class, Lopet.class, Okava.class, Okoorm.class, Ovorm.class, Valis.class})
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(updatable = false)
     private Student student;
     @NotNull(groups = {Akadk.class})
     private LocalDate startDate;
@@ -38,10 +39,10 @@ public class DirectiveStudent extends BaseEntityWithId {
     @NotNull(groups = {Akad.class, Eksmat.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier reason;
-    @NotNull(groups = Okoorm.class)
+    @NotNull(groups = {Immat.class, Okoorm.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyLoad;
-    @NotNull(groups = {Lopet.class})
+    @NotNull(groups = {Immat.class, Lopet.class, Okava.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
     @NotNull(groups = {Immat.class, Okava.class, Ovorm.class})
@@ -68,10 +69,13 @@ public class DirectiveStudent extends BaseEntityWithId {
     private StudyPeriod studyPeriodStart;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudyPeriod studyPeriodEnd;
+    @NotNull(groups = Ennist.class) // Immat is checked by hand
+    private LocalDate nominalStudyEnd;
     @NotNull(groups = Valis.class)
     private Boolean isAbroad;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier ehisSchool;
+    @NotNull(groups = Valis.class)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier country;
     @NotNull(groups = Valis.class)
@@ -95,9 +99,13 @@ public class DirectiveStudent extends BaseEntityWithId {
     private Application application;
     @NotNull(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
     private Person person;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudentHistory studentHistory;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
+    private SaisApplication saisApplication;
 
     public Directive getDirective() {
         return directive;
@@ -115,6 +123,7 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.student = student;
     }
 
+    @Override
     public LocalDate getStartDate() {
         return startDate;
     }
@@ -123,6 +132,7 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.startDate = startDate;
     }
 
+    @Override
     public LocalDate getEndDate() {
         return endDate;
     }
@@ -203,6 +213,7 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.curriculumGrade = curriculumGrade;
     }
 
+    @Override
     public Boolean getIsPeriod() {
         return isPeriod;
     }
@@ -211,6 +222,7 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.isPeriod = isPeriod;
     }
 
+    @Override
     public StudyPeriod getStudyPeriodStart() {
         return studyPeriodStart;
     }
@@ -219,12 +231,21 @@ public class DirectiveStudent extends BaseEntityWithId {
         this.studyPeriodStart = studyPeriodStart;
     }
 
+    @Override
     public StudyPeriod getStudyPeriodEnd() {
         return studyPeriodEnd;
     }
 
     public void setStudyPeriodEnd(StudyPeriod studyPeriodEnd) {
         this.studyPeriodEnd = studyPeriodEnd;
+    }
+
+    public LocalDate getNominalStudyEnd() {
+        return nominalStudyEnd;
+    }
+
+    public void setNominalStudyEnd(LocalDate nominalStudyEnd) {
+        this.nominalStudyEnd = nominalStudyEnd;
     }
 
     public Boolean getIsAbroad() {
@@ -337,5 +358,13 @@ public class DirectiveStudent extends BaseEntityWithId {
 
     public void setStudentHistory(StudentHistory studentHistory) {
         this.studentHistory = studentHistory;
+    }
+
+    public SaisApplication getSaisApplication() {
+        return saisApplication;
+    }
+
+    public void setSaisApplication(SaisApplication saisApplication) {
+        this.saisApplication = saisApplication;
     }
 }

@@ -3,6 +3,7 @@ package ee.hitsa.ois.domain;
 import java.io.Serializable;
 
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.ManyToOne;
@@ -14,11 +15,11 @@ public class ClassifierConnect extends BaseEntity {
     private static final long serialVersionUID = -76010744797373856L;
 
     @Id
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier classifier;
 
     @Id
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier connectClassifier;
 
     private String mainClassifierCode;
@@ -94,6 +95,7 @@ class ClassifierConnectPk implements Serializable {
             return true;
         if (obj == null)
             return false;
+        // TODO does not work with hibernate proxy
         if (getClass() != obj.getClass())
             return false;
         ClassifierConnectPk other = (ClassifierConnectPk) obj;

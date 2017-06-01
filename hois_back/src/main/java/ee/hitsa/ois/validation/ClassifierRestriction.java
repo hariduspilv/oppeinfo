@@ -11,4 +11,5 @@ import ee.hitsa.ois.enums.MainClassCode;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface ClassifierRestriction {
     MainClassCode[] value();
+    boolean useClassifierValue() default false;
 }

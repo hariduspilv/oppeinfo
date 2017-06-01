@@ -1,7 +1,7 @@
 <md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/main{{::formState.backRef}}" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/absences{{::formState.backRef}}" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents{{::formState.backRef}}" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
+  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
 </md-nav-bar>
 
 <div layout-padding>
@@ -19,8 +19,8 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.validFrom} }}</td>
-            <td md-cell>{{'main.formattedDate' | translate: {date: row.validThru} }}</td>
+            <td md-cell>{{::row.validFrom | hoisDate}}</td>
+            <td md-cell>{{::row.validThru | hoisDate}}</td>
             <td md-cell>{{::row.cause}}</td>
             <td md-cell>{{row.isAccepted ? 'main.yes' : 'main.no' | translate}}</td>
             <td md-cell>
@@ -36,6 +36,6 @@
 
 
     <md-button ng-click="editAbsence()" class="md-primary md-raised">{{'main.button.create' | translate}}</md-button>
-    <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

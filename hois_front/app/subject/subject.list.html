@@ -1,4 +1,4 @@
-  <div flex-xs="100" flex-gt-xs="100" flex-gt-sm="75" class="ois-form-layout-padding ois-form-layout" ng-cloak>
+<div flex-xs="100" flex-gt-xs="100" flex-gt-sm="75" class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <!--<div class="ois-form-layout" layout="column" layout-margin ng-cloak>-->
   <form ng-submit="loadData()" novalidate>
     <div layout="column">
@@ -31,7 +31,7 @@
       </div>
       <div layout="column">
         <!--h5>{{'subject.creditsEap' | translate}}</h5-->
-		<label class="common-label" style="padding-bottom:12px;"> {{'subject.creditsEap' | translate}}</label>
+      <label class="common-label" style="padding-bottom:12px;"> {{'subject.creditsEap' | translate}}</label>
         <div layout="row" flex>
           <div layout="column" flex>
             <div layout-gt-xs="row" flex="45" flex-xs="100">
@@ -102,7 +102,7 @@
         </thead>
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-          <td md-cell>{{currentLanguageNameField(row)}}</td>
+          <td md-cell><a ng-href="#/subject/{{::row.id}}">{{currentLanguageNameField(row)}}</a></td>
           <td md-cell>{{::row.code}}</td>
           <td md-cell>{{::row.credits}}</td>
           <td md-cell>{{currentLanguageNameField(row.assessment)}}</td>

@@ -82,9 +82,9 @@
     <br>
     <md-input-container flex>
       <label>{{'subject.linkDepartment' | translate}}</label>
-      <hois-school-department-select ng-model="subject.schoolDepartment"></hois-school-department-select>
+      <hois-school-department-select ng-model="subject.schoolDepartment.id"></hois-school-department-select>
     </md-input-container>
-    <md-input-container>
+    <md-input-container class="top-margin readonly">
       <label>{{'subject.status' | translate}}</label>
       <hois-classifier-value ng-model="subject.status" main-classifier-code="AINESTAATUS"></hois-classifier-value>
     </md-input-container>
@@ -107,7 +107,7 @@
     <div layout="row">
       <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
       <md-button ng-if="subject.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-      <md-button ng-href="#/subject" class="md-raised">{{'main.button.back' | translate}}</md-button>
+      <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>

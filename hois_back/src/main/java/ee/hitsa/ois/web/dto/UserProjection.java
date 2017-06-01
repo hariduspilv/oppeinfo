@@ -1,18 +1,43 @@
 package ee.hitsa.ois.web.dto;
 
+import java.io.Serializable;
 
-import org.springframework.beans.factory.annotation.Value;
+public class UserProjection implements Serializable {
 
-public interface UserProjection {
+    private Long id;
+    private String schoolCode;
+    private String role;
 
-    Long getId();
+    public UserProjection() {}
 
-    @Value("#{target.role.nameEt} #{target.school != null ? target.school.code : ''}")
-    String getRoleEt();
+    public UserProjection(Long id, String schoolCode, String role) {
+        this.id = id;
+        this.schoolCode = schoolCode;
+        this.role = role;
+    }
 
-    @Value("#{target.role.nameEn} #{target.school != null ? target.school.code : ''}")
-    String getRoleEn();
+    public void setId(Long id) {
+        this.id = id;
+    }
 
-    @Value("#{target.role.nameRu} #{target.school != null ? target.school.code : ''}")
-    String getRoleRu();
+
+    public Long getId() {
+        return id;
+    }
+
+    public String getSchoolCode() {
+        return schoolCode;
+    }
+
+    public void setSchoolCode(String schoolCode) {
+        this.schoolCode = schoolCode;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
+    }
 }

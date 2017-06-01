@@ -1,0 +1,12 @@
+<jxb:bindings 
+    xmlns:s="http://www.w3.org/2001/XMLSchema"
+    xmlns:jxb="http://java.sun.com/xml/ns/jaxb"
+    version="2.1">
+
+    <jxb:bindings schemaLocation="sais3.wsdl#types2">
+            <jxb:bindings node="//s:complexType[@name='AppStatusExportResponse']">
+                <jxb:class name="AppStatusExportResponseElement"/>
+            </jxb:bindings>
+    </jxb:bindings>
+
+</jxb:bindings>

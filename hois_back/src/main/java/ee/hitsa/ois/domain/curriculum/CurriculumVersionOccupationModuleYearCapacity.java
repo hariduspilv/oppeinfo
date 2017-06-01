@@ -1,5 +1,7 @@
 package ee.hitsa.ois.domain.curriculum;
 
+import java.math.BigDecimal;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -21,7 +23,7 @@ public class CurriculumVersionOccupationModuleYearCapacity extends BaseEntityWit
     private Integer studyYearNumber;
 
     @Column(nullable = false)
-    private Double credits;
+    private BigDecimal credits;
 
     public Integer getStudyYearNumber() {
         return studyYearNumber;
@@ -31,11 +33,11 @@ public class CurriculumVersionOccupationModuleYearCapacity extends BaseEntityWit
         this.studyYearNumber = studyYearNumber;
     }
 
-    public Double getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Double credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 
@@ -46,5 +48,4 @@ public class CurriculumVersionOccupationModuleYearCapacity extends BaseEntityWit
     public void setModule(CurriculumVersionOccupationModule module) {
         this.module = module;
     }
-
 }
