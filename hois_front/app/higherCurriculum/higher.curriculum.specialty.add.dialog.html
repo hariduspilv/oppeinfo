@@ -23,13 +23,16 @@
         </md-input-container>
         <md-input-container flex>
             <label>{{'curriculum.specialty.credits' | translate}}</label>
-            <input name="credits" ng-model="data.credits" type="number" required min="0" max="{{maxCredits}}" ng-readonly="readOnly">
+            <input name="credits" ng-model="data.credits" type="number" required min="0" max="{{maxCredits}}" pattern="^\d+(\.\d{1})?$" ng-readonly="readOnly">
            <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
                 <div ng-message="min">
                     {{'main.messages.error.positive' | translate}}
                 </div>
                 <div ng-message="max">
                     {{'curriculum.specialty.creditsError' | translate}} ({{maxCredits}} EAP)
+                </div>
+                <div ng-message="pattern">
+                  {{'stateCurriculum.error.decimalPresision' | translate}}
                 </div>
             </div>
         </md-input-container>
@@ -54,6 +57,7 @@
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
       <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!readOnly">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="delete()" ng-if="!isNew && !formState.readOnly">{{"main.button.delete" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

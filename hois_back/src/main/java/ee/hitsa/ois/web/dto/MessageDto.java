@@ -19,12 +19,10 @@ public class MessageDto extends MessageForm {
     
     public static MessageDto of(Message message) {
         MessageDto dto = EntityUtil.bindToDto(message, new MessageDto(), "sender", "responseTo", "receivers");
-        dto.setSendersId(message.getSender().getId());
+        dto.setSendersId(EntityUtil.getId(message.getSender()));
         dto.setSendersName(message.getSender().getFullname());
         dto.setReceiversNames(StreamUtil.toMappedSet(m -> m.getPerson().getFullname(), message.getReceivers()));
-        if(message.getResponseTo() != null) {
-            dto.setResponseTo(message.getResponseTo().getId());
-        }
+        dto.setResponseTo(EntityUtil.getNullableId(message.getResponseTo()));
         dto.setReceivers(StreamUtil.toMappedSet(MessageReceiver::getId, message.getReceivers()));
         return dto;
     }

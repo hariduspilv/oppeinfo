@@ -1,0 +1,27 @@
+@page {
+    size: A4;
+    margin: 0;
+}
+
+html {
+    font-size: 10px;
+}
+
+.label {
+    font-weight: bold;
+}
+
+.reporttable {
+    border-collapse: collapse;
+	width: 100%;
+}
+
+.reporttable td {
+	border: solid black thin;
+	padding: 3px;
+}
+
+.reporttableheader {
+    font-weight: bold;
+    text-align: center;
+}

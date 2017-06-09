@@ -96,7 +96,7 @@ public class DirectiveController {
     public DirectiveDto confirm(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
         // start requests after save has been successful
-        ehisStudentService.updateStudents(directiveConfirmService.confirm(user, directive, LocalDate.now()));
+        ehisStudentService.updateEhis(directiveConfirmService.confirm(user, directive, LocalDate.now()));
         return get(user, directive);
     }
 

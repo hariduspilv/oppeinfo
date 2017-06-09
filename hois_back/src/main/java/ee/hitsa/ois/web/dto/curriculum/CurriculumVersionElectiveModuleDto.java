@@ -1,15 +1,11 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionElectiveModule;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
@@ -23,15 +19,9 @@ public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
     @Size(max=255)
     private String nameEn;
 
-    private Set<Long> subjects;
-
     public static CurriculumVersionElectiveModuleDto of(CurriculumVersionElectiveModule electiveModule) {
         CurriculumVersionElectiveModuleDto dto = EntityUtil.bindToDto(electiveModule, new CurriculumVersionElectiveModuleDto(),
-                "subjects");
-        if(electiveModule.getSubjects() != null) {
-            dto.setSubjects(StreamUtil.toMappedSet(em -> EntityUtil.getId(em.getSubject()), electiveModule.getSubjects()));
-            dto.setReferenceNumber(dto.getId());
-        }
+                "subjects", "referenceNumber");
         return dto;
     }
 
@@ -49,6 +39,7 @@ public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
 
     public void setId(Long id) {
         this.id = id;
+        setReferenceNumber(id);
     }
 
     public String getNameEt() {
@@ -65,13 +56,5 @@ public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
 
     public void setNameEn(String nameEn) {
         this.nameEn = nameEn;
-    }
-
-    public Set<Long> getSubjects() {
-        return subjects != null ? subjects : new HashSet<>();
-    }
-
-    public void setSubjects(Set<Long> subjects) {
-        this.subjects = subjects;
     }
 }

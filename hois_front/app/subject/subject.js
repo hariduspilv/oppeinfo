@@ -19,8 +19,7 @@ angular.module('hitsaOis')
       if (id) {
         $scope.subject = Endpoint.get({id: id});
       } else {
-        $scope.subject = new Endpoint();
-        $scope.subject.status = 'AINESTAATUS_S';
+        $scope.subject = new Endpoint({status: 'AINESTAATUS_S'});
       }
 
       var checkConnections = function (ids, array) {
@@ -92,8 +91,6 @@ angular.module('hitsaOis')
       $q.all(clMapper.promises).then($scope.loadData);
 
       $scope.subjectLanguages = function (row) {
-        return row.map(function (it) {
-          return $scope.currentLanguageNameField(it);
-        }).join(', ');
+        return row.map($scope.currentLanguageNameField).join(', ');
       };
   }]);

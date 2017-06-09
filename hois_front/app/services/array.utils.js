@@ -47,6 +47,9 @@ angular.module('hitsaOis')
        * Checks whether two arrays have common elements
        */
       intersect: function(array1, array2) {
+        if(this.isEmpty(array1) || this.isEmpty(array2)) {
+          return false;
+        }
         for(var i = 0; i < array1.length; i++) {
             if(this.includes(array2, array1[i])) {
                 return true;
@@ -56,7 +59,7 @@ angular.module('hitsaOis')
       },
       /**
        * Finds common parts of two arrays!
-       * 
+       *
        * Note, that arrays with repeating elements are not considered here
        */
       intersection : function(array1, array2) {
@@ -67,17 +70,6 @@ angular.module('hitsaOis')
             }
         }
         return commonPart;
-      },
-      removeDuplicates: function(array, property) {
-        var mySet = new Set();
-        return array.filter(function(el) {
-            var key = angular.isDefined(property) ? property : el;
-            var isNew = !mySet.has(key);
-            if (isNew) {
-                mySet.add(key);
-            } 
-            return isNew;
-        });
       }
     };
   });

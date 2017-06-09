@@ -29,6 +29,7 @@ import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.repository.support.DomainClassConverter;
 import org.springframework.format.support.FormattingConversionService;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.method.HandlerMethod;
@@ -53,6 +54,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 @EntityScan(basePackageClasses = { BaseEntity.class, Jsr310JpaConverters.class })
+@EnableAsync
 @EnableCaching
 @EnableJpaAuditing
 @SpringBootApplication

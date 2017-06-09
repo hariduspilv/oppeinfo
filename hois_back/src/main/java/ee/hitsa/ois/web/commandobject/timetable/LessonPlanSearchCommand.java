@@ -7,7 +7,7 @@ public class LessonPlanSearchCommand {
     @NotNull
     private Long studyYear;
     private Long schoolDepartment;
-    private Long curriculumVerison;
+    private Long curriculumVersion;
     private Long studentGroup;
 
     public Long getStudyYear() {
@@ -26,12 +26,12 @@ public class LessonPlanSearchCommand {
         this.schoolDepartment = schoolDepartment;
     }
 
-    public Long getCurriculumVerison() {
-        return curriculumVerison;
+    public Long getCurriculumVersion() {
+        return curriculumVersion;
     }
 
-    public void setCurriculumVerison(Long curriculumVerison) {
-        this.curriculumVerison = curriculumVerison;
+    public void setCurriculumVersion(Long curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 
     public Long getStudentGroup() {

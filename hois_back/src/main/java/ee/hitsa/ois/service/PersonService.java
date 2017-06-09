@@ -112,7 +112,7 @@ public class PersonService {
     public Person save(PersonForm personForm, Person person) {
         EntityUtil.bindToEntity(personForm, person, classifierRepository);
         person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(personForm.getIdcode()));
-        person.setSex(classifierRepository.getOne(EstonianIdCodeValidator.sexFromIdcode(personForm.getIdcode())));
+        person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(personForm.getIdcode())));
         return personRepository.save(person);
     }
 

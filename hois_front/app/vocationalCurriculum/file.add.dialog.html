@@ -20,12 +20,13 @@
           </md-input-container>
 
           <md-input-container flex>
-                    <lf-ng-md-file-input name="file" lf-files='data.file' lf-browse-label="{{'main.addFile' | translate}}"
+                    <lf-ng-md-file-input name="file" lf-files="data.file" lf-browse-label="{{'main.addFile' | translate}}"
                       lf-remove-label="{{'main.button.delete' | translate}}"
-                      lf-placeholder="" lf-required> </lf-ng-md-file-input>
+                      lf-placeholder="" lf-required lf-filesize="10MB"> </lf-ng-md-file-input>
           </md-input-container>
           <div ng-messages="dialogForm.file.$error">
             <div class="invalid" ng-message="required">{{'main.messages.error.selectFile' | translate}}</div>
+            <div ng-message="filesize" class="invalid">{{'curriculum.error.fileSize' | translate}}</div>
           </div>
         </div>
       </div>

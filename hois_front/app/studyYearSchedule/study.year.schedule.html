@@ -1,81 +1,89 @@
 <!--FIXME: this form is slow in IE-->
 <div layout="column" layout-padding>
-    <form name="studyYearScheduleForm">
-        <div layout="column">
-            <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!auth.school">
-                <md-input-container flex="50" flex-sm="100" flex-xs="100">
-                    <label>{{'studyYearSchedule.studyYear' | translate}}</label>
-                    <md-select ng-model="criteria.studyYear">
-                      <md-option ng-value="option" ng-repeat="option in studyYears">
-                        <hois-classifier-value ng-model="option.year" main-classifier-code="OPPEAASTA"></hois-classifier-value>
-                      </md-option>
-                    </md-select>
-                </md-input-container>
-                <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                    <label>{{'studyYearSchedule.schoolDepartment' | translate}}</label>
-                    <hois-select ng-model="criteria.schoolDepartments" values="schoolDepartments" multiple></hois-select>
-                </md-input-container>
-            </div>
-            <br>
-            <md-table-container ng-cloak layout-padding>
-                <table md-table>
-                    <thead>
-                        <tr>
-                            <th class="studentGroup"></th>
-                            <th ng-repeat="studyPeriod in criteria.studyYear.studyPeriods" colspan="{{studyPeriod.weeks}}">
-                                {{currentLanguageNameField(studyPeriod)}}
-                            </th>
-                        </tr>
-                        <tr>
-                            <th class="studentGroup"></th>
-                            <th class="weekCell" ng-repeat="week in weeks" class="weekNr">{{$index + 1}}</th>
-                        </tr>
-                    </thead>
-                    <tbody ng-repeat="department in schoolDepartments | filter: filterSchoolDepartments">
-                        <tr>
-                            <td colspan="{{weeks.length + 1}}" class="schoolDepartment">{{currentLanguageNameField(department)}}</td>
-                        </tr>
-                        <tr ng-repeat="sg in studentGroups | filter: filterStudentGroups(department)">
-                            <td class="studentGroup">{{sg.code}}</td>
-                            <!--
+  <form name="studyYearScheduleForm">
+    <div layout="column">
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.school">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label>{{'studyYearSchedule.studyYear' | translate}}</label>
+          <md-select ng-model="criteria.studyYear">
+            <md-option ng-value="option" ng-repeat="option in studyYears">
+              <hois-classifier-value ng-model="option.year" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+            </md-option>
+          </md-select>
+        </md-input-container>
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'studyYearSchedule.schoolDepartment' | translate}}</label>
+          <hois-select ng-model="criteria.schoolDepartments" values="schoolDepartments" multiple></hois-select>
+        </md-input-container>
+      </div>
+      <br>
+      <md-table-container ng-cloak layout-padding>
+        <table>
+          <thead>
+            <tr>
+              <th class="studentGroup"></th>
+              <th ng-repeat="studyPeriod in criteria.studyYear.studyPeriods" colspan="{{studyPeriod.weeks}}">
+                {{currentLanguageNameField(studyPeriod)}}
+              </th>
+            </tr>
+            <tr>
+              <th class="studentGroup"></th>
+              <th class="weekCell weekNr" ng-repeat="week in weeks">{{$index + 1}}</th>
+            </tr>
+          </thead>
+          <tbody ng-repeat="department in schoolDepartments | filter: filterSchoolDepartments">
+            <tr>
+              <td colspan="{{weeks.length + 1}}" class="schoolDepartment">{{currentLanguageNameField(department)}}</td>
+            </tr>
+            <tr ng-repeat="sg in studentGroups | filter: filterStudentGroups(department)">
+              <td class="studentGroup">{{sg.code}}</td>
+              <!--
                                 style="background: { getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color}"
                                 Was not used insted of ng-style as VS code marked curly braces as error(css property expected),
                                 though it did not cause an error on "grunt build" on local machine
+
+                                ng-if="!isPastStudyYear" was used, because in case of past study year, it should not become bold when clicked
                             -->
-                            <td class="weekCell" ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
-                            ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }">
-                                {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
-                                </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </md-table-container>
-        <div layout="row">
-            <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-        </div>
-    </form>
-
-
-
+              <td ng-if="!isPastStudyYear" class="weekCell" ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
+                ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }">
+                {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
+              </td>
+              <td ng-if="isPastStudyYear" class="weekCell" ng-repeat="week in weeks"
+                ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }">
+                {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <div layout="row">
+        <md-button class="md-raised md-primary" ng-click="save()" ng-show="!isPastStudyYear">{{'main.button.save' | translate}}</md-button>
+      </div>
+    </div>
+  </form>
 </div>
 
 <style>
-
-table, th, td {
+  table,
+  th,
+  td {
     border: 1px solid #1cb3ff;
     border-collapse: collapse;
-}
-.studentGroup {
-    width: 100px;
-}
-.weekCell {
-    width: 30px;
-}
-.schoolDepartment {
-    font-weight: bold;
-}
-.weekNr {
-    font-weight: normal;
-}
+  }
 
+  .studentGroup {
+    width: 100px;
+  }
+
+  .weekCell {
+    width: 30px;
+  }
+
+  .schoolDepartment {
+    font-weight: bold;
+  }
+
+  .weekNr {
+    font-weight: normal;
+  }
 </style>

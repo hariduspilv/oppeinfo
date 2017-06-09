@@ -96,7 +96,7 @@ public class StudentSearchDto {
         dto.setFullname(p.getFullname());
         dto.setIdcode(p.getIdcode());
         StudentGroup sg = student.getStudentGroup();
-        dto.setStudentGroup(sg != null ? new AutocompleteResult(sg.getId(), sg.getCode(), sg.getCode()) : null);
+        dto.setStudentGroup(sg != null ? AutocompleteResult.of(sg) : null);
         return dto;
     }
 }

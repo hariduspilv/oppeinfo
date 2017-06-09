@@ -15,18 +15,10 @@
           <div layout="column">
           <md-input-container>
             <label>{{'stateCurriculum.enter.module.occupation' | translate}}</label>
-            <md-select ng-model="data.moduleOccupations" multiple="true" required  ng-disabled="readOnly" ng-change="validateOccupations()">
-                <!--TODO: find better solution-->
-                <md-option ng-value="option" ng-repeat="option in occupations | filter: filterOccupations('KUTSE')">
-                    <hois-classifier-value ng-model="option" main-classifier-code="KUTSE"></hois-classifier-value>
-                </md-option>
-                <md-option ng-value="option" ng-repeat="option in occupations | filter: filterOccupations('OSAKUTSE')">
-                    <hois-classifier-value ng-model="option" main-classifier-code="OSAKUTSE"></hois-classifier-value>
-                </md-option>
-                <md-option ng-value="option" ng-repeat="option in occupations | filter: filterOccupations('SPETSKUTSE')">
-                    <hois-classifier-value ng-model="option" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
-                </md-option>
-            </md-select>
+            <hois-classifier-select ng-model="data.moduleOccupations" main-classifier-codes="KUTSE,OSAKUTSE,SPETSKUTSE"
+                   show-only-values="occupations" multiple required model-value-attr="code"
+                   ng-disabled="readOnly" ng-change="validateOccupations()">
+            </hois-classifier-select>
           </md-input-container>
 
         <p class="invalid" ng-show="dialogForm.$submitted && !occupationsValid">
@@ -91,7 +83,7 @@
           </md-input-container>
           <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.criteriaEt' | translate}}</label>
-            <input ng-model="data.assessmentsEt" type="text" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
+            <textarea ng-model="data.assessmentsEt" required md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
           <md-input-container flex>
             <label>{{'stateCurriculum.enter.module.criteriaEn' | translate}}</label>

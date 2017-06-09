@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -131,7 +132,7 @@ public class CurriculumServiceTest {
         curriculum.setCode(name);
         curriculum.setStudyPeriod(number);
         curriculum.setJoint(Boolean.TRUE);
-        curriculum.setOptionalStudyCredits(Double.valueOf(number));
+        curriculum.setOptionalStudyCredits(BigDecimal.valueOf(number.longValue()));
         curriculum.setOccupation(Boolean.TRUE);
         curriculum.setValidFrom(LocalDate.now());
         curriculum.setConsecution(classifier);

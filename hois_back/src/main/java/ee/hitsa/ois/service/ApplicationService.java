@@ -252,16 +252,16 @@ public class ApplicationService {
     }
 
     public ApplicationDto get(HoisUserDetails user, Application application) {
-        setSeenBySchoolAdmin(user, application);
-        return ApplicationDto.of(application);
+        return ApplicationDto.of(setSeenBySchoolAdmin(user, application));
     }
 
-    private void setSeenBySchoolAdmin(HoisUserDetails user, Application application) {
+    private Application setSeenBySchoolAdmin(HoisUserDetails user, Application application) {
         if (UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) &&
                 ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_ESIT, application.getStatus())) {
             application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
-            applicationRepository.save(application);
+            application = applicationRepository.save(application);
         }
+        return application;
     }
 
     public Application findLastValidAcademicLeaveWithoutRevocation(Long studentId) {
@@ -299,13 +299,13 @@ public class ApplicationService {
             if (existingApplications.contains(type)) {
                 result.put(type, new ApplicationApplicableDto("application.messages.applicationAlreadyExists"));
             } else {
-                if (type == ApplicationType.AVALDUS_LIIK_AKAD) {
+                if (ApplicationType.AVALDUS_LIIK_AKAD.equals(type)) {
                     if (!StudentUtil.isActive(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
                     } else if (!StudentUtil.isNominalStudy(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotNominalStudy"));
                     }
-                } else if (type == ApplicationType.AVALDUS_LIIK_AKADK) {
+                } else if (ApplicationType.AVALDUS_LIIK_AKADK.equals(type)) {
                     if (!StudentUtil.isActive(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
                     } else if (!StudentUtil.isOnAcademicLeave(student)) {
@@ -316,7 +316,7 @@ public class ApplicationService {
                             result.put(type, new ApplicationApplicableDto("application.messages.noValidAcademicLeaveApplicationFound"));
                         }
                     }
-                } else if (type == ApplicationType.AVALDUS_LIIK_VALIS) {
+                } else if (ApplicationType.AVALDUS_LIIK_VALIS.equals(type)) {
                     if (!StudentUtil.isStudying(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotStudying"));
                     } else if (!CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel())) {

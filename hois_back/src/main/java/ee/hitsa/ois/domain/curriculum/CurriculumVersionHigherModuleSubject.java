@@ -6,7 +6,6 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.subject.Subject;
@@ -19,12 +18,23 @@ public class CurriculumVersionHigherModuleSubject extends BaseEntityWithId {
     @JoinColumn(name="curriculum_version_hmodule_id",  nullable = false, updatable = false)
     private CurriculumVersionHigherModule module;
     
-    @NotNull
     @Column(name="is_optional")
     private Boolean optional;
     
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Subject subject;
+    
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "curriculum_version_elective_module_id")
+    private CurriculumVersionElectiveModule electiveModule;
+
+    public CurriculumVersionElectiveModule getElectiveModule() {
+        return electiveModule;
+    }
+
+    public void setElectiveModule(CurriculumVersionElectiveModule electiveModule) {
+        this.electiveModule = electiveModule;
+    }
 
     public Boolean getOptional() {
         return optional;

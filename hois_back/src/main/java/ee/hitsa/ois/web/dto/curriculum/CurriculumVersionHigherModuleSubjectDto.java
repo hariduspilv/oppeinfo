@@ -1,9 +1,6 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
 import java.math.BigDecimal;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import javax.validation.constraints.NotNull;
 
@@ -42,9 +39,9 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
         return dto;
     }
     
-    public static CurriculumVersionHigherModuleSubjectDto of(CurriculumVersionHigherModuleSubject subject, Set<CurriculumVersionElectiveModuleDto> electiveModules) {
+    public static CurriculumVersionHigherModuleSubjectDto of(CurriculumVersionHigherModuleSubject subject) {
         CurriculumVersionHigherModuleSubjectDto dto = 
-                EntityUtil.bindToDto(subject, new CurriculumVersionHigherModuleSubjectDto(), "subject");
+                EntityUtil.bindToDto(subject, new CurriculumVersionHigherModuleSubjectDto(), "subject", "electiveModule");
         dto.setSubjectId(subject.getSubject().getId());
         dto.setNameEt(subject.getSubject().getNameEt());
         dto.setNameEn(subject.getSubject().getNameEn());
@@ -52,11 +49,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
         dto.setCode(subject.getSubject().getCode());
         dto.setSchoolCode(subject.getSubject().getSchool().getCode());
         dto.setEhisSchoolCode(EntityUtil.getCode(subject.getSubject().getSchool().getEhisSchool()));
-        
-        List<CurriculumVersionElectiveModuleDto> list = electiveModules.stream().filter(em -> em.getSubjects().contains(dto.getSubjectId())).collect(Collectors.toList());  
-        if(list.size() == 1) {
-            dto.setElectiveModule(list.get(0).getReferenceNumber());
-        }
+        dto.setElectiveModule(EntityUtil.getNullableId(subject.getElectiveModule()));
         return dto;
     }
 

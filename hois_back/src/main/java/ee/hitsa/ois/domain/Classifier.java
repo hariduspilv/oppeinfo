@@ -17,10 +17,11 @@ import org.hibernate.Hibernate;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.validation.NotEmpty;
 
 @Entity
-public class Classifier extends BaseEntity {
+public class Classifier extends BaseEntity implements Translatable {
     private static final long serialVersionUID = 3111361264166192650L;
 
     @Id
@@ -57,7 +58,7 @@ public class Classifier extends BaseEntity {
     @Size(max = 100)
     private String extraval2;
     @Size(max = 100)
-    private String ehisValue;
+    private String ehisValue; // for MainclassCode.EHIS_KOOL this should be number (see EhisStudentService)
     @Column(name="is_vocational")
     private boolean vocational;
     @Column(name="is_higher")
@@ -130,6 +131,7 @@ public class Classifier extends BaseEntity {
         this.value2 = value2;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -138,6 +140,7 @@ public class Classifier extends BaseEntity {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }
@@ -146,6 +149,7 @@ public class Classifier extends BaseEntity {
         this.nameEn = nameEn;
     }
 
+    @Override
     public String getNameRu() {
         return nameRu;
     }

@@ -41,6 +41,8 @@ import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
+import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
@@ -114,18 +116,17 @@ public class AutocompleteService {
                     resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
                     resultAsString(r, 7), resultAsString(r, 8)), data);
 
-        // optional sorting
-        if(mainClassCodes.size() == 1) {
-            ClassifierUtil.sort(mainClassCodes.get(0), result);
-        }
-        return result;
+        return ClassifierUtil.sort(mainClassCodes, result);
     }
+
     /**
      * Get list of classifiers with parents (bound via ClassifierConnect) for filtering in front-end
      */
     public List<ClassifierSelection> classifiersWithParents(List<String> mainClassCodes) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from classifier c left join (select array_agg(cc.connect_classifier_code) as parent, cc.classifier_code from classifier_connect cc group by cc.classifier_code) parents on c.code = parents.classifier_code");
-        qb.requiredCriteria("c.main_class_code in :mainClassCodes", "mainClassCodes", mainClassCodes);
+
+        qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
+
         List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value, array_to_string(parents.parent, ', ')", em).getResultList();
         List<ClassifierSelection> result = StreamUtil.toMappedList(r -> {
             ClassifierSelection c = new ClassifierSelection(resultAsString(r, 0),
@@ -138,10 +139,9 @@ public class AutocompleteService {
             }
             return c;
         }, data);
-        if(mainClassCodes.size() == 1) {
-            ClassifierUtil.sort(mainClassCodes.get(0), result);
-        }
-        return result;    }
+
+        return ClassifierUtil.sort(mainClassCodes, result);
+    }
 
     public List<AutocompleteResult> curriculums(Long schoolId, AutocompleteCommand term) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum c");
@@ -153,7 +153,7 @@ public class AutocompleteService {
         return StreamUtil.toMappedList(r -> new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)), data);
     }
 
-    public List<CurriculumVersionResult> curriculumVersions(Long schoolId, Boolean valid, Boolean sais) {
+    public List<CurriculumVersionResult> curriculumVersions(Long schoolId, CurriculumVersionAutocompleteCommand lookup) {
         String from = "from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id "+
             "inner join classifier sl on c.orig_study_level_code = sl.code "+
             "left outer join curriculum_study_form sf on cv.curriculum_study_form_id = sf.id";
@@ -161,14 +161,15 @@ public class AutocompleteService {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
-        if(Boolean.TRUE.equals(valid)) {
+        if(Boolean.TRUE.equals(lookup.getValid())) {
             // only valid ones
             qb.requiredCriteria("cv.status_code = :statusCode", "statusCode", CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K);
             qb.requiredCriteria("c.valid_from <= :currentDate and (c.valid_thru is null or c.valid_thru >= :currentDate)", "currentDate", LocalDate.now());
         }
-        if(Boolean.TRUE.equals(sais)) {
+        if(Boolean.TRUE.equals(lookup.getSais())) {
             qb.filter("exists(select sa.id from sais_admission sa where sa.curriculum_version_id = cv.id)");
         }
+        qb.optionalCriteria("c.is_higher = :higher", "higher", lookup.getHigher());
 
         List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code, sl.value", em).getResultList();
         return StreamUtil.toMappedList(r -> {
@@ -178,12 +179,44 @@ public class AutocompleteService {
         }, data);
     }
 
-    public List<AutocompleteResult> directiveCoordinators(Long schoolId, Boolean isDirective) {
+    public List<AutocompleteResult> curriculumVersionOccupationModules(Long curriculumVersionId) {
+        String from = "from curriculum_version_omodule cvo inner join curriculum_module cm on cvo.curriculum_module_id = cm.id";
+
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+
+        qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
+                curriculumVersionId);
+
+        List<?> data = qb.select("cvo.id, cm.name_et, cm.name_en", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            return new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2));
+        }, data);
+    }
+
+    public List<AutocompleteResult> curriculumVersionOccupationModuleThemes(Long curriculumVersionOmoduleId) {
+        String from = "from curriculum_version_omodule_theme cvot";
+
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+
+        qb.requiredCriteria("cvot.curriculum_version_omodule_id = :curriculum_version_omodule_id",
+                "curriculum_version_omodule_id", curriculumVersionOmoduleId);
+
+        List<?> data = qb.select("cvot.id, cvot.name_et", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String name = resultAsString(r, 1);
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }, data);
+    }
+
+    public List<AutocompleteResult> directiveCoordinators(Long schoolId, DirectiveCoordinatorAutocompleteCommand lookup) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator dc");
 
         qb.requiredCriteria("dc.school_id = :schoolId", "schoolId", schoolId);
-        if(Boolean.TRUE.equals(isDirective)) {
+        if(Boolean.TRUE.equals(lookup.getIsDirective())) {
             qb.filter("dc.is_directive = true");
+        }
+        if(Boolean.TRUE.equals(lookup.getIsCertificate())) {
+            qb.filter("dc.is_certificate = true");
         }
 
         List<?> data = qb.select("dc.id, dc.name", em).getResultList();
@@ -265,6 +298,7 @@ public class AutocompleteService {
             qb.requiredCriteria("s.nominal_study_end > :currentDate", "currentDate", LocalDate.now());
         }
         if (Boolean.TRUE.equals(lookup.getHigher())) {
+            // FIXME c.higher = true is maybe simpler way?
             qb.requiredCriteria("exists (select c.id from curriculum c "
                     + "inner join classifier osl on osl.code = c.orig_study_level_code "
                     + "inner join curriculum_version cv on cv.curriculum_id = c.id "

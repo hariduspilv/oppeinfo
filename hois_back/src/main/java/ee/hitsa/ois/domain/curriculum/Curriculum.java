@@ -17,9 +17,10 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
+import ee.hitsa.ois.util.Translatable;
 
 @Entity
-public class Curriculum extends BaseEntityWithId {
+public class Curriculum extends BaseEntityWithId implements Translatable {
     private static final long serialVersionUID = -7063602940937795603L;
 
     @Column(name = "is_higher")
@@ -28,7 +29,7 @@ public class Curriculum extends BaseEntityWithId {
     private String nameEn;
     private String nameRu;
     private String code;
-    private String merCode;
+    private String merCode; // XXX for EHIS this should be number (see EhisStudentService)
     private LocalDate approval;
     private String approvalDokNr;
     private String outcomesEt;
@@ -68,7 +69,7 @@ public class Curriculum extends BaseEntityWithId {
     private Integer studyPeriod;
     @Column(name = "is_joint")
     private Boolean joint;
-    private Double optionalStudyCredits;
+    private BigDecimal optionalStudyCredits;
     private LocalDate validFrom;
     private LocalDate validThru;
 
@@ -110,8 +111,7 @@ public class Curriculum extends BaseEntityWithId {
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumDepartment> departments = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumFile> files = new HashSet<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -164,6 +164,7 @@ public class Curriculum extends BaseEntityWithId {
         this.joint = joint;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -172,6 +173,7 @@ public class Curriculum extends BaseEntityWithId {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }
@@ -180,6 +182,7 @@ public class Curriculum extends BaseEntityWithId {
         this.nameEn = nameEn;
     }
 
+    @Override
     public String getNameRu() {
         return nameRu;
     }
@@ -228,11 +231,11 @@ public class Curriculum extends BaseEntityWithId {
         this.studyPeriod = studyPeriod;
     }
 
-    public Double getOptionalStudyCredits() {
+    public BigDecimal getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Double optionalStudyCredits) {
+    public void setOptionalStudyCredits(BigDecimal optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 

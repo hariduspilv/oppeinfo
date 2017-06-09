@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -32,7 +33,7 @@ public class StateCurriculumModuleDto extends VersionedCommand {
     @NotNull
     @Min(0)
     @Max(999)
-    private Double credits;
+    private BigDecimal credits;
     @NotBlank
     private String objectivesEt;
     private String objectivesEn;
@@ -92,11 +93,11 @@ public class StateCurriculumModuleDto extends VersionedCommand {
         this.nameEn = nameEn;
     }
 
-    public Double getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Double credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

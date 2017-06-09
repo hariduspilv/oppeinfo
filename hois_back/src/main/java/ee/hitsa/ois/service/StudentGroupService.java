@@ -24,14 +24,13 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -63,11 +62,7 @@ public class StudentGroupService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private CurriculumRepository curriculumRepository;
-    @Autowired
     private EntityManager em;
-    @Autowired
-    private SchoolRepository schoolRepository;
     @Autowired
     private StudentGroupRepository studentGroupRepository;
     @Autowired
@@ -105,7 +100,7 @@ public class StudentGroupService {
 
     public StudentGroup create(HoisUserDetails user, StudentGroupForm form) {
         StudentGroup studentGroup = new StudentGroup();
-        studentGroup.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        studentGroup.setSchool(em.getReference(School.class, user.getSchoolId()));
         return save(user, studentGroup, form);
     }
 
@@ -117,7 +112,7 @@ public class StudentGroupService {
         if(curriculumId == null) {
             throw new IllegalArgumentException();
         }
-        Curriculum curriculum = curriculumRepository.getOne(curriculumId);
+        Curriculum curriculum = em.getReference(Curriculum.class, curriculumId);
         UserUtil.assertSameSchool(user, curriculum.getSchool());
         studentGroup.setCurriculum(curriculum);
 
@@ -141,7 +136,7 @@ public class StudentGroupService {
         Set<Long> studentIds = new HashSet<>(form.getStudents() != null ? form.getStudents() : Collections.emptyList());
         List<Student> added = new ArrayList<>();
         for(Long studentId : studentIds) {
-            Student student = studentRepository.getOne(studentId);
+            Student student = em.getReference(Student.class, studentId);
             if(!studentGroup.getId().equals(EntityUtil.getNullableId(student.getStudentGroup()))) {
                 student.setStudentGroup(studentGroup);
                 studentService.saveWithHistory(student);

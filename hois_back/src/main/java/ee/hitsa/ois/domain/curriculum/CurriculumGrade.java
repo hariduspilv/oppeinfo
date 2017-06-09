@@ -9,8 +9,9 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.util.Translatable;
 @Entity
-public class CurriculumGrade extends BaseEntityWithId{
+public class CurriculumGrade extends BaseEntityWithId implements Translatable {
 
 	private static final long serialVersionUID = 5225487267992767869L;
 	@NotBlank
@@ -25,6 +26,7 @@ public class CurriculumGrade extends BaseEntityWithId{
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier ehisGrade;
 
+	@Override
 	public String getNameEt() {
 		return nameEt;
 	}
@@ -33,6 +35,7 @@ public class CurriculumGrade extends BaseEntityWithId{
 		this.nameEt = nameEt;
 	}
 
+    @Override
 	public String getNameEn() {
 		return nameEn;
 	}

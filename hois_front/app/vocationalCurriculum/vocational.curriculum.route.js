@@ -41,7 +41,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       })
-      .when('/vocationalCurriculum/:id/edit/moduleImplementationPlan/new', {
+      .when('/vocationalCurriculum/:id/moduleImplementationPlan/new', {
         templateUrl: 'vocationalCurriculum/module.implementation.plan.html',
         controller: 'VocationalCurriculumModuleImplementationPlanController',
         controllerAs: 'controller',
@@ -58,7 +58,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       })
-      .when('/vocationalCurriculum/:id/edit/moduleImplementationPlan/:versionId/edit', {
+      .when('/vocationalCurriculum/:id/moduleImplementationPlan/:versionId/edit', {
         templateUrl: 'vocationalCurriculum/module.implementation.plan.html',
         controller: 'VocationalCurriculumModuleImplementationPlanController',
         controllerAs: 'controller',
@@ -72,7 +72,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       })
-      .when('/vocationalCurriculum/:id/view/moduleImplementationPlan/:versionId/view', {
+      .when('/vocationalCurriculum/:id/moduleImplementationPlan/:versionId/view', {
         templateUrl: 'vocationalCurriculum/module.implementation.plan.html',
         controller: 'VocationalCurriculumModuleImplementationPlanController',
         controllerAs: 'controller',

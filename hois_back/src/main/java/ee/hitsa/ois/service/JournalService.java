@@ -307,7 +307,7 @@ public class JournalService {
         }
         EntityUtil.bindEntityCollection(
                 journalEntry.getJournalEntryCapacityTypes(),
-                type -> type.getCapacityType().getCode(),
+                type -> EntityUtil.getCode(type.getCapacityType()),
                 journalEntryForm.getJournalEntryCapacityTypes(), it -> {
                     JournalEntryCapacityType type = new JournalEntryCapacityType();
                     type.setCapacityType(classifierRepository.getOne(it));
@@ -403,6 +403,7 @@ public class JournalService {
     }
 
     public JournalEntryDto journalEntry(Long journalId, Long journalEntrylId) {
+        // TODO refactor using getOne by journalEntrylId and verifying journalId afterwards
         JournalEntry journalEntry = journalEntryRepository.findOne((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("journal").get("id"), journalId));
@@ -435,7 +436,7 @@ public class JournalService {
 
     public List<JournalStudentDto> journalStudents(Journal journal, Boolean allStudents) {
         return journal.getJournalStudents().stream()
-                .filter(jt -> Boolean.TRUE.equals(allStudents) ? true : StudentUtil.isStudying(jt.getStudent()))
+                .filter(jt -> Boolean.TRUE.equals(allStudents) || StudentUtil.isStudying(jt.getStudent()))
                 .map(JournalStudentDto::of).collect(Collectors.toList());
     }
 

@@ -37,7 +37,7 @@ angular.module('hitsaOis')
 
     $rootScope.$on(AUTH_EVENTS.notAuthenticated, showAlert);
     $rootScope.$on(AUTH_EVENTS.notAuthorized, showAlert);
-    $rootScope.$on(AUTH_EVENTS.reAuthenticate, authenticate);
+    $rootScope.$on(AUTH_EVENTS.reAuthenticate, function () { authenticate() });
 
     $scope.login = function () {
       authenticate($scope.credentials);
@@ -85,10 +85,16 @@ angular.module('hitsaOis')
       } else {
         $rootScope.logo = '';
       }
-      $rootScope.userWork = auth.user;
+      if (!angular.isDefined(auth.user)) {
+        $rootScope.userWork = null;
+      } else {
+        $rootScope.userWork = auth.user;
+      }
+
     };
 
     var loggedOut = function () {
-      $rootScope.currentUser = null;
+      $rootScope.setCurrentUser(null);
+      setLoggedInVisuals({});
     };
   });

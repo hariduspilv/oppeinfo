@@ -23,17 +23,17 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class CertificateControllerTest {
-    
+
+    private static final String BASE_URL = "/certificate";
+    private static final String TEXT = "CertificateControllerTest";
+    private static final String ID_CODE = "37810017107";
+    private static final String TYPE = "TOEND_LIIK_OPI";
+    private static final String STATUS = "TOEND_STAATUS_V";
+    private static final Long STUDENT_ID = Long.valueOf(2);
+
     @Autowired
     private TestRestTemplate restTemplate;
-    
-    private final String BASE_URL = "/certificate";
-    private final String TEXT = "CertificateControllerTest";
-    private final String ID_CODE = "37810017107";
-    private final String TYPE = "TOEND_LIIK_OPI";
-    private final String STATUS = "TOEND_STAATUS_V";
-    private final Long STUDENT_ID = Long.valueOf(2);
-    
+
     @Test
     public void search() {
         String url = BASE_URL;

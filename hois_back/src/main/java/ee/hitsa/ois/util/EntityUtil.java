@@ -10,6 +10,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -294,6 +295,26 @@ public abstract class EntityUtil {
                 destination.setPropertyValue(p, c);
             }
         }
+    }
+
+    /**
+     * Helper for finding entity from collection by id.
+     *
+     * @param id
+     * @param items
+     * @return
+     * @throws NullPointerException if id is null
+     *
+     */
+    public static <T extends BaseEntityWithId> T find(Long id, Collection<T> items) {
+        Objects.requireNonNull(id);
+
+        for(T item : items) {
+            if(id.equals(item.getId())) {
+                return item;
+            }
+        }
+        throw new NoSuchElementException();
     }
 
     public static Classifier validateClassifier(Classifier c, MainClassCode... domains) {

@@ -61,7 +61,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{currentLanguageNameField(row.type)}}</td>
+            <td md-cell><a ng-href="#/certificate/{{::row.id}}/view">{{currentLanguageNameField(row.type)}}</a></td>
             <td md-cell>{{::row.certificateNr}}</td>
             <td md-cell>{{::row.headline}}</td>
             <td md-cell>{{::row.whom}}</td>
@@ -94,7 +94,9 @@
     <tr md-row ng-repeat="type in types" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell>{{currentLanguageNameField(type)}}</td>
         <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::type.code}}/new">{{'certificate.order' | translate}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/certificate/{{::type.code}}/new">
+                {{'certificate.order' | translate}}
+              </md-button>
         </td>
     </tr>
     </tbody>

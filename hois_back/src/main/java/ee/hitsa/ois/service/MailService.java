@@ -32,8 +32,8 @@ public class MailService {
     private ThreadLocal<ExecutorService> executorLocal = ThreadLocal.withInitial(
             () -> Executors.newSingleThreadExecutor());
 
-    //IKE - emails are always sent together with system messages but we do not have to guarantee their arrival
-    public void sendMail(String from, String to, String subject, String message) {
+    // IKE - emails are always sent together with system messages but we do not have to guarantee their arrival
+    private void sendMail(String from, String to, String subject, String message) {
         if(Boolean.TRUE.equals(disable)) {
             return;
         }
@@ -45,7 +45,7 @@ public class MailService {
 
         String receivers = testReceivers != null ? testReceivers: to;
         if(testReceivers != null) {
-            log.debug("email is using debug receivers");
+            log.warn("email is using debug receivers");
         }
 
         try {
@@ -66,7 +66,7 @@ public class MailService {
         }
     }
 
-    public void sendMail(String from, List<String> receivers, String subject, String message) {
-        sendMail(from, String.join(",", receivers), subject, message);
+    public void sendMail(ee.hitsa.ois.domain.Message message, List<String> receivers) {
+        sendMail(message.getSender().getEmail(), String.join(",", receivers), message.getSubject(), message.getContent());
     }
 }

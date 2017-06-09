@@ -11,7 +11,6 @@ import javax.validation.constraints.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,28 +22,30 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
+import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
-import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.report.CurriculumReport;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.CurriculumService;
+import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.commandobject.CurriculumFileForm;
+import ee.hitsa.ois.web.commandobject.CurriculumFileUpdateDto;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
-import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
 
@@ -52,20 +53,23 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
 @RequestMapping("curriculum")
 public class CurriculumController {
 
-	@Autowired
-	private CurriculumService curriculumService;
-	@Autowired
-	private SchoolRepository schoolRepository;
     @Autowired
     private AutocompleteService autocompleteService;
+	@Autowired
+	private CurriculumService curriculumService;
+    @Autowired
+    private PdfService pdfService;
+	@Autowired
+	private SchoolRepository schoolRepository;
 
 	@GetMapping("/{id:\\d+}")
-    public CurriculumDto get(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
-	    // External expert can watch curriculum
-//	    if(!user.isExternalExpert()) {
-//	        assertSameOrJoinSchool(user, curriculum);
-//	    }
+    public CurriculumDto get(@WithEntity("id") Curriculum curriculum) {
         return CurriculumDto.of(curriculum);
+    }
+
+    @GetMapping(value = "/print/{id:\\d+}", produces = HttpUtil.APPLICATION_PDF)
+    public byte[] print(@WithEntity("id") Curriculum curriculum) {
+        return pdfService.generatePdf(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum));
     }
 
     @GetMapping
@@ -90,20 +94,39 @@ public class CurriculumController {
         UserUtil.assertIsSchoolAdmin(user);
         return CurriculumDto.of(curriculumService.save(curriculum, curriculumForm));
     }
-
-    @GetMapping("/unique")
-    public boolean isUnique(HoisUserDetails user, UniqueCommand command) {
-		return curriculumService.isUnique(user.getSchoolId(), command);
+    
+    @PutMapping("/close/{id:\\d+}")
+    public CurriculumDto closeCurriculum(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
+        assertSameOrJoinSchool(user, curriculum);
+        UserUtil.assertIsSchoolAdmin(user);
+        return CurriculumDto.of(curriculumService.closeCurriculum(curriculum));
+    }
+    
+    @GetMapping("/unique/higher/code")
+    public boolean isHigherCodeUnique(HoisUserDetails user, UniqueCommand command) {
+        return curriculumService.isHigherCodeUnique(user.getSchoolId(), command);
     }
 
-    /**
-     * TODO: test not added yet!
-     */
-    @GetMapping("/version/unique")
+    @GetMapping("/unique/higher/merCode")
+    public boolean isHigherMerCodeUnique(UniqueCommand command) {
+        return curriculumService.isHigherMerCodeUnique(command);
+    }
+    
+    @GetMapping("/unique/version/code")
     public boolean isVersionUnique(HoisUserDetails user, UniqueCommand command) {
         return curriculumService.isVersionUnique(user.getSchoolId(), command);
     }
-
+    
+    @GetMapping("/unique/vocational/name")
+    public boolean isVocationalNameUnique(HoisUserDetails user, UniqueCommand command) {
+        return curriculumService.isVocationalNameUnique(user.getSchoolId(), command);
+    }
+    
+    @GetMapping("/unique/vocational/merCode")
+    public boolean isVocationalMerCodeUnique(HoisUserDetails user, UniqueCommand command) {
+        return curriculumService.isVocationalMerCodeUnique(user.getSchoolId(), command);
+    }
+    
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithEntity("id") Curriculum curriculum) {
         UserUtil.assertSameSchool(user, curriculum.getSchool());
@@ -111,28 +134,10 @@ public class CurriculumController {
     	curriculumService.delete(curriculum);
     }
 
-    @PostMapping("/speciality")
-    public CurriculumSpecialityDto createCurriculumSpeciality(HoisUserDetails user, @Valid @RequestBody CurriculumSpecialityDto form) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return CurriculumSpecialityDto.of(curriculumService.createCurriculumSpeciality(form));
-    }
-
-    @PutMapping("/speciality/{id:\\d+}")
-    public CurriculumSpecialityDto updateCurriculumSpeciality(HoisUserDetails user, @NotNull @Valid @RequestBody CurriculumSpecialityDto form, @WithEntity("id") CurriculumSpeciality speciality) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return CurriculumSpecialityDto.of(curriculumService.saveCurriculumSpeciality(speciality, form));
-    }
-
-    @DeleteMapping("/speciality/{id:\\d+}")
-    public void deleteCurriculumSpeciality(HoisUserDetails user, @WithEntity("id") CurriculumSpeciality speciality) {
-        UserUtil.assertIsSchoolAdmin(user);
-        curriculumService.deleteSpeciality(speciality);
-    }
-
     //TODO: add tests!
     @GetMapping("/areasOfStudyByGroupOfStudy/{code}")
-    public List<ClassifierSelection> getAreasOfStudyByGroupOfStudy(@NotNull @PathVariable("code") String code) {
-        return StreamUtil.toMappedList(ClassifierSelection::of, curriculumService.getAreasOfStudyByGroupOfStudy(code));
+    public List<String> getAreasOfStudyByGroupOfStudy(@NotNull @PathVariable("code") String code) {
+        return StreamUtil.toMappedList(EntityUtil::getCode, curriculumService.getAreasOfStudyByGroupOfStudy(code));
     }
 
     @PostMapping("/{curriculumId:\\d+}/versions")
@@ -161,9 +166,9 @@ public class CurriculumController {
     /**
      * TODO: test
      */
-    @GetMapping("/subjects")
-    public Page<CurriculumVersionHigherModuleSubjectDto> getSubjects(@Valid SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
-        return curriculumService.getSubjects(subjectSearchCommand, pageable);
+    @GetMapping("{id:\\d+}/possibleSubjects")
+    public List<CurriculumVersionHigherModuleSubjectDto> getSubjects(@WithEntity(value = "id") Curriculum curriculum) {
+        return curriculumService.getSubjects(curriculum);
     }
 
     /**
@@ -187,17 +192,6 @@ public class CurriculumController {
         classifiers.addAll(otherTypes);
         return classifiers;
     }
-    
-    /**
-     * 
-     * @param stateCurriculumSearchCommand
-     * @param sort
-     * @return
-     */
-    @GetMapping("/stateCurricula")
-    public List<AutocompleteResult> getStateCurricula(Sort sort) {
-        return StreamUtil.toMappedList(AutocompleteResult::of, curriculumService.getStateCurricula(sort));
-    }
 
     @PutMapping("/module/{id:\\d+}")
     public CurriculumDto updateCurriculumModule(HoisUserDetails user, @NotNull @RequestBody CurriculumDto form, @WithEntity("id") Curriculum curriculum) {
@@ -214,12 +208,44 @@ public class CurriculumController {
     @PutMapping("/higher/version/modules/{id:\\d+}")
     public CurriculumVersionDto updateHigherCurriculumVersionModules(HoisUserDetails user, @NotNull @RequestBody CurriculumVersionDto form, @WithEntity("id") CurriculumVersion curriculumVersion) {
         UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertSameSchool(user, curriculumVersion.getCurriculum().getSchool());
         return CurriculumVersionDto.of(curriculumService.updateHigherCurriculumVersionModules(curriculumVersion, form));
     }
     
     @PutMapping("/vocational/implementationPlan/modules/{id:\\d+}")
     public CurriculumVersionDto updateVocationalCurriculumImplementationPlanModules(HoisUserDetails user, @NotNull @RequestBody CurriculumVersionDto form, @WithEntity("id") CurriculumVersion curriculumVersion) {
         UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertSameSchool(user, curriculumVersion.getCurriculum().getSchool());
         return CurriculumVersionDto.of(curriculumService.updateVocationalCurriculumImplementationPlanModules(curriculumVersion, form));
+    }
+    
+    @PutMapping("/grade/{id:\\d+}")
+    public CurriculumDto updateCurriculumGrades(HoisUserDetails user, @NotNull @RequestBody CurriculumDto form, @WithEntity("id") Curriculum curriculum) {
+        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertSameSchool(user, curriculum.getSchool());
+        return CurriculumDto.of(curriculumService.updateCurriculumGrades(curriculum, form));
+    }
+
+    @PutMapping("/speciality/{id:\\d+}")
+    public CurriculumDto updateCurriculumSpecialities(HoisUserDetails user, @NotNull @RequestBody CurriculumDto form, @WithEntity("id") Curriculum curriculum) {
+        UserUtil.assertIsSchoolAdmin(user);
+        UserUtil.assertSameSchool(user, curriculum.getSchool());
+        return CurriculumDto.of(curriculumService.updateCurriculumSpecialities(curriculum, form));
+    }
+
+    @PostMapping("/{curriculumId:\\d+}/file")
+    public CurriculumFileUpdateDto createCurriculumFile(HoisUserDetails user, @Valid @RequestBody 
+            CurriculumFileForm curriculumFileForm, @WithEntity("curriculumId") Curriculum curriculum) {
+        UserUtil.assertIsSchoolAdmin(user);
+        assertSameOrJoinSchool(user, curriculum);
+        return CurriculumFileUpdateDto.of(curriculumService.createCurriculumFile(curriculum, curriculumFileForm));
+    }
+
+    @DeleteMapping("/{curriculumId:\\d+}/file/{fileId:\\d+}")
+    public void deleteCurriculumFile(HoisUserDetails user, @WithEntity("curriculumId") Curriculum curriculum, 
+            @WithEntity("fileId") CurriculumFile curriculumFile) {
+      UserUtil.assertSameSchool(user, curriculum.getSchool());
+      UserUtil.assertIsSchoolAdmin(user);
+      curriculumService.deleteCurriculumFile(curriculumFile);
     }
 }

@@ -5,12 +5,8 @@
 		<div layout="column">
 			<md-input-container flex>
 			  <label>{{'module.implementationPlan.codeOrName' | translate}}</label>
-			  <input ng-model="implementationPlan.code" name="code" ng-model-options="{ debounce: 250 }" unique='codeUniqueQuery' type="text" md-maxlength="255" required ng-readonly="formState.readOnly">
-				<div ng-messages="vocationalCurriculumModuleImplementationPlanForm.code.$error" ng-show="vocationalCurriculumModuleImplementationPlanForm.code.$dirty">
-					<div ng-message="notUnique">
-						{{'main.messages.error.mustBeUnique' | translate}}
-					</div>
-				</div>
+			  <input ng-model="implementationPlan.code" name="code" type="text" md-maxlength="255" required ng-readonly="formState.readOnly">
+        <div ng-show="!codeNameUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>
 			</md-input-container>
 			<div layout="row">
 				<md-input-container flex="45" flex-xs="100">
@@ -44,7 +40,7 @@
 			  <label>{{'module.implementationPlan.teachingDepartment' | translate}}</label>
 			  <hois-school-department-select ng-model="implementationPlan.schoolDepartment" required ng-disabled="formState.readOnly"></hois-school-department-select>
 			</md-input-container>
-			
+
 			<md-input-container flex>
 			  <label>{{'main.notes' | translate}}</label>
 			  <textarea ng-model="implementationPlan.description" md-maxlength="20000" dfs max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
@@ -58,8 +54,8 @@
 				</md-input-container>
 			</div>
 		</div>
-	</fieldset>	
-	<div>&nbsp;</div>	
+	</fieldset>
+	<div>&nbsp;</div>
 	<fieldset tabindex="2">
 		<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !allModulesHaveData()}">{{'module.modules' | translate}}</legend>
 		<div layout="row" flex class="secondary-table-header">
@@ -125,13 +121,13 @@
             <!--MODULES WITHOUT OCCUPATIONS-->
             <div class="occupation-header align-center">{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}
             </div>
-            <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules | orderBy: 'nameEt'">
+            <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules | orderBy: 'nameEt'" class="lowerBorder">
                 <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
                     <div flex="5">&nbsp;</div>
                     <div flex="15">{{currentLanguageNameField(type)}}</div>
                     <div layout="column" flex="75">
                         <div flex="100" ng-repeat="module in modules | filter: filterEmptyModulesByType(type.code) | orderBy: 'nameEt'" layout="row" class="align-center">
-                            <a flex="50" ng-click="openViewModuleDialog(module)" href="" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isOccupationModuleDataSaved(module)}">{{currentLanguageNameField(module)}}</a>
+                            <a flex="50" ng-click="openViewModuleDialog(module)" href="" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isModuleValid(module)}">{{currentLanguageNameField(module)}}</a>
                             <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                             <div flex="30">
                                 <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="!formState.readOnly">
@@ -141,7 +137,7 @@
                                     {{'module.implementationPlan.viewModuleData' | translate}}
                                 </a>
                             </div>
-                            <div flex="15" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isOccupationModuleDataSaved(module)}">
+                            <div flex="15" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isModuleValid(module)}">
                                 {{isOccupationModuleDataSaved(module) ? 'main.yes' : 'main.no' | translate}}
                             </div>
                         </div>
@@ -156,13 +152,13 @@
                     <span ng-show="isOccupation">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
                     <span ng-show="!isOccupation">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
                 </div>
-                <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.occupation.code, modules) | orderBy: 'nameEt'">
+                <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.occupation.code, modules) | orderBy: 'nameEt'" class="lowerBorder">
                     <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
                         <div flex="5">&nbsp;</div>
                         <div flex="15">{{currentLanguageNameField(type)}}</div>
                         <div layout="column" flex="75">
                             <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, occupation.occupation.code) | orderBy: 'nameEt'" layout="row" class="align-center">
-                                <a flex="50" ng-click="openViewModuleDialog(module)" href="" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isOccupationModuleDataSaved(module)}">{{currentLanguageNameField(module)}}</a>
+                                <a flex="50" ng-click="openViewModuleDialog(module)" href="" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isModuleValid(module)}">{{currentLanguageNameField(module)}}</a>
                                 <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                                 <div flex="30">
                                     <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="!formState.readOnly">
@@ -172,7 +168,7 @@
                                         {{'module.implementationPlan.viewModuleData' | translate}}
                                     </a>
                                 </div>
-                                <div flex="15" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isOccupationModuleDataSaved(module)}">
+                                <div flex="15" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isModuleValid(module)}">
                                     {{isOccupationModuleDataSaved(module) ? 'main.yes' : 'main.no' | translate}}
                                 </div>
                             </div>
@@ -182,13 +178,13 @@
                 <!--OSAKUTSETE MOODULID-->
                 <div ng-repeat = "partOccupation in occupation.partOccupations | orderBy: 'nameEt'" layout="column">
                     <div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}: {{currentLanguageNameField(partOccupation)}}</div>
-                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation.code, modules) | orderBy: 'nameEt'">
+                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation.code, modules) | orderBy: 'nameEt'" class="lowerBorder">
                         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
                             <div flex="5">&nbsp;</div>
                             <div flex="15">{{currentLanguageNameField(type)}}</div>
                             <div layout="column" flex="75">
                                 <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, partOccupation.code) | orderBy: 'nameEt'" layout="row" class="align-center">
-                                    <a flex="50" ng-click="openViewModuleDialog(module)" href="" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isOccupationModuleDataSaved(module)}">{{currentLanguageNameField(module)}}</a>
+                                    <a flex="50" ng-click="openViewModuleDialog(module)" href="" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isModuleValid(module)}">{{currentLanguageNameField(module)}}</a>
                                     <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                                     <div flex="30">
                                         <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="!formState.readOnly">
@@ -198,7 +194,7 @@
                                             {{'module.implementationPlan.viewModuleData' | translate}}
                                         </a>
                                     </div>
-                                    <div flex="15" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isOccupationModuleDataSaved(module)}">
+                                    <div flex="15" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isModuleValid(module)}">
                                         {{isOccupationModuleDataSaved(module) ? 'main.yes' : 'main.no' | translate}}
                                     </div>
                                 </div>
@@ -211,13 +207,13 @@
                     <div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: &nbsp;
                         <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
                     </div>
-                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality.code, modules) | orderBy: 'nameEt'">
+                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality.code, modules) | orderBy: 'nameEt'" class="lowerBorder">
                         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
                             <div flex="5">&nbsp;</div>
                             <div flex="15">{{currentLanguageNameField(type)}}</div>
                             <div layout="column" flex="75">
                                 <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, speciality.code) | orderBy: 'nameEt'" layout="row" class="align-center">
-                                    <a flex="50" ng-click="openViewModuleDialog(module)" href="" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isOccupationModuleDataSaved(module)}">{{currentLanguageNameField(module)}}</a>
+                                    <a flex="50" ng-click="openViewModuleDialog(module)" href="" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isModuleValid(module)}">{{currentLanguageNameField(module)}}</a>
                                     <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                                     <div flex="30">
                                         <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="!formState.readOnly">
@@ -227,7 +223,7 @@
                                             {{'module.implementationPlan.viewModuleData' | translate}}
                                         </a>
                                     </div>
-                                    <div flex="15" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isOccupationModuleDataSaved(module)}">
+                                    <div flex="15" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isModuleValid(module)}">
                                         {{isOccupationModuleDataSaved(module) ? 'main.yes' : 'main.no' | translate}}
                                     </div>
                                 </div>
@@ -238,10 +234,32 @@
             </div>
 
 	</fieldset>
+
+  <div>&nbsp;</div>
+  <fieldset tabindex="10">
+  <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.yearCapacitiesTable' | translate}}</legend>
+    <table md-table class="secondary-table">
+      <thead md-head>
+          <tr md-row>
+              <th md-column></th>
+              <th md-column>{{'module.firstStudyYear' | translate}}</th>
+              <th md-column>{{'module.secondStudyYear' | translate}}</th>
+              <th md-column>{{'module.thirdStudyYear' | translate}}</th>
+          </tr>
+      </thead>
+      <tbody md-body>
+          <tr md-row ng-repeat="module in modules | orderBy: 'nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{currentLanguageNameField(module)}}</td>
+              <td md-cell ng-repeat="capacity in getModulesOccupationModule(module).yearCapacities | orderBy: 'studyYearNumber' track by $index">{{capacity.credits}}</td>
+          </tr>
+      </tbody>
+    </table>
+  </fieldset>
+
 	<div>&nbsp;</div>
-	<fieldset tabindex="10">
+	<fieldset tabindex="11">
 		<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.implementationPlanStatus' | translate}}</legend>
-		<div layout="row" flex="100">		
+		<div layout="row" flex="100">
 		  <md-input-container flex="30" flex-sm="100" flex-xs="100">
 			<label>{{'main.validFrom' | translate}}</label>
 			<md-datepicker ng-model="implementationPlan.validFrom" md-open-on-focus required ng-disabled="formState.readOnly"></md-datepicker>
@@ -259,32 +277,11 @@
 		  </md-input-container>
          </div>
 	</fieldset>
-    
 
-    
+
 
     <hois-created-modified object="implementationPlan"></hois-created-modified>
   </form>
-
-
-  <!--<div layout="row">
-    <md-button class="md-raised md-primary" ng-href="/#/vocationalCurriculum/{{curriculumId}}/edit/moduleImplementationPlan/{{implementationPlan.id}}/edit" ng-if="formState.readOnly">{{'main.button.change' | translate}}</md-button>
-    <md-button class="md-raised md-primary" ng-click="save()" ng-if="!formState.readOnly">{{'main.button.save' | translate}}</md-button>
-    <md-button class="md-raised md-default" ng-href="/#/vocationalCurriculum/{{curriculumId}}/edit" ng-if="!formState.readOnly">{{'main.button.back' | translate}}</md-button>
-    <md-button class="md-raised md-default" ng-href="/#/vocationalCurriculum/{{curriculumId}}/view" ng-if="formState.readOnly">{{'main.button.back' | translate}}</md-button>
-    <md-button ng-if="implementationPlan.id && !formState.readOnly" class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
-  </div>-->
-      <!--<div layout="row">
-        <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="formState.readOnly && currentStatus !== VERSION_STATUS.C">{{'main.button.change' | translate}}</md-button>
-        <md-button class="md-raised md-primary" ng-click="save()" ng-if="!formState.readOnly && currentStatus !== VERSION_STATUS.C">{{'main.button.save' | translate}}</md-button>
-
-        <md-button ng-show="implementationPlan.id && currentStatus === VERSION_STATUS.S " ng-click="setStatusVerified()" class="md-raised">{{'curriculum.statuschange.implementationPlan.button.verify' | translate}}</md-button>
-        <md-button ng-if="(currentStatus === VERSION_STATUS.S || currentStatus === VERSION_STATUS.K) && implementationPlan.id" ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
-
-        <md-button class="md-raised md-default" ng-click="copy()" ng-if="implementationPlan.id">{{'main.button.copy' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="delete()" ng-if="implementationPlan.id && currentStatus === VERSION_STATUS.S && !formState.readOnly">{{'main.button.delete' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="back('/#/vocationalCurriculum/' + curriculumId + '/edit')">{{'main.button.back' | translate}}</md-button>
-    </div>-->
 
      <div layout="row">
          <div ng-show="currentStatus === VERSION_STATUS.S">
@@ -318,6 +315,12 @@
          <div ng-show="currentStatus === VERSION_STATUS.C">
             <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
          </div>
-        <md-button class="md-raised md-default" ng-click="back('/#/vocationalCurriculum/' + curriculumId + '/edit')">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="back('/#/vocationalCurriculum/' + curriculumId + '/view')">{{'main.button.back' | translate}}</md-button>
     </div>
 </div>
+
+<style>
+  .lowerBorder {
+    border-bottom: solid 1px #E0E0E0;
+  }
+</style>

@@ -20,8 +20,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.config.SaisProperties;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.sais.SaisClassifier;
-import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ExceptionUtil;
@@ -48,8 +48,6 @@ public class SaisClassifierService {
     private SaisProperties sp;
     @Autowired
     private SaisLogService saisLogService;
-    @Autowired
-    private PersonRepository personRepository;
 
     public Page<SaisClassifierSearchDto> search(String parentCode, SaisClassifierSearchCommand criteria,
             Pageable pageable) {
@@ -92,7 +90,7 @@ public class SaisClassifierService {
         xRoadHeader.setConsumer(sp.getConsumer());
         xRoadHeader.setEndpoint(sp.getEndpoint());
         xRoadHeader.setProducer(sp.getProducer());
-        xRoadHeader.setUserId(sp.getUseridprefix() + personRepository.getOne(user.getPersonId()).getIdcode());
+        xRoadHeader.setUserId(sp.getUseridprefix() + em.getReference(Person.class, user.getPersonId()).getIdcode());
         xRoadHeader.setId(UUID.randomUUID().toString());
         xRoadHeader.setService("sais2.ClassificationsExport.v1");
         SaisClassificationResponse classificationResponse = null;
@@ -129,7 +127,7 @@ public class SaisClassifierService {
                 }
             }
             // TODO calculate count from classificationResponse
-            classificationResponse.setRecordCount(saisClassifierRepository.count());
+            classificationResponse.setRecordCount(Long.valueOf(saisClassifierRepository.count()));
             } catch (Exception e) {
                 classificationResponse.setError(ExceptionUtil.exceptionToStackTraceString(e));
                 classificationResponse.setProcessingErrors(Boolean.TRUE);
@@ -145,5 +143,4 @@ public class SaisClassifierService {
         saisLogService.insertLog(classificationResponse, user, null);
         return list(criteria, pageable);
     }
-
 }

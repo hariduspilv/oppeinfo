@@ -324,6 +324,7 @@ angular.module('hitsaOis')
       if(item && occupationNotAlreadyAdded(item.code)) {
         $scope.stateCurriculum.occupations.push(item.code);
         getSubOccupations(item.code);
+        $scope.stateCurriculumForm.$setDirty();
       }
     };
 
@@ -378,6 +379,7 @@ angular.module('hitsaOis')
                     deleteModuleWithNoOccupations(m);
                 });
             });
+            $scope.stateCurriculumForm.$setDirty();
         });
     };
 
@@ -490,12 +492,6 @@ angular.module('hitsaOis')
                 scope.occupations = scope.occupations.concat(list);
             });
             scope.allowedModuleTypes = [$scope.MODULE_TYPE.BASIC, $scope.MODULE_TYPE.GENERAL];
-
-            scope.filterOccupations = function(mainClassCode) {
-                return function (occupaionCode) {
-                    return occupaionCode.indexOf(mainClassCode) === 0;
-                };
-            };
         };
         dialogService.showDialog('stateCurriculum/state.curriculum.module.add.dialog.html', DialogController,
             function (submitScope) {

@@ -167,15 +167,5 @@ public class JournalControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
-    @Test
-    public void getCurrentYear() {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment("currentStudyYear");
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-
     //TODO: test save endpoints
-
 }

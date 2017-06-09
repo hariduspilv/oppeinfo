@@ -25,6 +25,7 @@
       "delete": "Kustuta",
       "finish": "Lõpeta",
       "ok": "Ok",
+      "print": "Trüki",
       "view": "Vaata",
       "hide": "Peida",
       "save": "Salvesta",
@@ -214,6 +215,9 @@
         "notifications": "Teated",
         "journal": {
           "search": "Päevikute otsing"
+        },
+        "moduleProtocol": {
+          "search": "Mooduli protokolli otsing"
         }
       },
       "studyYearSchedule": {
@@ -236,6 +240,12 @@
           "search": "Tundide aegade otsing",
           "insert": "Tundide aegade sisestamine"
         }
+      },
+      "dataexchange": {
+        "label": "Andmevahetus",
+        "teacherinfo": {
+          "export": "Õppejõudude andmed"
+         }
       }
     }
   },
@@ -564,14 +574,18 @@
     "grandTotal": "KÕIK KOKKU",
     "isUsable": "on kasutatav",
     "journalreference": "Viide tunniplaanile",
+    "journals": "Päevikud",
     "modulehours": "Mooduli maht",
     "moduleTotal": "kokku",
+    "plannedHoursTotal": "Planeeritud tundide arv kokku",
     "responsibleformodule": "Mooduli vastutaja",
     "schoolDepartment": "Struktuuriüksus",
+    "showCapacityTypes": "kuva mahtude jaotus",
     "showTotals": "kuva kokku read",
     "showWeeks": "kuva nädalad",
     "studentGroup": "Õpperühm",
     "studyYear": "Õppeaasta",
+    "subjects": "Õppeained",
     "teacher": "Õpetaja",
     "total": "Kokku",
     "journal": {
@@ -585,7 +599,10 @@
       "name": "Päeviku nimi",
       "teacher": "Õpetaja",
       "theme": "Õpetatav teema",
-      "capacity-type": "Õppetöö liik"
+      "capacity-type": "Õppetöö liik",
+      "group": "Seotud rühm",
+      "group-module": "Moodul",
+      "group-theme": "Teema"
     },
     "search": {
       "vocational": "Õpperühmad (kutse)",
@@ -604,8 +621,8 @@
     "dateSent": "Saatmise kuupäev",
     "sentDatesRange": "Teate saatmise kuupäevade vahemik",
     "sender": "Saatja nimi",
-    "messageReceiver": "Teade saaja",
-    "messageSender": "Teade saatja",
+    "messageReceiver": "Teate saaja",
+    "messageSender": "Teate saatja",
     "receiver": "Saaja nimi",
     "send": "Saada teade",
     "respond": "Vasta",
@@ -649,7 +666,7 @@
       "invalidIdcode": "Vale isikukood!",
       "otherName": "Õppuri nimi",
       "otherIdcode": "Õppuri isikukood",
-      "signatoriesMissing": "Tõendi allkirjastad puuduvad, palun pöördu õppespetsialisti poole"
+      "signatoriesMissing": "Tõendi allkirjastajad puuduvad, palun pöördu õppespetsialisti poole"
   },
   "stateCurriculum": {
     "curricula": "Seotud kutseõppe õppekavad",
@@ -673,10 +690,10 @@
         "verified": "Õppekava on kinnitatud",
         "closed": "Õppekava on suletud",
         "fail": {
-            "verify": "Andmete salvestamine ja kinnitamine ebaõnnestus. Kohustuslikud väljad on täitmata.",
-            "verifyReadOnly": "Andmete kinnitamine ebaõnnestus.",
-            "close": "Andmete salvestamine ja sulgemine ebaõnnestus. Kohustuslikud väljad on täitmata.",
-            "closeReadOnly": "Andmete sulgemine ebaõnnestus."
+            "verify": "Andmete salvestamine ja kinnitamine ebaõnnestus. Kohustuslikud väljad on täitmata",
+            "verifyReadOnly": "Andmete kinnitamine ebaõnnestus",
+            "close": "Andmete salvestamine ja sulgemine ebaõnnestus. Kohustuslikud väljad on täitmata",
+            "closeReadOnly": "Andmete sulgemine ebaõnnestus"
         }
     },
     "deleteconfirm": "Kas oled kindel, et soovid riikliku õppekava kustutada?",
@@ -762,7 +779,7 @@
       "decimalPresision": "Arv peab olema täpsusega üks koht peale koma",
       "specialtiesInvalid": "Moodul ei saa olla seotud nii kutse, kui ka selle kutse spetsialiseerumisega",
       "partAndSpecOccupationsInvalid": "Moodul ei saa olla seotud ühe kutse spetsialiseerumise ja osakutsega",
-      "hasCurricula": "Riiklik õppekava on seotud kutseõppe õppekavaga, ei saa kustutada."
+      "hasCurricula": "Riiklik õppekava on seotud kutseõppe õppekavaga, ei saa kustutada"
     },
     "info": {
       "createdOccupationalCurriculums": "Riikliku õppekava alusel loodud kutseõppe koolide õppekavad",
@@ -869,6 +886,7 @@
 	"sentToEhis":"Õppekava on EHISesse saadetud",
 	"statuses":"Õppekava kehtivus ja staatused",
 	"versionStatus":"Õppekava versiooni kehtivus ja staatus",
+	"yearCapacitiesTable":"Moodulite mahtude jaotus õppeaastate lõikes",
 	"implementationPlanStatus":"Rakenduskava kehtivus ja staatus",
     "consecution": {
       "primary": "Esmaõppe õppekava",
@@ -937,21 +955,28 @@
     },
     "error": {
         "numberOfElectiveModules": "Ei tohi olla suurem kui valikmoodulite arv",
-        "specAddedToVersion": "Peaeriala on seotud õppekava versiooniga",
+        "specAddedToVersion": "Peaeriala on lisatud õppekava versioonisse ja ei saa olla kustutatud",
         "max999": "Peab olema kuni 3-kohaline number!",
         "monthsMax11": "Peab olema kuni 11!",
+        "max": "Peab olema kuni {{max}}",
         "curriculumModuleCantBeDeleted": "Moodul on lisatud rakenduskavasse ja ei saa olla kustutatud",
-        "inputFieldsNotFilledOnConfirm": "Andmete salvestamine ja kinnitamine ebaõnnestus. Kohustuslikud väljad on täitmata.",
-        "inputFieldsNotFilledOnProcede": "Andmete salvestamine ja menetlemine ebaõnnestus. Kohustuslikud väljad on täitmata.",
-        "notAllModulesHaveOccupation": "Kõik moodulid peavad olema seotud vähemalt ühe kutse või osakutsega.",
+        "inputFieldsNotFilledOnConfirm": "Andmete salvestamine ja kinnitamine ebaõnnestus. Kohustuslikud väljad on täitmata",
+        "inputFieldsNotFilledOnProcede": "Andmete salvestamine ja menetlemine ebaõnnestus. Kohustuslikud väljad on täitmata",
+        "notAllModulesHaveOccupation": "Kõik moodulid peavad olema seotud vähemalt ühe kutse või osakutsega",
         "noBasicModule": "Vähemalt üks põhiõpingute  moodul peab olema lisatud",
-        "noImplementationPlan": "Vähemalt üks rakenduskava peab olema lisatud õppekavasse.",
-        "noVersion": "Vähemalt üks versioon peab olema lisatud õppekavasse.",
-        "noOccupation": "Vähemalt üks kutse/osakutse peab olema lisatud õppekavasse.",
-        "noPModules": "Igale kutsele/osakutsele/spetsialiseerumisele peab olema lisatud vähemalt üks põhiõpingute moodul.",
-        "noModule": "Vähemalt üks moodul peab olema lisatud õppekavasse.",
-        "moduleOccupations": "Üks ja sama moodul ei tohi olla samaaegselt seotud nii kutse/osakutsega ja spetsialiseerumisega.",
-        "occupationNotSelected": "Vähemalt üks kutse või osakutse peab olema valitud."
+        "noImplementationPlan": "Vähemalt üks kinnitatud rakenduskava peab olema lisatud õppekavasse",
+        "noVersion": "Vähemalt üks kinnitatud versioon peab olema lisatud õppekavasse",
+        "noOccupation": "Vähemalt üks kutse/osakutse peab olema lisatud õppekavasse",
+        "noPModules": "Igale kutsele/osakutsele/spetsialiseerumisele peab olema lisatud vähemalt üks põhiõpingute moodul",
+        "noModule": "Vähemalt üks moodul peab olema lisatud õppekavasse",
+        "moduleOccupations": "Üks ja sama moodul ei tohi olla samaaegselt seotud nii kutse/osakutsega ja spetsialiseerumisega",
+        "occupationNotSelected": "Vähemalt üks kutse või osakutse peab olema valitud",
+        "fileSize": "Fail on liiga suur (max 10MB)",
+        "credits": "Vale moodulite maht",
+        "modulesCredits": "Moodulite maht ei ole vastavuses õppekava kogumahuga!",
+        "occupationsCredits": "Kutse/osakutse moodulite maht ei ole vastavuses õppekava kogu mahuga!",
+        "spetsOccupationsCredits": "Spetsialiseerumise moodulite maht (koos kutse- ja valikmoodulite mahuga) ei ole vastavuses õppekava kogu mahuga!",
+        "nameNotUnique": "Nimetus pole unikaalne"
     },
     "prompt": {
         "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
@@ -970,12 +995,12 @@
         "higher": {
             "proceed": "Kas oled kindel, et soovid kõrgharidusõppe õppekava salvestada ja menetleda?",
             "verify": "Kas oled kindel, et soovid kõrgharidusõppe õppekava salvestada ja kinnitada?",
-            "close": "Kas oled kindel, et soovid kõrgharidusõppe õppekava salvestada ja sulgeda?"
+            "close": "Sulgemisel andmeid ei salvestata. Õppekava sulgemisel suletakse ka kõik õppekava versioonid. Kas soovid jätkata?"
         },
         "vocational": {
             "proceed": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja menetleda?",
             "verify": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja kinnitada?",
-            "close": "Kas oled kindel, et soovid kutseõppe õppekava salvestada ja sulgeda?"
+            "close": "Sulgemisel andmeid ei salvestata. Õppekava sulgemisel suletakse ka kõik rakenduskavad. Kas soovid jätkata?"
         },
         "version": {
             "button": {
@@ -1012,12 +1037,12 @@
         "higher": {
             "proceed": "Kas oled kindel, et soovid kõrgharidusõppe õppekava menetleda?",
             "verify": "Kas oled kindel, et soovid kõrgharidusõppe õppekava kinnitada?",
-            "close": "Kas oled kindel, et soovid kõrgharidusõppe õppekava sulgeda?"
+            "close": "Õppekava sulgemisel suletakse ka kõik õppekava versioonid. Kas soovid jätkata?"
         },
         "vocational": {
             "proceed": "Kas oled kindel, et soovid kutseõppe õppekava menetleda?",
             "verify": "Kas oled kindel, et soovid kutseõppe õppekava kinnitada?",
-            "close": "Kas oled kindel, et soovid kutseõppe õppekava sulgeda?"
+            "close": "Õppekava sulgemisel suletakse ka kõik rakenduskavad. Kas soovid jätkata?"
         },
         "version": {
             "prompt": {
@@ -1167,6 +1192,8 @@
     "label": "Moodul",
     "modules": "Moodulid",
     "add": "Lisa moodul",
+    "gradeFormation": "Mooduli hinna kujunemine",
+    "themeGradeFormation": "Teema hinna kujunemine",
     "overallAtLeast": "KOKKU vähemalt",
     "addToughtModule":"Õpetatava mooduli lisamine",
     "viewToughtModule": "Õpetatava mooduli vaatamine",
@@ -1361,9 +1388,6 @@
       "overrideconfirm": "Valitud õppekava ja õppevormi õppekoormus juba eksisteerib. Kas soovite andmeid üle kirjutada?",
       "validInCurriculums": "Kehtib õppekavades",
       "validInStudyForms": "Kehtib õppevormides"
-  },
-  "ehis": {
-    "fileType": "Ehise faili liik"
   },
   "building": {
     "label": "Hoone",
@@ -1628,6 +1652,44 @@
       "dublicateJournalStudentInJournalEntry": "Õppur on juba päevikusse lisatud",
       "addingStudentIsNotAllowed": "Õppuri lisamine päevikuse ei ole võimalik",
       "removingStudentIsNotAllowed": "Õppuri kustutamine päevikust ei ole võimalik"
+    }
+  },
+  "moduleProtocol": {
+    "studyYear":"Õppeaasta",
+    "studentGroup":"Õpperühm",
+    "curriculumVersion": "Rakenduskava",
+    "module": "Moodul",
+    "moduleCapacity": "Mooduli maht",
+    "moduleGrading": "Mooduli hindamisviis",
+    "status": "Protokolli staatus",
+    "protocolNumber": "Protokolli number",
+    "protocolNr": "Protokolli number",
+    "insertedDate": "Loomise kp",
+    "protocolInsertedDate": "Protokolli loomise kp",
+    "confirmDate": "Kinnitamise kp",
+    "protocolConfirmDate": "Protokolli kinnitamise kp",
+    "confirmer": "Kinnitaja",
+    "curriculumVersionModule": "Rakenduskava, moodul",
+    "addAllSelectedStudentsToProtocol": "Lisa valitud õppurid protokolli",
+    "journalResults": "Päevikute tulemused",
+    "addStudents": "Lisa õppurid",
+    "moduleGrade": "Mooduli hinne"
+  },
+  "ehis": {
+    "fileType": "Ehise faili liik",
+    "teacher": {
+      "radioData": "Andmete valik",
+      "allData": "Kõik andmed",
+      "changedData": "Muutused",
+      "importRange": "Muutuste kuupäevade vahemik",
+      "subjectData": "Õppeainete info edastamine",
+      "sendToEhis": "Saada andmed EHISesse",
+      "name": "Nimi",
+      "message": "Teade",
+      "response": "Tulemus:"
+    },
+    "messages": {
+      "exportFinished": "Eksportimine lõpetatud"
     }
   }
 }

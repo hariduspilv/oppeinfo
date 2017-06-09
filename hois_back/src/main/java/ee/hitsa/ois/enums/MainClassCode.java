@@ -56,6 +56,7 @@ public enum MainClassCode {
     OSAKUTSE,
     PAEVIK_STAATUS,
     PAEVIK_GRUPI_JAOTUS,
+    PROTOKOLL_STAATUS,
     PUUDUMINE,
     RIIK,
     ROLL,

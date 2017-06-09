@@ -28,7 +28,7 @@ public class LessonPlanUtil {
 
         LessonPlanCapacityMapper(StudyYear studyYear) {
             orderedStudyPeriods = studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).collect(Collectors.toList());
-            studyPeriodWeekNrs = orderedStudyPeriods.stream().collect(Collectors.toMap(StudyPeriod::getId, StudyPeriod::getWeekNrs));
+            studyPeriodWeekNrs = StreamUtil.toMap(StudyPeriod::getId, StudyPeriod::getWeekNrs, orderedStudyPeriods);
             weekNrsCount = studyPeriodWeekNrs.values().stream().mapToInt(List::size).sum();
 
             // study period offset in week nr list
@@ -41,7 +41,7 @@ public class LessonPlanUtil {
         }
 
         public Map<String, List<Integer>> mapOutput(Journal journal) {
-            Map<String, List<Integer>> hours = journal.getJournalCapacityTypes().stream().collect(Collectors.toMap(jct -> EntityUtil.getCode(jct.getCapacityType()), k -> new ArrayList<>(Collections.nCopies(weekNrsCount, null))));
+            Map<String, List<Integer>> hours = StreamUtil.toMap(jct -> EntityUtil.getCode(jct.getCapacityType()), k -> new ArrayList<>(Collections.nCopies(weekNrsCount, null)), journal.getJournalCapacityTypes());
             // put every JournalCapacity into it's position, determined by capacity type, study period and week nr
             for(JournalCapacity jc : journal.getJournalCapacities()) {
                 Long key = EntityUtil.getId(jc.getStudyPeriod());

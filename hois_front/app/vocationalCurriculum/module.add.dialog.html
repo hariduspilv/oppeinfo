@@ -16,7 +16,7 @@
           <fieldset tabindex="1">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
 				<div layout="column">
-				  <div ng-repeat="item in occupations">
+				  <div ng-repeat="item in occupations | orderBy: 'occupation.' + currentLanguageNameField()">
 					<md-checkbox ng-model="occupationsSelected[item.occupation.code]" ng-change="validateOccupations()" aria-label="{{item.occupation[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
 					  {{item.occupation[currentLanguageNameField()]}}
 					</md-checkbox>
@@ -53,13 +53,16 @@
 			  </md-input-container>
 			  <md-input-container  flex="10" flex-offset="5">
 				<label>{{'module.credits' | translate}}</label>
-				<input ng-model="module.credits" type="number" name="credits" min="0" max="999" required ng-readonly="formState.readOnly">
+				<input ng-model="module.credits" type="number" name="credits" min="0" max="999" pattern="^\d+(\.\d{1})?$" required ng-readonly="formState.readOnly">
                 <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
                     <div ng-message="min">
                         {{'main.messages.error.positive' | translate}}
                     </div>
-                        <div ng-message="max">
+                    <div ng-message="max">
                         {{'curriculum.error.max999' | translate}}
+                    </div>
+                    <div ng-message="pattern">
+                      {{'stateCurriculum.error.decimalPresision' | translate}}
                     </div>
                 </div>
 			  </md-input-container>
@@ -100,7 +103,7 @@
 			</div>
 			<div layout="column">
             <!--md-list flex-->
-              <div ng-repeat="item in module.outcomes" class="occupation-row align-center" layout="row" flex>
+              <div ng-repeat="item in module.outcomes | orderBy: 'outcomeEt'" class="occupation-row align-center" layout="row" flex>
                 <div flex="90">{{item.outcomeEt}} {{item.outcomeEn}}</div>
                 <div><a class="remove" ng-click="removeFromArray(module.outcomes, item)" ng-if="!formState.readOnly">&times;</a></div>
               </div>
@@ -149,7 +152,7 @@
           <md-input-container flex>
             <label>{{'module.competencesAquired' | translate}}</label>
             <md-select multiple="true" ng-model="module.competences" ng-disabled="module.module.code !== 'KUTSEMOODUL_P' || formState.readOnly || competences.length === 0">
-              <md-option ng-repeat="option in competences track by $index" ng-value="option.code" aria-label="{{option[currentLanguageNameField()]}}">
+              <md-option ng-repeat="option in competences | orderBy: currentLanguageNameField() track by $index" ng-value="option.code" aria-label="{{option[currentLanguageNameField()]}}">
                 {{option[currentLanguageNameField()]}}</md-option>
             </md-select>
           </md-input-container>

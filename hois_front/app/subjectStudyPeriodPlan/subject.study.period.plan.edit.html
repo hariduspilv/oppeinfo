@@ -32,7 +32,7 @@
                             </md-input-container>
                         </td>
                          <td md-cell>
-                            <md-checkbox ng-model="capacity.isContact" aria-label="{{'subjectStudyPeriodPlan.isContact' | translate}}" ng-disabled="readOnly">
+                            <md-checkbox ng-model="capacity.isContact" aria-label="{{'subjectStudyPeriodPlan.isContact' | translate}}" ng-disabled="readOnly"></md-checkbox>
                         </td>
                     </tr>
                 </tbody>
@@ -59,7 +59,7 @@
         </div>
         <div layout="row">
             <md-button ng-if="!readOnly" class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-            <md-button ng-if="!readOnly" class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
+            <md-button ng-if="!readOnly && record.id" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
             <md-button class="md-raised" ng-href="/#/subjectStudyPeriodPlans">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>

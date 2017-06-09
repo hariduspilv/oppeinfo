@@ -11,12 +11,12 @@
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'lessonplan.studyYear' | translate}}</label>
-          <hois-select ng-model="criteria.studyYear" type="studyyear" required autofocus></hois-select>
+          <hois-select ng-model="criteria.studyYear" values="formState.studyYears" required autofocus></hois-select>
         </md-input-container>
 
-        <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <hois-autocomplete label="lessonplan.teacher" ng-model="criteria.teacher" method="teachers"></hois-autocomplete>
-        </md-input-container>
+        </div>
       </div>
 
       <div layout="row">
@@ -34,15 +34,15 @@
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
             <th md-column md-order-by="p.lastname,p.firstname">{{'lessonplan.teacher' | translate}}</th>
-            <th md-column>{{'lessonplan.status' | translate}}</th>
+            <th md-column>{{'lessonplan.plannedHoursTotal' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/lessonplan/{{::row.id}}/edit">{{::row.teacherFullname}}</md-button>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/lessonplans/vocational/byteacher/{{::row.id}}/{{::row.studyYear}}">{{::row.teacherFullname}}</md-button>
             </td>
-            <td md-cell>XXX</td>
+            <td md-cell>{{::row.plannedHours}}</td>
           </tr>
         </tbody>
       </table>

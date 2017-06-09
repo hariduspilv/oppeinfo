@@ -4,6 +4,7 @@ import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 import javax.validation.constraints.NotNull;
@@ -29,8 +30,20 @@ public class CurriculumFile extends BaseEntityWithId{
 
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier ehisFile;
+	
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
+	private Curriculum curriculum;
 
-	public boolean isEhis() {
+	public Curriculum getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(Curriculum curriculum) {
+        this.curriculum = curriculum;
+    }
+
+    public boolean isEhis() {
 		return ehis;
 	}
 

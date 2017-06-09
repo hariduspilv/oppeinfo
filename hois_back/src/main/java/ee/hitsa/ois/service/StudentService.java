@@ -110,8 +110,7 @@ public class StudentService {
     }
 
     public Student save(HoisUserDetails user, Student student, StudentForm form) {
-        Person p = student.getPerson();
-        EntityUtil.bindToEntity(form.getPerson(), p, classifierRepository);
+        Person p = EntityUtil.bindToEntity(form.getPerson(), student.getPerson(), classifierRepository);
         personRepository.save(p);
 
         if(!UserUtil.isSchoolAdmin(user, student.getSchool())) {

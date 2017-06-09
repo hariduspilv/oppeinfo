@@ -13,24 +13,24 @@
 				  </md-radio-group>
                   <p class="invalid" ng-if="vocationalCurriculumForm.$submitted && !curriculum.draft">{{'main.messages.error.inputFieldIsRequired' | translate}}</p>
 				</md-input-container>
-				<!--div md-colors="{color: 'warn-A400'}"  ng-if="vocationalCurriculumForm.$submitted" ng-messages="vocationalCurriculumForm.draft.$error">
-					<div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
-				</div-->
 			</fieldset>
 			<div>&nbsp;</div>
 			<fieldset tabindex="2" layout="column" >
 				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.nameTitle' | translate}}</legend>
 				<md-input-container flex="100">
 					<label>{{'curriculum.nameEt' | translate}}</label>
-					<input ng-model="curriculum.nameEt" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
+					<input name="nameEt" ng-model="curriculum.nameEt" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
+          <div ng-show="!nameEtUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>
 				</md-input-container>
 				<md-input-container flex="100">
 					<label>{{'curriculum.nameEn' | translate}}</label>
 					<input ng-model="curriculum.nameEn" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
+          <div ng-show="!nameEnUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>
 				</md-input-container>
 				<md-input-container flex="100">
 					<label>{{'curriculum.nameRu' | translate}}</label>
 					<input ng-model="curriculum.nameRu" type="text" ng-readonly="formState.readOnly || formState.notEditableBasicData">
+          <div ng-show="!nameRuUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>
 				</md-input-container>
 			</fieldset>
 		</div>
@@ -47,17 +47,7 @@
 				</div>
 				<md-input-container flex="50" flex-offset="5">
 					<label>{{'curriculum.code' | translate}}</label>
-					<input ng-model="curriculum.code" name="code" type="text" ng-model-options="{ debounce: 250 }" unique="codeUniqueQuery" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
-					<div ng-messages="vocationalCurriculumForm.code.$error" ng-show="vocationalCurriculumForm.code.$dirty">
-						<div ng-message="notUnique">
-							{{'main.messages.error.mustBeUnique' | translate}}
-						</div>
-					</div>
-					<!--div ng-messages="vocationalCurriculumForm.code.$error" ng-show="vocationalCurriculumForm.code.$dirty">
-						<div ng-message="notUnique">
-							{{'main.messages.error.mustBeUnique' | translate}}
-						</div>
-					</div-->
+					<input ng-model="curriculum.code" name="code" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
 				</md-input-container>
 			</div>
 			<div layout="row" flex>
@@ -85,13 +75,16 @@
                 </div>
 				<md-input-container flex="50" flex-offset="5">
 					<label>{{'curriculum.credits' | translate}}</label>
-					<input ng-model="curriculum.credits" name="credits" type="number" min="0" max="999" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
+					<input ng-model="curriculum.credits" name="credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
                     <div ng-messages="vocationalCurriculumForm.credits.$error" ng-show="vocationalCurriculumForm.credits.$dirty">
                         <div ng-message="min">
                             {{'main.messages.error.positive' | translate}}
                         </div>
                             <div ng-message="max">
                             {{'curriculum.error.max999' | translate}}
+                        </div>
+                        <div ng-message="pattern">
+                            {{'stateCurriculum.error.decimalPresision' | translate}}
                         </div>
                     </div>
 				</md-input-container>
@@ -104,24 +97,30 @@
 				</md-input-container>
 				<div layout="row" flex="50" flex-offset="5">
 					<md-input-container  flex="50">
-						<input ng-model="curriculum.studyPeriodYears" name="studyPeriodYears" type="number" placeholder="{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}" required min="0" max="999" ng-readonly="formState.readOnly || formState.notEditableBasicData">
+						<input ng-model="curriculum.studyPeriodYears" name="studyPeriodYears" type="number" placeholder="{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}" required min="0" max="{{maxStydyYears.max}}" pattern="^\d+$" ng-readonly="formState.readOnly || formState.notEditableBasicData">
                      <div ng-messages="vocationalCurriculumForm.studyPeriodYears.$error" ng-show="vocationalCurriculumForm.studyPeriodYears.$dirty">
                         <div ng-message="min">
                             {{'main.messages.error.positive' | translate}}
                         </div>
                             <div ng-message="max">
-                            {{'curriculum.error.max999' | translate}}
+                            {{'curriculum.error.max' | translate:maxStydyYears }}
+                        </div>
+                        <div ng-message="pattern">
+                          {{'stateCurriculum.enter.credits.integer' | translate}}
                         </div>
                     </div>
 					 </md-input-container>
 				     <md-input-container  flex="45" flex-offset="5">
-						<input ng-model="curriculum.studyPeriodMonths" name="studyPeriodMonths" type="number" placeholder="{{'main.months' | translate}}" min="0" max="11" ng-readonly="formState.readOnly || formState.notEditableBasicData">
+						<input ng-model="curriculum.studyPeriodMonths" name="studyPeriodMonths" type="number" placeholder="{{'main.months' | translate}}" min="0" max="11" pattern="^\d+$" ng-readonly="formState.readOnly || formState.notEditableBasicData">
                         <div ng-messages="vocationalCurriculumForm.studyPeriodMonths.$error" ng-show="vocationalCurriculumForm.studyPeriodMonths.$dirty">
                             <div ng-message="min">
                                 {{'main.messages.error.positive' | translate}}
                             </div>
                                 <div ng-message="max">
                                 {{'curriculum.error.monthsMax11' | translate}}
+                            </div>
+                            <div ng-message="pattern">
+                              {{'stateCurriculum.enter.credits.integer' | translate}}
                             </div>
                         </div>
 					  </md-input-container>
@@ -200,7 +199,7 @@
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.structure' | translate}}{{getStar()}}</label>
-				<textarea ng-model="curriculum.structure" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="strictValidation()" ng-readonly="formState.readOnly"></textarea>
+				<textarea ng-model="curriculum.structure" md-maxlength="4000" max-rows="10" md-select-on-focus ng-required="strictValidation()" ng-readonly="formState.readOnly"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.admissionRequirementsEt' | translate}}{{getStar()}}</label>
@@ -289,7 +288,7 @@
 					</tr>
 				</thead>
 				<tbody md-body>
-					<tr md-row ng-repeat="item in curriculum.occupations" ng-class-odd="'odd'" ng-class-even="'even'">
+					<tr md-row ng-repeat="item in curriculum.occupations | orderBy: 'occupation.nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
 						<td md-cell>{{$index + 1}}</td>
 						<td md-cell><!--md-button class="md-primary" ng-click="curriculum.occupation ? openOccupationDialog(item) : openPartOccupationsDialog(item)">
                 {{item.occupation[currentLanguageNameField()]}}</md-button-->
@@ -362,7 +361,7 @@
             <!--MODULES WITHOUT OCCUPATIONS-->
             <div class="occupation-header align-center">{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}
             </div>
-            <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules | orderBy: 'nameEt'">
+            <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules | orderBy: 'nameEt'" class="lowerBorder">
                 <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
                     <div flex="5">&nbsp;</div>
                     <div flex="20">{{currentLanguageNameField(type)}}</div>
@@ -378,10 +377,10 @@
              <!--KUTSETE/OSAKUTSETE MOODULID-->
             <div ng-repeat="occupation in curriculum.occupations | orderBy: 'occupation.nameEt'" layout="column">
                 <div class="occupation-header align-center">
-                    <span ng-show="curriculum.occupation" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !occupationHasPModule(occupation.occupation.code)}">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
-                    <span ng-show="!curriculum.occupation" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !occupationHasPModule(occupation.occupation.code)}">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
+                    <span ng-show="curriculum.occupation" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(occupation.occupation.code) || !isOccutationsCreditsValid(occupation))}">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
+                    <span ng-show="!curriculum.occupation" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(occupation.occupation.code) || !isOccutationsCreditsValid(occupation))}">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
                 </div>
-                <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.occupation.code, curriculum.modules) | orderBy: 'nameEt'">
+                <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.occupation.code, curriculum.modules) | orderBy: 'nameEt'" class="lowerBorder">
                     <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
                         <div flex="5">&nbsp;</div>
                         <div flex="20">{{currentLanguageNameField(type)}}</div>
@@ -396,7 +395,7 @@
                 <!--OSAKUTSETE MOODULID-->
                 <div ng-repeat = "partOccupation in occupation.partOccupations | orderBy: 'nameEt'" layout="column">
                     <div class="occupation-header2 align-center"> <span ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !occupationHasPModule(partOccupation.code)}">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}: {{currentLanguageNameField(partOccupation)}}</span></div>
-                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation.code, curriculum.modules) | orderBy: 'nameEt'">
+                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation.code, curriculum.modules) | orderBy: 'nameEt'" class="lowerBorder">
                         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
                             <div flex="5">&nbsp;</div>
                             <div flex="20">{{currentLanguageNameField(type)}}</div>
@@ -411,8 +410,8 @@
                 </div>
                 <!--SPETSKUTSETE MOODULID-->
                 <div ng-repeat = "speciality in occupation.specialities | orderBy: 'nameEt'" layout="column">
-                    <div class="occupation-header2 align-center"><span ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !occupationHasPModule(speciality.code)}">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: {{currentLanguageNameField(speciality)}}</span></div>
-                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality.code, curriculum.modules) | orderBy: 'nameEt'">
+                    <div class="occupation-header2 align-center"><span ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(speciality.code) || !isSpetsOccupationValid(speciality, occupation))}">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: {{currentLanguageNameField(speciality)}}</span></div>
+                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality.code, curriculum.modules) | orderBy: 'nameEt'" class="lowerBorder">
                         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
                             <div flex="5">&nbsp;</div>
                             <div flex="20">{{currentLanguageNameField(type)}}</div>
@@ -434,14 +433,17 @@
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.additionalInfo' | translate}}</legend>
 			<md-input-container flex="10">
 				<label>{{'curriculum.optionalStudyCredits' | translate}}{{getStar()}}</label>
-				<input name="vocationalCredits" type="number" ng-model="curriculum.optionalStudyCredits" ng-required="strictValidation()" aria-label="optional credits" min="0" max="999" ng-readonly="formState.readOnly || formState.notEditableBasicData">
-				<div ng-messages="curriculumForm.vocationalCredits.$error" ng-show="curriculumForm.vocationalCredits.$dirty">
-                    <div ng-message="min">
-                        {{'main.messages.error.positive' | translate}}
-                    </div>
-                        <div ng-message="max">
-                        {{'curriculum.error.max999' | translate}}
-                    </div>
+				<input name="vocationalCredits" type="number" ng-model="curriculum.optionalStudyCredits" ng-required="strictValidation()" aria-label="optional credits" min="0" max="999" pattern="^\d+(\.\d{1})?$" ng-readonly="formState.readOnly || formState.notEditableBasicData">
+				<div ng-messages="vocationalCurriculumForm.vocationalCredits.$error" ng-show="vocationalCurriculumForm.vocationalCredits.$dirty">
+            <div ng-message="min">
+                {{'main.messages.error.positive' | translate}}
+            </div>
+            <div ng-message="max">
+                {{'curriculum.error.max999' | translate}}
+            </div>
+            <div ng-message="pattern">
+                {{'stateCurriculum.error.decimalPresision' | translate}}
+            </div>
 				</div>
 			</md-input-container>
 			<div layout="column">
@@ -508,7 +510,7 @@
 				</div>
 
 				<div layout="column" flex ng-show="curriculum.joint" class="common-label">
-					<div layout="row" ng-repeat="item in curriculum.jointPartners | filter: filterEmptyJointPartners" class="align-center">
+					<div layout="row" ng-repeat="item in curriculum.jointPartners | filter: filterEmptyJointPartners | orderBy: ['ehisSchool', 'nameEt']" class="align-center">
 						<div flex="5">&nbsp;</div>
 						<div ng-if="item.abroad">{{item[currentLanguageNameField()]}}</div>
 						<div ng-if="!item.abroad"> <hois-classifier-value ng-model="item.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value></div>
@@ -604,7 +606,7 @@
 				<tr md-row ng-repeat="file in curriculum.files | orderBy: 'oisFile.fname'" ng-class-odd="'odd'" ng-class-even="'even'">
 				  <td md-cell>
 					{{file.oisFile.fname}}
-					<a ng-href="{{getUrl(file.oisFile)}}" target="_blank"><md-icon md-font-set="material-icons">file_download</md-icon></a>
+					<a ng-href="{{getUrl(file)}}" download><md-icon md-font-set="material-icons">file_download</md-icon></a>
 				  </td>
 				  <td md-cell>
 					{{file.ehis ? 'EHIS' : 'ÕIS'}}
@@ -616,7 +618,7 @@
 					<md-checkbox ng-model="file.sendEhis" aria-label="send to ehis" ng-disabled="formState.readOnly"></md-checkbox>
 				  </td>
 				  <td md-cell>
-					<a class="remove nomargin" ng-click="removeFromArray(curriculum.files, file)" ng-if="!formState.readOnly">&times;</a>
+					<a class="remove nomargin" ng-click="deleteFile(file)" ng-if="!formState.readOnly">&times;</a>
 				  </td>
 				</tr>
 			  </tbody>
@@ -625,7 +627,7 @@
 
 		<div>&nbsp;</div>
 		<fieldset tabindex="12" ng-if="curriculum.id > 0">
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: strictValidation() && curriculum.versions.length === 0}">{{'curriculum.moduleImplementationPlans' | translate}}</legend>
+			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !hasVerifiedVersions()}">{{'curriculum.moduleImplementationPlans' | translate}}</legend>
 			<md-button class="md-raised" ng-click="goToVersionNewForm()" ng-show="versionCanBeAdded()">{{'main.button.create' | translate}}</md-button>
 			<md-table-container>
 				<table md-table md-progress="promise" class="secondary-table">
@@ -712,38 +714,51 @@
     </div-->
     </div>
   </form>
-
-  <!--<div layout="row">
-    <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="school && canBeEdited() && !formState.sentToEhis">{{'main.button.change' | translate}}</md-button>
-    <md-button class="md-raised md-primary" ng-click="save()" ng-if="!formState.readOnly && !formState.sentToEhis">{{'main.button.save' | translate}}</md-button>
-
-    <md-button class="md-raised md-default" ng-click="sendToEhis()" ng-if="school && currentStatus === STATUS.PROCEEDING && !formState.sentToEhis">{{'main.button.sendToEhis' | translate}}</md-button>
-    <md-button class="md-raised md-default" ng-click="updateFromEhis()" ng-show="school && formState.readOnly && currentStatus === STATUS.PROCEEDING && formState.sentToEhis">{{'main.button.updateFromEhis' | translate}}</md-button>
-
-    <div ng-show="curriculum.id > 0 && !formState.readOnly">
-        <md-button ng-show="currentStatus === STATUS.ENTERING" ng-click="setStatusProceed()" class="md-raised">{{'main.button.status.approving' | translate}}</md-button>
-        <md-button ng-show="currentStatus === STATUS.ENTERING || currentStatus === STATUS.PROCEEDING || currentStatus === STATUS.VERIFIED" ng-click="setStatusClosed()" class="md-raised">{{'main.button.status.close' | translate}}</md-button>
-    </div>
-    <md-button ng-if="school && (currentStatus === STATUS.PROCEEDING || currentStatus === STATUS.VERIFIED) && formState.readOnly && !formState.sentToEhis" ng-click="setStatusClosed()" class="md-raised">{{'main.button.status.close' | translate}}</md-button>
-
-    <md-button ng-click="delete()" ng-show="curriculum.id" class="md-raised" ng-if="school && curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis || curriculum.status === STATUS.ENTERING && !formState.readOnly">{{'main.button.delete' | translate}}</md-button>
-    <md-button class="md-raised md-default" ng-click="back('#/curriculum')">{{'main.button.back' | translate}}</md-button>
-  </div>-->
-
     <div layout="row">
-        <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="canBeEdited() && !formState.sentToEhis">{{'main.button.change' | translate}}</md-button>
-        <md-button class="md-raised md-primary" ng-click="save()" ng-if="!formState.readOnly && !formState.sentToEhis">{{'main.button.save' | translate}}</md-button>
-
-        <md-button class="md-raised md-default" ng-click="sendToEhis()" ng-if="currentStatus === STATUS.PROCEEDING && !formState.sentToEhis && formState.readOnly">{{'main.button.sendToEhis' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="updateFromEhis()" ng-show="formState.readOnly && currentStatus === STATUS.PROCEEDING && formState.sentToEhis">{{'main.button.updateFromEhis' | translate}}</md-button>
-
-        <div ng-show="curriculum.id > 0 && !formState.readOnly">
-            <md-button ng-show="currentStatus === STATUS.ENTERING" ng-click="setStatusProceed()" class="md-raised">{{'main.button.status.approving' | translate}}</md-button>
+      <div ng-show="currentStatus === STATUS.ENTERING">
+        <div ng-show="!curriculum.id">
+          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
         </div>
-        <md-button ng-if="(currentStatus === STATUS.PROCEEDING || currentStatus === STATUS.VERIFIED) && formState.readOnly && !formState.sentToEhis || (curriculum.id && currentStatus === STATUS.ENTERING && !formState.readOnly)" ng-click="setStatusClosed()" class="md-raised">{{'main.button.status.close' | translate}}</md-button>
-
-        <md-button class="md-raised md-default" ng-click="delete()" ng-if="curriculum.id && !formState.readOnly && (curriculum.status === STATUS.PROCEEDING || curriculum.status === STATUS.ENTERING) && !formState.sentToEhis">{{'main.button.delete' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-href="/#/curriculum">{{'main.button.back' | translate}}</md-button>
+        <div ng-show="curriculum.id && !formState.readOnly">
+          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="setStatusProceed()">{{'main.button.status.approving' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        </div>
+        <div ng-show="curriculum.id && formState.readOnly">
+          <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+        </div>
+      </div>
+      <div ng-show="currentStatus === STATUS.PROCEEDING && !formState.sentToEhis">
+        <div ng-show="!formState.readOnly">
+          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        </div>
+        <div ng-show="formState.readOnly">
+          <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="sendToEhis()">{{'main.button.sendToEhis' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
+        </div>
+      </div>
+      <div ng-show="currentStatus === STATUS.PROCEEDING && formState.sentToEhis">
+        <md-button class="md-raised md-default" ng-click="updateFromEhis()">{{'main.button.updateFromEhis' | translate}}</md-button>
+      </div>
+      <div ng-show="currentStatus === STATUS.VERIFIED">
+        <div ng-show="!formState.readOnly">
+          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+        </div>
+        <div ng-show="formState.readOnly">
+          <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
+        </div>
+      </div>
+      <md-button class="md-raised md-default" ng-click="back('#/curriculum')">{{'main.button.back' | translate}}</md-button>
     </div>
-
 </div>
+
+
+<style>
+  .lowerBorder {
+    border-bottom: solid 1px #E0E0E0;
+  }
+</style>

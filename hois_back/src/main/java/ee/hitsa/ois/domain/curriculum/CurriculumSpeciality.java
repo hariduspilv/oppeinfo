@@ -19,8 +19,9 @@ import org.hibernate.validator.constraints.NotBlank;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.util.Translatable;
 @Entity
-public class CurriculumSpeciality extends BaseEntityWithId {
+public class CurriculumSpeciality extends BaseEntityWithId implements Translatable {
 
 	private static final long serialVersionUID = 8173305313184771116L;
 
@@ -61,8 +62,8 @@ public class CurriculumSpeciality extends BaseEntityWithId {
     }
 
     public Long getReferenceNumber() {
-        AssertionFailedException.throwIf(referenceNumber == null && this.getId() == null, "Speciality should whether be saved before or have a reference number!");
-        return referenceNumber != null ? referenceNumber : this.getId();
+        AssertionFailedException.throwIf(referenceNumber == null && getId() == null, "Speciality should whether be saved before or have a reference number!");
+        return referenceNumber != null ? referenceNumber : getId();
     }
 
     public void setReferenceNumber(Long referenceNumber) {
@@ -77,6 +78,7 @@ public class CurriculumSpeciality extends BaseEntityWithId {
         this.curriculum = curriculum;
     }
 
+    @Override
     public String getNameEt() {
 		return nameEt;
 	}
@@ -85,7 +87,8 @@ public class CurriculumSpeciality extends BaseEntityWithId {
 		this.nameEt = nameEt;
 	}
 
-	public String getNameEn() {
+	@Override
+    public String getNameEn() {
 		return nameEn;
 	}
 

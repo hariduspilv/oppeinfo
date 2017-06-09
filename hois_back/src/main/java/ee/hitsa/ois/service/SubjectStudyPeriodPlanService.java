@@ -95,7 +95,7 @@ public class SubjectStudyPeriodPlanService {
         List<Curriculum> curriculums = curriculumRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            filters.add(cb.equal(root.get("status").get("code"), "OPPEKAVA_STAATUS_K"));
+            filters.add(cb.equal(root.get("status").get("code"), "OPPEKAVA_STAATUS_K")); // TODO use enum
             filters.add(cb.equal(root.get("higher"), Boolean.TRUE));
             
             if(!CollectionUtils.isEmpty(criteria.getSubjects())) {

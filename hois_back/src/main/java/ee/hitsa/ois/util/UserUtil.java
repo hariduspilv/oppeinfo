@@ -129,11 +129,9 @@ public abstract class UserUtil {
     }
 
     public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user) {
-        if (!user.isSchoolAdmin() && !user.isTeacher()) {
-            AssertionFailedException.throwIf(!user.isSchoolAdmin(), "User is not school admin");
-            AssertionFailedException.throwIf(!user.isTeacher(), "User is not school teacher");
-        }
+        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isTeacher(), "User is not school admin or teacher");
     }
+
     public static void assertCanUpdateUser(String role) {
         AssertionFailedException.throwIf(role.equals(Role.ROLL_T.name()) || role.equals(Role.ROLL_L.name()),"Invalid role");
     }

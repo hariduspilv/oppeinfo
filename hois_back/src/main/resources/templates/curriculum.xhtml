@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Õppekava</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+    </style>
+  </head>
+  <body>
+    <table class="reporttable">
+      <tr>
+        <td class="reporttableheader" colspan="2">{{ "report.curriculum.curriculum" | translate }}</td>
+      </tr>
+      <tr>
+        <td class="label">1. {{ "report.curriculum.name" | translate }}</td>
+        <td>{{ content.nameEt }}</td>
+      </tr>
+      <tr>
+        <td class="label">2. {{ "report.curriculum.nameEn" | translate }}</td>
+        <td>{{ content.nameEn }}</td>
+      </tr>
+      <tr>
+        <td class="label">4. {{ "report.curriculum.studyForm" | translate }}</td>
+        <td>{{ content.studyForm }}</td>
+      </tr>
+      <tr>
+        <td class="label">5. {{ "report.curriculum.school" | translate }}</td>
+        <td>{{ content.school }}</td>
+      </tr>
+      <tr>
+        <td class="label">6. {{ "report.curriculum.credits" | translate }}</td>
+        <td>{{ content.credits }}</td>
+      </tr>
+      <tr>
+        <td class="label">7. {{ "report.curriculum.studyPeriod" | translate }}</td>
+        <td>{{ content.studyPeriod }}</td>
+      </tr>
+      <tr>
+        <td class="label">8. {{ "report.curriculum.group" | translate }}</td>
+        <td>{{ content.group }}</td>
+      </tr>
+      <tr>
+        <td class="label">9. {{ "report.curriculum.merCode" | translate }}</td>
+        <td>{{ content.merCode }}</td>
+      </tr>
+      <tr>
+        <td class="label">10. {{ "report.curriculum.studyLang" | translate }}</td>
+        <td>{{ content.studyLang }}</td>
+      </tr>
+      <tr>
+        <td class="label">11. {{ "report.curriculum.otherLanguages" | translate }}</td>
+        <td>{{ content.otherLanguages }}</td>
+      </tr>
+      <tr>
+        <td class="label">12. {{ "report.curriculum.merRegDate" | translate }}</td>
+        <td>{{ content.merRegDate | hoisDate }}</td>
+      </tr>
+      <tr>
+        <td class="label">14. {{ "report.curriculum.admissionRequirements" | translate }}</td>
+        <td>{{ content.admissionRequirements }}</td>
+      </tr>
+      <tr>
+        <td class="label">15. {{ "report.curriculum.specialities" | translate }}</td>
+        <td>
+        {% for specialty in content.specialities %}
+          {% if loop.index > 0 %}
+            <br/>
+          {% endif %}
+          {{ specialty }}
+        {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <td class="label">17. {{ "report.curriculum.objectives" | translate }}</td>
+        <td>{{ content.objectives }}</td>
+      </tr>
+      <tr>
+        <td class="label">18. {{ "report.curriculum.outcomes" | translate }}</td>
+        <td>{{ content.outcomes }}</td>
+      </tr>
+      <tr>
+        <td class="label">19. {{ "report.curriculum.grade" | translate }}</td>
+        <td>{{ content.grade }}</td>
+      </tr>
+      <tr>
+        <td class="label">21. {{ "report.curriculum.structure" | translate }}</td>
+        <td>{{ content.structure }}</td>
+      </tr>
+      <tr>
+        <td class="label">22. {{ "report.curriculum.specialization" | translate }}</td>
+        <td>{{ content.specialization }}</td>
+      </tr>
+      <tr>
+        <td class="label">23. {{ "report.curriculum.graduationRequirements" | translate }}</td>
+        <td>{{ content.graduationRequirements }}</td>
+      </tr>
+      <tr>
+        <td class="label">24. {{ "report.curriculum.addInfo" | translate }}</td>
+        <td>{{ content.addInfo }}</td>
+      </tr>
+    </table>
+  </body>
+</html>

@@ -112,6 +112,7 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       return $resource(basePath, {}, {
           // crud
           save:   {method: 'POST', interceptor: resourceErrorHandler},
+          post:   {method: 'POST', isArray: true, interceptor: resourceErrorHandler},
           get:    {method: 'GET', url: idPath , interceptor: resourceErrorHandler},
           update: {method: 'PUT', url: idPath, params: {id: '@id'}, interceptor: resourceErrorHandler},
           delete: {method: 'DELETE', url: idPath, params: {id: '@id', version: '@version'}, interceptor: resourceErrorHandler},

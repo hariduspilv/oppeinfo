@@ -1,34 +1,23 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
-import javax.validation.Valid;
-import javax.validation.constraints.NotNull;
-
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
-import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
-import ee.hitsa.ois.web.commandobject.OisFileCommand;
-import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.commandobject.CurriculumFileForm;
+import ee.hitsa.ois.web.commandobject.CurriculumFileUpdateDto;
+import ee.hitsa.ois.web.dto.OisFileDto;
 
-public class CurriculumFileDto extends VersionedCommand {
+public class CurriculumFileDto extends CurriculumFileForm {
 
     private Long id;
-    @NotNull
-    private Boolean ehis;
-    @NotNull
-    private Boolean sendEhis;
-    @NotNull
-    @Valid
-    private OisFileCommand oisFile;
-    @NotEmpty
-    @ClassifierRestriction(MainClassCode.EHIS_FAIL)
-    private String ehisFile;
 
     public static CurriculumFileDto of(CurriculumFile curriculumFile) {
         CurriculumFileDto dto = EntityUtil.bindToDto(curriculumFile, new CurriculumFileDto());
-        dto.setOisFile(EntityUtil.bindToDto(curriculumFile.getOisFile(), new OisFileCommand()));
+        dto.setOisFile(EntityUtil.bindToDto(curriculumFile.getOisFile(), new OisFileDto()));
         return dto;
+    }
+    
+    public static CurriculumFileDto of(CurriculumFileUpdateDto updateDto) {
+        return EntityUtil.bindToDto(updateDto, new CurriculumFileDto());
     }
 
     public Long getId() {
@@ -37,35 +26,5 @@ public class CurriculumFileDto extends VersionedCommand {
 
     public void setId(Long id) {
         this.id = id;
-    }
-    public String getEhisFile() {
-        return ehisFile;
-    }
-    public void setEhisFile(String ehisFile) {
-        this.ehisFile = ehisFile;
-    }
-
-    public Boolean getEhis() {
-        return ehis;
-    }
-
-    public void setEhis(Boolean ehis) {
-        this.ehis = ehis;
-    }
-
-    public Boolean getSendEhis() {
-        return sendEhis;
-    }
-
-    public void setSendEhis(Boolean sendEhis) {
-        this.sendEhis = sendEhis;
-    }
-
-    public OisFileCommand getOisFile() {
-        return oisFile;
-    }
-
-    public void setOisFile(OisFileCommand oisFile) {
-        this.oisFile = oisFile;
     }
 }

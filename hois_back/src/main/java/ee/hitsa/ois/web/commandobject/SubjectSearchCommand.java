@@ -9,6 +9,7 @@ public class SubjectSearchCommand extends SearchCommand {
     private Collection<Long> departments;
     private Collection<String> assessments;
     private Collection<Long> curricula;
+    private Collection<Long> curriculaVersion;
     private Collection<String> status;
     private Collection<String> ehisSchools;
     private BigDecimal from;
@@ -76,5 +77,13 @@ public class SubjectSearchCommand extends SearchCommand {
 
     public void setThru(BigDecimal thru) {
         this.thru = thru;
+    }
+
+    public Collection<Long> getCurriculaVersion() {
+        return curriculaVersion;
+    }
+
+    public void setCurriculaVersion(Collection<Long> curriculaVersion) {
+        this.curriculaVersion = curriculaVersion;
     }
 }

@@ -59,10 +59,10 @@
             </md-input-container>
             <md-input-container>
                 <label>{{'certificate.signatory' | translate}}</label>
-                <md-select ng-model="record.signatoryIdcode" 
+                <md-select ng-model="record.signatoryIdcode"
                            aria-label="{{'certificate.signatory' | translate}}" required>
                   <md-option ng-value="signatory.idcode" ng-repeat="signatory in signatories">
-                    {{ signatory.name }}
+                    {{::signatory.name}}
                  </md-option>
                 </md-select>
             </md-input-container>

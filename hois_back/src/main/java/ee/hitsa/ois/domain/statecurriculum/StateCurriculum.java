@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.statecurriculum;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -15,9 +16,10 @@ import javax.persistence.Transient;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.util.Translatable;
 
 @Entity
-public class StateCurriculum extends BaseEntityWithId {
+public class StateCurriculum extends BaseEntityWithId implements Translatable {
 	
 	private static final long serialVersionUID = 1457162479961880680L;
 	
@@ -33,7 +35,7 @@ public class StateCurriculum extends BaseEntityWithId {
 	private String graduationRequirementsEn;
 	private Long credits;
 	private String practiceDescription;
-	private Double optionalStudyCredits;
+	private BigDecimal optionalStudyCredits;
 	private LocalDate validFrom;
 	private LocalDate validThru;
 
@@ -105,6 +107,7 @@ public class StateCurriculum extends BaseEntityWithId {
 		this.stateCurrClass = stateCurrClass;
 	}
 
+	@Override
 	public String getNameEn() {
 		return nameEn;
 	}
@@ -113,6 +116,7 @@ public class StateCurriculum extends BaseEntityWithId {
 		this.nameEt = nameEt;
 	}
 
+	@Override
 	public String getNameEt() {
 		return nameEt;
 	}
@@ -209,11 +213,11 @@ public class StateCurriculum extends BaseEntityWithId {
 		this.finalExamDescription = finalExamDescription;
 	}
 
-	public Double getOptionalStudyCredits() {
+	public BigDecimal getOptionalStudyCredits() {
 		return optionalStudyCredits;
 	}
 
-	public void setOptionalStudyCredits(Double optionalStudyCredits) {
+	public void setOptionalStudyCredits(BigDecimal optionalStudyCredits) {
 		this.optionalStudyCredits = optionalStudyCredits;
 	}
 

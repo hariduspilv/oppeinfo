@@ -2,8 +2,8 @@ package ee.hitsa.ois.web.dto.sais;
 
 import java.time.LocalDate;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.sais.SaisApplication;
+import ee.hitsa.ois.util.EntityUtil;
 
 public class SaisApplicationImportedRowDto {
 
@@ -44,10 +44,9 @@ public class SaisApplicationImportedRowDto {
         this.firstName = application.getFirstname();
         this.lastName = application.getLastname();
         this.admissionCode = application.getSaisAdmission().getCode();
-        this.applicationStatus = application.getStatus().getCode();
+        this.applicationStatus = EntityUtil.getCode(application.getStatus());
     }
-    
-    
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

@@ -16,19 +16,19 @@
 
         <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'lessonplan.schoolDepartment' | translate}}</label>
-          <hois-select ng-model="criteria.schoolDepartment" type="schooldepartment"></hois-select>
+          <hois-school-department-select ng-model="criteria.schoolDepartment"></hois-school-department-select>
         </md-input-container>
       </div>
 
 	  <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'lessonplan.curriculumVersion' | translate}}</label>
-          <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion" criteria="{valid: true}"></hois-select>
+          <hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions"></hois-select>
         </md-input-container>
 
         <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'lessonplan.studentGroup' | translate}}</label>
-          <hois-select ng-model="criteria.studentGroup" type="studentgroup"></hois-select>
+          <hois-select ng-model="criteria.studentGroup" values="formState.studentGroups"></hois-select>
         </md-input-container>
       </div>
 

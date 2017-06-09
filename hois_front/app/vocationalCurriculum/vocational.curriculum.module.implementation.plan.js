@@ -3,7 +3,7 @@
 angular.module('hitsaOis')
   .controller('VocationalCurriculumModuleImplementationPlanController',
 
-  function ($scope, Curriculum, Classifier, ClassifierConnect, QueryUtils, DataUtils, message, $location, $route, $q, dialogService, $routeParams, ArrayUtils, $rootScope) {
+  function ($scope, Curriculum, Classifier, ClassifierConnect, QueryUtils, DataUtils, message, $location, $route, $q, dialogService, $routeParams, ArrayUtils, $rootScope, $http, config) {
     var curriculumEntity = $route.current.locals.curriculum;
     $scope.initializing = true;
     var capacitiesData = [];
@@ -38,13 +38,6 @@ angular.module('hitsaOis')
       $scope.implementationPlan = entity;
     }
     $scope.currentStatus = $scope.implementationPlan.status;
-
-    $scope.codeUniqueQuery = {
-      fk: curriculumEntity.id,
-      paramName: 'code',
-      url: '/curriculum/version//unique',
-      id: angular.isDefined($scope.implementationPlan.id) ? $scope.implementationPlan.id : undefined
-    };
 
     $scope.curriculumId = curriculumEntity.id;
     $scope.studyForms = curriculumEntity.studyForms;
@@ -132,7 +125,6 @@ angular.module('hitsaOis')
       $scope.occupations = occupations;
       $scope.modules = curriculumEntity.modules;
       $scope.isOccupation = curriculumEntity.occupation;
-
       $scope.occupationModuleTypesModules = modulesView.occupationModuleTypesModules;
       $scope.modulesWithOutOccupation = modulesView.modulesWithOutOccupation;
       $scope.initializing = false;
@@ -168,6 +160,20 @@ angular.module('hitsaOis')
       null);
     };
 
+    function capacitiesToDto(capacities) {
+        return capacities.map(function(el){
+          return el.inputData;
+        }).filter(function(el){
+          return angular.isDefined(el.hours);
+        });
+    }
+
+    function getCapacityByType(capacities, typeCode) {
+      var capacity = capacities.find(function(el){
+        return el.capacityType === typeCode;
+      });
+      return capacity ? capacity : {capacityType: typeCode};
+    }
 
     var openAddThemeDialog = function(occupationModule, curriculumModule) {
       return function(occupationModuleTheme) {
@@ -191,8 +197,19 @@ angular.module('hitsaOis')
               dialogScope.occupationModuleTheme.hours = 26 * dialogScope.occupationModuleTheme.credits;
             }
           };
+
+          function capacitiesDtoToModel() {
+            dialogScope.capacities.forEach(function(el){
+              el.inputData = {};
+              var capacity = getCapacityByType(dialogScope.occupationModuleTheme.capacities, el.code);
+              angular.extend(el.inputData, capacity);
+            });
+          }
+          capacitiesDtoToModel();
         },
         function(submittedDialogScope) {
+          submittedDialogScope.occupationModuleTheme.capacities = capacitiesToDto(submittedDialogScope.capacities);
+
           if (!angular.isDefined(occupationModuleTheme)) {
             occupationModule.themes.push(submittedDialogScope.occupationModuleTheme);
           }
@@ -232,32 +249,85 @@ angular.module('hitsaOis')
       }
     };
 
+    function getModulesOccupationModule(curriculumModule) {
+      var occupationModule;
+      entity.occupationModules.forEach(function(it) {
+        if (angular.isDefined(curriculumModule) && it.curriculumModule === curriculumModule.id) {
+          occupationModule = it;
+        }
+      });
+      return occupationModule;
+    }
+
+    $scope.getModulesOccupationModule = function(curriculumModule) {
+        var occupationModule = getModulesOccupationModule(curriculumModule);
+        return occupationModule ? occupationModule : {yearCapacities: ['', '', '']};
+    };
+
     $scope.openAddModuleDataDialog = function(curriculumModule, moduleData) {
       dialogService.showDialog('vocationalCurriculum/module.data.add.dialog.html',
       function(dialogScope) {
         dialogScope.capacities = capacitiesData;
         dialogScope.formState = $scope.formState;
-        var occupationModule;
-        entity.occupationModules.forEach(function(it) {
-          if (angular.isDefined(curriculumModule) && it.curriculumModule === curriculumModule.id) {
-            occupationModule = it;
-          }
-        });
-
+        var occupationModule = getModulesOccupationModule(curriculumModule);
         if (angular.isDefined(occupationModule)) {
           dialogScope.occupationModule = occupationModule;
         } else {
           occupationModule = {
               curriculumModule: curriculumModule.id,
               capacities: [],
-              yearCapacities: [],
-              assessment: 'KUTSEHINDAMISVIIS_E'
+              yearCapacities: [
+                {credits: 0, studyYearNumber: 1},
+                {credits: 0, studyYearNumber: 2},
+                {credits: 0, studyYearNumber: 3}
+              ],
+              assessment: 'KUTSEHINDAMISVIIS_E',
+              themes: []
             };
           if (angular.isDefined(moduleData)) {
             angular.extend(occupationModule, moduleData);
           }
           dialogScope.occupationModule = occupationModule;
         }
+
+        function getThemesCapacityByType(theme, typeCode) {
+          var capacity = theme.capacities.find(function(el){
+            return el.capacityType === typeCode;
+          });
+          return capacity ? capacity.hours : 0;
+        }
+
+        function getAllThemesCapacitiesByType(typeCode) {
+          var themes = dialogScope.occupationModule.themes;
+          var sum = 0;
+          for(var i = 0; i < themes.length; i++) {
+            sum += getThemesCapacityByType(themes[i], typeCode);
+          }
+          return sum;
+        }
+
+       function hasThemesWithCapacities(moduleData) {
+            if(ArrayUtils.isEmpty(moduleData.themes)) {
+              return false;
+            }
+            return angular.isDefined(moduleData.themes.find(function(el){
+              return !ArrayUtils.isEmpty(el.capacities);
+            }));
+        }
+
+        dialogScope.hasThemesWithCapacities = hasThemesWithCapacities(occupationModule);
+
+        function capacitiesDtoToModel() {
+          dialogScope.capacities.forEach(function(el){
+            el.inputData = {};
+            var capacity = getCapacityByType(dialogScope.occupationModule.capacities, el.code);
+            if(dialogScope.hasThemesWithCapacities) {
+              capacity.hours = getAllThemesCapacitiesByType(el.code);
+            }
+            angular.extend(el.inputData, capacity);
+          });
+        }
+        capacitiesDtoToModel();
 
         dialogScope.openAddThemeDialog = openAddThemeDialog(dialogScope.occupationModule, curriculumModule);
         dialogScope.occupationModule.yearCapacities.sort(function(a, b) {
@@ -266,6 +336,9 @@ angular.module('hitsaOis')
         calculateYearCapacities(dialogScope.occupationModule.themes, dialogScope.occupationModule.yearCapacities);
       },
       function(submittedDialogScope) {
+
+        submittedDialogScope.occupationModule.capacities = capacitiesToDto(submittedDialogScope.capacities);
+
         var isUpdate = false;
         $scope.implementationPlan.occupationModules.forEach(function(it) {
           if(it.curriculumModule === submittedDialogScope.occupationModule.curriculumModule) {
@@ -296,6 +369,10 @@ angular.module('hitsaOis')
         }
       });
       return isSaved;
+    };
+
+    $scope.isModuleValid = function(curriculumModule) {
+      return $scope.isOccupationModuleDataSaved(curriculumModule) || curriculumModule.module === 'KUTSEMOODUL_V';
     };
 
     $scope.copy = function() {
@@ -331,7 +408,7 @@ angular.module('hitsaOis')
         });
       }
 
-      $location.path('/vocationalCurriculum/'+curriculumEntity.id+'/edit/moduleImplementationPlan/new').search({_noback: true});
+      $location.path('/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/new').search({_noback: true});
       $routeParams.implementationPlanCopy = copy;
       $route.current.locals.implementationPlanCopy = copy;
       $route.current.params.implementationPlanCopy = copy;
@@ -355,7 +432,7 @@ angular.module('hitsaOis')
             return false;
         }
         for(var i = 0; i < $scope.modules.length; i++) {
-            if(!$scope.isOccupationModuleDataSaved($scope.modules[i])) {
+            if(!$scope.isModuleValid($scope.modules[i])) {
                 return false;
             }
         }
@@ -381,15 +458,17 @@ angular.module('hitsaOis')
             $scope.implementationPlan.version = response.version;
 
             var status = response.status;
-            if($scope.currentStatus !== status && (status === Curriculum.VERSION_STATUS.K || status === Curriculum.VERSION_STATUS.C)) {
-                $location.path('/vocationalCurriculum/'+curriculumEntity.id+'/view/moduleImplementationPlan/' + response.id + '/view').search({_noback: true});
+            if($scope.currentStatus !== status && !$scope.formState.readOnly) {
+                $location.path('/vocationalCurriculum/' + curriculumEntity.id +
+                '/view/moduleImplementationPlan/' + response.id + '/view').search({_noback: true});
             }
             $scope.currentStatus = status;
           });
         } else {
           curriculumVersion.$save().then(function(response) {
             message.info('main.messages.create.success');
-            $location.path('/vocationalCurriculum/'+curriculumEntity.id+'/edit/moduleImplementationPlan/' + response.id + '/edit').search({_noback: true});
+            $location.path('/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/' + response.id + '/edit')
+            .search({_noback: true});
           });
         }
 
@@ -405,7 +484,7 @@ angular.module('hitsaOis')
         var curriculumVersion = new CurriculumVersionEndpoint($scope.implementationPlan);
         curriculumVersion.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $rootScope.back('#/vocationalCurriculum/'+curriculumEntity.id+'/edit/moduleImplementationPlan/' + $scope.implementationPlan.id + '/edit');
+          $rootScope.back('#/vocationalCurriculum/ '+ curriculumEntity.id + '/view/moduleImplementationPlan/' + $scope.implementationPlan.id + '/view');
         });
       });
     };
@@ -440,14 +519,15 @@ angular.module('hitsaOis')
         if(!$scope.curriculumId) {
             return;
         }
+        var url = '/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/' + $scope.implementationPlan.id + '/edit';
         if($scope.implementationPlan.status === Curriculum.VERSION_STATUS.K) {
             dialogService.confirmDialog({
             prompt: 'curriculum.statuschange.implementationPlan.prompt.editAccepted',
             }, function(){
-                $location.path('/vocationalCurriculum/'+curriculumEntity.id+'/edit/moduleImplementationPlan/' + $scope.implementationPlan.id + '/edit').search({_noback: true});
+                $location.path(url).search({_noback: true});
             });
         } else {
-            $location.path('/vocationalCurriculum/'+curriculumEntity.id+'/edit/moduleImplementationPlan/' + $scope.implementationPlan.id + '/edit').search({_noback: true});
+            $location.path(url).search({_noback: true});
         }
     };
 
@@ -487,6 +567,25 @@ angular.module('hitsaOis')
         }) : [];
         return !ArrayUtils.isEmpty(thisTypeModules);
     };
+
+    $scope.codeNameUnique = true;
+    $scope.$watch('implementationPlan.code', function(){
+      if($scope.implementationPlan.code) {
+        $http({
+          url: config.apiUrl + '/curriculum/unique/version/code',
+          method: "GET",
+          params: {
+            paramName: 'nameEt',
+            paramValue: $scope.implementationPlan.code,
+            id: $route.current.params.versionId
+          }
+        }).then(function(response) {
+          $scope.codeNameUnique = response.data;
+        });
+      } else {
+        $scope.codeNameUnique = true;
+      }
+    });
 
 
   });

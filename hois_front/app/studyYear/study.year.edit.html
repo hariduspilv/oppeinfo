@@ -23,38 +23,38 @@
       </div>
     </div>
     <div ng-if="studyYear.id" layout="column" flex>
-       <div>&nbsp;</div>
-	  <fieldset tabindex="1">
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'studyYear.studyPeriods' | translate}}</legend>
-			<md-button class="md-raised" ng-click="openStudyPeriodDialog()">{{'main.button.create' | translate}}</md-button>
+      <div>&nbsp;</div>
+      <fieldset tabindex="1">
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'studyYear.studyPeriods' | translate}}</legend>
+        <md-button class="md-raised" ng-click="openStudyPeriodDialog()">{{'main.button.create' | translate}}</md-button>
 
-      <div layout="row">
-        <table md-table class="secondary-table">
-          <thead md-head>
-          <tr md-row>
-            <th md-column>{{'studyYear.studyPeriod.type' | translate}}</th>
-            <th md-column>{{'studyYear.studyPeriod.name' | translate}}</th>
-            <th md-column>{{'studyYear.studyPeriod.startDate' | translate}}</th>
-            <th md-column>{{'studyYear.studyPeriod.endDate' | translate}}</th>
-            <th md-column></th>
-          </tr>
-          </thead>
-          <tbody md-body>
-          <tr md-row ng-repeat="item in studyPeriods | orderBy: ['startDate', 'endDate', 'id']" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{currentLanguageNameField(item.type)}}</td>
-            <td md-cell>{{currentLanguageNameField(item)}}</td>
-            <td md-cell>{{item.startDate | hoisDate}}</td>
-            <td md-cell>{{item.endDate | hoisDate}}</td>
-            <td md-cell ><md-button ng-click="openStudyPeriodDialog(item)" class="md-primary change-button">{{'main.button.change' | translate}}</md-button></td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-	  </fieldset>
-	  <div>&nbsp;</div>
-	   <fieldset>
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'studyYear.studyPeriodEvents' | translate}}</legend>
-            <md-button class="md-raised" ng-click="openStudyPeriodEventDialog()">{{'main.button.create' | translate}}</md-button>
+        <div layout="row">
+          <table md-table class="secondary-table">
+            <thead md-head>
+            <tr md-row>
+              <th md-column>{{'studyYear.studyPeriod.type' | translate}}</th>
+              <th md-column>{{'studyYear.studyPeriod.name' | translate}}</th>
+              <th md-column>{{'studyYear.studyPeriod.startDate' | translate}}</th>
+              <th md-column>{{'studyYear.studyPeriod.endDate' | translate}}</th>
+              <th md-column></th>
+            </tr>
+            </thead>
+            <tbody md-body>
+            <tr md-row ng-repeat="item in studyPeriods | orderBy: ['startDate', 'endDate', 'id']" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{currentLanguageNameField(item.type)}}</td>
+              <td md-cell>{{currentLanguageNameField(item)}}</td>
+              <td md-cell>{{item.startDate | hoisDate}}</td>
+              <td md-cell>{{item.endDate | hoisDate}}</td>
+              <td md-cell ><md-button ng-click="openStudyPeriodDialog(item)" class="md-primary change-button">{{'main.button.change' | translate}}</md-button></td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </fieldset>
+      <div>&nbsp;</div>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'studyYear.studyPeriodEvents' | translate}}</legend>
+        <md-button class="md-raised" ng-click="openStudyPeriodEventDialog()">{{'main.button.create' | translate}}</md-button>
         <div layout="row">
           <table md-table class="secondary-table">
             <thead md-head>
@@ -77,8 +77,7 @@
             </tbody>
           </table>
         </div>
-		</fieldset>
-      </div>
+      </fieldset>
     </div>
     <div layout="row">
       <md-button ng-href="#/school/studyYears" class="md-raised">{{'main.button.back' | translate}}</md-button>

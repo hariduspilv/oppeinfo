@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -40,15 +41,15 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     @NotNull
     @Min(0)
     @Max(999)
-    private Double totalCredits;
+    private BigDecimal totalCredits;
     @NotNull
     @Min(0)
     @Max(999)
-    private Double optionalStudyCredits;
+    private BigDecimal optionalStudyCredits;
     @NotNull
     @Min(0)
     @Max(999)
-    private Double compulsoryStudyCredits;
+    private BigDecimal compulsoryStudyCredits;
     @NotNull
     @Min(0)
     @Max(999)
@@ -72,7 +73,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
                 "electiveModules", "specialities", "subjects");
 
         dto.setElectiveModules(StreamUtil.toMappedSet(CurriculumVersionElectiveModuleDto::of, module.getElectiveModules()));
-        dto.setSubjects(StreamUtil.toMappedSet(s -> CurriculumVersionHigherModuleSubjectDto.of(s, dto.getElectiveModules()), module.getSubjects()));
+        dto.setSubjects(StreamUtil.toMappedSet(s -> CurriculumVersionHigherModuleSubjectDto.of(s), module.getSubjects()));
         dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(m -> EntityUtil.getId(m.getSpeciality().getCurriculumSpeciality()), module.getSpecialities()));
         return dto;
     }
@@ -157,27 +158,27 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         this.typeNameEn = typeNameEn;
     }
 
-    public Double getTotalCredits() {
+    public BigDecimal getTotalCredits() {
         return totalCredits;
     }
 
-    public void setTotalCredits(Double totalCredits) {
+    public void setTotalCredits(BigDecimal totalCredits) {
         this.totalCredits = totalCredits;
     }
 
-    public Double getOptionalStudyCredits() {
+    public BigDecimal getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Double optionalStudyCredits) {
+    public void setOptionalStudyCredits(BigDecimal optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 
-    public Double getCompulsoryStudyCredits() {
+    public BigDecimal getCompulsoryStudyCredits() {
         return compulsoryStudyCredits;
     }
 
-    public void setCompulsoryStudyCredits(Double compulsoryStudyCredits) {
+    public void setCompulsoryStudyCredits(BigDecimal compulsoryStudyCredits) {
         this.compulsoryStudyCredits = compulsoryStudyCredits;
     }
 

@@ -3,7 +3,6 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,10 +25,10 @@ import ee.hitsa.ois.domain.Building;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.RoomEquipment;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.BuildingRepository;
 import ee.hitsa.ois.repository.RoomRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
@@ -51,12 +50,10 @@ public class BuildingService {
     private EntityManager em;
     @Autowired
     private RoomRepository roomRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
 
     public Building create(HoisUserDetails user, BuildingForm form) {
         Building building = new Building();
-        building.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        building.setSchool(em.getReference(School.class, user.getSchoolId()));
         return save(building, form);
     }
 
@@ -100,15 +97,12 @@ public class BuildingService {
     public Room save(HoisUserDetails user, Room room, RoomForm form) {
         EntityUtil.bindToEntity(form, room, "roomEquipment");
         if(!Objects.equals(form.getBuilding(), EntityUtil.getNullableId(room.getBuilding()))) {
-            Building building = buildingRepository.getOne(form.getBuilding());
+            Building building = em.getReference(Building.class, form.getBuilding());
             UserUtil.assertSameSchool(user, building.getSchool());
             room.setBuilding(building);
         }
 
-        List<RoomForm.RoomEquipmentCommand> newRoomEquipment = form.getRoomEquipment();
-        if(newRoomEquipment == null) {
-            newRoomEquipment = Collections.emptyList();
-        }
+        List<RoomForm.RoomEquipmentCommand> newRoomEquipment = StreamUtil.nullSafeList(form.getRoomEquipment());
 
         // check for duplicate rows
         AssertionFailedException.throwIf(StreamUtil.toMappedSet(RoomForm.RoomEquipmentCommand::getEquipment, newRoomEquipment).size() != newRoomEquipment.size(), "Duplicate values in equipment list");

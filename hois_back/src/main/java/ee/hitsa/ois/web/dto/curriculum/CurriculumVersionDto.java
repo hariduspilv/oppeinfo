@@ -5,6 +5,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
 
@@ -25,6 +26,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     @Size(max=255)
     private String code;
     @Min(0)
+    @Max(10000)
     private Integer admissionYear;
 
     @Size(max=4000)
@@ -57,11 +59,6 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     private Set<CurriculumVersionOccupationModuleDto> occupationModules;
     private Set<Long> specialitiesReferenceNumbers;
 
-    /**
-     * Curriculum specialities may be also added from curriculum version form
-     */
-    private Set<CurriculumSpecialityDto> newCurriculumSpecialities;
-
     public static CurriculumVersionDto of(CurriculumVersion version) {
         CurriculumVersionDto dto = EntityUtil.bindToDto(version, new CurriculumVersionDto(),
                 "modules", "specialities", "occupationModules", "curriculumStudyForm");
@@ -76,15 +73,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
         }
         return dto;
     }
-
-    public Set<CurriculumSpecialityDto> getNewCurriculumSpecialities() {
-        return newCurriculumSpecialities;
-    }
-
-    public void setNewCurriculumSpecialities(Set<CurriculumSpecialityDto> newCurriculumSpecialities) {
-        this.newCurriculumSpecialities = newCurriculumSpecialities;
-    }
-
+    
     public Set<Long> getSpecialitiesReferenceNumbers() {
         return specialitiesReferenceNumbers != null ? specialitiesReferenceNumbers : (specialitiesReferenceNumbers = new HashSet<>());
     }

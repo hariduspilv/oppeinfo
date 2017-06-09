@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.commandobject.CurriculumFileUpdateDto;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 
 public class CurriculumDto extends CurriculumForm {
@@ -24,13 +25,13 @@ public class CurriculumDto extends CurriculumForm {
         dto.setStudyLanguages(StreamUtil.toMappedSet(lang -> EntityUtil.getNullableCode(lang.getStudyLang()), curriculum.getStudyLanguages()));
         dto.setStudyForms(StreamUtil.toMappedSet(f -> EntityUtil.getNullableCode(f.getStudyForm()), curriculum.getStudyForms()));
         dto.setSchoolDepartments(StreamUtil.toMappedSet(d -> EntityUtil.getNullableId(d.getSchoolDepartment()), curriculum.getDepartments()));
-        dto.setFiles(StreamUtil.toMappedSet(CurriculumFileDto::of, curriculum.getFiles()));
         dto.setVersions(StreamUtil.toMappedSet(CurriculumVersionDto::of, curriculum.getVersions()));
         dto.setJointPartners(StreamUtil.toMappedSet(CurriculumJointPartnerDto::of, curriculum.getJointPartners()));
         dto.setSpecialities(StreamUtil.toMappedSet(CurriculumSpecialityDto::of, curriculum.getSpecialities()));
         dto.setModules(StreamUtil.toMappedSet(CurriculumModuleDto::of, curriculum.getModules()));
         dto.setOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
         dto.setGrades(StreamUtil.toMappedSet(CurriculumGradeDto::of, curriculum.getGrades()));
+        dto.setFiles(StreamUtil.toMappedSet(CurriculumFileUpdateDto::of, curriculum.getFiles()));
 
         return dto;
     }

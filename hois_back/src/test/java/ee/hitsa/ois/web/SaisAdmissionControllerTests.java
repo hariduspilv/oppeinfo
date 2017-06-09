@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.enums.FinSource;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 import ee.hitsa.ois.web.dto.sais.SaisAdmissionSearchDto;
@@ -42,7 +43,7 @@ public class SaisAdmissionControllerTests {
         uriBuilder.queryParam("type", "test");
         uriBuilder.queryParam("curriculumVersion", Long.valueOf(1));
         uriBuilder.queryParam("studyForm", "OPPEVORM_M");
-        uriBuilder.queryParam("fin", "FINALLIKAS_RE");
+        uriBuilder.queryParam("fin", FinSource.FINALLIKAS_RE.name());
         String url = uriBuilder.build().toUriString();
 
         responseEntity = restTemplate.getForEntity(url, SaisAdmissionSearchDto.class);

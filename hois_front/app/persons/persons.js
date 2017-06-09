@@ -67,7 +67,12 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
 
     $scope.personBack = function () {
       if (($scope.users && $scope.users.length > 0) || $scope.showSchool || !$scope.person.id) {
-        $rootScope.back('#' + baseUrl);
+        if (!$scope.person.id) {
+          $location.search('_noback', null);
+          $location.path(baseUrl)
+        } else {
+          $rootScope.back('#' + baseUrl);
+        }
       } else {
         dialogService.confirmDialog({prompt: 'person.back'}, function () {
           $rootScope.back('#' + baseUrl);

@@ -63,10 +63,37 @@ public class AutocompleteControllerTests {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uri);
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.BAD_REQUEST, responseEntity.getStatusCode());
+        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
 
         uriBuilder = UriComponentsBuilder.fromUriString(uri);
         uriBuilder.queryParam("mainClassCode", "OPPURSTAATUS");
+        responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uriBuilder = UriComponentsBuilder.fromUriString(uri);
+        uriBuilder.queryParam("mainClassCodes", "OPPURSTAATUS");
+        responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void classifiersWithParents() {
+        String uri = "/autocomplete/classifiers/withparents";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uri);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
+
+        uriBuilder = UriComponentsBuilder.fromUriString(uri);
+        uriBuilder.queryParam("mainClassCode", "OPPURSTAATUS");
+        responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uriBuilder = UriComponentsBuilder.fromUriString(uri);
+        uriBuilder.queryParam("mainClassCodes", "OPPURSTAATUS");
         responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -96,12 +123,27 @@ public class AutocompleteControllerTests {
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/curriculumversions?higher=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
     public void directiveCoordinators() {
         String uri = "/autocomplete/directivecoordinators";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/directivecoordinators?isDirective=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/directivecoordinators?isCertificate=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
@@ -172,6 +214,11 @@ public class AutocompleteControllerTests {
     public void studentgroups() {
         String uri = "/autocomplete/studentgroups?valid=true";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/studentgroups?higher=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

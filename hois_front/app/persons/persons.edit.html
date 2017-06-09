@@ -45,15 +45,15 @@
     <md-button ng-click="personBack()" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </form>
   <div ng-if="person.id">
-  <div>&nbsp;</div>
-  <fieldset>
-   <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'user.role' | translate}}</legend>
-    <div layout="row" class="align-center">
-      <md-button class="md-raised" ng-if="person.id" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
-    </div >
-    <div layout="row">
-      <div ng-include="'persons/users.table.html'" flex></div>
-    </div>
-	</div>
+    <div>&nbsp;</div>
+    <fieldset>
+     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'user.role' | translate}}</legend>
+      <div layout="row" class="align-center">
+        <md-button class="md-raised" ng-if="person.id" ng-href="#/persons/{{::person.id}}/users/new">{{'main.button.create' | translate}}</md-button>
+      </div >
+      <div layout="row">
+        <div ng-include="'persons/users.table.html'" flex></div>
+      </div>
+    </fieldset>
   </div>
 </div>

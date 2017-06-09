@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.service.LessonPlanService;
@@ -30,6 +32,7 @@ import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchDto;
@@ -64,7 +67,15 @@ public class LessonPlanController {
     @GetMapping("/{id:\\d+}")
     public LessonPlanDto get(HoisUserDetails user, @WithEntity("id") LessonPlan lessonPlan) {
         UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
-        return LessonPlanDto.of(lessonPlan);
+        return lessonPlanService.get(lessonPlan);
+    }
+
+    @GetMapping("/byteacher/{id:\\d+}/{sy:\\d+}")
+    public LessonPlanByTeacherDto get(HoisUserDetails user, @WithEntity("id") Teacher teacher, @WithEntity("sy") StudyYear studyYear) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertSameSchool(user, teacher.getSchool());
+        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        return lessonPlanService.getByTeacher(teacher, studyYear);
     }
 
     @PutMapping("/{id:\\d+}")
@@ -99,7 +110,7 @@ public class LessonPlanController {
     @PutMapping("/journals/{id:\\d+}")
     public LessonPlanJournalDto update(HoisUserDetails user, @WithEntity("id") Journal journal, @Valid @RequestBody LessonPlanJournalForm form) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
-        return get(user, lessonPlanService.saveJournal(journal, form), form.getLessonPlanModuleId());
+        return get(user, lessonPlanService.saveJournal(journal, form, user), form.getLessonPlanModuleId());
     }
 
     @DeleteMapping("/journals/{id:\\d+}")

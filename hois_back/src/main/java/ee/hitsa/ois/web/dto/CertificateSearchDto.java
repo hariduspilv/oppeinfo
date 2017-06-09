@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto;
 import java.time.LocalDateTime;
 
 import ee.hitsa.ois.domain.Certificate;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.util.EntityUtil;
 
 public class CertificateSearchDto {
@@ -18,9 +19,10 @@ public class CertificateSearchDto {
 
     public static CertificateSearchDto of(Certificate certificate) {
         CertificateSearchDto dto = EntityUtil.bindToDto(certificate, new CertificateSearchDto(), "student");
-        if(certificate.getStudent() != null) {
-            dto.setStudentFullname(certificate.getStudent().getPerson().getFullname());
-            dto.setStudentId(certificate.getStudent().getId());
+        Student student = certificate.getStudent();
+        if(student != null) {
+            dto.setStudentFullname(student.getPerson().getFullname());
+            dto.setStudentId(student.getId());
         } else {
             dto.setStudentFullname(certificate.getOtherName());
         }

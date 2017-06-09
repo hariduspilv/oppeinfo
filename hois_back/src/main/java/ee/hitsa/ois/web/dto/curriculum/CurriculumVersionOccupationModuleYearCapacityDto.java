@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.dto.curriculum;
 
 import java.math.BigDecimal;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
@@ -14,8 +15,11 @@ public class CurriculumVersionOccupationModuleYearCapacityDto extends VersionedC
     private Long id;
     @NotNull
     @Min(1)
+    @Max(1000)
     private Integer studyYearNumber;
     @NotNull
+    @Min(0)
+    @Max(999)
     private BigDecimal credits;
 
     public static CurriculumVersionOccupationModuleYearCapacityDto of(CurriculumVersionOccupationModuleYearCapacity capacity) {

@@ -65,9 +65,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
   if (id) {
     $scope.teacher = Endpoint.get({id: id}, afterLoad);
   } else {
-    $scope.teacher = new Endpoint({isActive: true});
-    $scope.teacher.isStudyPeriodScheduleLoad = true;
-    $scope.teacher.person = {citizenship: 'RIIK_EST'};
+    $scope.teacher = new Endpoint({isActive: true, isStudyPeriodScheduleLoad: true, person: {citizenship: 'RIIK_EST'}});
   }
 
   if (!angular.isArray($scope.teacher.teacherPositionEhis)) {

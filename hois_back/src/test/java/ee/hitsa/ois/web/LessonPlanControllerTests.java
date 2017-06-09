@@ -47,6 +47,7 @@ public class LessonPlanControllerTests {
         uriBuilder.queryParam("studyYear", Long.valueOf(1));
         uriBuilder.queryParam("schoolDepartment", Long.valueOf(1));
         uriBuilder.queryParam("studentGroup", Long.valueOf(1));
+        uriBuilder.queryParam("curriculumVersion", Long.valueOf(1));
 
         url = uriBuilder.build().toUriString();
         responseEntity = restTemplate.getForEntity(url, Object.class);

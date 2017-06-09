@@ -29,8 +29,8 @@
                     <tr md-row>
                         <th md-column class="head">
                             {{'subjectStudyPeriod.subjects' | translate}}
-                        <md-button md-no-ink class="md-primary change-button right" 
-                        ng-href="#/subjectStudyPeriod/new?teacherId={{record.teacher}}&studyPeriodId={{record.studyPeriod}}" 
+                        <md-button md-no-ink class="md-primary change-button right"
+                        ng-href="#/subjectStudyPeriod/new?teacherId={{record.teacher}}&studyPeriodId={{record.studyPeriod}}"
                         ng-disabled="!record.teacher">{{'subjectStudyPeriod.addSubjects' | translate}}
                         </md-button>
                         </th>
@@ -86,7 +86,7 @@
             <br>
         </div>
         <div layout="row">
-            <md-button ng-if="!readOnly" class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+            <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
             <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/teachers')">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
