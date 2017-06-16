@@ -10,9 +10,7 @@ import java.util.Set;
 
 import javax.transaction.Transactional;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -55,14 +53,6 @@ public class CurriculumServiceTest {
     private CurriculumRepository curriculumRepository;
     @Autowired
     private SchoolRepository schoolRepository;
-
-    @BeforeClass
-    public static void setUp() {
-    }
-
-    @AfterClass
-    public static void cleanUp() {
-    }
 
     @Test
     public void crud() {

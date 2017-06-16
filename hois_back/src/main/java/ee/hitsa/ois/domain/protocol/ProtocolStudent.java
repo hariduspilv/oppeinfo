@@ -15,6 +15,7 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.timetable.JournalStudent;
 
 @Entity
 public class ProtocolStudent extends BaseEntityWithId {
@@ -48,6 +49,10 @@ public class ProtocolStudent extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "protocol_student_id", nullable = false, updatable = false)
     private List<ProtocolStudentHistory> protocolStudentHistories;
+
+    @OneToMany
+    @JoinColumn(name = "student_id", referencedColumnName = "student_id", nullable = false, updatable = false, insertable = false)
+    private List<JournalStudent> journalStudents;
 
     public ProtocolStudent() {
     }
@@ -118,6 +123,14 @@ public class ProtocolStudent extends BaseEntityWithId {
 
     public void setProtocolStudentHistories(List<ProtocolStudentHistory> protocolStudentHistories) {
         this.protocolStudentHistories = protocolStudentHistories;
+    }
+
+    public List<JournalStudent> getJournalStudents() {
+        return journalStudents;
+    }
+
+    public void setJournalStudents(List<JournalStudent> journalStudents) {
+        this.journalStudents = journalStudents;
     }
 
 }

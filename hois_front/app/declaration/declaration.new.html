@@ -1,0 +1,15 @@
+<form layout="column" class="ois-form-layout-padding form-readonly" name="declarationNewForm">
+  <md-input-container flex="45" flex-sm="100" flex-xs="100">
+      <label>{{'declaration.studyPeriod' | translate}}</label>
+      <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
+  </md-input-container>
+  <br>
+  <hois-autocomplete ng-model="student" url="/declarations/students" name="student"
+      label="declaration.student" required="true">
+  </hois-autocomplete>
+
+  <div layout="row">
+    <md-button class="md-raised md-primary" type="submit" ng-click="save()">{{'main.button.add' | translate}}</md-button>
+    <md-button class="md-raised md-default" ng-click="back('#/declarations')">{{'main.button.back' | translate}}</md-button>
+  </div>
+</form>

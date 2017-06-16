@@ -3,9 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -70,6 +68,7 @@ import ee.hitsa.ois.repository.CurriculumFileRepository;
 import ee.hitsa.ois.repository.CurriculumModuleOutcomeRepository;
 import ee.hitsa.ois.repository.CurriculumModuleRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
+import ee.hitsa.ois.repository.CurriculumSpecialityRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
@@ -127,6 +126,8 @@ public class CurriculumService {
     private CurriculumModuleOutcomeRepository curriculumVersionOccupationModuleOutcomeRepository;
     @Autowired
     private CurriculumFileRepository curriculumFileRepository;
+    @Autowired
+    private CurriculumSpecialityRepository curriculumSpecialityRepository;
 
     @SuppressWarnings("unchecked")
     public Page<CurriculumSearchDto> search(Long schoolId, CurriculumSearchCommand criteria, Pageable pageable) {
@@ -294,7 +295,7 @@ public class CurriculumService {
         if(versions != null) {
             for(CurriculumVersionDto dto : versions) {
                 CurriculumVersion version = dto.getId() == null ? new CurriculumVersion() :
-                    EntityUtil.find(dto.getId(), curriculum.getVersions());
+                    EntityUtil.find(dto.getId(), curriculum.getVersions()).get();
 
                 newVersions.add(updateVersion(curriculum, version, dto));
             }
@@ -362,7 +363,7 @@ public class CurriculumService {
         if(modules != null) {
             for(CurriculumVersionHigherModuleDto dto : modules) {
                 CurriculumVersionHigherModule module = dto.getId() == null ? new CurriculumVersionHigherModule() :
-                    EntityUtil.find(dto.getId(), version.getModules());
+                    EntityUtil.find(dto.getId(), version.getModules()).get();
 
                 EntityUtil.bindToEntity(dto, module, classifierRepository, "subjects", "electiveModules", "specialities");
                 module.setCurriculumVersion(version);
@@ -381,7 +382,7 @@ public class CurriculumService {
         if(electiveModules != null) {
             for(CurriculumVersionElectiveModuleDto dto : electiveModules) {
                 CurriculumVersionElectiveModule newElectiveModule = dto.getId() == null ? new CurriculumVersionElectiveModule() :
-                    EntityUtil.find(dto.getId(), module.getElectiveModules());
+                    EntityUtil.find(dto.getId(), module.getElectiveModules()).get();
 
                 newSet.add(EntityUtil.bindToEntity(dto, newElectiveModule, "subjects"));
             }
@@ -395,7 +396,7 @@ public class CurriculumService {
         if(subjects != null) {
             for(CurriculumVersionHigherModuleSubjectDto dto : subjects) {
                 CurriculumVersionHigherModuleSubject subject = dto.getId() == null ? new CurriculumVersionHigherModuleSubject() :
-                    EntityUtil.find(dto.getId(), module.getSubjects());
+                    EntityUtil.find(dto.getId(), module.getSubjects()).get();
 
                 EntityUtil.bindToEntity(dto, subject, "nameEt", "nameEt", "credits", "school", "subjectId", "electiveModule");
                 subject.setSubject(subjectRepository.getOne(dto.getSubjectId()));
@@ -419,7 +420,7 @@ public class CurriculumService {
         if(occupationModules != null) {
             for(CurriculumVersionOccupationModuleDto dto : occupationModules) {
                 CurriculumVersionOccupationModule occupationModule = dto.getId() == null ? new CurriculumVersionOccupationModule() :
-                    EntityUtil.find(dto.getId(), updatedVersion.getOccupationModules());
+                    EntityUtil.find(dto.getId(), updatedVersion.getOccupationModules()).get();
 
                 EntityUtil.bindToEntity(dto, occupationModule,
                         classifierRepository, "curriculumModule", "capacities", "themes", "yearCapacities");
@@ -452,7 +453,7 @@ public class CurriculumService {
     private CurriculumVersionOccupationModuleTheme updateThemes(CurriculumVersionOccupationModuleThemeDto dto,
             CurriculumVersionOccupationModule updatedOccupationModule) {
         CurriculumVersionOccupationModuleTheme theme = dto.getId() == null ? new CurriculumVersionOccupationModuleTheme() :
-            EntityUtil.find(dto.getId(), updatedOccupationModule.getThemes());
+            EntityUtil.find(dto.getId(), updatedOccupationModule.getThemes()).get();
 
         EntityUtil.bindToEntity(dto, theme, classifierRepository, "capacities", "outcomes");
 
@@ -483,14 +484,14 @@ public class CurriculumService {
             CurriculumVersionOccupationModuleYearCapacityDto dto,
             CurriculumVersionOccupationModule updatedOccupationModule) {
         CurriculumVersionOccupationModuleYearCapacity capacity = dto.getId() == null ? new CurriculumVersionOccupationModuleYearCapacity() :
-            EntityUtil.find(dto.getId(), updatedOccupationModule.getYearCapacities());
+            EntityUtil.find(dto.getId(), updatedOccupationModule.getYearCapacities()).get();
         return EntityUtil.bindToEntity(dto, capacity, classifierRepository);
     }
 
     private CurriculumVersionOccupationModuleThemeCapacity updateThemeCapacities(
             CurriculumVersionOccupationModuleThemeCapacityDto dto, CurriculumVersionOccupationModuleTheme updatedTheme) {
         CurriculumVersionOccupationModuleThemeCapacity capacity = dto.getId() == null ? new CurriculumVersionOccupationModuleThemeCapacity() :
-            EntityUtil.find(dto.getId(), updatedTheme.getCapacities());
+            EntityUtil.find(dto.getId(), updatedTheme.getCapacities()).get();
         return EntityUtil.bindToEntity(dto, capacity, classifierRepository);
     }
 
@@ -523,7 +524,7 @@ public class CurriculumService {
 
         if(modules != null) {
             for(CurriculumModuleDto dto : modules) {
-                CurriculumModule module = dto.getId() == null ? new CurriculumModule() : EntityUtil.find(dto.getId(), curriculum.getModules());
+                CurriculumModule module = dto.getId() == null ? new CurriculumModule() : EntityUtil.find(dto.getId(), curriculum.getModules()).get();
 
                 EntityUtil.bindToEntity(dto, module, classifierRepository, "occupations", "competences", "outcomes");
                 EntityUtil.bindEntityCollection(module.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), dto.getOccupations(), occupationCode -> {
@@ -547,7 +548,7 @@ public class CurriculumService {
         if(outcomes != null) {
             for(CurriculumModuleOutcomeDto dto : outcomes) {
                 CurriculumModuleOutcome outcome = dto.getId() == null ? new CurriculumModuleOutcome() :
-                    EntityUtil.find(dto.getId(), module.getOutcomes());
+                    EntityUtil.find(dto.getId(), module.getOutcomes()).get();
 
                 newOutComes.add(EntityUtil.bindToEntity(dto, outcome));
             }
@@ -560,7 +561,7 @@ public class CurriculumService {
         if(occupations != null) {
             for(CurriculumOccupationDto dto : occupations) {
                 CurriculumOccupation occupation = dto.getId() == null ? new CurriculumOccupation() :
-                    EntityUtil.find(dto.getId(), curriculum.getOccupations());
+                    EntityUtil.find(dto.getId(), curriculum.getOccupations()).get();
 
                 EntityUtil.bindToEntity(dto, occupation, classifierRepository, "specialities");
                 EntityUtil.bindEntityCollection(occupation.getSpecialities(), s -> EntityUtil.getCode(s.getSpeciality()), dto.getSpecialities(), specialityCode -> {
@@ -783,9 +784,11 @@ public class CurriculumService {
         return Boolean.FALSE.equals(codeExists);
     }
 
-    public boolean isHigherMerCodeUnique(UniqueCommand command) {
+    public boolean isMerCodeUnique(UniqueCommand command) {
         Boolean codeExists;
-        if(command.getId() == null) {
+        if(command.getParamValue() == null) {
+            return true;
+        } else if(command.getId() == null) {
             codeExists = curriculumRepository.existsByMerCode(command.getParamValue());
         } else {
             codeExists = curriculumRepository.existsByMerCodeAndIdNot(command.getParamValue(), command.getId());
@@ -793,7 +796,7 @@ public class CurriculumService {
         return Boolean.FALSE.equals(codeExists);
     }
 
-    public boolean isHigherCodeUnique(Long schoolId, UniqueCommand command) {
+    public boolean isCodeUnique(Long schoolId, UniqueCommand command) {
         Boolean codeExists;
         if(command.getId() == null) {
             codeExists = curriculumRepository.existsBySchoolIdAndCode(schoolId, command.getParamValue());
@@ -803,49 +806,16 @@ public class CurriculumService {
         return Boolean.FALSE.equals(codeExists);
     }
 
-    public boolean isVocationalNameUnique(Long schoolId, UniqueCommand command) {
-        
-        String column = command.getParamName();
-        final List<String> COLUMN_NAMES = Arrays.asList("nameEt", "nameEn", "nameRu");
-        AssertionFailedException.throwIf(!COLUMN_NAMES.contains(column),
-                "Only name fields are validated here!");
-        
-        Boolean exists = null;
-        
-        if(command.getId() == null) {
-            if(column.equals("nameEn")) {
-                exists = curriculumRepository.existsBySchoolIdAndNameEn(schoolId, command.getParamValue());
-            } else if(column.equals("nameRu")) {
-                exists = curriculumRepository.existsBySchoolIdAndNameRu(schoolId, command.getParamValue());
-            } else {
-                exists = curriculumRepository.existsBySchoolIdAndNameEt(schoolId, command.getParamValue());
-            }
-        } else {
-            if(column.equals("nameEn")) {
-                exists = curriculumRepository.existsBySchoolIdAndNameEnAndIdNot(schoolId, command.getParamValue(), command.getId());
-            } else if(column.equals("nameRu")) {
-                exists = curriculumRepository.existsBySchoolIdAndNameRuAndIdNot(schoolId, command.getParamValue(), command.getId());
-            } else {
-                exists = curriculumRepository.existsBySchoolIdAndNameEtAndIdNot(schoolId, command.getParamValue(), command.getId());
-            }
-        }
-        return Boolean.FALSE.equals(exists);
+    public CurriculumSpeciality createCurriculumSpeciality(CurriculumSpecialityDto form) {
+        CurriculumSpeciality speciality = new CurriculumSpeciality();
+        speciality.setCurriculum(curriculumRepository.getOne(form.getCurriculum()));
+        return saveCurriculumSpeciality(speciality, form);
     }
-
-    public boolean isVocationalMerCodeUnique(Long schoolId, UniqueCommand command) {
-        return curriculumRepository.count((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            if(command.getId() != null) {
-                filters.add(cb.notEqual(root.get("id"), command.getId()));
-            }
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            filters.add(cb.equal(root.get("merCode"), command.getParamValue()));
-            
-            LocalDate now = LocalDate.now();
-            filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
-            filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
-            
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }) == 0;
+    
+    public CurriculumSpeciality saveCurriculumSpeciality(CurriculumSpeciality speciality,
+            CurriculumSpecialityDto form) {
+        EntityUtil.bindToEntity(form, speciality, classifierRepository, "curriculum");
+        return curriculumSpecialityRepository.save(speciality);
     }
+    
 }

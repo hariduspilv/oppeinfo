@@ -1,53 +1,7 @@
 <div class="ois-form-layout-padding" ng-cloak>
   <div flex>
     <form ng-submit="moduleProtocolForm.$valid && save()" novalidate layout="column" name="moduleProtocolForm">
-      <div class="form-readonly">
-        <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.protocolNumber' | translate}}</label>
-            <hois-value value="protocol.protocolNr"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'main.status' | translate}}</label>
-            <hois-value value="currentLanguageNameField(protocol.status)"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.studyYear' | translate}}</label>
-            <hois-value value="currentLanguageNameField(protocol.studyYear)"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.insertedDate' | translate}} / {{'moduleProtocol.confirmDate' | translate}}</label>
-            <hois-value value="(protocol.inserted ? (protocol.inserted | hoisDate) : '-')  + ' / ' + (protocol.confirmDate ? (protocol.confirmDate | hoisDate) : '-')"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.confirmer' | translate}}</label>
-            <hois-value value="protocol.confirmer ? protocol.confirmer : '-' "></hois-value>
-          </md-input-container>
-        </div>
-
-        <div layout="row" layout-sm="column" layout-xs="column">
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.curriculumVersion' | translate}}</label>
-            <hois-value value="currentLanguageNameField(protocol.protocolVdata.curriculumVersion)"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.module' | translate}}</label>
-            <hois-value value="currentLanguageNameField(protocol.protocolVdata.curriculumVersionOccupationModule)"></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.moduleCapacity' | translate}}</label>
-            <hois-value value=""></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'moduleProtocol.moduleGrading' | translate}}</label>
-            <hois-value value=""></hois-value>
-          </md-input-container>
-          <md-input-container flex flex-sm="100" flex-xs="100">
-            <label>{{'teacher.label' | translate}}</label>
-            <hois-value value="protocol.teacher"></hois-value>
-          </md-input-container>
-        </div>
-      </div>
+      <div ng-include="'protocol/templates/module.protocol.header.tmpl.html'"></div>
       <div>
         <div flex>
           <md-table-container>
@@ -56,6 +10,14 @@
                 <tr md-row>
                   <th md-column>{{'student.label' | translate}}</th>
                   <th md-column>{{'student.idcode' | translate}}</th>
+                  <th md-column ng-repeat="journal in journals | orderBy: 'nameEt'">
+                    <div>
+                      <a md-colors="{color: 'grey-50'}" ng-href="/#/journal/{{::journal.id}}/view">{{'P' + ($index + 1)}}</a>
+                      <md-tooltip>
+                        {{journal.nameEt}} - {{'moduleProtocol.journalCapacity' | translate:journal}}
+                      </md-tooltip>
+                    </div>
+                  </th>
                   <th md-column>{{'moduleProtocol.moduleGrade' | translate}}</th>
                   <th md-column></th>
                 </tr>
@@ -64,11 +26,14 @@
                 <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.idcode}}</td>
+                  <td md-cell ng-repeat="journal in journals | orderBy: 'nameEt'">
+                    {{journalResultsView(journal.id, row)}}
+                  </td>
                   <td md-cell>
                     <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code" aria-label="grade"></hois-select>
                   </td>
                   <td md-cell>
-                    <a ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
+                    <a ng-if="row.status==='OPPURSTAATUS_K' && !row.grade" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
                   </td>
                 </tr>
               </tbody>
@@ -81,8 +46,16 @@
         <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised" ng-click="addProtocolStudents()">{{'moduleProtocol.addStudents' | translate}}</md-button>
         <md-button class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <!--TODO: <md-button class="md-raised" ng-click="calculate()">{{'main.button.calculate' | translate}}</md-button>-->
         <md-button class="md-raised" ng-href="#/moduleProtocols">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>
+  </div>
+  <div flex>
+    <h2>{{'moduleProtocol.studyOutcomes' | translate}}</h2>
+    <div layout="column"></div>
+    <div ng-repeat="outcome in protocol.protocolVdata.outcomes" flex>
+      <span>{{currentLanguageNameField(outcome)}}</span>
+    </div>
   </div>
 </div>

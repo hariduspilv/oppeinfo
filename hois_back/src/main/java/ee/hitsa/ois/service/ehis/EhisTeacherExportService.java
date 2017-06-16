@@ -105,7 +105,7 @@ public class EhisTeacherExportService {
 
         for (RequestObject requestObject : requestList) {
             EhisLaeOppejoudResponse ehisLaeOppejoudResponse;
-            if(requestObject.error == null) {
+            if(requestObject.getError() == null) {
                 ehisLaeOppejoudResponse = ehisXroadService.laeOppejoud(xRoadHeaderV4,
                         requestObject.getOppejoudList());
             } else {

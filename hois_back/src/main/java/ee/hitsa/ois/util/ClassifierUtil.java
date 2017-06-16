@@ -8,7 +8,6 @@ import java.util.Map;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.enums.CapacityType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -37,10 +36,11 @@ public class ClassifierUtil {
     }
 
     // sorters for classifiers
+    // this needs to be alphabetical not ordinal
     private static final Map<String, Comparator<ClassifierSelection>> CLASSIFIER_SORT = new HashMap<>();
     static {
         CLASSIFIER_SORT.put(MainClassCode.MAHT.name(), (a, b) -> {
-            return CapacityType.valueOf(a.getCode()).ordinal() - CapacityType.valueOf(b.getCode()).ordinal();
+            return a.getCode().toUpperCase().compareTo(b.getCode().toUpperCase());
         });
     }
 

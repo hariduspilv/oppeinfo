@@ -24,18 +24,23 @@ public class SubjectStudyPeriodTeacher extends BaseEntityWithId {
     public Boolean getIsSignatory() {
         return isSignatory;
     }
+
     public void setIsSignatory(Boolean isSignatory) {
         this.isSignatory = isSignatory;
     }
+
     public Teacher getTeacher() {
         return teacher;
     }
+
     public void setTeacher(Teacher teacher) {
         this.teacher = teacher;
     }
+
     public SubjectStudyPeriod getSubjectStudyPeriod() {
         return subjectStudyPeriod;
     }
+
     public void setSubjectStudyPeriod(SubjectStudyPeriod subjectStudyPeriod) {
         this.subjectStudyPeriod = subjectStudyPeriod;
     }

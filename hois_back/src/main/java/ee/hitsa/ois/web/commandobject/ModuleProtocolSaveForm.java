@@ -2,21 +2,19 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.List;
 
-import ee.hitsa.ois.web.dto.ProtocolStudentDto;
-
 public class ModuleProtocolSaveForm extends VersionedCommand {
 
-    private List<ProtocolStudentDto> protocolStudents;
+    private List<ModuleProtocolStudentSaveForm> protocolStudents;
 
-    public List<ProtocolStudentDto> getProtocolStudents() {
+    public List<ModuleProtocolStudentSaveForm> getProtocolStudents() {
         return protocolStudents;
     }
 
-    public void setProtocolStudents(List<ProtocolStudentDto> protocolStudents) {
+    public void setProtocolStudents(List<ModuleProtocolStudentSaveForm> protocolStudents) {
         this.protocolStudents = protocolStudents;
     }
-    
-    
+
+
 
 
 }

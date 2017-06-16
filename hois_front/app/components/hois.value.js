@@ -11,7 +11,13 @@
 angular.module('hitsaOis')
   .directive('hoisValue', function () {
     return {
-      template:'<div class="md-body-1 hois-value"><a ng-if="hrefValue" ng-href="{{hrefValue}}">{{value}}</a><span ng-if="!hrefValue"><div ng-repeat="row in value.split(\'\n\')">{{row}}</div></span></div>',
+      template:'<div class="md-body-1 hois-value">' +
+      '<a ng-if="hrefValue" ng-href="{{hrefValue}}">{{value}}</a>' +
+      '<span ng-if="!hrefValue">' +
+        '<div ng-if="value.split" ng-repeat="row in value.split(\'\n\')">{{row}}</div>' +
+        '<div ng-if="!value.split">{{value}}</div>' +
+      '</span>' +
+      '</div>',
       restrict: 'E',
       replace: true,
       scope: {

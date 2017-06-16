@@ -39,6 +39,11 @@ angular.module('hitsaOis')
     }
     $scope.currentStatus = $scope.implementationPlan.status;
 
+    $scope.curriculumVersionCodeUniqueQuery = {
+      id: $route.current.params.versionId,
+      url: '/curriculum/unique/version/code'
+    };
+
     $scope.curriculumId = curriculumEntity.id;
     $scope.studyForms = curriculumEntity.studyForms;
     $scope.curriculumStudyForms = curriculumEntity.studyForms;

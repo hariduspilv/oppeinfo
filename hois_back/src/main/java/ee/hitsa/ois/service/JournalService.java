@@ -61,7 +61,7 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
-import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
@@ -183,7 +183,7 @@ public class JournalService {
         return JournalDto.of(journal);
     }
 
-    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, Long journalId, JournalStudentsSearchCommand command, Pageable pageable) {
+    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, Long journalId, StudentNameSearchCommand command, Pageable pageable) {
         //TODO: kellel puudub vastavas moodulis positiivne tulemus.
         return studentRepository.findAll((root, query, cb) -> {
             root.fetch("person", JoinType.INNER);
@@ -347,10 +347,9 @@ public class JournalService {
         }
 
         // Kui puudumine on rühmajuhataja poolt muudetud põhjendatuks, siis hiljem hilinemise ega puudumise andmeid vastava sissekande juures muuta ei saa
-        if (journalEntryStudent != null && journalEntryStudent.getAbsence() != null && Absence.PUUDUMINE_V.name().equals(EntityUtil.getCode(journalEntryStudent.getAbsence()))) {
-            if(!Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence())) {
-                throw new ValidationFailedException("journal.messages.changingAbsenceIsNotAllowed");
-            }
+        if (journalEntryStudent != null && journalEntryStudent.getAbsence() != null && Absence.PUUDUMINE_V.name().equals(EntityUtil.getCode(journalEntryStudent.getAbsence()))
+                && !Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence())) {
+            throw new ValidationFailedException("journal.messages.changingAbsenceIsNotAllowed");
         }
     }
 

@@ -4,6 +4,7 @@ angular.module('hitsaOis')
   .controller('HigherCurriculumController', function ($scope, Classifier, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, DataUtils, $rootScope, config) {
 
     $scope.auth = $route.current.locals.auth;
+
     $scope.STATUS = Curriculum.STATUS;
 
     $scope.maxStydyYears = {max: 100};
@@ -179,12 +180,12 @@ angular.module('hitsaOis')
 
     $scope.codeUniqueQuery = {
       id: id,
-      url: baseUrl + '/unique/higher/code'
+      url: baseUrl + '/unique/code'
     };
 
     $scope.merCodeUniqueQuery = {
       id: id,
-      url: baseUrl + '/unique/higher/merCode'
+      url: baseUrl + '/unique/merCode'
     };
 
     // --- Save and Delete

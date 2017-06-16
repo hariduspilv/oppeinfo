@@ -69,7 +69,7 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
       if (($scope.users && $scope.users.length > 0) || $scope.showSchool || !$scope.person.id) {
         if (!$scope.person.id) {
           $location.search('_noback', null);
-          $location.path(baseUrl)
+          $location.path(baseUrl);
         } else {
           $rootScope.back('#' + baseUrl);
         }

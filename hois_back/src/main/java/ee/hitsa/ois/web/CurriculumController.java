@@ -24,6 +24,7 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.report.CurriculumReport;
@@ -46,6 +47,7 @@ import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
 
@@ -101,30 +103,20 @@ public class CurriculumController {
         UserUtil.assertIsSchoolAdmin(user);
         return CurriculumDto.of(curriculumService.closeCurriculum(curriculum));
     }
-    
-    @GetMapping("/unique/higher/code")
+
+    @GetMapping("/unique/code")
     public boolean isHigherCodeUnique(HoisUserDetails user, UniqueCommand command) {
-        return curriculumService.isHigherCodeUnique(user.getSchoolId(), command);
+        return curriculumService.isCodeUnique(user.getSchoolId(), command);
     }
 
-    @GetMapping("/unique/higher/merCode")
+    @GetMapping("/unique/merCode")
     public boolean isHigherMerCodeUnique(UniqueCommand command) {
-        return curriculumService.isHigherMerCodeUnique(command);
+        return curriculumService.isMerCodeUnique(command);
     }
     
     @GetMapping("/unique/version/code")
     public boolean isVersionUnique(HoisUserDetails user, UniqueCommand command) {
         return curriculumService.isVersionUnique(user.getSchoolId(), command);
-    }
-    
-    @GetMapping("/unique/vocational/name")
-    public boolean isVocationalNameUnique(HoisUserDetails user, UniqueCommand command) {
-        return curriculumService.isVocationalNameUnique(user.getSchoolId(), command);
-    }
-    
-    @GetMapping("/unique/vocational/merCode")
-    public boolean isVocationalMerCodeUnique(HoisUserDetails user, UniqueCommand command) {
-        return curriculumService.isVocationalMerCodeUnique(user.getSchoolId(), command);
     }
     
     @DeleteMapping("/{id:\\d+}")
@@ -247,5 +239,11 @@ public class CurriculumController {
       UserUtil.assertSameSchool(user, curriculum.getSchool());
       UserUtil.assertIsSchoolAdmin(user);
       curriculumService.deleteCurriculumFile(curriculumFile);
+    }
+
+    @PostMapping("/speciality")
+    public CurriculumSpecialityDto createCurriculumSpeciality(HoisUserDetails user, @Valid @RequestBody CurriculumSpecialityDto form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return CurriculumSpecialityDto.of(curriculumService.createCurriculumSpeciality(form));
     }
 }

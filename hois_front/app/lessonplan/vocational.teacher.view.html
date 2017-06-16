@@ -30,6 +30,10 @@
       <tr>
         <td colspan="{{::formState.weekNrs.length+3}}">
           <span class="bold">{{::journal.nameEt}}:</span>&nbsp;<span ng-repeat="theme in journal.themes"><span ng-if="!$first">,&nbsp;</span>{{::theme.nameEt}}&nbsp;{{::theme.credits}}&nbsp;{{'lessonplan.credits' | translate}}&nbsp;({{::theme.hours}})</span>
+          <div style="float: right;">
+            <md-checkbox disabled ng-model="journal.isFiller">{{'lessonplan.isFiller' | translate}}</md-checkbox>
+            <md-checkbox disabled ng-model="journal.isConfirmer">{{'lessonplan.isConfirmer' | translate}}</md-checkbox>
+          </div>
         </td>
       </tr>
       <tr ng-repeat="ct in getCapacityTypes(journal.hours)" ng-if="formState.showCapacityTypes">
@@ -77,7 +81,7 @@
         <td rowspan="{{keys(formState.grandTotals).length+1}}" ng-if="$first">
           {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.grandTotal' | translate}}
         </td>
-        <td>{{ct.value.toUpperCase()}}</td>
+        <td class="center">{{ct.value.toUpperCase()}}</td>
         <td class="center">{{formState.grandTotals._[ct.code]}}</td>
         <td ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h}}</td>
       </tr>

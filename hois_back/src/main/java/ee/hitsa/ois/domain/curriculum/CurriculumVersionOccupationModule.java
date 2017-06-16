@@ -16,12 +16,16 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 
 @Entity
-@Table(name="curriculum_version_omodule")
+@Table(name = "curriculum_version_omodule")
 public class CurriculumVersionOccupationModule extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private CurriculumModule curriculumModule;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    private CurriculumVersion curriculumVersion;
 
     @Column(nullable = false)
     private String requirementsEt;
@@ -201,6 +205,14 @@ public class CurriculumVersionOccupationModule extends BaseEntityWithId {
 
     public void setCurriculumModule(CurriculumModule curriculumModule) {
         this.curriculumModule = curriculumModule;
+    }
+
+    public CurriculumVersion getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(CurriculumVersion curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 
 }

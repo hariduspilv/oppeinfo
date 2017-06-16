@@ -94,7 +94,7 @@
         <td rowspan="{{keys(formState.grandTotals).length+1}}" ng-if="$first">
           {{currentLanguageNameField(module)}}&nbsp;{{'lessonplan.grandTotal' | translate}}
         </td>
-        <td>{{ct.value.toUpperCase()}}</td>
+        <td class="center">{{ct.value.toUpperCase()}}</td>
         <td class="center">{{formState.grandTotals._[ct.code]}}</td>
         <td ng-repeat="h in formState.grandTotals[ct.code] track by $index" class="center">{{h}}</td>
       </tr>

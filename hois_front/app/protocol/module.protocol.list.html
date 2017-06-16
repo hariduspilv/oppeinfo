@@ -10,14 +10,14 @@
 
         <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <label class="textInput">{{'moduleProtocol.studentGroup' | translate}}</label>
-          <hois-select ng-model="criteria.studentGroup" type="studentgroup"></hois-select>
+          <hois-select ng-model="criteria.studentGroup" type="studentgroup" criteria="{valid: true}"></hois-select>
         </md-input-container>
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="50" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'moduleProtocol.curriculumVersion' | translate}}</label>
-          <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion"></hois-select>
+          <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion" criteria="{higher: false}"></hois-select>
         </md-input-container>
 
         <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -41,14 +41,13 @@
       <div layout="row" layout-sm="column" layout-xs="column">
         <div flex="50" flex-sm="100" flex-xs="100">
           <div layout="column" flex>
-            <div flex="45" style="padding-bottom:0.3em;">{{'moduleProtocol.protocolInsertedDate' | translate}}</div>
             <div column="row" flex>
               <md-input-container>
-                <label>{{'main.from' | translate}}</label>
+                <label>{{'moduleProtocol.insertedFrom' | translate}}</label>
                 <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
               </md-input-container>
               <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                <label>{{'main.thru' | translate}}</label>
+                <label>{{'moduleProtocol.insertedThru' | translate}}</label>
                 <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
               </md-input-container>
             </div>
@@ -58,14 +57,13 @@
         <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <div layout="column" flex>
             <div layout="column" flex>
-              <div flex="45" style="padding-bottom:0.3em;">{{'moduleProtocol.protocolConfirmDate' | translate}}</div>
               <div column="row" flex>
                 <md-input-container>
-                  <label>{{'main.from' | translate}}</label>
+                  <label>{{'moduleProtocol.confirmedFrom' | translate}}</label>
                   <md-datepicker ng-model="criteria.confirmDateFrom"></md-datepicker>
                 </md-input-container>
                 <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'main.thru' | translate}}</label>
+                  <label>{{'moduleProtocol.confirmedThru' | translate}}</label>
                   <md-datepicker ng-model="criteria.confirmDateThru" md-min-date="criteria.confirmDateFrom"></md-datepicker>
                 </md-input-container>
               </div>

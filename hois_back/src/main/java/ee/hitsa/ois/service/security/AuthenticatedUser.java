@@ -7,7 +7,6 @@ import java.util.List;
 import org.springframework.security.core.GrantedAuthority;
 
 import ee.hitsa.ois.domain.User;
-import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.UserProjection;
@@ -49,10 +48,6 @@ public class AuthenticatedUser implements Serializable {
 
     public void setSchool(AuthenticatedSchool school) {
         this.school = school;
-    }
-
-    public void setSchool(School school) {
-        this.school = school != null ? new AuthenticatedSchool(school) : null;
     }
 
     public Collection<String> getAuthorizedRoles() {

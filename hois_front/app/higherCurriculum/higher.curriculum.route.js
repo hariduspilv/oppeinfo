@@ -39,7 +39,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },          
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           curriculum: function(QueryUtils, $route) {
             return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
           },

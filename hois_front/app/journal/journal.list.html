@@ -63,7 +63,9 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{row.studentGroups.join(", ")}}</td>
-            <td md-cell>{{row.nameEt}}</td>
+            <td md-cell>
+              <a ng-href="/#/journal/{{::row.id}}/view">{{row.nameEt}}</a>
+            </td>
             <td md-cell>{{row.teachers.join(", ")}}</td>
             <td md-cell>{{showModuleNames(row.modules)}}</td>
             <td md-cell>{{row.plannedHours}}/{{row.usedHours}}</td>

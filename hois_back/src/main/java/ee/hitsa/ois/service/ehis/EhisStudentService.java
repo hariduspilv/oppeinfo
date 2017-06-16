@@ -404,7 +404,7 @@ public class EhisStudentService {
         KhlKorgharidusLisa khlKorgharidusLisa = new KhlKorgharidusLisa();
 
         khlKorgharidusLisa.setOppimaAsumKp(getDate(student.getStudyStart(), directive));
-        khlKorgharidusLisa.setKursus(BigInteger.valueOf(student.getStudentGroup().getCourse()));
+        khlKorgharidusLisa.setKursus(BigInteger.valueOf(student.getStudentGroup().getCourse().longValue()));
 
         khlKorgharidusLisa.setOppekava(getCurriculum(student.getCurriculumVersion()));
         khlKorgharidusLisa.setKlOppekeel(student.getLanguage().getEhisValue());

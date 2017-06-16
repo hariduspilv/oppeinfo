@@ -53,14 +53,14 @@ angular.module('hitsaOis').factory('DataUtils',
      * Beware that using this method changes the order of initial array
      */
     function getCurrentStudyYearOrPeriod(list) {
-        return getStudyYearOrPeriodAt(new Date(), list);
+        return getStudyYearOrPeriodAt(new Date().withoutTime(), list);
     }
     /**
      * Beware that using this method changes the order of initial array
      */
     function isPastStudyYearOrPeriod(period) {
         convertStringToDates(period, ["endDate"]);
-        return new Date() >= period.endDate;
+        return new Date().withoutTime() > period.endDate;
     }
 
     return {
@@ -99,3 +99,9 @@ angular.module('hitsaOis').factory('DataUtils',
     };
   }
 );
+
+Date.prototype.withoutTime = function () {
+    var date = new Date(this);
+    date.setHours(0, 0, 0, 0);
+    return date;
+}

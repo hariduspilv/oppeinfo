@@ -15,8 +15,8 @@ angular.module('hitsaOis')
       );
     }
 
-    function showTranslatedMessage(messageText, toastClass) {
-      $translate(messageText).then(function(message) {
+    function showTranslatedMessage(messageText, toastClass, params) {
+      $translate(messageText, params).then(function(message) {
           showMessage(message, toastClass);
         })
         .catch(function() {
@@ -24,8 +24,8 @@ angular.module('hitsaOis')
         });
     }
 
-    factory.info = function(messageText) {
-      showTranslatedMessage(messageText, 'toastInfo');
+    factory.info = function(messageText, params) {
+      showTranslatedMessage(messageText, 'toastInfo', params);
     };
 
     factory.warn = function(messageText) {

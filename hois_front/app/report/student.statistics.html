@@ -1,0 +1,62 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="loadData()" novalidate>
+      <div layout="row">
+        <div layout="row" flex="45">
+          <label>{{'main.date' | translate}}</label>
+          <md-input-container>
+            <label>{{'main.date' | translate}}</label>
+            <md-datepicker ng-model="criteria.date"></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div layout="row">
+        <md-input-container flex="45">
+          <label>{{'report.studentstatistics.curriculum' | translate}}</label>
+          <hois-select ng-model="criteria.curriculum" type="curriculum" multiple></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-offset="5">
+          <label>{{'report.studentstatistics.result' | translate}}</label>
+          <md-select ng-model="criteria.result" required>
+            <md-option value="FINALLIKAS">{{'report.studentstatistics.FINALLIKAS' | translate}}</md-option>
+            <md-option value="OPPEVORM">{{'report.studentstatistics.OPPEVORM' | translate}}</md-option>
+            <md-option value="OPPURSTAATUS">{{'report.studentstatistics.OPPURSTAATUS' | translate}}</md-option>
+          </md-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="curriculumVersion.code">{{'report.studentstatistics.curriculum' | translate}}</th>
+            <th md-column ng-repeat="cl in formState.resultDef">{{currentLanguageNameField(cl)}}</th>
+            <th md-column>{{'report.studentstatistics.total' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row)}}</td>
+            <td md-cell ng-repeat="cl in formState.resultDef">{{::row.result[cl.code] || 0}}</td>
+            <td md-cell>{{::row.total}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

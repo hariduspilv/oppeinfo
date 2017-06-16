@@ -100,7 +100,14 @@ public class MessageTemplateControllerTest {
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);
     }
-    
+
+    @Test
+    public void getUsedTypeCodes() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/messageTemplate/usedTypeCodes", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
     private static MessageTemplateForm getForm() {
         MessageTemplateForm form = new MessageTemplateForm();
         form.setHeadline("MessageTemplateControllerTest");

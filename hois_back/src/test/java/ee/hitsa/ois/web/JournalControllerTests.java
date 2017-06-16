@@ -58,8 +58,12 @@ public class JournalControllerTests {
     public void setUp() {
         testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
         JacksonTester.initFields(this, objectMapper);
-        journal = journalRepository.findAll().get(0);
-        journalEntry = journalEntryRepository.findAll().get(0);
+        if(journal == null) {
+            journal = journalRepository.findAll().get(0);
+        }
+        if(journalEntry == null) {
+            journalEntry = journalEntryRepository.findAll().get(0);
+        }
     }
 
     @After

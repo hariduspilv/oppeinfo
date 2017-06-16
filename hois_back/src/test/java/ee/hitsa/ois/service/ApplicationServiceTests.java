@@ -49,17 +49,21 @@ public class ApplicationServiceTests {
 
     @Before
     public void setUp() {
-        student = studentRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.like(root.get("curriculumVersion").get("curriculum").get("origStudyLevel").get("value"), "5%"));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().findFirst().get();
+        if(student == null) {
+            student = studentRepository.findAll((root, query, cb) -> {
+                List<Predicate> filters = new ArrayList<>();
+                filters.add(cb.like(root.get("curriculumVersion").get("curriculum").get("origStudyLevel").get("value"), "5%"));
+                return cb.and(filters.toArray(new Predicate[filters.size()]));
+            }).stream().findFirst().get();
+        }
 
-        occupationalStudent = studentRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.like(root.get("curriculumVersion").get("curriculum").get("origStudyLevel").get("value"), "4%"));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().findFirst().get();
+        if(occupationalStudent == null) {
+            occupationalStudent = studentRepository.findAll((root, query, cb) -> {
+                List<Predicate> filters = new ArrayList<>();
+                filters.add(cb.like(root.get("curriculumVersion").get("curriculum").get("origStudyLevel").get("value"), "4%"));
+                return cb.and(filters.toArray(new Predicate[filters.size()]));
+            }).stream().findFirst().get();
+        }
     }
 
 

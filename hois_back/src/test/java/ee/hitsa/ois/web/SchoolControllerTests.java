@@ -64,7 +64,9 @@ public class SchoolControllerTests {
 
     @Before
     public void setUp() {
-        school = schoolRepository.getOne(hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId());
+        if(school == null) {
+            school = schoolRepository.getOne(hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId());
+        }
     }
 
     @Test
@@ -138,7 +140,7 @@ public class SchoolControllerTests {
     private List<String> getStudyLevels() {
         return StreamUtil.toMappedList(ClassifierSelection::getCode, autocompleteService.classifiers(Collections.singletonList(MainClassCode.OPPEASTE.name())));
     }
-    
+
     @Test
     public void studyYearScheduleLegends() {
         String uri = UriComponentsBuilder.fromUriString("/school/studyYearScheduleLegends").build().toUriString();
@@ -146,13 +148,12 @@ public class SchoolControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     /**
      * This test deletes all StudyYearScheduleLegends of school with id = 1
      */
     @Test
     public void updateStudyYearScheduleLegends() {
-
         final String URL = "/school/studyYearScheduleLegends";
         final String CODE_1 = "A";
         final String CODE_2 = "B";

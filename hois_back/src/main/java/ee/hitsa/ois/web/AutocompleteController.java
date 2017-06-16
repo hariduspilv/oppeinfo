@@ -48,6 +48,11 @@ public class AutocompleteController {
         return autocompleteService.buildings(user.getSchoolId());
     }
 
+    @GetMapping("/rooms")
+    public Page<AutocompleteResult> rooms(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+        return asPage(autocompleteService.rooms(user.getSchoolId(), lookup));
+    }
+
     @GetMapping("/classifiers")
     public List<ClassifierSelection> classifiers(@Valid ClassifierAutocompleteCommand lookup) {
         List<String> codes = lookup.getMainClassCodes();

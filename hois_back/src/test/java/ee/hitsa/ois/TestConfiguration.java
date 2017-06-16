@@ -9,6 +9,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.client.support.BasicAuthorizationInterceptor;
+import org.springframework.http.converter.ByteArrayHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
 import org.springframework.util.StringUtils;
 
@@ -31,6 +32,9 @@ public class TestConfiguration {
         MappingJackson2HttpMessageConverter converter = new MappingJackson2HttpMessageConverter(objectMapper);
         converter.setSupportedMediaTypes(Arrays.asList(MediaType.APPLICATION_JSON_UTF8));
 
+        ByteArrayHttpMessageConverter fileConverter = new ByteArrayHttpMessageConverter();
+        fileConverter.setSupportedMediaTypes(Arrays.asList(MediaType.IMAGE_JPEG));
+
         return new RestTemplateBuilder()
                 .additionalInterceptors((request, body, execution) -> {
                     request.getHeaders().add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_UTF8_VALUE);
@@ -40,6 +44,6 @@ public class TestConfiguration {
                         return new BasicAuthorizationInterceptor(USER_ID, "undefined").intercept(request, body, execution);
                     }
                     return execution.execute(request, body);
-                }).additionalMessageConverters(converter);
+                }).additionalMessageConverters(converter, fileConverter);
     }
 }

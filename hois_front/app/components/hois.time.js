@@ -12,7 +12,7 @@ angular.module('hitsaOis')
         ngModel: '='
       },
       link: {
-        post: function (scope, element, attrs) {
+        post: function (scope, element /*, attrs */) {
           var timeFormat = "HH:mm";
 
           scope.$watch("ngModel", function() {

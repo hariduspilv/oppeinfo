@@ -93,6 +93,19 @@ public class AutocompleteService {
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
+    
+    public List<AutocompleteResult> rooms(Long schoolId, AutocompleteCommand lookup) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from room r inner join building b on b.id = r.building_id");
+
+        qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalContains("r.code",  "code", lookup.getName());
+
+        List<?> data = qb.select("r.id, r.code", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String name = resultAsString(r, 1);
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }, data);
+    }
 
     public List<Classifier> classifierForAutocomplete(ClassifierSearchCommand classifierSearchCommand) {
         String nameField = Language.EN.equals(classifierSearchCommand.getLang()) ? "nameEn" : "nameEt";

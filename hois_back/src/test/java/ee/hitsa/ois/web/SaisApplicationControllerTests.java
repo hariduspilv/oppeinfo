@@ -177,6 +177,22 @@ public class SaisApplicationControllerTests {
     }
 
     @Test
+    public void importCsvApplicationNrDublicate() {
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012",
+                ADMISSION_CODE + ";Nr123456789;Toni;Kuut;37810010008;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+
+        ResponseEntity<SaisApplicationImportResultDto> responseEntity =
+                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
+
+        Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
+        Assert.assertEquals("Failis on rohkem kui üks avalduse numbriga Nr123456789 vastuvõtu avaldust.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+    }
+
+    @Test
     public void importCsvFirstnameMissing() {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
@@ -281,6 +297,20 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(2, responseEntity.getBody().getSuccessful().size());
+    }
+
+    @Test
+    public void csvSampleFile() {
+        ResponseEntity<?> response = restTemplate.getForEntity("/saisApplications/sample.csv", Void.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    public void classifiersFile() {
+        ResponseEntity<?> response = restTemplate.getForEntity("/saisApplications/classifiers.csv", Void.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     private void delete(SaisAdmission saisAdmission) {

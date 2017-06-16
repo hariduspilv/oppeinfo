@@ -210,74 +210,15 @@ angular.module('hitsaOis')
 
     var uniqueQueriesId = angular.isDefined($route.current.locals.entity) ? $route.current.locals.entity.id : undefined;
 
-    $scope.merCodeUniqueQuery = {
-      url: '/curriculum/unique/vocational/merCode',
+    $scope.codeUniqueQuery = {
+      url: '/curriculum/unique/code',
       id: uniqueQueriesId
     };
 
     $scope.merCodeUniqueQuery = {
-      url: '/curriculum/unique/vocational/merCode',
+      url: '/curriculum/unique/merCode',
       id: uniqueQueriesId
     };
-
-    var nameValidationUrl = '/curriculum/unique/vocational/name';
-
-    $scope.nameEtUnique = true;
-    $scope.$watch('curriculum.nameEt', function(){
-      if($scope.curriculum.nameEt) {
-        $http({
-          url: config.apiUrl + nameValidationUrl,
-          method: "GET",
-          params: {
-            paramName: 'nameEt',
-            paramValue: $scope.curriculum.nameEt,
-            id: uniqueQueriesId
-          }
-        }).then(function(response) {
-          $scope.nameEtUnique = response.data;
-        });
-      } else {
-        $scope.nameEtUnique = true;
-      }
-    });
-
-    $scope.nameEnUnique = true;
-    $scope.$watch('curriculum.nameEn', function(){
-      if($scope.curriculum.nameEn) {
-        $http({
-          url: config.apiUrl + nameValidationUrl,
-          method: "GET",
-          params: {
-            paramName: 'nameEn',
-            paramValue: $scope.curriculum.nameEn,
-            id: uniqueQueriesId
-          }
-        }).then(function(response) {
-          $scope.nameEnUnique = response.data;
-        });
-      } else {
-        $scope.nameEnUnique = true;
-      }
-    });
-
-    $scope.nameRuUnique = true;
-    $scope.$watch('curriculum.nameRu', function(){
-      if($scope.curriculum.nameRu) {
-        $http({
-          url: config.apiUrl + nameValidationUrl,
-          method: "GET",
-          params: {
-            paramName: 'nameRu',
-            paramValue: $scope.curriculum.nameRu,
-            id: uniqueQueriesId
-          }
-        }).then(function(response) {
-          $scope.nameRuUnique = response.data;
-        });
-      } else {
-        $scope.nameRuUnique = true;
-      }
-    });
 
     //edit
     if (angular.isDefined($route.current.locals.entity)) {
@@ -889,7 +830,9 @@ angular.module('hitsaOis')
                 savedModule.$update().then(function(response) {
                     $scope.curriculum.modules = response.modules;
                     $scope.curriculum.occupations = response.occupations;
+                    var currentStatus = $scope.currentStatus
                     mapDtoToModel($scope.curriculum, $scope);
+                    $scope.currentStatus = currentStatus;
                     message.info('main.messages.create.success');
                     renderModules();
                 });

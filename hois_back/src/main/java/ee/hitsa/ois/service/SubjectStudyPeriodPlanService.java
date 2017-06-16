@@ -1,5 +1,10 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
+
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -7,6 +12,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -26,7 +32,8 @@ import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlanCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlanCurriculum;
-import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlanStudyform;
+import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlanStudyForm;
+import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -36,8 +43,11 @@ import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodPlanRepository;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
+import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanUniqueCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -63,6 +73,9 @@ public class SubjectStudyPeriodPlanService {
     
     @Autowired
     private ClassifierRepository classifierRepository;
+    
+    @Autowired
+    private EntityManager em;
 
     /**
      * subjectService.search() is not used, because Subject objects need to be acquired in order to get their SubjectStudyPeriodPlans
@@ -95,7 +108,7 @@ public class SubjectStudyPeriodPlanService {
         List<Curriculum> curriculums = curriculumRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            filters.add(cb.equal(root.get("status").get("code"), "OPPEKAVA_STAATUS_K")); // TODO use enum
+            filters.add(cb.equal(root.get("status").get("code"), CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
             filters.add(cb.equal(root.get("higher"), Boolean.TRUE));
             
             if(!CollectionUtils.isEmpty(criteria.getSubjects())) {
@@ -165,7 +178,7 @@ public class SubjectStudyPeriodPlanService {
     private void updateStudyForms(SubjectStudyPeriodPlan plan, Set<String> newStudyForms) {
         EntityUtil.bindEntityCollection(plan.getStudyForms(), sf -> EntityUtil.getCode(sf.getStudyForm()), 
         newStudyForms, sf -> {
-            SubjectStudyPeriodPlanStudyform newStudyForm = new SubjectStudyPeriodPlanStudyform();
+            SubjectStudyPeriodPlanStudyForm newStudyForm = new SubjectStudyPeriodPlanStudyForm();
             newStudyForm.setStudyForm(EntityUtil.validateClassifier(classifierRepository.getOne(sf), MainClassCode.OPPEVORM));
             newStudyForm.setPlan(plan);
             return newStudyForm;
@@ -222,11 +235,46 @@ public class SubjectStudyPeriodPlanService {
             }
             if(!CollectionUtils.isEmpty(form.getStudyForms())) {    // Unnecessary check
                 Subquery<Long> targetQuery = query.subquery(Long.class);
-                Root<SubjectStudyPeriodPlanStudyform> targetRoot = targetQuery.from(SubjectStudyPeriodPlanStudyform.class);
+                Root<SubjectStudyPeriodPlanStudyForm> targetRoot = targetQuery.from(SubjectStudyPeriodPlanStudyForm.class);
                 targetQuery = targetQuery.select(targetRoot.get("plan").get("id")).where(targetRoot.get("studyForm").get("code").in(form.getStudyForms()));
                 filters.add(root.get("id").in(targetQuery));
             }
             return cb.and(filters.toArray(new Predicate[filters.size()]));
+        });
+    }
+
+    public Page<AutocompleteResult> getSubjectsOptions(Long schoolId, SubjectSearchCommand subjectSearchCommand,
+            Pageable pageable) {
+        final String SELECT = "s.id, s.name_et, s.name_en, s.code, s.credits ";
+        final String FROM = " from subject s";
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM).sort(pageable);
+
+        qb.filter("s.status_code = '" + SubjectStatus.AINESTAATUS_K + "'");
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalContains(Arrays.asList("s.name_et", "s.name_en", "s.code", 
+                "s.name_et || ' ' || s.code", "s.name_en || ' ' || s.code", 
+                "s.code || ' ' || s.name_et", "s.code || ' ' || s.name_en", 
+                "s.code || ' - ' || s.name_et", "s.code || ' - ' || s.name_en"), "name", subjectSearchCommand.getName());
+        
+        qb.optionalCriteria("exists( "
+                + "select * "
+                + "from curriculum_version_hmodule_subject cvhms "
+                + "left join curriculum_version_hmodule cvhm on cvhm.id = cvhms.curriculum_version_hmodule_id "
+                + "left join curriculum_version cv on cv.id = cvhm.curriculum_version_id "
+                + "where cv.curriculum_id in(:curricula) and cvhms.subject_id = s.id) ", 
+                "curricula", subjectSearchCommand.getCurricula());
+
+        Page<Object[]> results = JpaQueryUtil.pagingResult(qb, SELECT, em, pageable);
+        return results.map(r -> {
+
+            String nameEt = resultAsString(r, 1);
+            String nameEn = resultAsString(r, 2);
+            String code = resultAsString(r, 3);
+            BigDecimal credits = resultAsDecimal(r, 4);
+            
+            return new AutocompleteResult(resultAsLong(r, 0), 
+                    SubjectUtil.subjectName(code, nameEt, credits),
+                    SubjectUtil.subjectName(code, nameEn, credits));
         });
     }
 }

@@ -20,11 +20,11 @@
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{row.isPeriod ? 'main.period' : 'main.date' | translate}}</td>
         <td md-cell>
-          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodStart)}}</div>
+          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.newStudyPeriodStart)}}</div>
           <hois-value ng-if="!row.isPeriod" value="row.startDate | hoisDate"></hois-value>
         </td>
         <td md-cell>
-          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.studyPeriodEnd)}}</div>
+          <div ng-if="row.isPeriod">{{currentLanguageNameField(row.newStudyPeriodEnd)}}</div>
           <hois-value ng-if="!row.isPeriod" value="row.endDate | hoisDate"></hois-value>
         </td>
         <td md-cell>

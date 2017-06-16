@@ -6,8 +6,10 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumModuleOutcome;
 import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
@@ -83,6 +85,10 @@ public class AutocompleteResult extends EntityConnectionCommand {
         return new AutocompleteResult(theme.getId(), nameEt, nameEt);
     }
 
+    public static AutocompleteResult of(CurriculumVersionHigherModule module) {
+        return new AutocompleteResult(module.getId(), module.getNameEt(), module.getNameEn());
+    }
+
     public static AutocompleteResult of(DirectiveCoordinator coordinator) {
         String name = coordinator.getName();
         return new AutocompleteResult(coordinator.getId(), name, name);
@@ -155,5 +161,9 @@ public class AutocompleteResult extends EntityConnectionCommand {
 
     public static AutocompleteResult of(StudyYear studyYear) {
         return new AutocompleteResult(studyYear.getId(), studyYear.getYear());
+    }
+
+    public static AutocompleteResult of(CurriculumModuleOutcome outcome) {
+        return new AutocompleteResult(outcome.getId(), outcome.getOutcomeEt(), outcome.getOutcomeEt());
     }
 }

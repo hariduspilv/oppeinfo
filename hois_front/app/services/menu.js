@@ -210,6 +210,20 @@ angular.module('hitsaOis')
           name: 'main.menu.study.moduleProtocol.search',
           url: "/moduleProtocols?_menu"
         },
+        {
+          name: 'main.menu.declaration.current',
+          url: "/declaration/current/view",
+          studyLevel: {
+              higher: true
+          }
+        },
+        {
+          name: 'main.menu.declaration.search',
+          url: "/declarations?_menu",
+          studyLevel: {
+              higher: true
+          }
+        }
       ]
     });
 
@@ -257,11 +271,18 @@ angular.module('hitsaOis')
         },
         {
           name: 'main.menu.subjectStudyPeriods.plans',
-          url: "/subjectStudyPeriodPlans?_menu"
+          url: "/subjectStudyPeriodPlans?_menu",
+          studyLevel: {
+              higher: true
+          }
         },
         {
           name: 'main.menu.subjectStudyPeriods.label',
           url: "/subjectStudyPeriods/studentGroups?_menu"
+        },
+        {
+          name: 'main.menu.lessonplan.event.label',
+          url: "/lessonplans/events?_menu"
         }
       ]
     });
@@ -274,6 +295,29 @@ angular.module('hitsaOis')
           name: 'main.menu.dataexchange.teacherinfo.export',
           id: 'teacherinfoExport',
           url: "/ehis/teacher/export?_menu"
+        }
+      ]
+    });
+
+    sections.push({
+      name: 'main.menu.reports.label',
+      type: 'toggle',
+      pages: [
+        {
+          name: 'main.menu.reports.students',
+          url: "/reports/students/students?_menu"
+        },
+        {
+          name: 'main.menu.reports.studentstatistics',
+          url: "/reports/students/statistics?_menu"
+        },
+        {
+          name: 'main.menu.reports.curriculumscompletion',
+          url: "/reports/curriculums/completion?_menu"
+        },
+        {
+          name: 'main.menu.reports.teachersload',
+          url: "/reports/teachers/load?_menu"
         }
       ]
     });

@@ -11,7 +11,7 @@ import ee.hitsa.ois.domain.student.Student;
 
 public class StudentUtilTests {
 
-    Student student;
+    private Student student;
 
     @Before
     public void setUp() {
@@ -42,5 +42,4 @@ public class StudentUtilTests {
         student.getStatus().setCode("OPPURSTAATUS_O");
         Assert.assertTrue(StudentUtil.isStudying(student));
     }
-
 }

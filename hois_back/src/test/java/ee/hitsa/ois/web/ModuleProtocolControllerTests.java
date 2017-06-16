@@ -1,10 +1,8 @@
 package ee.hitsa.ois.web;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.junit.After;
@@ -21,14 +19,16 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.repository.UserRepository;
-import ee.hitsa.ois.web.commandobject.ModuleProtocolCommand;
+import ee.hitsa.ois.repository.ProtocolRepository;
+import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
+import ee.hitsa.ois.web.commandobject.ModuleProtocolStudentCreateForm;
+import ee.hitsa.ois.web.commandobject.ProtocolVdataForm;
+import ee.hitsa.ois.web.dto.ModuleProtocolDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolSearchDto;
-import ee.hitsa.ois.web.dto.ProtocolDto;
 
 @Transactional
 @RunWith(SpringRunner.class)
@@ -42,25 +42,29 @@ public class ModuleProtocolControllerTests {
     @Autowired
     private TestConfigurationService testConfigurationService;
     @Autowired
-    private UserRepository userRepository;
+    private ProtocolRepository protocolRepository;
 
     private School userSchool;
+    private Protocol existingProtocol;
+    private Long protocolId;
 
     @Before
     public void setUp() {
+        if(existingProtocol == null) {
+            existingProtocol = protocolRepository.findAll().stream()
+                    .filter(it -> !it.getProtocolStudents().isEmpty() && it.getProtocolVdata() != null).findFirst().get();
+            userSchool = existingProtocol.getSchool();
+        }
         Role role = Role.ROLL_A;
-        userSchool = userRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.isNotNull(root.get("school")));
-            filters.add(cb.equal(root.get("role").get("code"), role.name()));
-            filters.add(cb.equal(root.get("person").get("idcode"), TestConfiguration.USER_ID));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().findFirst().get().getSchool();
         testConfigurationService.userToRoleInSchool(role, userSchool.getId(), restTemplate);
+
     }
 
     @After
     public void cleanUp() {
+        if (protocolId != null) {
+            delete(protocolId);
+        }
         testConfigurationService.setSessionCookie(null);
     }
 
@@ -88,17 +92,103 @@ public class ModuleProtocolControllerTests {
     }
 
     @Test
-    public void createInitial() {
-        //TODO: remove hard coded values
-        ModuleProtocolCommand cmd = new ModuleProtocolCommand();
-        cmd.setCurriculumVersion(Long.valueOf(1840L));
-        cmd.setCurriculumVersionOccupationModule(Long.valueOf(366L));
-        cmd.setStudents(Arrays.asList(Long.valueOf(20L)));
-        cmd.setStudyYear(Long.valueOf(11L));
-        cmd.setTeacher(Long.valueOf(1L));
+    public void crud() {
+        // create
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
+        ProtocolVdataForm protocolVdata = new ProtocolVdataForm();
+        protocolVdata.setStudyYear(existingProtocol.getProtocolVdata().getStudyYear().getId());
+        protocolVdata.setTeacher(existingProtocol.getProtocolVdata().getTeacher().getId());
+        protocolVdata.setCurriculumVersion(existingProtocol.getProtocolVdata().getCurriculumVersion().getId());
+        protocolVdata.setCurriculumVersionOccupationModule(
+                existingProtocol.getProtocolVdata().getCurriculumVersionOccupationModule().getId());
 
-        ResponseEntity<ProtocolDto> responseEntity = restTemplate.postForEntity(ENDPOINT+"/create", cmd, ProtocolDto.class);
+        List<ModuleProtocolStudentCreateForm> protocolStudents = existingProtocol.getProtocolStudents().stream()
+                .map(it -> {
+                    ModuleProtocolStudentCreateForm form = new ModuleProtocolStudentCreateForm();
+                    form.setStudentId(it.getStudent().getId());
+                    return form;
+                }).collect(Collectors.toList());
+
+        ModuleProtocolCreateForm form = new ModuleProtocolCreateForm();
+        form.setProtocolVdata(protocolVdata);
+        form.setProtocolStudents(protocolStudents);
+
+        ResponseEntity<ModuleProtocolDto> responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form,
+                ModuleProtocolDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        protocolId = responseEntity.getBody().getId();
+
+        // get
+        UriComponentsBuilder uri = uriBuilder.pathSegment(protocolId.toString());
+        responseEntity = restTemplate.getForEntity(uri.toUriString(), ModuleProtocolDto.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        // TODO: update - needs teacher login
+
+        // delete
+        delete(protocolId);
+        protocolId = null;
+    }
+
+    @Test
+    public void occupationModules() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("occupationModules")
+                .pathSegment(existingProtocol.getProtocolVdata().getCurriculumVersion().getId().toString());
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void teachers() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("teachers");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void occupationModule() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("occupationModule")
+                .pathSegment(
+                        existingProtocol.getProtocolVdata().getCurriculumVersionOccupationModule().getId().toString());
+
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void otherStudents() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(existingProtocol.getId().toString()).pathSegment("otherStudents");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void addStudents() {
+        // TODO
+    }
+
+    @Test
+    public void confirm() {
+        // TODO
+    }
+
+    private void delete(Long id) {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
+
+        UriComponentsBuilder uri = uriBuilder.pathSegment(id.toString());
+        ResponseEntity<ModuleProtocolDto> responseEntity = restTemplate.getForEntity(uri.toUriString(),
+                ModuleProtocolDto.class);
+
+        Long version = responseEntity.getBody().getVersion();
+        uri = uriBuilder.pathSegment(id.toString());
+        uri.queryParam("version", version);
+        restTemplate.delete(uri.toUriString());
     }
 
 }

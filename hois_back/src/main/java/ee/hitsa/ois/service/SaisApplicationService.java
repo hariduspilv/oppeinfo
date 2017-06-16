@@ -190,11 +190,12 @@ public class SaisApplicationService {
         String fileContent = getContent(fileData);
 
         int rowNr = 1;
+        Map<String, Object> processedByNr = new HashMap<>();
         try (MappingIterator<SaisApplicationCsvRow> csvValues = csvMapper.readerFor(SaisApplicationCsvRow.class).with(schema).readValues(fileContent)) {
             while (csvValues.hasNext()) {
                 SaisApplicationCsvRow row = csvValues.next();
                 try {
-                      proccessRow(row, rowNr, failed, dto, classifiers, idCodeValidator, user.getSchoolId());
+                      proccessRow(row, rowNr, failed, dto, classifiers, processedByNr, idCodeValidator, user.getSchoolId());
                   } catch (Exception e) {
                       failed.add(new SaisApplicationImportedRowDto(rowNr, "Viga rea töötlemisel"));
                       log.error(e.getMessage(), e);
@@ -226,14 +227,18 @@ public class SaisApplicationService {
      * TODO: Avalduse andmeid ei muudeta siis, kui avaldus on juba lisatud immatrikuleerimise käskkirjale.
      */
     private void proccessRow(SaisApplicationCsvRow row, int rowNr, List<SaisApplicationImportedRowDto> failed,
-            SaisApplicationImportResultDto dto, ClassifierCache classifiers, EstonianIdCodeValidator idCodeValidator,
-            Long schoolId) {
+            SaisApplicationImportResultDto dto, ClassifierCache classifiers, Map<String, Object> processedByNr,
+            EstonianIdCodeValidator idCodeValidator, Long schoolId) {
 
         String applicationNr = row.getApplicationNr();
         if (!StringUtils.hasText(applicationNr)) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, "Puudub avalduse number"));
             return;
+        } else if (processedByNr.containsKey(applicationNr)) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, String.format("Failis on rohkem kui üks avalduse numbriga %s vastuvõtu avaldust.", applicationNr)));
+            return;
         }
+        processedByNr.put(applicationNr, null);
 
         String messageForMissing = String.format("Avaldusel nr %s puudub ", applicationNr);
         String messageForOther = String.format("Avaldusega nr %s ", applicationNr);

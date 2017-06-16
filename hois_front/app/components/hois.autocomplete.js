@@ -66,11 +66,18 @@ angular.module('hitsaOis')
             if(scope.additionalQueryParams) {
                 angular.extend(query, scope.additionalQueryParams);
             }
-            lookup.search(query, function (data) {
-              deferred.resolve(data.content);
-            });
-            return deferred.promise;
 
+            if(url === '/autocomplete/curriculumversions') {
+              lookup.query(query, function (data) {
+                deferred.resolve(data);
+              });
+            } else {
+              lookup.search(query, function (data) {
+                deferred.resolve(data.content);
+              });
+            }
+
+            return deferred.promise;
           };
         }
       }

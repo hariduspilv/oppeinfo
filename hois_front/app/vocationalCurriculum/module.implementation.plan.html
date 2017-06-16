@@ -5,8 +5,13 @@
 		<div layout="column">
 			<md-input-container flex>
 			  <label>{{'module.implementationPlan.codeOrName' | translate}}</label>
-			  <input ng-model="implementationPlan.code" name="code" type="text" md-maxlength="255" required ng-readonly="formState.readOnly">
-        <div ng-show="!codeNameUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>
+			  <input ng-model="implementationPlan.code" name="code" type="text" md-maxlength="255" required ng-readonly="formState.readOnly"
+        unique="curriculumVersionCodeUniqueQuery" ng-model-options="{ debounce: 250 }">
+        <div ng-messages="vocationalCurriculumModuleImplementationPlanForm.code.$error">
+          <div ng-message="notUnique">
+            {{'main.messages.error.mustBeUnique' | translate}}
+          </div>
+        </div>
 			</md-input-container>
 			<div layout="row">
 				<md-input-container flex="45" flex-xs="100">

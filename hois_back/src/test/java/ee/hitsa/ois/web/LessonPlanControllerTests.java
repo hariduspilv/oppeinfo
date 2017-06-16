@@ -37,6 +37,14 @@ public class LessonPlanControllerTests {
     }
 
     @Test
+    public void searchformData() {
+        String url = "/lessonplans/searchFormData";
+        ResponseEntity<?> response = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
     public void search() {
         String url = "/lessonplans";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);

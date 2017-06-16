@@ -119,7 +119,7 @@ public abstract class UserUtil {
     public static void assertIsSchoolAdmin(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(), "User is not school admin");
     }
-    
+
     public static void assertIsMainAdmin(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isMainAdmin(), "User is not main admin");
     }
@@ -138,5 +138,9 @@ public abstract class UserUtil {
 
     public static void assertUserBelongsToPerson(User user, Person person) {
         AssertionFailedException.throwIf(!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson())), "Person and user don't match");
+    }
+
+    public static void assertIsPerson(HoisUserDetails user, Person person) {
+        AssertionFailedException.throwIf(!user.getPersonId().equals(EntityUtil.getNullableId(person)), "Person and user don't match");
     }
 }

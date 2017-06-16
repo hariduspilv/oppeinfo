@@ -37,6 +37,7 @@ import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.UserRepository;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.dto.ApplicationDto;
 import ee.hitsa.ois.web.dto.ApplicationSearchDto;
@@ -64,23 +65,27 @@ public class ApplicationControllerTests {
     @Before
     public void setUp() {
         Role role = Role.ROLL_A;
-        List<School> userSchools = userRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.isNotNull(root.get("school").get("id")));
-            filters.add(cb.equal(root.get("role").get("code"), role.name()));
-            filters.add(cb.equal(root.get("person").get("idcode"), TestConfiguration.USER_ID));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().map(User::getSchool).collect(Collectors.toList());
+        if(student == null) {
+            List<School> userSchools = userRepository.findAll((root, query, cb) -> {
+                List<Predicate> filters = new ArrayList<>();
+                filters.add(cb.isNotNull(root.get("school").get("id")));
+                filters.add(cb.equal(root.get("role").get("code"), role.name()));
+                filters.add(cb.equal(root.get("person").get("idcode"), TestConfiguration.USER_ID));
+                return cb.and(filters.toArray(new Predicate[filters.size()]));
+            }).stream().map(User::getSchool).collect(Collectors.toList());
 
-        student = studentRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
-            filters.add(root.get("school").in(userSchools));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().findFirst().get();
+            Assert.assertFalse(userSchools.isEmpty());
 
-        userSchool = student.getSchool();
-        testConfigurationService.userToRoleInSchool(role, userSchool.getId(), restTemplate);
+            student = studentRepository.findAll((root, query, cb) -> {
+                List<Predicate> filters = new ArrayList<>();
+                filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
+                filters.add(root.get("school").in(userSchools));
+                return cb.and(filters.toArray(new Predicate[filters.size()]));
+            }).stream().findFirst().get();
+
+            userSchool = student.getSchool();
+        }
+        testConfigurationService.userToRoleInSchool(role, EntityUtil.getId(userSchool), restTemplate);
     }
 
     @After

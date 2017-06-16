@@ -19,18 +19,18 @@
 				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.nameTitle' | translate}}</legend>
 				<md-input-container flex="100">
 					<label>{{'curriculum.nameEt' | translate}}</label>
-					<input name="nameEt" ng-model="curriculum.nameEt" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
-          <div ng-show="!nameEtUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>
+					<input name="nameEt" ng-model="curriculum.nameEt" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData" md-maxlength="255">
+          <!--<div ng-show="!nameEtUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>-->
 				</md-input-container>
 				<md-input-container flex="100">
 					<label>{{'curriculum.nameEn' | translate}}</label>
-					<input ng-model="curriculum.nameEn" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
-          <div ng-show="!nameEnUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>
+					<input ng-model="curriculum.nameEn" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData" md-maxlength="255">
+          <!--<div ng-show="!nameEnUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>-->
 				</md-input-container>
 				<md-input-container flex="100">
 					<label>{{'curriculum.nameRu' | translate}}</label>
-					<input ng-model="curriculum.nameRu" type="text" ng-readonly="formState.readOnly || formState.notEditableBasicData">
-          <div ng-show="!nameRuUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>
+					<input ng-model="curriculum.nameRu" type="text" ng-readonly="formState.readOnly || formState.notEditableBasicData" md-maxlength="255">
+          <!--<div ng-show="!nameRuUnique">{{'curriculum.error.nameNotUnique' | translate}}</div>-->
 				</md-input-container>
 			</fieldset>
 		</div>
@@ -47,7 +47,12 @@
 				</div>
 				<md-input-container flex="50" flex-offset="5">
 					<label>{{'curriculum.code' | translate}}</label>
-					<input ng-model="curriculum.code" name="code" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData">
+					<input ng-model="curriculum.code" name="code" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData"md-maxlength="25" unique="codeUniqueQuery" ng-model-options="{ debounce: 250 }">
+          <div ng-messages="vocationalCurriculumForm.code.$error" ng-show="vocationalCurriculumForm.code.$dirty">
+            <div ng-message="notUnique">
+              {{'main.messages.error.mustBeUnique' | translate}}
+            </div>
+          </div>
 				</md-input-container>
 			</div>
 			<div layout="row" flex>
@@ -58,7 +63,7 @@
                 </div>
 				<md-input-container flex="50" flex-offset="5">
 					<label>{{'curriculum.merCode' | translate}}</label>
-					<input ng-model="curriculum.merCode" name="merCode" type="text" ng-model-options="{ debounce: 250 }" unique="merCodeUniqueQuery" ng-readonly="formState.readOnly || formState.notEditableBasicData">
+					<input ng-model="curriculum.merCode" name="merCode" type="text" ng-model-options="{ debounce: 250 }" unique="merCodeUniqueQuery" ng-readonly="formState.readOnly || formState.notEditableBasicData" md-maxlength="10">
 					<div ng-messages="vocationalCurriculumForm.merCode.$error" ng-show="vocationalCurriculumForm.merCode.$dirty">
 						<div ng-message="notUnique">
 							{{'main.messages.error.mustBeUnique' | translate}}
@@ -157,11 +162,11 @@
                 that's why two separate elements are used -->
                 <md-input-container flex="50" flex-offset="5" ng-if="strictValidation()">
                     <label>{{'curriculum.structuralUnitResponsible' | translate}}</label>
-                    <hois-school-department-select ng-model="curriculum.schoolDepartments" multiple required ng-disabled="readOnly || formState.notEditableBasicData"></hois-school-department-select>
+                    <hois-school-department-select ng-model="curriculum.schoolDepartments" multiple required ng-disabled="formState.readOnly || formState.notEditableBasicData"></hois-school-department-select>
                 </md-input-container>
                 <md-input-container flex="50" flex-offset="5" ng-if="!strictValidation()">
                     <label>{{'curriculum.structuralUnitResponsible' | translate}} *</label>
-                    <hois-school-department-select ng-model="curriculum.schoolDepartments" multiple ng-disabled="readOnly || formState.notEditableBasicData"></hois-school-department-select>
+                    <hois-school-department-select ng-model="curriculum.schoolDepartments" multiple ng-disabled="formState.readOnly || formState.notEditableBasicData"></hois-school-department-select>
                 </md-input-container>
 
 			</div>
@@ -461,7 +466,7 @@
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'curriculum.contactPerson' | translate}}</label>
-					<input ng-model="curriculum.contactPerson" type="text" ng-readonly="formState.readOnly">
+					<input ng-model="curriculum.contactPerson" type="text" ng-readonly="formState.readOnly" md-maxlength="1000">
 				</md-input-container>
 				<md-input-container flex>
 					<label>{{'main.notes' | translate}}</label>
@@ -547,7 +552,7 @@
 			<div layout="row" flex="100">
 				<md-input-container flex="30" flex-sm="100" flex-xs="100">
 					<label>{{'curriculum.approvalDocumentNr' | translate}}</label>
-					<input ng-model="curriculum.approvalDokNr" type="text" ng-readonly="formState.readOnly">
+					<input ng-model="curriculum.approvalDokNr" type="text" ng-readonly="formState.readOnly" md-maxlength="50">
 				</md-input-container>
 				<md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
 					<label>{{'curriculum.approvalDate' | translate}}</label>

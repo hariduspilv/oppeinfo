@@ -81,8 +81,12 @@ public class AutomaticMessageService {
     }
 
     public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean, Message existingMessage, HoisUserDetails initiator) {
+        List<StudentRepresentative> representatives = student.getRepresentatives();
+        if(representatives == null || representatives.isEmpty()) {
+            return;
+        }
         // XXX bad code: representatives are fetched but person is used
-        List<Person> persons = StreamUtil.toMappedList(StudentRepresentative::getPerson, student.getRepresentatives().stream()
+        List<Person> persons = StreamUtil.toMappedList(StudentRepresentative::getPerson, representatives.stream()
                 .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible()))
                 .filter(sr -> initiator == null || !EntityUtil.getId(sr.getPerson()).equals(initiator.getPersonId())));
 

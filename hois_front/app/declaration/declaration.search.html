@@ -1,0 +1,117 @@
+<div layout="column">
+  <form ng-submit="loadData()" novalidate>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label>{{'declaration.studyPeriod' | translate}}</label>
+          <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
+      </md-input-container>
+      <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+          <label>{{'declaration.student' | translate}}</label>
+          <input ng-model="criteria.studentsName" type="text">
+      </md-input-container>
+    </div>
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label>{{'declaration.curriculumVersion' | translate}}</label>
+          <hois-select ng-model="criteria.curriculumVersion" values="curriculumVersions"></hois-select>
+      </md-input-container>
+      <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+          <label>{{'declaration.studentGroup' | translate}}</label>
+          <hois-select ng-model="criteria.studentGroups" multiple values="studentGroups"></hois-select>
+      </md-input-container>
+    </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label>{{'declaration.status' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.status" main-classifier-code="OPINGUKAVA_STAATUS" model-value-attr="code"></hois-classifier-select>
+      </md-input-container>
+      <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+          <md-checkbox
+              ng-model="criteria.repeatingDeclaration"
+              aria-label="{{'declaration.repeatingDeclaration' | translate}}">
+              {{'declaration.repeatingDeclaration' | translate}}
+          </md-checkbox>
+      </md-input-container>
+    </div>
+
+    <div layout="row">
+      <div layout="column" flex="45">
+        <label class="common-label">{{'declaration.inserted' | translate}}</label>
+        <div layout="row" layout-sm="column" layout-xs="column" >
+          <md-input-container flex-sm="100" flex-xs="100">
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-sm="100" flex-xs="100">
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.insertedThru"></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div layout="column" flex="50" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <label class="common-label">{{'declaration.confirmDate' | translate}}</label>
+        <div layout="row" layout-sm="column" layout-xs="column" >
+          <md-input-container flex-sm="100" flex-xs="100">
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.confirmedFrom"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-sm="100" flex-xs="100">
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.confirmedThru"></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+    </div>
+
+    <div layout="row">
+      <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/declarations/new">{{'main.button.create' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+    </div>
+    <div layout="row">
+      <md-button class="md-raised" ng-click="confirmAll()">{{'declaration.confirmAll' | translate}}</md-button>
+    </div>
+
+  </form>
+
+
+
+  <br>
+
+  <md-table-container ng-cloak layout-padding>
+    <table md-table md-progress="tabledata.$promise">
+      <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+        <tr md-row>
+          <th md-column md-order-by="p.lastname,p.firstname">{{'declaration.student' | translate}}</th>
+          <th md-column md-order-by="p.idcode">{{'declaration.idcode' | translate}}</th>
+          <th md-column md-order-by="cv.code">{{'declaration.curriculumVersion' | translate}}</th>
+          <th md-column md-order-by="sg.code">{{'declaration.studentGroup' | translate}}</th>
+          <th md-column md-order-by="d.inserted">{{'declaration.inserted' | translate}}</th>
+          <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'declaration.status' | translate}}</th>
+          <th md-column md-order-by="d.confirmDate">{{'declaration.confirmDate' | translate}}</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell><a ng-href="#/declarations/{{row.id}}/view">{{::row.student.fullname}}</a></td>
+            <td md-cell>{{::row.student.idcode}}</td>
+            <td md-cell>{{currentLanguageNameField(row.student.curriculumVersion)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.student.studentGroup)}}</td>
+            <td md-cell>{{row.inserted | hoisDate}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{row.confirmDate | hoisDate}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/declarations/{{row.id}}/edit">
+                {{'main.button.change' | translate}}
+              </md-button>
+            </td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+  <md-table-pagination  md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                        md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                        md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }"  md-page-select></md-table-pagination>
+</div>

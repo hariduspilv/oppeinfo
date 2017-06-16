@@ -1,13 +1,12 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($scope, $route, QueryUtils, DataUtils, Classifier) {
+angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message) {
   $scope.auth = $route.current.locals.auth;
   $scope.formState = {
     selectedStudents: [],
     teachers: QueryUtils.endpoint('/moduleProtocols/teachers').query()
   };
   var clMapper = Classifier.valuemapper({ journalResults: 'KUTSEHINDAMINE', status: 'OPPURSTAATUS' });
-  //TODO: vaikimisi on vastaval õppeaastal tunnijaotusplaanis märgitud mooduli vastutaja
 
   $scope.curriculumVersionChange = function () {
     $scope.formState.curriculumVersionOccupationModule = undefined;
@@ -15,38 +14,47 @@ angular.module('hitsaOis').controller('ModuleProtocolNewController', function ($
   };
 
   $scope.curriculumVersionOccupationModuleChange = function () {
-    var query = QueryUtils.endpoint('/moduleProtocols/occupationModuleStudents/' + $scope.formState.curriculumVersionOccupationModule).query({});
+    var query = QueryUtils.endpoint('/moduleProtocols/occupationModule/' + $scope.formState.curriculumVersionOccupationModule).get();
     $scope.tabledata = {
       $promise: query.$promise
     };
 
     query.$promise.then(function (result) {
-      $scope.tabledata.content = clMapper.objectmapper(result);
-      result.forEach(function (it) {
-        $scope.formState.selectedStudents.push(it.studentId);
+      $scope.tabledata.content = clMapper.objectmapper(result.occupationModuleStudents);
+      result.occupationModuleStudents.forEach(function (it) {
+        if (it.status.code === 'OPPURSTAATUS_O') {
+          $scope.formState.selectedStudents.push(it.studentId);
+        }
       });
+      if (result.teacher && !$scope.formState.teacher) {
+        $scope.formState.teacher = result.teacher.id;
+      }
     });
   };
 
   $scope.journalResultsView = function (journalResult) {
-    return journalResult.map(function (it) { return it.value; }).join('/ ');
+    return journalResult.map(function (it) { return it.value; }).join(' / ');
   };
 
-  $scope.selectedStudentsLength = function() {
+  $scope.selectedStudentsLength = function () {
     return $scope.formState.selectedStudents.length;
   };
 
+  var ModuleProtocolEndpoint = QueryUtils.endpoint('/moduleProtocols');
   $scope.submit = function () {
-    var data = {
-      students: $scope.formState.selectedStudents,
+    var entity = {};
+    entity.protocolVdata = {
       curriculumVersionOccupationModule: $scope.formState.curriculumVersionOccupationModule,
       curriculumVersion: $scope.formState.curriculumVersion,
       studyYear: $scope.formState.studyYear,
       teacher: $scope.formState.teacher
     };
+    entity.protocolStudents = $scope.formState.selectedStudents.map(function(it) {return {studentId: it};});
 
-    QueryUtils.endpoint('/moduleProtocols/create').save(data, function (entity) {
-      $scope.protocol = entity;
-    });
+    new ModuleProtocolEndpoint(entity)
+      .$save().then(function (result) {
+        message.info('main.messages.create.success');
+        $location.path('/moduleProtocols/' + result.id + '/edit');
+      });
   };
 });

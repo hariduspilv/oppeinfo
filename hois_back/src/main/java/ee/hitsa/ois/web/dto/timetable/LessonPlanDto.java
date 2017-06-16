@@ -12,6 +12,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
@@ -170,6 +171,43 @@ public class LessonPlanDto extends LessonPlanForm {
             this.teachers = teachers;
         }
     }
+    
+    public static class LessonPlanModuleJournalForTeacherDto extends LessonPlanModuleJournalDto {
+        
+        private Boolean isConfirmer;
+        private Boolean isFiller;
+
+        public static LessonPlanModuleJournalForTeacherDto of(Journal journal, LessonPlanCapacityMapper capacityMapper, Teacher teacher) {
+            LessonPlanModuleJournalForTeacherDto dto = new LessonPlanModuleJournalForTeacherDto();
+            dto.setId(journal.getId());
+            dto.setNameEt(journal.getNameEt());
+            dto.setGroupProportion(EntityUtil.getNullableCode(journal.getGroupProportion()));
+            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
+            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt().toLowerCase())).collect(Collectors.toList()));
+            List<JournalTeacher> currentTeacher = StreamUtil.nullSafeList(journal.getJournalTeachers().stream().filter(t -> EntityUtil.getId(t.getTeacher()) == EntityUtil.getId(teacher)).collect(Collectors.toList()));
+            dto.setIsConfirmer(currentTeacher.get(0).getIsConfirmer());
+            dto.setIsFiller(currentTeacher.get(0).getIsFiller());
+            // all hours mapped by capacity type and week nr
+            dto.setHours(capacityMapper.mapOutput(journal));
+            return dto;
+        }
+
+        public void setIsConfirmer(Boolean isConfirmer) {
+            this.isConfirmer = isConfirmer;
+        }
+
+        public Boolean getIsConfirmer() {
+            return isConfirmer;
+        }
+
+        public void setIsFiller(Boolean isFiller) {
+            this.isFiller = isFiller;
+        }
+
+        public Boolean getIsFiller() {
+            return isFiller;
+        }
+    }
 
     public static class LessonPlanModuleJournalThemeDto {
 
@@ -209,6 +247,7 @@ public class LessonPlanDto extends LessonPlanForm {
         public AutocompleteResult getTeacher() {
             return teacher;
         }
+
     }
 
     public static class StudyPeriodDto {

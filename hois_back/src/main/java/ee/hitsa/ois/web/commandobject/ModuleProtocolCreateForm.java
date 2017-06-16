@@ -2,36 +2,24 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.List;
 
-import ee.hitsa.ois.web.dto.ProtocolStudentDto;
-import ee.hitsa.ois.web.dto.ProtocolVdataDto;
-
 public class ModuleProtocolCreateForm {
 
-    private String protocolNr;
-    private ProtocolVdataDto protocolVdata;
-    private List<ProtocolStudentDto> protocolStudents;
+    private ProtocolVdataForm protocolVdata;
+    private List<ModuleProtocolStudentCreateForm> protocolStudents;
 
-    public String getProtocolNr() {
-        return protocolNr;
-    }
-
-    public void setProtocolNr(String protocolNr) {
-        this.protocolNr = protocolNr;
-    }
-
-    public ProtocolVdataDto getProtocolVdata() {
+    public ProtocolVdataForm getProtocolVdata() {
         return protocolVdata;
     }
 
-    public void setProtocolVdata(ProtocolVdataDto protocolVdata) {
+    public void setProtocolVdata(ProtocolVdataForm protocolVdata) {
         this.protocolVdata = protocolVdata;
     }
 
-    public List<ProtocolStudentDto> getProtocolStudents() {
+    public List<ModuleProtocolStudentCreateForm> getProtocolStudents() {
         return protocolStudents;
     }
 
-    public void setProtocolStudents(List<ProtocolStudentDto> protocolStudents) {
+    public void setProtocolStudents(List<ModuleProtocolStudentCreateForm> protocolStudents) {
         this.protocolStudents = protocolStudents;
     }
 

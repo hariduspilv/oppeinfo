@@ -28,6 +28,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
+import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanUniqueCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -93,5 +94,11 @@ public class SubjectStudyPeriodPlanController {
     @GetMapping("/subject/{id:\\d+}")
     public AutocompleteResult subject(@WithEntity("id") Subject subject) {
         return AutocompleteResult.of(subject);
+    }
+    
+    @GetMapping("/subjects")
+    public Page<AutocompleteResult> getSubjectsOptions(SubjectSearchCommand subjectSearchCommand, HoisUserDetails user, Pageable pageable) {
+        return subjectStudyPeriodPlanService.getSubjectsOptions(user.getSchoolId(), subjectSearchCommand, pageable);
+        
     }
 }

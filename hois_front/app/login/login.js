@@ -37,7 +37,7 @@ angular.module('hitsaOis')
 
     $rootScope.$on(AUTH_EVENTS.notAuthenticated, showAlert);
     $rootScope.$on(AUTH_EVENTS.notAuthorized, showAlert);
-    $rootScope.$on(AUTH_EVENTS.reAuthenticate, function () { authenticate() });
+    $rootScope.$on(AUTH_EVENTS.reAuthenticate, function () { authenticate(); });
 
     $scope.login = function () {
       authenticate($scope.credentials);

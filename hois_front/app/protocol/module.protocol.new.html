@@ -21,7 +21,7 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex flex-sm="100">
             <label class="textInput">{{'moduleProtocol.curriculumVersion' | translate}}</label>
-            <hois-select ng-model="formState.curriculumVersion" type="curriculumversion" ng-change="curriculumVersionChange()" required></hois-select>
+            <hois-select ng-model="formState.curriculumVersion" type="curriculumversion" criteria="{higher: false}" ng-change="curriculumVersionChange()" required></hois-select>
           </md-input-container>
         </div>
 

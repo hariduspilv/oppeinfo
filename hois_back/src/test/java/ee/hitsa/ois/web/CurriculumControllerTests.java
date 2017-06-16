@@ -64,8 +64,6 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto
 @Transactional
 public class CurriculumControllerTests {
 
-    private final static String CODE = "code";
-
     @Autowired
     private TestRestTemplate restTemplate;
     @Autowired

@@ -5,7 +5,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
     var id = $route.current.params.id;
     var lessonPlanModule = $route.current.params.lessonPlanModule;
     var baseUrl = '/lessonplans/journals';
-    $scope.formState = {capacityTypes: Classifier.queryForDropdown({mainClassCode: 'MAHT'})};
+    $scope.formState = {capacityTypes: Classifier.queryForDropdown({mainClassCode: 'MAHT', vocational: true})};
     $scope.record = QueryUtils.endpoint(baseUrl).get({id: id || 'new', lessonPlanModule: lessonPlanModule});
     $scope.formState.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').query({valid: true, higher: false});
     $scope.record.$promise.then(function(result) {
@@ -16,7 +16,6 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
       $scope.formState.themes = result.themes;
       delete result.themes;
       $scope.formState.themeMap = $scope.formState.themes.reduce(function(acc, item) { acc[item.id] = item; return acc; }, {});
-
 
       for(var i = 0; result.groups.length > i; i++) {
         result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: result.groups[i].curriculumVersion});
@@ -43,7 +42,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
       $scope.record.journalCapacityTypes = Classifier.getSelectedCodes($scope.formState.capacityTypes);
       if($scope.record.id) {
         $scope.record.$update().then( function(result) {
-          message.updateSuccess;
+          message.updateSuccess();
           for(var i = 0; result.groups.length > i; i++) {
             result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: result.groups[i].curriculumVersion});
             result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule});
