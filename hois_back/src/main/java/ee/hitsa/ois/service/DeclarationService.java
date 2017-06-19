@@ -73,11 +73,11 @@ public class DeclarationService {
     @Autowired
     private EntityManager em;
 
-    private final String DECLARATION_SELECT = " distinct d.id as d_id, s.id as sId, "
+    private static final String DECLARATION_SELECT = " distinct d.id as d_id, s.id as sId, "
             + "p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code as cv_code, "
             + "sg.id as sgId, sg.code as sg_code, d.inserted, d.status_code, d.confirm_date, "
             + "sp.id, sp.name_et, sp.name_en ";
-    private final String DECLARATION_FROM = "from declaration d "
+    private static final String DECLARATION_FROM = "from declaration d "
             + "left join student s on s.id = d.student_id "
             + "left join person p on p.id = s.person_id "
             + "left join student_group sg on sg.id = s.student_group_id "
@@ -85,7 +85,7 @@ public class DeclarationService {
             + "left join classifier status on status.code = d.status_code "
             + "left join study_period sp on sp.id = d.study_period_id ";
 
-    final String SUBJECT_FROM = "from subject_study_period ssp left join subject s on s.id = ssp.subject_id "
+    private static final String SUBJECT_FROM = "from subject_study_period ssp left join subject s on s.id = ssp.subject_id "
             + "left join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = s.id "
             + "left join curriculum_version_hmodule cvhm on cvhm.id =  cvhms.curriculum_version_hmodule_id "
             + "join classifier c on c.code = s.assessment_code left join ("
@@ -95,7 +95,7 @@ public class DeclarationService {
             + "left join teacher t on t.id = sspt.teacher_id left join person p on p.id = t.person_id "
             + "group by ssp2.id) teachers on ssp.id  = teachers.ssp2Id";
 
-    final String SUBJECT_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
+    private static final String SUBJECT_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
             + "s.name_et, s.name_en, s.code, s.credits, c.value, cvhm.id as moduleId, "
             + "cvhms.is_optional, array_to_string(teachers.teacher, ', ')";
 
@@ -189,7 +189,7 @@ public class DeclarationService {
         Declaration declaration = declarationRepository.getOne(form.getDeclaration());
         SubjectStudyPeriod ssp = subjectStudyPeriodRepository.getOne(form.getSubjectStudyPeriod());
 
-        AssertionFailedException.throwIf(!declaration.getStudyPeriod().getId().equals(ssp.getStudyPeriod().getId()),
+        AssertionFailedException.throwIf(!EntityUtil.getId(declaration.getStudyPeriod()).equals(EntityUtil.getId(ssp.getStudyPeriod())),
                 "Declaration's and study period's ids does not match");
         UserUtil.assertSameSchool(user, ssp.getStudyPeriod().getStudyYear().getSchool());
         
@@ -205,7 +205,7 @@ public class DeclarationService {
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
         StudyPeriod studyPeriod = studyPeriodRepository.getOne(studyPeriodId);
 
-        AssertionFailedException.throwIf(!studyPeriod.getStudyYear().getSchool().getId().equals(schoolId),
+        AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(schoolId),
                 "User's and studyPeriod's schools does not match!");
 
         Declaration declaration = new Declaration();
@@ -235,7 +235,7 @@ public class DeclarationService {
         List<Declaration> declarations = declarationRepository.findAll((root, query, cb) -> {
             return cb.equal(root.get("studyPeriod").get("id"), studyPeriodId);
         });
-        Integer count = 0;
+        int count = 0;
         for (Declaration declaration : declarations) {
             if (declaration.getConfirmDate() == null) {
                 declaration.setStatus(classifierRepository.getOne(DeclarationStatus.OPINGUKAVA_STAATUS_K.name()));
@@ -245,7 +245,7 @@ public class DeclarationService {
             }
         }
         declarationRepository.save(declarations);
-        return count;
+        return Integer.valueOf(count);
     }
 
     public Declaration removeConfirmation(Declaration declaration) {
@@ -261,9 +261,9 @@ public class DeclarationService {
     }
 
     public List<DeclarationSubjectDto> getCurriculumSubjectOptions(Declaration declaration) {
-        Long studyPeriod = declaration.getStudyPeriod().getId();
+        Long studyPeriod = EntityUtil.getId(declaration.getStudyPeriod());
         Student student = declaration.getStudent();
-        Long CurriculumVersion = student.getCurriculumVersion().getId();
+        Long CurriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SUBJECT_FROM);
 
@@ -277,9 +277,9 @@ public class DeclarationService {
     }
 
     public List<DeclarationSubjectDto> getExtraCurriculumSubjects(Declaration declaration) {
-        Long studyPeriod = declaration.getStudyPeriod().getId();
+        Long studyPeriod = EntityUtil.getId(declaration.getStudyPeriod());
         Student student = declaration.getStudent();
-        Long CurriculumVersion = student.getCurriculumVersion().getId();
+        Long CurriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SUBJECT_FROM);
 
@@ -300,7 +300,7 @@ public class DeclarationService {
         return subjectsQueryResultToDto(result);
     }
 
-    private List<DeclarationSubjectDto> subjectsQueryResultToDto(List<?> result) {
+    private static List<DeclarationSubjectDto> subjectsQueryResultToDto(List<?> result) {
         return StreamUtil.toMappedList(r -> {
             DeclarationSubjectDto dto = new DeclarationSubjectDto();
             dto.setSubjectStudyPeriod(resultAsLong(r, 0));

@@ -316,7 +316,7 @@ public class ModuleProtocolService {
         return protocolRepository.save(protocol);
     }
 
-    private void assertRemovedStudents(List<ProtocolStudent> oldStudents, List<ProtocolStudent> newStudents) {
+    private static void assertRemovedStudents(List<ProtocolStudent> oldStudents, List<ProtocolStudent> newStudents) {
         List<Long> newIds = StreamUtil.toMappedList(ProtocolStudent::getId, newStudents);
         List<ProtocolStudent> removedStudents = oldStudents.stream()
                 .filter(oldStudent -> !newIds.contains(oldStudent.getId())).collect(Collectors.toList());

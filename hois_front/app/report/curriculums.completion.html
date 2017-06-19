@@ -7,10 +7,9 @@
           <input ng-model="criteria.name" name="name" type="text" autofocus>
         </md-input-container>
 
-        <md-input-container flex="50" flex-offset="5">
-          <label>{{'report.curriculumscompletion.curriculum' | translate}}</label>
-          <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion" multiple></hois-select>
-        </md-input-container>
+        <div flex="50" flex-offset="5">
+          <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.curriculumscompletion.curriculum"></hois-autocomplete>
+        </div>
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column">

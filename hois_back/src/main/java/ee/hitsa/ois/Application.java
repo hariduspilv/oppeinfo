@@ -8,6 +8,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.concurrent.Executor;
 
 import javax.annotation.PostConstruct;
 
@@ -24,6 +25,7 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.ConverterRegistry;
+import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
@@ -98,6 +100,11 @@ public class Application {
     @Bean
     public EhisXroadService ehisXroadService() {
         return new EhisXroadService();
+    }
+
+    @Bean
+    public Executor taskExecutor() {
+        return new SimpleAsyncTaskExecutor();
     }
 
     @Bean

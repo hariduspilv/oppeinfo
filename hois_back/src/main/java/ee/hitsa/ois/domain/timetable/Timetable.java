@@ -1,8 +1,8 @@
 package ee.hitsa.ois.domain.timetable;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -19,8 +19,10 @@ import ee.hitsa.ois.domain.school.School;
 @Entity
 public class Timetable extends BaseEntityWithId {
 
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private School school;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private StudyPeriod studyPeriod;
     @ManyToOne(fetch = FetchType.LAZY)
@@ -31,7 +33,7 @@ public class Timetable extends BaseEntityWithId {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_id", nullable = false, updatable = false)
-    private Set<TimetableObject> timetableObjects = new HashSet<>();
+    private List<TimetableObject> timetableObjects = new ArrayList<>();
 
     public School getSchool() {
         return school;
@@ -73,11 +75,11 @@ public class Timetable extends BaseEntityWithId {
         this.endDate = endDate;
     }
 
-    public Set<TimetableObject> getTimetableObjects() {
+    public List<TimetableObject> getTimetableObjects() {
         return timetableObjects;
     }
 
-    public void setTimetableObjects(Set<TimetableObject> timetableObjects) {
+    public void setTimetableObjects(List<TimetableObject> timetableObjects) {
         this.timetableObjects = timetableObjects;
     }
 }

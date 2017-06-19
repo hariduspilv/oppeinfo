@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('VocationalCurriculumController', function ($scope, Classifier, dialogService, ClassifierConnect, ArrayUtils,
-    message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q, config, $http) {
+    message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q, config) {
       var clMapper = Classifier.valuemapper({occupations: 'KUTSE', partOccupations: 'OSAKUTSE', specialities: 'SPETSKUTSE'});
       $scope.school = $route.current.locals.auth ? $route.current.locals.auth.school : null;
 
@@ -830,7 +830,7 @@ angular.module('hitsaOis')
                 savedModule.$update().then(function(response) {
                     $scope.curriculum.modules = response.modules;
                     $scope.curriculum.occupations = response.occupations;
-                    var currentStatus = $scope.currentStatus
+                    var currentStatus = $scope.currentStatus;
                     mapDtoToModel($scope.curriculum, $scope);
                     $scope.currentStatus = currentStatus;
                     message.info('main.messages.create.success');

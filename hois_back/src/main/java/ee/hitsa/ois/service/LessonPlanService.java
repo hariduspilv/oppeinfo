@@ -435,7 +435,7 @@ public class LessonPlanService {
         }
     }
     
-    private class JournalOccupationModuleThemeHolder {
+    private static class JournalOccupationModuleThemeHolder {
         private Journal journal;
         private LessonPlanModule lessonPlanModule;
         private Long cvomt;
@@ -457,6 +457,5 @@ public class LessonPlanService {
         public Long getCvomt() {
             return cvomt;
         }
-
     }
 }

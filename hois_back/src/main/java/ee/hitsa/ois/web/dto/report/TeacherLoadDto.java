@@ -54,12 +54,10 @@ public class TeacherLoadDto {
     public static class TeacherLoadSubjectDto {
         private final AutocompleteResult subject;
         private final String code;
-        private final Long hours;
 
         public TeacherLoadSubjectDto(Object record) {
             subject = new AutocompleteResult(null, resultAsString(record, 0), resultAsString(record, 1));
             code = resultAsString(record, 2);
-            hours = resultAsLong(record, 3);
         }
 
         public AutocompleteResult getSubject() {
@@ -68,10 +66,6 @@ public class TeacherLoadDto {
 
         public String getCode() {
             return code;
-        }
-
-        public Long getHours() {
-            return hours;
         }
     }
 }

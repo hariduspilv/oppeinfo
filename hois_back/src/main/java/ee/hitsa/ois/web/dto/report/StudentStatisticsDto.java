@@ -4,7 +4,9 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class StudentStatisticsDto {
 
@@ -12,12 +14,14 @@ public class StudentStatisticsDto {
     private final String nameEt;
     private final String nameEn;
     private final Map<String, Long> result;
+    private final Set<String> resultFilter;
 
     public StudentStatisticsDto(Object record) {
         this.id = resultAsLong(record, 0);
         this.nameEt = resultAsString(record, 1);
         this.nameEn = resultAsString(record, 2);
         this.result = new HashMap<>();
+        this.resultFilter = new HashSet<>();
     }
 
     public Long getId() {
@@ -37,6 +41,10 @@ public class StudentStatisticsDto {
     }
 
     public long getTotal() {
-        return result.values().stream().mapToLong(r -> r.longValue()).sum();
+        return result.entrySet().stream().filter(r -> !resultFilter.contains(r.getKey())).mapToLong(r -> r.getValue().longValue()).sum();
+    }
+
+    public Set<String> getResultFilter() {
+        return resultFilter;
     }
 }

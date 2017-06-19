@@ -1,8 +1,8 @@
 package ee.hitsa.ois.domain.timetable;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -27,11 +27,11 @@ public class TimetableEventTime extends BaseEntityWithId {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
-    private Set<TimetableEventTeacher> timetableEventTeachers = new HashSet<>();
+    private List<TimetableEventTeacher> timetableEventTeachers = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
-    private Set<TimetableEventRoom> timetableEventRooms = new HashSet<>();
+    private List<TimetableEventRoom> timetableEventRooms = new ArrayList<>();
 
     public TimetableEvent getTimetableEvent() {
         return timetableEvent;
@@ -73,19 +73,19 @@ public class TimetableEventTime extends BaseEntityWithId {
         this.otherRoom = otherRoom;
     }
 
-    public Set<TimetableEventTeacher> getTimetableEventTeachers() {
+    public List<TimetableEventTeacher> getTimetableEventTeachers() {
         return timetableEventTeachers;
     }
 
-    public void setTimetableEventTeachers(Set<TimetableEventTeacher> timetableEventTeachers) {
+    public void setTimetableEventTeachers(List<TimetableEventTeacher> timetableEventTeachers) {
         this.timetableEventTeachers = timetableEventTeachers;
     }
 
-    public Set<TimetableEventRoom> getTimetableEventRooms() {
+    public List<TimetableEventRoom> getTimetableEventRooms() {
         return timetableEventRooms;
     }
 
-    public void setTimetableEventRooms(Set<TimetableEventRoom> timetableEventRooms) {
+    public void setTimetableEventRooms(List<TimetableEventRoom> timetableEventRooms) {
         this.timetableEventRooms = timetableEventRooms;
     }
     

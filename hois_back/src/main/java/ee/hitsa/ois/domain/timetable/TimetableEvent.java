@@ -1,8 +1,8 @@
 package ee.hitsa.ois.domain.timetable;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -28,7 +28,7 @@ public class TimetableEvent extends BaseEntityWithId {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_id", nullable = false, updatable = false)
-    private Set<TimetableEventTime> timetableEventTimes = new HashSet<>();
+    private List<TimetableEventTime> timetableEventTimes = new ArrayList<>();
 
     public LocalDateTime getStart() {
         return start;
@@ -78,11 +78,11 @@ public class TimetableEvent extends BaseEntityWithId {
         this.timetableObject = timetableObject;
     }
 
-    public Set<TimetableEventTime> getTimetableEventTimes() {
+    public List<TimetableEventTime> getTimetableEventTimes() {
         return timetableEventTimes;
     }
 
-    public void setTimetableEventTimes(Set<TimetableEventTime> timetableEventTimes) {
+    public void setTimetableEventTimes(List<TimetableEventTime> timetableEventTimes) {
         this.timetableEventTimes = timetableEventTimes;
     }
 

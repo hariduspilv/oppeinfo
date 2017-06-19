@@ -10,13 +10,14 @@ import javax.validation.constraints.AssertTrue;
 
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.validation.DateRange;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 @DateRange(from = "from", thru = "thru")
 public class StudentStatisticsByPeriodCommand {
 
     private LocalDate from;
     private LocalDate thru;
-    private List<Long> curriculum;
+    private List<EntityConnectionCommand> curriculum;
     private String result;
 
     public LocalDate getFrom() {
@@ -35,11 +36,11 @@ public class StudentStatisticsByPeriodCommand {
         this.thru = thru;
     }
 
-    public List<Long> getCurriculum() {
+    public List<EntityConnectionCommand> getCurriculum() {
         return curriculum;
     }
 
-    public void setCurriculum(List<Long> curriculum) {
+    public void setCurriculum(List<EntityConnectionCommand> curriculum) {
         this.curriculum = curriculum;
     }
 

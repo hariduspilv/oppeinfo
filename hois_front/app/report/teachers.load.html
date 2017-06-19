@@ -41,7 +41,6 @@
             <th md-column>{{'report.teachersload.studyPeriod' | translate}}</th>
             <th md-column>{{'report.teachersload.subject' | translate}}</th>
             <th md-column>{{'report.teachersload.subjectcode' | translate}}</th>
-            <th md-column>{{'report.teachersload.hours' | translate}}</th>
             <th md-column>{{'report.teachersload.teacher' | translate}}</th>
             <th md-column>{{'report.teachersload.plannedhours' | translate}}</th>
             <th md-column>{{'report.teachersload.actualhours' | translate}}</th>
@@ -51,10 +50,18 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(row.studyYear)}}</td>
             <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
-            <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
-            <td md-cell>{{::row.subjectcode}}</td>
-            <td md-cell>{{::row.hours}}</td>
-            <td md-cell>{{::row.teachername}}</td>
+            <td md-cell>
+              <div ng-repeat="subject in row.subjects">
+                <hr ng-if="!$first">
+                {{currentLanguageNameField(subject.subject)}}
+              </div>
+            </td>
+            <td md-cell>
+              <div ng-repeat="subject in row.subjects">
+                <hr ng-if="!$first">
+                {{::subject.code}}
+              </div></td>
+            <td md-cell>{{::row.teacher}}</td>
             <td md-cell>{{::row.plannedhours}}</td>
             <td md-cell>{{::row.actualhours}}</td>
           </tr>

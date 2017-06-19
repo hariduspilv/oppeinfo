@@ -289,7 +289,7 @@ public class JournalService {
             }
         }
 
-        if (journalEntryForm.getEntryType().equals(JournalEntryType.SISSEKANNE_T.name())) {
+        if (JournalEntryType.SISSEKANNE_T.name().equals(journalEntryForm.getEntryType())) {
             Set<ConstraintViolation<JournalEntryForm>> errors = validator.validate(journalEntryForm, JournalEntryValidation.Lesson.class);
             if(!errors.isEmpty()) {
                 throw new ValidationFailedException(errors);

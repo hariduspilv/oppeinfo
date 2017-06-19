@@ -1,7 +1,7 @@
 package ee.hitsa.ois.domain.timetable;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -30,7 +30,7 @@ public class TimetableObject extends BaseEntityWithId {
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_event_id", nullable = false, updatable = false)
-    private Set<TimetableEvent> timetableEvents = new HashSet<>();
+    private List<TimetableEvent> timetableEvents = new ArrayList<>();
 
     public Timetable getTimetable() {
         return timetable;
@@ -56,11 +56,11 @@ public class TimetableObject extends BaseEntityWithId {
         this.subjectStudyPeriod = subjectStudyPeriod;
     }
 
-    public Set<TimetableEvent> getTimetableEvents() {
+    public List<TimetableEvent> getTimetableEvents() {
         return timetableEvents;
     }
 
-    public void setTimetableEvents(Set<TimetableEvent> timetableEvents) {
+    public void setTimetableEvents(List<TimetableEvent> timetableEvents) {
         this.timetableEvents = timetableEvents;
     }
 

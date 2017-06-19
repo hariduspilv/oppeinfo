@@ -312,6 +312,10 @@ angular.module('hitsaOis')
           url: "/reports/students/statistics?_menu"
         },
         {
+          name: 'main.menu.reports.studentstatisticsbyperiod',
+          url: "/reports/students/statistics/byperiod?_menu"
+        },
+        {
           name: 'main.menu.reports.curriculumscompletion',
           url: "/reports/curriculums/completion?_menu"
         },

@@ -6,6 +6,7 @@ import java.util.List;
 
 public class TimetableEventSearchDto {
 
+    private Long id;
     private String name;
     private LocalDate date;
     private LocalTime time;
@@ -13,13 +14,23 @@ public class TimetableEventSearchDto {
     private List<String> rooms;
     private String studentGroup;
     private Boolean singleEvent;
-    
-    public TimetableEventSearchDto(String name, LocalDate date, LocalTime time, String studentGroup, Boolean singleEvent) {
+
+    public TimetableEventSearchDto(Long id, String name, LocalDate date, LocalTime time, String studentGroup,
+            Boolean singleEvent) {
+        this.id = id;
         this.name = name;
         this.date = date;
         this.time = time;
         this.studentGroup = studentGroup;
         this.singleEvent = singleEvent;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     public String getName() {

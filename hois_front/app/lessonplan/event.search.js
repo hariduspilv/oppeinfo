@@ -17,6 +17,12 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController', ['$scop
   $scope.clearCriteria = function() {
     $scope.criteria = {};
     $scope.criteria.singleEvent = true;
-  }
+  };
+  
+  $scope.$watch('criteria.roomObject', function() {
+    $scope.criteria.room = $scope.criteria.roomObject ? $scope.criteria.roomObject.id : null;
+  });
+  
+  QueryUtils.createQueryForm($scope, baseUrl, {});
 }
 ]);

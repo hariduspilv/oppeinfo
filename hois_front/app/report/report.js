@@ -6,6 +6,8 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       studyLevel: 'OPPEASTE', studyForm: 'OPPEVORM', studyLoad: 'OPPEKOORMUS', status: 'OPPURSTAATUS'});
     QueryUtils.createQueryForm($scope, '/reports/students', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
 
+    $scope.formState = {xlsUrl: 'reports/students/students.xls'};
+
     $q.all(clMapper.promises).then($scope.loadData);
   }
 ]).controller('ReportStudentStatisticsController', ['$scope', 'Classifier', 'QueryUtils',
@@ -16,6 +18,29 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
       if($scope.formState.resultType !== resultType) {
         $scope.formState.resultType = resultType;
         $scope.formState.resultDef = Classifier.queryForDropdown({mainClassCode: resultType});
+        if(resultType === 'FINALLIKAS') {
+          Classifier.queryForDropdown({mainClassCode: 'FINTAPSUSTUS'}, function(result) {
+            $scope.formState.resultDef.$promise.then(function() {
+              Array.prototype.push.apply($scope.formState.resultDef, result);
+            });
+          });
+        }
+      }
+    });
+
+    $scope.loadData();
+  }
+]).controller('ReportStudentStatisticsByperiodController', ['$scope', 'Classifier', 'QueryUtils',
+  function ($scope, Classifier, QueryUtils) {
+    var classifierMapping = {OPPURSTAATUS_A: 'AKADPUHKUS_POHJUS', OPPURSTAATUS_K: 'EKSMAT_POHJUS'};
+    $scope.formState = {};
+
+    QueryUtils.createQueryForm($scope, '/reports/students/statistics/byperiod', {result: 'OPPURSTAATUS_A'}, function() {
+      var resultType = $scope.criteria.result;
+      if($scope.formState.resultType !== resultType) {
+        $scope.formState.resultType = resultType;
+        var mainClassCode = classifierMapping[resultType];
+        $scope.formState.resultDef = mainClassCode ? Classifier.queryForDropdown({mainClassCode: mainClassCode}) : undefined;
       }
     });
 

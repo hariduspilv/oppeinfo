@@ -15,6 +15,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 public class HttpUtil {
 
     public static final String APPLICATION_PDF = "application/pdf";
+    public static final String APPLICATION_XLS = "application/vnd.ms-excel";
     public static final String TEXT_CSV_UTF8 = "text/csv; Charset=UTF-8";
     private static final byte[] UTF8_BOM = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 

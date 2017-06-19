@@ -15,7 +15,8 @@ angular.module('hitsaOis')
         status: $scope.STATUS.ENTERING,
         modules: [],
         occupations: [],
-        validFrom: new Date()
+        validFrom: new Date(),
+        optionalStudyCredits: 0
     };
     var baseUrl = '/stateCurriculum';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -59,7 +60,7 @@ angular.module('hitsaOis')
       });
     }
 
-    
+
         // ----------- save and delete
 
 
@@ -152,7 +153,7 @@ angular.module('hitsaOis')
             prompt: $scope.readOnly ? 'stateCurriculum.prompt.viewForm.close' : 'stateCurriculum.prompt.editForm.close',
             updateSuccess: 'stateCurriculum.statuschange.closed',
             errorMessage: $scope.readOnly ? 'stateCurriculum.statuschange.fail.closeReadOnly' : 'stateCurriculum.statuschange.fail.close'
-        };        
+        };
         setStatus($scope.STATUS.CLOSED, messages);
     };
 
@@ -281,13 +282,13 @@ angular.module('hitsaOis')
         var occMod = getCreditsOfOccupationOrSubOccupation(occupation);
         var subOccMod = getCreditsOfOccupationOrSubOccupation(spetsOccupation);
         var partOccMod = sumOfPartOccupations(occupation);
-        var bool = occMod + subOccMod + partOccMod + 
+        var bool = occMod + subOccMod + partOccMod +
         $scope.stateCurriculum.optionalStudyCredits - getCreditsOfRepeatingModules(occupation) === $scope.stateCurriculum.credits;
         return bool;
     };
 
     function sumOfPartOccupations(occupation) {
-        var partOccupations = getOccupationsSubOccupations(occupation, 'OSAKUTSE');        
+        var partOccupations = getOccupationsSubOccupations(occupation, 'OSAKUTSE');
         return partOccupations.reduce(function(sum, val){
             return sum + getCreditsOfOccupationOrSubOccupation(val);
         }, 0);

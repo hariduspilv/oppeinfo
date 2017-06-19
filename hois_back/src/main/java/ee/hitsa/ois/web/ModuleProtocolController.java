@@ -126,7 +126,7 @@ public class ModuleProtocolController {
         return get(moduleProtocolService.confirm(protocol, moduleProtocolSaveForm));
     }
 
-    private void assertIsTeacherResponsible(HoisUserDetails user, Protocol protocol) {
+    private static void assertIsTeacherResponsible(HoisUserDetails user, Protocol protocol) {
         UserUtil.assertIsPerson(user, protocol.getProtocolVdata().getTeacher().getPerson());
     }
 

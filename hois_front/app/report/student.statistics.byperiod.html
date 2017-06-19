@@ -4,23 +4,27 @@
       <div layout="row">
         <div layout="row" flex="45">
           <md-input-container>
-            <label>{{'main.date' | translate}}</label>
-            <md-datepicker ng-model="criteria.date"></md-datepicker>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.from"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-offset="5">
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
           </md-input-container>
         </div>
       </div>
 
       <div layout="row">
         <div flex="45">
-          <hois-autocomplete ng-model="criteria.curriculum" method="curriculums" label="report.studentstatistics.curriculum" multiple></hois-autocomplete>
+          <hois-autocomplete ng-model="criteria.curriculum" method="curriculums" label="report.studentstatisticsbyperiod.curriculum" multiple></hois-autocomplete>
         </div>
 
         <md-input-container flex="50" flex-offset="5">
-          <label>{{'report.studentstatistics.result' | translate}}</label>
+          <label>{{'report.studentstatisticsbyperiod.result' | translate}}</label>
           <md-select ng-model="criteria.result" required>
-            <md-option value="FINALLIKAS">{{'report.studentstatistics.FINALLIKAS' | translate}}</md-option>
-            <md-option value="OPPEVORM">{{'report.studentstatistics.OPPEVORM' | translate}}</md-option>
-            <md-option value="OPPURSTAATUS">{{'report.studentstatistics.OPPURSTAATUS' | translate}}</md-option>
+            <md-option value="OPPURSTAATUS_A">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_A' | translate}}</md-option>
+            <md-option value="OPPURSTAATUS_K">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_K' | translate}}</md-option>
+            <md-option value="OPPURSTAATUS_L">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_L' | translate}}</md-option>
           </md-select>
         </md-input-container>
       </div>
@@ -39,16 +43,18 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="curriculumVersion.code">{{'report.studentstatistics.curriculum' | translate}}</th>
-            <th md-column ng-repeat="cl in formState.resultDef">{{currentLanguageNameField(cl)}}</th>
-            <th md-column>{{'report.studentstatistics.total' | translate}}</th>
+            <th md-column md-order-by="curriculumVersion.code">{{'report.studentstatisticsbyperiod.curriculum' | translate}}</th>
+            <th md-column ng-if="formState.resultType !== 'OPPURSTAATUS_L'" ng-repeat="cl in formState.resultDef">{{currentLanguageNameField(cl)}}</th>
+            <th md-column>{{formState.resultType === 'OPPURSTAATUS_L' ? 'report.studentstatisticsbyperiod.finished' : 'report.studentstatisticsbyperiod.total' | translate}}</th>
+            <th md-column ng-if="formState.resultType === 'OPPURSTAATUS_L'">{{'report.studentstatisticsbyperiod.isCumLaude' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(row)}}</td>
-            <td md-cell ng-repeat="cl in formState.resultDef">{{::row.result[cl.code] || 0}}</td>
+            <td md-cell ng-if="formState.resultType !== 'OPPURSTAATUS_L'" ng-repeat="cl in formState.resultDef">{{::row.result[cl.code] || 0}}</td>
             <td md-cell>{{::row.total}}</td>
+            <td md-cell ng-if="formState.resultType === 'OPPURSTAATUS_L'">{{::row.result['true'] || 0}}</td>
           </tr>
         </tbody>
       </table>

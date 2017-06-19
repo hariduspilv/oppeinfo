@@ -14,24 +14,22 @@
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
         <div layout="row" flex="45">
-          <label>{{'report.student.birthdate' | translate}}</label>
-          <md-input-container>
-            <label>{{'main.from' | translate}}</label>
+         <md-input-container>
+            <label>{{'report.student.birthdate_from' | translate}}</label>
             <md-datepicker ng-model="criteria.birthdateFrom"></md-datepicker>
           </md-input-container>
           <md-input-container flex-offset="5">
-            <label>{{'main.thru' | translate}}</label>
+            <label>{{'report.student.birthdate_thru' | translate}}</label>
             <md-datepicker ng-model="criteria.birthdateThru" md-min-date="criteria.birthdateFrom"></md-datepicker>
           </md-input-container>
         </div>
-        <div layout="row" flex="50">
-          <label>{{'report.student.studyStart' | translate}}</label>
+        <div layout="row"  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <md-input-container>
-            <label>{{'main.from' | translate}}</label>
+            <label>{{'report.student.studyStart_from' | translate}}</label>
             <md-datepicker ng-model="criteria.studyStartFrom"></md-datepicker>
           </md-input-container>
           <md-input-container flex-offset="5">
-            <label>{{'main.thru' | translate}}</label>
+            <label>{{'report.student.studyStart_thru' | translate}}</label>
             <md-datepicker ng-model="criteria.studyStartThru" md-min-date="criteria.studyStartFrom"></md-datepicker>
           </md-input-container>
         </div>
@@ -41,9 +39,9 @@
           <label>{{'report.student.studyLevel' | translate}}</label>
           <hois-classifier-select ng-model="criteria.studyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"></hois-classifier-select>
         </md-input-container>
-        <md-input-container flex="45" flex-offset="5">
+        <div flex="45" flex-offset="5">
           <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.student.curriculum"></hois-autocomplete>
-        </md-input-container>
+        </div>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45">
@@ -78,6 +76,7 @@
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>

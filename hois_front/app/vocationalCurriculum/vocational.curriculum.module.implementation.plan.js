@@ -264,11 +264,6 @@ angular.module('hitsaOis')
       return occupationModule;
     }
 
-    $scope.getModulesOccupationModule = function(curriculumModule) {
-        var occupationModule = getModulesOccupationModule(curriculumModule);
-        return occupationModule ? occupationModule : {yearCapacities: ['', '', '']};
-    };
-
     $scope.openAddModuleDataDialog = function(curriculumModule, moduleData) {
       dialogService.showDialog('vocationalCurriculum/module.data.add.dialog.html',
       function(dialogScope) {
@@ -276,7 +271,16 @@ angular.module('hitsaOis')
         dialogScope.formState = $scope.formState;
         var occupationModule = getModulesOccupationModule(curriculumModule);
         if (angular.isDefined(occupationModule)) {
+
           dialogScope.occupationModule = occupationModule;
+          // dialogScope.occupationModule = angular.copy(occupationModule);
+
+          // if(angular.isDefined(moduleData)) {
+          //   dialogScope.occupationModule = moduleData;
+          // } else {
+          //   dialogScope.occupationModule = angular.copy(occupationModule);
+          // }
+
         } else {
           occupationModule = {
               curriculumModule: curriculumModule.id,
@@ -344,6 +348,10 @@ angular.module('hitsaOis')
 
         submittedDialogScope.occupationModule.capacities = capacitiesToDto(submittedDialogScope.capacities);
 
+
+
+
+
         var isUpdate = false;
         $scope.implementationPlan.occupationModules.forEach(function(it) {
           if(it.curriculumModule === submittedDialogScope.occupationModule.curriculumModule) {
@@ -353,6 +361,22 @@ angular.module('hitsaOis')
         if(!isUpdate) {
           $scope.implementationPlan.occupationModules.push(submittedDialogScope.occupationModule);
         }
+
+
+
+
+        // var editedOccupationModule = $scope.implementationPlan.occupationModules.find(function(el){
+        //   return el.id === submittedDialogScope.occupationModule.id; //FIXME: this sjould not work when editing occupationModule on new form!
+        // });
+
+        // if(editedOccupationModule){
+        //   ArrayUtils.remove($scope.implementationPlan.occupationModules, editedOccupationModule);
+        // }
+        // $scope.implementationPlan.occupationModules.push(submittedDialogScope.occupationModule);
+
+
+
+
         if($scope.implementationPlan.id) {
             var ModuleEndpoint = QueryUtils.endpoint('/curriculum/vocational/implementationPlan/modules');
             var savedModule = new ModuleEndpoint($scope.implementationPlan);
@@ -464,8 +488,8 @@ angular.module('hitsaOis')
 
             var status = response.status;
             if($scope.currentStatus !== status && !$scope.formState.readOnly) {
-                $location.path('/vocationalCurriculum/' + curriculumEntity.id +
-                '/view/moduleImplementationPlan/' + response.id + '/view').search({_noback: true});
+                var url = '/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/' + response.id + '/view';
+                $location.path(url).search({_noback: true});
             }
             $scope.currentStatus = status;
           });
@@ -489,7 +513,7 @@ angular.module('hitsaOis')
         var curriculumVersion = new CurriculumVersionEndpoint($scope.implementationPlan);
         curriculumVersion.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $rootScope.back('#/vocationalCurriculum/ '+ curriculumEntity.id + '/view/moduleImplementationPlan/' + $scope.implementationPlan.id + '/view');
+          $rootScope.back('#/vocationalCurriculum/'+ curriculumEntity.id + '/view');
         });
       });
     };
@@ -592,5 +616,12 @@ angular.module('hitsaOis')
       }
     });
 
-
+    $scope.getModulesCapacities = function(studyYearNumber) {
+      return $scope.implementationPlan.occupationModules.reduce(function(sum, occupationModule){
+        var modulesYearCapacity = occupationModule.yearCapacities.find(function(yearCapacity){
+          return yearCapacity.studyYearNumber === studyYearNumber;
+        });
+        return modulesYearCapacity && !isNaN(modulesYearCapacity.credits) ? sum + modulesYearCapacity.credits : sum;
+      }, 0);
+    };
   });

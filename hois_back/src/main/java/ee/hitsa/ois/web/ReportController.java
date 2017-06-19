@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.service.ReportService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.report.CurriculumCompletionCommand;
 import ee.hitsa.ois.web.commandobject.report.CurriculumSubjectsCommand;
@@ -35,6 +36,12 @@ public class ReportController {
     public Page<StudentSearchDto> students(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
         return reportService.students(user.getSchoolId(), criteria, pageable);
+    }
+
+    @GetMapping(value = "/students/students.xls", produces = HttpUtil.APPLICATION_XLS)
+    public byte[] studentsAsExcel(HoisUserDetails user, @Valid StudentSearchCommand criteria) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return reportService.studentsAsExcel(user.getSchoolId(), criteria);
     }
 
     @GetMapping("/students/statistics")

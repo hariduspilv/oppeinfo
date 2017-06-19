@@ -44,6 +44,10 @@ public class ReportControllerTests {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("name", "nimi");
         uriBuilder.queryParam("idcode", "48908209998");
+        uriBuilder.queryParam("birthdateFrom", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("birthdateThru", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("studyStartFrom", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("studyStartThru", "2017-01-01T00:00:00.000Z");
         uriBuilder.queryParam("studyLevel", "OPPEASTE_442");
         uriBuilder.queryParam("curriculumVersion", Long.valueOf(1));
         uriBuilder.queryParam("studentGroup", Long.valueOf(1));
@@ -59,10 +63,21 @@ public class ReportControllerTests {
     }
 
     @Test
+    public void studentsAsExcel() {
+        String url = "/reports/students/students.xls";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+
+        ResponseEntity<?> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Void.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void studentStatistics() {
         String url = "/reports/students/statistics";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("result", MainClassCode.FINALLIKAS.name());
+        uriBuilder.queryParam("date", "2017-01-01T00:00:00.000Z");
 
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
@@ -88,6 +103,8 @@ public class ReportControllerTests {
         String url = "/reports/students/statistics/byperiod";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("result", StudentStatus.OPPURSTAATUS_A.name());
+        uriBuilder.queryParam("from", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("thru", "2017-01-01T00:00:00.000Z");
 
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);

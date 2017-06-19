@@ -67,7 +67,7 @@
             <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.gradeFormation' | translate}}</legend>
             <div flex layout="row">
               <span flex="30" class="common-label">{{'module.assessmentType' | translate}}</span>
-              <hois-classifier-radio layout="row" ng-model="occupationModule.assessment" model-value-attr="code" main-classifier-code="KUTSEHINDAMISVIIS" required ng-readonly="formState.readOnly" class="md-primary"></hois-classifier-radio>
+              <hois-classifier-radio layout="row" ng-model="occupationModule.assessment" model-value-attr="code" main-classifier-code="KUTSEHINDAMISVIIS" required ng-disabled="formState.readOnly" class="md-primary"></hois-classifier-radio>
             </div>
             <div>&nbsp;</div>
             <md-input-container flex>

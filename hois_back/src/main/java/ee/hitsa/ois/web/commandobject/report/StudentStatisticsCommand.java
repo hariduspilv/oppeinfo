@@ -9,11 +9,12 @@ import java.util.Set;
 import javax.validation.constraints.AssertTrue;
 
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 public class StudentStatisticsCommand {
 
     private LocalDate date;
-    private List<Long> curriculum;
+    private List<EntityConnectionCommand> curriculum;
     private String result;
 
     public LocalDate getDate() {
@@ -24,11 +25,11 @@ public class StudentStatisticsCommand {
         this.date = date;
     }
 
-    public List<Long> getCurriculum() {
+    public List<EntityConnectionCommand> getCurriculum() {
         return curriculum;
     }
 
-    public void setCurriculum(List<Long> curriculum) {
+    public void setCurriculum(List<EntityConnectionCommand> curriculum) {
         this.curriculum = curriculum;
     }
 

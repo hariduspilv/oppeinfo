@@ -35,18 +35,20 @@
           <label>{{'lessonplan.event.teachers' | translate}}</label>
           <hois-select ng-model="criteria.teachers" values="formState.teachers" flex multiple></hois-select>
         </md-input-container>
-        <md-input-container class="md-block" flex="50">
-          <hois-autocomplete label="lessonplan.event.otherTeacher" ng-model="criteria.otherTeacher" method="teachers"></hois-autocomplete>
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'lessonplan.event.otherTeacher' | translate}}</label>
+          <input ng-model="criteria.otherTeacher" type="text">
         </md-input-container>
       </div>
       
       <div layout="row" flex="100">
         <div layout="row" flex="50">
-          <hois-autocomplete flex ng-model="criteria.room" method="rooms" name="student" label="lessonplan.event.room"></hois-autocomplete>
+          <hois-autocomplete flex ng-model="criteria.roomObject" method="rooms" name="student" label="lessonplan.event.room"></hois-autocomplete>
         </div>
-        <div layout="row" flex="50">
-          <hois-autocomplete flex ng-model="criteria.otherRoom" method="rooms" name="student" label="lessonplan.event.otherRoom"></hois-autocomplete>
-        </div>
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'lessonplan.event.otherRoom' | translate}}</label>
+          <input ng-model="criteria.otherRoom" type="text">
+        </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="30" flex-sm="100" flex-xs="100">

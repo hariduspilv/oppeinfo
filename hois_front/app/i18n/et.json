@@ -209,6 +209,7 @@
         "label": "Päringud",
         "students": "Õppurid",
         "studentstatistics": "Õppurite statistika",
+        "studentstatisticsbyperiod": "Õppurite statistika perioodis",
         "teachersload": "Õpetaja koormus"
       },
       "student": {
@@ -1781,8 +1782,11 @@
     }
   },
   "report": {
+    "excel": "Excelisse",
     "student": {
       "birthdate": "Sünnikuupäev",
+	  "birthdate_from": "Sünnikp. alates",
+	  "birthdate_thru": "Sünnikp. kuni",
       "credits": "Tehtud ainepunktide arv",
       "curriculum": "Õppekava",
       "fin": "Finantseerimise allikas",
@@ -1795,7 +1799,9 @@
       "studyForm": "Õppevorm",
       "studyLevel": "Õppetase",
       "studyLoad": "Õppekoormus",
-      "studyStart": "Õpingute alguse kuupäev"
+      "studyStart": "Õpingute alguse kuupäev",
+	  "studyStart_from": "Õpingute alg. kp. alates",
+	  "studyStart_thru": "Õpingute alg. kp. kuni"
     },
     "curriculumscompletion": {
       "curriculum": "Õppekava",
@@ -1806,16 +1812,25 @@
       "studyLoad": "Õppekoormus"
     },
     "studentstatistics": {
-      "FINALLIKAS": "Aktiivsete õppurite arv finats. allika kaupa ",
+      "FINALLIKAS": "Aktiivsete õppurite arv finats. allika kaupa",
       "OPPEVORM": "Aktiivsete õppurite arv õppevormide kaupa",
       "OPPURSTAATUS": "Aktiivsete õppurite arv staatuste kaupa",
       "curriculum": "Õppekava",
       "result": "Statistika liik",
       "total": "Õppurite arv kokku"
     },
+    "studentstatisticsbyperiod": {
+      "OPPURSTAATUS_A": "Akadeemilisele puhkusele läinud",
+      "OPPURSTAATUS_K": "Eksmatrikuleeritud",
+      "OPPURSTAATUS_L": "Lõpetanud",
+      "curriculum": "Õppekava",
+      "finished": "Lõpetanud õppurite arv",
+      "isCumLaude": "sh cum laude",
+      "result": "Statistika liik",
+      "total": "Õppurite arv kokku"
+    },
     "teachersload": {
       "actualhours": "Õpetaja tegelik tundide arv",
-      "hours": "Tundide arv",
       "plannedhours": "Õpetaja planeeritud tundide arv",
       "studyPeriod": "Õppeperiood",
       "studyYear": "Õppeaasta",

@@ -249,7 +249,7 @@ angular.module('hitsaOis')
 
     function getModulesBySpeciality(specialityId) {
       return $scope.version.modules.filter(function (el) {
-        return ArrayUtils.includes(el.specialitiesReferenceNumbers, specialityId);
+        return !el.minorSpeciality && ArrayUtils.includes(el.specialitiesReferenceNumbers, specialityId);
       });
     }
 

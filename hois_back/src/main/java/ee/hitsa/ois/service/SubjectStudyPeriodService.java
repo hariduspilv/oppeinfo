@@ -614,7 +614,7 @@ public class SubjectStudyPeriodService {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject s");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("s.status_code = :status", "status", SubjectStatus.AINESTAATUS_K.name());
+        qb.requiredCriteria("s.status_code = :status", "status", SubjectStatus.AINESTAATUS_K);
 
         qb.optionalCriteria("not exists " 
                         + "(select * from subject_study_period ssp "

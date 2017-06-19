@@ -13,8 +13,8 @@ public class TimetableEventSearchCommand {
     private Long room;
     private LocalDate from;
     private LocalDate thru;
-    private Long otherTeacher;
-    private Long otherRoom;
+    private String otherTeacher;
+    private String otherRoom;
 
     public String getName() {
         return name;
@@ -80,19 +80,19 @@ public class TimetableEventSearchCommand {
         this.thru = thru;
     }
 
-    public Long getOtherTeacher() {
+    public String getOtherTeacher() {
         return otherTeacher;
     }
 
-    public void setOtherTeacher(Long otherTeacher) {
+    public void setOtherTeacher(String otherTeacher) {
         this.otherTeacher = otherTeacher;
     }
 
-    public Long getOtherRoom() {
+    public String getOtherRoom() {
         return otherRoom;
     }
 
-    public void setOtherRoom(Long otherRoom) {
+    public void setOtherRoom(String otherRoom) {
         this.otherRoom = otherRoom;
     }
 

@@ -20,6 +20,14 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); }
       }
+    }).when('/reports/students/statistics/byperiod', {
+        templateUrl: 'report/student.statistics.byperiod.html',
+        controller: 'ReportStudentStatisticsByperiodController',
+        controllerAs: 'controller',
+        data: authorizedRoles,
+        resolve: {
+            translationLoaded: function($translate) { return $translate.onReady(); }
+        }
     }).when('/reports/curriculums/completion', {
       templateUrl: 'report/curriculums.completion.html',
       controller: 'ReportCurriculumsCompletionController',

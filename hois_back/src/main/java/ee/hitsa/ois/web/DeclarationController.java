@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.time.LocalDate;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -24,12 +25,13 @@ import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DeclarationStatus;
-import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.DeclarationRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.DeclarationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
@@ -54,9 +56,9 @@ public class DeclarationController {
     public DeclarationDto get(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
         DeclarationDto dto = DeclarationDto.of(declaration);
         declarationService.setAreSubjectsDeclaredRepeatedy(dto.getSubjects(), declaration.getId());
-        dto.setCanBeChanged(canChangeDeclaration(user, declaration));
-        dto.setCanBeSetUnconfirmed(canUnconfirmDeclaration(user, declaration));
-        dto.setCanBeSetConfirmed(canConfirmDeclaration(user, declaration));
+        dto.setCanBeChanged(Boolean.valueOf(canChangeDeclaration(user, declaration)));
+        dto.setCanBeSetUnconfirmed(Boolean.valueOf(canUnconfirmDeclaration(user, declaration)));
+        dto.setCanBeSetConfirmed(Boolean.valueOf(canConfirmDeclaration(user, declaration)));
         return dto;
     }
 
@@ -107,15 +109,12 @@ public class DeclarationController {
      */
     @GetMapping("/canCreate")
     public Map<String, ?> canCreate(HoisUserDetails user) {
-
-        Boolean answer = Boolean.FALSE;
+        boolean canCreate = false;
         if(user.isStudent()) {
             Student student = studentRepository.getOne(user.getStudentId());
-            answer = student.getStatus().getCode().equals(StudentStatus.OPPURSTAATUS_O.name());
+            canCreate = StudentUtil.isStudying(student);
         }
-        Map<String, Object> response = new HashMap<>();
-        response.put("canCreate", answer);
-        return response;
+        return Collections.singletonMap("canCreate", Boolean.valueOf(canCreate));
     }
 
     @PostMapping("create")
@@ -125,6 +124,7 @@ public class DeclarationController {
                 "You cannot create declaration!");
         return get(user, declarationService.create(user.getSchoolId(), student));
     }
+
     @PostMapping("create/{id:\\d+}")
     public DeclarationDto createForSchoolAdmin(HoisUserDetails user, @WithEntity("id") Student student) {
         UserUtil.assertSameSchool(user, student.getSchool());
@@ -192,34 +192,35 @@ public class DeclarationController {
     public AutocompleteResult getCurrentStudyPeriod(HoisUserDetails user) {
         return declarationService.getCurrentStudyPeriod(user.getSchoolId());
     }
-    
-    private boolean canConfirmDeclaration(HoisUserDetails user, Declaration declaration) {
-        return (user.isSchoolAdmin() || user.isStudent() 
-                && declaration.getStudent().getStatus().getCode().equals(StudentStatus.OPPURSTAATUS_O.name())
-                && declaration.getStudent().getId().equals(user.getStudentId()))
-                && declaration.getStatus().getCode().equals(DeclarationStatus.OPINGUKAVA_STAATUS_S.name());
+
+    private static boolean canConfirmDeclaration(HoisUserDetails user, Declaration declaration) {
+        return user.isSchoolAdmin() || (user.isStudent() 
+                && StudentUtil.isStudying(declaration.getStudent())
+                && user.getStudentId().equals(declaration.getStudent().getId()))
+                && DeclarationStatus.OPINGUKAVA_STAATUS_S.name().equals(EntityUtil.getCode(declaration.getStatus()));
     }
 
-    private boolean canChangeDeclaration(HoisUserDetails user, Declaration declaration) {
-        return user.isSchoolAdmin() || user.isStudent() 
-                && declaration.getStudent().getStatus().getCode().equals(StudentStatus.OPPURSTAATUS_O.name())
-                && declaration.getStatus().getCode().equals(DeclarationStatus.OPINGUKAVA_STAATUS_S.name())
-                && declaration.getStudent().getId().equals(user.getStudentId());
+    private static boolean canChangeDeclaration(HoisUserDetails user, Declaration declaration) {
+        return user.isSchoolAdmin() || (user.isStudent() 
+                && StudentUtil.isStudying(declaration.getStudent())
+                && DeclarationStatus.OPINGUKAVA_STAATUS_S.name().equals(EntityUtil.getCode(declaration.getStatus()))
+                && user.getStudentId().equals(declaration.getStudent().getId()));
     }
 
-    private boolean canUnconfirmDeclaration(HoisUserDetails user, Declaration declaration) {
-        if(user.isStudent() && !declaration.getStudent().getId().equals(user.getStudentId())) {
+    private static boolean canUnconfirmDeclaration(HoisUserDetails user, Declaration declaration) {
+        if(user.isStudent() && !user.getStudentId().equals(declaration.getStudent().getId())) {
             return false;
         }
-        return declaration.getStatus().getCode().equals(DeclarationStatus.OPINGUKAVA_STAATUS_K.name()) && 
+        return DeclarationStatus.OPINGUKAVA_STAATUS_K.name().equals(EntityUtil.getCode(declaration.getStatus())) && 
                 LocalDate.now().isBefore(declaration.getStudyPeriod().getEndDate());
     }
 
-    private boolean canCreateDeclaration(HoisUserDetails user, Student student) {
+    private static boolean canCreateDeclaration(HoisUserDetails user, Student student) {
         if(user.isSchoolAdmin()) {
             return true;
-        } else if(user.isStudent() && student != null) {
-            return student.getStatus().getCode().equals(StudentStatus.OPPURSTAATUS_O.name());
+        }
+        if(user.isStudent() && student != null) {
+            return StudentUtil.isStudying(student);
         }
         return false;
     }

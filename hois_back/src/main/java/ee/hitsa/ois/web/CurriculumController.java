@@ -24,7 +24,6 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
-import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.report.CurriculumReport;
@@ -200,7 +199,10 @@ public class CurriculumController {
     @PutMapping("/higher/version/modules/{id:\\d+}")
     public CurriculumVersionDto updateHigherCurriculumVersionModules(HoisUserDetails user, @NotNull @RequestBody CurriculumVersionDto form, @WithEntity("id") CurriculumVersion curriculumVersion) {
         UserUtil.assertIsSchoolAdmin(user);
-        UserUtil.assertSameSchool(user, curriculumVersion.getCurriculum().getSchool());
+        /*
+         * This check caused error while adding subjects to joint curriculum
+         */
+//        UserUtil.assertSameSchool(user, curriculumVersion.getCurriculum().getSchool());
         return CurriculumVersionDto.of(curriculumService.updateHigherCurriculumVersionModules(curriculumVersion, form));
     }
     
