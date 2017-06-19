@@ -17,6 +17,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.util.Translatable;
 
 /**
  * TODO: Logo file does not need to be sent with school, but on request only!
@@ -31,7 +32,7 @@ import ee.hitsa.ois.domain.OisFile;
  * Currently for displaying list of schools is used SchoolWithoutLogo interface
  */
 @Entity
-public class School extends BaseEntityWithId {
+public class School extends BaseEntityWithId implements Translatable {
 
     @Column(nullable = false)
     private String nameEt;
@@ -58,8 +59,8 @@ public class School extends BaseEntityWithId {
     @JsonIgnore
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyYearScheduleLegend> studyYearScheduleLegends;
-    
-    
+
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -68,6 +69,7 @@ public class School extends BaseEntityWithId {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

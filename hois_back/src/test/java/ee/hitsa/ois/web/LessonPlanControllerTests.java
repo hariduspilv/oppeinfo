@@ -37,6 +37,14 @@ public class LessonPlanControllerTests {
     }
 
     @Test
+    public void searchformData() {
+        String url = "/lessonplans/searchFormData";
+        ResponseEntity<?> response = restTemplate.getForEntity(url, Object.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
     public void search() {
         String url = "/lessonplans";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
@@ -47,6 +55,7 @@ public class LessonPlanControllerTests {
         uriBuilder.queryParam("studyYear", Long.valueOf(1));
         uriBuilder.queryParam("schoolDepartment", Long.valueOf(1));
         uriBuilder.queryParam("studentGroup", Long.valueOf(1));
+        uriBuilder.queryParam("curriculumVersion", Long.valueOf(1));
 
         url = uriBuilder.build().toUriString();
         responseEntity = restTemplate.getForEntity(url, Object.class);

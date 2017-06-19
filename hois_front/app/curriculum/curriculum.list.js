@@ -1,6 +1,6 @@
 'use strict';
 
-  angular.module('hitsaOis').controller('CurriculumListController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$rootScope', 'AuthService', '$location', '$route', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, $rootScope, AuthService, $location, $route) {
+  angular.module('hitsaOis').controller('CurriculumListController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$rootScope', 'AuthService', '$location', '$route', 'Curriculum', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, $rootScope, AuthService, $location, $route, Curriculum) {
     $scope.auth = $route.current.locals.auth;
     var clMapper = Classifier.valuemapper({origStudyLevel: 'OPPEASTE', status: 'OPPEKAVA_STAATUS'});
     QueryUtils.createQueryForm($scope, '/curriculum', {order: $scope.currentLanguageNameField()}, clMapper.objectmapper);
@@ -30,6 +30,18 @@
     }
     getListOfStudyLevels();
 
+    $scope.areasOfStudy = true;
+
+    $scope.$watch('criteria.curriculumGroup', function() {
+        if($scope.criteria.curriculumGroup) {
+            Curriculum.getAreasOfStudyByGroupOfStudy($scope.criteria.curriculumGroup, function(response){
+              $scope.areasOfStudy = response;
+            });
+        } else {
+          $scope.areasOfStudy = true;
+        }
+    });
+
     $scope.edit = function(curriculum) {
       if(curriculum.higher) {
         $location.path('/higherCurriculum/' + curriculum.id + '/edit');
@@ -49,4 +61,18 @@
     $scope.canBeEdited = function (curriculum){
         return curriculum.status.code !== 'OPPEKAVA_STAATUS_C' && curriculum.status.code !== 'OPPEKAVA_STAATUS_K' && curriculum.ehisStatus !== 'OPPEKAVA_EHIS_STAATUS_A' && curriculum.ehisStatus !== 'OPPEKAVA_EHIS_STAATUS_M';
     };
+
+
+    $scope.$watch('criteria.iscedClassCode', function () {
+      if($scope.criteria.iscedClassCode && !$scope.criteria.iscedSuun && $scope.criteria.iscedVald) {
+        $scope.criteria.iscedVald = undefined;
+      }
+    });
+
+    $scope.$watch('criteria.iscedSuun', function () {
+      if($scope.criteria.iscedSuun && !$scope.criteria.iscedVald && $scope.criteria.curriculumGroup) {
+        $scope.criteria.curriculumGroup = undefined;
+      }
+    });
+
 }]);

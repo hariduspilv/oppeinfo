@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleThemeCapacity;
@@ -18,6 +20,8 @@ public class CurriculumVersionOccupationModuleThemeCapacityDto extends Versioned
     private String capacityType;
 
     @NotNull
+    @Min(0)
+    @Max(10000)
     private Integer hours;
 
     private Boolean contact = Boolean.FALSE;

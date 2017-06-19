@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.Message;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 
 public class MessageSearchDto {
@@ -19,7 +20,7 @@ public class MessageSearchDto {
 
 
     public MessageSearchDto(Message message) {
-        this(message.getId(), message.getSubject(), message.getInserted(), null, null, message.getSender().getId());
+        this(message.getId(), message.getSubject(), message.getInserted(), null, null, EntityUtil.getId(message.getSender()));
     }
 
     public MessageSearchDto(Long id, String subject, String content, LocalDateTime dateSent, String sender,

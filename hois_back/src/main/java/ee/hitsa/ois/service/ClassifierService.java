@@ -23,7 +23,6 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.enums.Language;
-import ee.hitsa.ois.repository.ClassifierConnectRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -40,8 +39,6 @@ public class ClassifierService {
     private EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
-    @Autowired
-    private ClassifierConnectRepository classifierConnectRepository;
 
     public Classifier save(Classifier classifier) {
         return classifierRepository.save(classifier);
@@ -94,10 +91,6 @@ public class ClassifierService {
 
     public void delete(String code) {
         EntityUtil.deleteEntity(classifierRepository, classifierRepository.getOne(code));
-    }
-
-    public void deleteConnections(String code) {
-        classifierConnectRepository.removeAllByClassifierCodeOrConnectClassifierCode(code, code);
     }
 
     public List<Classifier> getParents(String code) {

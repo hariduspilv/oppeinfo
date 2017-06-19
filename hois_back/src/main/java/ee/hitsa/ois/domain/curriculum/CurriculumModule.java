@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.curriculum;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -29,7 +30,7 @@ public class CurriculumModule extends BaseEntityWithId {
 	private String nameEn;
 
 	@Column(nullable = false)
-	private Integer credits;
+	private BigDecimal credits;
 
 	@Column(nullable = false)
 	private String objectivesEt;
@@ -87,11 +88,11 @@ public class CurriculumModule extends BaseEntityWithId {
         this.nameEn = nameEn;
     }
 
-    public Integer getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Integer credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

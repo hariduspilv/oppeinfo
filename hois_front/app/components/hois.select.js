@@ -6,7 +6,7 @@
  * @description
  * # hoisCurriculumVersionSelect
  */
-angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School, QueryUtils) {
+angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School, QueryUtils, DataUtils) {
   return {
     template: '<md-select>'+
       '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>'+
@@ -15,13 +15,15 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
     restrict: 'E',
     replace: true,
     scope: {
+      ngModel: '=',
       criteria: '=',
       multiple:'@',
       ngRequired:'=',
       required:'@',
       values: '@',
       valueProperty: '@',
-      showProperty: '@'
+      showProperty: '@',
+      selectCurrentStudyYear: '@'
     },
     link: function postLink(scope, element, attrs) {
       scope.isMultiple = angular.isDefined(scope.multiple);
@@ -34,23 +36,34 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
         scope.options = result.content;
       };
 
+      var afterStudyYearsLoad = function()  {
+        if (angular.isDefined(scope.selectCurrentStudyYear)) {
+          if (!scope.ngModel) {
+            var currentStudyYear = DataUtils.getCurrentStudyYearOrPeriod(scope.options);
+            if (currentStudyYear) {
+              scope.ngModel = currentStudyYear.id;
+            }
+          }
+        }
+      };
+
       if(angular.isDefined(attrs.type)) {
         if(attrs.type === 'building') {
           scope.options = QueryUtils.endpoint('/autocomplete/buildings').query();
+        } else if(attrs.type === 'curriculum') {
+            QueryUtils.endpoint('/autocomplete/curriculums').search(afterLoad);
         } else if(attrs.type === 'curriculumversion') {
           scope.options = Curriculum.queryVersions(scope.criteria);
         } else if(attrs.type === 'directivecoordinator') {
           scope.options = QueryUtils.endpoint('/autocomplete/directivecoordinators').query(scope.criteria);
+        } else if(attrs.type === 'journal') {
+            scope.options = QueryUtils.endpoint('/autocomplete/journals').query();
         } else if(attrs.type === 'school') {
           scope.options = School.getAll();
-        } else if(attrs.type === 'curriculum') {
-          QueryUtils.endpoint('/autocomplete/curriculums').search(afterLoad);
         } else if(attrs.type === 'studentgroup') {
-          scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query();
+          scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query(scope.criteria);
         } else if(attrs.type === 'studyyear') {
-          scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query();
-        } else if(attrs.type === 'journal') {
-          scope.options = QueryUtils.endpoint('/autocomplete/journals').query();
+          scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query({}, afterStudyYearsLoad);
         }
       } else if(angular.isDefined(scope.values)) {
         scope.$parent.$watchCollection(scope.values, function(values) {

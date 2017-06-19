@@ -1,4 +1,4 @@
-VERSIOON: 0.3.0/20170601
+VERSIOON: 0.3.1/20170601
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -35,7 +35,7 @@ DOK2 - HOIS_analyys_oppekavad_ained.docx
 	   
 DOK3 - HOIS_analyys_opilased_liikumised.docx
 		2.1	Õppurite otsing
-		2.2	Õppuri andmete vaatamine (va välisõppes viibimine ja dokumendid)
+		2.2	Õppuri andmete vaatamine (va välisõppes viibimine)
 		2.3	Õppuri andmete muutmine
 		2.4	Õppuri esindaja andmete muutmine
 		2.5	Õpperühma/grupi moodustamine
@@ -61,11 +61,11 @@ DOK5 - HOIS_analyys_avaldused_kaskkirjad.docx
 		2.8	Finantseerimisallika muutmise taotlemine
 		2.9	Välisõpilaseks vormistamise taotlmine
 		2.10 Eksmatrikuleerimise taotlemine
-		2.11	Avaldusele faili lisamine
-		2.12	Avalduse andmete vaatamine
-		2.13	Avalduse andmete muutmine
-		2.14	Avalduse tagasilükkamine
-		2.15	Alaealise või erivajadusega õppuri koostatud avalduse esitamine
+		2.11 Avaldusele faili lisamine
+		2.12 Avalduse andmete vaatamine
+		2.13 Avalduse andmete muutmine
+		2.14 Avalduse tagasilükkamine
+		2.15 Alaealise või erivajadusega õppuri koostatud avalduse esitamine
 		3.1	Käskkirjade otsing
 		3.2	Õppuri otsimine
 		3.3	Akadeemilisele puhkusele lubamise käskkirja koostamine
@@ -75,14 +75,14 @@ DOK5 - HOIS_analyys_avaldused_kaskkirjad.docx
 		3.7	Finantseerimisallika muutmise käskkirja koostamine
 		3.8	Õppevormi vahetamise käskkirja koostamine
 		3.9	Välisõpilaseks vormistamise käskkirja koostamine
-		3.10	Eksmatrikuleerimise käskkirja koostamine
-		3.11	Immatrikuleerimise käskkirja koostamine
-		3.12	Lõpetamise käskkirja koostamine
-		3.13	Ennistamise käskkirja koostamine 
-		3.16	Käskkirja tühistamine
-		3.17	Käskkirja andmete vaatamine
-		3.18	Käskkirja andmete muutmine
-		3.19	Immatrikuleerimise (vastuvõtt) käskkirja koostamine
+		3.10 Eksmatrikuleerimise käskkirja koostamine
+		3.11 Immatrikuleerimise käskkirja koostamine
+		3.12 Lõpetamise käskkirja koostamine
+		3.13 Ennistamise käskkirja koostamine 
+		3.16 Käskkirja tühistamine
+		3.17 Käskkirja andmete vaatamine
+		3.18 Käskkirja andmete muutmine
+		3.19 Immatrikuleerimise (vastuvõtt) käskkirja koostamine
 		4.1	Tõendite otsing
 		4.3	Tõendi tellimine (admin. töötaja töökohal, ilma reaalse sisuta)
 
@@ -112,10 +112,18 @@ DOK8 - HOIS_analyys_teated.docx
 DOK9 - HOIS_analyys_andmevahetus.docx
 		Andmevahetus EHISega
 		-------------------------------------------
+		3.3	Õppejõudude andmed
 		3.4.1.1	Õppekoormuse muutmine
 		3.4.1.2	Õppekava vahetamine
 		3.4.1.3	Finantseerimisallika muutmine
 		3.4.1.4	Õppevormi vahetamine
+		3.4.2	Eksmatrikuleerimine
+		3.4.3	Ennistamine 
+		3.4.4	Akadeemilisele puhkusele lubamine
+		3.4.5	Akadeemilise puhkuse katkestamine
+		3.4.6	Immatrikuleerimine
+		3.4.13	Õppeasutuse lõpetamine
+		3.4.14	Õppekava täitmine
 		
 		Andmevahetus SAIS-iga
 		-------------------------------------------
@@ -129,6 +137,9 @@ DOK10 - HOIS_analyys_opitulemused_paevikud.docx
 		2.1	Päevikute otsing
 		2.2	Päevikusse õppurite lisamine
 		2.4	Päeviku täitmine
+		2.6	Mooduli protokollid ja mooduli tulemuse sisestamine
+		3.1	Õpingukava koostamine
+		3.2	Õpingukava otsing ja massiline kinnitamine
 
 DOK11 - HOIS_analyys_tunniplaan.docx	
 		2.1	Tundide aegade sisestamine
@@ -136,11 +147,21 @@ DOK11 - HOIS_analyys_tunniplaan.docx
 		3	Õppetöögraafik
 		4.1	Koormuste planeerimise koondvorm
 		4.2	Koormuste sisestamine kutseõppes õpperühmade kaupa
+		4.3	Koormuste vaatamine õpetajate kaupa kutseõppes
 		4.4	Õppeaine koormuse sisestamine kõrgharidusõppes
 		4.5	Koormuste sisestamine õpperühmade kaupa kõrgharidusõppes
 		4.6	Koormuste sisestamine õpetajate kaupa kõrgharidusõppes
 		4.7	Koormuste sisestamine õppeainete kaupa kõrgharidusõppes
 		4.8	Aine-õpetaja paari  otsing
+		5.4	Sündmuste otsing
+
+DOK12 - HOIS_analyys_paringud.docx
+		2.1	Õppurid
+		2.2	Õppurite statistika õppekavade lõikes
+		2.3	Õppurite statistika perioodis
+		2.4	Õppekava täitmine
+		2.7	Õpetaja koormus (kõrg)
+
 	   
 Testisikute kasutajanimed, kellena saab ÕISi sisse logida ja süsteemi testida (kasutajanimi - isiku nimi, rollid):
 37101010003 - Test1 Kasutaja1, peaadministraator, administratiivne töötaja Tallinna Polütehnikumis, Tallinna Tervishoiu Kõrgkoolis ja EBS-s
@@ -162,7 +183,7 @@ Tallinna Tervishoiu Kõrgkoolis on olemas üks kõrgharidusõppe õppekava
 NB! Automaatteadete saatmiseks ÕISi on tekitatud kasutaja Hõis Automaatteade, palume seda mitte kustutada
 	   
 
-EELDUS: ver. 0.2.1/20170331
+EELDUS: ver. 0.3.0/20170601
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x
@@ -191,9 +212,9 @@ EELDUS: ver. 0.2.1/20170331
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
-KIRJELDUS: kustutatakse ära ja uuesti luuakse uue õppeinfosüsteemi andmebaas "hois", vajalikud tabelid, klassifikaatorid ja testkasutajate andmed. Andmebaasi skriptid asuvad "db" kaustas.
+KIRJELDUS: lisatakse andmebaasi "hois" vajalikud tabelid ja klassifikaatorid. Andmebaasi skriptid asuvad "db" kaustas.
 
-EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku.
+EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku, versioon 0.3.0/20170601 on paigaldatud.
 
 
 Andmebaasi installeerimiseks:
@@ -208,8 +229,6 @@ Andmebaasi installeerimiseks:
    log.txt - andmebaasi installeerimise logi fail
    
    Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja luuakse vajalikud tabelid ning andmed
-
-2. Veeenduda, et on loodud "hois" andmebaas, tabelites "school", "person", "classifier" on olemas andmed
 
 
 RAKENDUSE INSTALLEERIMINE:
@@ -358,7 +377,6 @@ NB! XXX - frontendi server, nt devhoisfront
 	5. Backendi ehitamiseka paigaldamiseks
 		1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
 		2. veenduda, et /opt/hois kaustas on olemas muudetud application.properties fail ja käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
-		3. Veenduda et asi töötab. Selleks brauseris sisestada aadressi reale: "http://YYY:8080/hois_back/school/all", kus YYY asendada vastava hosti nimega
     6. Frontendi ehitamiseks ja paigaldamiseks
 		1. Navigeerida hois_front kausta ja kopeerida /opt/hois/frontend.config.js > app/config.js faili, nt
 		   cp /opt/hois/frontend.config.js app/config.js

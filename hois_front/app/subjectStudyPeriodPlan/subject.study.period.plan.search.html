@@ -17,7 +17,7 @@
             <label class="textInput">{{'subjectStudyPeriodPlan.curriculum' | translate}}</label>
             <hois-select ng-model="criteria.curriculum" values="curriculums"></hois-select>
         </md-input-container>
-        <hois-autocomplete ng-model="criteria.subjectObject" url="/subject" name="subject"
+        <hois-autocomplete ng-model="criteria.subjectObject" url="/subjectStudyPeriodPlans/subjects" name="subject"
                 label="subjectStudyPeriodPlan.subject"
                 additional-query-params="subjectQueryParams"></hois-autocomplete>
         <div layout="row">
@@ -32,7 +32,7 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'subjectStudyPeriodPlan.subject' | translate}}</th>
+            <th md-column md-order-by="{{currentLanguageNameField()}}">{{'subjectStudyPeriodPlan.curriculum' | translate}}</th>
             <th md-column>{{'subjectStudyPeriodPlan.studyForm' | translate}}</th>
             <th md-column class="center" ng-repeat="capacityType in capacityTypes">
                 {{capacityType.value.toUpperCase()}}
@@ -43,7 +43,7 @@
         <tbody md-body ng-repeat="row in tabledata.content">
             <tr md-row ng-class-odd="'odd'" ng-class-even="'even'">
                 <td>{{currentLanguageNameField(row.subject)}}</td>
-                <td colspan="5"></td>
+                <td colspan="{{capacityTypes.length + 1}}"></td>
                 <td>
                     <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/{{criteria.studyPeriod}}/new" ng-disabled="pastStudyPeriodSelected">{{'subjectStudyPeriodPlan.add' | translate}}
                     </md-button>

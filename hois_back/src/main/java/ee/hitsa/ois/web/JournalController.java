@@ -1,8 +1,6 @@
 package ee.hitsa.ois.web;
 
-import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.service.JournalService;
-import ee.hitsa.ois.service.StudyYearService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -31,7 +28,7 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEndDateCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
-import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
@@ -46,8 +43,6 @@ public class JournalController {
 
     @Autowired
     private JournalService journalService;
-    @Autowired
-    private StudyYearService studyYearService;
 
     @GetMapping("")
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
@@ -107,7 +102,7 @@ public class JournalController {
     }
 
     @GetMapping("/{id:\\d+}/otherStudents")
-    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, @PathVariable("id") Long journalId, JournalStudentsSearchCommand command, Pageable pageable) {
+    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, @PathVariable("id") Long journalId, StudentNameSearchCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return journalService.otherStudents(user, journalId, command, pageable);
     }
@@ -136,15 +131,10 @@ public class JournalController {
         return journalService.journalEntryLessonInfo(user, journal);
     }
 
-    @GetMapping("currentStudyYear")
-    public Map<String, Long> currentPeriod(HoisUserDetails user) {
-        return Collections.singletonMap("currentStudyYear", EntityUtil.getNullableId(studyYearService.getCurrentStudyYear(user.getSchoolId())));
-    }
-
     private static void assertIsConfirmer(HoisUserDetails user, Journal journal) {
         if (user.isTeacher()) {
             Optional<JournalTeacher> teacher =
-                    journal.getJournalTeachers().stream().filter(it -> EntityUtil.getId(it.getTeacher().getPerson()) == user.getPersonId()).findFirst();
+                    journal.getJournalTeachers().stream().filter(it -> EntityUtil.getId(it.getTeacher().getPerson()).equals(user.getPersonId())).findFirst();
             if (!teacher.isPresent() || !Boolean.TRUE.equals(teacher.get().getIsConfirmer())) {
                 throw new ValidationFailedException("journal.messages.teacherNotAllowedToChangeEndDate");
             }
@@ -162,5 +152,4 @@ public class JournalController {
             throw new ValidationFailedException("journal.messages.removingStudentIsNotAllowed");
         }
     }
-
 }

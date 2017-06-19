@@ -14,7 +14,7 @@
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column">
-        <div class="form-readonly" flex="25" flex-sm="100" flex-xs="100">
+        <div class="form-readonly" layout="row" flex="25" flex-sm="100" flex-xs="100">
           <md-input-container flex>
             <label class="textInput">{{'journal.label' | translate}}</label>
             <hois-value value="journal.nameEt"></hois-value>
@@ -26,7 +26,7 @@
             <label>{{'journal.endDate' | translate}}</label>
             <md-datepicker ng-model="journal.endDate"></md-datepicker>
           </md-input-container>
-          <a href="" class="md-button" style="margin-top:-1em;" ng-click="saveEndDate()" class="md-raised">{{'journal.saveEndDate' | translate}}</a>
+          <a href="" class="md-button md-raised" style="margin-top:-1em;" ng-click="saveEndDate()">{{'journal.saveEndDate' | translate}}</a>
         </div>
       </div>
 

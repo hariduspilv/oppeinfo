@@ -15,8 +15,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Certificate;
-import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.CertificateService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
@@ -24,7 +22,6 @@ import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.commandobject.CertificateSearchCommand;
-import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.CertificateDto;
 import ee.hitsa.ois.web.dto.CertificateSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
@@ -35,8 +32,6 @@ public class CertificateController {
 
     @Autowired
     private CertificateService certificateService;
-    @Autowired
-    private StudentRepository studentRepository;
 
     @GetMapping
     public Page<CertificateSearchDto> search(HoisUserDetails user, @Valid CertificateSearchCommand criteria, Pageable pageable) {
@@ -72,16 +67,5 @@ public class CertificateController {
     public StudentSearchDto getOtherPerson(HoisUserDetails user, String idcode) {
         // TODO validation of idcode
         return certificateService.getOtherPerson(user.getSchoolId(), idcode);
-    }
-
-    @GetMapping("/student")
-    public AutocompleteResult getStudent(HoisUserDetails user) {
-        if(user.getStudentId() != null) {
-            Student s = studentRepository.getOne(user.getStudentId());
-            // FIXME maybe should use AutocompleteResult.of(s) ?
-            String name = s.getPerson().getFullname();
-            return new AutocompleteResult(s.getId(), name, name);
-        }
-        return null;
     }
 }

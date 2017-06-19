@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -37,7 +38,7 @@ public class StateCurriculumForm extends VersionedCommand {
     private String practiceDescription;
     @Min(0)
     @Max(999)
-    private Double optionalStudyCredits;
+    private BigDecimal optionalStudyCredits;
     private LocalDate validFrom;
     private LocalDate validThru;
     private String description;
@@ -154,11 +155,11 @@ public class StateCurriculumForm extends VersionedCommand {
         this.practiceDescription = practiceDescription;
     }
 
-    public Double getOptionalStudyCredits() {
+    public BigDecimal getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Double optionalStudyCredits) {
+    public void setOptionalStudyCredits(BigDecimal optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 

@@ -37,7 +37,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{row.name}}</td>
+            <td md-cell><a ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/view">{{row.name}}</a></td>
             <td md-cell>{{row.hours}}</td>
             <td md-cell><a href=""></a></td>
             <td md-cell>

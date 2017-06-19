@@ -32,7 +32,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a ng-href="#/saisClassifier/{{::row.code}}?_menu">{{::row.nameEt}}</td>
+            <td md-cell><a ng-href="#/saisClassifier/{{::row.code}}?_menu">{{::row.nameEt}}</a></td>
             <td md-cell>{{::row.count}}</td>
           </tr>
         </tbody>

@@ -1,10 +1,10 @@
 package ee.hitsa.ois.service;
 
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +22,7 @@ import ee.hitsa.ois.repository.StudyYearRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
@@ -33,6 +34,8 @@ import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 @Transactional
 public class StudyYearService {
 
+    @Autowired
+    private EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
@@ -51,11 +54,6 @@ public class StudyYearService {
 
     public List<StudyYearSearchDto> getStudyYears(Long schoolId) {
         return StreamUtil.toMappedList(StudyYearSearchDto::new, studyYearRepository.findStudyYearsBySchool(schoolId));
-    }
-
-    public StudyYear getCurrentStudyYear(Long schoolId) {
-        LocalDate now = LocalDate.now();
-        return studyYearRepository.findFirstBySchoolIdAndStartDateLessThanEqualAndEndDateGreaterThanEqualOrderByStartDateDesc(schoolId, now, now);
     }
 
     public StudyYear create(HoisUserDetails user, StudyYearForm studyYearForm) {
@@ -120,5 +118,37 @@ public class StudyYearService {
 
     public void delete(StudyPeriodEvent studyPeriodEvent) {
         EntityUtil.deleteEntity(studyPeriodEventRepository, studyPeriodEvent);
+    }
+
+    public Long getPreviousStudyPeriod(Long school) {
+        String from = "from study_period ss inner join study_year yy on ss.study_year_id = yy.id";
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+
+        qb.requiredCriteria("yy.school_id = :school_id", "school_id", school);
+        qb.requiredCriteria(
+                "ss.end_date = (select max(ss2.end_date) from study_period ss2 join study_year yy2"
+                        + " on ss2.study_year_id = yy2.id and yy2.school_id = :school_id where ss2.end_date < current_date) ",
+                "school_id", school);
+        List<?> result = qb.select("ss.id", em).getResultList();
+        if (result.isEmpty()) {
+            return null;
+        }
+        return Long.valueOf(((Number) result.get(0)).longValue());
+    }
+
+    public Long getCurrentStudyPeriod(Long school) {
+        String from = "from study_period ss inner join study_year yy on ss.study_year_id = yy.id";
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+
+        qb.requiredCriteria("yy.school_id = :school_id", "school_id", school);
+        qb.requiredCriteria(
+                "ss.end_date = (select min(ss2.end_date) from study_period ss2 join study_year yy2"
+                        + " on ss2.study_year_id = yy2.id and yy2.school_id = :school_id where ss2.end_date >= current_date)",
+                "school_id", school);
+        List<?> result = qb.select("ss.id", em).getResultList();
+        if (result.isEmpty()) {
+            return null;
+        }
+        return Long.valueOf(((Number) result.get(0)).longValue());
     }
 }

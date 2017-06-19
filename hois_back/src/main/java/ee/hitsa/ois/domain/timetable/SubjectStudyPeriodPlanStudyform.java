@@ -4,17 +4,18 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 
 @Entity
-public class SubjectStudyPeriodPlanStudyform extends BaseEntityWithId {
-    
+@Table(name="subject_study_period_plan_studyform")
+public class SubjectStudyPeriodPlanStudyForm extends BaseEntityWithId {
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name="subject_study_period_plan_id", updatable = false, nullable = false)
     private SubjectStudyPeriodPlan plan;
-    
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyForm;
 

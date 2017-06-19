@@ -28,7 +28,7 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String>,
 	        + "(select connect_classifier_code from classifier_connect where classifier_code in "
 	            + "(select connect_classifier_code from classifier_connect where classifier_code in "
 	                + "(select classifier_code from classifier_connect where connect_classifier_code = ?1)))"
-	        + " and a.main_class_code = 'ISCED_VALD'", nativeQuery = true)
+	        + " and a.main_class_code = 'ISCED_VALD' and is_higher", nativeQuery = true)
 	List<Classifier> findAreasOfStudyByGroupOfStudy(String code);
 
     @Query("select c.code from Classifier c where c.mainClassCode = ?1")

@@ -16,7 +16,7 @@
 
           <md-input-container>
             <label>{{'theme.name' | translate}}</label>
-            <input ng-model="occupationModuleTheme.nameEt" type="text" required ng-readonly="formState.readOnly"></textarea>
+            <input ng-model="occupationModuleTheme.nameEt" type="text" required ng-readonly="formState.readOnly">
           </md-input-container>
 
           <div layout="row">
@@ -26,39 +26,48 @@
 
             <md-input-container flex="10">
               <label>EKAP</label>
-              <input ng-model="occupationModuleTheme.credits" name="credits" type="number" min="0" max="999" ng-model-options='{ debounce: 500 }' ng-change="setDefaultHours()" required ng-readonly="formState.readOnly">
+              <input ng-model="occupationModuleTheme.credits" name="credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$"  ng-change="setDefaultHours()" required ng-readonly="formState.readOnly">
                   <div ng-messages="dialogForm.credits.$error" ng-show="dialogForm.credits.$dirty">
                     <div ng-message="min">
                         {{'main.messages.error.positive' | translate}}
                     </div>
-                        <div ng-message="max">
+                    <div ng-message="max">
                         {{'curriculum.error.max999' | translate}}
+                    </div>
+                    <div ng-message="pattern">
+                      {{'stateCurriculum.error.decimalPresision' | translate}}
                     </div>
                 </div>
             </md-input-container>
 
             <md-input-container flex="10">
               <label>{{'main.hour' | translate}}</label>
-              <input ng-model="occupationModuleTheme.hours" name="hours" type="number" min="0" max="999" required ng-readonly="formState.readOnly">
+              <input ng-model="occupationModuleTheme.hours" name="hours" type="number" min="0" max="999" pattern="^\d+$" required ng-readonly="formState.readOnly">
                  <div ng-messages="dialogForm.hours.$error" ng-show="dialogForm.hours.$dirty">
                     <div ng-message="min">
                         {{'main.messages.error.positive' | translate}}
                     </div>
-                        <div ng-message="max">
+                    <div ng-message="max">
                         {{'curriculum.error.max999' | translate}}
+                    </div>
+                    <div ng-message="pattern">
+                      {{'stateCurriculum.enter.credits.integer' | translate}}
                     </div>
                 </div>
             </md-input-container>
 
             <md-input-container flex="30">
               <label>{{'theme.proportionInModule' | translate}}</label>
-              <input ng-model="occupationModuleTheme.proportion" type="number" name="proportion" min="0" max="999" ng-readonly="formState.readOnly">
+              <input ng-model="occupationModuleTheme.proportion" type="number" name="proportion" min="0" max="999" pattern="^\d+(\.\d{1})?$"  ng-readonly="formState.readOnly">
                 <div ng-messages="dialogForm.proportion.$error" ng-show="dialogForm.proportion.$dirty">
                     <div ng-message="min">
                         {{'main.messages.error.positive' | translate}}
                     </div>
-                        <div ng-message="max">
+                    <div ng-message="max">
                         {{'curriculum.error.max999' | translate}}
+                    </div>
+                    <div ng-message="pattern">
+                      {{'stateCurriculum.error.decimalPresision' | translate}}
                     </div>
                 </div>
             </md-input-container>
@@ -82,12 +91,12 @@
 				  <div flex="30">{{item[currentLanguageNameField()]}}</div>
 				  <div flex="30">
 					<md-input-container  flex>
-					  <input ng-model="occupationModuleTheme.capacities[$index].hours" type="number" min="0" max="999" aria-label="capacity hours" class="small-input"
-                    ng-change="occupationModuleTheme.capacities[$index].capacityType = item.code" ng-required="occupationModuleTheme.capacities[$index].contact!==undefined"  ng-readonly="formState.readOnly">
+					  <input ng-model="item.inputData.hours" type="number" min="0" max="999" pattern="^\d+$" aria-label="capacity hours" class="small-input"
+                     ng-required="item.inputData.contact!==undefined"  ng-readonly="formState.readOnly">
 					</md-input-container>
 				  </div>
 				  <div flex="40" layout="row" >
-					<md-checkbox ng-model="occupationModuleTheme.capacities[$index].contact" aria-label="capacity contact" ng-disabled="formState.readOnly"></md-checkbox>
+					<md-checkbox ng-model="item.inputData.contact" aria-label="capacity contact" ng-disabled="formState.readOnly"></md-checkbox>
 				  </div>
 			  </div>
 		  </fieldset>
@@ -106,40 +115,44 @@
           </md-input-container>
 
           <div>&nbsp;</div>
-		  <div flex layout="row">
-            <span flex="30" class="common-label">{{'theme.assessmentType' | translate}}</span>
-            <hois-classifier-radio layout="row" ng-model="occupationModuleTheme.assessment" model-value-attr="code" main-classifier-code="KUTSEHINDAMISVIIS" required  ng-disabled="formState.readOnly"></hois-classifier-radio>
-          </div>
-		  <div>&nbsp;</div>
+          <fieldset tabindex="2" layout="column">
+          <legend md-colors="{color: 'default-primary-800'}" class="md-title-small">{{'module.themeGradeFormation' | translate}}</legend>
+            <div flex layout="row">
+                  <span flex="30" class="common-label">{{'theme.assessmentType' | translate}}</span>
+                  <hois-classifier-radio layout="row" ng-model="occupationModuleTheme.assessment" model-value-attr="code" main-classifier-code="KUTSEHINDAMISVIIS" required  ng-disabled="formState.readOnly"></hois-classifier-radio>
+                </div>
+            <div>&nbsp;</div>
 
-          <md-input-container flex>
-            <label>{{'module.totalGradeDescription' | translate}}</label>
-            <textarea ng-model="occupationModuleTheme.totalGradeDescription" md-maxlength="20000" max-rows="10" md-select-on-focus required ng-readonly="formState.readOnly"></textarea>
-          </md-input-container>
+            <md-input-container flex>
+              <label>{{'module.totalGradeDescription' | translate}}</label>
+              <textarea ng-model="occupationModuleTheme.totalGradeDescription" md-maxlength="20000" max-rows="10" md-select-on-focus required ng-readonly="formState.readOnly"></textarea>
+            </md-input-container>
+            <div ng-show="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'"  layout="column" flex>
+              <md-input-container flex>
+                <label>{{'module.grade3Description' | translate}}</label>
+                <textarea ng-model="occupationModuleTheme.grade3Description" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'" ng-readonly="formState.readOnly"></textarea>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'module.grade4Description' | translate}}</label>
+                <textarea ng-model="occupationModuleTheme.grade4Description" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'" ng-readonly="formState.readOnly"></textarea>
+              </md-input-container>
+              <md-input-container flex>
+                <label>{{'module.grade5Description' | translate}}</label>
+                <textarea ng-model="occupationModuleTheme.grade5Description" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'" ng-readonly="formState.readOnly"></textarea>
+              </md-input-container>
+            </div>
+            <div ng-show="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_M'"  layout="column" flex>
+              <md-input-container flex>
+                <label>{{'module.gradeADescription' | translate}}</label>
+                <textarea ng-model="occupationModuleTheme.passDescription" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_M'" ng-readonly="formState.readOnly"></textarea>
+              </md-input-container>
+            </div>
 
-          <!--md-input-container flex>
-            <span class="md-headline">{{'module.gradeAssessments' | translate}}</span>
-          </md-input-container-->
-          <div ng-show="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'"  layout="column" flex>
-            <md-input-container flex>
-              <label>{{'module.grade3Description' | translate}}</label>
-              <textarea ng-model="occupationModuleTheme.grade3Description" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'" ng-readonly="formState.readOnly"></textarea>
-            </md-input-container>
-            <md-input-container flex>
-              <label>{{'module.grade4Description' | translate}}</label>
-              <textarea ng-model="occupationModuleTheme.grade4Description" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'" ng-readonly="formState.readOnly"></textarea>
-            </md-input-container>
-            <md-input-container flex>
-              <label>{{'module.grade5Description' | translate}}</label>
-              <textarea ng-model="occupationModuleTheme.grade5Description" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_E'" ng-readonly="formState.readOnly"></textarea>
-            </md-input-container>
-          </div>
-          <div ng-show="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_M'"  layout="column" flex>
-            <md-input-container flex>
-              <label>{{'module.gradeADescription' | translate}}</label>
-              <textarea ng-model="occupationModuleTheme.passDescription" md-maxlength="20000" max-rows="2" md-select-on-focus ng-required="occupationModuleTheme.assessment === 'KUTSEHINDAMISVIIS_M'" ng-readonly="formState.readOnly"></textarea>
-            </md-input-container>
-          </div>
+
+          </fieldset>
+
+          <div>&nbsp;</div>
+
         </div>
       </div>
     </md-dialog-content>

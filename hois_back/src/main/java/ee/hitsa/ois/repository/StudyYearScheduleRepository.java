@@ -5,6 +5,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import ee.hitsa.ois.domain.school.StudyYearSchedule;
 
-public interface StudyYearScheduleRepository extends JpaRepository<StudyYearSchedule, Long>, JpaSpecificationExecutor<StudyYearSchedule>  {
+public interface StudyYearScheduleRepository extends JpaRepository<StudyYearSchedule, Long>, JpaSpecificationExecutor<StudyYearSchedule> {
 
 }

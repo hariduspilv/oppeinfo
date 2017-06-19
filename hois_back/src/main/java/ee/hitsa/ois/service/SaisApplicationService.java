@@ -4,8 +4,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.invoke.MethodHandles;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -20,7 +18,6 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -52,23 +49,24 @@ import com.fasterxml.jackson.dataformat.csv.CsvSchema;
 
 import ee.hitsa.ois.config.SaisProperties;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.sais.SaisAdmission;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.domain.sais.SaisApplicationGrade;
 import ee.hitsa.ois.domain.sais.SaisApplicationGraduatedSchool;
 import ee.hitsa.ois.domain.sais.SaisApplicationOtherData;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.FinSource;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SaisApplicationStatus;
 import ee.hitsa.ois.enums.StudyLoad;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
-import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SaisApplicationRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.ExceptionUtil;
@@ -85,7 +83,6 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationImportResultDto;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationImportedRowDto;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 import ee.hois.xroad.helpers.XRoadHeader;
-import ee.hois.xroad.helpers.sais.SaisAdmissionResponse;
 import ee.hois.xroad.helpers.sais.SaisApplicationResponse;
 import ee.hois.xroad.sais2.generated.AllAppsExportRequest;
 import ee.hois.xroad.sais2.generated.Application;
@@ -130,15 +127,11 @@ public class SaisApplicationService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private PersonRepository personRepository;
-    @Autowired
     private SaisAdmissionRepository saisAdmissionRepository;
     @Autowired
     private SaisApplicationRepository saisApplicationRepository;
     @Autowired
     private SaisLogService saisLogService;
-    @Autowired
-    SchoolRepository schoolRepository;
     @Autowired
     private Validator validator;
     @Autowired
@@ -197,11 +190,12 @@ public class SaisApplicationService {
         String fileContent = getContent(fileData);
 
         int rowNr = 1;
+        Map<String, Object> processedByNr = new HashMap<>();
         try (MappingIterator<SaisApplicationCsvRow> csvValues = csvMapper.readerFor(SaisApplicationCsvRow.class).with(schema).readValues(fileContent)) {
             while (csvValues.hasNext()) {
                 SaisApplicationCsvRow row = csvValues.next();
                 try {
-                      proccessRow(row, rowNr, failed, dto, classifiers, idCodeValidator, user.getSchoolId());
+                      proccessRow(row, rowNr, failed, dto, classifiers, processedByNr, idCodeValidator, user.getSchoolId());
                   } catch (Exception e) {
                       failed.add(new SaisApplicationImportedRowDto(rowNr, "Viga rea töötlemisel"));
                       log.error(e.getMessage(), e);
@@ -233,14 +227,18 @@ public class SaisApplicationService {
      * TODO: Avalduse andmeid ei muudeta siis, kui avaldus on juba lisatud immatrikuleerimise käskkirjale.
      */
     private void proccessRow(SaisApplicationCsvRow row, int rowNr, List<SaisApplicationImportedRowDto> failed,
-            SaisApplicationImportResultDto dto, ClassifierCache classifiers, EstonianIdCodeValidator idCodeValidator,
-            Long schoolId) {
+            SaisApplicationImportResultDto dto, ClassifierCache classifiers, Map<String, Object> processedByNr,
+            EstonianIdCodeValidator idCodeValidator, Long schoolId) {
 
         String applicationNr = row.getApplicationNr();
         if (!StringUtils.hasText(applicationNr)) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, "Puudub avalduse number"));
             return;
+        } else if (processedByNr.containsKey(applicationNr)) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, String.format("Failis on rohkem kui üks avalduse numbriga %s vastuvõtu avaldust.", applicationNr)));
+            return;
         }
+        processedByNr.put(applicationNr, null);
 
         String messageForMissing = String.format("Avaldusel nr %s puudub ", applicationNr);
         String messageForOther = String.format("Avaldusega nr %s ", applicationNr);
@@ -278,7 +276,6 @@ public class SaisApplicationService {
         }
 
         SaisApplication existingSaisApplication = saisApplicationRepository.findByApplicationNrAndSaisAdmissionCode(applicationNr, saisAdmission.getCode());
-        SaisApplication saisApplication = existingSaisApplication == null ? new SaisApplication() : existingSaisApplication;
 
         if (existingSaisApplication != null && StringUtils.hasText(existingSaisApplication.getIdcode()) &&
                 StringUtils.hasText(row.getIdcode()) && !existingSaisApplication.getIdcode().equals(row.getIdcode())) {
@@ -286,8 +283,8 @@ public class SaisApplicationService {
             return;
         }
 
+        SaisApplication saisApplication = new SaisApplication();
         EntityUtil.bindToEntity(row, saisApplication, classifierRepository, "curriculumVersionCode", "submitted");
-
 
 
         if (!StringUtils.hasText(saisApplication.getFirstname())) {
@@ -446,9 +443,10 @@ public class SaisApplicationService {
             }
         }
 
-
-        if(EntityUtil.getNullableId(saisApplication) == null) {
+        if(existingSaisApplication == null) {
             saisAdmission.getApplications().add(saisApplication);
+        } else {
+            EntityUtil.bindToEntity(saisApplication, existingSaisApplication);
         }
         saisAdmissionRepository.save(saisAdmission);
 
@@ -457,6 +455,7 @@ public class SaisApplicationService {
     }
 
     public String getSampleCsvFile() {
+        // TODO use letters šŠžŽ too
         return "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;OppekavaVersioon/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;OppuriEelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp\n"+
                "FIL12/12;Nr123;Mari;Maasikas;49011112345;EST;EST;RE;1.01.2012;T;FIL12/12;TAIS;P;E;411;1.12.2011;1.02.2012\n"+
                "MAT15/16;Nr456;Tõnu;Kuut;39311112312;FIN;EST;REV;3.03.2012;T;MAT15/16;OSA;P;I;411;1.01.2012;3.04.2012\n"+
@@ -487,7 +486,7 @@ public class SaisApplicationService {
             AllAppsExportRequest request = getRequest(form, user, classifiers);
             applicationResponse = saisService.applicationsExport(xRoadHeader, request);
             applicationResponse.setQueryStart(LocalDateTime.now());
-            if(applicationResponse.getxRoadErrors() == null || applicationResponse.getxRoadErrors() != null && applicationResponse.getxRoadErrors()) {
+            if(!Boolean.FALSE.equals(applicationResponse.getxRoadErrors())) {
                 EstonianIdCodeValidator idCodeValidator = new EstonianIdCodeValidator();
                 List<String> previousApplicationNrs = new ArrayList<>();
                 Map<String, SaisAdmission> admissionMap = new HashMap<>();
@@ -536,7 +535,7 @@ public class SaisApplicationService {
         return dto;
     }
 
-    private SaisApplicationImportedRowDto processApplication(Application application, SaisApplication prevApp, ClassifierCache classifiers, 
+    private SaisApplicationImportedRowDto processApplication(Application application, SaisApplication prevApp, ClassifierCache classifiers,
             Map<String, SaisAdmission> admissionMap,
             EstonianIdCodeValidator idCodeValidator) {
         SaisApplication saisApplication;
@@ -614,7 +613,7 @@ public class SaisApplicationService {
         saisApplication.setLanguage(saisAdmission.getLanguage());
 
         saisApplication.getGrades().clear();
-        saisApplication.getGraduatedSchools().clear();;
+        saisApplication.getGraduatedSchools().clear();
         saisApplication.getOtherData().clear();
 
         for(CandidateEducation education : application.getCandidateEducations().getCandidateEducation()) {
@@ -626,15 +625,15 @@ public class SaisApplicationService {
         for(ApplicationFormData data : application.getApplicationFormData().getApplicationFormData()) {
             processData(data, saisApplication);
         }
-        
+
         saisAdmission.getApplications().add(saisApplication);
         saisAdmissionRepository.save(saisAdmission);
 
         return new SaisApplicationImportedRowDto(saisApplication, null);
     }
-    
+
     //if returned string is empty then there is no error, otherwise returns a string containing the error message
-    private static String validate(SaisApplication application, SaisAdmission saisAdmission, 
+    private static String validate(SaisApplication application, SaisAdmission saisAdmission,
             SaisApplication previousApplication, EstonianIdCodeValidator idCodeValidator) {
         String messageForMissing = String.format("Avaldusel nr %s puudub ", application.getApplicationNr());
         String messageForOther = String.format("Avaldusega nr %s ", application.getApplicationNr());
@@ -711,7 +710,7 @@ public class SaisApplicationService {
         }
         application.getOtherData().add(otherData);
     }
-    
+
     private static String kvpHandler(List<Kvp> kvpList, String targetLanguage) {
         for(Kvp kvp : kvpList) {
             if(kvp.getKey().toUpperCase().equals(targetLanguage)) {
@@ -727,7 +726,7 @@ public class SaisApplicationService {
         xRoadHeader.setConsumer(sp.getConsumer());
         xRoadHeader.setEndpoint(sp.getEndpoint());
         xRoadHeader.setProducer(sp.getProducer());
-        xRoadHeader.setUserId(sp.getUseridprefix() + personRepository.getOne(user.getPersonId()).getIdcode());
+        xRoadHeader.setUserId(sp.getUseridprefix() + em.getReference(Person.class, user.getPersonId()).getIdcode());
         xRoadHeader.setId(UUID.randomUUID().toString());
         xRoadHeader.setService("sais2.AllApplicationsExport.v1");
         return xRoadHeader;
@@ -756,7 +755,7 @@ public class SaisApplicationService {
                 request.setAdmissionId(saisAdmissionRepository.findByCode(form.getAdmissionCode()).getSaisId());
             }
             ArrayOfInt aoi = new ArrayOfInt();
-            Classifier ehisSchool = schoolRepository.getOne(user.getSchoolId()).getEhisSchool();
+            Classifier ehisSchool = em.getReference(School.class, user.getSchoolId()).getEhisSchool();
             Integer koolRegNr = Integer.valueOf(ehisSchool.getValue2());
             aoi.getInt().add(koolRegNr);
             request.setInstitutionRegCodes(aoi);
@@ -764,65 +763,5 @@ public class SaisApplicationService {
             log.error(e.getMessage(), e);
         }
         return request;
-    }
-
-}
-
-class ClassifierCache {
-    private final ClassifierRepository repository;
-    private final Map<MainClassCode, Map<String, Classifier>> classifiers = new HashMap<>();
-
-    public ClassifierCache(ClassifierRepository repository) {
-        this.repository = repository;
-    }
-
-    public Classifier get(String value, MainClassCode mainClassCode, Boolean isCode) {
-        // FIXME should fetch all values by mainClassCode with single query?
-        Map<String, Classifier> cache = classifiers.computeIfAbsent(mainClassCode, key -> new HashMap<>());
-        Classifier c = cache.get(value);
-        if(c == null) {
-            if(cache.containsKey(value)) {
-                return null;
-            }
-            c = StringUtils.hasText(value) ? getClassifier(value, mainClassCode, isCode) : null;
-            cache.put(value, c);
-        }
-        return c;
-    }
-
-    private Classifier getClassifier(String valueOrCode, MainClassCode mainClassCode, Boolean isCode) {
-        if (Boolean.TRUE.equals(isCode)) {
-            return repository.getOne(valueOrCode);
-        }
-        return repository.findByValueAndMainClassCode(valueOrCode, mainClassCode.name());
-    }
-
-    public Classifier get(String value, MainClassCode mainClassCode) {
-        return get(value, mainClassCode, Boolean.FALSE);
-    }
-
-    public Classifier getByCode(String value, MainClassCode mainClassCode) {
-        return get(value, mainClassCode, Boolean.TRUE);
-    }
-
-    public Classifier getByEhisValue(String ehisValue, MainClassCode mainClassCode) {
-        Map<String, Classifier> cache = classifiers.computeIfAbsent(mainClassCode, key -> new HashMap<>());
-        Classifier c = cache.get(ehisValue);
-        if(c == null) {
-            if(cache.containsKey(ehisValue)) {
-                return null;
-            }
-            if(StringUtils.hasText(ehisValue)){
-                for(Classifier classifier : getClassifiersByMainCode(mainClassCode)) {
-                    cache.put(classifier.getEhisValue(), classifier);
-                }
-            }
-            c = cache.get(ehisValue);
-        }
-        return c;
-    }
-
-    private List<Classifier> getClassifiersByMainCode(MainClassCode mainClassCode) {
-        return repository.findAllByMainClassCode(mainClassCode.name());
     }
 }

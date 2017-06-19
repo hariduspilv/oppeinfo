@@ -8,9 +8,10 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.util.Translatable;
 
 @Entity
-public class SchoolDepartment extends BaseEntityWithId {
+public class SchoolDepartment extends BaseEntityWithId implements Translatable {
 
     private String nameEt;
     private String nameEn;
@@ -23,6 +24,7 @@ public class SchoolDepartment extends BaseEntityWithId {
     private LocalDate validFrom;
     private LocalDate validThru;
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -31,6 +33,7 @@ public class SchoolDepartment extends BaseEntityWithId {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

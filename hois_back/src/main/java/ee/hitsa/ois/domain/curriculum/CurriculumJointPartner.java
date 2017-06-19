@@ -5,14 +5,13 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
-import javax.validation.constraints.NotNull;
-import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.util.Translatable;
 @Entity
 @Table(name = "curriculum_joint_partners")
-public class CurriculumJointPartner extends BaseEntityWithId{
+public class CurriculumJointPartner extends BaseEntityWithId implements Translatable {
 
 	private static final long serialVersionUID = 6980376403338348043L;
 
@@ -58,6 +57,7 @@ public class CurriculumJointPartner extends BaseEntityWithId{
 		this.supervisor = supervisor;
 	}
 
+	@Override
 	public String getNameEt() {
 		return nameEt;
 	}
@@ -66,6 +66,7 @@ public class CurriculumJointPartner extends BaseEntityWithId{
 		this.nameEt = nameEt;
 	}
 
+	@Override
 	public String getNameEn() {
 		return nameEn;
 	}

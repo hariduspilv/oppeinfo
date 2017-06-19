@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService) {
+  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer) {
 
     var self = this;
 
@@ -311,6 +311,10 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
       } else {
         goBack(defaultUrl);
       }
+    };
+
+    $rootScope.excel = function(url, params) {
+      return config.apiUrl + '/'+ url + '?' + $httpParamSerializer(params);
     };
   })
   .filter('nospace', function () {

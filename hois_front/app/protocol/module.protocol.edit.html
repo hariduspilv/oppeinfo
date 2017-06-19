@@ -1,0 +1,61 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form ng-submit="moduleProtocolForm.$valid && save()" novalidate layout="column" name="moduleProtocolForm">
+      <div ng-include="'protocol/templates/module.protocol.header.tmpl.html'"></div>
+      <div>
+        <div flex>
+          <md-table-container>
+            <table md-table md-progress="protocol.$promise">
+              <thead md-head>
+                <tr md-row>
+                  <th md-column>{{'student.label' | translate}}</th>
+                  <th md-column>{{'student.idcode' | translate}}</th>
+                  <th md-column ng-repeat="journal in journals | orderBy: 'nameEt'">
+                    <div>
+                      <a md-colors="{color: 'grey-50'}" ng-href="/#/journal/{{::journal.id}}/view">{{'P' + ($index + 1)}}</a>
+                      <md-tooltip>
+                        {{journal.nameEt}} - {{'moduleProtocol.journalCapacity' | translate:journal}}
+                      </md-tooltip>
+                    </div>
+                  </th>
+                  <th md-column>{{'moduleProtocol.moduleGrade' | translate}}</th>
+                  <th md-column></th>
+                </tr>
+              </thead>
+              <tbody md-body>
+                <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                  <td md-cell>{{row.fullname}}</td>
+                  <td md-cell>{{row.idcode}}</td>
+                  <td md-cell ng-repeat="journal in journals | orderBy: 'nameEt'">
+                    {{journalResultsView(journal.id, row)}}
+                  </td>
+                  <td md-cell>
+                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code" aria-label="grade"></hois-select>
+                  </td>
+                  <td md-cell>
+                    <a ng-if="row.status==='OPPURSTAATUS_K' && !row.grade" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </md-table-container>
+        </div>
+      </div>
+      <br>
+      <div>
+        <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="addProtocolStudents()">{{'moduleProtocol.addStudents' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <!--TODO: <md-button class="md-raised" ng-click="calculate()">{{'main.button.calculate' | translate}}</md-button>-->
+        <md-button class="md-raised" ng-href="#/moduleProtocols">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+  <div flex>
+    <h2>{{'moduleProtocol.studyOutcomes' | translate}}</h2>
+    <div layout="column"></div>
+    <div ng-repeat="outcome in protocol.protocolVdata.outcomes" flex>
+      <span>{{currentLanguageNameField(outcome)}}</span>
+    </div>
+  </div>
+</div>

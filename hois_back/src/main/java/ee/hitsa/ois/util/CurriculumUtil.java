@@ -24,6 +24,10 @@ public class CurriculumUtil {
         return studyLevelValue != null && studyLevelValue.length() >  0 && studyLevelValue.charAt(0) < SCHOOL_STUDY_LEVEL;
     }
 
+    public static String moduleName(String moduleName, String moduleClassifierName, String curriculumCode) {
+        return moduleName + " - " + moduleClassifierName + ", " + curriculumCode;
+    }
+
     public static String versionName(String versionCode, String curriculumName) {
         return versionCode+" "+curriculumName;
     }

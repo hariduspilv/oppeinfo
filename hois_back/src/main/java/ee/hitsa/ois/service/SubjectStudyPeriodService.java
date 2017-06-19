@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
 import ee.hitsa.ois.domain.student.StudentGroup;
@@ -42,7 +43,6 @@ import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
-import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodPlanRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
@@ -82,8 +82,6 @@ public class SubjectStudyPeriodService {
     private TeacherRepository teacherRepository;
     @Autowired
     private SubjectRepository subjectRepository;
-    @Autowired
-    private StudyPeriodRepository studyPeriodRepository;
     @Autowired
     private CurriculumRepository curriculumRepository;
     @Autowired
@@ -145,7 +143,7 @@ public class SubjectStudyPeriodService {
     public SubjectStudyPeriod create(SubjectStudyPeriodForm form) {
         SubjectStudyPeriod subjectStudyPeriod = new SubjectStudyPeriod();
         subjectStudyPeriod.setSubject(subjectRepository.getOne(form.getSubject()));
-        subjectStudyPeriod.setStudyPeriod(studyPeriodRepository.getOne(form.getStudyPeriod()));
+        subjectStudyPeriod.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
         return update(subjectStudyPeriod, form);
     }
 
@@ -369,14 +367,12 @@ public class SubjectStudyPeriodService {
     }
 
     public List<StudentGroupSearchDto> getStudentGroupsList(Long schoolId, Long studyPeriodId) {
-
-        final String SELECT = "sg.id, sg.code, sg.course, c.id as curricId";
         final String FROM = "from student_group sg join curriculum c on c.id = sg.curriculum_id";
-
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM);
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
         qb.filter("c.is_higher = true");
+        // TODO use enum constant
         qb.filter("c.status_code = 'OPPEKAVA_STAATUS_K'");
         qb.filter("(sg.valid_from is null or sg.valid_from <= current_date)");
         qb.filter("(sg.valid_thru is null or sg.valid_thru >= current_date)");
@@ -387,7 +383,7 @@ public class SubjectStudyPeriodService {
                         + "where ssp.study_period_id = :studyPeriodId " + "and ssp_sg.student_group_id = sg.id )",
                           "studyPeriodId", studyPeriodId);
 
-        List<?> data = qb.select(SELECT, em).getResultList();
+        List<?> data = qb.select("sg.id, sg.code, sg.course, c.id as curricId", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(resultAsLong(r, 0));
@@ -509,9 +505,7 @@ public class SubjectStudyPeriodService {
     }
 
     public List<AutocompleteResult> getTeachersList(Long schoolId, Long studyPeriodId) {
-        final String SELECT = "t.id, p.firstname, p.lastname";
         final String FROM = "from teacher t join person p on p.id = t.person_id";
-
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM);
 
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", schoolId);
@@ -524,7 +518,7 @@ public class SubjectStudyPeriodService {
                         + "where ssp.study_period_id = :studyPeriodId and sspt.teacher_id = t.id)",
                           "studyPeriodId", studyPeriodId);
 
-        List<?> data = qb.select(SELECT, em).getResultList();
+        List<?> data = qb.select("t.id, p.firstname, p.lastname", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2));
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
@@ -617,20 +611,17 @@ public class SubjectStudyPeriodService {
     }
 
     public List<AutocompleteResult> getSubjectsList(Long schoolId, Long studyPeriodId) {
-        final String SELECT = "s.id, s.code, s.name_et, s.name_en, s.credits";
-        final String FROM = "from subject s";
-
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject s");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("s.status_code = :status", "status", SubjectStatus.AINESTAATUS_K.name());
+        qb.requiredCriteria("s.status_code = :status", "status", SubjectStatus.AINESTAATUS_K);
 
         qb.optionalCriteria("not exists " 
                         + "(select * from subject_study_period ssp "
                         + " where ssp.study_period_id = :studyPeriodId and ssp.subject_id = s.id)",
                            "studyPeriodId", studyPeriodId);
 
-        List<?> data = qb.select(SELECT, em).getResultList();
+        List<?> data = qb.select("s.id, s.code, s.name_et, s.name_en, s.credits", em).getResultList();
         return StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 1);
             BigDecimal credits = resultAsDecimal(r, 4);

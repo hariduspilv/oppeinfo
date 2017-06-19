@@ -4,6 +4,7 @@ import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
@@ -26,9 +27,7 @@ import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.MessageRepository;
-import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -44,33 +43,32 @@ public class AutomaticMessageService {
     private final ExpressionParser spelParser = new SpelExpressionParser();
 
     @Autowired
-    private ClassifierRepository classifierRepository;
+    private EntityManager em;
     @Autowired
     private MessageRepository messageRepository;
     @Autowired
     private MessageTemplateService messageTemplateService;
-    @Autowired
-    private PersonRepository personRepository;
     @Autowired
     private UserService userService;
     @Autowired
     private MailService mailService;
 
     public void sendMessageToSchoolAdmins(MessageType type, School school, Object dataBean) {
+        // XXX bad code: users are fetched but person is used
         List<Person> persons = StreamUtil.toMappedList(User::getPerson, userService.findAllValidSchoolUsersByRole(school, Role.ROLL_A));
 
         Message message = sendMessageToPersons(type, school, persons, dataBean);
 
         if(message != null) {
             List<String> receivers = StreamUtil.toMappedList(Person::getEmail, persons);
-            mailService.sendMail(message.getSender().getEmail(), receivers, message.getSubject(), message.getContent());
+            mailService.sendMail(message, receivers);
         }
     }
 
     public void sendMessageToStudent(MessageType type, Student student, Object dataBean, HoisUserDetails initiator) {
         Message message = sendMessageToPersons(type, student.getSchool(), Collections.singletonList(student.getPerson()), dataBean);
         if (message != null) {
-            mailService.sendMail(message.getSender().getEmail(), student.getEmail(), message.getSubject(), message.getContent());
+            mailService.sendMail(message, Collections.singletonList(student.getEmail()));
         }
 
         if (!StudentUtil.isAdult(student)) {
@@ -83,7 +81,12 @@ public class AutomaticMessageService {
     }
 
     public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean, Message existingMessage, HoisUserDetails initiator) {
-        List<Person> persons = StreamUtil.toMappedList(StudentRepresentative::getPerson, student.getRepresentatives().stream()
+        List<StudentRepresentative> representatives = student.getRepresentatives();
+        if(representatives == null || representatives.isEmpty()) {
+            return;
+        }
+        // XXX bad code: representatives are fetched but person is used
+        List<Person> persons = StreamUtil.toMappedList(StudentRepresentative::getPerson, representatives.stream()
                 .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible()))
                 .filter(sr -> initiator == null || !EntityUtil.getId(sr.getPerson()).equals(initiator.getPersonId())));
 
@@ -91,7 +94,7 @@ public class AutomaticMessageService {
 
         if(message != null) {
             List<String> receivers = StreamUtil.toMappedList(Person::getEmail, persons);
-            mailService.sendMail(message.getSender().getEmail(), receivers, message.getSubject(), message.getContent());
+            mailService.sendMail(message, receivers);
         }
     }
 
@@ -103,12 +106,12 @@ public class AutomaticMessageService {
         Message message = sendMessageToPersons(type, school, Collections.singletonList(person), data);
 
         if (message != null) {
-            mailService.sendMail(message.getSender().getEmail(), person.getEmail(), message.getSubject(), message.getContent());
+            mailService.sendMail(message, Collections.singletonList(person.getEmail()));
         }
     }
 
     private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean, Message existingMessage) {
-        Classifier status = classifierRepository.getOne(MessageStatus.TEATESTAATUS_U.name());
+        Classifier status = em.getReference(Classifier.class, MessageStatus.TEATESTAATUS_U.name());
         List<MessageReceiver> messageReceivers = StreamUtil.toMappedList(person -> {
             MessageReceiver messageReceiver = new MessageReceiver();
             messageReceiver.setPerson(person);
@@ -116,7 +119,7 @@ public class AutomaticMessageService {
             return messageReceiver;
         }, persons);
 
-        Person automaticSender = personRepository.getOne(PersonUtil.AUTOMATIC_SENDER_ID);
+        Person automaticSender = em.getReference(Person.class, PersonUtil.AUTOMATIC_SENDER_ID);
         return sendTemplateMessage(type, school, automaticSender, messageReceivers, dataBean, existingMessage);
     }
 
@@ -168,7 +171,7 @@ public class AutomaticMessageService {
 
         if (message != null) {
             message.getReceivers().addAll(messageReceivers);
-            messageRepository.save(message);
+            message = messageRepository.save(message);
         }
 
         return message;

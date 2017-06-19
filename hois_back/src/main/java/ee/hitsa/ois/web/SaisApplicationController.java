@@ -1,11 +1,7 @@
 package ee.hitsa.ois.web;
 
-import java.lang.invoke.MethodHandles;
-import java.nio.charset.StandardCharsets;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -17,6 +13,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.sais.SaisApplication;
 import ee.hitsa.ois.service.SaisApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.SaisApplicationImportForm;
@@ -29,9 +26,6 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 @RestController
 @RequestMapping("/saisApplications")
 public class SaisApplicationController {
-
-    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static final byte[] UTF8_BOM = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
 
     @Autowired
     private SaisApplicationService saisApplicationService;
@@ -61,29 +55,13 @@ public class SaisApplicationController {
     }
 
 
-    @GetMapping(value = "sample.csv", produces = {"text/csv; Charset=UTF-8"})
-    public byte[] csvSampleFile() {
-        return getFileBytes(saisApplicationService.getSampleCsvFile());
+    @GetMapping(value = "sample.csv", produces = HttpUtil.TEXT_CSV_UTF8)
+    public InputStreamResource csvSampleFile() {
+        return HttpUtil.csvUtf8WithBom(saisApplicationService.getSampleCsvFile());
     }
 
-    @GetMapping(value = "classifiers.csv", produces = {"text/csv; Charset=UTF-8"})
-    public byte[] classifiersFile() {
-        return getFileBytes(saisApplicationService.classifiersFile());
+    @GetMapping(value = "classifiers.csv", produces = HttpUtil.TEXT_CSV_UTF8)
+    public InputStreamResource classifiersFile() {
+        return HttpUtil.csvUtf8WithBom(saisApplicationService.classifiersFile());
     }
-
-    private static byte[] getFileBytes(String fileContent) {
-        try {
-            //XXX: find cleaner solution
-            //Excel 2003 strictly requires the BOM in UTF-8 encoded CSV
-            byte[] content = fileContent.getBytes(StandardCharsets.UTF_8);
-            byte[] result = new byte[content.length + UTF8_BOM.length];
-            System.arraycopy(UTF8_BOM, 0, result, 0, UTF8_BOM.length);
-            System.arraycopy(content, 0, result, UTF8_BOM.length, content.length);
-            return result;
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            return fileContent.getBytes();
-        }
-    }
-
 }

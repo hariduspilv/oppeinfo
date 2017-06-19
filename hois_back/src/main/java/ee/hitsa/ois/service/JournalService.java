@@ -61,7 +61,7 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
-import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsSearchCommand;
+import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
 import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
@@ -183,7 +183,7 @@ public class JournalService {
         return JournalDto.of(journal);
     }
 
-    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, Long journalId, JournalStudentsSearchCommand command, Pageable pageable) {
+    public Page<JournalStudentDto> otherStudents(HoisUserDetails user, Long journalId, StudentNameSearchCommand command, Pageable pageable) {
         //TODO: kellel puudub vastavas moodulis positiivne tulemus.
         return studentRepository.findAll((root, query, cb) -> {
             root.fetch("person", JoinType.INNER);
@@ -289,7 +289,7 @@ public class JournalService {
             }
         }
 
-        if (journalEntryForm.getEntryType().equals(JournalEntryType.SISSEKANNE_T.name())) {
+        if (JournalEntryType.SISSEKANNE_T.name().equals(journalEntryForm.getEntryType())) {
             Set<ConstraintViolation<JournalEntryForm>> errors = validator.validate(journalEntryForm, JournalEntryValidation.Lesson.class);
             if(!errors.isEmpty()) {
                 throw new ValidationFailedException(errors);
@@ -307,7 +307,7 @@ public class JournalService {
         }
         EntityUtil.bindEntityCollection(
                 journalEntry.getJournalEntryCapacityTypes(),
-                type -> type.getCapacityType().getCode(),
+                type -> EntityUtil.getCode(type.getCapacityType()),
                 journalEntryForm.getJournalEntryCapacityTypes(), it -> {
                     JournalEntryCapacityType type = new JournalEntryCapacityType();
                     type.setCapacityType(classifierRepository.getOne(it));
@@ -347,10 +347,9 @@ public class JournalService {
         }
 
         // Kui puudumine on rühmajuhataja poolt muudetud põhjendatuks, siis hiljem hilinemise ega puudumise andmeid vastava sissekande juures muuta ei saa
-        if (journalEntryStudent != null && journalEntryStudent.getAbsence() != null && Absence.PUUDUMINE_V.name().equals(EntityUtil.getCode(journalEntryStudent.getAbsence()))) {
-            if(!Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence())) {
-                throw new ValidationFailedException("journal.messages.changingAbsenceIsNotAllowed");
-            }
+        if (journalEntryStudent != null && journalEntryStudent.getAbsence() != null && Absence.PUUDUMINE_V.name().equals(EntityUtil.getCode(journalEntryStudent.getAbsence()))
+                && !Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence())) {
+            throw new ValidationFailedException("journal.messages.changingAbsenceIsNotAllowed");
         }
     }
 
@@ -403,6 +402,7 @@ public class JournalService {
     }
 
     public JournalEntryDto journalEntry(Long journalId, Long journalEntrylId) {
+        // TODO refactor using getOne by journalEntrylId and verifying journalId afterwards
         JournalEntry journalEntry = journalEntryRepository.findOne((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("journal").get("id"), journalId));
@@ -435,7 +435,7 @@ public class JournalService {
 
     public List<JournalStudentDto> journalStudents(Journal journal, Boolean allStudents) {
         return journal.getJournalStudents().stream()
-                .filter(jt -> Boolean.TRUE.equals(allStudents) ? true : StudentUtil.isStudying(jt.getStudent()))
+                .filter(jt -> Boolean.TRUE.equals(allStudents) || StudentUtil.isStudying(jt.getStudent()))
                 .map(JournalStudentDto::of).collect(Collectors.toList());
     }
 

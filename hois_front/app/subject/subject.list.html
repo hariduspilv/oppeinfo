@@ -22,7 +22,7 @@
       <div layout="row">
         <md-input-container flex>
           <label>{{'subject.curriculum' | translate}}</label>
-          <md-select ng-model="criteria.curricula" multiple>
+          <md-select ng-model="criteria.curriculaVersion" multiple>
             <md-option ng-repeat="it in curricula" value="{{it.id}}" style="font-size: medium;">
               {{currentLanguageNameField(it)}}
             </md-option>

@@ -141,6 +141,7 @@ public abstract class JpaQueryUtil {
         private Sort sort;
         private final Map<String, Object> parameters = new HashMap<>();
         private final StringBuilder where = new StringBuilder();
+        private String groupBy;
 
         public NativeQueryBuilder(String from) {
             this.from = Objects.requireNonNull(from);
@@ -157,6 +158,11 @@ public abstract class JpaQueryUtil {
 
         public NativeQueryBuilder sort(Pageable pageable) {
             return sort(pageable != null ? pageable.getSort() : null);
+        }
+
+        public NativeQueryBuilder groupBy(String groupByFields) {
+            this.groupBy = groupByFields;
+            return this;
         }
 
         public void optionalCriteria(String criteria, String name, Collection<?> value) {
@@ -313,6 +319,11 @@ public abstract class JpaQueryUtil {
             if(where.length() > 0) {
                 sql.append(" where ");
                 sql.append(where);
+            }
+
+            if(StringUtils.hasText(groupBy)) {
+                sql.append(" group by ");
+                sql.append(groupBy);
             }
 
             if(sort != null && ordered) {

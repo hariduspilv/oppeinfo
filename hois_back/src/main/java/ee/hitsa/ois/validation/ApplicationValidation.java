@@ -2,31 +2,31 @@ package ee.hitsa.ois.validation;
 
 public interface ApplicationValidation {
 
-    public interface Finm extends ApplicationValidation {
+    interface Finm extends ApplicationValidation {
 
     }
 
-    public interface Ovorm extends ApplicationValidation {
+    interface Ovorm extends ApplicationValidation {
 
     }
 
-    public interface Okava extends ApplicationValidation {
+    interface Okava extends ApplicationValidation {
 
     }
 
-    public interface Valis extends ApplicationValidation {
+    interface Valis extends ApplicationValidation {
 
     }
 
-    public interface Eksmat extends ApplicationValidation {
+    interface Eksmat extends ApplicationValidation {
 
     }
 
-    public interface Akadk extends ApplicationValidation {
+    interface Akadk extends ApplicationValidation {
 
     }
 
-    public interface Akad extends ApplicationValidation {
+    interface Akad extends ApplicationValidation {
 
     }
 

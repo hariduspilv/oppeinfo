@@ -44,7 +44,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
+            <td md-cell><a ng-href="#/subjectStudyPeriods/subjects/{{row.subject.id}}/{{criteria.studyPeriod}}/view">{{currentLanguageNameField(row.subject)}}</a></td>
             <td md-cell>{{row.hours}}</td>
             <td md-cell>
                 <table>

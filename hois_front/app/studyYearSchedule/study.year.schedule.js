@@ -102,7 +102,7 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
     }
 
     $scope.filterSchoolDepartments = function(dept) {
-        return $scope.criteria.schoolDepartments.length === 0 || ArrayUtils.includes($scope.criteria.schoolDepartments, dept.id);
+        return !ArrayUtils.isEmpty($scope.criteria.schoolDepartments) && ArrayUtils.includes($scope.criteria.schoolDepartments, dept.id);
     };
 
     $scope.filterStudentGroups = function(dept) {
@@ -135,7 +135,7 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
     };
 
     $scope.openAddScheduleDialog = function (studentGroup, week, schedule) {
-        if(!week.studyPeriodId || $scope.criteria.studyYear.endDate < new Date()) {
+        if(!week.studyPeriodId) {
             return;
         }
         var DialogController = function (scope) {
@@ -143,7 +143,7 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
             scope.week = week;
             scope.legends = $scope.legends;
             scope.data = {
-                weeks: getNumberOfWeeks(schedule), 
+                weeks: getNumberOfWeeks(schedule),
                 legend: schedule.studyYearScheduleLegend
             };
             scope.translationData = {weeks: $scope.weeks.length - week.weekNr + 1};
@@ -209,4 +209,12 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
             $scope.studyYearSchedules = response.studyYearSchedules;
         });
     };
+
+    $scope.$watch('criteria.studyYear', function(){
+      if(!$scope.criteria.studyYear) {
+        $scope.isPastStudyYear = true;
+      } else {
+        $scope.isPastStudyYear = DataUtils.isPastStudyYearOrPeriod($scope.criteria.studyYear);
+      }
+    });
 }]);

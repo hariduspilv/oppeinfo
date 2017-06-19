@@ -7,10 +7,15 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in generalmessages.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell width="10%">{{::row.inserted | hoisDate}}</td>
-            <td md-cell width="40%"><h4>{{::row.title}}</h4><div ng-show="row.clicked">{{::row.content}}</div></td>
+            <td md-cell width="40%">
+              <h4>{{::row.title}}</h4>
+              <pre ng-show="row.clicked">{{::row.content}}</pre>
+            </td>
             <td md-cell>
-                <a class="md-primary" ng-click="openCloseDetails(row)" aria-label="{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}"><span>{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}</span></a>
-			</td>
+              <a class="md-primary" ng-click="openCloseDetails(row)" aria-label="{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}">
+                <span>{{row.clicked ? 'main.button.hide' : 'main.button.view' | translate}}</span>
+              </a>
+			      </td>
           </tr>
         </tbody>
       </table>
@@ -18,7 +23,7 @@
     <md-table-pagination md-limit="criteria.size" md-limit-options="[5, 10, 15]" ng-if="generalmessages.totalElements > criteria.size"
                          md-page="criteria.page" md-total="{{generalmessages.totalElements}}" md-on-paginate="loadGeneralMessages"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
-    
+
     <h3 ng-show="showUnreadMessages">{{'message.messages' | translate}}</h3>
     <h5 ng-show="showUnreadMessages" ng-if="unreadMessages.content.length === 0">{{'message.noNewMessages' | translate}}</h5>
     <md-table-container ng-show="showUnreadMessages">
@@ -26,7 +31,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in unreadMessages.content" ng-class-odd="'odd'" ng-class-even="'even'" ng-click="readMessage(row)">
             <td md-cell width="10%">{{::row.dateSent | hoisDateTime}}</td>
-            <td md-cell width="90%"><h4>{{::row.subject}}</h4>
+            <td md-cell width="40%"><h4>{{::row.subject}}</h4>
                 <div ng-show="row.clicked">
                     <pre>{{::row.content}}</pre>
                     <p>{{'message.messageSender' | translate}}: {{::row.sender}}</p>
@@ -41,7 +46,7 @@
         </tbody>
       </table>
     </md-table-container>
-    
+
   </div>
   <div ng-if="!currentUser">
     <span>{{ 'home.joinedSchools' | translate }}</span>
@@ -52,3 +57,14 @@
     </md-list>
   </div>
 </div>
+
+<style>
+
+ pre {
+    white-space: pre-wrap;       /* Since CSS 2.1 */
+    white-space: -moz-pre-wrap;  /* Mozilla, since 1999 */
+    white-space: -pre-wrap;      /* Opera 4-6 */
+    white-space: -o-pre-wrap;    /* Opera 7 */
+    word-wrap: break-word;       /* Internet Explorer 5.5+ */
+  }
+</style>

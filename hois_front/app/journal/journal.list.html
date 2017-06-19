@@ -4,7 +4,7 @@
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'journal.studyYear' | translate}}</label>
-          <hois-select ng-model="criteria.studyYear" type="studyyear" required autofocus></hois-select>
+          <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
         </md-input-container>
 
         <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -63,7 +63,9 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{row.studentGroups.join(", ")}}</td>
-            <td md-cell>{{row.nameEt}}</td>
+            <td md-cell>
+              <a ng-href="/#/journal/{{::row.id}}/view">{{row.nameEt}}</a>
+            </td>
             <td md-cell>{{row.teachers.join(", ")}}</td>
             <td md-cell>{{showModuleNames(row.modules)}}</td>
             <td md-cell>{{row.plannedHours}}/{{row.usedHours}}</td>

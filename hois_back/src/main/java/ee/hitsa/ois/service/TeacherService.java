@@ -94,16 +94,15 @@ public class TeacherService {
             personRepository.save(teacher.getPerson());
         } else {
             bindOldPerson(teacherForm, person);
-            personRepository.save(person);
-            teacher.setPerson(person);
+            teacher.setPerson(personRepository.save(person));
         }
         bindTeacherPositionEhisForm(teacher, teacherForm);
         if (!Boolean.TRUE.equals(teacher.getIsHigher())) {
             bindTeacherMobilityForm(teacher, Collections.emptySet());
             bindTeacherQualificationForm(teacher, Collections.emptySet());
         }
-        teacherRepository.save(teacher);
-        return TeacherDto.of(teacher);
+
+        return TeacherDto.of(teacherRepository.save(teacher));
     }
 
     private void bindOldPerson(TeacherForm teacherForm, Person person) {
@@ -141,7 +140,7 @@ public class TeacherService {
     }
 
     private TeacherMobility createTeacherMobility(Teacher teacher, TeacherMobilityForm mobilityForm, TeacherMobility teacherMobility) {
-        teacherMobility = EntityUtil.bindToEntity(mobilityForm, teacherMobility, classifierRepository);
+        EntityUtil.bindToEntity(mobilityForm, teacherMobility, classifierRepository);
         teacherMobility.setTeacher(teacher);
         return teacherMobility;
     }
@@ -158,7 +157,7 @@ public class TeacherService {
     }
 
     private TeacherQualification createTeacherQualification(Teacher teacher, TeacherQualificationFrom teacherQualificationForm, TeacherQualification teacherQualification) {
-        teacherQualification = EntityUtil.bindToEntity(teacherQualificationForm, teacherQualification, classifierRepository);
+        EntityUtil.bindToEntity(teacherQualificationForm, teacherQualification, classifierRepository);
         teacherQualification.setTeacher(teacher);
         if (ClassifierUtil.isEstonia(teacherQualification.getState())) {
             teacherQualification.setSchoolOther(null);
@@ -177,14 +176,14 @@ public class TeacherService {
     }
 
     private TeacherPositionEhis createTeacherPositionEhisForm(Teacher teacher, TeacherForm.TeacherPositionEhisForm positionEhis, TeacherPositionEhis oldPositionEhis) {
-        TeacherPositionEhis newTeacherPositionEhis = EntityUtil.bindToEntity(positionEhis, oldPositionEhis, classifierRepository);
-        newTeacherPositionEhis.setTeacher(teacher);
+        EntityUtil.bindToEntity(positionEhis, oldPositionEhis, classifierRepository);
+        oldPositionEhis.setTeacher(teacher);
         SchoolDepartment schoolDepartment = null;
         if (positionEhis.getSchoolDepartment() != null && positionEhis.getSchoolDepartment().longValue() > 0) {
             schoolDepartment = schoolDepartmentRepository.getOne(positionEhis.getSchoolDepartment());
         }
-        newTeacherPositionEhis.setSchoolDepartment(schoolDepartment);
-        return newTeacherPositionEhis;
+        oldPositionEhis.setSchoolDepartment(schoolDepartment);
+        return oldPositionEhis;
     }
 
     private static void clearConflictingFields(TeacherForm.TeacherPositionEhisForm positionEhis) {

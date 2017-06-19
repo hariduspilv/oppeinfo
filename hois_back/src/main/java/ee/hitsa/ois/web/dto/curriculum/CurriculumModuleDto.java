@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
+import java.math.BigDecimal;
 import java.util.Set;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
@@ -29,7 +31,8 @@ public class CurriculumModuleDto extends VersionedCommand {
 
     @NotNull
     @Min(0)
-    private Integer credits;
+    @Max(999)
+    private BigDecimal credits;
 
     @NotNull
     private String objectivesEt;
@@ -51,7 +54,7 @@ public class CurriculumModuleDto extends VersionedCommand {
         dto.setOutcomes(StreamUtil.toMappedSet(CurriculumModuleOutcomeDto::of, module.getOutcomes()));
         dto.setOccupations(StreamUtil.toMappedSet(o -> EntityUtil.getNullableCode(o.getOccupation()), module.getOccupations()));
         dto.setCompetences(StreamUtil.toMappedSet(c -> EntityUtil.getNullableCode(c.getCompetence()), module.getCompetences()));
-        dto.setAddedToImplementationPlan(!CollectionUtils.isEmpty(module.getCurriculumVersionOccupationModules()));
+        dto.setAddedToImplementationPlan(Boolean.valueOf(!CollectionUtils.isEmpty(module.getCurriculumVersionOccupationModules())));
         return dto;
     }
 
@@ -95,11 +98,11 @@ public class CurriculumModuleDto extends VersionedCommand {
         this.nameEn = nameEn;
     }
 
-    public Integer getCredits() {
+    public BigDecimal getCredits() {
         return credits;
     }
 
-    public void setCredits(Integer credits) {
+    public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }
 

@@ -41,7 +41,6 @@ import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.repository.ApplicationRepository;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
@@ -60,8 +59,6 @@ public class DirectiveConfirmService {
     private ApplicationRepository applicationRepository;
     @Autowired
     private AutomaticMessageService automaticMessageService;
-    @Autowired
-    private ClassifierRepository classifierRepository;
     @Autowired
     private DirectiveRepository directiveRepository;
     @Autowired
@@ -121,7 +118,7 @@ public class DirectiveConfirmService {
         }
 
         // TODO send to sais, if service returns no errors then update wdId with service return value and set status to kinnitamisel
-        directive.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name()));
+        directive.setStatus(em.getReference(Classifier.class, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name()));
         directiveRepository.save(directive);
     }
 
@@ -129,7 +126,7 @@ public class DirectiveConfirmService {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus()), "Invalid directive status");
 
         // update directive fields
-        directive.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name()));
+        directive.setStatus(em.getReference(Classifier.class, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name()));
         directive.setConfirmDate(confirmDate);
         directive.setConfirmer(user.getUsername());
 
@@ -137,8 +134,8 @@ public class DirectiveConfirmService {
         if(KASKKIRI_TYHIST.equals(directiveType)) {
             cancelDirective(directive);
         } else {
-            Classifier studentStatus = directiveType.studentStatus() != null ? classifierRepository.getOne(directiveType.studentStatus().name()) : null;
-            Classifier applicationStatus = classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
+            Classifier studentStatus = directiveType.studentStatus() != null ? em.getReference(Classifier.class, directiveType.studentStatus().name()) : null;
+            Classifier applicationStatus = em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name());
             Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
             for(DirectiveStudent ds : directive.getStudents()) {
                 Student student = ds.getStudent();
@@ -198,6 +195,8 @@ public class DirectiveConfirmService {
         case KASKKIRI_IMMATV:
             Integer months = directiveStudent.getCurriculumVersion().getCurriculum().getStudyPeriod();
             student.setNominalStudyEnd(confirmDate.plusMonths(months.longValue()));
+            // set nominal study end also on directive
+            directiveStudent.setNominalStudyEnd(student.getNominalStudyEnd());
             // fall thru
         case KASKKIRI_IMMAT:
             student.setStudyStart(confirmDate);
@@ -241,7 +240,7 @@ public class DirectiveConfirmService {
                     // undo create student. Logic similar to EKSMAT
                     LocalDate confirmDate = directive.getConfirmDate();
                     student.setStudyEnd(confirmDate);
-                    student.setStatus(classifierRepository.getOne(StudentStatus.OPPURSTAATUS_K.name()));
+                    student.setStatus(em.getReference(Classifier.class, StudentStatus.OPPURSTAATUS_K.name()));
                     User user = userForStudent(student);
                     if(user != null) {
                         user.setValidThru(confirmDate);
@@ -323,8 +322,8 @@ public class DirectiveConfirmService {
         // TODO wrong rights, replace!
         UserRights userRights = new UserRights();
         userRights.setUser(user);
-        userRights.setPermission(classifierRepository.getOne(Permission.OIGUS_V.name()));
-        userRights.setObject(classifierRepository.getOne("TEEMAOIGUS_A"));
+        userRights.setPermission(em.getReference(Classifier.class, Permission.OIGUS_V.name()));
+        userRights.setObject(em.getReference(Classifier.class, "TEEMAOIGUS_A"));
         user.setUserRights(Collections.singleton(userRights));
         em.persist(user);
         return user;

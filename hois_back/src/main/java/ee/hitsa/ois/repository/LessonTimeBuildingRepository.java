@@ -4,11 +4,10 @@ import java.time.LocalDate;
 import java.util.Set;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 
-public interface LessonTimeBuildingRepository extends JpaRepository<LessonTimeBuilding, Long>, JpaSpecificationExecutor<LessonTimeBuilding> {
+public interface LessonTimeBuildingRepository extends JpaRepository<LessonTimeBuilding, Long> {
 
     LessonTimeBuilding findFirstByBuildingIdInOrderByLessonTimeBuildingGroupValidFromDesc(Set<Long> buildings);
 

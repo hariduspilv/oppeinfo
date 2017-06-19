@@ -55,8 +55,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
     if (id) {
       $scope.studyYear = Endpoint.get({id: id}, afterLoad);
     } else if (code) {
-      $scope.studyYear = new Endpoint();
-      $scope.studyYear.year = code;
+      $scope.studyYear = new Endpoint({year: code});
       $scope.studyPeriods = [];
       $scope.studyPeriodEvents = [];
     }

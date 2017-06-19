@@ -1,7 +1,5 @@
 package ee.hitsa.ois.service;
 
-import java.io.PrintWriter;
-import java.io.StringWriter;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -224,8 +222,7 @@ public class SaisAdmissionService {
                 log.info("couldn't map studyform for admission with code {}, using default value {}", saisAdmission.getCode(), DEFAULT_OPPEVORM);
                 saisAdmission.setStudyForm(oppevormMap.get(DEFAULT_OPPEVORM));
             }
-            saisAdmissionRepository.save(saisAdmission);
-            result.add(SaisAdmissionSearchDto.of(saisAdmission));
+            result.add(SaisAdmissionSearchDto.of(saisAdmissionRepository.save(saisAdmission)));
         }
         return result;
     }
@@ -238,6 +235,7 @@ public class SaisAdmissionService {
         xRoadHeader.setProducer(sp.getProducer());
         xRoadHeader.setUserId(sp.getUseridprefix() + personRepository.getOne(user.getPersonId()).getIdcode());
         xRoadHeader.setId(UUID.randomUUID().toString());
+        // TODO configurable
         xRoadHeader.setService("sais2.AllAdmissionsExport.v1");
         return xRoadHeader;
     }
@@ -251,12 +249,12 @@ public class SaisAdmissionService {
         gcal = GregorianCalendar.from(form.getCreateDateTo().atStartOfDay(ZoneId.systemDefault()));
         request.setCreateDateTo(DatatypeFactory.newInstance().newXMLGregorianCalendar(gcal));
         request.setModifyDateTo(DatatypeFactory.newInstance().newXMLGregorianCalendar(gcal));
-        ArrayOfInt aoi = new ArrayOfInt();
         Classifier ehisSchool = schoolRepository.getOne(user.getSchoolId()).getEhisSchool();
         Integer koolRegNr = null;
         if(ehisSchool.getValue2() != null) {
             koolRegNr = Integer.valueOf(ehisSchool.getValue2());
         }
+        ArrayOfInt aoi = new ArrayOfInt();
         aoi.getInt().add(koolRegNr);
         request.setInstitutionRegCodes(aoi);
 

@@ -205,6 +205,24 @@ angular.module('hitsaOis')
         {
           name: 'main.menu.studyYearSchedule.legend',
           url: "/studyYearScheduleLegend"
+        },
+        {
+          name: 'main.menu.study.moduleProtocol.search',
+          url: "/moduleProtocols?_menu"
+        },
+        {
+          name: 'main.menu.declaration.current',
+          url: "/declaration/current/view",
+          studyLevel: {
+              higher: true
+          }
+        },
+        {
+          name: 'main.menu.declaration.search',
+          url: "/declarations?_menu",
+          studyLevel: {
+              higher: true
+          }
         }
       ]
     });
@@ -253,11 +271,57 @@ angular.module('hitsaOis')
         },
         {
           name: 'main.menu.subjectStudyPeriods.plans',
-          url: "/subjectStudyPeriodPlans?_menu"
+          url: "/subjectStudyPeriodPlans?_menu",
+          studyLevel: {
+              higher: true
+          }
         },
         {
           name: 'main.menu.subjectStudyPeriods.label',
           url: "/subjectStudyPeriods/studentGroups?_menu"
+        },
+        {
+          name: 'main.menu.lessonplan.event.label',
+          url: "/lessonplans/events?_menu"
+        }
+      ]
+    });
+
+    sections.push({
+      name: 'main.menu.dataexchange.label',
+      type: 'toggle',
+      pages: [
+        {
+          name: 'main.menu.dataexchange.teacherinfo.export',
+          id: 'teacherinfoExport',
+          url: "/ehis/teacher/export?_menu"
+        }
+      ]
+    });
+
+    sections.push({
+      name: 'main.menu.reports.label',
+      type: 'toggle',
+      pages: [
+        {
+          name: 'main.menu.reports.students',
+          url: "/reports/students/students?_menu"
+        },
+        {
+          name: 'main.menu.reports.studentstatistics',
+          url: "/reports/students/statistics?_menu"
+        },
+        {
+          name: 'main.menu.reports.studentstatisticsbyperiod',
+          url: "/reports/students/statistics/byperiod?_menu"
+        },
+        {
+          name: 'main.menu.reports.curriculumscompletion',
+          url: "/reports/curriculums/completion?_menu"
+        },
+        {
+          name: 'main.menu.reports.teachersload',
+          url: "/reports/teachers/load?_menu"
         }
       ]
     });
@@ -380,8 +444,8 @@ angular.module('hitsaOis')
     }
 
 
-    function studyLevelMatch(section, school) { 
-        if(angular.isDefined(section.studyLevel) && angular.isDefined(school)) {
+    function studyLevelMatch(section, school) {
+        if(angular.isDefined(section.studyLevel) && angular.isDefined(school) && school !== null) {
             return school.higher && section.studyLevel.higher ||
                    school.vocational && section.studyLevel.vocational;
         }
@@ -392,7 +456,7 @@ angular.module('hitsaOis')
     function addSubmenuItem(pages, section, roles, school) {
       if (!_canAccess(section, roles) || !section.url) {
         return;
-      } 
+      }
       if (!studyLevelMatch(section, school)) {
           return;
       }

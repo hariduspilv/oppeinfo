@@ -19,6 +19,9 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.ClassifierAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
@@ -45,23 +48,26 @@ public class AutocompleteController {
         return autocompleteService.buildings(user.getSchoolId());
     }
 
+    @GetMapping("/rooms")
+    public Page<AutocompleteResult> rooms(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+        return asPage(autocompleteService.rooms(user.getSchoolId(), lookup));
+    }
+
     @GetMapping("/classifiers")
-    public List<ClassifierSelection> classifiers(@RequestParam(name = "mainClassCode", required = false) String mainClassCode,
-            @RequestParam(name = "mainClassCodes", required = false) List<String> mainClassCodes) {
-        if (mainClassCode == null && mainClassCodes == null) {
-            throw new IllegalArgumentException("mainClassCode or mainClassCodes must be specified");
+    public List<ClassifierSelection> classifiers(@Valid ClassifierAutocompleteCommand lookup) {
+        List<String> codes = lookup.getMainClassCodes();
+        if(codes == null) {
+            codes = Collections.singletonList(lookup.getMainClassCode());
         }
-        List<String> codes = mainClassCodes != null ? mainClassCodes : Collections.singletonList(mainClassCode);
         return autocompleteService.classifiers(codes);
     }
 
     @GetMapping("/classifiers/withparents")
-    public List<ClassifierSelection> classifiersWithParents(@RequestParam(name = "mainClassCode", required = false) String mainClassCode,
-            @RequestParam(name = "mainClassCodes", required = false) List<String> mainClassCodes) {
-        if (mainClassCode == null && mainClassCodes == null) {
-            throw new IllegalArgumentException("mainClassCode or mainClassCodes must be specified");
+    public List<ClassifierSelection> classifiersWithParents(@Valid ClassifierAutocompleteCommand lookup) {
+        List<String> codes = lookup.getMainClassCodes();
+        if(codes == null) {
+            codes = Collections.singletonList(lookup.getMainClassCode());
         }
-        List<String> codes = mainClassCodes != null ? mainClassCodes : Collections.singletonList(mainClassCode);
         return autocompleteService.classifiersWithParents(codes);
     }
 
@@ -71,13 +77,23 @@ public class AutocompleteController {
     }
 
     @GetMapping("/curriculumversions")
-    public List<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, @RequestParam(name = "valid", required = false) Boolean valid, @RequestParam(name = "sais", required = false) Boolean sais) {
-        return autocompleteService.curriculumVersions(user.getSchoolId(), valid, sais);
+    public List<CurriculumVersionResult> curriculumVersions(HoisUserDetails user, @Valid CurriculumVersionAutocompleteCommand lookup) {
+        return autocompleteService.curriculumVersions(user.getSchoolId(), lookup);
+    }
+
+    @GetMapping("/curriculumversionomodules")
+    public List<AutocompleteResult> curriculumVersionOmodules(@RequestParam("curriculumVersionId") Long curriculumVersionId) {
+        return autocompleteService.curriculumVersionOccupationModules(curriculumVersionId);
+    }
+
+    @GetMapping("/curriculumversionomodulethemes")
+    public List<AutocompleteResult> curriculumVersionOmoduleThemes(@RequestParam("curriculumVersionOmoduleId") Long curriculumVersionOmoduleId) {
+        return autocompleteService.curriculumVersionOccupationModuleThemes(curriculumVersionOmoduleId);
     }
 
     @GetMapping("/directivecoordinators")
-    public List<AutocompleteResult> directiveCoordinators(HoisUserDetails user, @RequestParam(name = "isDirective", required = false) Boolean isDirective) {
-        return autocompleteService.directiveCoordinators(user.getSchoolId(), isDirective);
+    public List<AutocompleteResult> directiveCoordinators(HoisUserDetails user, @Valid DirectiveCoordinatorAutocompleteCommand lookup) {
+        return autocompleteService.directiveCoordinators(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/persons")
@@ -113,6 +129,10 @@ public class AutocompleteController {
 
     @GetMapping("/students")
     public Page<AutocompleteResult> students(HoisUserDetails user, @Valid StudentAutocompleteCommand lookup) {
+        if(user.isStudent()) {
+            // student is allowed to lookup himself/herself
+            lookup.setId(user.getStudentId());
+        }
         return asPage(autocompleteService.students(user.getSchoolId(), lookup));
     }
 

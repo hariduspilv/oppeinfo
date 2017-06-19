@@ -29,6 +29,7 @@ public class TestConfigurationService {
     private HoisUserDetailsService hoisUserDetailsService;
 
     private String sessionCookie;
+    private User currentUser;
 
     public String getSessionCookie() {
         return sessionCookie;
@@ -52,9 +53,9 @@ public class TestConfigurationService {
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
         if (!CollectionUtils.isEmpty(usersWithRole)) {
-            User toUser = usersWithRole.stream().findFirst().get();
+            currentUser = usersWithRole.stream().findFirst().get();
             Map<String, Long> postData = new HashMap<>();
-            postData.put("id", toUser.getId());
+            postData.put("id", currentUser.getId());
             ResponseEntity<Object> changeUserResponse = restTemplate.withBasicAuth(TestConfiguration.USER_ID, "undefined").postForEntity("/changeUser", postData, Object.class);
             HttpHeaders headers = changeUserResponse.getHeaders();
             headers.forEach((name, values) -> {
@@ -64,6 +65,10 @@ public class TestConfigurationService {
             });
         }
 
+    }
+
+    public HoisUserDetails getHoisUserDetails() {
+        return hoisUserDetailsService.getHoisUserDetails(currentUser);
     }
 
 }

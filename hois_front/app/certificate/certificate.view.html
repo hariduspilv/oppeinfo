@@ -1,0 +1,45 @@
+<div layout-padding ng-cloak class="form-readonly">
+  <div layout="column">
+      <md-input-container>
+          <label>{{'certificate.type' | translate}}</label>
+          <hois-classifier-value ng-model="record.type" main-classifier-code="TOEND_LIIK"></hois-classifier-value>
+      </md-input-container>
+
+      <div ng-show="record.type !== 'TOEND_LIIK_MUU'" layout="column">
+        <md-input-container>
+            <label>{{'certificate.headline' | translate}}</label>
+            <hois-value value="student.nameEt"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div ng-if="record.type === 'TOEND_LIIK_MUU'">
+          <md-input-container class="md-block">
+              <label>{{'certificate.otherIdcode' | translate}}</label>
+              <hois-value value="record.otherIdcode"></hois-value>
+          </md-input-container>
+          <md-input-container class="md-block">
+              <label>{{'certificate.otherName' | translate}}</label>
+              <hois-value value="record.otherName"></hois-value>
+          </md-input-container>
+      </div>
+      <md-input-container>
+          <label>{{'certificate.headline' | translate}}</label>
+          <hois-value value="record.headline"></hois-value>
+      </md-input-container>
+      <md-input-container>
+          <label>{{'certificate.whom' | translate}}</label>
+          <hois-value value="record.whom"></hois-value>
+      </md-input-container>
+      <md-input-container>
+          <label>{{'certificate.signatory' | translate}}</label>
+          <hois-value value="record.signatoryName"></hois-value>
+      </md-input-container>
+      <md-input-container>
+          <label>{{'certificate.content' | translate}}</label>
+          <hois-value value="record.content"></hois-value>
+      </md-input-container>
+  </div>
+  <div layout="row">
+      <md-button class="md-raised md-default" ng-href="/#/certificate">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

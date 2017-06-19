@@ -41,7 +41,7 @@ public class CurriculumForm extends VersionedCommand {
     @Size(max = 25)
     private String code;
     @Size(max = 10)
-    private String merCode;
+    private String merCode; // XXX for EHIS this should be number (see EhisStudentService)
     private LocalDate approval;
     @Size(max = 50)
     private String approvalDokNr;
@@ -59,6 +59,8 @@ public class CurriculumForm extends VersionedCommand {
     private String graduationRequirementsEt;
     @Size(max = 20000)
     private String graduationRequirementsEn;
+    @Min(0)
+    @Max(999)
     private BigDecimal credits;
     @Size(max = 4000)
     private String draftText;
@@ -104,8 +106,8 @@ public class CurriculumForm extends VersionedCommand {
     @NotNull
     private Boolean joint;
     @Min(0)
-    @Max(1000)
-    private Double optionalStudyCredits;
+    @Max(999)
+    private BigDecimal optionalStudyCredits;
     private LocalDate validFrom;
     private LocalDate validThru;
 
@@ -135,7 +137,8 @@ public class CurriculumForm extends VersionedCommand {
     private Set<String> studyForms;
     private Set<Long> schoolDepartments;
     @Valid
-    private Set<CurriculumFileDto> files;
+    private Set<CurriculumFileDto> newFiles;
+    private Set<CurriculumFileUpdateDto> files;
     @Valid
     private Set<CurriculumGradeDto> grades;
     @Valid
@@ -152,6 +155,14 @@ public class CurriculumForm extends VersionedCommand {
     private String contractEt;
     private String contractEn;
     private String supervisor;
+
+    public Set<CurriculumFileUpdateDto> getFiles() {
+        return files;
+    }
+
+    public void setFiles(Set<CurriculumFileUpdateDto> files) {
+        this.files = files;
+    }
 
     public Set<CurriculumJointPartnerDto> getJointPartners() {
         return jointPartners;
@@ -197,12 +208,12 @@ public class CurriculumForm extends VersionedCommand {
         this.grades = grades;
     }
 
-    public Set<CurriculumFileDto> getFiles() {
-        return files;
+    public Set<CurriculumFileDto> getNewFiles() {
+        return newFiles;
     }
 
-    public void setFiles(Set<CurriculumFileDto> files) {
-        this.files = files;
+    public void setNewFiles(Set<CurriculumFileDto> newFiles) {
+        this.newFiles = newFiles;
     }
 
     public Set<String> getStudyForms() {
@@ -537,11 +548,11 @@ public class CurriculumForm extends VersionedCommand {
         this.joint = joint;
     }
 
-    public Double getOptionalStudyCredits() {
+    public BigDecimal getOptionalStudyCredits() {
         return optionalStudyCredits;
     }
 
-    public void setOptionalStudyCredits(Double optionalStudyCredits) {
+    public void setOptionalStudyCredits(BigDecimal optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
 

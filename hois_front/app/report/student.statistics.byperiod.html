@@ -1,0 +1,66 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="loadData()" novalidate>
+      <div layout="row">
+        <div layout="row" flex="45">
+          <md-input-container>
+            <label>{{'main.from' | translate}}</label>
+            <md-datepicker ng-model="criteria.from"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-offset="5">
+            <label>{{'main.thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div layout="row">
+        <div flex="45">
+          <hois-autocomplete ng-model="criteria.curriculum" method="curriculums" label="report.studentstatisticsbyperiod.curriculum" multiple></hois-autocomplete>
+        </div>
+
+        <md-input-container flex="50" flex-offset="5">
+          <label>{{'report.studentstatisticsbyperiod.result' | translate}}</label>
+          <md-select ng-model="criteria.result" required>
+            <md-option value="OPPURSTAATUS_A">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_A' | translate}}</md-option>
+            <md-option value="OPPURSTAATUS_K">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_K' | translate}}</md-option>
+            <md-option value="OPPURSTAATUS_L">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_L' | translate}}</md-option>
+          </md-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="curriculumVersion.code">{{'report.studentstatisticsbyperiod.curriculum' | translate}}</th>
+            <th md-column ng-if="formState.resultType !== 'OPPURSTAATUS_L'" ng-repeat="cl in formState.resultDef">{{currentLanguageNameField(cl)}}</th>
+            <th md-column>{{formState.resultType === 'OPPURSTAATUS_L' ? 'report.studentstatisticsbyperiod.finished' : 'report.studentstatisticsbyperiod.total' | translate}}</th>
+            <th md-column ng-if="formState.resultType === 'OPPURSTAATUS_L'">{{'report.studentstatisticsbyperiod.isCumLaude' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row)}}</td>
+            <td md-cell ng-if="formState.resultType !== 'OPPURSTAATUS_L'" ng-repeat="cl in formState.resultDef">{{::row.result[cl.code] || 0}}</td>
+            <td md-cell>{{::row.total}}</td>
+            <td md-cell ng-if="formState.resultType === 'OPPURSTAATUS_L'">{{::row.result['true'] || 0}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

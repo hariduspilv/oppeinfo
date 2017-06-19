@@ -1,10 +1,14 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
@@ -33,6 +37,8 @@ public class LessonPlanJournalForm extends VersionedCommand {
     private List<LessonPlanJournalTeacherForm> journalTeachers;
     @NotEmpty
     private List<Long> journalOccupationModuleThemes;
+    
+    private List<LessonPlanGroupForm> groups;
 
     public Long getLessonPlanModuleId() {
         return lessonPlanModuleId;
@@ -89,7 +95,80 @@ public class LessonPlanJournalForm extends VersionedCommand {
     public void setJournalOccupationModuleThemes(List<Long> journalOccupationModuleThemes) {
         this.journalOccupationModuleThemes = journalOccupationModuleThemes;
     }
+    
 
+    public List<LessonPlanGroupForm> getGroups() {
+        return groups;
+    }
+
+    public void setGroups(List<LessonPlanGroupForm> groups) {
+        this.groups = groups;
+    }
+
+    public static class LessonPlanGroupForm {
+
+        private Long studentGroup;
+        @NotNull
+        private Long curriculumVersionOccupationModule;
+        @NotNull
+        private List<Long> curriculumVersionOccupationModuleThemes;
+        private EntityConnectionCommand group;
+        private Long curriculumVersion;
+
+        public static LessonPlanGroupForm of(Entry<StudentGroup, List<JournalOccupationModuleTheme>> entry) {
+            LessonPlanGroupForm dto = new LessonPlanGroupForm();
+            dto.setCurriculumVersionOccupationModuleThemes(entry.getValue().stream()
+                    .map(it -> it.getCurriculumVersionOccupationModuleTheme().getId()).collect(Collectors.toList()));
+            dto.setCurriculumVersionOccupationModule(
+                    entry.getValue().get(0).getCurriculumVersionOccupationModuleTheme().getModule().getId());
+            dto.setStudentGroup(entry.getKey().getId());
+            dto.setGroup(AutocompleteResult.of(entry.getKey()));
+            dto.setCurriculumVersion(entry.getKey().getCurriculumVersion().getId());
+            return dto;
+        }
+
+        public Long getStudentGroup() {
+            return studentGroup;
+        }
+
+        public void setStudentGroup(Long studentGroup) {
+            this.studentGroup = studentGroup;
+        }
+
+        public Long getCurriculumVersionOccupationModule() {
+            return curriculumVersionOccupationModule;
+        }
+
+        public void setCurriculumVersionOccupationModule(Long curriculumVersionOccupationModule) {
+            this.curriculumVersionOccupationModule = curriculumVersionOccupationModule;
+        }
+
+        public List<Long> getCurriculumVersionOccupationModuleThemes() {
+            return curriculumVersionOccupationModuleThemes;
+        }
+
+        public void setCurriculumVersionOccupationModuleThemes(List<Long> curriculumVersionOccupationModuleThemes) {
+            this.curriculumVersionOccupationModuleThemes = curriculumVersionOccupationModuleThemes;
+        }
+
+        public EntityConnectionCommand getGroup() {
+            return group;
+        }
+
+        public void setGroup(EntityConnectionCommand group) {
+            this.group = group;
+        }
+
+        public Long getCurriculumVersion() {
+            return curriculumVersion;
+        }
+
+        public void setCurriculumVersion(Long curriculumVersion) {
+            this.curriculumVersion = curriculumVersion;
+        }
+
+    }
+    
     public static class LessonPlanJournalTeacherForm {
 
         private Long id;

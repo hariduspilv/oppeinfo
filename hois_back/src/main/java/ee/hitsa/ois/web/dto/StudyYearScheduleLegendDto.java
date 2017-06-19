@@ -7,8 +7,8 @@ import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
-public class StudyYearScheduleLegendDto  extends VersionedCommand {
-    
+public class StudyYearScheduleLegendDto extends VersionedCommand {
+
     private Long id;
     @NotNull
     @Size(max=2)
@@ -21,7 +21,7 @@ public class StudyYearScheduleLegendDto  extends VersionedCommand {
     @NotNull
     @Size(max=7)
     private String color;
-    
+
     public static StudyYearScheduleLegendDto of(StudyYearScheduleLegend l) {
         return EntityUtil.bindToDto(l, new StudyYearScheduleLegendDto());
     }

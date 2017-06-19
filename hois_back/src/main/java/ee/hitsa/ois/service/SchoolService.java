@@ -1,11 +1,12 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -24,12 +25,13 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.OisFileRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.SchoolForm;
 import ee.hitsa.ois.web.commandobject.SchoolSearchCommand;
 import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyLevelsCommand;
 import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyYearScheduleLegendsCommand;
 import ee.hitsa.ois.web.dto.SchoolDto;
+import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 
 @Transactional
 @Service
@@ -37,6 +39,8 @@ public class SchoolService {
 
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private EntityManager em;
     @Autowired
     private OisFileRepository oisFileRepository;
     @Autowired
@@ -99,19 +103,41 @@ public class SchoolService {
     }
 
     public School updateLegends(School school, SchoolUpdateStudyYearScheduleLegendsCommand cmd) {
-        Map<Long, StudyYearScheduleLegend> oldLegendsMap = StreamUtil.toMap
-                (EntityUtil::getId, school.getStudyYearScheduleLegends());
-        List<StudyYearScheduleLegend> newLegends = StreamUtil.toMappedList(dto -> {
-            StudyYearScheduleLegend legend = oldLegendsMap.get(dto.getId());
-            if(legend != null) {
-                legend = EntityUtil.bindToEntity(dto, legend);
-            } else {
-                legend = EntityUtil.bindToEntity(dto, new StudyYearScheduleLegend());
-                legend.setSchool(school);
-            }
-            return legend;
-        }, cmd.getLegends());
-        school.setStudyYearScheduleLegends(newLegends);
+        EntityUtil.bindEntityCollection(school.getStudyYearScheduleLegends(), StudyYearScheduleLegend::getId, cmd.getLegends(), StudyYearScheduleLegendDto::getId, form -> {
+            StudyYearScheduleLegend legend = new StudyYearScheduleLegend();
+            legend.setSchool(school);
+            return EntityUtil.bindToEntity(form, legend);
+        }, (form, legend) -> EntityUtil.bindToEntity(form, legend));
         return schoolRepository.save(school);
+    }
+
+    public SchoolType schoolType(Long schoolId) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("");
+        qb.parameter("school", schoolId);
+        Object type = qb.select(
+            "case when exists(select 1 from classifier c inner join school_study_level ssl on ssl.school_id = :school and ssl.study_level_code = c.code and c.value ~ '[5-9].*') " +
+                    "then true else false end as higher, " +
+            "case when exists(select 1 from classifier c inner join school_study_level ssl on ssl.school_id = :school and ssl.study_level_code = c.code and c.value ~ '[0-4].*') " +
+                    "then true else false end as vocational", em).getSingleResult();
+
+        return new SchoolType(resultAsBoolean(type, 0).booleanValue(), resultAsBoolean(type, 1).booleanValue());
+    }
+
+    public static class SchoolType {
+        private final boolean higher;
+        private final boolean vocational;
+
+        public SchoolType(boolean higher, boolean vocational) {
+            this.higher = higher;
+            this.vocational = vocational;
+        }
+
+        public boolean isHigher() {
+            return higher;
+        }
+
+        public boolean isVocational() {
+            return vocational;
+        }
     }
 }

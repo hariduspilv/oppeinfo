@@ -21,11 +21,10 @@ import ee.hitsa.ois.web.commandobject.StudyYearScheduleDtoContainer;
 @Transactional
 public class StudyYearScheduleControllerTest {
 
+    private static final String BASE_URL = "/studyYearSchedule";
+
     @Autowired
     private TestRestTemplate restTemplate;
-
-    private final String BASE_URL = "/studyYearSchedule";
-    
 
     @Test
     public void getStudyYearSchedules() {
@@ -37,6 +36,4 @@ public class StudyYearScheduleControllerTest {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
     }
-
-
 }

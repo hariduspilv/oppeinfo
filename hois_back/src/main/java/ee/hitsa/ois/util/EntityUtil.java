@@ -11,6 +11,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -224,6 +225,31 @@ public abstract class EntityUtil {
         // remove possible leftovers
         storedValues.removeIf(t -> storedIds.contains(idExtractor.apply(t)));
     }
+    
+    /**
+     * child collection binding when you need to extract id from object and also have other parameters to set (typically holder object with multiple parameters).
+     *
+     * @param storedValues
+     * @param idExtractor
+     * @param newIds
+     * @param newValueFactory
+     * @param newIdExtractor
+     */
+    public static <SV, ID, NV> void bindEntityCollection(Collection<SV> storedValues, Function<SV, ID> idExtractor, Collection<NV> newValues, Function<NV, ID> newIdExtractor, Function<NV, SV> newValueFactory) {
+        Set<ID> storedIds = StreamUtil.toMappedSet(idExtractor, storedValues);
+
+        if(newValues != null) {
+            for(NV newValue : newValues) {
+                ID id = newIdExtractor.apply(newValue);
+                if(!storedIds.remove(id)) {
+                    storedValues.add(newValueFactory.apply(newValue));
+                }
+            }
+        }
+
+        // remove possible leftovers
+        storedValues.removeIf(t -> storedIds.contains(idExtractor.apply(t)));
+    }
 
     /**
      * child collection binding with create, update and remove operations.
@@ -294,6 +320,26 @@ public abstract class EntityUtil {
                 destination.setPropertyValue(p, c);
             }
         }
+    }
+
+    /**
+     * Helper for finding entity from collection by id.
+     *
+     * @param id
+     * @param items
+     * @return Optional
+     * @throws NullPointerException if id is null
+     *
+     */
+    public static <T extends BaseEntityWithId> Optional<T> find(Long id, Collection<T> items) {
+        Objects.requireNonNull(id);
+
+        for(T item : items) {
+            if(id.equals(item.getId())) {
+                return Optional.of(item);
+            }
+        }
+        return Optional.empty();
     }
 
     public static Classifier validateClassifier(Classifier c, MainClassCode... domains) {

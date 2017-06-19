@@ -18,11 +18,11 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.repository.CertificateRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
@@ -47,8 +47,6 @@ public class CertificateService {
     private StudentRepository studentRepository;
     @Autowired
     private PersonRepository personRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
     
     private static final String CERTIFICATE_FROM = "from certificate c "
             + "left outer join student s on s.id = c.student_id "
@@ -91,7 +89,7 @@ public class CertificateService {
 
     public Certificate create(HoisUserDetails user, CertificateForm form) {
         Certificate certificate = new Certificate();
-        certificate.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        certificate.setSchool(em.getReference(School.class, user.getSchoolId()));
         if(user.isStudent()) {
             form.setStudent(user.getStudentId());
         }

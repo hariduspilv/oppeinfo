@@ -26,12 +26,12 @@ import org.springframework.util.CollectionUtils;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Message;
 import ee.hitsa.ois.domain.MessageReceiver;
+import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.MessageRepository;
-import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -93,17 +93,13 @@ public class MessageService {
                 + "sg.id as sgId, sg.code as sgCode, "
                 + "c.id as curriculumId, c.name_et as curriculumNameEt, c.name_en as curriculumNameEn, "
                 + "s.id as studentId";
-    private static final String STUDENT_REQUIRES_REPRESENTATIVE = String.format("(date_part('year', age(p.birthdate)) < %d OR s.special_need_code is not null)",
-            Integer.valueOf(PersonUtil.ADULT_YEARS));
+    // private static final String STUDENT_REQUIRES_REPRESENTATIVE = String.format("(date_part('year', age(p.birthdate)) < %d OR s.special_need_code is not null)",
+    //         Integer.valueOf(PersonUtil.ADULT_YEARS));
 
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
     private MessageRepository messageRepository;
-    @Autowired
-    private PersonRepository personRepository;
     @Autowired
     private StudentService studentService;
     @Autowired
@@ -188,17 +184,14 @@ public class MessageService {
     }
 
     public Message create(HoisUserDetails user, MessageForm form) {
-        Message message = new Message();
-        EntityUtil.bindToEntity(form, message, classifierRepository,
+        Message message = EntityUtil.bindToEntity(form, new Message(), classifierRepository,
                 "sender", "sendersSchool", "responseTo", "receivers");
-        if(user.getSchoolId() != null) {
-            message.setSendersSchool(schoolRepository.getOne(user.getSchoolId()));
-        }
-        message.setSender(personRepository.getOne(user.getPersonId()));
-        message.setSendersRole(classifierRepository.getOne(user.getRole()));
+        message.setSendersSchool(EntityUtil.getOptionalOne(School.class, user.getSchoolId(), em));
+        message.setSender(em.getReference(Person.class, user.getPersonId()));
+        message.setSendersRole(em.getReference(Classifier.class, user.getRole()));
 
         if(form.getResponseTo() != null) {
-            Message responseTo = messageRepository.getOne(form.getResponseTo());
+            Message responseTo = em.getReference(Message.class, form.getResponseTo());
             responseTo.getResponses().add(message);
             message.setResponseTo(responseTo);
         }
@@ -211,11 +204,11 @@ public class MessageService {
         if(receivers != null) {
 //            receivers.addAll(getRepresentativePersonIds(receivers));
 
-            Classifier statusNew = classifierRepository.getOne(MessageStatus.TEATESTAATUS_U.name());
+            Classifier statusNew = em.getReference(Classifier.class, MessageStatus.TEATESTAATUS_U.name());
             message.getReceivers().addAll(StreamUtil.toMappedList(r -> {
                 MessageReceiver receiver = new MessageReceiver();
                 receiver.setStatus(statusNew);
-                receiver.setPerson(personRepository.getOne(r));
+                receiver.setPerson(em.getReference(Person.class, r));
                 return receiver;
             }, receivers));
         }
@@ -240,7 +233,7 @@ public class MessageService {
     public void setRead(Long personId, Message message) {
         MessageReceiver receiver = message.getReceivers().stream().filter(r -> EntityUtil.getId(r.getPerson()).equals(personId)).findFirst().get();
         receiver.setRead(LocalDateTime.now());
-        receiver.setStatus(classifierRepository.getOne(MessageStatus.TEATESTAATUS_L.name()));
+        receiver.setStatus(em.getReference(Classifier.class, MessageStatus.TEATESTAATUS_L.name()));
         messageRepository.save(message);
     }
 

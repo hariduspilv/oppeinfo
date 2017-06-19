@@ -6,12 +6,6 @@ angular.module('hitsaOis').controller('JournalListController', function ($scope,
   var clMapper = Classifier.valuemapper({status: 'PAEVIK_STAATUS'});
   var promises = clMapper.promises;
 
-  var currentStudyYearPromise = QueryUtils.endpoint('/journals/currentStudyYear').get({}).$promise;
-  currentStudyYearPromise.then(function(result) {
-    $scope.criteria.studyYear = result.currentStudyYear;
-  });
-  promises.push(currentStudyYearPromise);
-
   QueryUtils.createQueryForm($scope, '/journals', {}, clMapper.objectmapper);
 
   $q.all(promises).then(function() {

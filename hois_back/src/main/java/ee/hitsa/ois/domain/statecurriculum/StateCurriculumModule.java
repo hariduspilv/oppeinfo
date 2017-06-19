@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.statecurriculum;
 
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -23,7 +24,7 @@ public class StateCurriculumModule extends BaseEntityWithId {
 	private Classifier module;	
 	private String nameEt;
 	private String nameEn;
-	private Double credits;
+	private BigDecimal credits;
 	private String objectivesEt;
 	private String objectivesEn;
 	private String assessmentsEt;
@@ -78,11 +79,11 @@ public class StateCurriculumModule extends BaseEntityWithId {
 		this.nameEn = nameEn;
 	}
 
-	public Double getCredits() {
+	public BigDecimal getCredits() {
 		return credits;
 	}
 
-	public void setCredits(Double credits) {
+	public void setCredits(BigDecimal credits) {
 		this.credits = credits;
 	}
 

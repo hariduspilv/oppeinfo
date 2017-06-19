@@ -36,7 +36,7 @@ public class ClassifierConnectControllerTest {
     private ClassifierRepository classifierRepository;
 
     @Test
-    public void testChangeListOfParents() throws RestClientException, ClassNotFoundException {
+    public void testChangeListOfParents() throws RestClientException {
 
         Classifier child = classifierRepository.findOne("OPPEKAVA_STAATUS_S");
         Classifier parent1 = classifierRepository.findOne("OPPEKAVA_STAATUS_M");
@@ -121,7 +121,7 @@ public class ClassifierConnectControllerTest {
     }
 
     @SuppressWarnings("unchecked")
-    private List<ClassifierConnectSelection> getResponseEntity(Object body) {
+    private static List<ClassifierConnectSelection> getResponseEntity(Object body) {
         List<ClassifierConnectSelection> response = new ArrayList<>();
         for (LinkedHashMap<String, Object> classifierConnectSelection : (List<LinkedHashMap<String, Object>>)body) {
             response.add(new ClassifierConnectSelection(
@@ -133,7 +133,7 @@ public class ClassifierConnectControllerTest {
     }
 
     @SuppressWarnings("unchecked")
-    private ClassifierSelection getClassifierSelection(Object object) {
+    private static ClassifierSelection getClassifierSelection(Object object) {
         LinkedHashMap<String, Object> classifierSelectionObject = (LinkedHashMap<String, Object>) object;
         ClassifierSelection classifierSelection = new ClassifierSelection((String)classifierSelectionObject.get("code"),
                 null, null, null, null, null, null, null, null);

@@ -8,6 +8,8 @@ import javax.persistence.Id;
 import javax.persistence.IdClass;
 import javax.persistence.ManyToOne;
 
+import ee.hitsa.ois.util.EntityUtil;
+
 @Entity
 @IdClass(ClassifierConnectPk.class)
 public class ClassifierConnect extends BaseEntity {
@@ -50,10 +52,9 @@ public class ClassifierConnect extends BaseEntity {
 
     @Override
     public String toString() {
-        return "ClassifierConnect [classCode=" + classifier.getCode() + ", connectClassCode="
-                + connectClassifier.getCode() + "]";
+        return "ClassifierConnect [classCode=" + EntityUtil.getCode(classifier) + ", connectClassCode="
+                + EntityUtil.getCode(connectClassifier) + "]";
     }
-
 }
 
 class ClassifierConnectPk implements Serializable {

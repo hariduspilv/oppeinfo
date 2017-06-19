@@ -2,7 +2,7 @@ package ee.hitsa.ois.service;
 
 import ee.hitsa.ois.domain.sais.WsSaisLog;
 import ee.hitsa.ois.domain.sais.WsSaisLogDetail;
-import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hois.xroad.helpers.XRoadResponse;
 
@@ -15,16 +15,15 @@ import org.springframework.stereotype.Service;
 @Transactional
 @Service
 public class SaisLogService {
+
     @Autowired
-    EntityManager em;
-    @Autowired
-    SchoolRepository schoolRepository;
+    private EntityManager em;
     
     public void insertLog(XRoadResponse response, HoisUserDetails user, String logTxt) {
         WsSaisLog newLog = new WsSaisLog();
         
         if(logTxt != null) {
-            newLog.setSchool(schoolRepository.getOne(user.getSchoolId()));
+            newLog.setSchool(em.getReference(School.class, user.getSchoolId()));
         }
         newLog.setWsName(response.getQueryName());
         newLog.setRequest(response.getXmlQuery());
@@ -43,11 +42,7 @@ public class SaisLogService {
         errors = errors || Boolean.TRUE.equals(response.getxRoadErrors());
 
         newDetail.setIsError(Boolean.valueOf(errors));
-        if(logTxt != null) {
-            newDetail.setLogTxt(logTxt);
-        } else {
-            newDetail.setLogTxt(response.getError() != null ? response.getError() : "Import edukas");
-        }
+        newDetail.setLogTxt(logTxt != null ? logTxt : (response.getError() != null ? response.getError() : "Import edukas"));
         newDetail.setWsSaisLog(newLog);
 
         em.persist(newDetail);

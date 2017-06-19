@@ -3,28 +3,33 @@ package ee.hitsa.ois.domain.curriculum;
 import java.util.HashSet;
 import java.util.Set;
 
-import javax.persistence.CascadeType;
 import javax.persistence.Entity;
-import javax.persistence.JoinColumn;
+import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
-import javax.validation.constraints.Size;
-
-import org.hibernate.validator.constraints.NotBlank;
+import javax.persistence.Transient;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.util.AssertionFailedException;
 
 @Entity
 public class CurriculumVersionElectiveModule extends BaseEntityWithId {
-    @NotBlank
-    @Size(max=255)
     private String nameEt;
-    @NotBlank
-    @Size(max=255)
     private String nameEn;
     
-    @OneToMany(cascade = CascadeType.ALL)
-    @JoinColumn(name = "curriculum_version_elective_module_id")
+    @OneToMany(mappedBy = "electiveModule", fetch = FetchType.LAZY)
     private Set<CurriculumVersionHigherModuleSubject> subjects = new HashSet<>();
+    
+    @Transient
+    private Long referenceNumber;
+    
+    public Long getReferenceNumber() {
+        AssertionFailedException.throwIf(referenceNumber == null && getId() == null, "CurriculumVersionElectiveModule should whether be saved before or have a reference number!");
+        return referenceNumber != null ? referenceNumber : getId();
+    }
+
+    public void setReferenceNumber(Long referenceNumber) {
+        this.referenceNumber = referenceNumber;
+    }
 
     public String getNameEt() {
         return nameEt;

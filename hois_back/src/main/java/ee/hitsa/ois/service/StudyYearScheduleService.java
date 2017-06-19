@@ -68,7 +68,7 @@ public class StudyYearScheduleService {
 
         List<StudyYearScheduleDto> newSchedulesDtos = schedulesCmd.getStudyYearSchedules()
                 .stream().filter(s -> s.getId() == null).collect(Collectors.toList());
-        return !newSchedulesDtos.isEmpty() ? save(schedulesCmd, newSchedulesDtos, schoolId) : new ArrayList<>();
+        return save(schedulesCmd, newSchedulesDtos, schoolId);
     }
 
     private void delete(Long schoolId, StudyYearScheduleDtoContainer schedulesCmd, Set<Long> oldSchedulesDtosIds) {

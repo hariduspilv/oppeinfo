@@ -16,6 +16,7 @@ public class StudyYearScheduleDto {
     private Long studyPeriod;
     @NotNull
     private Long weekNr;
+    
 
     public static StudyYearScheduleDto of(StudyYearSchedule studyYearSchedule) {
         StudyYearScheduleDto dto = new StudyYearScheduleDto();
@@ -27,7 +28,18 @@ public class StudyYearScheduleDto {
         return dto;
     }
     
+    public StudyYearScheduleDto(Long studentGroupId, Long studyYearScheduleLegendId, Long studyPeriodId, Long weekNr) {
+        this.studentGroup = studentGroupId;
+        this.studyYearScheduleLegend = studyYearScheduleLegendId;
+        this.studyPeriod = studyPeriodId;
+        this.weekNr = weekNr;
+    }
     
+    
+    public StudyYearScheduleDto() {
+        // TODO Auto-generated constructor stub
+    }
+
     /*
      * Equals and hashCode should be computed by studentGroup, studyPeriod, and weekNr.
      * They are generated automatically.

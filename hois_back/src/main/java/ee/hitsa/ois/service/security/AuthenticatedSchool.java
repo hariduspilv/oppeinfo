@@ -2,10 +2,6 @@ package ee.hitsa.ois.service.security;
 
 import java.io.Serializable;
 
-import ee.hitsa.ois.domain.school.School;
-import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.SchoolUtil;
-
 public class AuthenticatedSchool implements Serializable {
 
     private Long id;
@@ -16,11 +12,11 @@ public class AuthenticatedSchool implements Serializable {
     public AuthenticatedSchool() {
     }
 
-    public AuthenticatedSchool(School school) {
-        id = school.getId();
-        higher = SchoolUtil.isHigher(school);
-        vocational = SchoolUtil.isVocational(school);
-        ehisSchool = EntityUtil.getCode(school.getEhisSchool());
+    public AuthenticatedSchool(Long id, boolean higher, boolean vocational, String ehisSchool) {
+        this.id = id;
+        this.higher = higher;
+        this.vocational = vocational;
+        this.ehisSchool = ehisSchool;
     }
 
     public Long getId() {

@@ -22,12 +22,12 @@ import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.GeneralMessage;
 import ee.hitsa.ois.domain.GeneralMessageTarget;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.GeneralMessageRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -45,11 +45,7 @@ public class GeneralMessageService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
     private GeneralMessageRepository generalMessageRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
 
     public Page<GeneralMessageDto> show(HoisUserDetails user, Pageable pageable) {
         if(user.getSchoolId() == null) {
@@ -94,7 +90,7 @@ public class GeneralMessageService {
 
     public GeneralMessage create(HoisUserDetails user, GeneralMessageForm form) {
         GeneralMessage generalMessage = new GeneralMessage();
-        generalMessage.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        generalMessage.setSchool(em.getReference(School.class, user.getSchoolId()));
         return save(generalMessage, form);
     }
 
@@ -108,7 +104,7 @@ public class GeneralMessageService {
             // add new link
             GeneralMessageTarget sl = new GeneralMessageTarget();
             sl.setGeneralMessage(generalMessage);
-            sl.setRole(EntityUtil.validateClassifier(classifierRepository.getOne(roleCode), MainClassCode.ROLL));
+            sl.setRole(EntityUtil.validateClassifier(em.getReference(Classifier.class, roleCode), MainClassCode.ROLL));
             return sl;
         });
         return generalMessageRepository.save(generalMessage);

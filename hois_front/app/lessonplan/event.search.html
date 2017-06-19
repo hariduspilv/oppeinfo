@@ -1,0 +1,104 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="loadData()" novalidate class="nomargin" >
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <label>{{'lessonplan.event.studyPeriod' | translate}}</label>
+            <hois-select ng-model="criteria.studyPeriod" values="formState.studyPeriods"></hois-select>
+        </md-input-container>
+        
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <label>{{'lessonplan.event.studentGroups' | translate}}</label>
+            <hois-select ng-model="criteria.studentGroups" values="formState.studentGroups" multiple></hois-select>
+        </md-input-container>
+      </div>
+
+	  <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'lessonplan.event.name' | translate}}</label>
+          <input ng-model="criteria.name" type="text">
+        </md-input-container>
+        
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label>{{'main.from' | translate}}</label>
+          <md-datepicker ng-model="criteria.from"></md-datepicker>
+        </md-input-container>
+
+        <md-input-container flex="25" flex-sm="100" flex-xs="100">
+          <label>{{'main.thru' | translate}}</label>
+          <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"></md-datepicker>
+        </md-input-container>
+      </div>
+      
+      <div layout="row">
+        <md-input-container class="md-block" flex="50">
+          <label>{{'lessonplan.event.teachers' | translate}}</label>
+          <hois-select ng-model="criteria.teachers" values="formState.teachers" flex multiple></hois-select>
+        </md-input-container>
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'lessonplan.event.otherTeacher' | translate}}</label>
+          <input ng-model="criteria.otherTeacher" type="text">
+        </md-input-container>
+      </div>
+      
+      <div layout="row" flex="100">
+        <div layout="row" flex="50">
+          <hois-autocomplete flex ng-model="criteria.roomObject" method="rooms" name="student" label="lessonplan.event.room"></hois-autocomplete>
+        </div>
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'lessonplan.event.otherRoom' | translate}}</label>
+          <input ng-model="criteria.otherRoom" type="text">
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="30" flex-sm="100" flex-xs="100">
+          <md-checkbox ng-model="criteria.singleEvent">{{'lessonplan.event.single-event' | translate}}</md-checkbox>
+        </md-input-container>
+      </div>
+      
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="newEvent()">{{'main.button.create' | translate}}</md-button>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column>{{'lessonplan.event.name' | translate}}</th>
+            <th md-column>{{'lessonplan.event.date' | translate}}</th>
+            <th md-column>{{'lessonplan.event.time' | translate}}</th>
+            <th md-column>{{'lessonplan.event.teachers' | translate}}</th>
+            <th md-column>{{'lessonplan.event.rooms' | translate}}</th>
+            <th md-column>{{'lessonplan.event.studentGroups' | translate}}</th>
+            <th md-column>{{'lessonplan.event.single-event' | translate}}</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{::row.name}}</td>
+            <td md-cell>{{::row.date}}</td>
+            <td md-cell>{{::row.time}}</td>
+            <td md-cell>{{::row.teachers}}</td>
+            <td md-cell>{{::row.rooms}}</td>
+            <td md-cell>{{::row.groups}}</td>
+            <td md-cell>{{::row.singleEvent}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/lessonplans/event/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

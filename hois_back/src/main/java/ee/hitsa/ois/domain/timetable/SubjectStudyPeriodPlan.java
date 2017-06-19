@@ -32,38 +32,47 @@ public class SubjectStudyPeriodPlan extends BaseEntityWithId {
     private Set<SubjectStudyPeriodPlanCurriculum> curriculums;
 
     @OneToMany(mappedBy = "plan", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<SubjectStudyPeriodPlanStudyform> studyForms;
+    private Set<SubjectStudyPeriodPlanStudyForm> studyForms;
 
     public StudyPeriod getStudyPeriod() {
         return studyPeriod;
     }
+
     public void setStudyPeriod(StudyPeriod studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
+
     public Subject getSubject() {
         return subject;
     }
+
     public void setSubject(Subject subject) {
         this.subject = subject;
     }
+
     public Set<SubjectStudyPeriodPlanCapacity> getCapacities() {
         return capacities != null ? capacities : (capacities = new HashSet<>());
     }
+
     public void setCapacities(Set<SubjectStudyPeriodPlanCapacity> capacities) {
         getCapacities().clear();
         getCapacities().addAll(capacities);
     }
+
     public Set<SubjectStudyPeriodPlanCurriculum> getCurriculums() {
         return curriculums != null ? curriculums : (curriculums = new HashSet<>());
     }
+
     public void setCurriculums(Set<SubjectStudyPeriodPlanCurriculum> curriculums) {
         getCurriculums().clear();
         getCurriculums().addAll(curriculums);
     }
-    public Set<SubjectStudyPeriodPlanStudyform> getStudyForms() {
+
+    public Set<SubjectStudyPeriodPlanStudyForm> getStudyForms() {
         return studyForms != null ? studyForms : (studyForms = new HashSet<>());
     }
-    public void setStudyForms(Set<SubjectStudyPeriodPlanStudyform> studyForms) {
+
+    public void setStudyForms(Set<SubjectStudyPeriodPlanStudyForm> studyForms) {
         getStudyForms().clear();
         getStudyForms().addAll(studyForms);
     }

@@ -2,6 +2,8 @@ package ee.hitsa.ois.web.dto.curriculum;
 
 import java.math.BigDecimal;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
@@ -24,6 +26,8 @@ public class CurriculumSpecialityDto extends VersionedCommand {
     @Size(max=100)
     private String nameEn;
     @NotNull
+    @Min(0)
+    @Max(999)
     private BigDecimal credits;
     @Size(max=1000)
     private String description;

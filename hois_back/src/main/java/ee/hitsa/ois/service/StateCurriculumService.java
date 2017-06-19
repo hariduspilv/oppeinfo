@@ -123,6 +123,7 @@ public class StateCurriculumService {
 
     public boolean isUnique(UniqueCommand command) {
         // TODO use existsBy
+        
         return stateCurriculumRepository.count((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             if(command.getId() != null) {
@@ -132,6 +133,10 @@ public class StateCurriculumService {
             if(ALLOWED_PROPERTIES.contains(command.getParamName())) {
                 filters.add(cb.equal(root.get(command.getParamName()), command.getParamValue()));
             }
+            LocalDate now = LocalDate.now();
+            filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
+            filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
+            
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }) == 0;
     }
@@ -167,36 +172,16 @@ public class StateCurriculumService {
 
     public StateCurriculum save(StateCurriculum stateCurriculum, StateCurriculumForm stateCurriculumForm) {
         EntityUtil.bindToEntity(stateCurriculumForm, stateCurriculum, classifierRepository, "occupations", "modules");
-        updateOccupations(stateCurriculum, stateCurriculumForm.getOccupations());
-        updateModules(stateCurriculum, stateCurriculumForm.getModules());
-        return stateCurriculumRepository.save(stateCurriculum);
-    }
-
-    private void updateOccupations(StateCurriculum stateCurriculum, Set<String> occupations) {
-        EntityUtil.bindEntityCollection(stateCurriculum.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), occupations, occupation -> {
-            return new StateCurriculumOccupation(EntityUtil.validateClassifier(classifierRepository.getOne(occupation), MainClassCode.KUTSE));
-        });
-    }
-
-    private void updateModules(StateCurriculum stateCurriculum, Set<StateCurriculumModuleDto> moduleDtos) {
-        EntityUtil.bindEntityCollection(stateCurriculum.getModules(), StateCurriculumModule::getId, moduleDtos, StateCurriculumModuleDto::getId, dto -> {
-            StateCurriculumModule module = new StateCurriculumModule();
-            updateModule(dto, module);
-            return module;
-        }, this::updateModule);
+        return updateStateCurriculumModules(stateCurriculum, stateCurriculumForm);
     }
 
     private void updateModule(StateCurriculumModuleDto dto, StateCurriculumModule module) {
-        module = EntityUtil.bindToEntity(dto, module, classifierRepository, "outcome", "moduleOccupations");
+        EntityUtil.bindToEntity(dto, module, classifierRepository, "outcome", "moduleOccupations");
         StateCurriculumModuleOutcome outcome = module.getOutcome();
         outcome.setOutcomesEt(dto.getOutcomesEt());
         outcome.setOutcomesEn(dto.getOutcomesEn());
         outcome.setModule(module);
-        updateModuleOccupations(module, dto.getModuleOccupations());
-    }
-
-    private void updateModuleOccupations(StateCurriculumModule module, Set<String> moduleOccupations) {
-        EntityUtil.bindEntityCollection(module.getModuleOccupations(), o -> EntityUtil.getCode(o.getOccupation()), moduleOccupations, occupation -> {
+        EntityUtil.bindEntityCollection(module.getModuleOccupations(), o -> EntityUtil.getCode(o.getOccupation()), dto.getModuleOccupations(), occupation -> {
             Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupation),
                     MainClassCode.KUTSE, MainClassCode.OSAKUTSE, MainClassCode.SPETSKUTSE);
 
@@ -205,8 +190,16 @@ public class StateCurriculumService {
     }
 
     public StateCurriculum updateStateCurriculumModules(StateCurriculum stateCurriculum, StateCurriculumForm form) {
-        updateOccupations(stateCurriculum, form.getOccupations());
-        updateModules(stateCurriculum, form.getModules());
+        EntityUtil.bindEntityCollection(stateCurriculum.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), form.getOccupations(), occupation -> {
+            return new StateCurriculumOccupation(EntityUtil.validateClassifier(classifierRepository.getOne(occupation), MainClassCode.KUTSE));
+        });
+
+        EntityUtil.bindEntityCollection(stateCurriculum.getModules(), StateCurriculumModule::getId, form.getModules(), StateCurriculumModuleDto::getId, dto -> {
+            StateCurriculumModule module = new StateCurriculumModule();
+            updateModule(dto, module);
+            return module;
+        }, this::updateModule);
+
         return stateCurriculumRepository.save(stateCurriculum);
     }
 }

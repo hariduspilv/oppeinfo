@@ -5,6 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import org.hibernate.validator.constraints.NotBlank;
@@ -24,13 +26,21 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
     private String nameEt;
 
     @NotNull
+    @Min(0)
+    @Max(999)
     private BigDecimal credits;
 
     @NotNull
+    @Min(0)
+    @Max(10000)
     private Integer hours;
 
+    @Min(0)
+    @Max(999)
     private BigDecimal proportion;
     private String subthemes;
+    @Min(0)
+    @Max(10000)
     private Integer studyYearNumber;
 
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMISVIIS)
@@ -55,7 +65,7 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
         dto.setCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeCapacityDto::of, theme.getCapacities()));
 //        dto.setOutcomes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleOutcomeDto::of, theme.getOutcomes()));
-        dto.setOutcomes(StreamUtil.toMappedSet(o -> o.getOutcome().getId(), theme.getOutcomes()));
+        dto.setOutcomes(StreamUtil.toMappedSet(o -> EntityUtil.getId(o.getOutcome()), theme.getOutcomes()));
 
         return dto;
     }

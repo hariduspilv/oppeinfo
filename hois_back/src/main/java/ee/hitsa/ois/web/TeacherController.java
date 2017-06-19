@@ -23,17 +23,20 @@ import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
 import ee.hitsa.ois.service.TeacherOccupationService;
 import ee.hitsa.ois.service.TeacherService;
+import ee.hitsa.ois.service.ehis.EhisTeacherExportService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.TeacherUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.EhisTeacherExportForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityFormWrapper;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFromWrapper;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.EhisTeacherExportResultDto;
 import ee.hitsa.ois.web.dto.TeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
 
@@ -46,6 +49,9 @@ public class TeacherController {
     
     @Autowired
     private TeacherOccupationService teacherOccupationService;
+    
+    @Autowired
+    private EhisTeacherExportService ehisTeacherExportService;
     
     @GetMapping("/{id:\\d+}")
     public TeacherDto get(@WithEntity("id") Teacher teacher) {
@@ -120,5 +126,10 @@ public class TeacherController {
         UserUtil.assertSameSchool(user, teacher.getSchool());
         TeacherUtil.assertEhisPositionBelongsToTeacher(teacherPositionEhis, teacher);
         teacherService.delete(teacherPositionEhis);
+    }
+    
+    @PostMapping("/ehisTeacherExport")
+    public List<EhisTeacherExportResultDto> ehisTeacherExport(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
+        return ehisTeacherExportService.exportToEhis(form, user);
     }
 }

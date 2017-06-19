@@ -1,0 +1,131 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form ng-submit="loadData()" novalidate>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'report.student.name' | translate}}</label>
+          <input ng-model="criteria.name" name="name" type="text" autofocus>
+        </md-input-container>
+
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'report.student.idcode' | translate}}</label>
+          <input ng-model="criteria.idcode" name="idcode" type="text" md-minlength="11" md-maxlength="11">
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div layout="row" flex="45">
+         <md-input-container>
+            <label>{{'report.student.birthdate_from' | translate}}</label>
+            <md-datepicker ng-model="criteria.birthdateFrom"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-offset="5">
+            <label>{{'report.student.birthdate_thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.birthdateThru" md-min-date="criteria.birthdateFrom"></md-datepicker>
+          </md-input-container>
+        </div>
+        <div layout="row"  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container>
+            <label>{{'report.student.studyStart_from' | translate}}</label>
+            <md-datepicker ng-model="criteria.studyStartFrom"></md-datepicker>
+          </md-input-container>
+          <md-input-container flex-offset="5">
+            <label>{{'report.student.studyStart_thru' | translate}}</label>
+            <md-datepicker ng-model="criteria.studyStartThru" md-min-date="criteria.studyStartFrom"></md-datepicker>
+          </md-input-container>
+        </div>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label>{{'report.student.studyLevel' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.studyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"></hois-classifier-select>
+        </md-input-container>
+        <div flex="45" flex-offset="5">
+          <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.student.curriculum"></hois-autocomplete>
+        </div>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45">
+          <label class="textInput">{{'report.student.studentGroup' | translate}}</label>
+          <input ng-model="criteria.studentGroup" type="text">
+        </md-input-container>
+        <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+          <label>{{'report.student.studyLoad' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45">
+          <label class="textInput">{{'report.student.studyForm' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM"></hois-classifier-select>
+        </md-input-container>
+        <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+          <label>{{'report.student.status' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="OPPURSTAATUS"></hois-classifier-select>
+        </md-input-container>
+      </div>
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45">
+          <label class="textInput">{{'report.student.fin' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.fin" model-value-attr="code" main-classifier-code="FINALLIKAS"></hois-classifier-select>
+        </md-input-container>
+        <md-input-container flex="45" flex-offset="5" flex-sm="100" flex-xs="100">
+          <label>{{'report.student.language' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.language" model-value-attr="code" main-classifier-code="OPPEKEEL"></hois-classifier-select>
+        </md-input-container>
+      </div>
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+        <a ng-href="{{excel(formState.xlsUrl, criteria)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="p.lastname,p.firstname">{{'report.student.name' | translate}}</th>
+            <th md-column md-order-by="p.idcode">{{'report.student.idcode' | translate}}</th>
+            <th md-column md-order-by="s.studyStart">{{'report.student.studyStart' | translate}}</th>
+            <th md-column>{{'report.student.studyLevel' | translate}}</th>
+            <th md-column md-order-by="cv.code">{{'report.student.curriculum' | translate}}</th>
+            <th md-column md-order-by="sg.code">{{'report.student.studentGroup' | translate}}</th>
+            <th md-column>{{'report.student.studyLoad' | translate}}</th>
+            <th md-column>{{'report.student.studyForm' | translate}}</th>
+            <th md-column>{{'report.student.status' | translate}}</th>
+            <th md-column>{{'report.student.fin' | translate}}</th>
+            <th md-column>{{'report.student.finSpecific' | translate}}</th>
+            <th md-column>{{'report.student.language' | translate}}</th>
+            <th md-column>{{'report.student.credits' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a md-no-ink class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullName}}</a>
+            </td>
+            <td md-cell>{{::row.idcode}}</td>
+            <td md-cell>{{row.studyStart | hoisDate}}</td>
+            <td md-cell>{{currentLanguageNameField(row.studyLevel)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+            <td md-cell>{{::row.studentGroup}}</td>
+            <td md-cell>{{currentLanguageNameField(row.studyLoad)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.fin)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.finSpecific)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.language)}}</td>
+            <td md-cell>{{::row.credits}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
+  </div>
+</div>

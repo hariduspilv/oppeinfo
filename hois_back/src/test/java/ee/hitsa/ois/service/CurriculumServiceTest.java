@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -9,9 +10,7 @@ import java.util.Set;
 
 import javax.transaction.Transactional;
 
-import org.junit.AfterClass;
 import org.junit.Assert;
-import org.junit.BeforeClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -54,14 +53,6 @@ public class CurriculumServiceTest {
     private CurriculumRepository curriculumRepository;
     @Autowired
     private SchoolRepository schoolRepository;
-
-    @BeforeClass
-    public static void setUp() {
-    }
-
-    @AfterClass
-    public static void cleanUp() {
-    }
 
     @Test
     public void crud() {
@@ -131,7 +122,7 @@ public class CurriculumServiceTest {
         curriculum.setCode(name);
         curriculum.setStudyPeriod(number);
         curriculum.setJoint(Boolean.TRUE);
-        curriculum.setOptionalStudyCredits(Double.valueOf(number));
+        curriculum.setOptionalStudyCredits(BigDecimal.valueOf(number.longValue()));
         curriculum.setOccupation(Boolean.TRUE);
         curriculum.setValidFrom(LocalDate.now());
         curriculum.setConsecution(classifier);

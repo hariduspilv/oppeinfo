@@ -1,5 +1,6 @@
 package ee.hitsa.ois;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,15 +28,15 @@ import ee.hitsa.ois.service.security.HoisUserDetailsService;
  */
 @Service
 public class TestData {
-    
+
+    private static final String STRING = "ApplicationTest";
+
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private SchoolRepository schoolRepository;
     @Autowired
     private HoisUserDetailsService hoisUserDetailsService;
-    
-    private final String STRING = "ApplicationTest";
     /** Use getter go get the school even in this class! */
     private School school;
 
@@ -46,17 +47,17 @@ public class TestData {
         c.setCode(STRING);
         
         c.setStudyPeriod(Integer.valueOf(1));
-        c.setOptionalStudyCredits(Double.valueOf(1));
+        c.setOptionalStudyCredits(BigDecimal.valueOf(1));
         
         c.setHigher(Boolean.FALSE);
         c.setJoint(Boolean.FALSE);
         c.setOccupation(Boolean.FALSE);
         c.setValidFrom(LocalDate.now());
         
-        c.setConsecution(classifierRepository.findOne("OPPEKAVA_TYPE_E"));
-        c.setStatus(classifierRepository.findOne("OPPEKAVA_STAATUS_S"));
-        c.setDraft(classifierRepository.findOne("OPPEKAVA_LOOMISE_VIIS_PUUDUB"));
-        c.setOrigStudyLevel(classifierRepository.findOne("OPPEASTE_511"));
+        c.setConsecution(classifierRepository.getOne("OPPEKAVA_TYPE_E"));
+        c.setStatus(classifierRepository.getOne("OPPEKAVA_STAATUS_S"));
+        c.setDraft(classifierRepository.getOne("OPPEKAVA_LOOMISE_VIIS_PUUDUB"));
+        c.setOrigStudyLevel(classifierRepository.getOne("OPPEASTE_511"));
         c.setSchool(getSchool());
 
         return c;
@@ -76,7 +77,7 @@ public class TestData {
         sg.setSchool(getSchool());
         sg.setCourse(Integer.valueOf(1));
         sg.setCurriculum(curriculum);
-        sg.setStudyForm(classifierRepository.findOne("OPPEVORM_MS"));
+        sg.setStudyForm(classifierRepository.getOne("OPPEVORM_MS"));
         return sg;
     }
     
@@ -84,7 +85,7 @@ public class TestData {
         StudyPeriod studyPeriod = new StudyPeriod();
         studyPeriod.setStudyYear(studyYear);
         studyPeriod.setNameEt(STRING);
-        studyPeriod.setType(classifierRepository.findOne("OPPEPERIOOD_S"));
+        studyPeriod.setType(classifierRepository.getOne("OPPEPERIOOD_S"));
         studyPeriod.setStartDate(LocalDate.now());
         studyPeriod.setEndDate(LocalDate.now());
         return studyPeriod;
@@ -95,7 +96,7 @@ public class TestData {
         studyYear.setStartDate(LocalDate.now());
         studyYear.setEndDate(LocalDate.now());
         studyYear.setSchool(getSchool());
-        studyYear.setYear(classifierRepository.findOne("OPPEAASTA_2016_17"));
+        studyYear.setYear(classifierRepository.getOne("OPPEAASTA_2016_17"));
         return studyYear;
     }
     

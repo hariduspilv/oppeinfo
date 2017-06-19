@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -11,6 +12,10 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.Join;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +30,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalCapacityType;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
@@ -49,12 +55,17 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
+import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm.LessonPlanGroupForm;
+import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanSearchTeacherCommand;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanByTeacherDto.LessonPlanByTeacherSubjectDto;
+import ee.hitsa.ois.web.dto.timetable.LessonPlanDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanJournalDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchDto;
 import ee.hitsa.ois.web.dto.timetable.LessonPlanSearchTeacherDto;
@@ -72,11 +83,15 @@ public class LessonPlanService {
     @Autowired
     private JournalRepository journalRepository;
     @Autowired
-    private LessonPlanModuleRepository lessonPlanModuleRepository;
-    @Autowired
     private LessonPlanRepository lessonPlanRepository;
     @Autowired
     private TeacherRepository teacherRepository;
+    @Autowired
+    private LessonPlanModuleRepository lessonPlanModuleRepository;
+
+    public LessonPlanDto get(LessonPlan lessonPlan) {
+        return LessonPlanDto.of(lessonPlan, scheduleLegends(lessonPlan));
+    }
 
     public LessonPlan create(HoisUserDetails user, LessonPlanCreateForm form) {
         StudentGroup studentGroup = em.getReference(StudentGroup.class, form.getStudentGroup());
@@ -124,7 +139,7 @@ public class LessonPlanService {
                 List<? extends LessonPlanModuleJournalForm> formJournals = formModule.getJournals();
                 if(formJournals != null) {
                     for(LessonPlanModuleJournalForm formJournal : formJournals) {
-                        Journal journal = journalRepository.getOne(formJournal.getId());
+                        Journal journal = em.getReference(Journal.class, formJournal.getId());
                         // TODO better checks - is journal related to this module
                         assertSameSchool(journal, lessonPlan.getSchool());
                         capacityMapper.mapInput(journal, formJournal.getHours());
@@ -145,7 +160,7 @@ public class LessonPlanService {
         qb.requiredCriteria("lp.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria("lp.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
         qb.optionalCriteria("cv.school_department_id = :schoolDepartmentId", "schoolDepartmentId", criteria.getSchoolDepartment());
-        qb.optionalCriteria("lp.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", criteria.getCurriculumVerison());
+        qb.optionalCriteria("lp.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", criteria.getCurriculumVersion());
         qb.optionalCriteria("lp.student_group_id = :studentGroupId", "studentGroupId", criteria.getStudentGroup());
 
         return JpaQueryUtil.pagingResult(qb, "lp.id, sg.code as student_group_code, cv.code", em, pageable).map(r -> {
@@ -155,8 +170,9 @@ public class LessonPlanService {
 
     public Page<LessonPlanSearchTeacherDto> search(HoisUserDetails user, LessonPlanSearchTeacherCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
-                "from journal j inner join journal_teacher jt on j.id = jt.journal_id " +
-                "inner join teacher t on jt.teacher_id = t.id inner join person p on t.person_id = p.id").sort(pageable);
+                "from journal_teacher jt inner join journal j on j.id = jt.journal_id "
+                + "inner join teacher t on jt.teacher_id = t.id inner join person p on t.person_id = p.id "
+                + "inner join journal_capacity jc on j.id = jc.journal_id").sort(pageable);
 
         qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("j.study_year_id = :studyYearId", "studyYearId", criteria.getStudyYear());
@@ -167,10 +183,68 @@ public class LessonPlanService {
         } else {
             qb.optionalCriteria("jt.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
         }
+        qb.groupBy("jt.teacher_id, p.firstname, p.lastname having sum(jc.hours) > 0");
 
-        return JpaQueryUtil.pagingResult(qb, "jt.teacher_id, p.firstname, p.lastname", em, pageable).map(r -> {
-            return new LessonPlanSearchTeacherDto(resultAsLong(r, 0), PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+        return JpaQueryUtil.pagingResult(qb, "jt.teacher_id, p.firstname, p.lastname, sum(jc.hours)", em, pageable).map(r -> {
+            return new LessonPlanSearchTeacherDto(resultAsLong(r, 0), PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)), resultAsLong(r, 3), criteria.getStudyYear());
         });
+    }
+
+    public LessonPlanByTeacherDto getByTeacher(Teacher teacher, StudyYear studyYear) {
+        Long studyYearId = EntityUtil.getId(studyYear);
+        Long teacherId = EntityUtil.getId(teacher);
+
+        // journals for teacher
+        List<Journal> journals = journalRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+
+            filters.add(cb.equal(root.get("studyYear").get("id"), studyYearId));
+
+            Subquery<Long> journalTeachersQuery = query.subquery(Long.class);
+            Root<Journal> journalRoot = journalTeachersQuery.from(Journal.class);
+            Join<Object, Object> journalTeachersJoin = journalRoot.join("journalTeachers");
+            journalTeachersQuery.select(journalRoot.get("id")).where(
+                cb.and(
+                    cb.equal(journalRoot.get("id"), root.get("id")),
+                    cb.equal(journalTeachersJoin.get("teacher").get("id"), teacherId))
+                );
+            filters.add(cb.exists(journalTeachersQuery));
+
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        });
+
+        // subjects summary
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period ssp "+
+                "inner join study_period sp on ssp.study_period_id = sp.id " +
+                "inner join subject_study_period_teacher sspt on ssp.id = sspt.subject_study_period_id " +
+                "inner join subject s on ssp.subject_id = s.id " +
+                "inner join subject_study_period_student_group sspsg on ssp.id = sspsg.subject_study_period_id " +
+                "inner join student_group sg on sspsg.student_group_id = sg.id");
+
+        qb.requiredCriteria("sp.study_year_id = :studyYearId", "studyYearId", studyYearId);
+        qb.requiredCriteria("sspt.teacher_id = :teacherId", "teacherId", teacherId);
+
+        List<?> teacherSubjects = qb.select("s.id, s.name_et, s.name_en, sspsg.student_group_id, sg.code", em).getResultList();
+
+        Map<Long, LessonPlanByTeacherSubjectDto> subjects = new HashMap<>();
+        Map<Long, String> studentGroups = new HashMap<>();
+        Map<Long, List<Long>> subjectStudentGroups = new HashMap<>();
+        for(Object r : teacherSubjects) {
+            Long subjectId = resultAsLong(r, 0);
+            LessonPlanByTeacherSubjectDto subject = subjects.get(subjectId);
+            if(subject == null) {
+                subject = new LessonPlanByTeacherSubjectDto(subjectId, resultAsString(r, 1), resultAsString(r, 2));
+                subjects.put(subjectId, subject);
+            }
+            Long studentGroupId = resultAsLong(r, 3);
+            String studentGroupCode = studentGroups.get(studentGroupId);
+            if(studentGroupCode == null) {
+                studentGroups.put(studentGroupId, studentGroupCode = resultAsString(r, 4));
+            }
+            subjectStudentGroups.computeIfAbsent(subjectId, k -> new ArrayList<>()).add(studentGroupId);
+        }
+        // TODO hours by subject, student groups and capacity type
+        return new LessonPlanByTeacherDto(studyYear, journals, subjects.values().stream().sorted(Comparator.comparing(LessonPlanByTeacherSubjectDto::getNameEt)).collect(Collectors.toList()), teacher);
     }
 
     public Map<String, ?> searchFormData(Long schoolId) {
@@ -178,6 +252,10 @@ public class LessonPlanService {
         data.put("studyYears", autocompleteService.studyYears(schoolId));
         data.put("studentGroups", autocompleteService.studentGroups(schoolId, Boolean.TRUE, Boolean.FALSE));
         data.put("studentGroupMapping", studentgroupsWithLessonPlans(schoolId));
+        CurriculumVersionAutocompleteCommand lookup = new CurriculumVersionAutocompleteCommand();
+        lookup.setHigher(Boolean.FALSE);
+        lookup.setValid(Boolean.TRUE);
+        data.put("curriculumVersions", autocompleteService.curriculumVersions(schoolId, lookup));
         return data;
     }
 
@@ -189,7 +267,7 @@ public class LessonPlanService {
      * @return
      */
     public LessonPlanJournalDto newJournal(HoisUserDetails user, Long lessonPlanModuleId) {
-        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository.getOne(lessonPlanModuleId);
+        LessonPlanModule lessonPlanModule = em.getReference(LessonPlanModule.class, lessonPlanModuleId);
         UserUtil.assertIsSchoolAdmin(user, lessonPlanModule.getLessonPlan().getSchool());
 
         Journal journal = new Journal();
@@ -207,26 +285,23 @@ public class LessonPlanService {
     }
 
     public LessonPlanJournalDto getJournal(Journal journal, Long lessonPlanModuleId) {
-        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository.getOne(lessonPlanModuleId);
+        LessonPlanModule lessonPlanModule = em.getReference(LessonPlanModule.class, lessonPlanModuleId);
         return LessonPlanJournalDto.of(journal, lessonPlanModule);
     }
 
     public Journal createJournal(HoisUserDetails user, LessonPlanJournalForm form) {
-        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository.getOne(form.getLessonPlanModuleId());
+        LessonPlanModule lessonPlanModule = em.getReference(LessonPlanModule.class, form.getLessonPlanModuleId());
         LessonPlan lessonPlan = lessonPlanModule.getLessonPlan();
         UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
-        Journal journal = EntityUtil.bindToEntity(form, new Journal());
-        journal.setJournalCapacityTypes(null);
-        journal.setJournalTeachers(null);
-        journal.setJournalOccupationModuleThemes(null);
+        Journal journal = new Journal();
         journal.setStudyYear(lessonPlan.getStudyYear());
         journal.setSchool(lessonPlan.getSchool());
         journal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
-        return saveJournal(journal, form);
+        return saveJournal(journal, form, user);
     }
 
-    public Journal saveJournal(Journal journal, LessonPlanJournalForm form) {
-        EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers", "journalOccupationModuleThemes");
+    public Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user) {
+        EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers", "journalOccupationModuleThemes", "groups");
 
         List<JournalCapacityType> capacityTypes = journal.getJournalCapacityTypes();
         if(capacityTypes == null) {
@@ -253,25 +328,80 @@ public class LessonPlanService {
             EntityUtil.bindToEntity(jtf, jt);
         });
 
-        LessonPlanModule lessonPlanModule = lessonPlanModuleRepository.getOne(form.getLessonPlanModuleId());
+        LessonPlanModule lessonPlanModule = em.getReference(LessonPlanModule.class, form.getLessonPlanModuleId());
         assertSameSchool(journal, lessonPlanModule.getLessonPlan().getSchool());
-        List<JournalOccupationModuleTheme> themes = journal.getJournalOccupationModuleThemes();
-        if(themes == null) {
-            journal.setJournalOccupationModuleThemes(themes = new ArrayList<>());
+        List<JournalOccupationModuleTheme> oldThemes = journal.getJournalOccupationModuleThemes();
+        if(oldThemes == null) {
+            journal.setJournalOccupationModuleThemes(oldThemes = new ArrayList<>());
         }
-        EntityUtil.bindEntityCollection(themes, jm -> EntityUtil.getId(jm.getCurriculumVersionOccupationModuleTheme()), form.getJournalOccupationModuleThemes(), jm -> {
+        List<JournalOccupationModuleThemeHolder> fromForm = form.getJournalOccupationModuleThemes()
+                .stream()
+                .map(id -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModule, id)).collect(Collectors.toList());
+        
+        if(form.getGroups() != null && !form.getGroups().isEmpty()) {
+            Map<Long, Long> lessonPlanIds = findLessonPlanByStudyYearAndStudentGroup(journal.getStudyYear(), StreamUtil.toMappedList(LessonPlanGroupForm::getStudentGroup, form.getGroups()));
+            List<LessonPlanModule> lessonPlanModules = lessonPlanModuleRepository.findAll((root, query, cb) -> {
+                List<Predicate> filters = new ArrayList<>();
+                filters.add(root.get("lessonPlan").get("id").in(lessonPlanIds.values()));
+                filters.add(root.get("curriculumVersionOccupationModule").get("id").in(StreamUtil.toMappedList(LessonPlanGroupForm::getCurriculumVersionOccupationModule, form.getGroups())));
+                return cb.and(filters.toArray(new Predicate[filters.size()]));
+            });
+            for(LessonPlanGroupForm lpg : form.getGroups()) {
+                Long lessonPlanId = lessonPlanIds.get(lpg.getStudentGroup());
+                LessonPlan lp;
+                if(lessonPlanId == null) {
+                    LessonPlanCreateForm lpCreateForm = new LessonPlanCreateForm();
+                    lpCreateForm.setStudentGroup(lpg.getStudentGroup());
+                    lpCreateForm.setStudyYear(EntityUtil.getId(journal.getStudyYear()));
+                    lp = create(user, lpCreateForm);
+                } else {
+                    lp = em.getReference(LessonPlan.class, lessonPlanId);
+                }
+                LessonPlanModule lpm = getLessonPlanModule(lessonPlanModules, lp.getId(), lpg.getCurriculumVersionOccupationModule());
+                if(lpm == null) {
+                    lpm = new LessonPlanModule();
+                    lpm.setLessonPlan(lp);
+                    CurriculumVersionOccupationModule module = em.getReference(CurriculumVersionOccupationModule.class, lpg.getCurriculumVersionOccupationModule());
+                    lpm.setCurriculumVersionOccupationModule(module);
+                    lp.getLessonPlanModules().add(lpm);
+                    lessonPlanModuleRepository.save(lpm);
+                }
+                final LessonPlanModule lessonPlanModuleForSave = lpm;
+                fromForm.addAll(lpg.getCurriculumVersionOccupationModuleThemes()
+                        .stream()
+                        .map(cvomt -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModuleForSave, cvomt)).collect(Collectors.toList()));
+            }
+        }
+        
+        EntityUtil.bindEntityCollection(oldThemes, jm -> EntityUtil.getId(jm.getCurriculumVersionOccupationModuleTheme()), fromForm, JournalOccupationModuleThemeHolder::getCvomt, jm -> {
             JournalOccupationModuleTheme jmt = new JournalOccupationModuleTheme();
-            jmt.setJournal(journal);
-            jmt.setLessonPlanModule(lessonPlanModule);
-            jmt.setCurriculumVersionOccupationModuleTheme(em.getReference(CurriculumVersionOccupationModuleTheme.class, jm));
-            // TODO check that theme is from same curriculum version as lesson plan
+            jmt.setJournal(jm.getJournal());
+            jmt.setLessonPlanModule(jm.getLessonPlanModule());
+            jmt.setCurriculumVersionOccupationModuleTheme(em.getReference(CurriculumVersionOccupationModuleTheme.class, jm.getCvomt()));
             return jmt;
         });
         return journalRepository.save(journal);
     }
-
+    
+    private static LessonPlanModule getLessonPlanModule(List<LessonPlanModule> lessonPlanModules, Long lessonPlan, Long cvom) {
+        List <LessonPlanModule> result = StreamUtil.nullSafeList(lessonPlanModules.stream().filter(p -> 
+            EntityUtil.getId(p.getLessonPlan()).equals(lessonPlan) &&
+            EntityUtil.getId(p.getCurriculumVersionOccupationModule()).equals(cvom)).collect(Collectors.toList()));
+        return result.isEmpty() ? null : result.get(0);
+    }
+    
     public void deleteJournal(Journal journal) {
         EntityUtil.deleteEntity(journalRepository, journal);
+    }
+    
+    private Map<Long, Long> findLessonPlanByStudyYearAndStudentGroup(StudyYear studyYear, List<Long> studentGroup) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from lesson_plan lp");
+
+        qb.requiredCriteria("lp.study_year_id = :studyYear", "studyYear", EntityUtil.getId(studyYear));
+        qb.requiredCriteria("lp.student_group_id in (:studentGroup)", "studentGroup", studentGroup);
+        
+        List<?> result = qb.select("lp.student_group_id, lp.id", em).getResultList();
+        return StreamUtil.toMap(r -> resultAsLong(r, 0),  r -> resultAsLong(r, 1), result);
     }
 
     private Map<Long, List<Long>> studentgroupsWithLessonPlans(Long schoolId) {
@@ -284,9 +414,48 @@ public class LessonPlanService {
         return data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
     }
 
+    private Map<Long, Long> scheduleLegends(LessonPlan lessonPlan) {
+        String from = "from lesson_plan lp inner join study_year sy on lp.study_year_id = sy.id"
+                + " inner join study_period sp on sy.id = sp.study_year_id"
+                + " inner join study_year_schedule sys on sp.id = sys.study_period_id";
+
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+
+        qb.requiredCriteria("lp.id = :lessonPlanId", "lessonPlanId", lessonPlan.getId());
+        qb.requiredCriteria("sys.school_id = :schoolId", "schoolId", EntityUtil.getId(lessonPlan.getSchool()));
+        qb.requiredCriteria("sys.student_group_id = :studentGroupId", "studentGroupId", EntityUtil.getId(lessonPlan.getStudentGroup()));
+
+        List<?> data = qb.select("sys.week_nr, sys.study_year_schedule_legend_id", em).getResultList();
+        return data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsLong(r, 1), (o, n) -> o));
+    }
+
     private static void assertSameSchool(Journal journal, School school) {
         if(school != null && !EntityUtil.getId(journal.getSchool()).equals(EntityUtil.getId(school))) {
             throw new AssertionFailedException("School mismatch");
+        }
+    }
+    
+    private static class JournalOccupationModuleThemeHolder {
+        private Journal journal;
+        private LessonPlanModule lessonPlanModule;
+        private Long cvomt;
+
+        public JournalOccupationModuleThemeHolder(Journal journal, LessonPlanModule lpm, Long cvomt) {
+            this.journal = journal;
+            this.lessonPlanModule = lpm;
+            this.cvomt = cvomt;
+        }
+
+        public Journal getJournal() {
+            return journal;
+        }
+
+        public LessonPlanModule getLessonPlanModule() {
+            return lessonPlanModule;
+        }
+
+        public Long getCvomt() {
+            return cvomt;
         }
     }
 }

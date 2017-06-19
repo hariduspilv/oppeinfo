@@ -16,7 +16,7 @@
 		  <fieldset tabindex="1">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
 				<div layout="column">
-				  <div ng-repeat="item in occupations">
+				  <div ng-repeat="item in occupations | orderBy: 'occupation.' + currentLanguageNameField()">
 					<md-checkbox ng-model="occupationsSelected[item.occupation.code]" aria-label="{{item.occupation[currentLanguageNameField()]}}" disabled>
 					  {{item.occupation[currentLanguageNameField()]}}
 					</md-checkbox>
@@ -41,7 +41,7 @@
 				</div>
 			</fieldset>
 			<div>&nbsp;</div>
-			
+
 			<div layout="row" flex>
 			  <md-input-container flex="45">
 				<label>{{'module.type' | translate}}</label>
@@ -68,25 +68,25 @@
             <label>{{'module.objectivesEn' | translate}}</label>
             <hois-value value="module.objectivesEt"></hois-value>
           </md-input-container>
-		  
-		  
+
+
 		  <fieldset tabindex="1">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}} *</legend>
 			<div layout="column">
             <!--md-list flex-->
-              <div ng-repeat="item in module.outcomes" class="occupation-row align-center" layout="row" flex>
+              <div ng-repeat="item in module.outcomes | orderBy: 'outcomeEt'" class="occupation-row align-center" layout="row" flex>
                 <div flex="45">{{item.outcomeEt}}</div>
-				<div flex="50" flex-offset="5">{{item.outcomeEn}}</div>
+				        <div flex="50" flex-offset="5">{{item.outcomeEn}}</div>
               </div>
             <!--/md-list-->
           </div>
-			
-		</fieldset>	
+
+		</fieldset>
 		<div>&nbsp;</div>
 
 
-          
-      
+
+
           <md-input-container flex>
             <md-checkbox ng-model="module.practice" disabled>{{'module.practice' | translate}}</md-checkbox>
           </md-input-container>

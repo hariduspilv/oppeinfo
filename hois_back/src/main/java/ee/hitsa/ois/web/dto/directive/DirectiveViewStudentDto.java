@@ -20,8 +20,8 @@ public class DirectiveViewStudentDto {
     private Boolean isPeriod;
     private LocalDate startDate;
     private LocalDate endDate;
-    private AutocompleteResult studyPeriodStart;
-    private AutocompleteResult studyPeriodEnd;
+    private AutocompleteResult newStudyPeriodStart;
+    private AutocompleteResult newStudyPeriodEnd;
     private LocalDate nominalStudyEnd;
     private String reason;
     private String fin;
@@ -33,7 +33,7 @@ public class DirectiveViewStudentDto {
     private String studyForm;
     private String studyLoad;
     private AutocompleteResult oldCurriculumVersion;
-    private AutocompleteResult curriculumVersion;
+    private AutocompleteResult newCurriculumVersion;
     private String studentGroup;
     private Boolean applicationIsPeriod;
     private LocalDate applicationStartDate;
@@ -115,20 +115,20 @@ public class DirectiveViewStudentDto {
         this.endDate = endDate;
     }
 
-    public AutocompleteResult getStudyPeriodStart() {
-        return studyPeriodStart;
+    public AutocompleteResult getNewStudyPeriodStart() {
+        return newStudyPeriodStart;
     }
 
-    public void setStudyPeriodStart(AutocompleteResult studyPeriodStart) {
-        this.studyPeriodStart = studyPeriodStart;
+    public void setNewStudyPeriodStart(AutocompleteResult newStudyPeriodStart) {
+        this.newStudyPeriodStart = newStudyPeriodStart;
     }
 
-    public AutocompleteResult getStudyPeriodEnd() {
-        return studyPeriodEnd;
+    public AutocompleteResult getNewStudyPeriodEnd() {
+        return newStudyPeriodEnd;
     }
 
-    public void setStudyPeriodEnd(AutocompleteResult studyPeriodEnd) {
-        this.studyPeriodEnd = studyPeriodEnd;
+    public void setNewStudyPeriodEnd(AutocompleteResult newStudyPeriodEnd) {
+        this.newStudyPeriodEnd = newStudyPeriodEnd;
     }
 
     public LocalDate getNominalStudyEnd() {
@@ -219,12 +219,12 @@ public class DirectiveViewStudentDto {
         this.oldCurriculumVersion = oldCurriculumVersion;
     }
 
-    public AutocompleteResult getCurriculumVersion() {
-        return curriculumVersion;
+    public AutocompleteResult getNewCurriculumVersion() {
+        return newCurriculumVersion;
     }
 
-    public void setCurriculumVersion(AutocompleteResult curriculumVersion) {
-        this.curriculumVersion = curriculumVersion;
+    public void setNewCurriculumVersion(AutocompleteResult newCurriculumVersion) {
+        this.newCurriculumVersion = newCurriculumVersion;
     }
 
     public String getStudentGroup() {
@@ -377,6 +377,8 @@ public class DirectiveViewStudentDto {
         Application application = directiveStudent.getApplication();
         switch(directiveType) {
         case KASKKIRI_AKAD:
+            dto.setNewStudyPeriodStart(directiveStudent.getStudyPeriodStart() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodStart()) : null);
+            dto.setNewStudyPeriodEnd(directiveStudent.getStudyPeriodEnd() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodEnd()) : null);
             dto.setApplicationIsPeriod(application != null ? application.getIsPeriod() : null);
             dto.setApplicationStartDate(application != null ? application.getStartDate() : null);
             dto.setApplicationEndDate(application != null ? application.getEndDate() : null);
@@ -384,7 +386,7 @@ public class DirectiveViewStudentDto {
             dto.setApplicationStudyPeriodEnd(application != null && application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
             break;
         case KASKKIRI_ENNIST:
-            dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+            dto.setNewCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             dto.setStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
             dto.setStudyLoad(EntityUtil.getNullableCode(student.getStudyLoad()));
             dto.setFin(EntityUtil.getNullableCode(student.getFin()));
@@ -397,10 +399,11 @@ public class DirectiveViewStudentDto {
             break;
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
+            dto.setNewCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
             dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_LOPET:
-            dto.setCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+            dto.setNewCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             // TODO
             // dto.setIsCumLaude(isCumLaude);
             // dto.setIsOccupationExamPassed(isOccupationExamPassed);
@@ -409,12 +412,16 @@ public class DirectiveViewStudentDto {
         case KASKKIRI_OKAVA:
             dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-            dto.setCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
+            dto.setNewCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
             dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_OVORM:
             dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
             dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
+            break;
+        case KASKKIRI_VALIS:
+            dto.setNewStudyPeriodStart(directiveStudent.getStudyPeriodStart() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodStart()) : null);
+            dto.setNewStudyPeriodEnd(directiveStudent.getStudyPeriodEnd() != null ? AutocompleteResult.of(directiveStudent.getStudyPeriodEnd()) : null);
             break;
         default:
             break;

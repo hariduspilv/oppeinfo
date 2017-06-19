@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.service.StudentService;
+import ee.hitsa.ois.service.ehis.EhisStudentService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -30,6 +31,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.EhisStudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
@@ -40,12 +42,17 @@ import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
 
+import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
+
 @RestController
 @RequestMapping("/students")
 public class StudentController {
 
     @Autowired
     private StudentService studentService;
+
+    @Autowired
+    private EhisStudentService ehisStudentService;
 
     @GetMapping
     public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
@@ -134,6 +141,13 @@ public class StudentController {
     public List<AutocompleteResult> subjects(HoisUserDetails user, @WithEntity("id") Student student) {
         assertCanView(user, student);
         return studentService.subjects(student);
+    }
+
+    @PostMapping("/ehisStudentExport")
+    public void ehisExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
+        assertIsSchoolAdmin(user);
+        ehisStudentForm.setSchoolID(user.getSchoolId());
+        ehisStudentService.exportStudents(ehisStudentForm);
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {

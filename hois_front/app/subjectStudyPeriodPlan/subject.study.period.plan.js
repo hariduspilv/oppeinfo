@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController', 
-['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', 'Classifier', '$q', '$translate', 
+angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
+['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', 'Classifier', '$q', '$translate',
 function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier) {
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriodPlans', {order: 'id'});
@@ -24,7 +24,7 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier) {
         $scope.curriculums = response;
     });
 
-    Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
+    Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true}, function(response){
         $scope.capacityTypes = response;
     });
 
@@ -64,12 +64,12 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier) {
     };
 
     $scope.$watch('criteria.curriculum', function() {
-            $scope.subjectQueryParams = $scope.criteria.curriculum ? 
+            $scope.subjectQueryParams = $scope.criteria.curriculum ?
             {curricula: [$scope.criteria.curriculum], status: ['AINESTAATUS_K']} : {status: ['AINESTAATUS_K']};
         }
     );
 
-}]).controller('subjectStudyPeriodPlanNewController', 
+}]).controller('subjectStudyPeriodPlanNewController',
 ['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', '$mdDialog', 'dialogService', '$route', 'Classifier', '$location',
 function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService, $route, Classifier, $location) {
 
@@ -80,7 +80,7 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
      * Probably readonly is not needed at all, as user do not have access to form in this case.
      * Required security check is also present in back end
      */
-    $scope.readOnly = false; 
+    $scope.readOnly = false;
 
     var initialRecord = {
         studyPeriod: $route.current.params.studyPeriodId,
@@ -118,7 +118,7 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
     }
 
     function setInitialCapacities() {
-        Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
+        Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true}, function(response){
             var capacities = [];
             for(var i = 0; i < response.length; i++) {
                 capacities.push({isContact: false, hours: null, capacityType: response[i].code});
@@ -126,7 +126,27 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
             $scope.record.capacities = capacities;
         });
     }
-    
+
+    function hasCapacity(capacityCode) {
+      var capacity = $scope.record.capacities.find(function(el){
+        return el.capacityType === capacityCode;
+      });
+      return angular.isDefined(capacity) && capacity !== null;
+    }
+
+    function addMissingCapacities() {
+        if(!$scope.record.capacities) {
+          $scope.record.capacities = [];
+        }
+        Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true}, function(response){
+            for(var i = 0; i < response.length; i++) {
+              if(!hasCapacity(response[i].code)) {
+                $scope.record.capacities.push({isContact: false, hours: null, capacityType: response[i].code});
+              }
+            }
+        });
+    }
+
     function getStudyForms() {
         Classifier.queryForDropdown({mainClassCode: 'OPPEVORM', higher: true}, function(response){
             $scope.studyForms = response;
@@ -143,6 +163,7 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
             getStudySubject(response.subject);
             getCurriculums();
             getStudyForms();
+            addMissingCapacities();
         });
     } else {
         $scope.record = new Endpoint(initialRecord);
@@ -182,7 +203,7 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
         }
         $scope.record.studyForms = $scope.studyForms.filter(function(el){return el.selected;}).map(function(el){return el.code;});
         $scope.record.curriculums = $scope.curriculums.filter(function(el){return el.selected;}).map(function(el){return el.id;});
-        
+
         QueryUtils.endpoint(baseUrl + '/exists').search($scope.record).$promise.then(function(response){
             if(response.exists) {
                 dialogService.confirmDialog({prompt: 'subjectStudyPeriodPlan.overrideconfirm'}, function() {
@@ -193,7 +214,7 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
             }
         });
     };
- 
+
     $scope.delete = function() {
         dialogService.confirmDialog({prompt: 'subjectStudyPeriodPlan.deleteconfirm'}, function() {
             $scope.record.$delete().then(function() {

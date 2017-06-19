@@ -13,7 +13,6 @@
                 </md-input-container>
                 <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.department' | translate}}</label>
-                    <!--<hois-select ng-model="criteria.department" values="studyPeriods"></hois-select>-->
                     <hois-school-department-select ng-model="criteria.department"></hois-school-department-select>
                 </md-input-container>
             </div>
@@ -64,7 +63,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{row.code}}</td>
+            <td md-cell><a ng-href="#/subjectStudyPeriods/studentGroups/{{row.id}}/{{criteria.studyPeriod}}/view">{{row.code}}</a></td>
             <td md-cell>{{currentLanguageNameField(row.curriculum)}}</td>
             <td md-cell>{{row.hours}}</td>
             <td md-cell><a href=""></a></td>

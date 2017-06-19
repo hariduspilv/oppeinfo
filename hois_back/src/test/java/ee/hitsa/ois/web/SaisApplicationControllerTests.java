@@ -36,7 +36,8 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class SaisApplicationControllerTests {
 
-    private final String CSV_HEADER = "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;Oppekava/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;EelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp";
+    private static final String CSV_HEADER = "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;Oppekava/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;EelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp";
+    private static final String ADMISSION_CODE = "SaisApplicationControllerTests/1";
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -45,11 +46,9 @@ public class SaisApplicationControllerTests {
     @Autowired
     private TestConfigurationService testConfigurationService;
 
-    String admissionCode = "SaisApplicationControllerTests/1";
-
     @After
     public void cleanUp() {
-        SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(admissionCode);
+        SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
         if (saisAdmission != null) {
             delete(saisAdmission);
         }
@@ -85,14 +84,14 @@ public class SaisApplicationControllerTests {
     public void crud() {
         //create
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(
-                admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+                ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-        SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(admissionCode);
+        SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
         Long saisApplicationId = saisAdmission.getApplications().stream().findFirst().get().getId();
 
         //read
@@ -106,7 +105,7 @@ public class SaisApplicationControllerTests {
     @Test
     public void importCsvValid() {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(
-                admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+                ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -116,7 +115,7 @@ public class SaisApplicationControllerTests {
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().stream().findFirst().get().getRowNr());
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/saisApplications");
-        uriBuilder.queryParam("code", admissionCode);
+        uriBuilder.queryParam("code", ADMISSION_CODE);
         uriBuilder.queryParam("idcode", "47810010009");
 
         String url = uriBuilder.build().toUriString();
@@ -136,7 +135,7 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void importCsvWrongIdCode() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -145,7 +144,7 @@ public class SaisApplicationControllerTests {
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().stream().findFirst().get().getRowNr());
 
-        cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;37810012580;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;37810012580;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
         responseEntity = restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -155,7 +154,7 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void importCsvApplicationNrMissing() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -167,7 +166,7 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void importCsvApplicationNrEmpty() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + "; ;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + "; ;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -178,8 +177,24 @@ public class SaisApplicationControllerTests {
     }
 
     @Test
+    public void importCsvApplicationNrDublicate() {
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012",
+                ADMISSION_CODE + ";Nr123456789;Toni;Kuut;37810010008;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+
+        ResponseEntity<SaisApplicationImportResultDto> responseEntity =
+                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
+
+        Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
+        Assert.assertEquals("Failis on rohkem kui üks avalduse numbriga Nr123456789 vastuvõtu avaldust.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+    }
+
+    @Test
     public void importCsvFirstnameMissing() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -191,7 +206,7 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void importCsvSaisChangedMissing() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -203,7 +218,7 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void importCsvSaisChangedWrongFormat() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1/1/2001;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1/1/2001;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -227,7 +242,7 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void importCsvCitizenshipEmpty() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;47810010009; ;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009; ;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -239,7 +254,7 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void importCsvCitizenshipMissing() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -251,7 +266,7 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void importCsvCitizenshipWrongClassifierValue() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EESTI;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EESTI;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
                 restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
@@ -261,10 +276,8 @@ public class SaisApplicationControllerTests {
         Assert.assertEquals("Avaldusel nr Nr123456789 puudub kodakondsus.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
     }
 
-
     @Test
     public void importCsvAdmissionCodeMissing() {
-
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
@@ -274,10 +287,9 @@ public class SaisApplicationControllerTests {
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
     }
 
-
     @Test
     public void importCsvAdmissionCodeMissingForSecondRow() {
-        SaisApplicationImportCsvCommand cmd = csvCmdForRows(admissionCode + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012",
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012",
                 ";Nr223456789;Juku;Juurikas;37810010030;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
@@ -285,20 +297,20 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(2, responseEntity.getBody().getSuccessful().size());
-
     }
 
+    @Test
+    public void csvSampleFile() {
+        ResponseEntity<?> response = restTemplate.getForEntity("/saisApplications/sample.csv", Void.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
 
-    private SaisApplicationImportCsvCommand csvCmdForRows(String...rows) {
-        SaisApplicationImportCsvCommand form = new SaisApplicationImportCsvCommand();
-        OisFileCommand file = new OisFileCommand();
-        String csvFileContent = CSV_HEADER + "\n";
-        for (String row : rows) {
-            csvFileContent += (row + "\n");
-        }
-        file.setFdata(csvFileContent.getBytes(StandardCharsets.UTF_8));
-        form.setFile(file);
-        return form;
+    @Test
+    public void classifiersFile() {
+        ResponseEntity<?> response = restTemplate.getForEntity("/saisApplications/classifiers.csv", Void.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     private void delete(SaisAdmission saisAdmission) {
@@ -310,4 +322,12 @@ public class SaisApplicationControllerTests {
         restTemplate.delete(uri);
     }
 
+    private static SaisApplicationImportCsvCommand csvCmdForRows(String...rows) {
+        SaisApplicationImportCsvCommand form = new SaisApplicationImportCsvCommand();
+        OisFileCommand file = new OisFileCommand();
+        String csvFileContent = CSV_HEADER + "\n" + String.join("\n", rows);
+        file.setFdata(csvFileContent.getBytes(StandardCharsets.UTF_8));
+        form.setFile(file);
+        return form;
+    }
 }

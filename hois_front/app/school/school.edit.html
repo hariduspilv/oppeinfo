@@ -57,7 +57,6 @@
     </div>
   </form>
 
-  <h3 ng-if="school.id && !school.logo">{{'school.logo.noLogo' | translate}}</h3>
   <h3 ng-if="school.logo">{{'school.logo.currentLogo' | translate}}</h3>
   <img ng-if="school.logo" ng-src="{{school.imageUrl}}" id="currentLogoView">
   <br>

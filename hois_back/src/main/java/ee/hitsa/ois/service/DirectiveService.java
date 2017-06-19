@@ -328,7 +328,7 @@ public class DirectiveService {
      */
     public DirectiveDto directivedata(HoisUserDetails user, DirectiveDataCommand cmd) {
         if(KASKKIRI_TYHIST.name().equals(cmd.getType())) {
-            Directive canceled = directiveRepository.getOne(cmd.getCanceledDirective());
+            Directive canceled = em.getReference(Directive.class, cmd.getCanceledDirective());
             assertSameSchool(canceled, em.getReference(School.class, user.getSchoolId()));
             DirectiveDto.DirectiveCancelDto dto = directiveInitialValues(new DirectiveDto.DirectiveCancelDto(), user, cmd);
             dto.setCanceledDirectiveType(EntityUtil.getCode(canceled.getType()));
@@ -348,8 +348,7 @@ public class DirectiveService {
         dto.setInserted(LocalDateTime.now());
         dto.setInsertedBy(user.getUsername());
         // directive type as default headline
-        Classifier type = classifierRepository.getOne(cmd.getType());
-        dto.setHeadline(type != null ? type.getNameEt() : null);
+        dto.setHeadline(em.getReference(Classifier.class, cmd.getType()).getNameEt());
         return dto;
     }
 
@@ -489,12 +488,11 @@ public class DirectiveService {
         }, new PageRequest(0, STUDENTS_MAX, new Sort("lastname", "firstname"))).map(DirectiveStudentDto::of).getContent();
 
         // suggest valid studentGroup, if possible
-        LocalDate now = LocalDate.now();
-        List<StudentGroup> groups = studentGroupRepository.findAllBySchool_id(schoolId).stream()
-                .filter(sg -> (sg.getValidFrom() == null || !sg.getValidFrom().isAfter(now)) && (sg.getValidThru() == null || !sg.getValidThru().isBefore(now))).collect(Collectors.toList());
+        List<StudentGroup> groups = findValidStudentGroups(schoolId);
         Map<Long, List<StudentGroup>> groupsByCurriculumVersion = groups.stream().filter(sg -> sg.getCurriculumVersion() != null).collect(Collectors.groupingBy(sg -> EntityUtil.getId(sg.getCurriculumVersion())));
         Map<Long, List<StudentGroup>> groupsByCurriculum = null;
         Map<Long, Integer> addedCount = new HashMap<>();
+
         for(DirectiveStudentDto s : students) {
             // first try to use student group with exact curriculum version
             StudentGroup sg = findStudentGroup(s, groupsByCurriculumVersion.get(s.getCurriculumVersion()), addedCount);
@@ -655,6 +653,17 @@ public class DirectiveService {
             app.setStatus(em.getReference(Classifier.class, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
             applicationRepository.save(app);
         }
+    }
+
+    private List<StudentGroup> findValidStudentGroups(Long schoolId) {
+        return studentGroupRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+            LocalDate now = LocalDate.now();
+            filters.add(cb.or(cb.isNull(root.get("validFrom")), cb.lessThanOrEqualTo(root.get("validFrom"), now)));
+            filters.add(cb.or(cb.isNull(root.get("validThru")), cb.greaterThanOrEqualTo(root.get("validThru"), now)));
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        });
     }
 
     private static StudentGroup findStudentGroup(DirectiveStudentDto student, List<StudentGroup> groups, Map<Long, Integer> addedCount) {

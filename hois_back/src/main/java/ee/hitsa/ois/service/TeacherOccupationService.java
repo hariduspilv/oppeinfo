@@ -30,7 +30,7 @@ public class TeacherOccupationService {
     @Autowired
     private SchoolRepository schoolRepository;
     @Autowired
-    TeacherOccupationRepository teacherOccupationRepository;
+    private TeacherOccupationRepository teacherOccupationRepository;
 
     public Page<TeacherOccupationDto> findAll(Long schoolId, TeacherOccupationSearchCommand criteria, Pageable pageable) {
         return teacherOccupationRepository.findAll((root, query, cb) -> {

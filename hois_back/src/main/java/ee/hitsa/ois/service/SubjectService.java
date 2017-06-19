@@ -133,6 +133,9 @@ public class SubjectService {
         }
     }
 
+    /**
+     *  Curricula OR CurriculaVersion
+     */
     public Page<SubjectSearchDto> search(Long schoolId, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
         return subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
@@ -154,12 +157,18 @@ public class SubjectService {
             }
 
             Collection<Long> curricula = subjectSearchCommand.getCurricula();
-            if (!CollectionUtils.isEmpty(curricula)) {
+            Collection<Long> curriculaVersion = subjectSearchCommand.getCurriculaVersion();
+            if (!CollectionUtils.isEmpty(curricula) || !CollectionUtils.isEmpty(curriculaVersion)) {
                 Subquery<Long> curriculaQuery = query.subquery(Long.class);
                 Root<CurriculumVersion> curriculumVersionRoot = curriculaQuery.from(CurriculumVersion.class);
                 curriculaQuery = curriculaQuery
-                        .select(curriculumVersionRoot.join("modules").join("subjects").get("subject").get("id"))
-                        .where(curriculumVersionRoot.get("curriculum").get("id").in(curricula));
+                        .select(curriculumVersionRoot.join("modules").join("subjects").get("subject").get("id"));
+
+                if (!CollectionUtils.isEmpty(curriculaVersion)) {
+                    curriculaQuery = curriculaQuery.where(curriculumVersionRoot.get("id").in(curriculaVersion));
+                } else {
+                    curriculaQuery = curriculaQuery.where(curriculumVersionRoot.get("curriculum").get("id").in(curricula));
+                }
                 filters.add(root.get("id").in(curriculaQuery));
             }
 

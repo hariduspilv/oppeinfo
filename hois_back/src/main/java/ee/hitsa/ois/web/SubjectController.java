@@ -8,6 +8,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -62,7 +63,9 @@ public class SubjectController {
         Long schoolId = user.getSchoolId();
         Map<String, List<? extends AutocompleteResult>> result = new HashMap<>();
         result.put("departments", autocompleteService.schoolDepartments(schoolId));
-        result.put("curricula", autocompleteService.curriculumVersions(schoolId, null, null));
+        CurriculumVersionAutocompleteCommand lookup = new CurriculumVersionAutocompleteCommand();
+        lookup.setHigher(Boolean.TRUE);
+        result.put("curricula", autocompleteService.curriculumVersions(schoolId, lookup));
         return result;
     }
 

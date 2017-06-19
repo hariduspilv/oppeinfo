@@ -35,7 +35,7 @@ angular.module('hitsaOis').controller('RoomSearchController', ['$scope', 'Classi
         $scope.record = Endpoint.get({id: id}, afterLoad);
       } else {
         // new room
-        $scope.record = new Endpoint({roomEquipment: []});
+        $scope.record = new Endpoint({roomEquipment: [], isStudy: true});
         afterLoad($scope.record);
       }
     });

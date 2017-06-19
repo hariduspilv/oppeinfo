@@ -25,6 +25,7 @@ import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.LessonTime;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuildingGroup;
@@ -33,7 +34,6 @@ import ee.hitsa.ois.repository.BuildingRepository;
 import ee.hitsa.ois.repository.LessonTimeBuildingGroupRepository;
 import ee.hitsa.ois.repository.LessonTimeBuildingRepository;
 import ee.hitsa.ois.repository.LessonTimeRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -70,8 +70,6 @@ public class LessonTimeService {
     private LessonTimeBuildingRepository lessonTimeBuildingRepository;
     @Autowired
     private LessonTimeBuildingGroupRepository lessonTimeBuildingGroupRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
     @Autowired
     private BuildingRepository buildingRepository;
     @Autowired
@@ -268,10 +266,11 @@ public class LessonTimeService {
     }
 
     private void updateLessonTimes(LessonTimeBuildingGroupDto groupDto, Long schoolId, LessonTimeBuildingGroup group) {
+        School school = em.getReference(School.class, schoolId);
         EntityUtil.bindEntityCollection(group.getLessonTimes(), LessonTime::getId, groupDto.getLessonTimes(), LessonTimeDto::getId,
                 lessonTimeDto -> {
                     LessonTime lessonTime = EntityUtil.bindToEntity(lessonTimeDto, new LessonTime());
-                    lessonTime.setSchool(schoolRepository.getOne(schoolId));
+                    lessonTime.setSchool(school);
                     lessonTime.setLessonTimeBuildingGroup(group);
                     return lessonTime;
                 }, (updated, stored) -> EntityUtil.bindToEntity(updated, stored));
