@@ -93,7 +93,7 @@ public class AutocompleteService {
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
-    
+
     public List<AutocompleteResult> rooms(Long schoolId, AutocompleteCommand lookup) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from room r inner join building b on b.id = r.building_id");
 
@@ -413,5 +413,15 @@ public class AutocompleteService {
 
     private static PageRequest sortAndLimit(String... sortFields) {
         return new PageRequest(0, MAX_ITEM_COUNT, new Sort(sortFields));
+    }
+
+    public List<AutocompleteResult> enterprises() {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from enterprise e");
+
+        List<?> data = qb.select("e.id, e.name", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            String name = resultAsString(r, 1);
+            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+        }, data);
     }
 }

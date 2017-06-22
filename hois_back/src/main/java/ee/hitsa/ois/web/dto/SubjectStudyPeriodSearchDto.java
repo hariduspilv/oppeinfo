@@ -9,7 +9,14 @@ public class SubjectStudyPeriodSearchDto {
     private Set<String> teachers;
     private AutocompleteResult subject;
     private AutocompleteResult studyPeriod;
+    private Set<AutocompleteResult> midtermTasks;
 
+    public Set<AutocompleteResult> getMidtermTasks() {
+        return midtermTasks;
+    }
+    public void setMidtermTasks(Set<AutocompleteResult> midtermTasks) {
+        this.midtermTasks = midtermTasks;
+    }
     public Long getHours() {
         return hours;
     }

@@ -53,6 +53,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodTeacherForm;
@@ -89,8 +90,6 @@ public class SubjectStudyPeriodService {
     @Autowired
     private ClassifierRepository classifierRepository;
 
-    // SubjectStudyPeriods
-
     public Page<SubjectStudyPeriodSearchDto> search(Long schoolId, SubjectStudyPeriodSearchCommand criteria,
             Pageable pageable) {
         final String FROM = "from subject_study_period ssp " 
@@ -103,7 +102,8 @@ public class SubjectStudyPeriodService {
                 + "(select string_agg(p2.firstname || ' ' || p2.lastname, ';') " + "from subject_study_period ssp2 "
                 + "left join subject_study_period_teacher sspt2 on sspt2.subject_study_period_id = ssp2.id "
                 + "left join teacher t2 on t2.id = sspt2.teacher_id " + "left join person p2 on p2.id = t2.person_id "
-                + "where ssp2.id = ssp.id ) as names";
+                + "where ssp2.id = ssp.id ) as names, "
+                + "(select count(*) from declaration_subject ds where ds.subject_study_period_id = ssp.id) as declared_students";
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM).sort(pageable);
         if (StringUtils.hasText(criteria.getTeachersFullname())) {
@@ -136,6 +136,7 @@ public class SubjectStudyPeriodService {
                 dto.setTeachers(Arrays.asList(s.split(";")).stream().collect(Collectors.toSet()));
             }
             dto.setSubject(subject);
+            dto.setStudentsNumber(resultAsLong(r, 8));
             return dto;
         });
     }
@@ -183,6 +184,10 @@ public class SubjectStudyPeriodService {
     }
 
     public void delete(SubjectStudyPeriod subjectStudyPeriod) {
+        // See SubjectStudyPeriod.java for explanation
+        if(!CollectionUtils.isEmpty(subjectStudyPeriod.getMidtermTasks())) {
+            throw new ValidationFailedException("main.messages.record.referenced");
+        }
         EntityUtil.deleteEntity(subjectStudyPeriodRepository, subjectStudyPeriod);
     }
 

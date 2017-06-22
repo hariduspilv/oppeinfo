@@ -38,6 +38,12 @@ angular.module('hitsaOis')
         }
       });
       $scope.version = entity;
+      $rootScope.removeLastUrlFromHistory(function(lastUrl){
+        return lastUrl === '#/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/view' ||
+               lastUrl === '#/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit' ||
+               lastUrl === '#/higherCurriculum/' + $scope.version.curriculum + '/version/new';
+      });
+
     } else if (angular.isDefined($route.current.locals.copy)) {
       angular.extend(entity, initialVersion, $route.current.locals.copy);
       $scope.version = entity;
@@ -135,14 +141,16 @@ angular.module('hitsaOis')
 
           var status = $scope.version.status;
           if ($scope.currentStatus !== status && !$scope.formState.readOnly) {
-            $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/view').search({ _noback: true });
+            // $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/view').search({ _noback: true });
+            $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/view');
           }
           $scope.currentStatus = status;
         });
       } else {
         curriculumVersion.$save().then(function (response) {
           message.info('main.messages.create.success');
-          $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/edit').search({ _noback: true });
+          // $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/edit').search({ _noback: true });
+          $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/edit');
         });
       }
     }
@@ -181,10 +189,12 @@ angular.module('hitsaOis')
         dialogService.confirmDialog({
           prompt: 'curriculum.statuschange.version.prompt.editAccepted',
         }, function () {
-          $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit').search({ _noback: true });
+          // $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit').search({ _noback: true });
+          $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit');
         });
       } else {
-        $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit').search({ _noback: true });
+        // $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit').search({ _noback: true });
+        $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit');
       }
     };
 
@@ -233,7 +243,8 @@ angular.module('hitsaOis')
           e.version = undefined;
         });
       });
-      $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/new').search({ _noback: true });
+      // $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/new').search({ _noback: true });
+      $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/new');
       $routeParams.versionCopy = copy;
       $route.current.locals.versionCopy = copy;
       $route.current.params.versionCopy = copy;

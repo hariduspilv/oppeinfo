@@ -30,6 +30,12 @@ angular.module('hitsaOis')
 
       $scope.implementationPlan = entity;
       DataUtils.convertStringToDates($scope.implementationPlan, ["validFrom", "validThru"]);
+
+      $rootScope.removeLastUrlFromHistory(function(lastUrl){
+        return lastUrl === '#/vocationalCurriculum/' + $scope.implementationPlan.curriculum + '/moduleImplementationPlan/' +    $scope.implementationPlan.id + '/view' ||
+        lastUrl === '#/vocationalCurriculum/' + $scope.implementationPlan.curriculum + '/moduleImplementationPlan/' + $scope.implementationPlan.id + '/edit' ||
+               lastUrl === '#/vocationalCurriculum/' + $scope.implementationPlan.curriculum + '/moduleImplementationPlan/new';
+      });
     } else if (angular.isDefined($route.current.locals.copy)) {
       angular.extend(entity, initialImplementationPlan, $route.current.locals.copy);
       $scope.implementationPlan = entity;
@@ -239,16 +245,17 @@ angular.module('hitsaOis')
       if (yearCapacities.length === 0) {
         creditsPerYearNumber.forEach(function(credits, studyYearNumber) {
           var index = studyYearNumber-1;
-          var capacity = {calculated: true, credits: credits, studyYearNumber: studyYearNumber};
+          var capacity = {credits: credits, studyYearNumber: studyYearNumber};
           yearCapacities[index] = capacity;
         });
       } else {
         yearCapacities.forEach(function(it) {
-          if (angular.isDefined(it.studyYearNumber) && angular.isDefined(creditsPerYearNumber[it.studyYearNumber])) {
-            it.credits = creditsPerYearNumber[it.studyYearNumber];
-            it.calculated = true;
-          } else {
-            it.calculated = false;
+          if (angular.isDefined(it.studyYearNumber)) {
+            if(!angular.isDefined(creditsPerYearNumber[it.studyYearNumber])) {
+              it.credits = 0;
+            } else {
+              it.credits = creditsPerYearNumber[it.studyYearNumber];
+            }
           }
         });
       }
@@ -269,17 +276,19 @@ angular.module('hitsaOis')
       function(dialogScope) {
         dialogScope.capacities = capacitiesData;
         dialogScope.formState = $scope.formState;
+
+        dialogScope.curriculumModule = curriculumModule;
+
         var occupationModule = getModulesOccupationModule(curriculumModule);
         if (angular.isDefined(occupationModule)) {
 
-          dialogScope.occupationModule = occupationModule;
-          // dialogScope.occupationModule = angular.copy(occupationModule);
+          // dialogScope.occupationModule = occupationModule;
 
-          // if(angular.isDefined(moduleData)) {
-          //   dialogScope.occupationModule = moduleData;
-          // } else {
-          //   dialogScope.occupationModule = angular.copy(occupationModule);
-          // }
+          if(angular.isDefined(moduleData)) {
+            dialogScope.occupationModule = moduleData;
+          } else {
+            dialogScope.occupationModule = angular.copy(occupationModule);
+          }
 
         } else {
           occupationModule = {
@@ -326,6 +335,11 @@ angular.module('hitsaOis')
 
         dialogScope.hasThemesWithCapacities = hasThemesWithCapacities(occupationModule);
 
+        dialogScope.deleteTheme = function(theme) {
+          ArrayUtils.remove(dialogScope.occupationModule.themes, theme);
+          calculateYearCapacities(dialogScope.occupationModule.themes, dialogScope.occupationModule.yearCapacities);
+        };
+
         function capacitiesDtoToModel() {
           dialogScope.capacities.forEach(function(el){
             el.inputData = {};
@@ -348,33 +362,22 @@ angular.module('hitsaOis')
 
         submittedDialogScope.occupationModule.capacities = capacitiesToDto(submittedDialogScope.capacities);
 
-
-
-
-
-        var isUpdate = false;
-        $scope.implementationPlan.occupationModules.forEach(function(it) {
-          if(it.curriculumModule === submittedDialogScope.occupationModule.curriculumModule) {
-            isUpdate = true;
-          }
-        });
-        if(!isUpdate) {
-          $scope.implementationPlan.occupationModules.push(submittedDialogScope.occupationModule);
-        }
-
-
-
-
-        // var editedOccupationModule = $scope.implementationPlan.occupationModules.find(function(el){
-        //   return el.id === submittedDialogScope.occupationModule.id; //FIXME: this sjould not work when editing occupationModule on new form!
+        // var isUpdate = false;
+        // $scope.implementationPlan.occupationModules.forEach(function(it) {
+        //   if(it.curriculumModule === submittedDialogScope.occupationModule.curriculumModule) {
+        //     isUpdate = true;
+        //   }
         // });
-
-        // if(editedOccupationModule){
-        //   ArrayUtils.remove($scope.implementationPlan.occupationModules, editedOccupationModule);
+        // if(!isUpdate) {
+        //   $scope.implementationPlan.occupationModules.push(submittedDialogScope.occupationModule);
         // }
-        // $scope.implementationPlan.occupationModules.push(submittedDialogScope.occupationModule);
 
+        var editedOccupationModule = getModulesOccupationModule(submittedDialogScope.curriculumModule);
 
+        if(editedOccupationModule){
+          ArrayUtils.remove($scope.implementationPlan.occupationModules, editedOccupationModule);
+        }
+        $scope.implementationPlan.occupationModules.push(submittedDialogScope.occupationModule);
 
 
         if($scope.implementationPlan.id) {
@@ -393,7 +396,7 @@ angular.module('hitsaOis')
     $scope.isOccupationModuleDataSaved = function(curriculumModule) {
       var isSaved = false;
       $scope.implementationPlan.occupationModules.forEach(function(it) {
-        if(it.curriculumModule === curriculumModule.id && angular.isNumber(it.id)) {
+        if(it.curriculumModule === curriculumModule.id) {
           isSaved = true;
         }
       });
@@ -437,7 +440,8 @@ angular.module('hitsaOis')
         });
       }
 
-      $location.path('/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/new').search({_noback: true});
+      // $location.path('/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/new').search({_noback: true});
+      $location.path('/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/new');
       $routeParams.implementationPlanCopy = copy;
       $route.current.locals.implementationPlanCopy = copy;
       $route.current.params.implementationPlanCopy = copy;
@@ -489,15 +493,16 @@ angular.module('hitsaOis')
             var status = response.status;
             if($scope.currentStatus !== status && !$scope.formState.readOnly) {
                 var url = '/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/' + response.id + '/view';
-                $location.path(url).search({_noback: true});
+                // $location.path(url).search({_noback: true});
+                $location.path(url);
             }
             $scope.currentStatus = status;
           });
         } else {
           curriculumVersion.$save().then(function(response) {
             message.info('main.messages.create.success');
-            $location.path('/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/' + response.id + '/edit')
-            .search({_noback: true});
+            // $location.path('/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/' + response.id + '/edit').search({_noback: true});
+            $location.path('/vocationalCurriculum/' + curriculumEntity.id + '/moduleImplementationPlan/' + response.id + '/edit');
           });
         }
 
@@ -553,10 +558,12 @@ angular.module('hitsaOis')
             dialogService.confirmDialog({
             prompt: 'curriculum.statuschange.implementationPlan.prompt.editAccepted',
             }, function(){
-                $location.path(url).search({_noback: true});
+                // $location.path(url).search({_noback: true});
+                $location.path(url);
             });
         } else {
-            $location.path(url).search({_noback: true});
+            // $location.path(url).search({_noback: true});
+            $location.path(url);
         }
     };
 

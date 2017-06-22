@@ -167,25 +167,25 @@ public class ModuleProtocolService {
     }
 
     public List<AutocompleteResult> occupationModules(HoisUserDetails user, Long curriculumVersionId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum_version_omodule cvo "
+        String from = "from curriculum_version_omodule cvo "
                 + "inner join curriculum_module cm on cm.id = cvo.curriculum_module_id "
                 + "inner join classifier mcl on mcl.code = cm.module_code "
                 + "inner join curriculum_version cv on cv.id = cvo.curriculum_version_id "
-                + "inner join curriculum c on c.id = cv.curriculum_id");
+                + "inner join curriculum c on c.id = cv.curriculum_id";
 
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
                 curriculumVersionId);
 
+        String select = "cvo.id, cv.code, cm.name_et, mcl.name_et as mcl_name_et, cm.name_en, mcl.name_en as mcl_name_en";
+        List<?> data = qb.select(select, em).getResultList();
+
         List<AutocompleteResult> results = new ArrayList<>();
-        List<?> data = qb
-                .select("cvo.id, cv.code, cm.name_et, mcl.name_et as mcl_name_et, cm.name_en, mcl.name_en as mcl_name_en",
-                        em)
-                .getResultList();
         for (Object r : data) {
             results.add(new AutocompleteResult(resultAsLong(r, 0),
-                    resultAsString(r, 2) + " - " + resultAsString(r, 3) + ", " + resultAsString(r, 1),
-                    resultAsString(r, 4) + " - " + resultAsString(r, 5) + ", " + resultAsString(r, 1)));
+                    CurriculumUtil.moduleName(resultAsString(r, 2), resultAsString(r, 3),  resultAsString(r, 1)),
+                    CurriculumUtil.moduleName(resultAsString(r, 4), resultAsString(r, 5), resultAsString(r, 1))));
         }
         return results;
     }
@@ -250,16 +250,16 @@ public class ModuleProtocolService {
 
         List<?> students = studentsQb.select("distinct s.id, p.firstname, p.lastname, p.idcode, s.status_code", em)
                 .getResultList();
-        Map<Long, ModuleProtocolStudentSelectDto> result = students.stream()
-                .collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
-                    ModuleProtocolStudentSelectDto dto = new ModuleProtocolStudentSelectDto();
-                    dto.setStudentId(resultAsLong(r, 0));
-                    dto.setFullname(resultAsString(r, 1) + " " + resultAsString(r, 2));
-                    dto.setIdcode(resultAsString(r, 3));
-                    dto.setStatus(resultAsString(r, 4));
-                    return dto;
-                }));
-        return result;
+
+        return students.stream()
+            .collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
+                ModuleProtocolStudentSelectDto dto = new ModuleProtocolStudentSelectDto();
+                dto.setStudentId(resultAsLong(r, 0));
+                dto.setFullname(resultAsString(r, 1) + " " + resultAsString(r, 2));
+                dto.setIdcode(resultAsString(r, 3));
+                dto.setStatus(resultAsString(r, 4));
+                return dto;
+            }));
     }
 
     @org.springframework.transaction.annotation.Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)

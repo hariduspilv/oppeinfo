@@ -1,0 +1,158 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <div layout="column" flex>
+            <div layout="row" flex>
+              <md-input-container>
+                <label>{{'contract.startFrom' | translate}}</label>
+                <md-datepicker ng-model="criteria.startFrom"></md-datepicker>
+              </md-input-container>
+              <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'contract.startThru' | translate}}</label>
+                <md-datepicker ng-model="criteria.startThru" md-min-date="criteria.startFrom"></md-datepicker>
+              </md-input-container>
+            </div>
+          </div>
+        </div>
+
+        <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div layout="column" flex>
+              <div layout="row" flex>
+                <md-input-container>
+                  <label>{{'contract.endFrom' | translate}}</label>
+                  <md-datepicker ng-model="criteria.endFrom"></md-datepicker>
+                </md-input-container>
+                <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'contract.endThru' | translate}}</label>
+                  <md-datepicker ng-model="criteria.endThru" md-min-date="criteria.endFrom"></md-datepicker>
+                </md-input-container>
+              </div>
+          </div>
+        </div>
+      </div>
+
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <div layout="column" flex>
+            <md-input-container>
+              <label class="textInput">{{'student.label' | translate}}</label>
+              <input ng-model="criteria.studentName" type="text">
+            </md-input-container>
+          </div>
+        </div>
+
+        <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div layout="column" flex>
+              <md-input-container>
+                <label class="textInput">{{'contract.curriculumVersion' | translate}}</label>
+                <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion"></hois-select>
+              </md-input-container>
+            </div>
+        </div>
+      </div>
+
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <div layout="column" flex>
+            <md-input-container>
+              <label class="textInput">{{'studentGroup.label' | translate}}</label>
+              <hois-select ng-model="criteria.studentGroup" type="studentgroup" criteria="{valid: true}"></hois-select>
+            </md-input-container>
+          </div>
+        </div>
+      </div>
+
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <div layout="column" flex>
+            <md-input-container>
+              <label class="textInput">{{'enterprise.label' | translate}}</label>
+              <input ng-model="criteria.enterpriseName" type="text">
+            </md-input-container>
+          </div>
+        </div>
+
+        <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div layout="column" flex>
+              <md-input-container>
+                <label class="textInput">{{'enterprise.supervisor' | translate}}</label>
+                <input ng-model="criteria.enterpriseSupervisor" type="text">
+              </md-input-container>
+            </div>
+        </div>
+      </div>
+
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <div layout="column" flex>
+            <md-input-container>
+              <label class="textInput">{{'contract.status' | translate}}</label>
+              <hois-classifier-select ng-model="criteria.status" main-classifier-code="LEPING_STAATUS" model-value-attr="code"></hois-classifier-select>
+            </md-input-container>
+          </div>
+        </div>
+
+        <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div layout="column" flex>
+              <md-input-container>
+                <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
+                <hois-select ng-model="criteria.teacher" type="teacher" criteria="{valid: true}"></hois-select>
+              </md-input-container>
+            </div>
+        </div>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/contracts/new">{{'main.button.create' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearSearch()">{{'main.button.clear' | translate}}</md-button>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column>{{'student.label' | translate}}</th>
+            <th md-column>{{'contract.contractNumber' | translate}}</th>
+            <th md-column>{{'contract.validity' | translate}}</th>
+            <th md-column>{{'enterprise.label' | translate}}</th>
+            <th md-column>{{'enterprise.supervisor' | translate}}</th>
+            <th md-column>{{'contract.schoolSupervisor' | translate}}</th>
+            <th md-column>{{'contract.contractDate' | translate}}</th>
+            <th md-column>{{'main.status' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>{{currentLanguageNameField(row.student)}}</td>
+            <td md-cell>{{row.contractNumber}}</td>
+            <td md-cell>{{row.start | hoisDate}} - {{row.end | hoisDate}}</td>
+            <td md-cell>{{row.enterpriseName}}</td>
+            <td md-cell>{{row.enterpriseContactPersonName}}</td>
+            <td md-cell>{{currentLanguageNameField(row.teacher)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{row.confirmDate | hoisDate}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

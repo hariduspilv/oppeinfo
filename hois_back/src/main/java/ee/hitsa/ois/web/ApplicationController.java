@@ -49,13 +49,13 @@ public class ApplicationController {
         return applicationService.get(user, application);
     }
 
-    @GetMapping("")
+    @GetMapping
     public Page<ApplicationSearchDto> search(ApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return applicationService.search(user, command, pageable);
     }
 
-    @PostMapping("")
+    @PostMapping
     public ApplicationDto create(@Valid @RequestBody ApplicationForm applicationForm, HoisUserDetails user) {
         return get(user, applicationService.create(user, applicationForm));
     }

@@ -3,11 +3,14 @@ package ee.hitsa.ois.web.commandobject;
 import java.time.LocalDate;
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+
 import ee.hitsa.ois.validation.DateRange;
 
 @DateRange(from = "insertedFrom", thru = "insertedThru")
 @DateRange(from = "confirmedFrom", thru = "confirmedThru")
 public class DeclarationSearchCommand {
+    @NotNull
     private Long studyPeriod;
     private Long curriculumVersion;
     private List<Long> studentGroups;

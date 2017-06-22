@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('VocationalCurriculumController', function ($scope, Classifier, dialogService, ClassifierConnect, ArrayUtils,
-    message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q, config) {
+    message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q, config, $rootScope) {
       var clMapper = Classifier.valuemapper({occupations: 'KUTSE', partOccupations: 'OSAKUTSE', specialities: 'SPETSKUTSE'});
       $scope.school = $route.current.locals.auth ? $route.current.locals.auth.school : null;
 
@@ -224,6 +224,13 @@ angular.module('hitsaOis')
     if (angular.isDefined($route.current.locals.entity)) {
       mapDtoToModel($route.current.locals.entity, $scope);
       CurriculumFileEndpoint = QueryUtils.endpoint('/curriculum/' + $route.current.locals.entity.id + '/file');
+
+      $rootScope.removeLastUrlFromHistory(function(lastUrl){
+        // return lastUrl.indexOf('#/vocationalCurriculum/' + $route.current.locals.entity.id + '/view') !== -1;
+        return lastUrl === '#/vocationalCurriculum/' + $route.current.locals.entity.id + '/view' ||
+               lastUrl === '#/vocationalCurriculum/' + $route.current.locals.entity.id + '/edit' ||
+               lastUrl === '#/vocationalCurriculum/new';
+      });
     }
 
     $scope.draftOptions = {};
@@ -1202,7 +1209,8 @@ angular.module('hitsaOis')
           var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
           message.info(updateSuccess);
           if(curriculum.status !== $scope.currentStatus && !$scope.formState.readOnly) {
-              $location.path('/vocationalCurriculum/' + curriculum.id + '/view').search({_noback: true});
+              // $location.path('/vocationalCurriculum/' + curriculum.id + '/view').search({_noback: true});
+              $location.path('/vocationalCurriculum/' + curriculum.id + '/view');
           }
           mapDtoToModel(curriculum, $scope);
         });
@@ -1211,7 +1219,8 @@ angular.module('hitsaOis')
         curriculum.files = undefined;
         curriculum.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.path('/vocationalCurriculum/'+curriculum.id+'/edit').search({_noback: true});
+          // $location.path('/vocationalCurriculum/'+curriculum.id+'/edit').search({_noback: true});
+          $location.path('/vocationalCurriculum/'+ curriculum.id + '/edit');
         });
       }
     }
@@ -1239,11 +1248,13 @@ angular.module('hitsaOis')
         if($scope.curriculum.status === Curriculum.STATUS.VERIFIED) {
             dialogService.confirmDialog({
             prompt: 'curriculum.prompt.editAccepted',
-            }, function(){
-                $location.path('/vocationalCurriculum/' + $scope.curriculum.id + '/edit').search({_noback: true});
+          }, function(){
+                // $location.path('/vocationalCurriculum/' + $scope.curriculum.id + '/edit').search({_noback: true});
+                $location.path('/vocationalCurriculum/' + $scope.curriculum.id + '/edit');
             });
         } else {
-            $location.path('/vocationalCurriculum/' + $scope.curriculum.id + '/edit').search({_noback: true});
+            // $location.path('/vocationalCurriculum/' + $scope.curriculum.id + '/edit').search({_noback: true});
+                $location.path('/vocationalCurriculum/' + $scope.curriculum.id + '/edit');
         }
     };
 
@@ -1296,7 +1307,8 @@ angular.module('hitsaOis')
             closedCurriculum.$update().then(function(response){
               message.info(messages.updateSuccess);
               if(!$scope.formState.readOnly) {
-                $location.path('/vocationalCurriculum/' + $scope.curriculum.id +'/view').search({_noback: true});
+                // $location.path('/vocationalCurriculum/' + $scope.curriculum.id +'/view').search({_noback: true});
+                $location.path('/vocationalCurriculum/' + $scope.curriculum.id +'/view');
               }
               mapDtoToModel(response, $scope);
             });

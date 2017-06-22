@@ -70,7 +70,7 @@ abstract class EhisService {
     static final String YES = "jah";
     static final String NO = "ei";
 
-    void laeKorgharidused(XRoadHeaderV4 xRoadHeaderV4, KhlOppeasutusList khlOppeasutusList, WsEhisStudentLog wsEhisStudentLog) {
+    WsEhisStudentLog laeKorgharidused(XRoadHeaderV4 xRoadHeaderV4, KhlOppeasutusList khlOppeasutusList, WsEhisStudentLog wsEhisStudentLog) {
         EhisLaeKorgharidusedResponse ehisLaeKorgharidusedResponse = ehisXroadService.laeKorgharidused(xRoadHeaderV4, khlOppeasutusList);
 
         wsEhisStudentLog.setRequest(ehisLaeKorgharidusedResponse.getRequest());
@@ -85,7 +85,7 @@ abstract class EhisService {
             wsEhisStudentLog.setHasOtherErrors(Boolean.TRUE);
         }
         wsEhisStudentLog.setLogTxt(ehisLaeKorgharidusedResponse.getLogTxt());
-        wsEhisStudentLogRepository.save(wsEhisStudentLog);
+        return wsEhisStudentLogRepository.save(wsEhisStudentLog);
     }
 
     static KhlOppeasutusList getKhlOppeasutusList(Student student) {
@@ -177,16 +177,26 @@ abstract class EhisService {
                         person.getBirthdate().toString());
     }
 
-    void bindingException(Directive directive, Exception e) {
-        WsEhisStudentLog studentLog = new WsEhisStudentLog();
+    WsEhisStudentLog bindingException(Directive directive, Exception e) {
+        WsEhisStudentLog studentLog = baseBindingException(e);
         studentLog.setDirective(directive);
+        studentLog.setSchool(directive.getSchool());
+        return wsEhisStudentLogRepository.save(studentLog);
+    }
+
+    WsEhisStudentLog bindingException(Student student, Exception e) {
+        WsEhisStudentLog studentLog = baseBindingException(e);
+        studentLog.setSchool(student.getSchool());
+        return wsEhisStudentLogRepository.save(studentLog);
+    }
+
+    private WsEhisStudentLog baseBindingException(Exception e) {
+        WsEhisStudentLog studentLog = new WsEhisStudentLog();
         studentLog.setHasOtherErrors(Boolean.TRUE);
         studentLog.setWsName(LAE_KORGHARIDUS_SERVICE);
         studentLog.setLogTxt(e.toString());
-        studentLog.setSchool(directive.getSchool());
         log.error("Binding failed: ", e);
-
-        wsEhisStudentLogRepository.save(studentLog);
+        return studentLog;
     }
 
     XRoadHeaderV4 getXroadHeader() {

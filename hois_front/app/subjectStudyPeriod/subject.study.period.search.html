@@ -11,7 +11,7 @@
       </md-input-container>
     </div>
     <div layout="row">
-      <md-input-container flex="50" flex-sm="100" flex-xs="100">
+      <md-input-container flex="45" flex-sm="100" flex-xs="100">
         <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
         <hois-select ng-model="criteria.studyPeriods" values="studyPeriods" multiple></hois-select>
       </md-input-container>
@@ -32,7 +32,7 @@
             <th md-column md-order-by="s.{{currentLanguageNameField()}},s.code">{{'subjectStudyPeriod.nameCode' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.teachersFullname' | translate}}</th>
             <th md-column md-order-by="sp.{{currentLanguageNameField()}}">{{'subjectStudyPeriod.studyPeriod' | translate}}</th>
-            <th md-column md-order-by="">{{'subjectStudyPeriod.declaredStudentsNumber' | translate}}</th>
+            <th md-column md-order-by="declared_students">{{'subjectStudyPeriod.declaredStudentsNumber' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
@@ -44,7 +44,7 @@
               <span ng-if="row.clicked">{{showTeachers(row, true)}}</span>
             </td>
             <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
-            <td md-cell>{{::row.studyPeriods}}</td>
+            <td md-cell><a href="#/subjectStudyPeriods/{{::row.id}}/midtermTasks/studentResults">{{::row.studentsNumber}}</a></td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriod/{{::row.id}}/edit">{{'main.button.change' | translate}}
               </md-button>

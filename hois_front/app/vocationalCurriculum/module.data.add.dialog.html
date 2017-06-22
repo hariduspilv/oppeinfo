@@ -126,7 +126,7 @@
                     {{theme.studyYearNumber}}
                   </td>
                   <td md-cell>
-                    <a class="remove" ng-click="removeFromArray(occupationModule.themes, theme)" ng-if="!formState.readOnly">
+                    <a class="remove" ng-click="deleteTheme(theme)" ng-if="!formState.readOnly">
                       &times;
                     </a>
                   </td>
@@ -140,7 +140,7 @@
 			 <div layout="row">
             <md-input-container flex>
               <label>{{'module.firstStudyYear' | translate}}</label>
-              <input ng-disabled="occupationModule.yearCapacities[0].calculated || formState.readOnly" ng-model="occupationModule.yearCapacities[0].credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
+              <input ng-disabled="occupationModule.themes.length > 0 || formState.readOnly" ng-model="occupationModule.yearCapacities[0].credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
                 ng-change="occupationModule.yearCapacities[0].studyYearNumber=1" name="yearCapacities0" required>
                 <div ng-messages="dialogForm.yearCapacities0.$error" ng-show="dialogForm.yearCapacities0.$dirty">
                     <div ng-message="min">
@@ -157,7 +157,7 @@
 
             <md-input-container flex>
               <label>{{'module.secondStudyYear' | translate}}</label>
-              <input ng-disabled="occupationModule.yearCapacities[1].calculated || formState.readOnly" ng-model="occupationModule.yearCapacities[1].credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
+              <input ng-disabled="occupationModule.themes.length > 0 || formState.readOnly" ng-model="occupationModule.yearCapacities[1].credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
                 ng-change="occupationModule.yearCapacities[1].studyYearNumber=2" name="yearCapacities1" required>
                 <div ng-messages="dialogForm.yearCapacities1.$error" ng-show="dialogForm.yearCapacities1.$dirty">
                     <div ng-message="min">
@@ -174,7 +174,7 @@
 
             <md-input-container flex>
               <label>{{'module.thirdStudyYear' | translate}}</label>
-              <input ng-disabled="occupationModule.yearCapacities[2].calculated || formState.readOnly" ng-model="occupationModule.yearCapacities[2].credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
+              <input ng-disabled="occupationModule.themes.length > 0 || formState.readOnly" ng-model="occupationModule.yearCapacities[2].credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" aria-label="year capacity credits"
               ng-change="occupationModule.yearCapacities[2].studyYearNumber=3" name="yearCapacities2" required>
                 <div ng-messages="dialogForm.yearCapacities2.$error" ng-show="dialogForm.yearCapacities2.$dirty">
                     <div ng-message="min">

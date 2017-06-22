@@ -12,6 +12,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
@@ -19,7 +20,6 @@ import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 
 @Entity
 public class SubjectStudyPeriod extends BaseEntityWithId {
-    //TODO: set of students who declared a subject
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
@@ -45,6 +45,22 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     @OneToMany(mappedBy = "subjectStudyPeriod", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubjectStudyPeriodCapacity> capacities;
+    
+    /*
+     * This mapping is required for saving midtermTasks using EntityUtil.bindEntityCollection.
+     * However, SubjectStudyPeriod cannot be removed via its controller if it has any midtermTask
+     * Exception is thrown in SubjectStudyPeriodService.delete() in that case.
+     */
+    @OneToMany(mappedBy = "subjectStudyPeriod", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MidtermTask> midtermTasks;
+
+    public List<MidtermTask> getMidtermTasks() {
+        return midtermTasks != null ? midtermTasks : (midtermTasks = new ArrayList<>());
+    }
+
+    public void setMidtermTasks(List<MidtermTask> midtermTasks) {
+        this.midtermTasks = midtermTasks;
+    }
 
     public List<SubjectStudyPeriodCapacity> getCapacities() {
         return capacities != null ? capacities : (capacities = new ArrayList<>());

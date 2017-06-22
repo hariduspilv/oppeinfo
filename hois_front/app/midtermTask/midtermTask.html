@@ -1,0 +1,166 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+
+  <form name="midtermTaskForm" layout="column" class="nomargin">
+
+    <md-table-container>
+      <table md-table>
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'midtermTask.nr' | translate}}</th>
+            <th md-column ng-click="sortBy('nameEt')">
+              {{'midtermTask.nameEt' | translate}} *
+              <span class="sortorder" ng-show="propertyName === 'nameEt'" ng-class="{reverse: reverse}"></span>
+            </th>
+            <th md-column ng-click="sortBy('nameEn')">
+              {{'midtermTask.nameEn' | translate}}
+              <span class="sortorder" ng-show="propertyName === 'nameEn'" ng-class="{reverse: reverse}"></span>
+            </th>
+            <th md-column ng-click="sortBy('descriptionEt')">
+              {{'midtermTask.descriptionEt' | translate}} *
+              <span class="sortorder" ng-show="propertyName === 'descriptionEt'" ng-class="{reverse: reverse}"></span>
+            </th>
+            <th md-column ng-click="sortBy('descriptionEn')">
+              {{'midtermTask.descriptionEn' | translate}}
+              <span class="sortorder" ng-show="propertyName === 'descriptionEn'" ng-class="{reverse: reverse}"></span>
+            </th>
+            <th md-column ng-click="sortBy('maxPoints')">
+              {{'midtermTask.maxPoints' | translate}} *
+              <span class="sortorder" ng-show="propertyName === 'maxPoints'" ng-class="{reverse: reverse}"></span>
+            </th>
+            <th md-column ng-click="sortBy('percentage')">
+              {{'midtermTask.percentage' | translate}} *
+              <span class="sortorder" ng-show="propertyName === 'percentage'" ng-class="{reverse: reverse}"></span>
+            </th>
+            <th md-column ng-click="sortBy('taskDate')">
+              {{'midtermTask.taskDate' | translate}}
+              <span class="sortorder" ng-show="propertyName === 'taskDate'" ng-class="{reverse: reverse}"></span>
+            </th>
+            <th md-column ng-click="sortBy('threshold')">
+              {{'midtermTask.threshold' | translate}}
+              <span class="sortorder" ng-show="propertyName === 'threshold'" ng-class="{reverse: reverse}"></span>
+            </th>
+            <th md-column ng-click="sortBy('thresholdPercentage')">
+              {{'midtermTask.thresholdPercentage' | translate}}
+              <span class="sortorder" ng-show="propertyName === 'thresholdPercentage'" ng-class="{reverse: reverse}"></span>
+            </th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in record.midtermTasks | orderBy:propertyName:reverse" ng-class-odd="'odd'" ng-class-even="'even'" ng-if="record.canBeEdited">
+            <ng-form name="midtermTaskUnitForm">
+              <td md-cell>{{$index + 1}}</td>
+              <td md-cell>
+                <md-input-container>
+                  <input ng-model="row.nameEt" type="text" md-maxlength="255" required
+                  aria-label="{{'midtermTask.nameEt' | translate}}">
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <input ng-model="row.nameEn" type="text" md-maxlength="255"
+                  aria-label="{{'midtermTask.nameEn' | translate}}">
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <input ng-model="row.descriptionEt" type="text" md-maxlength="4000"
+                  aria-label="{{'midtermTask.descriptionEt' | translate}}" required>
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <input ng-model="row.descriptionEn" type="text" md-maxlength="4000"
+                  aria-label="{{'midtermTask.descriptionEn' | translate}}">
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <input ng-model="row.maxPoints" type="number" min="0" max="999" required
+                  aria-label="{{'midtermTask.maxPoints' | translate}}" pattern="^\d+(\.\d{1})?$">
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <input ng-model="row.percentage" type="number" min="0" max="100" required
+                  aria-label="{{'midtermTask.percentage' | translate}}" pattern="^\d+$">
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <md-datepicker ng-model="row.taskDate" md-open-on-focus aria-label="{{currentLanguageNameField(row)}} {{'midtermTask.taskDate' | translate}}"></md-datepicker>
+                </md-input-container>
+              </td>
+              <td md-cell>
+                <md-checkbox ng-model="row.threshold" ng-change="clearThresholdPercentage(row)"
+                        aria-label="{{currentLanguageNameField(row)}} {{'midtermTask.threshold' | translate}}">
+                </md-checkbox>
+              </td>
+              <td md-cell>
+                <md-input-container>
+                  <input ng-model="row.thresholdPercentage" type="number" min="0" max="100"
+                  ng-disabled="!row.threshold"
+                  aria-label="{{'midtermTask.thresholdPercentage' | translate}}" pattern="^\d+$">
+                </md-input-container>
+              </td>
+              <td md-cell><a class="remove nomargin" ng-click="removeRow(row)">&times;</a></td>
+            </ng-form>
+          </tr>
+          <tr md-row ng-repeat="row in record.midtermTasks | orderBy:propertyName:reverse" ng-class-odd="'odd'" ng-class-even="'even'" ng-if="!record.canBeEdited">
+            <ng-form name="midtermTaskUnitForm">
+              <td md-cell>{{$index + 1}}</td>
+              <td md-cell>{{row.nameEt}}</td>
+              <td md-cell>{{row.nameEn}}</td>
+              <td md-cell>{{row.descriptionEt}}</td>
+              <td md-cell>{{row.descriptionEn}}</td>
+              <td md-cell>{{row.maxPoints}}</td>
+              <td md-cell>{{row.percentage}}</td>
+              <td md-cell>{{row.taskDate | hoisDate}}</td>
+              <td md-cell>
+                <md-checkbox ng-model="row.threshold"
+                        aria-label="{{currentLanguageNameField(row)}} {{'midtermTask.threshold' | translate}}"
+                        disabled>
+                </md-checkbox>
+              </td>
+              <td md-cell>{{row.thresholdPercentage}}</td>
+              <td md-cell></td>
+            </ng-form>
+          </tr>
+          <!-- colspan is not used because of the line under previous row on readOnly form -->
+          <tr md-row>
+            <td md-cell></td>
+            <td md-cell></td>
+            <td md-cell></td>
+            <td md-cell></td>
+            <td md-cell></td>
+            <td md-cell></td>
+            <td md-cell>{{'midtermTask.percentageSum' | translate}}: {{getPercentageSum()}}</td>
+            <td md-cell></td>
+            <td md-cell></td>
+            <td md-cell></td>
+            <td md-cell></td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <div layout="row">
+        <md-button class="md-primary" ng-click="addRow()" ng-show="record.canBeEdited">{{'midtermTask.addRow' | translate}}</md-button>
+    </div>
+    <div layout="row">
+        <md-button class="md-raised md-primary" ng-click="save()" ng-show="record.canBeEdited">{{'main.button.save' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="openCopyDialog()" ng-show="record.canBeEdited">{{'midtermTask.copy' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/{{subjectStudyPeriodId}}/midtermTasks/studentResults')">{{'main.button.back' | translate}}</md-button>
+    </div>
+  </form>
+</div>
+
+
+
+<style>
+  .sortorder:after {
+    content: '\25b2';
+  }
+  .sortorder.reverse:after {
+    content: '\25bc';
+  }
+</style>

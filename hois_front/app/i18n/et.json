@@ -230,6 +230,9 @@
         },
         "moduleProtocol": {
           "search": "Mooduli protokolli otsing"
+        },
+        "contract": {
+          "search": "Praktika lepingute otsing"
         }
       },
       "studyYearSchedule": {
@@ -257,7 +260,8 @@
         "label": "Andmevahetus",
         "teacherinfo": {
           "export": "Õppejõudude andmed"
-         }
+        },
+        "studentinfoExport": "Õpilaste andmed"
       },
       "declaration": {
         "current": "Õpingukava koostamine",
@@ -1442,6 +1446,7 @@
     "seats": "Kohtade arv"
   },
   "studentGroup": {
+    "label": "Õpperühm",
     "addStudents": "Lisa õppurid",
     "code": "Tähis",
     "course": "Õppeaasta (kursus)",
@@ -1729,6 +1734,24 @@
       "message": "Teade",
       "response": "Tulemus:"
     },
+    "student": {
+      "dataType": "Saadetavad andmed",
+      "sendToEhis": "Saada EHISesse",
+      "sentDatesRange": "Andmete saatmise kuupäevade vahemik",
+      "CURRICULA_FULFILMENT": "Õppekava täitmine",
+      "GRADUATION": "Õppeasutuse lõpetamine",
+      "result": "Õppurid, kelle andmed saadeti EHISesse",
+      "name": "Õppuri nimi",
+      "idcode": "Isikukood",
+      "curriculum": "Õppekava",
+      "percentage": "Täituvus",
+      "points": "Ainepunktid",
+      "error": "Sõnumi saatmine õnnestus",
+      "message": "Teade",
+      "docNr": "Lõpudokumendi number",
+      "cumLaude": "cum laude",
+      "academicNr": "Akadeemilise õiendi nr"
+    },
     "messages": {
       "exportFinished": "Eksportimine lõpetatud"
     }
@@ -1838,5 +1861,47 @@
       "subject": "Õppeaine",
       "teacher": "Õpetaja nimi"
     }
+  },
+  "contract": {
+    "startFrom": "Alguskuupäev alates",
+    "startThru": "Alguskuupäev kuni",
+    "endFrom": "Lõpukuupäev alates",
+    "endThru": "Lõpukuupäev kuni",
+    "validity": "Lepingu kehtivus",
+    "schoolSupervisor": "Õppeasutuse juhendaja",
+    "contractDate": "Sõlmimise kp",
+    "contractNumber": "Lepingu nr",
+    "curriculumVersion":"Õppekava",
+    "status": "Lepingu staatus"
+  },
+  "enterprise": {
+    "label": "Ettevõte",
+    "supervisor": "Ettevõtte juhendaja"
+  },
+  "midtermTask": {
+    "add": "Lisa/muuda vahesooritused",
+    "addRow": "Lisa uus rida",
+    "copy": "Kopeeri teisest päevikust",
+    "descriptionEn": "Vahesoorituse kirjeldus inglise keeles",
+    "descriptionEt": "Vahesoorituse kirjeldus eesti keeles",
+    "error": {
+      "midtermTaskCantBeDeleted": "Vahesooritus on seotud õppurite tulemustega ja ei saa olla kustutatud"
+    },
+    "maxPoints": "Max punktid",
+    "message": {
+      "copied": "Kopeerimine õnnestus"
+    },
+    "midtermTasks": "Vahesooritused",
+    "nameEn": "Vahesoorituse nimetus inglise keeles",
+    "nameEt": "Vahesoorituse nimetus eesti keeles",
+    "nr": "Nr",
+    "percentage": "Vahesoorituse osakaal lõpphindes",
+    "percentageSum": "Osakaalude summa",
+    "studyPeriod" : "Õppeperiood",
+    "subject" : "Õppeaine",
+    "taskDate": "Vahesoorituse kuupäev",
+    "teacher": "Õpetaja",
+    "threshold": "Lävend",
+    "thresholdPercentage": "Lävendi %"
   }
 }

@@ -86,6 +86,12 @@ angular.module('hitsaOis')
           CurriculumFileEndpoint = QueryUtils.endpoint(baseUrl + '/' + id + '/file');
           $scope.curriculum = response;
           setVariablesForExistingCurriculum();
+
+          $rootScope.removeLastUrlFromHistory(function(lastUrl){
+          return lastUrl === '#/higherCurriculum/' + $scope.curriculum.id + '/view' ||
+                 lastUrl === '#/higherCurriculum/' + $scope.curriculum.id + '/edit' ||
+                 lastUrl === '#/higherCurriculum/new';
+          });
         });
       } else {
         $scope.curriculum = new Endpoint(initialCurriculumScope);
@@ -242,7 +248,8 @@ angular.module('hitsaOis')
 
     function goToReadOnlyForm() {
       if(!$scope.formState.readOnly) {
-        $location.path('/higherCurriculum/'+ $scope.curriculum.id +'/view').search({_noback: true});
+        // $location.path('/higherCurriculum/'+ $scope.curriculum.id +'/view').search({_noback: true});
+        $location.path('/higherCurriculum/'+ $scope.curriculum.id +'/view');
       }
     }
 
@@ -262,7 +269,7 @@ angular.module('hitsaOis')
                 var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
                 message.info(updateSuccess);
                 // if($scope.curriculum.status !== Curriculum.STATUS.ENTERING || $scope.curriculum.ehisStatus === 'OPPEKAVA_EHIS_STAATUS_A') {
-                if($scope.curriculum.status !== $scope.formState.curriculum.status) {
+                if($scope.curriculum.status !== $scope.formState.curriculum.status) { // if status changed
                     goToReadOnlyForm();
                 }
                 setVariablesForExistingCurriculum();
@@ -272,7 +279,8 @@ angular.module('hitsaOis')
             $scope.curriculum.files = undefined;
             $scope.curriculum.$save().then(function(response){
                 message.info('main.messages.create.success');
-                $location.path('/higherCurriculum/'+ response.id +'/edit').search({_noback: true});
+                // $location.path('/higherCurriculum/'+ response.id +'/edit').search({_noback: true});
+                $location.path('/higherCurriculum/'+ response.id +'/edit');
             });
         }
     }
@@ -563,10 +571,12 @@ angular.module('hitsaOis')
             dialogService.confirmDialog({
             prompt: 'curriculum.prompt.editAccepted',
             }, function(){
-                $location.path('/higherCurriculum/' + $scope.curriculum.id + '/edit').search({_noback: true});
+                // $location.path('/higherCurriculum/' + $scope.curriculum.id + '/edit').search({_noback: true});
+                $location.path('/higherCurriculum/' + $scope.curriculum.id + '/edit');
             });
         } else {
-            $location.path('/higherCurriculum/' + $scope.curriculum.id + '/edit').search({_noback: true});
+            // $location.path('/higherCurriculum/' + $scope.curriculum.id + '/edit').search({_noback: true});
+            $location.path('/higherCurriculum/' + $scope.curriculum.id + '/edit');
         }
     };
 

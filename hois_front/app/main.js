@@ -292,8 +292,14 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
         history.push(newUrl);
     };
 
+    $rootScope.removeLastUrlFromHistory = function(condition) {
+        var lastUrl = history.pop();
+        if(angular.isDefined(condition) && !condition(lastUrl)) {
+            history.push(lastUrl);
+        }
+    };
+
     $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
-      //console.log(history, newUrl, oldUrl, isBack)
       if (newUrl !== oldUrl && !isBack && newUrl.indexOf('_noback') === -1) {
         pushHistoryState(oldUrl.replace(/(\?_menu)$/, ''), newUrl.replace(/(\?_menu)$/, ''));
       }

@@ -68,7 +68,7 @@ public class DeclarationController {
     }
 
     @GetMapping("/hasPrevious")
-    public Map<String, ?> studyLevels(HoisUserDetails user) {
+    public Map<String, ?> checkIfStudentHasPreviousDeclarations(HoisUserDetails user) {
         Map<String, Object> response = new HashMap<>();
         response.put("hasPrevious", declarationService.studentHasPreviousDeclarations(user.getStudentId()));
         return response;
@@ -100,7 +100,7 @@ public class DeclarationController {
 
     @GetMapping("/subjects/extracurriculum/{id:\\d+}")
     public List<DeclarationSubjectDto> getExtraCurriculumSubjectOptions(@WithEntity("id") Declaration declaration) {
-        return declarationService.getExtraCurriculumSubjects(declaration);
+        return declarationService.getExtraCurriculumSubjectsOptions(declaration);
     }
 
     /**
@@ -117,7 +117,7 @@ public class DeclarationController {
         return Collections.singletonMap("canCreate", Boolean.valueOf(canCreate));
     }
 
-    @PostMapping("create")
+    @PostMapping("/create")
     public DeclarationDto createForStudent(HoisUserDetails user) {
         Student student = studentRepository.getOne(user.getStudentId()); 
         AssertionFailedException.throwIf(!canCreateDeclaration(user, student),
@@ -125,12 +125,22 @@ public class DeclarationController {
         return get(user, declarationService.create(user.getSchoolId(), student));
     }
 
-    @PostMapping("create/{id:\\d+}")
+    @PostMapping("/create/{id:\\d+}")
     public DeclarationDto createForSchoolAdmin(HoisUserDetails user, @WithEntity("id") Student student) {
         UserUtil.assertSameSchool(user, student.getSchool());
         AssertionFailedException.throwIf(!canCreateDeclaration(user, student),
                 "You cannot create declaration!");
         return get(user, declarationService.create(user.getSchoolId(), student));
+    }
+
+    /**
+     *  Method is only used for unit testing 
+     */
+    @DeleteMapping("/{id:\\d+}")   
+    private void delete(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+        AssertionFailedException.throwIf(!user.getSchoolId().equals(Long.valueOf(1L)),
+                "Deletion is only used for unit testing");
+        declarationService.delete(declaration);
     }
 
     @PutMapping("/confirm/{id:\\d+}")
@@ -193,21 +203,23 @@ public class DeclarationController {
         return declarationService.getCurrentStudyPeriod(user.getSchoolId());
     }
 
-    private static boolean canConfirmDeclaration(HoisUserDetails user, Declaration declaration) {
-        return user.isSchoolAdmin() || (user.isStudent() 
+    public static boolean canConfirmDeclaration(HoisUserDetails user, Declaration declaration) {
+        return DeclarationStatus.OPINGUKAVA_STAATUS_S.name().equals(EntityUtil.getCode(declaration.getStatus())) &&
+                (user.isSchoolAdmin() || (user.isStudent() 
                 && StudentUtil.isStudying(declaration.getStudent())
-                && user.getStudentId().equals(declaration.getStudent().getId()))
-                && DeclarationStatus.OPINGUKAVA_STAATUS_S.name().equals(EntityUtil.getCode(declaration.getStatus()));
+                && user.getStudentId().equals(declaration.getStudent().getId())));
     }
-
-    private static boolean canChangeDeclaration(HoisUserDetails user, Declaration declaration) {
+    /**
+     * For now even confirmed declarations can be changed by school admin
+     */
+    public static boolean canChangeDeclaration(HoisUserDetails user, Declaration declaration) {
         return user.isSchoolAdmin() || (user.isStudent() 
                 && StudentUtil.isStudying(declaration.getStudent())
                 && DeclarationStatus.OPINGUKAVA_STAATUS_S.name().equals(EntityUtil.getCode(declaration.getStatus()))
                 && user.getStudentId().equals(declaration.getStudent().getId()));
     }
 
-    private static boolean canUnconfirmDeclaration(HoisUserDetails user, Declaration declaration) {
+    public static boolean canUnconfirmDeclaration(HoisUserDetails user, Declaration declaration) {
         if(user.isStudent() && !user.getStudentId().equals(declaration.getStudent().getId())) {
             return false;
         }
@@ -215,7 +227,7 @@ public class DeclarationController {
                 LocalDate.now().isBefore(declaration.getStudyPeriod().getEndDate());
     }
 
-    private static boolean canCreateDeclaration(HoisUserDetails user, Student student) {
+    public static boolean canCreateDeclaration(HoisUserDetails user, Student student) {
         if(user.isSchoolAdmin()) {
             return true;
         }

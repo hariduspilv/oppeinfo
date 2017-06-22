@@ -1,6 +1,5 @@
 package ee.hitsa.ois.service.ehis;
 
-import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
 import java.time.LocalDate;
 import java.util.Optional;
@@ -8,28 +7,25 @@ import java.util.Optional;
 import javax.transaction.Transactional;
 import javax.xml.datatype.DatatypeConfigurationException;
 
-import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
-import ee.hois.xroad.ehis.generated.KhlOppeasutuseLopetamine;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
+import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.repository.DirectiveRepository;
-import ee.hitsa.ois.repository.WsEhisStudentLogRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hois.xroad.ehis.generated.KhlAkadPuhkusAlgus;
 import ee.hois.xroad.ehis.generated.KhlEnnistamine;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusLisa;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlOppeasutus;
+import ee.hois.xroad.ehis.generated.KhlOppeasutuseLopetamine;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusestValjaarvamine;
 import ee.hois.xroad.ehis.generated.KhlOppekavaMuutus;
@@ -41,13 +37,8 @@ import ee.hois.xroad.helpers.XRoadHeaderV4;
 @Service
 public class EhisDirectiveStudentService extends EhisService {
 
-    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-
     @Autowired
     private DirectiveRepository directiveRepository;
-
-    @Autowired
-    private WsEhisStudentLogRepository wsEhisStudentLogRepository;
 
     @Async
     public void updateEhis(Directive directive) {
@@ -177,12 +168,12 @@ public class EhisDirectiveStudentService extends EhisService {
         makeRequest(directive, xRoadHeaderV4, khlOppeasutusList);
     }
 
-    private void makeRequest(Directive directive, XRoadHeaderV4 xRoadHeaderV4, KhlOppeasutusList khlOppeasutusList) {
+    private WsEhisStudentLog makeRequest(Directive directive, XRoadHeaderV4 xRoadHeaderV4, KhlOppeasutusList khlOppeasutusList) {
         WsEhisStudentLog wsEhisStudentLog = new WsEhisStudentLog();
         wsEhisStudentLog.setDirective(directive);
         wsEhisStudentLog.setSchool(directive.getSchool());
 
-        laeKorgharidused(xRoadHeaderV4, khlOppeasutusList, wsEhisStudentLog);
+        return laeKorgharidused(xRoadHeaderV4, khlOppeasutusList, wsEhisStudentLog);
     }
 
     private void changeStudyForm(DirectiveStudent directiveStudent, Directive directive) throws DatatypeConfigurationException {
@@ -278,7 +269,7 @@ public class EhisDirectiveStudentService extends EhisService {
         makeRequest(directive, xRoadHeaderV4, khlOppeasutusList);
     }
 
-    private void graduation(DirectiveStudent directiveStudent, Directive directive) throws DatatypeConfigurationException {
+    WsEhisStudentLog graduation(DirectiveStudent directiveStudent, Directive directive) throws DatatypeConfigurationException {
         Student student = directiveStudent.getStudent();
         XRoadHeaderV4 xRoadHeaderV4 = getXroadHeader();
         KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
@@ -299,7 +290,7 @@ public class EhisDirectiveStudentService extends EhisService {
         khlKorgharidusMuuda.setOppeasutuseLopetamine(oppeasutuseLopetamine);
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
-        makeRequest(directive, xRoadHeaderV4, khlOppeasutusList);
+        return makeRequest(directive, xRoadHeaderV4, khlOppeasutusList);
     }
 
     private void reinstatement(DirectiveStudent directiveStudent, Directive directive) throws DatatypeConfigurationException {
@@ -399,6 +390,7 @@ public class EhisDirectiveStudentService extends EhisService {
         makeRequest(directive, xRoadHeaderV4, khlOppeasutusList);
     }
 
+    @Override
     protected XRoadHeaderV4 getXroadHeader() {
         XRoadHeaderV4 xRoadHeaderV4 = super.getXroadHeader();
         xRoadHeaderV4.getService().setServiceCode(LAE_KORGHARIDUS_SERIVCE_CODE);

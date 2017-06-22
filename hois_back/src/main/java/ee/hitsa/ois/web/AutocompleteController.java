@@ -127,6 +127,11 @@ public class AutocompleteController {
         return asPage(autocompleteService.teachers(user.getSchoolId(), lookup));
     }
 
+    @GetMapping("/teachersList")
+    public List<AutocompleteResult> teachersList(HoisUserDetails user, @Valid TeacherAutocompleteCommand lookup) {
+        return autocompleteService.teachers(user.getSchoolId(), lookup);
+    }
+
     @GetMapping("/students")
     public Page<AutocompleteResult> students(HoisUserDetails user, @Valid StudentAutocompleteCommand lookup) {
         if(user.isStudent()) {
@@ -164,6 +169,11 @@ public class AutocompleteController {
     @GetMapping("/journals")
     public List<AutocompleteResult> journals(HoisUserDetails user) {
         return autocompleteService.journals(user);
+    }
+
+    @GetMapping("/enterprises")
+    public List<AutocompleteResult> enterprises() {
+        return autocompleteService.enterprises();
     }
 
     private static <R> Page<R> asPage(List<R> data) {

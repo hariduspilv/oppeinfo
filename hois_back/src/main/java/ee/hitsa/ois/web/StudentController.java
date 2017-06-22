@@ -36,6 +36,7 @@ import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
@@ -144,10 +145,10 @@ public class StudentController {
     }
 
     @PostMapping("/ehisStudentExport")
-    public void ehisExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
+    public EhisStudentReport ehisExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
         assertIsSchoolAdmin(user);
         ehisStudentForm.setSchoolID(user.getSchoolId());
-        ehisStudentService.exportStudents(ehisStudentForm);
+        return ehisStudentService.exportStudents(ehisStudentForm);
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {

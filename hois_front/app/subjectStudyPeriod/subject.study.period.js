@@ -53,10 +53,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         });
     } else {
         var initialObject = {
-            groupProportion: 'PAEVIK_GRUPI_JAOTUS_1', 
-            studyPeriod: studyPeriodId ? studyPeriodId : null, 
-            subject: subjectId, 
-            teachers: [], 
+            groupProportion: 'PAEVIK_GRUPI_JAOTUS_1',
+            studyPeriod: studyPeriodId ? studyPeriodId : null,
+            subject: subjectId,
+            teachers: [],
             studentGroups: []
         };
         $scope.record = new Endpoint(initialObject);
@@ -74,7 +74,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
 
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
         $scope.studentGroups = result.filter(function(el){
-            return studentGroupId ? el.id !== studentGroupId : true; 
+            return studentGroupId ? el.id !== studentGroupId : true;
         }).map(function(el){
             var newEl = el;
             newEl.nameEt = el.code;
@@ -161,7 +161,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
        dialogService.confirmDialog({prompt: 'subjectStudyPeriodTeacher.deleteconfirm'}, function() {
          $scope.record.$delete().then(function() {
            message.info('main.messages.delete.success');
-            $rootScope.back(baseUrl);
+            $rootScope.back('#' + baseUrl);
          });
       });
     };

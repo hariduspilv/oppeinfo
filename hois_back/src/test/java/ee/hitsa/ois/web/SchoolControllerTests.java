@@ -12,6 +12,7 @@ import javax.transaction.Transactional;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -149,46 +150,54 @@ public class SchoolControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
-    /**
-     * This test deletes all StudyYearScheduleLegends of school with id = 1
-     */
     @Test
     public void updateStudyYearScheduleLegends() {
+        
+        String uri = UriComponentsBuilder.fromUriString("/school/studyYearScheduleLegends").build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        List<StudyYearScheduleLegendDto> legends = getUpdateLegendsResult(responseEntity.getBody());
+        int initialDtos = legends.size();
+        
         final String URL = "/school/studyYearScheduleLegends";
         final String CODE_1 = "A";
         final String CODE_2 = "B";
         final String CODE_3 = "C";
         SchoolUpdateStudyYearScheduleLegendsCommand request = new SchoolUpdateStudyYearScheduleLegendsCommand();
-        request.setLegends(Arrays.asList(getlegendDto(CODE_1), getlegendDto(CODE_2)));
-        
-        ResponseEntity<Object> responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
+        legends.add(getlegendDto(CODE_1));
+        legends.add(getlegendDto(CODE_2));
+        request.setLegends(legends);
+
+        responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
                 new HttpEntity<>(request), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());   
         List<StudyYearScheduleLegendDto> responseDtos = getUpdateLegendsResult(responseEntity.getBody());
-        Assert.assertEquals(2, responseDtos.size());
+        Assert.assertEquals(initialDtos + 2, responseDtos.size());
         
         //remove one
-        responseDtos = responseDtos.stream().filter(l -> l.getCode().equals(CODE_2)).collect(Collectors.toList());
+        responseDtos = responseDtos.stream().filter(l -> !l.getCode().equals(CODE_1)).collect(Collectors.toList());
         request.setLegends(responseDtos);
         responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
                 new HttpEntity<>(request), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         responseDtos = getUpdateLegendsResult(responseEntity.getBody());
-        Assert.assertEquals(1, responseDtos.size());
+        Assert.assertEquals(initialDtos + 1, responseDtos.size());
 
         // update one
-        StudyYearScheduleLegendDto item = responseDtos.get(0);
+        StudyYearScheduleLegendDto item = responseDtos.stream().
+                filter(l -> l.getCode().equals(CODE_2)).findFirst().get();
         item.setCode(CODE_3);
-        request.setLegends(Arrays.asList(item));
+        request.setLegends(responseDtos);
         responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
                 new HttpEntity<>(request), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         responseDtos = getUpdateLegendsResult(responseEntity.getBody());
         
-        Assert.assertEquals(1, responseDtos.size());
+        Assert.assertEquals(initialDtos + 1, responseDtos.size());
         item = responseDtos.get(0);
         Assert.assertTrue(item.getCode().equals(CODE_3));  
     }

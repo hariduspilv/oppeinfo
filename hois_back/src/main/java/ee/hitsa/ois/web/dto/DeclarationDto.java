@@ -35,7 +35,7 @@ public class DeclarationDto {
         student.setId(EntityUtil.getId(declaration.getStudent()));
         student.setFullname(declaration.getStudent().getPerson().getFullname());
         student.setIdcode(declaration.getStudent().getPerson().getIdcode());
-        student.setStatus(EntityUtil.getCode(declaration.getStudent().getStatus()));
+        student.setStatus(EntityUtil.getNullableCode(declaration.getStudent().getStatus()));
         StudentGroup sg = declaration.getStudent().getStudentGroup();
         if(sg != null) {
             dto.setCourse(sg.getCourse());

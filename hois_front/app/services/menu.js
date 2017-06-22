@@ -223,7 +223,11 @@ angular.module('hitsaOis')
           studyLevel: {
               higher: true
           }
-        }
+        },
+        {
+          name: 'main.menu.study.contract.search',
+          url: "/contracts?_menu"
+        },
       ]
     });
 
@@ -295,6 +299,10 @@ angular.module('hitsaOis')
           name: 'main.menu.dataexchange.teacherinfo.export',
           id: 'teacherinfoExport',
           url: "/ehis/teacher/export?_menu"
+        },
+        {
+          name: 'main.menu.dataexchange.studentinfoExport',
+          url: "/ehis/student/export?_menu"
         }
       ]
     });

@@ -6,6 +6,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventSearchCommand;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchDto;
@@ -77,17 +79,72 @@ public class TimetableEventService {
         qb.optionalCriteria("tet.other_room = :otherRoom", "otherRoom", criteria.getOtherRoom());
 
         String select = "tet.id, te.name, tet.start, sg.code, te.consider_break";
-        return JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
-            return new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsLocalDateTime(r, 2).toLocalDate(),
-                    resultAsLocalDateTime(r, 2).toLocalTime(), resultAsString(r, 3), resultAsBoolean(r, 4));
+        Page<TimetableEventSearchDto> result = JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
+            return new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1),
+                    resultAsLocalDateTime(r, 2).toLocalDate(), resultAsLocalDateTime(r, 2).toLocalTime(),
+                    resultAsString(r, 3), resultAsBoolean(r, 4));
         });
-        
-        //List<Long> timetableEventTimeIds = StreamUtil.toMappedList(r -> r.getId(), result);
-        //Map<Long, List<TimetableEventTeacher>> teachers = JpaQueryUtil.loadRelationChilds(TimetableEventTeacher.class, timetableEventTimeIds, em, "timetable_event_time", "id").stream().collect(Collectors.groupingBy(t -> EntityUtil.getId(t.getTimetableEventTime())));
-        //Map<Long, List<Room>> rooms = JpaQueryUtil.loadRelationChilds(TimetableEventTeacher.class, timetableEventTimeIds, em, "timetable_event_time", "id").stream().collect(Collectors.groupingBy(t -> EntityUtil.getId(t.getTimetableEventTime())));
-        
-        
-        //return result;
+
+        List<Long> timetableEventTimeIds = StreamUtil.toMappedList(r -> r.getId(), result.getContent());
+        if (!timetableEventTimeIds.isEmpty()) {
+            Map<Long, List<ResultObject>> teacherNamesByTimetableEventTime = getTeacherNamesByTimetableEventTime(
+                    timetableEventTimeIds);
+            Map<Long, List<ResultObject>> roomCodesByTimetableEventTime = getRoomNrsByTimetableEventTime(
+                    timetableEventTimeIds);
+
+            for (TimetableEventSearchDto dto : result.getContent()) {
+                dto.setTeachers(
+                        StreamUtil.toMappedList(r -> r.getValue(), teacherNamesByTimetableEventTime.get(dto.getId())));
+                dto.setRooms(
+                        StreamUtil.toMappedList(r -> r.getValue(), roomCodesByTimetableEventTime.get(dto.getId())));
+            }
+        }
+
+        return result;
+    }
+
+    private Map<Long, List<ResultObject>> getTeacherNamesByTimetableEventTime(List<Long> tetIds) {
+        String from = "timetable_event_teacher tet" + " inner join teacher t on t.id = teteacher.teacher_id"
+                + " inner join person p on p.id = t.person_id";
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+
+        qb.requiredCriteria("teteacher.timetable_event_time_id in (:tetIds)", "tetIds", tetIds);
+
+        List<?> queryResult = qb.select("tet.timetable_event_time_id, p.firstname, p.lastname", em).getResultList();
+        List<ResultObject> resultObjects = StreamUtil.toMappedList(
+                r -> new ResultObject(resultAsLong(r, 0), resultAsString(r, 1) + " " + resultAsString(r, 2)),
+                queryResult);
+        return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
+    }
+
+    private Map<Long, List<ResultObject>> getRoomNrsByTimetableEventTime(List<Long> tetIds) {
+        String from = "timetable_event_room ter" + " inner join room r on r.id = ter.room_id";
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+
+        qb.requiredCriteria("tet.timetable_event_time_id in (:tetIds)", "tetIds", tetIds);
+
+        List<?> queryResult = qb.select("ter.timetable_event_time_id, r.code", em).getResultList();
+        List<ResultObject> resultObjects = StreamUtil
+                .toMappedList(r -> new ResultObject(resultAsLong(r, 0), resultAsString(r, 1)), queryResult);
+        return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
+    }
+
+    private static class ResultObject {
+        private static Long timetableEventId;
+        private static String value;
+
+        public ResultObject(Long tetId, String value) {
+            ResultObject.timetableEventId = tetId;
+            ResultObject.value = value;
+        }
+
+        public Long getTimetableEventId() {
+            return timetableEventId;
+        }
+
+        public String getValue() {
+            return value;
+        }
     }
 
 }

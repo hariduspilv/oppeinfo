@@ -11,6 +11,7 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController', ['$scop
     $scope.formState.studyPeriods = result.studyPeriods;
     $scope.formState.teachers = result.teachers;
     $scope.criteria.singleEvent = true;
+    $scope.loadData();
   });
 
 
@@ -23,6 +24,6 @@ angular.module('hitsaOis').controller('LessonplanEventSearchController', ['$scop
     $scope.criteria.room = $scope.criteria.roomObject ? $scope.criteria.roomObject.id : null;
   });
   
-  QueryUtils.createQueryForm($scope, baseUrl, {});
+  QueryUtils.createQueryForm($scope, baseUrl, {order: 'id'});
 }
 ]);

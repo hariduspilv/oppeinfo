@@ -11,9 +11,9 @@ public class EhisStudentForm {
     @NotNull
     private EhisStudentDataType dataType;
     private Long schoolID;
-    @NotNull
+
     private LocalDate from;
-    @NotNull
+
     private LocalDate thru;
 
     public EhisStudentDataType getDataType() {

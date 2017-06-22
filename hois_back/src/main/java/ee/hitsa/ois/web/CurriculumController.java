@@ -50,6 +50,12 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
 
+/*
+ * TODO: for now when user saves/deletes such objects as CurriculumSpeciality, CurriculumGrade, CurriculumModule, 
+ * CurriculumVersionOModule, CurriculumVersionHModule, the whole list is sent and updated.
+ * 
+ * It's better to make distinct apis for creating/updating/deleting single items.
+ */
 @RestController
 @RequestMapping("curriculum")
 public class CurriculumController {

@@ -41,7 +41,7 @@
       <div layout="row" layout-sm="column" layout-xs="column">
         <div flex="50" flex-sm="100" flex-xs="100">
           <div layout="column" flex>
-            <div column="row" flex>
+            <div layout="row" flex>
               <md-input-container>
                 <label>{{'moduleProtocol.insertedFrom' | translate}}</label>
                 <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
@@ -56,17 +56,15 @@
 
         <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <div layout="column" flex>
-            <div layout="column" flex>
-              <div column="row" flex>
-                <md-input-container>
-                  <label>{{'moduleProtocol.confirmedFrom' | translate}}</label>
-                  <md-datepicker ng-model="criteria.confirmDateFrom"></md-datepicker>
-                </md-input-container>
-                <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-                  <label>{{'moduleProtocol.confirmedThru' | translate}}</label>
-                  <md-datepicker ng-model="criteria.confirmDateThru" md-min-date="criteria.confirmDateFrom"></md-datepicker>
-                </md-input-container>
-              </div>
+            <div layout="row" flex>
+              <md-input-container>
+                <label>{{'moduleProtocol.confirmedFrom' | translate}}</label>
+                <md-datepicker ng-model="criteria.confirmDateFrom"></md-datepicker>
+              </md-input-container>
+              <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'moduleProtocol.confirmedThru' | translate}}</label>
+                <md-datepicker ng-model="criteria.confirmDateThru" md-min-date="criteria.confirmDateFrom"></md-datepicker>
+              </md-input-container>
             </div>
           </div>
         </div>

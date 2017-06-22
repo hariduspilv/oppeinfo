@@ -276,7 +276,7 @@ public class DeclarationService {
         return subjectsQueryResultToDto(result);
     }
 
-    public List<DeclarationSubjectDto> getExtraCurriculumSubjects(Declaration declaration) {
+    public List<DeclarationSubjectDto> getExtraCurriculumSubjectsOptions(Declaration declaration) {
         Long studyPeriod = EntityUtil.getId(declaration.getStudyPeriod());
         Student student = declaration.getStudent();
         Long CurriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
@@ -375,5 +375,9 @@ public class DeclarationService {
                 subject.setIsDeclaredRepeatedly(map.get(subject.getId()));
             }
         }
+    }
+
+    public void delete(Declaration declaration) {
+        EntityUtil.deleteEntity(declarationRepository, declaration);
     }
 }

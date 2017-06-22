@@ -170,12 +170,23 @@ public class LessonTimeService {
         }
     }
 
+    /**
+     * Minimum validFrom for selected buildings is the highest validFrom among all buildings + 1 day for avoiding overlapping.
+     */
     public LocalDate minValidFrom(Set<Long> buildings, Long lessonTimeId) {
         if (lessonTimeId != null) {
             LessonTime lessonTime = lessonTimeRepository.getOne(lessonTimeId);
-            Set<Long> savedBuildings = lessonTime.getLessonTimeBuildingGroup().getBuildings().stream().map(ltb -> EntityUtil.getId(ltb.getBuilding())).collect(Collectors.toSet());
+            Set<LessonTimeBuildingGroup> groups = getLessonTimeBuildingGroups(lessonTime.getLessonTimeBuildingGroup().getValidFrom(),
+                    EntityUtil.getId(lessonTime.getSchool()));
+
+            Set<Long> savedBuildings = groups.stream()
+                    .flatMap(b -> b.getBuildings().stream())
+                    .map(ltb -> EntityUtil.getId(ltb.getBuilding()))
+                    .collect(Collectors.toSet());
+
             if (savedBuildings.containsAll(buildings)) {
-                return previousValidFrom(buildings, lessonTime.getLessonTimeBuildingGroup().getValidFrom().minusDays(1));
+                LocalDate beforeCurrentValidFrom = lessonTime.getLessonTimeBuildingGroup().getValidFrom().minusDays(1);
+                return previousValidFrom(buildings, beforeCurrentValidFrom);
             }
         }
         LocalDate previousValidFrom = previousValidFrom(buildings, null);

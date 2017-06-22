@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.Building;
+import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
@@ -93,6 +94,10 @@ public class AutocompleteResult extends EntityConnectionCommand {
         String name = coordinator.getName();
         return new AutocompleteResult(coordinator.getId(), name, name);
     }
+    
+    public static AutocompleteResult of(MidtermTask midtermTask) {
+        return new AutocompleteResult(midtermTask.getId(), midtermTask.getNameEt(), midtermTask.getNameEn());
+    }
 
     public static AutocompleteResult of(LessonTimeBuilding lessonTimeBuilding) {
         return of(lessonTimeBuilding.getBuilding());
@@ -155,8 +160,8 @@ public class AutocompleteResult extends EntityConnectionCommand {
     public static AutocompleteResult of(CurriculumVersionOccupationModule curriculumVersionOccupationModule) {
         CurriculumModule curriculumModule = curriculumVersionOccupationModule.getCurriculumModule();
         return new AutocompleteResult(curriculumVersionOccupationModule.getId(),
-                curriculumModule.getNameEt() + " - " + curriculumModule.getModule().getNameEt() + ", " + curriculumModule.getCurriculum().getCode(),
-                curriculumModule.getNameEn() + " - " + curriculumModule.getModule().getNameEn() + ", " + curriculumModule.getCurriculum().getCode());
+                CurriculumUtil.moduleName(curriculumModule.getNameEt(), curriculumModule.getModule().getNameEt(), curriculumModule.getCurriculum().getCode()),
+                CurriculumUtil.moduleName(curriculumModule.getNameEn(), curriculumModule.getModule().getNameEn(), curriculumModule.getCurriculum().getCode()));
     }
 
     public static AutocompleteResult of(StudyYear studyYear) {
