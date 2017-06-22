@@ -27,9 +27,9 @@ public class PdfServiceTests {
     public void higherCurriculumPdf() {
         Curriculum curriculum = new Curriculum();
         curriculum.setStudyPeriod(Integer.valueOf(15));
-        byte[] data = pdfService.generatePdf(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum, Language.ET));
+        byte[] data = pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum, Language.ET));
         curriculum.setMerRegDate(LocalDate.now());
-        data = pdfService.generatePdf(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum, Language.ET));
+        data = pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum, Language.ET));
         // toFile("highercurriculum.pdf", data);
     }
 

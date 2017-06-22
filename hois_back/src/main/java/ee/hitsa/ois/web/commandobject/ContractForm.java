@@ -1,0 +1,199 @@
+package ee.hitsa.ois.web.commandobject;
+
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+import javax.validation.constraints.NotNull;
+
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+
+public class ContractForm extends VersionedCommand {
+
+    @NotNull
+    private AutocompleteResult student;
+    @NotNull
+    private Long module;
+    private Long theme;
+    @NotNull
+    private BigDecimal credits;
+    @NotNull
+    private BigDecimal hours;
+    @NotNull
+    private LocalDate start;
+    @NotNull
+    private LocalDate end;
+    @NotNull
+    private String practicePlace;
+    @NotNull
+    private Long enterprise;
+    @NotNull
+    private String contactPersonName;
+    private String contactPersonPhone;
+    @NotNull
+    private String contactPersonEmail;
+    @NotNull
+    private String supervisorName;
+    private String supervisorPhone;
+    @NotNull
+    private String supervisorEmail;
+    @NotNull
+    private Long teacher;
+    private String otherSupervisor;
+    @NotNull
+    private Long contractCoordinator;
+    @NotNull
+    private String practicePlan;
+
+    public AutocompleteResult getStudent() {
+        return student;
+    }
+
+    public void setStudent(AutocompleteResult student) {
+        this.student = student;
+    }
+
+    public Long getModule() {
+        return module;
+    }
+
+    public void setModule(Long module) {
+        this.module = module;
+    }
+
+    public Long getTheme() {
+        return theme;
+    }
+
+    public void setTheme(Long theme) {
+        this.theme = theme;
+    }
+
+    public BigDecimal getCredits() {
+        return credits;
+    }
+
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
+    }
+
+    public BigDecimal getHours() {
+        return hours;
+    }
+
+    public void setHours(BigDecimal hours) {
+        this.hours = hours;
+    }
+
+    public LocalDate getStart() {
+        return start;
+    }
+
+    public void setStart(LocalDate start) {
+        this.start = start;
+    }
+
+    public LocalDate getEnd() {
+        return end;
+    }
+
+    public void setEnd(LocalDate end) {
+        this.end = end;
+    }
+
+    public String getPracticePlace() {
+        return practicePlace;
+    }
+
+    public void setPracticePlace(String practicePlace) {
+        this.practicePlace = practicePlace;
+    }
+
+    public Long getEnterprise() {
+        return enterprise;
+    }
+
+    public void setEnterprise(Long enterprise) {
+        this.enterprise = enterprise;
+    }
+
+    public String getContactPersonName() {
+        return contactPersonName;
+    }
+
+    public void setContactPersonName(String contactPersonName) {
+        this.contactPersonName = contactPersonName;
+    }
+
+    public String getContactPersonPhone() {
+        return contactPersonPhone;
+    }
+
+    public void setContactPersonPhone(String contactPersonPhone) {
+        this.contactPersonPhone = contactPersonPhone;
+    }
+
+    public String getContactPersonEmail() {
+        return contactPersonEmail;
+    }
+
+    public void setContactPersonEmail(String contactPersonEmail) {
+        this.contactPersonEmail = contactPersonEmail;
+    }
+
+    public String getSupervisorName() {
+        return supervisorName;
+    }
+
+    public void setSupervisorName(String supervisorName) {
+        this.supervisorName = supervisorName;
+    }
+
+    public String getSupervisorPhone() {
+        return supervisorPhone;
+    }
+
+    public void setSupervisorPhone(String supervisorPhone) {
+        this.supervisorPhone = supervisorPhone;
+    }
+
+    public String getSupervisorEmail() {
+        return supervisorEmail;
+    }
+
+    public void setSupervisorEmail(String supervisorEmail) {
+        this.supervisorEmail = supervisorEmail;
+    }
+
+    public Long getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Long teacher) {
+        this.teacher = teacher;
+    }
+
+    public String getOtherSupervisor() {
+        return otherSupervisor;
+    }
+
+    public void setOtherSupervisor(String otherSupervisor) {
+        this.otherSupervisor = otherSupervisor;
+    }
+
+    public Long getContractCoordinator() {
+        return contractCoordinator;
+    }
+
+    public void setContractCoordinator(Long contractCoordinator) {
+        this.contractCoordinator = contractCoordinator;
+    }
+
+    public String getPracticePlan() {
+        return practicePlan;
+    }
+
+    public void setPracticePlan(String practicePlan) {
+        this.practicePlan = practicePlan;
+    }
+
+}

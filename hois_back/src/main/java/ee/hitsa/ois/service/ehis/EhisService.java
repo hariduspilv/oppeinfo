@@ -190,7 +190,7 @@ abstract class EhisService {
         return wsEhisStudentLogRepository.save(studentLog);
     }
 
-    private WsEhisStudentLog baseBindingException(Exception e) {
+    private static WsEhisStudentLog baseBindingException(Exception e) {
         WsEhisStudentLog studentLog = new WsEhisStudentLog();
         studentLog.setHasOtherErrors(Boolean.TRUE);
         studentLog.setWsName(LAE_KORGHARIDUS_SERVICE);

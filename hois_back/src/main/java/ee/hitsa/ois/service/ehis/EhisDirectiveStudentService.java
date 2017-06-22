@@ -374,7 +374,7 @@ public class EhisDirectiveStudentService extends EhisService {
         KhlKorgharidusLisa khlKorgharidusLisa = new KhlKorgharidusLisa();
 
         khlKorgharidusLisa.setOppimaAsumKp(getDate(student.getStudyStart(), directive));
-        khlKorgharidusLisa.setKursus(BigInteger.valueOf(student.getStudentGroup().getCourse()));
+        khlKorgharidusLisa.setKursus(BigInteger.valueOf(student.getStudentGroup().getCourse().intValue()));
 
         khlKorgharidusLisa.setOppekava(getCurriculum(student.getCurriculumVersion()));
         khlKorgharidusLisa.setKlOppekeel(student.getLanguage().getEhisValue());

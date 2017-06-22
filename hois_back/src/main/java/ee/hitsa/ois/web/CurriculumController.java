@@ -76,7 +76,7 @@ public class CurriculumController {
 
     @GetMapping(value = "/print/{id:\\d+}", produces = HttpUtil.APPLICATION_PDF)
     public byte[] print(@WithEntity("id") Curriculum curriculum) {
-        return pdfService.generatePdf(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum));
+        return pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum));
     }
 
     @GetMapping

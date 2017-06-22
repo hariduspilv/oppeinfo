@@ -41,8 +41,8 @@ public class PdfService {
      * @param data
      * @return
      */
-    public byte[] generatePdf(String templateName, Object data) {
-        String xhtml = evaluateTemplate(templateName, data);
+    public byte[] generate(String templateName, Object data) {
+        String xhtml = evaluateTemplate(templateName, Collections.singletonMap("content", data));
         ITextRenderer renderer = new ITextRenderer();
         renderer.setDocumentFromString(xhtml);
         renderer.layout();
@@ -65,11 +65,11 @@ public class PdfService {
      * @return
      * @throws NullPointerException if templateName is null
      */
-    private String evaluateTemplate(String templateName, Object data) {
+    private String evaluateTemplate(String templateName, Map<String, Object> data) {
         try {
             PebbleTemplate template = pebble.getTemplate(Objects.requireNonNull(templateName));
             StringWriter w = new StringWriter();
-            template.evaluate(w, Collections.singletonMap("content", data));
+            template.evaluate(w, data);
             return w.toString();
         } catch (IOException | PebbleException e) {
             throw new RuntimeException(e);

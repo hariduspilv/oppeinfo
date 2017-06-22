@@ -3,9 +3,6 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -19,8 +16,6 @@ import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 import javax.validation.Valid;
 
-import org.jxls.common.Context;
-import org.jxls.util.JxlsHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,9 +26,7 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.util.AssertionFailedException;
-import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -54,12 +47,10 @@ import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
 @Service
 public class ReportService {
 
-    private static final String XLS_TEMPLATE_PATH = "/templates/";
-
-    @Autowired
-    private ClassifierRepository classifierRepository;
     @Autowired
     private EntityManager em;
+    @Autowired
+    private XlsService xlsService;
 
     public Page<StudentSearchDto> students(Long schoolId, @Valid StudentSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
@@ -92,7 +83,7 @@ public class ReportService {
 
     public byte[] studentsAsExcel(Long schoolId, @Valid StudentSearchCommand criteria) {
         List<StudentSearchDto> students = students(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
-        return generateExcel("students.xls", Collections.singletonMap("students", students));
+        return xlsService.generate("students.xls", Collections.singletonMap("students", students));
     }
 
     public Page<StudentStatisticsDto> studentStatistics(Long schoolId, StudentStatisticsCommand criteria, Pageable pageable) {
@@ -233,24 +224,6 @@ public class ReportService {
         }
 
         return result.map(r -> new TeacherLoadDto(r, subjectRecords.computeIfAbsent(resultAsLong(r, 8), key -> new HashMap<>()).get(resultAsLong(r, 9))));
-    }
-
-    private byte[] generateExcel(String templateName, Map<String, Object> data) {
-        try {
-            try(InputStream is = ReportService.class.getResourceAsStream(XLS_TEMPLATE_PATH + templateName)) {
-                if(is == null) {
-                    throw new AssertionFailedException("XLS template " + XLS_TEMPLATE_PATH + templateName + " not found");
-                }
-                try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-                    Context context = new Context(data);
-                    context.putVar("classifiers", new ClassifierUtil.ClassifierCache(classifierRepository));
-                    JxlsHelper.getInstance().processTemplate(is, os, context);
-                    return os.toByteArray();
-                }
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
     }
 
     private Page<StudentStatisticsDto> loadCurriculums(Long schoolId, List<EntityConnectionCommand> curriculumIds, Pageable pageable) {
