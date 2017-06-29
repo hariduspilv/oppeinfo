@@ -5,6 +5,7 @@ import java.util.Comparator;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -60,7 +61,7 @@ public class ApplicationDto extends ApplicationForm {
         dto.setPlannedSubjects(StreamUtil.toMappedSet(ApplicationPlannedSubjectDto::of, application.getPlannedSubjects()));
         dto.setAcademicApplication(ApplicationDto.of(application.getAcademicApplication()));
 
-        if (ApplicationType.AVALDUS_LIIK_AKAD.name().equals(EntityUtil.getCode(application.getType()))) {
+        if (ClassifierUtil.equals(ApplicationType.AVALDUS_LIIK_AKAD, application.getType())) {
             //lets use the last directive student ?
             application.getDirectiveStudents()
                     .stream().max(Comparator.comparingLong(DirectiveStudent::getId))

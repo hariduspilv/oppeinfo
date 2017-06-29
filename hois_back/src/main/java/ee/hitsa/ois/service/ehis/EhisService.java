@@ -63,8 +63,8 @@ abstract class EhisService {
     @Value("${ehis.service.subsystemCode}")
     protected String serviceSubsystemCode;
 
-    static final String LAE_KORGHARIDUS_SERIVCE_CODE = "laeKorgharidus";
-    private static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERIVCE_CODE + ".v1";
+    static final String LAE_KORGHARIDUS_SERVICE_CODE = "laeKorgharidus";
+    private static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE + ".v1";
     private static final String birthDateEntered = "SS";
 
     static final String YES = "jah";

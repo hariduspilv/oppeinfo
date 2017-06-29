@@ -13,11 +13,11 @@ public class StudentUtil {
     }
 
     public static boolean isStudying(Student student) {
-        return StudentStatus.OPPURSTAATUS_O.name().equals(EntityUtil.getNullableCode(student.getStatus()));
+        return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_O, student.getStatus());
     }
 
     public static boolean isOnAcademicLeave(Student student) {
-        return StudentStatus.OPPURSTAATUS_A.name().equals(EntityUtil.getNullableCode(student.getStatus()));
+        return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_A, student.getStatus());
     }
 
     public static boolean isNominalStudy(Student student) {

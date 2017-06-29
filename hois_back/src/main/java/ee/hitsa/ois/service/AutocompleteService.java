@@ -8,7 +8,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import javax.persistence.EntityManager;
@@ -33,6 +32,7 @@ import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
+import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -45,10 +45,10 @@ import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
-import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
+import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
@@ -73,7 +73,7 @@ public class AutocompleteService {
     @Autowired
     private SchoolRepository schoolRepository;
     @Autowired
-    private SubjectService subjectService;
+    private SubjectRepository subjectRepository;
     @Autowired
     private StudyPeriodRepository studyPeriodRepository;
     @Autowired
@@ -326,11 +326,27 @@ public class AutocompleteService {
         }, data);
     }
 
+    /**
+     * SubjectService.search() is not used as it does not enable to search by both code and name using autocomplete
+     */
     public Page<SubjectSearchDto> subjects(Long schoolId, AutocompleteCommand command) {
-        SubjectSearchCommand subjectSearchCommand = new SubjectSearchCommand();
-        subjectSearchCommand.setName(command.getName());
-        subjectSearchCommand.setStatus(Collections.singletonList(SubjectStatus.AINESTAATUS_K.name()));
-        return subjectService.search(schoolId, subjectSearchCommand, new PageRequest(0, MAX_ITEM_COUNT));
+
+        return subjectRepository.findAll((root, query, cb) -> {
+            List<Predicate> filtersAnd = new ArrayList<>();
+            
+            if (schoolId != null) {
+                filtersAnd.add(cb.equal(root.get("school").get("id"), schoolId));
+            }
+            filtersAnd.add(cb.equal(root.get("status").get("code"), SubjectStatus.AINESTAATUS_K.name()));
+
+            List<Predicate> filtersOr = new ArrayList<>();
+            String nameField = Language.EN.equals(command.getLang()) ? "nameEn" : "nameEt";
+            propertyContains(() -> root.get(nameField), cb, command.getName(), filtersOr::add);
+            propertyContains(() -> root.get("code"), cb, command.getName(), filtersOr::add);
+            filtersAnd.add(cb.or(filtersOr.toArray(new Predicate[filtersOr.size()])));
+            
+            return cb.and(filtersAnd.toArray(new Predicate[filtersAnd.size()]));
+        }, new PageRequest(0, MAX_ITEM_COUNT)).map(SubjectSearchDto::of);
     }
 
     public List<AutocompleteResult> teachers(Long schoolId, TeacherAutocompleteCommand lookup) {
@@ -415,13 +431,18 @@ public class AutocompleteService {
         return new PageRequest(0, MAX_ITEM_COUNT, new Sort(sortFields));
     }
 
-    public List<AutocompleteResult> enterprises() {
+    public List<EnterpriseResult> enterprises() {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from enterprise e");
 
-        List<?> data = qb.select("e.id, e.name", em).getResultList();
+        List<?> data = qb.select("e.id, e.name, e.contact_person_name, e.contact_person_email, e.contact_person_phone", em)
+                .getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);
-            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+            EnterpriseResult enterpriseResult = new EnterpriseResult(resultAsLong(r, 0), name, name);
+            enterpriseResult.setContactPersonName(resultAsString(r, 2));
+            enterpriseResult.setContactPersonEmail(resultAsString(r, 3));
+            enterpriseResult.setContactPersonPhone(resultAsString(r, 4));
+            return enterpriseResult;
         }, data);
     }
 }

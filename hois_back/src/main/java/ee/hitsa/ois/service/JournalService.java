@@ -34,6 +34,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.domain.timetable.JournalEntryCapacityType;
@@ -42,6 +43,7 @@ import ee.hitsa.ois.domain.timetable.JournalEntryStudentHistory;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.JournalEntryType;
+import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.JournalEntryRepository;
@@ -50,6 +52,7 @@ import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.JournalStudentRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -184,7 +187,6 @@ public class JournalService {
     }
 
     public Page<JournalStudentDto> otherStudents(HoisUserDetails user, Long journalId, StudentNameSearchCommand command, Pageable pageable) {
-        //TODO: kellel puudub vastavas moodulis positiivne tulemus.
         return studentRepository.findAll((root, query, cb) -> {
             root.fetch("person", JoinType.INNER);
             root.fetch("studentGroup", JoinType.LEFT);
@@ -213,12 +215,22 @@ public class JournalService {
                         cb.equal(journalStudentsJoin.get("student").get("id"), root.get("id"))));
             filters.add(cb.not(cb.exists(studentsQuery)));
 
+            //kellel puudub vastavas moodulis positiivne tulemus.
+            Subquery<Long> protocolStudentsQuery = query.subquery(Long.class);
+            Root<Protocol> protocolRoot = protocolStudentsQuery.from(Protocol.class);
+            Join<Object, Object> protocolStudentsJoin = protocolRoot.join("protocolStudents", JoinType.LEFT);
+            protocolStudentsQuery.select(protocolStudentsJoin.get("student").get("id"))
+            .where(cb.and(
+                    cb.equal(protocolStudentsJoin.get("student").get("id"), root.get("id"))),
+                    protocolStudentsJoin.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
+                    cb.equal(protocolRoot.get("protocolVdata").get("curriculumVersion").get("id"), root.get("curriculumVersion").get("id")));
+            filters.add(cb.not(cb.exists(protocolStudentsQuery)));
+
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(JournalStudentDto::of);
     }
 
     public List<JournalStudentDto> suitedStudents(HoisUserDetails user, Long journalId) {
-      //TODO: kellel puudub vastavas moodulis positiivne tulemus.
         return studentRepository.findAll((root, query, cb) -> {
             root.fetch("person", JoinType.INNER);
             root.fetch("studentGroup", JoinType.LEFT);
@@ -237,6 +249,17 @@ public class JournalService {
                     cb.equal(journalRoot.get("id"), journalId),
                     cb.equal(journalOmoduleThemesJoin.get("lessonPlanModule").get("lessonPlan").get("studentGroup").get("id"), root.get("studentGroup").get("id"))));
             filters.add(cb.exists(studentGroupsQuery));
+
+            //kellel puudub vastavas moodulis positiivne tulemus.
+            Subquery<Long> protocolStudentsQuery = query.subquery(Long.class);
+            Root<Protocol> protocolRoot = protocolStudentsQuery.from(Protocol.class);
+            Join<Object, Object> protocolStudentsJoin = protocolRoot.join("protocolStudents", JoinType.LEFT);
+            protocolStudentsQuery.select(protocolStudentsJoin.get("student").get("id"))
+            .where(cb.and(
+                    cb.equal(protocolStudentsJoin.get("student").get("id"), root.get("id"))),
+                    protocolStudentsJoin.get("grade").get("code").in(OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE),
+                    cb.equal(protocolRoot.get("protocolVdata").get("curriculumVersion").get("id"), root.get("curriculumVersion").get("id")));
+            filters.add(cb.not(cb.exists(protocolStudentsQuery)));
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }).stream().map(JournalStudentDto::of).collect(Collectors.toList());
@@ -342,12 +365,12 @@ public class JournalService {
 
         // Õpetaja ja administratiivne töötaja saavad märkida ainult põhjuseta puudumist
         if ((user.isTeacher() || user.isSchoolAdmin()) && journalEntryStudentForm.getAbsence() != null  && Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence()) &&
-                (journalEntryStudent == null || !Absence.PUUDUMINE_V.name().equals(EntityUtil.getCode(journalEntryStudent.getAbsence())))) {
+                (journalEntryStudent == null || !ClassifierUtil.equals(Absence.PUUDUMINE_V, journalEntryStudent.getAbsence()))) {
             throw new ValidationFailedException("journal.messages.absenceValueIsNotAllowed");
         }
 
         // Kui puudumine on rühmajuhataja poolt muudetud põhjendatuks, siis hiljem hilinemise ega puudumise andmeid vastava sissekande juures muuta ei saa
-        if (journalEntryStudent != null && journalEntryStudent.getAbsence() != null && Absence.PUUDUMINE_V.name().equals(EntityUtil.getCode(journalEntryStudent.getAbsence()))
+        if (journalEntryStudent != null && journalEntryStudent.getAbsence() != null && ClassifierUtil.equals(Absence.PUUDUMINE_V, journalEntryStudent.getAbsence())
                 && !Absence.PUUDUMINE_V.name().equals(journalEntryStudentForm.getAbsence())) {
             throw new ValidationFailedException("journal.messages.changingAbsenceIsNotAllowed");
         }

@@ -33,10 +33,8 @@ public class EhisStudentService  extends EhisService {
 
     @Autowired
     private StudentRepository studentRepository;
-
     @Autowired
     private DirectiveRepository directiveRepository;
-
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
 
@@ -47,9 +45,9 @@ public class EhisStudentService  extends EhisService {
 
         KhlOppekavaTaitmine oppekavaTaitmine = new KhlOppekavaTaitmine();
         oppekavaTaitmine.setMuutusKp(getDate(LocalDate.now(), student));
-        // todo currently no way to find
+        // TODO currently no way to find
         oppekavaTaitmine.setTaitmiseProtsent(new BigDecimal(100));
-        // todo currently no way to find
+        // TODO currently no way to find
         oppekavaTaitmine.setAinepunkte(new BigDecimal(50));
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
@@ -99,7 +97,7 @@ public class EhisStudentService  extends EhisService {
 
                 for (Directive directive : directives) {
                     for (DirectiveStudent directiveStudent : directive.getStudents()) {
-                        // todo: check for printed status
+                        // TODO check for printed status
                         try {
                             graduations.add(
                                     EhisStudentReport.Graduation.of(directiveStudent,
@@ -123,7 +121,7 @@ public class EhisStudentService  extends EhisService {
     @Override
     XRoadHeaderV4 getXroadHeader() {
         XRoadHeaderV4 header = super.getXroadHeader();
-        header.getService().setServiceCode(LAE_KORGHARIDUS_SERIVCE_CODE);
+        header.getService().setServiceCode(LAE_KORGHARIDUS_SERVICE_CODE);
         return header;
     }
 }

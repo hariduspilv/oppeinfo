@@ -2,7 +2,6 @@ package ee.hitsa.ois.domain;
 
 import java.math.BigDecimal;
 
-import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -18,10 +17,8 @@ public class MidtermTaskStudentResult extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
     private DeclarationSubject declarationSubject;
-    
-    private BigDecimal points;
 
-    @Column(name="ponts_txt")
+    private BigDecimal points;
     private String pointsTxt;
 
     public MidtermTask getMidtermTask() {

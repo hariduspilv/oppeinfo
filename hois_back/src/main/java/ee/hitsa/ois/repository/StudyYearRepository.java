@@ -10,7 +10,7 @@ import ee.hitsa.ois.domain.StudyYear;
 
 public interface StudyYearRepository extends JpaRepository<StudyYear, Long>, JpaSpecificationExecutor<StudyYear> {
 
-    // todo: remove nativeQuery
+    // TODO remove nativeQuery
     @Query(value = "select c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, sy.count " +
                         "from classifier c left outer join " +
             "(select y.id, y.start_date, y.end_date, y.year_code, count(p.study_year_id) " +

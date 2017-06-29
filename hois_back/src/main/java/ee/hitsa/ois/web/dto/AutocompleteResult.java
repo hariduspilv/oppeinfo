@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.Building;
+import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
@@ -30,7 +31,7 @@ import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
-public class AutocompleteResult extends EntityConnectionCommand {
+public class AutocompleteResult extends EntityConnectionCommand implements Translatable {
 
     private final String nameEt;
     private final String nameEn;
@@ -49,10 +50,12 @@ public class AutocompleteResult extends EntityConnectionCommand {
         this(id, data.getNameEt(), data.getNameEn());
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }
@@ -94,7 +97,7 @@ public class AutocompleteResult extends EntityConnectionCommand {
         String name = coordinator.getName();
         return new AutocompleteResult(coordinator.getId(), name, name);
     }
-    
+
     public static AutocompleteResult of(MidtermTask midtermTask) {
         return new AutocompleteResult(midtermTask.getId(), midtermTask.getNameEt(), midtermTask.getNameEn());
     }
@@ -170,5 +173,10 @@ public class AutocompleteResult extends EntityConnectionCommand {
 
     public static AutocompleteResult of(CurriculumModuleOutcome outcome) {
         return new AutocompleteResult(outcome.getId(), outcome.getOutcomeEt(), outcome.getOutcomeEt());
+    }
+
+    public static AutocompleteResult of(Enterprise enterprise) {
+        String name = enterprise.getName() + "(" + enterprise.getRegCode() + ")";
+        return new AutocompleteResult(enterprise.getId(), name, name);
     }
 }

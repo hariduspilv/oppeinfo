@@ -22,27 +22,27 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 public class Contract extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false)
     private Student student;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(name = "curriculum_version_omodule_id", nullable = false, updatable = false)
+    @JoinColumn(name = "curriculum_version_omodule_id", nullable = false)
     private CurriculumVersionOccupationModule module;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "curriculum_version_omodule_theme_id", nullable = false, updatable = false)
+    @JoinColumn(name = "curriculum_version_omodule_theme_id")
     private CurriculumVersionOccupationModuleTheme theme;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false)
     private Enterprise enterprise;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false)
     private Teacher teacher;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false)
     private DirectiveCoordinator contractCoordinator;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -55,14 +55,15 @@ public class Contract extends BaseEntityWithId {
     private Integer hours;
 
     @Column(nullable = false)
-    private LocalDate start;
+    private LocalDate startDate;
 
-    //TODO: remove quotes from column name
-    @Column(name = "\"end\"", nullable = false)
-    private LocalDate end;
+    @Column(nullable = false)
+    private LocalDate endDate;
 
     @Column(nullable = false)
     private String practicePlace;
+
+    private String contractNr;
 
     @Column(nullable = false)
     private String contactPersonName;
@@ -161,20 +162,20 @@ public class Contract extends BaseEntityWithId {
         this.hours = hours;
     }
 
-    public LocalDate getStart() {
-        return start;
+    public LocalDate getStartDate() {
+        return startDate;
     }
 
-    public void setStart(LocalDate start) {
-        this.start = start;
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
     }
 
-    public LocalDate getEnd() {
-        return end;
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
-    public void setEnd(LocalDate end) {
-        this.end = end;
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public String getPracticePlace() {
@@ -183,6 +184,14 @@ public class Contract extends BaseEntityWithId {
 
     public void setPracticePlace(String practicePlace) {
         this.practicePlace = practicePlace;
+    }
+
+    public String getContractNr() {
+        return contractNr;
+    }
+
+    public void setContractNr(String contractNr) {
+        this.contractNr = contractNr;
     }
 
     public String getContactPersonName() {

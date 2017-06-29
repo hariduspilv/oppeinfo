@@ -1,0 +1,54 @@
+<div layout="column" layout-padding>
+    <form name="subjectStudyPeriodEditForm">
+        <div layout="column" class="form-readonly">
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" disabled required></hois-select>
+                </md-input-container>
+                <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'subjectStudyPeriod.nameCode' | translate}}</label>
+                    <hois-select ng-model="record.subject" values="subjects" disabled required></hois-select>
+                </md-input-container>
+            </div>
+
+            <table md-table class="secondary-table">
+                <tbody md-body>
+                    <tr md-row ng-repeat="teacher in record.teachers" ng-class-odd="'odd'" ng-class-even="'even'">
+                        <td md-cell>{{teacher.name}}</td>
+                        <td md-cell ng-hide="record.teachers.length === 1">
+                            <md-checkbox ng-model="teacher.isSignatory" disabled aria-label="{{'subjectStudyPeriodTeacher.isSignatory' | translate}}">
+                                {{'subjectStudyPeriodTeacher.isSignatory' | translate}}
+                            </md-checkbox>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+            <br>
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="45" flex-sm="100" flex-xs="100">
+                    <label>{{'subjectStudyPeriod.studentGroups' | translate}}</label>
+                    <hois-select ng-model="record.studentGroups" values="studentGroups" multiple disabled></hois-select>
+                </md-input-container>
+                <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                    <label>{{'subjectStudyPeriod.proportion' | translate}}</label>
+                    <hois-classifier-select ng-model="record.groupProportion" model-value-attr="code" main-classifier-code="PAEVIK_GRUPI_JAOTUS" required disabled></hois-classifier-select>
+                    <!--<hois-classifier-value ng-model="record.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>-->
+                </md-input-container>
+            </div>
+            <md-input-container>
+                <label>{{'subjectStudyPeriod.addInfo' | translate}}</label>
+                <hois-value value="record.addInfo"></hois-value>
+            </md-input-container>
+            <md-input-container>
+                <label>{{'subjectStudyPeriod.declaration' | translate}}</label>
+                <hois-classifier-value ng-model="record.declarationType" main-classifier-code="DEKLARATSIOON"></hois-classifier-value>
+
+            </md-input-container>
+        </div>
+        <div layout="row">
+            <md-button class="md-primary md-raised" ng-href="#/subjectStudyPeriod/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods')">{{'main.button.back' | translate}}</md-button>
+        </div>
+    </form>
+</div>

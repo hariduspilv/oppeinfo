@@ -228,6 +228,10 @@ angular.module('hitsaOis')
           name: 'main.menu.study.contract.search',
           url: "/contracts?_menu"
         },
+        {
+          name: 'main.menu.study.practiceJournal.search',
+          url: "/practiceJournals?_menu"
+        },
       ]
     });
 

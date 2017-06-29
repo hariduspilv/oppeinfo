@@ -1,10 +1,12 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
 
@@ -74,9 +76,9 @@ public class CurriculumController {
         return CurriculumDto.of(curriculum);
     }
 
-    @GetMapping(value = "/print/{id:\\d+}", produces = HttpUtil.APPLICATION_PDF)
-    public byte[] print(@WithEntity("id") Curriculum curriculum) {
-        return pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum));
+    @GetMapping("/print/{id:\\d+}/curriculum.pdf")
+    public void print(@WithEntity("id") Curriculum curriculum, HttpServletResponse response) throws IOException {
+        HttpUtil.pdf(response, curriculum.getNameEt() + ".pdf", pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum)));
     }
 
     @GetMapping

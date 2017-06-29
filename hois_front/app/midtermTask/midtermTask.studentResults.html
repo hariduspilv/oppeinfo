@@ -1,5 +1,73 @@
+<div class="ois-form-layout-padding form-readonly" ng-cloak>
+  <form name="midtermTaskResultForm">
+    <div layout="row" layout-sm="column" layout-xs="column"  >
+      <md-input-container flex="20" flex-sm="100" flex-xs="100">
+        <label class="textInput">{{'midtermTask.subject' | translate}}</label>
+        <hois-value value="record.subjectStudyPeriod.subject.nameEt"></hois-value>
+      </md-input-container>
+      <md-input-container flex="20" flex-sm="100" flex-xs="100"
+      flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+        <label class="textInput">{{'midtermTask.teacher' | translate}}</label>
+        <hois-value value="record.subjectStudyPeriod.teachers.join(', ')"></hois-value>
+      </md-input-container>
+      <md-input-container flex="20" flex-sm="100" flex-xs="100"
+      flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+        <label class="textInput">{{'midtermTask.studyPeriod' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.subjectStudyPeriod.studyPeriod)"></hois-value>
+      </md-input-container>
+      <md-input-container flex="20" flex-sm="100" flex-xs="100"
+      flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+        <label class="textInput">{{'midtermTask.assessment' | translate}}</label>
+        <hois-value value="currentLanguageNameField(record.assessment)"></hois-value>
+      </md-input-container>
+    </div>
+
+    <md-table-container>
+      <table md-table>
+        <thead md-head>
+          <tr md-row>
+            <th md-column>{{'midtermTask.student' | translate}}</th>
+            <th md-column ng-repeat="midtermTask in record.midtermTasks">
+              {{getMidtermTaskHeader(midtermTask)}}
+            </th>
+            <th md-column>{{'midtermTask.finalGrade' | translate}}</th>
+            <th md-column>{{'midtermTask.protocols' | translate}}</th>
+            <th md-column>{{'midtermTask.notes' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="student in record.students | orderBy: 'name'" ng-class-odd="'odd'" ng-class-even="'even'">
+            <ng-form name="midtermTaskUnitForm">
+              <td md-cell>{{student.name}}</td>
+              <td md-cell ng-repeat="result in record.studentResults | filter: filterStudentResults(student)">
+                <md-input-container ng-if="result.isText">
+                  <input ng-model="result.pointsTxt" type="text" md-maxlength="10"
+                  aria-label="{{'midtermTask.pointsTxt' | translate}}" ng-disabled="!result.canBeChanged">
+                </md-input-container>
+                <md-input-container ng-if="!result.isText">
+                  <input ng-model="result.points" type="number" min="0" max="{{result.maxPoints}}" pattern="^\d+(\.\d{2})?$"
+                  aria-label="{{'midtermTask.points' | translate}}" ng-disabled="!result.canBeChanged">
+                </md-input-container>
+              </td>
+              <td md-cell></td>
+              <td md-cell></td>
+              <td md-cell></td>
+            </ng-form>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+  </form>
+
+
+
   <div layout="row">
-      <md-button class="md-raised md-primary" >{{'main.button.save' | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
       <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods')">{{'main.button.back' | translate}}</md-button>
       <md-button class="md-raised" ng-href="#/subjectStudyPeriods/{{subjectStudyPeriodId}}/midtermTasks">{{'midtermTask.add' | translate}}</md-button>
   </div>
+</div>
+
+
+
+

@@ -31,6 +31,7 @@
       "save": "Salvesta",
       "search": "Otsi",
       "sendToEhis": "Saada EHISesse",
+      "sendToEkis": "Saada EKISesse",
       "send": "Saada",
       "update": "Uuenda",
       "uploadFile": "Lae fail",
@@ -233,6 +234,9 @@
         },
         "contract": {
           "search": "Praktika lepingute otsing"
+        },
+        "practiceJournal" : {
+          "search": "Praktika päevikute otsing"
         }
       },
       "studyYearSchedule": {
@@ -1319,6 +1323,7 @@
     "nameEn": "Õpiväljund inglise keeles"
   },
   "studyYear": {
+    "label": "Õppeaasta",
     "year": "Õppeaasta",
     "startDate": "Alguskuupäev",
     "endDate": "Lõppkuupäev",
@@ -1777,7 +1782,7 @@
     "module_isRequired": "Moodul/Kohustuslik",
     "prerequisites": "Eeldused",
     "confirm": "Kinnita",
-    "removeConfirmation": "Võta kinnituse maha",
+    "removeConfirmation": "Võta kinnitus maha",
     "addingCurriculumSubject": "Õppekava aine lisamine",
     "addingExtraCurriculumSubject": "Õppekava välise aine lisamine",
     "eap": "EAP",
@@ -1785,7 +1790,7 @@
     "isRequired": "Kohustuslik",
     "addSubject": "Lisa aine õpingukavasse",
     "noCurrentDeclaration": "Käesoleva õppeperioodi õpingukava pole veel lisatud",
-    "repeatingDeclaration": "Koorduvkuulamine",
+    "repeatingDeclaration": "Korduvkuulamine",
     "confirmAll": "Kinnita kõik jooksval perioodil koostatud õpingukavad",
     "showUncomposed": "Näita kõik jooksval perioodil koostamata õpingukavad",
     "seePrerequisites": "vt eeldused",
@@ -1872,21 +1877,46 @@
     "contractDate": "Sõlmimise kp",
     "contractNumber": "Lepingu nr",
     "curriculumVersion":"Õppekava",
-    "status": "Lepingu staatus"
+    "status": "Lepingu staatus",
+    "theme": "Teema",
+    "credits": "Maht EKAP",
+    "hours": "Maht tundides",
+    "start": "Lepingu kehtivuse algus",
+    "end": "Lepingu kehtivuse lõpp",
+    "practicePlace": "Praktika koht",
+    "contactPersonName": "Kontaktisiku nimi",
+    "contactPersonPhone": "Kontaktisiku telefon",
+    "contactPersonEmail": "Kontaktisiku e-mail",
+    "supervisorName": "Juhendaja nimi",
+    "supervisorPhone": "Juhendaja telefon",
+    "supervisorEmail": "Juhendaja e-mail",
+    "contractCoordinator": "Lepingu menetleja EKISes",
+    "practicePlan": "Praktika kava",
+    "otherSupervisor": "Teised juhendajad",
+    "deleteconfirm":"Kas oled kindel, et soovid lepingu kustutada?"
   },
   "enterprise": {
     "label": "Ettevõte",
-    "supervisor": "Ettevõtte juhendaja"
+    "supervisor": "Ettevõtte juhendaja",
+    "create": "Lisa ettevõte",
+    "name": "Ettevõtte nimi",
+    "regCode": "Registrikood",
+    "contactPersonName": "Kontaktisiku nimi",
+    "contactPersonPhone": "Kontaktisiku telefon",
+    "contactPersonEmail": "Kontaktisiku e-mail"
   },
   "midtermTask": {
     "add": "Lisa/muuda vahesooritused",
     "addRow": "Lisa uus rida",
+    "assessment": "Hindamisviis",
     "copy": "Kopeeri teisest päevikust",
     "descriptionEn": "Vahesoorituse kirjeldus inglise keeles",
     "descriptionEt": "Vahesoorituse kirjeldus eesti keeles",
     "error": {
-      "midtermTaskCantBeDeleted": "Vahesooritus on seotud õppurite tulemustega ja ei saa olla kustutatud"
+      "midtermTaskCantBeDeleted": "Vahesooritus on seotud õppurite tulemustega ja ei saa olla kustutatud",
+      "nopermission": "Vajalikud õigused puuduvad"
     },
+    "finalGrade": "Lõpphinne",
     "maxPoints": "Max punktid",
     "message": {
       "copied": "Kopeerimine õnnestus"
@@ -1894,14 +1924,29 @@
     "midtermTasks": "Vahesooritused",
     "nameEn": "Vahesoorituse nimetus inglise keeles",
     "nameEt": "Vahesoorituse nimetus eesti keeles",
+    "notes": "Märkused",
     "nr": "Nr",
     "percentage": "Vahesoorituse osakaal lõpphindes",
     "percentageSum": "Osakaalude summa",
+    "points": "Vahesoorituse tulemus (number)",
+    "pointsTxt": "Vahesoorituse tulemus (text)",
+    "protocols": "Protokollid",
     "studyPeriod" : "Õppeperiood",
     "subject" : "Õppeaine",
+    "student" : "Õppur",
     "taskDate": "Vahesoorituse kuupäev",
     "teacher": "Õpetaja",
     "threshold": "Lävend",
     "thresholdPercentage": "Lävendi %"
+  },
+  "practiceJournal": {
+    "moduleAndTheme": "Moodule ja teema",
+    "practiceStartAndEnd": "Praktika algus ja lõpp",
+    "practicePlace": "Praktika koht",
+    "schoolSupervisor": "Õppeasutuse juhendaja",
+    "studentLastEntryDate": "Õppuri viimase sissekande kp",
+    "button": {
+    "createWithoutContract": "Lisa uus päevik ilma lepinguta"
+    }
   }
 }

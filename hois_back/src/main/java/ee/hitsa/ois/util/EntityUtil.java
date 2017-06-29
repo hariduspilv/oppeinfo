@@ -44,6 +44,9 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
+/**
+ * Utility functions for working with JPA entities
+ */
 public abstract class EntityUtil {
 
     private static final Set<String> IGNORED_ENTITY_PROPERTIES = new HashSet<>(Arrays.asList("version", "inserted", "insertedBy", "changed", "changedBy", "id", "class"));

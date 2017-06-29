@@ -21,9 +21,15 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.enums.ContractStatus;
+import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.ContractRepository;
+import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
+import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleThemeRepository;
+import ee.hitsa.ois.repository.DirectiveCoordinatorRepository;
+import ee.hitsa.ois.repository.EnterpriseRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -49,8 +55,18 @@ public class ContractService {
     private StudentRepository studentRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
+    @Autowired
+    private CurriculumVersionOccupationModuleThemeRepository curriculumVersionOccupationModuleThemeRepository;
+    @Autowired
+    private EnterpriseRepository enterpriseRepository;
+    @Autowired
+    private TeacherRepository teacherRepository;
+    @Autowired
+    private DirectiveCoordinatorRepository directiveCoordinatorRepository;
 
-    private static final String CONTRACT_FROM = "from contract contract "
+    private static final String SEARCH_FROM = "from contract contract "
             + "inner join student student on contract.student_id = student.id "
             + "inner join person student_person on student.person_id = student_person.id "
             + "inner join enterprise enterprise on contract.enterprise_id = enterprise.id "
@@ -58,19 +74,31 @@ public class ContractService {
             + "inner join person teacher_person on teacher.person_id = teacher_person.id "
             + "inner join curriculum_version_omodule curriculum_version_omodule on contract.curriculum_version_omodule_id = curriculum_version_omodule.id ";
 
-    private static final String CONTRACT_SELECT = "contract.id contract_id, contract.status_code, contract.start, contract.end, contract.confirm_date, "
+    private static final String SEARCH_SELECT = "contract.id contract_id, contract.contract_nr, contract.status_code, contract.start_date, contract.end_date, contract.confirm_date, "
             + "student.id student_id, student_person.firstname student_person_firstname, student_person.lastname student_person_lastname, "
             + "enterprise.name, enterprise.contact_person_name, "
             + "teacher.id teacher_id, teacher_person.firstname teacher_person_firstname, teacher_person.lastname teacher_person_lastname ";
 
+
+    private static final String MODULES_FROM = "from student s "
+            + "inner join curriculum_version cv on cv.id = s.curriculum_version_id "
+            + "inner join curriculum c on c.id = cv.curriculum_id "
+            + "inner join curriculum_version_omodule cvo on cvo.curriculum_version_id = s.curriculum_version_id "
+            + "inner join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+            + "inner join classifier mcl on mcl.code = cm.module_code "
+            + "left join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id";
+    private static final String MODULES_SELECT = "cvo.id as cvo_id, cv.code, cm.name_et as cm_name_et, mcl.name_et as mcl_name_et, "
+            + "cm.name_en as cm_name_en, mcl.name_en as mcl_name_en, cm.credits as cm_credits, cvo.assessment_methods_et, "
+            + "cvot.id as cvot_id, cvot.name_et as cvot_name_et, cvot.credits as cvot_credits, cvot.subthemes";
+
     public Page<ContractSearchDto> search(HoisUserDetails user, ContractSearchCommand command, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(CONTRACT_FROM).sort(pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SEARCH_FROM).sort(pageable);
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
 
-        qb.optionalCriteria("contract.start >= :startFrom", "startFrom", command.getStartFrom());
-        qb.optionalCriteria("contract.start <= :startThru", "startThru", command.getStartThru());
-        qb.optionalCriteria("contract.end >= :endFrom", "endFrom", command.getEndFrom());
-        qb.optionalCriteria("contract.end <= :endThru", "endThru", command.getEndThru());
+        qb.optionalCriteria("contract.start_date >= :startFrom", "startFrom", command.getStartFrom());
+        qb.optionalCriteria("contract.start_date <= :startThru", "startThru", command.getStartThru());
+        qb.optionalCriteria("contract.end_date >= :endFrom", "endFrom", command.getEndFrom());
+        qb.optionalCriteria("contract.end_date <= :endThru", "endThru", command.getEndThru());
         qb.optionalContains(Arrays.asList("student_person.firstname", "student_person.lastname",
                 "student_person.firstname || ' ' || student_person.lastname"), "name", command.getStudentName());
         qb.optionalCriteria("curriculum_version_omodule.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", command.getCurriculumVersion());
@@ -79,47 +107,44 @@ public class ContractService {
         qb.optionalContains("enterprise.contact_person_name", "enterpriseContactPersonName", command.getEnterpriseContactPersonName());
         qb.optionalCriteria("contract.teacher_id = :teacherId", "teacherId", command.getTeacher());
         qb.optionalCriteria("contract.status_code = :status", "status", command.getStatus());
+        qb.optionalCriteria("contract.student_id = :studentId", "studentId", command.getStudent());
 
-        return JpaQueryUtil.pagingResult(qb, CONTRACT_SELECT, em, pageable).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, SEARCH_SELECT, em, pageable).map(r -> {
             ContractSearchDto dto = new ContractSearchDto();
             dto.setId(resultAsLong(r, 0));
-            dto.setStatus(resultAsString(r, 1));
-            dto.setStart(resultAsLocalDate(r, 2));
-            dto.setEnd(resultAsLocalDate(r, 3));
-            dto.setConfirmDate(resultAsLocalDate(r, 4));
-            //TODO: dto.setContractNumber(contractNumber);
+            dto.setContractNr(resultAsString(r, 1));
+            dto.setStatus(resultAsString(r, 2));
+            dto.setStartDate(resultAsLocalDate(r, 3));
+            dto.setEndDate(resultAsLocalDate(r, 4));
+            dto.setConfirmDate(resultAsLocalDate(r, 5));
 
-            String studentName = PersonUtil.fullname(resultAsString(r, 6), resultAsString(r, 7));
-            dto.setStudent(new AutocompleteResult(resultAsLong(r, 5), studentName, studentName));
+            String studentName = PersonUtil.fullname(resultAsString(r, 7), resultAsString(r, 8));
+            dto.setStudent(new AutocompleteResult(resultAsLong(r, 6), studentName, studentName));
 
-            dto.setEnterpriseName(resultAsString(r, 8));
-            dto.setEnterpriseContactPersonName(resultAsString(r, 9));
+            dto.setEnterpriseName(resultAsString(r, 9));
+            dto.setEnterpriseContactPersonName(resultAsString(r, 10));
 
-            String teacherName = PersonUtil.fullname(resultAsString(r, 11), resultAsString(r, 12));
-            dto.setTeacher(new AutocompleteResult(resultAsLong(r, 10), teacherName, teacherName));
+            String teacherName = PersonUtil.fullname(resultAsString(r, 12), resultAsString(r, 13));
+            dto.setTeacher(new AutocompleteResult(resultAsLong(r, 11), teacherName, teacherName));
             return dto;
         });
     }
 
     public Collection<ContractStudentModuleDto> studentPracticeModules(HoisUserDetails user, Long studentId) {
-        String from = "from student s "
-                + "inner join curriculum_version cv on cv.id = s.curriculum_version_id "
-                + "inner join curriculum c on c.id = cv.curriculum_id "
-                + "inner join curriculum_version_omodule cvo on cvo.curriculum_version_id = s.curriculum_version_id "
-                + "inner join curriculum_module cm on cm.id = cvo.curriculum_module_id "
-                + "inner join classifier mcl on mcl.code = cm.module_code "
-                + "left join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id";
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(MODULES_FROM);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("s.id = :studentId", "studentId", studentId);
+        qb.filter("cm.is_practice = true");
 
-        //qb.filter("cm.practice = true");
-        //TODO: kellel puudub vastavas moodulis positiivne tulemus.
+        //kellel puudub vastavas moodulis positiivne tulemus.
+        qb.requiredCriteria(
+                "s.id not in (select ps.student_id from protocol_student ps "
+                        + "inner join protocol p on p.id = ps.protocol_id "
+                        + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
+                        + "where ps.grade_code in :positiveGrades and pvd.curriculum_version_omodule_id = cvo.id)",
+                "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
-        String select = "cvo.id as cvo_id, cv.code, cm.name_et as cm_name_et, mcl.name_et as mcl_name_et, "
-                + "cm.name_en as cm_name_en, mcl.name_en as mcl_name_en, "
-                + "cvot.id as cvot_id, cvot.name_et as cvot_name_et, cvot.credits ";
-        List<?> data = qb.select(select,em).getResultList();
+        List<?> data = qb.select(MODULES_SELECT, em).getResultList();
 
         Map<Long, ContractStudentModuleDto> modulesById = new HashMap<>();
         for (Object r : data) {
@@ -130,14 +155,16 @@ public class ContractService {
                         CurriculumUtil.moduleName(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 1)),
                         CurriculumUtil.moduleName(resultAsString(r, 4), resultAsString(r, 5), resultAsString(r, 1)));
                 dto.setModule(module);
-                //TODO dto.setCredits()
+                dto.setCredits(resultAsDecimal(r, 6));
+                dto.setAssessmentMethodsEt(resultAsString(r, 7));
                 modulesById.put(resultAsLong(r, 0), dto);
             }
 
-            if (resultAsLong(r, 6) != null) {
+            if (resultAsLong(r, 8) != null) {
                 ContractStudentThemeDto themeDto = new ContractStudentThemeDto();
-                themeDto.setTheme(new AutocompleteResult(resultAsLong(r, 6), resultAsString(r, 7), resultAsString(r, 7)));
-                themeDto.setCredits((resultAsDecimal(r, 8)));
+                themeDto.setTheme(new AutocompleteResult(resultAsLong(r, 8), resultAsString(r, 9), resultAsString(r, 9)));
+                themeDto.setCredits((resultAsDecimal(r, 10)));
+                themeDto.setSubthemes(resultAsString(r, 11));
                 dto.getThemes().add(themeDto);
             }
         }
@@ -156,9 +183,23 @@ public class ContractService {
     }
 
     public Contract save(Contract contract, ContractForm contractForm) {
-        Contract changedContract = EntityUtil.bindToEntity(contractForm, contract, "student");
-        changedContract.setStudent(studentRepository.getOne(contractForm.getStudent().getId()));
+        Contract changedContract = EntityUtil.bindToEntity(contractForm, contract, "student", "module", "theme", "enterprise", "contractCoordinator");
+        EntityUtil.setEntityFromRepository(contractForm, changedContract, studentRepository, "student");
+        EntityUtil.setEntityFromRepository(contractForm, changedContract, curriculumVersionOccupationModuleRepository, "module");
+        EntityUtil.setEntityFromRepository(contractForm, changedContract, curriculumVersionOccupationModuleThemeRepository, "theme");
+        EntityUtil.setEntityFromRepository(contractForm, changedContract, enterpriseRepository, "enterprise");
+        EntityUtil.setEntityFromRepository(contractForm, changedContract, teacherRepository, "teacher");
+        EntityUtil.setEntityFromRepository(contractForm, changedContract, directiveCoordinatorRepository, "contractCoordinator");
         return contractRepository.save(changedContract);
+    }
+
+    public void delete(Contract contract) {
+        contractRepository.delete(contract);
+    }
+
+    public Contract sendToEkis(Contract contract) {
+        contract.setStatus(classifierRepository.getOne(ContractStatus.LEPING_STAATUS_Y.name()));
+        return contractRepository.save(contract);
     }
 
 }

@@ -6,6 +6,7 @@ public class ContractStudentThemeDto {
 
     private AutocompleteResult theme;
     private BigDecimal credits;
+    private String subthemes;
 
     public AutocompleteResult getTheme() {
         return theme;
@@ -21,6 +22,14 @@ public class ContractStudentThemeDto {
 
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
+    }
+
+    public String getSubthemes() {
+        return subthemes;
+    }
+
+    public void setSubthemes(String subthemes) {
+        this.subthemes = subthemes;
     }
 
 }

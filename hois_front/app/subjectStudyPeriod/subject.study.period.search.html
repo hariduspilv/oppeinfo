@@ -13,7 +13,7 @@
     <div layout="row">
       <md-input-container flex="45" flex-sm="100" flex-xs="100">
         <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-        <hois-select ng-model="criteria.studyPeriods" values="studyPeriods" multiple></hois-select>
+        <hois-select ng-model="criteria.studyPeriods" values="studyPeriods" required></hois-select>
       </md-input-container>
     </div>
     <div layout="row">
@@ -38,10 +38,13 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a href="#/subject/{{row.subject.id}}/edit?backUrl=subjectStudyPeriods">{{currentLanguageNameField(row.subject)}}</a></td>
-            <td md-cell ng-click="row.clicked = !row.clicked">
-              <span ng-if="!row.clicked">{{showTeachers(row, false)}}</span>
-              <span ng-if="row.clicked">{{showTeachers(row, true)}}</span>
+            <td md-cell><a href="#/subjectStudyPeriod/{{::row.id}}/view">{{currentLanguageNameField(row.subject)}}</a></td>
+            <td md-cell>
+                <table>
+                    <tr ng-repeat="teacher in row.teachers | orderBy">
+                        <td><a href="#/subjectStudyPeriod/{{::row.id}}/view">{{teacher}}</a></td>
+                    </tr>
+                </table>
             </td>
             <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
             <td md-cell><a href="#/subjectStudyPeriods/{{::row.id}}/midtermTasks/studentResults">{{::row.studentsNumber}}</a></td>

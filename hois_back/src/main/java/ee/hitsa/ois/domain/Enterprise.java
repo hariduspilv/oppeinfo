@@ -3,6 +3,8 @@ package ee.hitsa.ois.domain;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 
+import org.hibernate.validator.constraints.Email;
+
 @Entity
 public class Enterprise extends BaseEntityWithId {
 
@@ -12,6 +14,7 @@ public class Enterprise extends BaseEntityWithId {
     private String name;
     private String contactPersonName;
     private String contactPersonPhone;
+    @Email
     private String contactPersonEmail;
 
     public String getRegCode() {

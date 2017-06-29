@@ -97,7 +97,7 @@ public class PersonService {
             dto.setSchool(schools.get(resultAsLong(r, 3)));
             dto.setId(resultAsLong(r, 4));
 
-            // todo implements UserType(array)
+            // TODO implements UserType(array)
             String roles = resultAsString(r, 5);
             dto.setRole(Arrays.asList((roles != null ? roles: "").split(", ")));
 

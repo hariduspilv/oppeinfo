@@ -12,6 +12,7 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.subject.Subject;
@@ -53,6 +54,17 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
      */
     @OneToMany(mappedBy = "subjectStudyPeriod", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<MidtermTask> midtermTasks;
+
+    @OneToMany(mappedBy = "subjectStudyPeriod", fetch = FetchType.LAZY)
+    private List<DeclarationSubject> declarationSubjects;
+
+    public List<DeclarationSubject> getDeclarationSubjects() {
+        return declarationSubjects != null ? declarationSubjects : (declarationSubjects = new ArrayList<>());
+    }
+
+    public void setDeclarationSubjects(List<DeclarationSubject> declarationSubjects) {
+        this.declarationSubjects = declarationSubjects;
+    }
 
     public List<MidtermTask> getMidtermTasks() {
         return midtermTasks != null ? midtermTasks : (midtermTasks = new ArrayList<>());

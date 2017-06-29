@@ -27,6 +27,7 @@ import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
+import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
@@ -172,7 +173,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/enterprises")
-    public List<AutocompleteResult> enterprises() {
+    public List<EnterpriseResult> enterprises() {
         return autocompleteService.enterprises();
     }
 

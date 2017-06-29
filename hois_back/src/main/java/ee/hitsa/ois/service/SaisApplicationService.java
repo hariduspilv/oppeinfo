@@ -66,6 +66,7 @@ import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SaisApplicationRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -279,7 +280,7 @@ public class SaisApplicationService {
 
         if (existingSaisApplication != null && StringUtils.hasText(existingSaisApplication.getIdcode()) &&
                 StringUtils.hasText(row.getIdcode()) && !existingSaisApplication.getIdcode().equals(row.getIdcode())) {
-            failed.add(new SaisApplicationImportedRowDto(rowNr, String.format(messageForOther + "on süsteemis juba seotud teise isikuga (%s).", existingSaisApplication.getIdcode())));
+            failed.add(new SaisApplicationImportedRowDto(rowNr, String.format("%son süsteemis juba seotud teise isikuga (%s).", messageForOther, existingSaisApplication.getIdcode())));
             return;
         }
 
@@ -352,7 +353,7 @@ public class SaisApplicationService {
         }
 
         String previousStudyLevelValue = row.getStudyLevel();
-        Classifier previousStudyLevel = classifiers.get(previousStudyLevelValue, MainClassCode.OPPEASTE);
+        Classifier previousStudyLevel = classifiers.getByValue(previousStudyLevelValue, MainClassCode.OPPEASTE);
         if (previousStudyLevel == null) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing + "eelmine õppetase."));
             return;
@@ -416,7 +417,7 @@ public class SaisApplicationService {
 
         Long admissionSchool = EntityUtil.getId(saisAdmission.getCurriculumVersion().getCurriculum().getSchool());
         if (!admissionSchool.equals(schoolId)) {
-            log.error(messageForOther + "seotud õppekava/rakenduskava kool {} ei kuulu kasutaja koolile {}.", admissionSchool, schoolId);
+            log.error("{}seotud õppekava/rakenduskava kool {} ei kuulu kasutaja koolile {}.", messageForOther, admissionSchool, schoolId);
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForOther + "seotud õppekava/rakenduskava kool ei ühti kasutaja kooliga."));
             return;
         }
@@ -582,16 +583,16 @@ public class SaisApplicationService {
             saisApplication.setForeignIdcode(application.getOtherIdNumber());
         }
 
-        String address = "";
+        StringBuilder address = new StringBuilder("");
         for(CandidateAddress currAddress : application.getCandidateAddresses().getCandidateAddress()) {
             if(currAddress != null) {
-                address += currAddress.getAddress();
-                address += currAddress.getPlaceOrCityPart().isEmpty() ?  "" : ", " + currAddress.getPlaceOrCityPart();
-                address += currAddress.getCity().isEmpty() ? "" : ", " + currAddress.getCity();
-                address += currAddress.getCounty().isEmpty() ? "" : ", " + currAddress.getCounty();
+                address.append(currAddress.getAddress());
+                address.append(currAddress.getPlaceOrCityPart().isEmpty() ?  "" : ", " + currAddress.getPlaceOrCityPart());
+                address.append(currAddress.getCity().isEmpty() ? "" : ", " + currAddress.getCity());
+                address.append(currAddress.getCounty().isEmpty() ? "" : ", " + currAddress.getCounty());
             }
         }
-        saisApplication.setAddress(address);
+        saisApplication.setAddress(address.toString());
 
         String sexCode = EstonianIdCodeValidator.sexFromIdcode(application.getSexClassification().getValue());
         if (StringUtils.hasText(sexCode)) {
@@ -602,14 +603,14 @@ public class SaisApplicationService {
         saisApplication.setEmail(application.getEmail());
         saisApplication.setFin(classifiers.getByCode((application.isIsTuitionFeeRequired() ? FinSource.FINALLIKAS_REV : FinSource.FINALLIKAS_RE).name(), MainClassCode.FINALLIKAS));
         saisApplication.setPoints(application.getApplicationTotalPoints());
-        saisApplication.setCitizenship(classifiers.get(application.getCitizenshipCountry().getValue(), MainClassCode.RIIK));
+        saisApplication.setCitizenship(classifiers.getByValue(application.getCitizenshipCountry().getValue(), MainClassCode.RIIK));
         saisApplication.setStudyLoad(classifiers.getByCode((Boolean.TRUE.equals(application.isIsFullLoad()) ? StudyLoad.OPPEKOORMUS_TAIS : StudyLoad.OPPEKOORMUS_OSA).name(), MainClassCode.OPPEKOORMUS));
         if(application.getResidenceCountry() != null) {
-            saisApplication.setResidenceCountry(classifiers.get(application.getResidenceCountry().getValue(), MainClassCode.RIIK));
+            saisApplication.setResidenceCountry(classifiers.getByValue(application.getResidenceCountry().getValue(), MainClassCode.RIIK));
         } else {
-            saisApplication.setResidenceCountry(classifiers.get("EST", MainClassCode.RIIK));
+            saisApplication.setResidenceCountry(classifiers.getByCode(ClassifierUtil.COUNTRY_ESTONIA, MainClassCode.RIIK));
         }
-        saisApplication.setStudyForm(classifiers.get(application.getStudyForm().getValue(), MainClassCode.OPPEVORM));
+        saisApplication.setStudyForm(classifiers.getByValue(application.getStudyForm().getValue(), MainClassCode.OPPEVORM));
         saisApplication.setLanguage(saisAdmission.getLanguage());
 
         saisApplication.getGrades().clear();
@@ -676,9 +677,9 @@ public class SaisApplicationService {
         }
         graduated.setRegCode(education.getInstitutionRegNr() != null ? education.getInstitutionRegNr().toString() : "");
         graduated.setIsAbroad(education.getInstitutionCountry() == null || "EST".equals(education.getInstitutionCountry().getValue()) ? Boolean.FALSE : Boolean.TRUE);
-        graduated.setStudyLevel(classifiers.get(education.getEhisLevel().getValue(), MainClassCode.OPPEASTE));
+        graduated.setStudyLevel(classifiers.getByValue(education.getEhisLevel().getValue(), MainClassCode.OPPEASTE));
         if(education.getStudyFormClassification() != null) {
-            graduated.setStudyForm(classifiers.get(education.getStudyFormClassification().getValue(), MainClassCode.OPPEVORM));
+            graduated.setStudyForm(classifiers.getByValue(education.getStudyFormClassification().getValue(), MainClassCode.OPPEVORM));
         }
         for(CandidateGrade grade : education.getCandidateGrades().getCandidateGrade()) {
             processGrade(grade, application);
@@ -713,7 +714,7 @@ public class SaisApplicationService {
 
     private static String kvpHandler(List<Kvp> kvpList, String targetLanguage) {
         for(Kvp kvp : kvpList) {
-            if(kvp.getKey().toUpperCase().equals(targetLanguage)) {
+            if(kvp.getKey().equalsIgnoreCase(targetLanguage)) {
                 return kvp.getValue();
             }
         }

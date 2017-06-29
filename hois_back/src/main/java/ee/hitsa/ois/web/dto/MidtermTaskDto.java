@@ -8,10 +8,9 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.springframework.util.CollectionUtils;
-
 import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.MidtermTaskUtil;
 
 public class MidtermTaskDto {
 
@@ -40,13 +39,27 @@ public class MidtermTaskDto {
     private Long thresholdPercentage;
     private LocalDate taskDate;
     private Boolean canBeDeleted;
-    
+    private Boolean studentResultIsText;
+
     public static MidtermTaskDto of(MidtermTask midtermTask) {
         MidtermTaskDto dto = EntityUtil.bindToDto(midtermTask, new MidtermTaskDto());
-        dto.setCanBeDeleted(Boolean.valueOf(CollectionUtils.isEmpty(midtermTask.getStudentResults())));
+        dto.setCanBeDeleted(MidtermTaskUtil.midtermTaskCanBeDeleted(midtermTask));
         return dto;
     }
 
+    public static MidtermTaskDto ofForStudentResultsForm(MidtermTask midtermTask) {
+        MidtermTaskDto dto = EntityUtil.bindToDto(midtermTask, new MidtermTaskDto(), 
+                "descriptionEt", "descriptionEn", "thresholdPercentage", "threshold");
+        dto.setStudentResultIsText(MidtermTaskUtil.getStudentResultIsText(midtermTask));
+        return dto;
+    }
+
+    public Boolean getStudentResultIsText() {
+        return studentResultIsText;
+    }
+    public void setStudentResultIsText(Boolean studentResultIsText) {
+        this.studentResultIsText = studentResultIsText;
+    }
     public Long getId() {
         return id;
     }

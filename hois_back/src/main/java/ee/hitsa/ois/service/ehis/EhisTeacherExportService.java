@@ -293,7 +293,7 @@ public class EhisTeacherExportService {
     }
 
     private static String getCode(Classifier classifier) {
-        return classifier != null ? classifier.getCode() : null;
+        return EntityUtil.getNullableCode(classifier);
     }
 
     private List<Long> getTeachers(Long school, EhisTeacherExportForm form) {

@@ -1,7 +1,10 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
+
+import javax.servlet.http.HttpServletResponse;
+
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.io.InputStreamResource;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -55,13 +58,13 @@ public class SaisApplicationController {
     }
 
 
-    @GetMapping(value = "sample.csv", produces = HttpUtil.TEXT_CSV_UTF8)
-    public InputStreamResource csvSampleFile() {
-        return HttpUtil.csvUtf8WithBom(saisApplicationService.getSampleCsvFile());
+    @GetMapping("sample.csv")
+    public void csvSampleFile(HttpServletResponse response) throws IOException {
+        HttpUtil.csvUtf8WithBom(response, "sample.csv", saisApplicationService.getSampleCsvFile());
     }
 
-    @GetMapping(value = "classifiers.csv", produces = HttpUtil.TEXT_CSV_UTF8)
-    public InputStreamResource classifiersFile() {
-        return HttpUtil.csvUtf8WithBom(saisApplicationService.classifiersFile());
+    @GetMapping("classifiers.csv")
+    public void classifiersFile(HttpServletResponse response) throws IOException {
+        HttpUtil.csvUtf8WithBom(response, "classifiers.csv", saisApplicationService.classifiersFile());
     }
 }

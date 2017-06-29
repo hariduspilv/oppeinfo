@@ -12,7 +12,7 @@ import java.util.Set;
 public class TeacherDto extends TeacherForm {
 
     private Long id;
-    // todo start using persondto
+    // TODO start using persondto
     private String fullname;
 
     private Set<TeacherQualificationFrom> teacherQualifications;

@@ -14,6 +14,9 @@ import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalCapacity;
 import ee.hitsa.ois.domain.timetable.JournalCapacityType;
 
+/**
+ * Utility functions for working with lesson plans
+ */
 public class LessonPlanUtil {
 
     public static LessonPlanCapacityMapper capacityMapper(StudyYear studyYear) {

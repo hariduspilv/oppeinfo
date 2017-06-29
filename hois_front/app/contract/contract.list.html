@@ -81,7 +81,7 @@
           <div layout="column" flex>
               <md-input-container>
                 <label class="textInput">{{'enterprise.supervisor' | translate}}</label>
-                <input ng-model="criteria.enterpriseSupervisor" type="text">
+                <input ng-model="criteria.enterpriseContactPersonName" type="text">
               </md-input-container>
             </div>
         </div>
@@ -102,7 +102,7 @@
           <div layout="column" flex>
               <md-input-container>
                 <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
-                <hois-select ng-model="criteria.teacher" type="teacher" criteria="{valid: true}"></hois-select>
+                <hois-select ng-model="criteria.teacher" type="teacher"></hois-select>
               </md-input-container>
             </div>
         </div>
@@ -110,8 +110,8 @@
 
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button class="md-raised" ng-href="#/contracts/new">{{'main.button.create' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="clearSearch()">{{'main.button.clear' | translate}}</md-button>
+        <md-button ng-if="!auth.isStudent()" class="md-raised" ng-href="#/contracts/new">{{'main.button.create' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>
@@ -137,15 +137,21 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>{{currentLanguageNameField(row.student)}}</td>
-            <td md-cell>{{row.contractNumber}}</td>
-            <td md-cell>{{row.start | hoisDate}} - {{row.end | hoisDate}}</td>
+            <td md-cell>{{row.contractNr}}</td>
+            <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
             <td md-cell>{{row.enterpriseName}}</td>
             <td md-cell>{{row.enterpriseContactPersonName}}</td>
             <td md-cell>{{currentLanguageNameField(row.teacher)}}</td>
-            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>{{row.confirmDate | hoisDate}}</td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <div ng-if="auth.isStudent()">
+                <md-button md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+              </div>
+              <div ng-if="!auth.isStudent()">
+                <md-button ng-if="row.status.code==='LEPING_STAATUS_S'" md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+                <md-button ng-if="row.status.code!=='LEPING_STAATUS_S'" md-no-ink class="md-primary change-button" ng-href="#/contracts/{{::row.id}}/view">{{'main.button.view' | translate}}</md-button>
+              </div>
             </td>
           </tr>
         </tbody>

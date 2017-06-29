@@ -152,9 +152,9 @@ public class EhisStudentReport {
 
             fulfilment.setCurriculum(student.getCurriculumVersion().getCurriculum().getCode());
 
-            // todo currently no way to find
+            // TODO currently no way to find
             fulfilment.setPercentage(new BigDecimal(100));
-            // todo currently no way to find
+            // TODO currently no way to find
             fulfilment.setPoints(new BigDecimal(50));
 
             fulfilment.setError(Boolean.valueOf(Boolean.TRUE.equals(wsEhisStudentLog.getHasOtherErrors())

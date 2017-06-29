@@ -32,6 +32,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.application.ApplicationFile;
@@ -40,6 +41,7 @@ import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.message.ConfirmationNeededMessage;
 import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
@@ -293,22 +295,43 @@ public class ApplicationService {
 
     public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
         List<ApplicationType> existingApplications = existingApplicationsTypes(EntityUtil.getId(student));
-
+        boolean isHigher = CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel());
         Map<ApplicationType, ApplicationApplicableDto> result = new HashMap<>();
+        rulesByApplicationType(student, existingApplications, isHigher, result);
+        rulesByApplicationClassifier(isHigher, result);
+        return result;
+    }
+
+    private void rulesByApplicationClassifier(boolean isHigher, Map<ApplicationType, ApplicationApplicableDto> result) {
+        List<Classifier> allowedApplicationTypes = classifierRepository.findAllByMainClassCode(MainClassCode.AVALDUS_LIIK.name());
+        for (Classifier allowedApplicationType : allowedApplicationTypes) {
+            if ((isHigher && !allowedApplicationType.isHigher()) || (!isHigher && !allowedApplicationType.isVocational())) {
+                result.remove(ApplicationType.valueOf(allowedApplicationType.getCode()));
+            }
+        }
+    }
+
+    private void rulesByApplicationType(Student student, List<ApplicationType> existingApplications, boolean isHigher,
+            Map<ApplicationType, ApplicationApplicableDto> result) {
+        boolean isActive = StudentUtil.isActive(student);
+        boolean isNominalStudy = StudentUtil.isNominalStudy(student);
+        boolean isOnAcademicLeave = StudentUtil.isOnAcademicLeave(student);
+        boolean isStudying = StudentUtil.isStudying(student);
+
         for (ApplicationType type : ApplicationType.values()) {
             if (existingApplications.contains(type)) {
                 result.put(type, new ApplicationApplicableDto("application.messages.applicationAlreadyExists"));
             } else {
                 if (ApplicationType.AVALDUS_LIIK_AKAD.equals(type)) {
-                    if (!StudentUtil.isActive(student)) {
+                    if (!isActive) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
-                    } else if (!StudentUtil.isNominalStudy(student)) {
+                    } else if (!isNominalStudy) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotNominalStudy"));
                     }
                 } else if (ApplicationType.AVALDUS_LIIK_AKADK.equals(type)) {
-                    if (!StudentUtil.isActive(student)) {
+                    if (!isActive) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
-                    } else if (!StudentUtil.isOnAcademicLeave(student)) {
+                    } else if (!isOnAcademicLeave) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotOnAcademicLeave"));
                     } else {
                         Application academicLeaveApplication = findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student));
@@ -317,13 +340,13 @@ public class ApplicationService {
                         }
                     }
                 } else if (ApplicationType.AVALDUS_LIIK_VALIS.equals(type)) {
-                    if (!StudentUtil.isStudying(student)) {
+                    if (!isStudying) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotStudying"));
-                    } else if (!CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel())) {
+                    } else if (!isHigher) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentIsNotHigher"));
                     }
                 } else {
-                    if (!StudentUtil.isStudying(student)) {
+                    if (!isStudying) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotStudying"));
                     }
                 }
@@ -332,8 +355,6 @@ public class ApplicationService {
                 }
             }
         }
-
-        return result;
     }
 
     public void sendConfirmNeededNotificationMessage(Application application) {

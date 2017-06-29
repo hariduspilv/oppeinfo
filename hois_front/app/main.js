@@ -301,7 +301,7 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
 
     $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {
       if (newUrl !== oldUrl && !isBack && newUrl.indexOf('_noback') === -1) {
-        pushHistoryState(oldUrl.replace(/(\?_menu)$/, ''), newUrl.replace(/(\?_menu)$/, ''));
+        pushHistoryState(oldUrl.replace(/(\?_menu)$/, ''));
       }
       isBack = false;
     });

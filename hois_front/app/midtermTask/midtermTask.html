@@ -5,7 +5,7 @@
     <md-table-container>
       <table md-table>
         <thead md-head>
-          <tr md-row>
+          <tr md-row ng-if="!record.canBeEdited">
             <th md-column>{{'midtermTask.nr' | translate}}</th>
             <th md-column ng-click="sortBy('nameEt')">
               {{'midtermTask.nameEt' | translate}} *
@@ -45,9 +45,23 @@
             </th>
             <th md-column></th>
           </tr>
+          <tr md-row ng-if="record.canBeEdited">
+            <th md-column>{{'midtermTask.nr' | translate}}</th>
+            <th md-column>{{'midtermTask.nameEt' | translate}} *</th>
+            <th md-column>{{'midtermTask.nameEn' | translate}}</th>
+            <th md-column>{{'midtermTask.descriptionEt' | translate}} *</th>
+            <th md-column>{{'midtermTask.descriptionEn' | translate}}</th>
+            <th md-column>{{'midtermTask.maxPoints' | translate}} *</th>
+            <th md-column>{{'midtermTask.percentage' | translate}} *</th>
+            <th md-column>{{'midtermTask.taskDate' | translate}}</th>
+            <th md-column>{{'midtermTask.threshold' | translate}}</th>
+            <th md-column>{{'midtermTask.thresholdPercentage' | translate}}</th>
+            <th md-column></th>
+          </tr>
+
         </thead>
         <tbody md-body>
-          <tr md-row ng-repeat="row in record.midtermTasks | orderBy:propertyName:reverse" ng-class-odd="'odd'" ng-class-even="'even'" ng-if="record.canBeEdited">
+          <tr md-row ng-repeat="row in record.midtermTasks" ng-class-odd="'odd'" ng-class-even="'even'" ng-if="record.canBeEdited">
             <ng-form name="midtermTaskUnitForm">
               <td md-cell>{{$index + 1}}</td>
               <td md-cell>
@@ -149,7 +163,7 @@
     <div layout="row">
         <md-button class="md-raised md-primary" ng-click="save()" ng-show="record.canBeEdited">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised" ng-click="openCopyDialog()" ng-show="record.canBeEdited">{{'midtermTask.copy' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/{{subjectStudyPeriodId}}/midtermTasks/studentResults')">{{'main.button.back' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/' + subjectStudyPeriodId + '/midtermTasks/studentResults')">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>

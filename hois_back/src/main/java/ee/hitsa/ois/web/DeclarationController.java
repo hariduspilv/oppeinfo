@@ -30,7 +30,7 @@ import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.DeclarationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
-import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -204,26 +204,24 @@ public class DeclarationController {
     }
 
     public static boolean canConfirmDeclaration(HoisUserDetails user, Declaration declaration) {
-        return DeclarationStatus.OPINGUKAVA_STAATUS_S.name().equals(EntityUtil.getCode(declaration.getStatus())) &&
-                (user.isSchoolAdmin() || (user.isStudent() 
-                && StudentUtil.isStudying(declaration.getStudent())
-                && user.getStudentId().equals(declaration.getStudent().getId())));
+        return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_S, declaration.getStatus()) &&
+                (user.isSchoolAdmin() || (UserUtil.isStudent(user, declaration.getStudent())
+                && StudentUtil.isStudying(declaration.getStudent())));
     }
     /**
      * For now even confirmed declarations can be changed by school admin
      */
     public static boolean canChangeDeclaration(HoisUserDetails user, Declaration declaration) {
-        return user.isSchoolAdmin() || (user.isStudent() 
+        return user.isSchoolAdmin() || (UserUtil.isStudent(user, declaration.getStudent())
                 && StudentUtil.isStudying(declaration.getStudent())
-                && DeclarationStatus.OPINGUKAVA_STAATUS_S.name().equals(EntityUtil.getCode(declaration.getStatus()))
-                && user.getStudentId().equals(declaration.getStudent().getId()));
+                && ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_S, declaration.getStatus()));
     }
 
     public static boolean canUnconfirmDeclaration(HoisUserDetails user, Declaration declaration) {
-        if(user.isStudent() && !user.getStudentId().equals(declaration.getStudent().getId())) {
+        if(user.isStudent() && !UserUtil.isStudent(user, declaration.getStudent())) {
             return false;
         }
-        return DeclarationStatus.OPINGUKAVA_STAATUS_K.name().equals(EntityUtil.getCode(declaration.getStatus())) && 
+        return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_K, declaration.getStatus()) &&
                 LocalDate.now().isBefore(declaration.getStudyPeriod().getEndDate());
     }
 

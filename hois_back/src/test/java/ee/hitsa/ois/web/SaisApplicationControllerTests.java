@@ -300,6 +300,17 @@ public class SaisApplicationControllerTests {
     }
 
     @Test
+    public void importCsvApplicationTryUpdateWhenAddedToDirective() {
+        SaisApplicationImportCsvCommand cmd = csvCmdForRows(
+                ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        //TODO
+        //create
+        //update
+        //add to directive
+        //try update
+    }
+
+    @Test
     public void csvSampleFile() {
         ResponseEntity<?> response = restTemplate.getForEntity("/saisApplications/sample.csv", Void.class);
         Assert.assertNotNull(response);

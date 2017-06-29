@@ -9,6 +9,7 @@ public class ContractSearchCommand {
     private LocalDate endFrom;
     private LocalDate endThru;
     private String studentName;
+    private Long student;
     private Long curriculumVersion;
     private Long studentGroup;
     private String enterpriseName;
@@ -54,6 +55,14 @@ public class ContractSearchCommand {
 
     public void setStudentName(String studentName) {
         this.studentName = studentName;
+    }
+
+    public Long getStudent() {
+        return student;
+    }
+
+    public void setStudent(Long student) {
+        this.student = student;
     }
 
     public Long getCurriculumVersion() {

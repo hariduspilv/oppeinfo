@@ -18,7 +18,7 @@ public class SubjectStudyPeriodPlanSearchDto {
         dto.setId(EntityUtil.getId(plan));
         dto.setCurriculums(StreamUtil.toMappedSet(c -> AutocompleteResult.of(c.getCurriculum()), plan.getCurriculums()));
         dto.setStudyForms(StreamUtil.toMappedSet(sf -> 
-        new AutocompleteResult(null, sf.getStudyForm().getNameEt(), sf.getStudyForm().getNameEn()), plan.getStudyForms()));
+        new AutocompleteResult(null, sf.getStudyForm()), plan.getStudyForms()));
         dto.setCapacities(StreamUtil.toMappedSet(SubjectStudyPeriodPlanCapacityDto::of, plan.getCapacities()));
         return dto;
     }

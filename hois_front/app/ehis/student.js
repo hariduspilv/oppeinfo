@@ -29,7 +29,7 @@ angular.module('hitsaOis').controller('StudentEhisController', function ($scope,
     if($scope.studentExportForm.$valid) {
       QueryUtils.endpoint('/students/ehisStudentExport').save($scope.criteria).$promise.then(function(result) {
         message.info('ehis.messages.exportFinished');
-        $mdDialog.hide();;
+        $mdDialog.hide();
         $scope.result = result;
       }).catch(function() {
         $mdDialog.hide();

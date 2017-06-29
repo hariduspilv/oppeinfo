@@ -49,104 +49,48 @@ public class EhisDirectiveStudentService extends EhisService {
     void updateStudents(Long directiveId) {
         Directive directive = directiveRepository.getOne(directiveId);
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
-        switch (directiveType) {
-            case KASKKIRI_AKAD:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        startAcademicLeave(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
+        for (DirectiveStudent directiveStudent : directive.getStudents()) {
+            try {
+                switch (directiveType) {
+                case KASKKIRI_AKAD:
+                    startAcademicLeave(directiveStudent, directive);
+                    break;
+                case KASKKIRI_AKADK:
+                    endAcademicLeave(directiveStudent, directive);
+                    break;
+                case KASKKIRI_EKSMAT:
+                    exmatriculation(directiveStudent, directive);
+                    break;
+                case KASKKIRI_ENNIST:
+                    reinstatement(directiveStudent, directive);
+                    break;
+                case KASKKIRI_LOPET:
+                    graduation(directiveStudent, directive);
+                    break;
+                case KASKKIRI_OKOORM:
+                    changeStudyLoad(directiveStudent, directive);
+                    break;
+                case KASKKIRI_OKAVA:
+                    changeCurriculum(directiveStudent, directive);
+                    break;
+                case KASKKIRI_FINM:
+                    changeFinance(directiveStudent, directive);
+                    break;
+                case KASKKIRI_OVORM:
+                    changeStudyForm(directiveStudent, directive);
+                    break;
+                case KASKKIRI_IMMAT:
+                case KASKKIRI_IMMATV:
+                    admissionMatriculation(directiveStudent, directive);
+                    break;
+                default:
+                    break;
                 }
-                break;
-            case KASKKIRI_AKADK:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        endAcademicLeave(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
-                }
-                break;
-            case KASKKIRI_EKSMAT:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        exmatriculation(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
-                }
-                break;
-            case KASKKIRI_ENNIST:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        reinstatement(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
-                }
-                break;
-            case KASKKIRI_LOPET:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        graduation(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
-                }
-                break;
-            case KASKKIRI_OKOORM:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        changeStudyLoad(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
-                }
-                break;
-            case KASKKIRI_OKAVA:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        changeCurriculum(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
-                }
-                break;
-            case KASKKIRI_FINM:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        changeFinance(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
-                }
-                break;
-            case KASKKIRI_OVORM:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        changeStudyForm(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
-                }
-                break;
-            case KASKKIRI_IMMAT:
-            case KASKKIRI_IMMATV:
-                for (DirectiveStudent directiveStudent: directive.getStudents()) {
-                    try {
-                        admissionMatriculation(directiveStudent, directive);
-                    } catch (Exception e) {
-                        bindingException(directive, e);
-                    }
-                }
-                break;
-            default:
-                break;
+            } catch (Exception e) {
+                bindingException(directive, e);
+            }
         }
     }
-
-
 
     private void changeStudyLoad(DirectiveStudent directiveStudent, Directive directive) throws DatatypeConfigurationException {
         Student student = directiveStudent.getStudent();
@@ -204,7 +148,7 @@ public class EhisDirectiveStudentService extends EhisService {
         KhlOppevormiMuutus khlOppevormiMuutus = new KhlOppevormiMuutus();
         khlOppevormiMuutus.setMuutusKp(getDate(directive.getConfirmDate(), directive));
 
-        // todo is this correct
+        // TODO is this correct
         khlOppevormiMuutus.setKlOppevorm(student.getStudyForm().getEhisValue());
         khlOppevormiMuutus.setKlRahastAllikas(directiveStudent.getFinSpecific().getEhisValue());
 
@@ -276,7 +220,7 @@ public class EhisDirectiveStudentService extends EhisService {
 
         KhlOppeasutuseLopetamine oppeasutuseLopetamine = new KhlOppeasutuseLopetamine();
         oppeasutuseLopetamine.setMuutusKp(getDate(LocalDate.now(), student));
-        // todo: Fix when actually we have a way to get value
+        // TODO Fix when actually we have a way to get value
         oppeasutuseLopetamine.setLopudokumendiNr("FIXME000001");
         oppeasutuseLopetamine.setCumLaude(Boolean.TRUE.equals(directiveStudent.getIsCumLaude()) ? YES : NO);
 
@@ -284,7 +228,6 @@ public class EhisDirectiveStudentService extends EhisService {
                 .map(CurriculumGrade::getEhisGrade)
                 .map(Classifier::getEhisValue)
                 .ifPresent(oppeasutuseLopetamine::setKlAkadKraad);
-
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setOppeasutuseLopetamine(oppeasutuseLopetamine);
@@ -393,7 +336,7 @@ public class EhisDirectiveStudentService extends EhisService {
     @Override
     protected XRoadHeaderV4 getXroadHeader() {
         XRoadHeaderV4 xRoadHeaderV4 = super.getXroadHeader();
-        xRoadHeaderV4.getService().setServiceCode(LAE_KORGHARIDUS_SERIVCE_CODE);
+        xRoadHeaderV4.getService().setServiceCode(LAE_KORGHARIDUS_SERVICE_CODE);
         return xRoadHeaderV4;
     }
 }

@@ -99,6 +99,18 @@ public class ReportControllerTests {
     }
 
     @Test
+    public void studentStatisticsAsExcel() {
+        String url = "/reports/students/statistics/studentstatistics.xls";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("result", MainClassCode.FINALLIKAS.name());
+        uriBuilder.queryParam("date", "2017-01-01T00:00:00.000Z");
+
+        ResponseEntity<?> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Void.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void studentStatisticsByPeriod() {
         String url = "/reports/students/statistics/byperiod";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
@@ -121,6 +133,19 @@ public class ReportControllerTests {
         uriBuilder.queryParam("result", StudentStatus.OPPURSTAATUS_L.name());
 
         responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void studentStatisticsByPeriodAsExcel() {
+        String url = "/reports/students/statistics/studentstatisticsbyperiod.xls";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("result", StudentStatus.OPPURSTAATUS_A.name());
+        uriBuilder.queryParam("from", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("thru", "2017-01-01T00:00:00.000Z");
+
+        ResponseEntity<?> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Void.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

@@ -236,10 +236,10 @@ public class ModuleProtocolService {
 
         // kellel puudub positiivne õppetulemus vastavas moodulis
         studentsQb.requiredCriteria(
-                "js.student_id not in (" + "select ps.student_id from protocol_student ps "
+                "js.student_id not in (select ps.student_id from protocol_student ps "
                         + "inner join protocol p on p.id = ps.protocol_id "
                         + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
-                        + "where grade_code in :positiveGrades and " + "pvd.curriculum_version_omodule_id = cvo.id)",
+                        + "where grade_code in :positiveGrades and pvd.curriculum_version_omodule_id = cvo.id)",
                 "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
         // kelle andmeid ei ole veel protokollile lisatud

@@ -5,8 +5,10 @@ import java.time.LocalDate;
 
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
+@DateRange(from = "startDate", thru = "endDate")
 public class ContractForm extends VersionedCommand {
 
     @NotNull
@@ -17,11 +19,11 @@ public class ContractForm extends VersionedCommand {
     @NotNull
     private BigDecimal credits;
     @NotNull
-    private BigDecimal hours;
+    private Integer hours;
     @NotNull
-    private LocalDate start;
+    private LocalDate startDate;
     @NotNull
-    private LocalDate end;
+    private LocalDate endDate;
     @NotNull
     private String practicePlace;
     @NotNull
@@ -76,28 +78,28 @@ public class ContractForm extends VersionedCommand {
         this.credits = credits;
     }
 
-    public BigDecimal getHours() {
+    public Integer getHours() {
         return hours;
     }
 
-    public void setHours(BigDecimal hours) {
+    public void setHours(Integer hours) {
         this.hours = hours;
     }
 
-    public LocalDate getStart() {
-        return start;
+    public LocalDate getStartDate() {
+        return startDate;
     }
 
-    public void setStart(LocalDate start) {
-        this.start = start;
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
     }
 
-    public LocalDate getEnd() {
-        return end;
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
-    public void setEnd(LocalDate end) {
-        this.end = end;
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public String getPracticePlace() {

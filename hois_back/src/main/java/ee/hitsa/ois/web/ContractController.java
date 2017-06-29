@@ -7,20 +7,25 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Contract;
+import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ContractForm;
 import ee.hitsa.ois.web.commandobject.ContractSearchCommand;
 import ee.hitsa.ois.web.dto.ContractDto;
@@ -36,13 +41,15 @@ public class ContractController {
 
     @GetMapping
     public Page<ContractSearchDto> search(HoisUserDetails user, ContractSearchCommand command, Pageable pageable) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        if (user.isStudent()) {
+            command.setStudent(user.getStudentId());
+        }
         return contractService.search(user, command, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
     public ContractDto get(HoisUserDetails user, @WithEntity("id") Contract contract) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertSameSchool(user, contract.getStudent().getSchool());
         return contractService.get(contract);
     }
 
@@ -56,13 +63,33 @@ public class ContractController {
     public ContractDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Contract contract,
             @Valid @RequestBody ContractForm contractForm) {
         UserUtil.assertIsSchoolAdmin(user);
+        if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
+            throw new ValidationFailedException("contract.messages.updatingOnlyAllowedForStatusS");
+        }
         return get(user, contractService.save(contract, contractForm));
+    }
+
+    @DeleteMapping("/{id:\\d+}")
+    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Contract contract,
+            @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        UserUtil.assertIsSchoolAdmin(user);
+        if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus()) &&
+                !ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
+            throw new ValidationFailedException("contract.messages.deletionOnlyAllowedForStatusSAndY");
+        }
+        contractService.delete(contract);
     }
 
     @GetMapping("studentPracticeModules/{studentId:\\d+}")
     public Collection<ContractStudentModuleDto> studentPracticeModules(HoisUserDetails user, @PathVariable Long studentId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return contractService.studentPracticeModules(user, studentId);
+    }
+
+    @PostMapping("/sendToEkis/{id:\\d+}")
+    public ContractDto sendToEkis(HoisUserDetails user, @WithEntity("id") Contract contract) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return get(user, contractService.sendToEkis(contract));
     }
 
 }

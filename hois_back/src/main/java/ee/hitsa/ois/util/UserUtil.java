@@ -97,6 +97,10 @@ public abstract class UserUtil {
         return user.getPersonId().equals(EntityUtil.getId(student.getPerson()));
     }
 
+    public static boolean isStudent(HoisUserDetails user, Student student) {
+        return user.isStudent() && user.getStudentId().equals(EntityUtil.getId(student));
+    }
+
     public static boolean isStudentRepresentative(HoisUserDetails user, Student student) {
         return student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
     }

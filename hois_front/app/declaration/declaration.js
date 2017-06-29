@@ -82,6 +82,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
         });
         newSubject.$save().then(function(response){
           message.info('declaration.message.subjectAdded');
+          response.newlyAdded = true;
           $scope.declaration.subjects.push(response);
         });
       };
@@ -119,6 +120,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
           });
           newSubject.$save().then(function(response){
             message.info('declaration.message.subjectAdded');
+            response.newlyAdded = true;
             $scope.declaration.subjects.push(response);
             getSubjects();
             scope.subject = undefined;
@@ -183,17 +185,15 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
   $scope.addDeclaration = function() {
     var Endpoint = QueryUtils.endpoint('/declarations/create');
     new Endpoint().$save().then(function(response){
-      // $scope.formState.declaration = true;
-      // $scope.formState.noDeclaration = false;
-      // $scope.declaration = response;
-         $location.path("/declarations/" + response.id + "/edit");
+      $location.path("/declarations/" + response.id + "/edit");
     });
   };
 
   $scope.confirm = function() {
     dialogService.confirmDialog({prompt: 'declaration.prompt.confirm'}, function() {
-      new ConfirmEndPoint($scope.declaration).$update().then(function(){
+      new ConfirmEndPoint($scope.declaration).$update().then(function(response){
         message.info('declaration.message.confirmed');
+        $scope.declaration = response;
       });
     });
   };
@@ -233,13 +233,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
         if($scope.criteria && !$scope.criteria.studyPeriod) {
             $scope.criteria.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
         }
-        // $scope.loadData();
     }
-
-    // QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
-    //     $scope.studyPeriods = response;
-    //     setCurrentStudyPeriod();
-    // });
 
     var promises = clMapper.promises;
     var studyPeriodsPromise = QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise;
@@ -269,7 +263,6 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
     $scope.confirmAll = function() {
       dialogService.confirmDialog({prompt: 'declaration.prompt.confirmAll'}, function() {
         QueryUtils.endpoint('/declarations/confirm/all').put().$promise.then(function(response){
-          // message.info('declaration.message.allConfirmed');
           message.info('declaration.message.allConfirmed', {numberOfNewlyConfirmedDeclarations: response.numberOfNewlyConfirmedDeclarations});
           $scope.loadData();
         });

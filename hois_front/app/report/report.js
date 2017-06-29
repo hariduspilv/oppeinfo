@@ -12,7 +12,8 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
   }
 ]).controller('ReportStudentStatisticsController', ['$scope', 'Classifier', 'QueryUtils',
   function ($scope, Classifier, QueryUtils) {
-    $scope.formState = {};
+    $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatistics.xls'};
+
     QueryUtils.createQueryForm($scope, '/reports/students/statistics', {result: 'OPPEVORM'}, function() {
       var resultType = $scope.criteria.result;
       if($scope.formState.resultType !== resultType) {
@@ -33,7 +34,7 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
 ]).controller('ReportStudentStatisticsByperiodController', ['$scope', 'Classifier', 'QueryUtils',
   function ($scope, Classifier, QueryUtils) {
     var classifierMapping = {OPPURSTAATUS_A: 'AKADPUHKUS_POHJUS', OPPURSTAATUS_K: 'EKSMAT_POHJUS'};
-    $scope.formState = {};
+    $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatisticsbyperiod.xls'};
 
     QueryUtils.createQueryForm($scope, '/reports/students/statistics/byperiod', {result: 'OPPURSTAATUS_A'}, function() {
       var resultType = $scope.criteria.result;

@@ -1,11 +1,25 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', '$sessionStorage', 'QueryUtils', function ($scope, $sessionStorage, QueryUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', function ($scope, $sessionStorage, QueryUtils, DataUtils) {
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods', {order: 's.' + $scope.currentLanguageNameField()});
-    $scope.loadData();
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query(function(result) {
-        $scope.studyPeriods = result;
+
+    function setCurrentStudyPeriod() {
+        if($scope.criteria && $scope.studyPeriods && !$scope.criteria.studyPeriods) {
+            $scope.criteria.studyPeriods = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
+        }
+    }
+
+    QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
+        $scope.studyPeriods = response;
+        setCurrentStudyPeriod();
+        $scope.loadData();
     });
+
+    $scope.$watch('criteria.studyPeriods', function() {
+          setCurrentStudyPeriod();
+        }
+    );
+
     $scope.showTeachers = function(row, bool) {
         var name = "";
         if( row.teachers) {
@@ -17,8 +31,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         }
         return name;
     };
-
-
 
 }]).controller('SubjectStudyPeriodEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$q', '$rootScope', function ($scope, QueryUtils, ArrayUtils, $route, dialogService, message, $q, $rootScope) {
 
@@ -165,4 +177,30 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
          });
       });
     };
+}]).controller('SubjectStudyPeriodViewController', ['$scope', 'QueryUtils', '$route', function ($scope, QueryUtils, $route) {
+
+    var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods');
+    var id = $route.current.params.id;
+
+    Endpoint.get({id: id}).$promise.then(function(response){
+        $scope.record = response;
+    });
+
+    QueryUtils.endpoint('/autocomplete/studyPeriods').query(function(result) {
+        $scope.studyPeriods = result;
+    });
+
+    QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
+        $scope.studentGroups = result.map(function(el){
+            var newEl = el;
+            newEl.nameEt = el.code;
+            newEl.nameEn = el.code;
+            return newEl;
+        });
+    });
+
+    QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query(function(result) {
+        $scope.subjects = result;
+    });
+
 }]);

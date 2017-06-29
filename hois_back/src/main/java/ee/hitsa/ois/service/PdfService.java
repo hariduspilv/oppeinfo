@@ -26,6 +26,9 @@ import com.mitchellbosecke.pebble.template.PebbleTemplate;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.TranslateUtil;
 
+/**
+ * Pdf generator using pebble template engine and flying saycer xhtml to pdf renderer
+ */
 @Service
 public class PdfService {
 

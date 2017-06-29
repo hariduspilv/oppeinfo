@@ -6,9 +6,9 @@ public class ContractSearchDto {
 
     private Long id;
     private AutocompleteResult student;
-    private String contractNumber;
-    private LocalDate start;
-    private LocalDate end;
+    private String contractNr;
+    private LocalDate startDate;
+    private LocalDate endDate;
     private String enterpriseName;
     private String enterpriseContactPersonName;
     private AutocompleteResult teacher;
@@ -31,28 +31,28 @@ public class ContractSearchDto {
         this.student = student;
     }
 
-    public String getContractNumber() {
-        return contractNumber;
+    public String getContractNr() {
+        return contractNr;
     }
 
-    public void setContractNumber(String contractNumber) {
-        this.contractNumber = contractNumber;
+    public void setContractNr(String contractNr) {
+        this.contractNr = contractNr;
     }
 
-    public LocalDate getStart() {
-        return start;
+    public LocalDate getStartDate() {
+        return startDate;
     }
 
-    public void setStart(LocalDate start) {
-        this.start = start;
+    public void setStartDate(LocalDate startDate) {
+        this.startDate = startDate;
     }
 
-    public LocalDate getEnd() {
-        return end;
+    public LocalDate getEndDate() {
+        return endDate;
     }
 
-    public void setEnd(LocalDate end) {
-        this.end = end;
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
     }
 
     public String getEnterpriseName() {

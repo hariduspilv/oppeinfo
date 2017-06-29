@@ -1,0 +1,158 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form name="contractForm" ng-submit="contractForm.$valid && save()" novalidate layout="column">
+      <div flex>
+        <hois-autocomplete ng-model="contract.student" method="students" additional-query-params="{active: true}" name="student"
+          label="student.label" required></hois-autocomplete>
+      </div>
+
+      <div ng-if="contract.student && formState.student" class="form-readonly" layout="column">
+        <br>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label>{{'student.name' | translate}}</label>
+            <hois-value value="formState.student.person.firstname + ' ' + formState.student.person.lastname"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.idcode' | translate}}</label>
+            <hois-value value="formState.student.person.idcode"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.email' | translate}}</label>
+            <hois-value value="formState.student.person.email"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.course' | translate}}</label>
+            <hois-value value="formState.student.course"></hois-value>
+          </md-input-container>
+        </div>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label>{{'student.curriculum' | translate}}</label>
+            <hois-value value="currentLanguageNameField(formState.student.curriculumVersion)"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.studyForm' | translate}}</label>
+            <hois-value value="currentLanguageNameField(formState.student.studyForm)"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'module.practice' | translate}}</label>
+          <hois-select ng-model="contract.module" values="formState.modules" ng-change="moduleChanged(contract.module)" required></hois-select>
+        </md-input-container>
+
+        <md-input-container flex flex-offset-gt-md="5">
+          <label class="textInput">{{'contract.theme' | translate}}</label>
+          <hois-select ng-model="contract.theme" values="formState.themes" ng-change="themeChanged(contract.theme)"></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
+          <label class="textInput">{{'contract.credits' | translate}}</label>
+          <input type="number" ng-model="contract.credits" required>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'contract.hours' | translate}}</label>
+          <input type="number" ng-model="contract.hours" required>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container>
+          <label>{{'contract.start' | translate}}</label>
+          <md-datepicker ng-model="contract.startDate" required></md-datepicker>
+        </md-input-container>
+
+        <md-input-container>
+          <label>{{'contract.end' | translate}}</label>
+          <md-datepicker ng-model="contract.endDate" md-min-date="contract.startDate" required></md-datepicker>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.practicePlace' | translate}}</label>
+          <input type="text" ng-model="contract.practicePlace" required>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'enterprise.label' | translate}}</label>
+          <hois-select ng-model="contract.enterprise" values="formState.enterprises" ng-change="enterpriseChanged(contract.enterprise)" required></hois-select>
+        </md-input-container>
+        <div layout="row">
+          <md-button class="md-raised md-default" ng-click="addEnterprise()">{{'main.button.create' | translate}}</md-button>
+        </div>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.contactPersonName' | translate}}</label>
+          <input type="text" ng-model="contract.contactPersonName" required>
+        </md-input-container>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.contactPersonEmail' | translate}}</label>
+          <input type="email" ng-model="contract.contactPersonEmail" required>
+        </md-input-container>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.contactPersonPhone' | translate}}</label>
+          <input type="text" ng-model="contract.contactPersonPhone">
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.supervisorName' | translate}}</label>
+          <input type="text" ng-model="contract.supervisorName" required>
+        </md-input-container>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.supervisorEmail' | translate}}</label>
+          <input type="email" ng-model="contract.supervisorEmail" required>
+        </md-input-container>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.supervisorPhone' | translate}}</label>
+          <input type="text" ng-model="contract.supervisorPhone">
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
+          <hois-select ng-model="contract.teacher" type="teacher" required></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.otherSupervisor' | translate}}</label>
+          <input type="text" ng-model="contract.otherSupervisor">
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.contractCoordinator' | translate}}</label>
+          <hois-select ng-model="contract.contractCoordinator" type="directivecoordinator" required></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.practicePlan' | translate}}</label>
+          <textarea ng-model="contract.practicePlan" required md-maxlength="10000" max-rows="2"></textarea>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button ng-if="contract.status !== 'LEPING_STAATUS_Y'" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-if="contract.id && (contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_S')" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="back('#/contracts/')">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="contract.id && contract.status !== 'LEPING_STAATUS_Y'" class="md-raised md-default" type="submit" ng-click="contractForm.$valid && sendToEkis()">{{'main.button.sendToEkis' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

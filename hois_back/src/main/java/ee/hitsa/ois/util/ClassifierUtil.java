@@ -12,6 +12,9 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 
+/**
+ * Utility functions for working with classifiers
+ */
 public class ClassifierUtil {
 
     public static final String COUNTRY_ESTONIA = "RIIK_EST";
@@ -46,60 +49,62 @@ public class ClassifierUtil {
 
     public static class ClassifierCache {
         private final ClassifierRepository repository;
-        private final Map<MainClassCode, Map<String, Classifier>> classifiers = new HashMap<>();
+        private final Map<MainClassCode, List<Classifier>> classifiers = new HashMap<>();
+        private final Map<MainClassCode, Map<String, Classifier>> byCode = new HashMap<>();
+        private final Map<MainClassCode, Map<String, Classifier>> byEhisValue = new HashMap<>();
+        private final Map<MainClassCode, Map<String, Classifier>> byValue = new HashMap<>();
 
         public ClassifierCache(ClassifierRepository repository) {
             this.repository = repository;
         }
 
-        public Classifier get(String value, MainClassCode mainClassCode, Boolean isCode) {
-            // FIXME should fetch all values by mainClassCode with single query?
-            Map<String, Classifier> cache = classifiers.computeIfAbsent(mainClassCode, key -> new HashMap<>());
-            Classifier c = cache.get(value);
-            if(c == null) {
-                if(cache.containsKey(value)) {
-                    return null;
-                }
-                c = StringUtils.hasText(value) ? getClassifier(value, mainClassCode, isCode) : null;
-                cache.put(value, c);
-            }
-            return c;
+        public List<Classifier> getAll(MainClassCode mainClassCode) {
+            loadClassifiers(mainClassCode);
+            return classifiers.get(mainClassCode);
         }
 
-        private Classifier getClassifier(String valueOrCode, MainClassCode mainClassCode, Boolean isCode) {
-            if (Boolean.TRUE.equals(isCode)) {
-                return repository.getOne(valueOrCode);
-            }
-            return repository.findByValueAndMainClassCode(valueOrCode, mainClassCode.name());
+        public Classifier getByValue(String value, MainClassCode mainClassCode) {
+            return get(value, mainClassCode, byValue);
         }
 
-        public Classifier get(String value, MainClassCode mainClassCode) {
-            return get(value, mainClassCode, Boolean.FALSE);
-        }
-
-        public Classifier getByCode(String value, MainClassCode mainClassCode) {
-            return get(value, mainClassCode, Boolean.TRUE);
+        public Classifier getByCode(String code, MainClassCode mainClassCode) {
+            return get(code, mainClassCode, byCode);
         }
 
         public Classifier getByEhisValue(String ehisValue, MainClassCode mainClassCode) {
-            Map<String, Classifier> cache = classifiers.computeIfAbsent(mainClassCode, key -> new HashMap<>());
-            Classifier c = cache.get(ehisValue);
-            if(c == null) {
-                if(cache.containsKey(ehisValue)) {
-                    return null;
-                }
-                if(StringUtils.hasText(ehisValue)){
-                    for(Classifier classifier : getClassifiersByMainCode(mainClassCode)) {
-                        cache.put(classifier.getEhisValue(), classifier);
-                    }
-                }
-                c = cache.get(ehisValue);
-            }
-            return c;
+            return get(ehisValue, mainClassCode, byEhisValue);
         }
 
-        private List<Classifier> getClassifiersByMainCode(MainClassCode mainClassCode) {
-            return repository.findAllByMainClassCode(mainClassCode.name());
+        private Classifier get(String cacheKey, MainClassCode mainClassCode, Map<MainClassCode, Map<String, Classifier>> cacheMap) {
+            loadClassifiers(mainClassCode);
+            Map<String, Classifier> cache = cacheMap.get(mainClassCode);
+            return cache.get(cacheKey);
+        }
+
+        private void loadClassifiers(MainClassCode mainClassCode) {
+            if(classifiers.containsKey(mainClassCode)) {
+                return;
+            }
+
+            List<Classifier> records = repository.findAllByMainClassCode(mainClassCode.name());
+            // FIXME sorting?
+            classifiers.put(mainClassCode, records);
+
+            Map<String, Classifier> code = new HashMap<>();
+            Map<String, Classifier> ehisValue = new HashMap<>();
+            Map<String, Classifier> value = new HashMap<>();
+
+            for(Classifier c : records) {
+                code.put(c.getCode(), c);
+                if(StringUtils.hasText(c.getEhisValue())) {
+                    ehisValue.put(c.getEhisValue(), c);
+                }
+                value.put(c.getValue(), c);
+            }
+
+            byCode.put(mainClassCode, code);
+            byEhisValue.put(mainClassCode, ehisValue);
+            byValue.put(mainClassCode, value);
         }
     }
 }

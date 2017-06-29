@@ -1,10 +1,94 @@
 'use strict';
 
-angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', '$route', function ($scope, $sessionStorage, QueryUtils, DataUtils, $route) {
+angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', '$route', '$rootScope', 'message', 'orderByFilter', function ($scope, $sessionStorage, QueryUtils, DataUtils, $route, $rootScope, message, orderBy) {
 
   $scope.subjectStudyPeriodId = $route.current.params.id;
+  var Endpoint = QueryUtils.endpoint('/midtermTasks/studentResults');
 
-}]).controller('MidtermTaskController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils', 'message', 'dialogService', function ($scope, $sessionStorage, QueryUtils, DataUtils, $route, ArrayUtils, message, dialogService) {
+  function studentHasResultForTask(student, midtermTask) {
+    var result = $scope.record.studentResults.find(function(studentResult){
+      return studentResult.midtermTask === midtermTask.id && studentResult.declarationSubject === student.declarationSubject;
+    });
+    return angular.isDefined(result);
+  }
+
+  function indexOfMidtermTask(midtermTaskId) {
+    var midtermTask = $scope.record.midtermTasks.find(function(el){
+      return el.id === midtermTaskId;
+    });
+    return $scope.record.midtermTasks.indexOf(midtermTask);
+  }
+
+  function getEmptyStudentResult(student, midtermTask) {
+    return {
+            midtermTask: midtermTask.id,
+            declarationSubject: student.declarationSubject,
+            maxPoints: midtermTask.maxPoints,
+            canBeChanged: student.studentResultCanBeChanged,
+            isText: midtermTask.studentResultIsText
+          };
+  }
+
+  function addEmptyStudentResults() {
+    $scope.record.students.forEach(function(student){
+      var newResults = [];
+      for(var i = 0; i < $scope.record.midtermTasks.length; i++) {
+        if(!studentHasResultForTask(student, $scope.record.midtermTasks[i])) {
+          newResults.push(getEmptyStudentResult(student, $scope.record.midtermTasks[i]));
+        }
+      }
+      $scope.record.studentResults = $scope.record.studentResults.concat(newResults);
+    });
+  }
+
+  function afterload() {
+    $scope.record.midtermTasks.forEach(function(el){
+      DataUtils.convertStringToDates(el, ["taskDate"]);
+    });
+    $scope.record.midtermTasks = orderBy($scope.record.midtermTasks, ['taskDate', $rootScope.currentLanguageNameField()]);
+    addEmptyStudentResults();
+    $scope.record.studentResults.sort(function(val1, val2){
+      return indexOfMidtermTask(val1.midtermTask) - indexOfMidtermTask(val2.midtermTask);
+    });
+  }
+
+  Endpoint.get({id: $scope.subjectStudyPeriodId}).$promise.then(function(response){
+    $scope.record = response;
+    afterload();
+  });
+
+  function getNumberWithZero(number) {
+    return number < 10 ? "0" + number : number;
+  }
+
+  $scope.getMidtermTaskHeader = function(midtermTask) {
+    var date = midtermTask.taskDate ?
+      getNumberWithZero(midtermTask.taskDate.getDate()) + "." +
+      getNumberWithZero(midtermTask.taskDate.getMonth() + 1) : "";
+    return $rootScope.currentLanguageNameField(midtermTask) + " " + date + " (" + midtermTask.percentage + "%), max " + midtermTask.maxPoints;
+  };
+
+  $scope.filterStudentResults = function(student) {
+    return function(studentResult) {
+      return student.declarationSubject === studentResult.declarationSubject;
+    };
+  };
+
+  $scope.save = function() {
+    $scope.midtermTaskResultForm.$setSubmitted();
+    if(!$scope.midtermTaskResultForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return;
+    }
+    $scope.record.id = $scope.subjectStudyPeriodId;
+    new Endpoint($scope.record).$update().then(function(response){
+      message.updateSuccess();
+      $scope.record = response;
+      afterload();
+    });
+  };
+
+}]).controller('MidtermTaskController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils', 'message', 'dialogService', 'orderByFilter', '$rootScope', function ($scope, $sessionStorage, QueryUtils, DataUtils, $route, ArrayUtils, message, dialogService, orderBy, $rootScope) {
 
   var Endpoint = QueryUtils.endpoint('/midtermTasks');
 
@@ -18,6 +102,10 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
     $scope.record.midtermTasks.forEach(function(el){
       DataUtils.convertStringToDates(el, ["taskDate"]);
     });
+
+    if($scope.record.canBeEdited) {
+      $scope.record.midtermTasks = orderBy($scope.record.midtermTasks, ['taskDate', $rootScope.currentLanguageNameField()]);
+    }
   }
 
   Endpoint.get({id: $scope.subjectStudyPeriodId}).$promise.then(function(response){
@@ -70,7 +158,7 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
     }
   };
 
-  $scope.propertyName = 'nameEt';
+  $scope.propertyName = ['taskDate', $rootScope.currentLanguageNameField()];
   $scope.reverse = false;
 
   $scope.sortBy = function(propertyName) {
@@ -88,7 +176,7 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
         auth: $scope.auth
       };
 
-      QueryUtils.createQueryForm(scope, '/midtermTasks/subjectStudyPeriods', {order: 'subject.' + $scope.currentLanguageNameField()});
+      QueryUtils.createQueryForm(scope, '/midtermTasks/subjectStudyPeriods/' + $scope.subjectStudyPeriodId, {order: 'subject.' + $scope.currentLanguageNameField()});
       scope.clearCriteria();
       QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
         scope.studyPeriods = response;
@@ -128,7 +216,9 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
       function (submitScope) {
         QueryUtils.endpoint('/midtermTasks/' + $scope.subjectStudyPeriodId + '/subjectStudyPeriodCopy/' + submitScope.subjectStudyPeriodSelected[0].id).put().$promise.then(function(response){
           message.info('midtermTask.message.copied');
-          $scope.record = response;
+          if(response.midtermTasks) {
+            $scope.record.midtermTasks = $scope.record.midtermTasks.concat(response.midtermTasks);
+          }
           afterload();
         });
     });

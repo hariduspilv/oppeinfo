@@ -11,6 +11,7 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
@@ -118,12 +119,12 @@ public class LessonPlanJournalForm extends VersionedCommand {
         public static LessonPlanGroupForm of(Entry<StudentGroup, List<JournalOccupationModuleTheme>> entry) {
             LessonPlanGroupForm dto = new LessonPlanGroupForm();
             dto.setCurriculumVersionOccupationModuleThemes(entry.getValue().stream()
-                    .map(it -> it.getCurriculumVersionOccupationModuleTheme().getId()).collect(Collectors.toList()));
+                    .map(it -> EntityUtil.getId(it.getCurriculumVersionOccupationModuleTheme())).collect(Collectors.toList()));
             dto.setCurriculumVersionOccupationModule(
-                    entry.getValue().get(0).getCurriculumVersionOccupationModuleTheme().getModule().getId());
+                    EntityUtil.getId(entry.getValue().get(0).getCurriculumVersionOccupationModuleTheme().getModule()));
             dto.setStudentGroup(entry.getKey().getId());
             dto.setGroup(AutocompleteResult.of(entry.getKey()));
-            dto.setCurriculumVersion(entry.getKey().getCurriculumVersion().getId());
+            dto.setCurriculumVersion(EntityUtil.getId(entry.getKey().getCurriculumVersion()));
             return dto;
         }
 

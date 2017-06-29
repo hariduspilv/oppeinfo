@@ -4,7 +4,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -52,7 +50,7 @@ public class ReportService {
     @Autowired
     private XlsService xlsService;
 
-    public Page<StudentSearchDto> students(Long schoolId, @Valid StudentSearchCommand criteria, Pageable pageable) {
+    public Page<StudentSearchDto> students(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id " +
                 "inner join curriculum c on cv.curriculum_id = c.id "+
@@ -81,9 +79,12 @@ public class ReportService {
         , em, pageable).map(r -> new StudentSearchDto(r));
     }
 
-    public byte[] studentsAsExcel(Long schoolId, @Valid StudentSearchCommand criteria) {
+    public byte[] studentsAsExcel(Long schoolId, StudentSearchCommand criteria) {
         List<StudentSearchDto> students = students(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
-        return xlsService.generate("students.xls", Collections.singletonMap("students", students));
+        Map<String, Object> data = new HashMap<>();
+        data.put("criteria", criteria);
+        data.put("students", students);
+        return xlsService.generate("students.xls", data);
     }
 
     public Page<StudentStatisticsDto> studentStatistics(Long schoolId, StudentStatisticsCommand criteria, Pageable pageable) {
@@ -111,6 +112,14 @@ public class ReportService {
             }
         }
         return result;
+    }
+
+    public byte[] studentStatisticsAsExcel(Long schoolId, StudentStatisticsCommand criteria) {
+        List<StudentStatisticsDto> students = studentStatistics(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
+        Map<String, Object> data = new HashMap<>();
+        data.put("criteria", criteria);
+        data.put("students", students);
+        return xlsService.generate("studentstatistics.xls", data);
     }
 
     public Page<StudentStatisticsDto> studentStatisticsByPeriod(Long schoolId, StudentStatisticsByPeriodCommand criteria, Pageable pageable) {
@@ -155,6 +164,14 @@ public class ReportService {
         }
 
         return result;
+    }
+
+    public byte[] studentStatisticsByPeriodAsExcel(Long schoolId, StudentStatisticsByPeriodCommand criteria) {
+        List<StudentStatisticsDto> students = studentStatisticsByPeriod(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
+        Map<String, Object> data = new HashMap<>();
+        data.put("criteria", criteria);
+        data.put("students", students);
+        return xlsService.generate("studentstatisticsbyperiod.xls", data);
     }
 
     public Page<CurriculumCompletionDto> curriculumCompletion(Long schoolId, CurriculumCompletionCommand criteria, Pageable pageable) {

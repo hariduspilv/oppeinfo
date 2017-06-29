@@ -8,6 +8,7 @@ public class ContractStudentModuleDto {
 
     private AutocompleteResult module;
     private BigDecimal credits;
+    private String assessmentMethodsEt;
     private List<ContractStudentThemeDto> themes = new ArrayList<>();
 
     public AutocompleteResult getModule() {
@@ -24,6 +25,14 @@ public class ContractStudentModuleDto {
 
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
+    }
+
+    public String getAssessmentMethodsEt() {
+        return assessmentMethodsEt;
+    }
+
+    public void setAssessmentMethodsEt(String assessmentMethodsEt) {
+        this.assessmentMethodsEt = assessmentMethodsEt;
     }
 
     public List<ContractStudentThemeDto> getThemes() {

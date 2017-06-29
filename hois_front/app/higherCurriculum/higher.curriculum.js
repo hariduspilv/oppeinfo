@@ -15,7 +15,7 @@ angular.module('hitsaOis')
 
     $scope.formState = {
         readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
-        curriculumPdfUrl: config.apiUrl + baseUrl + '/print/' + id
+        curriculumPdfUrl: config.apiUrl + baseUrl + '/print/' + id + '/curriculum.pdf'
     };
 
     $scope.removeFromArray = function(array, item) {
