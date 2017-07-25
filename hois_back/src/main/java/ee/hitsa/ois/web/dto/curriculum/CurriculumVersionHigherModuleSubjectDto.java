@@ -3,6 +3,8 @@ package ee.hitsa.ois.web.dto.curriculum;
 import java.math.BigDecimal;
 
 import javax.validation.constraints.NotNull;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlTransient;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.subject.Subject;
@@ -52,7 +54,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
         dto.setElectiveModule(EntityUtil.getNullableId(subject.getElectiveModule()));
         return dto;
     }
-
+    @XmlTransient
     public String getSchoolCode() {
         return schoolCode;
     }
@@ -60,7 +62,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setSchoolCode(String schoolCode) {
         this.schoolCode = schoolCode;
     }
-
+    @XmlTransient
     public String getEhisSchoolCode() {
         return ehisSchoolCode;
     }
@@ -76,7 +78,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setElectiveModule(Long electiveModule) {
         this.electiveModule = electiveModule;
     }
-
+    @XmlElement(name="subjectCode")
     public String getCode() {
         return code;
     }
@@ -84,7 +86,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setCode(String code) {
         this.code = code;
     }
-
+    @XmlTransient
     public Long getId() {
         return id;
     }
@@ -92,7 +94,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setId(Long id) {
         this.id = id;
     }
-
+    @XmlElement(name="optional")
     public Boolean getOptional() {
         return optional;
     }
@@ -100,7 +102,8 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setOptional(Boolean optional) {
         this.optional = optional;
     }
-
+    
+    @XmlElement(name="subjectId")
     public Long getSubjectId() {
         return subjectId;
     }
@@ -108,7 +111,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setSubjectId(Long subjectId) {
         this.subjectId = subjectId;
     }
-
+    @XmlTransient
     public String getNameEt() {
         return nameEt;
     }
@@ -116,7 +119,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setNameEt(String nameEt) {
         this.nameEt = nameEt;
     }
-
+    @XmlTransient
     public String getNameEn() {
         return nameEn;
     }
@@ -124,11 +127,11 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setNameEn(String nameEn) {
         this.nameEn = nameEn;
     }
-
+    @XmlTransient
     public BigDecimal getCredits() {
         return credits;
     }
-
+    
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }

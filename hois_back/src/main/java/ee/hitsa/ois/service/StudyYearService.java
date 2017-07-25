@@ -1,10 +1,13 @@
 package ee.hitsa.ois.service;
 
+import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,6 +16,7 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudyPeriodEventRepository;
@@ -145,5 +149,17 @@ public class StudyYearService {
             return null;
         }
         return Long.valueOf(((Number) result.get(0)).longValue());
+    }
+
+    public StudyYear getCurrentStudyYear(School school) {
+        //TODO: what if study year is not found? Should we return previous study year or next study year instead of null?
+        LocalDate now = LocalDate.now();
+        return studyYearRepository.findOne((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("school").get("id"), EntityUtil.getId(school)));
+            filters.add(cb.lessThanOrEqualTo(root.get("startDate"), now));
+            filters.add(cb.greaterThanOrEqualTo(root.get("endDate"), now));
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        });
     }
 }

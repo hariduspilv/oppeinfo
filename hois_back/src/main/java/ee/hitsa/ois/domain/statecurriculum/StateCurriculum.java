@@ -55,9 +55,7 @@ public class StateCurriculum extends BaseEntityWithId implements Translatable {
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier stateCurrClass;
 	
-	
-	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true)
-	@JoinColumn(name = "state_curriculum_id", nullable=false, updatable = false)
+	@OneToMany(mappedBy = "stateCurriculum", cascade = CascadeType.ALL, orphanRemoval = true)
 	private Set<StateCurriculumModule> modules = new HashSet<>();
 	
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval=true)
@@ -269,10 +267,5 @@ public class StateCurriculum extends BaseEntityWithId implements Translatable {
 	public void setOccupations(Set<StateCurriculumOccupation> occupations) {
 		this.getOccupations().clear();
 		this.getOccupations().addAll(occupations);
-	}
-
-	@Override
-	public String toString() {
-		return "StateCurriculum [nameEt=" + nameEt + ", getId()=" + getId() + "]";
 	}
 }

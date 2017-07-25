@@ -2,6 +2,7 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -40,6 +41,7 @@ import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 import ee.hitsa.ois.enums.SubjectStatus;
+import ee.hitsa.ois.enums.TimetableType;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
@@ -68,6 +70,7 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 
 @Transactional
 @Service
@@ -634,5 +637,15 @@ public class SubjectStudyPeriodService {
             String nameEn = SubjectUtil.subjectName(code, resultAsString(r, 3), credits);
             return new AutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
         }, data);
+    }
+    
+    public List<SubjectStudyPeriod> getSubjectStudyPeriodsForSchoolAndPeriod(Long schoolId, Long studyPeriodId) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period ssp inner join subject s on ssp.subject_id = s.id");
+
+        qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        
+        List<?> data = qb.select("ssp.id", em).getResultList();
+        return StreamUtil.toMappedList(r -> { return em.getReference(SubjectStudyPeriod.class, resultAsLong(r, 0)); }, data);
     }
 }

@@ -211,7 +211,7 @@ public class EhisTeacherExportService {
                 ametikoht.setOnOppejoud(positionEhis.getIsTeacher().booleanValue() ? "jah" : "ei");
                 ametikoht.setKlAmetikoht(positionEhis.getPosition().getEhisValue());
                 if (getCode(positionEhis.getPosition()) != null
-                        && getCode(positionEhis.getPosition()).equals(EHIS_AMETIKOHT_MUU)) {
+                        && EHIS_AMETIKOHT_MUU.equals(getCode(positionEhis.getPosition()))) {
                     ametikoht.setAmetikohtMuu(positionEhis.getPositionSpecificationEt());
                 }
                 ametikoht.setKlToosuhe(getCode(positionEhis.getEmploymentType()));
@@ -253,7 +253,7 @@ public class EhisTeacherExportService {
             oKvalifikatsioon.setKlKvalifikatsioon(getCode(hoisQualification.getQualification()));
             oKvalifikatsioon.setKlKvalifikatsioonNimetus(getCode(hoisQualification.getQualification()));
             if (getCode(hoisQualification.getQualificationName()) != null
-                    && getCode(hoisQualification.getQualificationName()).equals(EHIS_KVALIFIKATSIOON_NIMI_MUU)) {
+                    && EHIS_KVALIFIKATSIOON_NIMI_MUU.equals(getCode(hoisQualification.getQualificationName()))) {
                 oKvalifikatsioon.setKvalifikatsioonNimetusMuu(hoisQualification.getQualificationOther());
             }
             oKvalifikatsioon.setKlRiik(getCode(hoisQualification.getState()));
@@ -336,11 +336,11 @@ public class EhisTeacherExportService {
         return StreamUtil.toMappedList(
                 r -> new TeacherWithSubject(resultAsLong(r, 0), resultAsLong(r, 1), resultAsLong(r, 2)), result);
     }
-    
+
     private static String validateOppejoud(Oppejoud oppejoud) {
         String error = "Puudub/puuduvad jargmised parameetrid: ";
         List<String> errors = new ArrayList<>();
-        
+
         OppejoudIsikuandmed isikuandmed = oppejoud.getIsikuandmed();
         if(isikuandmed.getEesnimi() == null) {
             errors.add("eesnimi");
@@ -357,11 +357,11 @@ public class EhisTeacherExportService {
         if(isikuandmed.getKlKodakondsus() == null) {
             errors.add("kodakondsus");
         }
-        
+
         if(!errors.isEmpty()) {
             return error + String.join(", ", errors);
         }
-        
+
         return null;
     }
 
@@ -399,7 +399,7 @@ public class EhisTeacherExportService {
             this.oppejoudList = oppejoudList;
             this.error = null;
         }
-        
+
         public RequestObject(Teacher teacher, String error) {
             this.teacher = teacher;
             this.error = error;
@@ -413,7 +413,7 @@ public class EhisTeacherExportService {
         public OppejoudList getOppejoudList() {
             return oppejoudList;
         }
-        
+
         public String getError() {
             return error;
         }

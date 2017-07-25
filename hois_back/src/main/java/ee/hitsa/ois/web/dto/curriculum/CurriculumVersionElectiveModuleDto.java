@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.curriculum;
 
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -24,7 +25,7 @@ public class CurriculumVersionElectiveModuleDto extends VersionedCommand {
                 "subjects", "referenceNumber");
         return dto;
     }
-
+    @XmlTransient
     public Long getReferenceNumber() {
         return referenceNumber;
     }

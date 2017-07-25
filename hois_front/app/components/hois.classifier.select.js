@@ -33,7 +33,8 @@ angular.module('hitsaOis')
         watchModel: '@',
         watchMultiple: '@',
         searchFromConnect: '@',
-        selectFirstValue: '@'
+        selectFirstValue: '@',
+        defaultValue: '@'
       },
       link: function postLink(scope, element) {
         scope.isMultiple = angular.isDefined(scope.multiple);

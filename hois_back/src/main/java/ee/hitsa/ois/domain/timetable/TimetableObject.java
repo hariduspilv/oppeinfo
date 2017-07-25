@@ -21,11 +21,9 @@ public class TimetableObject extends BaseEntityWithId {
     private Timetable timetable;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
     private Journal journal;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
     private SubjectStudyPeriod subjectStudyPeriod;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)

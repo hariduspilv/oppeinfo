@@ -314,9 +314,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     });
   };
 
-  $scope.getUrl = function (oisFile) {
-    return oisFileService.getFileUrl(oisFile);
-  };
+  $scope.getUrl = oisFileService.getUrl;
 
   $scope.isStudentRepresentative = function () {
     return angular.isObject($scope.auth) && angular.isObject($scope.application.student) &&

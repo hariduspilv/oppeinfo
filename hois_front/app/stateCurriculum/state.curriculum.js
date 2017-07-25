@@ -1,7 +1,8 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('StateCurriculumController', function ($route, $scope, message, Classifier, $location, classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils, Curriculum) {
+  .controller('StateCurriculumController', function ($route, $scope, message, Classifier, $location,
+    classifierAutocomplete, dialogService, QueryUtils, DataUtils, ArrayUtils, Curriculum, config) {
 
 
     $scope.STATUS = Curriculum.STATUS;
@@ -23,7 +24,13 @@ angular.module('hitsaOis')
     var id = $route.current.params.id;
     $scope.removeFromArray = ArrayUtils.remove;
     $scope.subOccupations = {};
-    $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
+
+    $scope.formState = {
+      strictValidation: false,
+      waitingResponse: false,
+      readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
+      stateCurriculumPdfUrl: config.apiUrl + baseUrl + '/print/' + id + '/stateCurriculum.pdf'
+    };
 
     function getStateCurriculum() {
       if (id) {
@@ -33,7 +40,6 @@ angular.module('hitsaOis')
         });
       } else {
         $scope.stateCurriculum = new Endpoint(initialStateCurriculum);
-        $scope.currentStatus = $scope.STATUS.ENTERING;
       }
     }
     getStateCurriculum();
@@ -42,8 +48,7 @@ angular.module('hitsaOis')
         DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
         fillCascadeDropdowns();
         getAllSuboccupations();
-        $scope.currentStatus = $scope.stateCurriculum.status;
-        $scope.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1 || $scope.currentStatus === Curriculum.STATUS.VERIFIED;
+        $scope.formState.readOnly = $route.current.$$route.originalPath.indexOf("view") !== -1;
     }
 
 
@@ -63,98 +68,119 @@ angular.module('hitsaOis')
 
         // ----------- save and delete
 
-
     $scope.delete = function() {
-        if(!ArrayUtils.isEmpty($scope.stateCurriculum.curricula)) {
-            message.error("stateCurriculum.error.hasCurricula");
-            return;
-        }
-        dialogService.confirmDialog({prompt: 'stateCurriculum.deleteconfirm'}, function() {
-            $scope.stateCurriculum.$delete().then(function() {
-                message.info('main.messages.delete.success');
-                $location.path('/stateCurriculum');
-            });
+      if($scope.formState.waitingResponse) {
+        return;
+      }
+      if(!ArrayUtils.isEmpty($scope.stateCurriculum.curricula)) {
+        message.error("stateCurriculum.error.hasCurricula");
+        return;
+      }
+      dialogService.confirmDialog({prompt: 'stateCurriculum.deleteconfirm'}, function() {
+        $scope.formState.waitingResponse = true;
+        $scope.stateCurriculum.$delete().then(function() {
+          message.info('main.messages.delete.success');
+          $location.path('/stateCurriculum');
         });
+      });
     };
+
+    function validationPassed(messages) {
+      if($scope.formState.waitingResponse) {
+        return false;
+      }
+      $scope.stateCurriculumForm.$setSubmitted();
+      if (!stateCurriculumFormIsValid()) {
+          message.error(messages.errorMessage);
+          return false;
+      }
+      if($scope.strictValidation()) {
+          if(!allOccuppationsValid()) {
+              message.error('stateCurriculum.error.occupationsCredids');
+              return false;
+          }
+          if(!allSpetsOccupationsValid()) {
+              message.error('stateCurriculum.error.spetsOccupationsCredids');
+              return false;
+          }
+      }
+      return true;
+    }
+
+    function createCurriculum(messages) {
+      if(!validationPassed(messages)) {
+        return;
+      }
+      $scope.formState.waitingResponse = true;
+      $scope.stateCurriculum.$save().then(function(){
+          $scope.formState.waitingResponse = false;
+          DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
+          message.info('main.messages.create.success');
+          $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit').search({_noback: true});
+      });
+    }
+
+    function update(endpoint, messages) {
+      // setTimeout is needed for validation of ng-required fields
+      setTimeout(function(){
+        if(!validationPassed(messages)) {
+          return;
+        }
+        $scope.formState.waitingResponse = true;
+        endpoint.$update().then(function(response){
+          $scope.formState.waitingResponse = false;
+          message.info(messages.updateSuccess);
+          $scope.stateCurriculum = response;
+          setVariablesForExistingStateCurriculum();
+          $scope.stateCurriculumForm.$setPristine();
+
+          if(!$scope.formState.readOnly && $scope.stateCurriculum.status !== Curriculum.STATUS.ENTERING) {
+            $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/view').search({_noback: true});
+          }
+        });
+      }, 0);
+    }
 
     $scope.save = function () {
-        $scope.stateCurriculum.status = $scope.currentStatus;
-        // setTimeout is needed for validation of ng-required fields
-        setTimeout(save, 0);
+      var messages = {
+        errorMessage: 'main.messages.form-has-errors',
+        updateSuccess: 'main.messages.update.success'
+      };
+      if(id) {
+        $scope.formState.strictValidation = false;
+        update(new Endpoint($scope.stateCurriculum), messages);
+      } else {
+        createCurriculum(messages);
+      }
     };
 
-    $scope.modulesValid = function() {
-        if(!$scope.stateCurriculum) {
-            return true;
-        }
-        return !$scope.strictValidation() || $scope.stateCurriculum.occupations.length !== 0 && $scope.stateCurriculum.modules.length !== 0  && allOccuppationsValid() && allSpetsOccupationsValid();
-    };
-
-    function save(messages) {
-        $scope.stateCurriculumForm.$setSubmitted();
-
-        if (!stateCurriculumFormIsValid()) {
-            var errorMessage = messages && messages.errorMessage ? messages.errorMessage : 'main.messages.form-has-errors';
-            message.error(errorMessage);
-            return;
-        }
-        if($scope.strictValidation()) {
-            if(!allOccuppationsValid()) {
-                message.error('stateCurriculum.error.occupationsCredids');
-                return;
-            }
-            if(!allSpetsOccupationsValid()) {
-                message.error('stateCurriculum.error.spetsOccupationsCredids');
-                return;
-            }
-        }
-
-        if(id) {
-            $scope.stateCurriculum.$update().then(function(){
-                setVariablesForExistingStateCurriculum();
-                var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
-                message.info(updateSuccess);
-                $scope.stateCurriculumForm.$setPristine();
-                if($scope.stateCurriculum.status === $scope.STATUS.CLOSED || $scope.stateCurriculum.status === $scope.STATUS.VERIFIED) {
-                    $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/view').search({_noback: true});
-                }
-            });
-        } else {
-            $scope.stateCurriculum.$save().then(function(){
-                DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
-                message.updateSuccess();
-                $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit').search({_noback: true});
-            });
-        }
+    function setStatus(endpoint, messages) {
+      dialogService.confirmDialog({prompt: messages.prompt}, function() {
+        update(endpoint, messages);
+      });
     }
 
-    function setStatus(newStatus, messages) {
-        dialogService.confirmDialog({prompt: messages.prompt}, function() {
-            $scope.stateCurriculum.status = newStatus;
-            // setTimeout is needed for validation of ng-required fields
-            setTimeout(function(){
-                save(messages);
-            }, 0);
-        });
-    }
-
-    $scope.confirmCurriculum = function() {
-        var messages = {
-            prompt: $scope.readOnly ? 'stateCurriculum.prompt.viewForm.verify' : 'stateCurriculum.prompt.editForm.verify',
-            updateSuccess: 'stateCurriculum.statuschange.verified',
-            errorMessage: $scope.readOnly ? 'stateCurriculum.statuschange.fail.verifyReadOnly' : 'stateCurriculum.statuschange.fail.verify'
-        };
-        setStatus($scope.STATUS.VERIFIED, messages);
+    $scope.confirmAndSave = function() {
+      $scope.formState.strictValidation = true;
+      var messages = {
+        prompt: 'stateCurriculum.prompt.editForm.verify',
+        updateSuccess: 'stateCurriculum.statuschange.verified',
+        errorMessage: 'stateCurriculum.statuschange.fail.verify'
+      };
+      var ConfirmEndpoint = QueryUtils.endpoint(baseUrl + '/confirmAndSave');
+      setStatus(new ConfirmEndpoint($scope.stateCurriculum), messages);
     };
 
-
-    $scope.closeCurriculum = function() {
-        var messages = {
-            prompt: $scope.readOnly ? 'stateCurriculum.prompt.viewForm.close' : 'stateCurriculum.prompt.editForm.close',
-            updateSuccess: 'stateCurriculum.statuschange.closed',
-            errorMessage: $scope.readOnly ? 'stateCurriculum.statuschange.fail.closeReadOnly' : 'stateCurriculum.statuschange.fail.close'
-        };
-        setStatus($scope.STATUS.CLOSED, messages);
+    $scope.close = function() {
+      $scope.formState.strictValidation = false;
+      var messages = {
+        prompt: $scope.formState.readOnly ? 'stateCurriculum.prompt.viewForm.close' : 'stateCurriculum.prompt.editForm.close',
+        updateSuccess: 'stateCurriculum.statuschange.closed',
+        errorMessage: $scope.formState.readOnly ? 'stateCurriculum.statuschange.fail.closeReadOnly' : 'stateCurriculum.statuschange.fail.close'
+      };
+      var url = $scope.formState.readOnly ? baseUrl + '/close' : baseUrl + '/closeAndSave';
+      var CloseEndpoint = QueryUtils.endpoint(url);
+      setStatus(new CloseEndpoint($scope.stateCurriculum), messages);
     };
 
     $scope.getStar = function() {
@@ -162,7 +188,7 @@ angular.module('hitsaOis')
     };
 
     $scope.strictValidation = function() {
-        return $scope.stateCurriculum && $scope.stateCurriculum.status === $scope.STATUS.VERIFIED;
+        return $scope.stateCurriculum && $scope.stateCurriculum.status === $scope.STATUS.VERIFIED || $scope.formState.strictValidation;
     };
 
     // validation
@@ -287,6 +313,14 @@ angular.module('hitsaOis')
         return bool;
     };
 
+    $scope.modulesValid = function() {
+      if(!$scope.stateCurriculum) {
+          return true;
+      }
+      return !$scope.strictValidation() || $scope.stateCurriculum.occupations.length !== 0 && $scope.stateCurriculum.modules.length !== 0  &&
+      allOccuppationsValid() && allSpetsOccupationsValid();
+    };
+
     function sumOfPartOccupations(occupation) {
         var partOccupations = getOccupationsSubOccupations(occupation, 'OSAKUTSE');
         return partOccupations.reduce(function(sum, val){
@@ -406,11 +440,6 @@ angular.module('hitsaOis')
       };
     };
 
-    $scope.removeModule = function(occupation, module1) {
-        $scope.removeFromArray( module1.moduleOccupations, occupation);
-        deleteModuleWithNoOccupations(module1);
-    };
-
     function deleteModuleWithNoOccupations(module1) {
         if(!module1.moduleOccupations ||  module1.moduleOccupations.length === 0) {
             $scope.removeFromArray($scope.stateCurriculum.modules, module1);
@@ -448,16 +477,17 @@ angular.module('hitsaOis')
 
             scope.delete = function() {
                dialogService.confirmDialog({prompt: 'curriculum.moduleDeleteConfirm'}, function() {
-                   ArrayUtils.remove($scope.stateCurriculum.modules, editingModule);
-                    if(scope.data.id) {
-                         var ModuleEndpoint = QueryUtils.endpoint('/stateCurriculum/modules');
-                         var deletedModule = new ModuleEndpoint($scope.stateCurriculum);
-                         deletedModule.$update().then(function(response) {
-                                message.info('main.messages.delete.success');
-                                $scope.stateCurriculum.modules = response.modules;
-                        });
-                    }
-                    scope.cancel();
+                 if(scope.data.id) {
+                  var ModuleEndpoint = QueryUtils.endpoint('/stateCurriculum/modules');
+                  var deletedModule = new ModuleEndpoint(scope.data);
+                  deletedModule.$delete().then(function() {
+                    message.info('main.messages.delete.success');
+                    ArrayUtils.remove($scope.stateCurriculum.modules, editingModule);
+                  });
+                  } else {
+                    ArrayUtils.remove($scope.stateCurriculum.modules, editingModule);
+                  }
+                  scope.cancel();
                 });
             };
 
@@ -486,7 +516,7 @@ angular.module('hitsaOis')
             };
             scope.validateOccupations();
 
-            scope.readOnly = $scope.readOnly;
+            scope.readOnly = $scope.formState.readOnly;
             scope.occupations = $scope.stateCurriculum.occupations;
             $scope.stateCurriculum.occupations.forEach(function(o){
                 var list = $scope.subOccupations[o].map(function(e){return e.code;});
@@ -497,19 +527,28 @@ angular.module('hitsaOis')
         dialogService.showDialog('stateCurriculum/state.curriculum.module.add.dialog.html', DialogController,
             function (submitScope) {
             var data = submitScope.data;
-                if(editingModule) {
-                    angular.extend(editingModule, data);
-                } else {
-                    $scope.stateCurriculum.modules.push(data);
-                }
                 if($scope.stateCurriculum.id) {
                     var ModuleEndpoint = QueryUtils.endpoint('/stateCurriculum/modules');
-                    var savedModule = new ModuleEndpoint($scope.stateCurriculum);
-                    savedModule.$update().then(function(response) {
-                        message.info('main.messages.create.success');
-                        $scope.stateCurriculum.modules = response.modules;
-                        $scope.stateCurriculum.occupations = response.occupations;
-                    });
+                    var savedModule = new ModuleEndpoint(data);
+                    savedModule.stateCurriculumOccupations = $scope.stateCurriculum.occupations;
+                    savedModule.stateCurriculum = $scope.stateCurriculum.id;
+                    if(data.id) {
+                      savedModule.$update().then(function(response) {
+                          message.info('main.messages.update.success');
+                          angular.extend(editingModule, response);
+                      });
+                    } else {
+                      savedModule.$save().then(function(response) {
+                          message.info('main.messages.create.success');
+                          $scope.stateCurriculum.modules.push(response);
+                      });
+                    }
+                } else {
+                  if(editingModule) {
+                      angular.extend(editingModule, data);
+                  } else {
+                      $scope.stateCurriculum.modules.push(data);
+                  }
                 }
             });
         };

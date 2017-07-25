@@ -1,0 +1,55 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div>
+    <form name="timetableForm" novalidate class="nomargin">
+
+        <div  layout="row">
+          <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
+            <md-datepicker required ng-model="timetable.startDate" md-min-date="studyPeriodStartDate" 
+              md-max-date="timetable.endDate ? timetable.endDate : studyPeriodEndDate" 
+              md-placeholder="{{'main.from' | translate}}" md-date-filter="blockedFromDatesPredicate" disabled></md-datepicker>
+          </md-input-container>
+          
+          <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
+            <md-datepicker required ng-model="timetable.endDate" md-min-date="timetable.startDate ? timetable.startDate : studyPeriodStartDate" 
+              md-max-date="studyPeriodEndDate" md-placeholder="{{'main.thru' | translate}}" md-date-filter="blockedThruDatesPredicate" disabled></md-datepicker>
+          </md-input-container>
+        </div>
+        
+        <div ng-repeat="journal in timetable.journals">
+          <table md-table >
+            <thead md-head>
+            <tr md-row>
+              <th md-column>{{journal.curriculumCode}}</th>
+            </tr>
+            </thead>
+            <tbody md-body>
+            <tr md-row ng-repeat="group in journal.groups" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{group.code}}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        
+        <div ng-if="timetable.pairs">
+          <table md-table >
+            <thead md-head>
+            <tr md-row>
+              <th md-column><label>{{'timetable.subjectTeacherPairs' | translate}}</label>
+              </th>
+            </tr>
+            </thead>
+            <tbody md-body>
+            <tr md-row ng-repeat="pair in timetable.pairs" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{pair.subjectCode}} {{pair.nameEt}} / {{pair.teacherName}}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        
+    </form>
+    <md-button ng-href="#/timetable/{{timetable.id}}/edit" class="md-raised md-primary">{{'main.button.edit' | translate}}</md-button>
+    <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_S'" ng-href="#/timetable/{{timetable.id}}/confirm" class="md-raised">{{'main.button.confirm' | translate}}</md-button>
+    <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_K'" ng-href="#/timetable/{{timetable.id}}/publicize" class="md-raised">{{'timetable.view.publicize' | translate}}</md-button>
+    <md-button ng-href="#/timetable/timetableManagement" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

@@ -5,6 +5,7 @@ public class PracticeJournalSearchCommand {
     private Long studyYear;
     private Long studentGroup;
     private String studentName;
+    private Long student;
     private Long curriculumVersion;
     private Long teacher;
 
@@ -30,6 +31,14 @@ public class PracticeJournalSearchCommand {
 
     public void setStudentName(String studentName) {
         this.studentName = studentName;
+    }
+
+    public Long getStudent() {
+        return student;
+    }
+
+    public void setStudent(Long student) {
+        this.student = student;
     }
 
     public Long getCurriculumVersion() {

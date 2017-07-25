@@ -280,4 +280,12 @@ public class SchoolController {
         schoolService.updateLegends(school, legendsCmd);
         return studyYearScheduleLegends(user);
     }
+    
+    @GetMapping("/studyPeriod/current")
+    public Map<String, ?> getCurrentStudyPeriod(HoisUserDetails user) {
+        Long studyPeriod = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
+        Map<String, Object> response = new HashMap<>();
+        response.put("currentStudyPeriod", studyPeriod);
+        return response;
+    }
 }

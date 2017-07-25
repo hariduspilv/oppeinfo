@@ -10,24 +10,33 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Contract;
+import ee.hitsa.ois.domain.PracticeJournal;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.ContractStatus;
+import ee.hitsa.ois.enums.JournalStatus;
+import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.message.PracticeJournalUniqueUrlMessage;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.ContractRepository;
 import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
 import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleThemeRepository;
 import ee.hitsa.ois.repository.DirectiveCoordinatorRepository;
 import ee.hitsa.ois.repository.EnterpriseRepository;
+import ee.hitsa.ois.repository.PracticeJournalRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -65,6 +74,17 @@ public class ContractService {
     private TeacherRepository teacherRepository;
     @Autowired
     private DirectiveCoordinatorRepository directiveCoordinatorRepository;
+    @Autowired
+    private PracticeJournalRepository practiceJournalRepository;
+    @Autowired
+    private SchoolRepository schoolRepository;
+    @Autowired
+    private StudyYearService studyYearService;
+    @Autowired
+    private AutomaticMessageService automaticMessageService;
+
+    @Value("${hois.frontend.baseUrl}")
+    private String frontendBaseUrl;
 
     private static final String SEARCH_FROM = "from contract contract "
             + "inner join student student on contract.student_id = student.id "
@@ -179,11 +199,17 @@ public class ContractService {
     public Contract create(ContractForm contractForm) {
         Contract contract = new Contract();
         contract.setStatus(classifierRepository.getOne(ContractStatus.LEPING_STAATUS_S.name()));
+        contract.setSupervisorUrl(generateUniqueUrl());
         return save(contract, contractForm);
     }
 
+    private String generateUniqueUrl() {
+        return UUID.randomUUID().toString();
+    }
+
     public Contract save(Contract contract, ContractForm contractForm) {
-        Contract changedContract = EntityUtil.bindToEntity(contractForm, contract, "student", "module", "theme", "enterprise", "contractCoordinator");
+        Contract changedContract = EntityUtil.bindToEntity(contractForm, contract,
+                "student", "module", "theme", "enterprise", "teacher", "contractCoordinator");
         EntityUtil.setEntityFromRepository(contractForm, changedContract, studentRepository, "student");
         EntityUtil.setEntityFromRepository(contractForm, changedContract, curriculumVersionOccupationModuleRepository, "module");
         EntityUtil.setEntityFromRepository(contractForm, changedContract, curriculumVersionOccupationModuleThemeRepository, "theme");
@@ -197,9 +223,29 @@ public class ContractService {
         contractRepository.delete(contract);
     }
 
-    public Contract sendToEkis(Contract contract) {
+    public Contract sendToEkis(HoisUserDetails user, Contract contract) {
         contract.setStatus(classifierRepository.getOne(ContractStatus.LEPING_STAATUS_Y.name()));
+        practiceJournalRepository.save(createPracticeJournal(contract, schoolRepository.getOne(user.getSchoolId())));
         return contractRepository.save(contract);
+    }
+
+    private PracticeJournal createPracticeJournal(Contract contract, School school) {
+        PracticeJournal practiceJournal = EntityUtil.bindToEntity(contract, new PracticeJournal(), "contract", "school", "studyYear", "status");
+        practiceJournal.setContract(contract);
+        practiceJournal.setSchool(school);
+        practiceJournal.setStudyYear(studyYearService.getCurrentStudyYear(school));
+        practiceJournal.setStatus(classifierRepository.getOne(JournalStatus.PAEVIK_STAATUS_T.name()));
+        return practiceJournal;
+    }
+
+    public void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, Contract contract) {
+        PracticeJournalUniqueUrlMessage data = new PracticeJournalUniqueUrlMessage();
+        data.setUrl(getPracticeJournalSupervisorUrl(contract));
+        automaticMessageService.sendMessageToEnterprise(contract.getEnterprise(), schoolRepository.getOne(user.getSchoolId()), MessageType.TEATE_LIIK_PRAKTIKA_URL, data);
+    }
+
+    public String getPracticeJournalSupervisorUrl(Contract contract) {
+        return frontendBaseUrl + "practiceJournals/supervisor/" + contract.getSupervisorUrl();
     }
 
 }

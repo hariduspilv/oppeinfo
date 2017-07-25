@@ -14,8 +14,10 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.Message;
 import ee.hitsa.ois.domain.MessageReceiver;
 import ee.hitsa.ois.domain.MessageTemplate;
@@ -110,6 +112,15 @@ public class AutomaticMessageService {
         }
     }
 
+    public void sendMessageToEnterprise(Enterprise enterprise, School school, MessageType type, Object dataBean) {
+        Message message = getMessage(type, school, dataBean);
+        Person automaticSender = em.getReference(Person.class, PersonUtil.AUTOMATIC_SENDER_ID);
+
+        if (message != null && StringUtils.hasText(enterprise.getContactPersonEmail())) {
+            mailService.sendMail(automaticSender.getEmail(), enterprise.getContactPersonEmail(), message.getSubject(), message.getContent());
+        }
+    }
+
     private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean, Message existingMessage) {
         Classifier status = em.getReference(Classifier.class, MessageStatus.TEATESTAATUS_U.name());
         List<MessageReceiver> messageReceivers = StreamUtil.toMappedList(person -> {
@@ -176,4 +187,6 @@ public class AutomaticMessageService {
 
         return message;
     }
+
+
 }

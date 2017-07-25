@@ -49,7 +49,7 @@ public class MidtermTaskUtil {
     }
 
     public static boolean midtermTaskCanBeEdited(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
-        return LocalDate.now().isBefore(subjectStudyPeriod.getStudyPeriod().getEndDate()) && (
+        return !LocalDate.now().isAfter(subjectStudyPeriod.getStudyPeriod().getEndDate()) && (
                 user.isSchoolAdmin() || user.isTeacher());
     }
 

@@ -21,6 +21,10 @@ html {
 	padding: 3px;
 }
 
+.reportsubtable td {
+	border: none;
+}
+
 .reporttableheader {
     font-weight: bold;
     text-align: center;

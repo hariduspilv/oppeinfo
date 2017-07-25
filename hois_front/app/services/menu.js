@@ -232,6 +232,17 @@ angular.module('hitsaOis')
           name: 'main.menu.study.practiceJournal.search',
           url: "/practiceJournals?_menu"
         },
+        {
+          name: 'main.menu.study.practiceJournal.student.list',
+          url: "/practiceJournals/student?_menu"
+        },
+        {
+          name: 'main.menu.protocol.search',
+          url: "/higherProtocols?_menu",
+          studyLevel: {
+              higher: true
+          }
+        }
       ]
     });
 
@@ -291,6 +302,14 @@ angular.module('hitsaOis')
         {
           name: 'main.menu.lessonplan.event.label',
           url: "/lessonplans/events?_menu"
+        },
+        {
+          name: 'main.menu.timetable.generalTimetable.label',
+          url: "/timetable/generalTimetableByGroup?_menu"
+        },
+        {
+          name: 'main.menu.timetable.timetableManagement.label',
+          url: "/timetable/timetableManagement?_menu"
         }
       ]
     });

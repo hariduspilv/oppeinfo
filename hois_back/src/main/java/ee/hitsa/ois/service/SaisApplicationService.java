@@ -225,7 +225,7 @@ public class SaisApplicationService {
     }
 
     /**
-     * TODO: Avalduse andmeid ei muudeta siis, kui avaldus on juba lisatud immatrikuleerimise käskkirjale.
+     * TODO: this method may be slow - it has many N+1 query problems.
      */
     private void proccessRow(SaisApplicationCsvRow row, int rowNr, List<SaisApplicationImportedRowDto> failed,
             SaisApplicationImportResultDto dto, ClassifierCache classifiers, Map<String, Object> processedByNr,
@@ -281,6 +281,11 @@ public class SaisApplicationService {
         if (existingSaisApplication != null && StringUtils.hasText(existingSaisApplication.getIdcode()) &&
                 StringUtils.hasText(row.getIdcode()) && !existingSaisApplication.getIdcode().equals(row.getIdcode())) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, String.format("%son süsteemis juba seotud teise isikuga (%s).", messageForOther, existingSaisApplication.getIdcode())));
+            return;
+        }
+
+        if (existingSaisApplication != null && !directiveService.directiveStudentsWithSaisApplication(Arrays.asList(existingSaisApplication.getId())).isEmpty()) {
+            failed.add(new SaisApplicationImportedRowDto(rowNr, String.format("%son seotud käskkiri - seda ei uuendata.", messageForOther)));
             return;
         }
 

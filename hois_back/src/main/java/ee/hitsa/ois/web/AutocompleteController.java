@@ -168,8 +168,8 @@ public class AutocompleteController {
     }
 
     @GetMapping("/journals")
-    public List<AutocompleteResult> journals(HoisUserDetails user) {
-        return autocompleteService.journals(user);
+    public List<AutocompleteResult> journals(HoisUserDetails user, @RequestParam(name = "studyYear", required = false) Long studyYear) {
+        return autocompleteService.journals(user, studyYear);
     }
 
     @GetMapping("/enterprises")

@@ -7,4 +7,6 @@ import ee.hitsa.ois.domain.Contract;
 
 public interface ContractRepository extends JpaRepository<Contract, Long>, JpaSpecificationExecutor<Contract> {
 
+    Contract findBySupervisorUrl(String uuid);
+
 }

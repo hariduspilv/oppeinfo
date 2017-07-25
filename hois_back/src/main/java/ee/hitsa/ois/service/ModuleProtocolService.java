@@ -5,8 +5,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.lang.invoke.MethodHandles;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -15,7 +13,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import org.slf4j.Logger;
@@ -49,6 +46,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
@@ -66,7 +64,6 @@ import ee.hitsa.ois.web.dto.ModuleProtocolStudentSelectDto;
 public class ModuleProtocolService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static DateTimeFormatter shortYearFormatter = DateTimeFormatter.ofPattern("YY");
 
     @Autowired
     private EntityManager em;
@@ -268,7 +265,7 @@ public class ModuleProtocolService {
         protocol.setIsVocational(Boolean.TRUE);
         protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
         protocol.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        protocol.setProtocolNr(generateProtocolNumber());
+        protocol.setProtocolNr(ProtocolUtil.generateProtocolNumber(em));
         protocol.setProtocolStudents(form.getProtocolStudents().stream().map(dto -> {
             ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
             protocolStudent.setStudent(studentRepository.getOne(dto.getStudentId()));
@@ -278,12 +275,6 @@ public class ModuleProtocolService {
         protocolVdata.setProtocol(protocol);
         protocol.setProtocolVdata(protocolVdata);
         return protocolRepository.save(protocol);
-    }
-
-    // TODO: proper per school protocol number generation
-    private String generateProtocolNumber() {
-        Query q = em.createNativeQuery("select nextval('public.protocol_id_seq')");
-        return LocalDate.now().format(shortYearFormatter) + String.format("%04d", q.getSingleResult());
     }
 
     private ProtocolVdata protocolVdataFromDto(ProtocolVdataForm vdata) {

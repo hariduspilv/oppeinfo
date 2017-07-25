@@ -28,14 +28,17 @@ import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOccupation;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumOccupation;
+import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.StateCurriculumModuleRepository;
 import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
+import ee.hitsa.ois.web.commandobject.StateCurriculumModuleForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
@@ -47,6 +50,8 @@ public class StateCurriculumService {
 
 	@Autowired
 	private StateCurriculumRepository stateCurriculumRepository;
+    @Autowired
+    private StateCurriculumModuleRepository stateCurriculumModuleRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
@@ -167,12 +172,16 @@ public class StateCurriculumService {
     }
 
     public StateCurriculum create(StateCurriculumForm stateCurriculumForm) {
-        return save(new StateCurriculum(), stateCurriculumForm);
+        StateCurriculum stateCurriculum = new StateCurriculum();
+        stateCurriculum.setStatus(classifierRepository.getOne(CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
+        return save(stateCurriculum, stateCurriculumForm);
     }
 
     public StateCurriculum save(StateCurriculum stateCurriculum, StateCurriculumForm stateCurriculumForm) {
         EntityUtil.bindToEntity(stateCurriculumForm, stateCurriculum, classifierRepository, "occupations", "modules");
-        return updateStateCurriculumModules(stateCurriculum, stateCurriculumForm);
+        updateStateCurriculumOccupations(stateCurriculum, stateCurriculumForm.getOccupations());
+        updateStateCurriculumModules(stateCurriculum, stateCurriculumForm);
+        return stateCurriculumRepository.save(stateCurriculum);
     }
 
     private void updateModule(StateCurriculumModuleDto dto, StateCurriculumModule module) {
@@ -188,18 +197,55 @@ public class StateCurriculumService {
             return new StateCurriculumModuleOccupation(c);
         });
     }
-
-    public StateCurriculum updateStateCurriculumModules(StateCurriculum stateCurriculum, StateCurriculumForm form) {
-        EntityUtil.bindEntityCollection(stateCurriculum.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), form.getOccupations(), occupation -> {
+    
+    public void updateStateCurriculumOccupations(StateCurriculum stateCurriculum, Set<String> occupations) {
+        EntityUtil.bindEntityCollection(stateCurriculum.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), occupations, occupation -> {
             return new StateCurriculumOccupation(EntityUtil.validateClassifier(classifierRepository.getOne(occupation), MainClassCode.KUTSE));
         });
+    }
 
-        EntityUtil.bindEntityCollection(stateCurriculum.getModules(), StateCurriculumModule::getId, form.getModules(), StateCurriculumModuleDto::getId, dto -> {
-            StateCurriculumModule module = new StateCurriculumModule();
-            updateModule(dto, module);
-            return module;
-        }, this::updateModule);
+    public void updateStateCurriculumModules(StateCurriculum stateCurriculum, StateCurriculumForm form) {
+        EntityUtil.bindEntityCollection(stateCurriculum.getModules(), StateCurriculumModule::getId, form.getModules(), 
+                StateCurriculumModuleDto::getId, dto -> createModule(dto, stateCurriculum), this::updateModule);
+    }
+    
+    public StateCurriculumModule createModule(StateCurriculumModuleDto dto, StateCurriculum stateCurriculum) {
+        StateCurriculumModule module = new StateCurriculumModule();
+        module.setStateCurriculum(stateCurriculum);
+        updateModule(dto, module);
+        return module;
+    }
 
+    public StateCurriculumModule createModule(StateCurriculumModuleForm form) {
+        StateCurriculum stateCurriculum = stateCurriculumRepository.getOne(form.getStateCurriculum());
+        updateStateCurriculumOccupations(stateCurriculum, form.getStateCurriculumOccupations());
+        StateCurriculumModule module = createModule(form, stateCurriculum);
+        stateCurriculum.getModules().add(module);
+        stateCurriculumRepository.save(stateCurriculum);
+        return stateCurriculumModuleRepository.save(module);
+    }
+
+    public void deleteModule(StateCurriculumModule stateCurriculumModule) {
+        StateCurriculum stateCurriculum = stateCurriculumModule.getStateCurriculum();
+        stateCurriculum.getModules().remove(stateCurriculumModule);
+        EntityUtil.deleteEntity(stateCurriculumModuleRepository, stateCurriculumModule);
+    }
+
+    public StateCurriculumModule updateModule(StateCurriculumModule module, StateCurriculumModuleForm form) {
+        StateCurriculum stateCurriculum = module.getStateCurriculum();
+        updateStateCurriculumOccupations(stateCurriculum, form.getStateCurriculumOccupations());
+        updateModule(form, module);
+        stateCurriculumRepository.save(stateCurriculum);
+        return stateCurriculumModuleRepository.save(module);
+    }
+    
+    public StateCurriculum setStatus(StateCurriculum stateCurriculum, CurriculumStatus status) {
+        stateCurriculum.setStatus(classifierRepository.getOne(status.name()));
         return stateCurriculumRepository.save(stateCurriculum);
+    }
+    
+    public StateCurriculum setStatusAndSave(StateCurriculum stateCurriculum, StateCurriculumForm form, CurriculumStatus status) {
+        stateCurriculum.setStatus(classifierRepository.getOne(status.name()));
+        return save(stateCurriculum, form);
     }
 }

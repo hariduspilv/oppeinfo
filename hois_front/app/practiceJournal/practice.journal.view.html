@@ -1,0 +1,200 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form name="practiceJournalEntryForm" ng-submit="practiceJournalEntryForm.$valid && save()" novalidate layout="column">
+      <div class="form-readonly" layout="column">
+        <br>
+        <div ng-if="!auth.isStudent()" layout="row" flex>
+          <md-input-container class="label-only" flex>
+            <label>{{'student.label' | translate}}</label>
+            <hois-value value="practiceJournal.student.nameEt" href-value="'#/students/' + practiceJournal.student.id + '/main'"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.curriculum' | translate}}</label>
+            <hois-value value="currentLanguageNameField(practiceJournal.studentCurriculumVersion)"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.studyForm' | translate}}</label>
+            <hois-classifier-value ng-model="practiceJournal.studentStudyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+          </md-input-container>
+          <br>
+        </div>
+
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label>{{'practiceJournal.module' | translate}}</label>
+            <hois-value value="currentLanguageNameField(practiceJournal.module)"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'practiceJournal.theme' | translate}}</label>
+            <hois-value value="currentLanguageNameField(practiceJournal.theme)"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'practiceJournal.credits' | translate}}</label>
+            <hois-value value="practiceJournal.credits"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'practiceJournal.hours' | translate}}</label>
+            <hois-value value="practiceJournal.hours"></hois-value>
+          </md-input-container>
+        </div>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label>{{'enterprise.label' | translate}}</label>
+            <hois-value value="currentLanguageNameField(practiceJournal.contract.enterprise)"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'enterprise.supervisor' | translate}}</label>
+            <hois-value value="practiceJournal.contract.supervisorName"></hois-value>
+          </md-input-container>
+        </div>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label>{{'practiceJournal.startDate' | translate}}</label>
+            <hois-value value="practiceJournal.startDate | hoisDate"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'practiceJournal.endDate' | translate}}</label>
+            <hois-value value="practiceJournal.endDate | hoisDate"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'practiceJournal.schoolSupervisor' | translate}}</label>
+            <hois-value value="currentLanguageNameField(practiceJournal.teacher)"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div flex>
+        <md-table-container>
+          <table md-table md-progress="entries.$promise">
+            <thead md-head md-on-reorder="loadEntries">
+              <tr md-row flex>
+                <th md-column>{{'practiceJournal.practiceJournalEntry.practiceDate' | translate}}</th>
+                <th md-column>{{'practiceJournal.practiceJournalEntry.description' | translate}}</th>
+                <th md-column>{{'practiceJournal.practiceJournalEntry.hours' | translate}}</th>
+                <th md-column>{{'practiceJournal.practiceJournalEntry.supervisorComment' | translate}}</th>
+                <th md-column>{{'practiceJournal.practiceJournalEntry.teacherComment' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in practiceJournal.practiceJournalEntries | orderBy: 'practiceDate'" ng-class-odd="'odd'" ng-class-even="'even'"
+                md-colors="{background: getEntryColor(row)}">
+                <td md-cell>
+                  <div>
+                    <hois-value value="row.practiceDate | hoisDate"></hois-value>
+                  </div>
+                </td>
+                <td md-cell>
+                  <div>
+                    <hois-value value="row.description"></hois-value>
+                  </div>
+                </td>
+                <td md-cell>
+                  <div>
+                    <hois-value value="row.hours"></hois-value>
+                  </div>
+                </td>
+                <td md-cell>{{row.supervisorComment}}</td>
+                <td md-cell>
+                  <div>
+                    <hois-value value="row.teacherComment"></hois-value>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+
+      <br>
+
+      <div class="form-readonly" layout="row">
+        <md-input-container flex>
+          <label>{{'practiceJournal.myPracticeReport' | translate}}</label>
+          <hois-value value="practiceJournal.practiceReport"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div class="form-readonly" layout="row" flex>
+        <md-input-container flex>
+          <label>{{'practiceJournal.teacherComment' | translate}}</label>
+          <hois-value value="practiceJournal.teacherComment"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div class="form-readonly" layout="row">
+        <md-input-container flex>
+          <label>{{'practiceJournal.supervisorComment' | translate}}</label>
+          <hois-value value="practiceJournal.supervisorComment"></hois-value>
+        </md-input-container>
+      </div>
+
+      <br>
+      <div layout="row">
+        <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/')">{{'main.button.back' | translate}}</md-button>
+      </div>
+      <br>
+    </form>
+
+    <div layout="column" flex>
+      <fieldset>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practiceJournal.supervisorOpinionFile' | translate}}</legend>
+        <table md-table class="secondary-table">
+          <thead md-head>
+            <tr md-row>
+              <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+              <th md-column><span>{{'file.additionDate' | translate}}</span></th>
+              <th md-column>{{'file.addedBy' | translate}}</th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="file in practiceJournal.practiceJournalFiles | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>
+                {{file.oisFile.fname}}
+                <a ng-href="{{getUrl(file.oisFile)}}" target="_blank">
+                  <md-icon md-font-set="material-icons">file_download</md-icon>
+                </a>
+              </td>
+              <td md-cell>
+                {{file.inserted | hoisDateTime}}
+              </td>
+              <td md-cell>
+                {{file.insertedBy}}
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </fieldset>
+    </div>
+
+    <br>
+
+    <div class="form-readonly" layout="row">
+      <md-input-container flex>
+        <label>{{'practiceJournal.teacherOpinion' | translate}}</label>
+        <hois-value value="practiceJournal.teacherOpinion"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div class="form-readonly" layout="row">
+      <md-input-container flex>
+        <label>{{'practiceJournal.supervisorOpinion' | translate}}</label>
+        <hois-value value="practiceJournal.supervisorOpinion"></hois-value>
+      </md-input-container>
+    </div>
+
+    <div class="form-readonly" layout="row">
+      <md-input-container flex>
+        <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
+        <hois-classifier-value ng-model="practiceJournal.grade" main-classifier-code="KUTSEHINDAMINE" model-value-attr="code"></hois-classifier-value>
+      </md-input-container>
+    </div>
+
+    <div flex>
+      <hois-collapsable label="('contract.practicePlan' | translate)" expanded="false">
+        <div>
+          {{practiceJournal.contract.practicePlan}}
+        </div>
+      </hois-collapsable>
+    </div>
+  </div>
+</div>

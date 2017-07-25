@@ -66,7 +66,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     } else {
         var initialObject = {
             groupProportion: 'PAEVIK_GRUPI_JAOTUS_1',
-            studyPeriod: studyPeriodId ? studyPeriodId : null,
+            studyPeriod: studyPeriodId,
             subject: subjectId,
             teachers: [],
             studentGroups: []

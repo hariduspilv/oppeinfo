@@ -1,19 +1,15 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ContractEditController', function ($scope, $route, QueryUtils, Classifier, message, $location, dialogService) {
+angular.module('hitsaOis').controller('ContractEditController', function ($scope, $route, QueryUtils, Classifier, message, $location, dialogService, DataUtils) {
   var CREDITS_TO_HOURS_MULTIPLIER = 26;
 
   $scope.auth = $route.current.locals.auth;
   $scope.contract = {};
   $scope.formState = {};
 
-  function entityToForm(contract) {
-    ['module', 'theme', 'enterprise', 'teacher', 'contractCoordinator'].forEach(function (property) {
-      if (angular.isObject(contract[property])) {
-        contract[property] = contract[property].id;
-      }
-    });
-    $scope.contract = contract;
+  function entityToForm(entity) {
+    DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'enterprise', 'teacher', 'contractCoordinator']);
+    $scope.contract = entity;
   }
 
   var entity = $route.current.locals.entity;

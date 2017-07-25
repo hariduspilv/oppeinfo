@@ -147,4 +147,8 @@ public abstract class UserUtil {
     public static void assertIsPerson(HoisUserDetails user, Person person) {
         AssertionFailedException.throwIf(!user.getPersonId().equals(EntityUtil.getNullableId(person)), "Person and user don't match");
     }
+
+    public static void assertIsStudent(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isStudent(), "User is not school student");
+    }
 }

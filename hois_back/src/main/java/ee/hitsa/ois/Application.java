@@ -12,7 +12,6 @@ import java.util.concurrent.Executor;
 
 import javax.annotation.PostConstruct;
 
-import ee.hois.xroad.ehis.service.EhisXroadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -54,6 +53,7 @@ import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 import ee.hitsa.ois.domain.BaseEntity;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import ee.hois.xroad.ehis.service.EhisXroadService;
 
 @EntityScan(basePackageClasses = { BaseEntity.class, Jsr310JpaConverters.class })
 @EnableAsync
@@ -83,6 +83,11 @@ public class Application {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
             if (authentication == null || !authentication.isAuthenticated()) {
               return null;
+            }
+
+            //for anonymous user
+            if (authentication.getPrincipal() instanceof String) {
+                return (String) authentication.getPrincipal();
             }
             return HoisUserDetails.fromPrincipal(authentication).getUsername();
         };

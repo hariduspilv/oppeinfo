@@ -6,6 +6,7 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -37,23 +38,11 @@ public class CurriculumSpecialityDto extends VersionedCommand {
     private String occupationEn;
     @ClassifierRestriction(MainClassCode.KUTSE)
     private String occupation;
-    private Long curriculum;
-    
 
     public static CurriculumSpecialityDto of(CurriculumSpeciality speciality) {
-        CurriculumSpecialityDto dto = EntityUtil.bindToDto(speciality, new CurriculumSpecialityDto(), "referenceNumber", "curriculum");
-        dto.setCurriculum(EntityUtil.getId(speciality.getCurriculum()));
-        return dto;
+        return EntityUtil.bindToDto(speciality, new CurriculumSpecialityDto(), "referenceNumber", "curriculum");
     }
-    
-    public Long getCurriculum() {
-        return curriculum;
-    }
-    
-    public void setCurriculum(Long curriculum) {
-        this.curriculum = curriculum;
-    }
-
+    @XmlTransient
     public Long getReferenceNumber() {
         return referenceNumber;
     }

@@ -28,6 +28,7 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
@@ -37,6 +38,7 @@ import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
 import ee.hitsa.ois.repository.DirectiveCoordinatorRepository;
 import ee.hitsa.ois.repository.EnterpriseRepository;
+import ee.hitsa.ois.repository.PracticeJournalRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.repository.UserRepository;
@@ -69,6 +71,8 @@ public class ContractControllerTests {
     private DirectiveCoordinatorRepository directiveCoordinatorRepository;
     @Autowired
     private UserRepository userRepository;
+    @Autowired
+    private PracticeJournalRepository practiceJournalRepository;
 
     private ContractDto contract;
     private Student student;
@@ -138,22 +142,7 @@ public class ContractControllerTests {
         ResponseEntity<ContractDto> responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ContractDto.class);
         Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
 
-        PageRequest SINGLE_RESULT = new PageRequest(1, 1);
-        form.setStudent(AutocompleteResult.of(student));
-        form.setModule(curriculumVersionOccupationModuleRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
-        form.setCredits(BigDecimal.ONE);
-        form.setHours(Integer.valueOf(1));
-        form.setStartDate(LocalDate.now());
-        form.setEndDate(LocalDate.now().plusDays(1));
-        form.setPracticePlace("place");
-        form.setEnterprise(enterpriseRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
-        form.setContactPersonName("person name");
-        form.setContactPersonEmail("test@test.ee");
-        form.setSupervisorName("supervisor");
-        form.setSupervisorEmail("test@test.ee");
-        form.setTeacher(teacherRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
-        form.setContractCoordinator(directiveCoordinatorRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
-        form.setPracticePlan("plan");
+        form = createForm();
 
         responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ContractDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -179,14 +168,68 @@ public class ContractControllerTests {
 
     }
 
+
+    @Test
+    public void sendToEkis() {
+        ContractForm form = createForm();
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
+        ResponseEntity<ContractDto> responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ContractDto.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        contract = responseEntity.getBody();
+
+        Assert.assertEquals(contract.getStatus(), ContractStatus.LEPING_STAATUS_S.name());
+        PracticeJournal practiceJournal = practiceJournalRepository.findByContractId(contract.getId());
+        Assert.assertNull(practiceJournal);
+
+        uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT + "/sendToEkis").pathSegment(contract.getId().toString());
+        responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ContractDto.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        contract = responseEntity.getBody();
+
+        Assert.assertEquals(contract.getStatus(), ContractStatus.LEPING_STAATUS_Y.name());
+
+        practiceJournal = practiceJournalRepository.findByContractId(contract.getId());
+        Assert.assertNotNull(practiceJournal);
+
+    }
+
     private void delete() {
         if (contract != null && contract.getId() != null) {
+            PracticeJournal practiceJournal = practiceJournalRepository.findByContractId(contract.getId());
+            if (practiceJournal != null) {
+                UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/practiceJournals")
+                        .pathSegment(practiceJournal.getId().toString());
+                uriBuilder.queryParam("version", practiceJournal.getVersion().toString());
+                restTemplate.delete(uriBuilder.toUriString());
+            }
+
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
                     .pathSegment(contract.getId().toString());
             uriBuilder.queryParam("version", contract.getVersion().toString());
             restTemplate.delete(uriBuilder.toUriString());
-        }
 
+        }
+    }
+
+    private ContractForm createForm() {
+        ContractForm form = new ContractForm();
+        PageRequest SINGLE_RESULT = new PageRequest(1, 1);
+        form.setStudent(AutocompleteResult.of(student));
+        form.setModule(curriculumVersionOccupationModuleRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
+        form.setCredits(BigDecimal.ONE);
+        form.setHours(Integer.valueOf(1));
+        form.setStartDate(LocalDate.now());
+        form.setEndDate(LocalDate.now().plusDays(1));
+        form.setPracticePlace("place");
+        form.setEnterprise(enterpriseRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
+        form.setContactPersonName("person name");
+        form.setContactPersonEmail("test@test.ee");
+        form.setSupervisorName("supervisor");
+        form.setSupervisorEmail("test@test.ee");
+        form.setTeacher(teacherRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
+        form.setContractCoordinator(directiveCoordinatorRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
+        form.setPracticePlan("plan");
+        return form;
     }
 
 }

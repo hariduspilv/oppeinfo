@@ -6,4 +6,6 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import ee.hitsa.ois.domain.teacher.Teacher;
 
 public interface TeacherRepository extends JpaRepository<Teacher, Long>, JpaSpecificationExecutor<Teacher> {
+
+    Teacher findByPersonIdAndSchoolId(Long personId, Long schoolId);
 }

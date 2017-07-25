@@ -38,6 +38,18 @@ public class Protocol extends BaseEntityWithId {
     @OneToOne(mappedBy = "protocol", cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(nullable = false, updatable = false)
     private ProtocolVdata protocolVdata;
+    
+    @OneToOne(mappedBy = "protocol", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(nullable = false, updatable = false)
+    private ProtocolHdata protocolHdata;
+
+    public ProtocolHdata getProtocolHdata() {
+        return protocolHdata;
+    }
+
+    public void setProtocolHdata(ProtocolHdata protocolHdata) {
+        this.protocolHdata = protocolHdata;
+    }
 
     public Boolean getIsVocational() {
         return isVocational;

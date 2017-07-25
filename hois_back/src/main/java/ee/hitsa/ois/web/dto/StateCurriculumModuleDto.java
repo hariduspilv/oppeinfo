@@ -10,6 +10,7 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
@@ -40,10 +41,14 @@ public class StateCurriculumModuleDto extends VersionedCommand {
     @NotBlank
     private String assessmentsEt;
     private String assessmentsEn;
-
+    
+    @NotEmpty
+    @ClassifierRestriction({MainClassCode.OSAKUTSE, MainClassCode.SPETSKUTSE, MainClassCode.KUTSE})
     private Set<String> moduleOccupations = new HashSet<>();
-
+    
+    @Size(max=4000)
     private String outcomesEt;
+    @Size(max=4000)
     private String outcomesEn;
 
     

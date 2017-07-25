@@ -42,7 +42,7 @@
       <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.higher && school.vocational">
             <md-input-container flex="20" flex-sm="100" flex-xs="100">
                 <label>{{'curriculum.curriculumGroup' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP"  ng-disabled="criteria.iscedClassCode"></hois-classifier-select>
+                <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP"  ng-disabled="criteria.iscedClassCode && criteria.iscedClassCode.length > 0"></hois-classifier-select>
             </md-input-container>
 
             <md-input-container  flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">

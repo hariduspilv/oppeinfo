@@ -6,12 +6,15 @@ angular.module('hitsaOis')
     var baseUrl = '/curriculum';
     $scope.curriculum = $route.current.locals.curriculum;
     $scope.formState = {
-      readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1
+      readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
+      strictValidation: false
     };
     $scope.myEhisSchool = $rootScope.currentUser.school ? $rootScope.currentUser.school.ehisSchool : null;
     $scope.ehisSchools = $scope.curriculum.jointPartners.map(function (p) { return p.ehisSchool; });
     $scope.ehisSchools.push($scope.myEhisSchool);
-    var SpecialityEndpoint = QueryUtils.endpoint(baseUrl + '/speciality');
+    // var SpecialityEndpoint = QueryUtils.endpoint(baseUrl + '/speciality');
+    var SpecialityEndpoint = QueryUtils.endpoint('/curriculum/' + $scope.curriculum.id + '/speciality');
+
 
     var entity = { curriculum: $scope.curriculum.id, modules: [] };
 
@@ -51,7 +54,6 @@ angular.module('hitsaOis')
       angular.extend(entity, initialVersion);
       $scope.version = entity;
     }
-    $scope.currentStatus = $scope.version.status;
     DataUtils.convertStringToDates($scope.version, ["validFrom", "validThru"]);
 
     var CurriculumVersionEndpoint = QueryUtils.endpoint('/curriculum/' + $scope.version.curriculum + '/versions');
@@ -81,6 +83,7 @@ angular.module('hitsaOis')
     $scope.openAddSpecialtyDialog = function () {
       var DialogController = function (scope) {
         scope.maxCredits = $scope.curriculum.credits ? $scope.curriculum.credits : 0;
+        scope.isNew = true;
       };
       dialogService.showDialog('higherCurriculum/higher.curriculum.specialty.add.dialog.html', DialogController,
         function (submitScope) {
@@ -115,17 +118,26 @@ angular.module('hitsaOis')
     };
 
     $scope.save = function () {
-      $scope.version.status = $scope.currentStatus;
+      $scope.formState.strictValidation = false;
       setTimeout(save, 0);
     };
 
     // function formIsValid()
 
-    function save(messages) {
+    function validationPassed(messages) {
       $scope.higherCurriculumVersionForm.$setSubmitted();
+
       if (!versionFormIsValid()) {
         var errorMessage = messages && messages.errorMessage ? messages.errorMessage : 'main.messages.form-has-errors';
         message.error(errorMessage);
+        return false;
+      }
+      return true;
+    }
+
+    function save(messages) {
+
+      if (!validationPassed(messages)) {
         return;
       }
       var curriculumVersion = new CurriculumVersionEndpoint($scope.version);
@@ -138,48 +150,71 @@ angular.module('hitsaOis')
           DataUtils.convertStringToDates($scope.version, ["validFrom", "validThru"]);
           $scope.version.curriculum = $scope.curriculum.id;
           getCurriculum();
-
-          var status = $scope.version.status;
-          if ($scope.currentStatus !== status && !$scope.formState.readOnly) {
-            // $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/view').search({ _noback: true });
-            $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/view');
-          }
-          $scope.currentStatus = status;
         });
       } else {
         curriculumVersion.$save().then(function (response) {
           message.info('main.messages.create.success');
-          // $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/edit').search({ _noback: true });
           $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/edit');
         });
       }
     }
 
-    function setStatus(newStatus, messages) {
-      dialogService.confirmDialog({ prompt: messages.prompt }, function () {
-        $scope.version.status = newStatus;
-        // setTimeout is needed for validation of ng-required fields
-        setTimeout(function () {
-          save(messages);
-        }, 0);
-      });
-    }
-
-    $scope.setStatusVerified = function () {
+    $scope.saveAndConfirm = function() {
       var messages = {
         prompt: $scope.formState.readOnly ? 'curriculum.statuschangeReadOnly.version.prompt.verify' : 'curriculum.statuschange.version.prompt.verify',
         updateSuccess: 'curriculum.statuschange.version.success.verified'
       };
-      setStatus(Curriculum.VERSION_STATUS.K, messages);
+      var SaveAndConfirmEndpoint = QueryUtils.endpoint("/curriculum/" + $scope.curriculum.id + "/versions/saveAndConfirm");
+      $scope.formState.strictValidation = true;
+      changeStatus(SaveAndConfirmEndpoint, messages);
     };
 
-    $scope.setStatusClosed = function () {
+    $scope.confirm = function() {
+      var messages = {
+        prompt: $scope.formState.readOnly ? 'curriculum.statuschangeReadOnly.version.prompt.verify' : 'curriculum.statuschange.version.prompt.verify',
+        updateSuccess: 'curriculum.statuschange.version.success.verified'
+      };
+      var ConfirmEndpoint = QueryUtils.endpoint("/curriculum/" + $scope.curriculum.id + "/versions/confirm");
+      $scope.formState.strictValidation = true;
+      changeStatus(ConfirmEndpoint, messages);
+    };
+
+    $scope.setStatusClosed = function() {
+
       var messages = {
         prompt: $scope.formState.readOnly ? 'curriculum.statuschangeReadOnly.version.prompt.close' : 'curriculum.statuschange.version.prompt.close',
         updateSuccess: 'curriculum.statuschange.version.success.closed'
       };
-      setStatus(Curriculum.VERSION_STATUS.C, messages);
+      var ClosingEndpoint = QueryUtils.endpoint("/curriculum/" + $scope.curriculum.id + "/versions/close");
+      $scope.formState.strictValidation = false;
+      changeStatus(ClosingEndpoint, messages);
     };
+
+    function changeStatus(StatusChangeEndpoint, messages) {
+      if (!validationPassed(messages)) {
+        return;
+      }
+      setTimeout(function(){
+        dialogService.confirmDialog({ prompt: messages.prompt }, function () {
+            new StatusChangeEndpoint($scope.version).$update().then(function(response){
+              var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
+              message.info(updateSuccess);
+              $scope.version = response;
+              DataUtils.convertStringToDates($scope.version, ["validFrom", "validThru"]);
+              $scope.version.curriculum = $scope.curriculum.id;
+              getCurriculum();
+              $scope.formState.strictValidation = false;
+              goToReadOnlyForm(response);
+            });
+        });
+      }, 0);
+    }
+
+    function goToReadOnlyForm(response) {
+      if(!$scope.formState.readOnly) {
+        $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + response.id + '/view');
+      }
+    }
 
     $scope.goToEditForm = function () {
       if (!$scope.curriculum) {
@@ -189,11 +224,9 @@ angular.module('hitsaOis')
         dialogService.confirmDialog({
           prompt: 'curriculum.statuschange.version.prompt.editAccepted',
         }, function () {
-          // $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit').search({ _noback: true });
           $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit');
         });
       } else {
-        // $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit').search({ _noback: true });
         $location.path('/higherCurriculum/' + $scope.version.curriculum + '/version/' + $scope.version.id + '/edit');
       }
     };
@@ -211,7 +244,7 @@ angular.module('hitsaOis')
     }
 
     $scope.strictValidation = function () {
-      return $scope.version.status === Curriculum.VERSION_STATUS.K;
+      return $scope.version.status === Curriculum.VERSION_STATUS.K || $scope.formState.strictValidation;
     };
 
     $scope.delete = function () {
@@ -548,17 +581,16 @@ angular.module('hitsaOis')
           };
         }
 
-
         scope.delete = function () {
           dialogService.confirmDialog({ prompt: 'curriculum.moduleDeleteConfirm' }, function () {
-            ArrayUtils.remove($scope.version.modules, editingModule);
-            if (scope.data.id) {
-              var ModuleEndpoint = QueryUtils.endpoint('/curriculum/higher/version/modules');
-              var deletedModule = new ModuleEndpoint($scope.version);
-              deletedModule.$update().then(function (response) {
+            if(scope.data.id) {
+              var ModuleEndpoint = QueryUtils.endpoint('/curriculum/version/' + $scope.version.id + '/higherModule');
+              new ModuleEndpoint(scope.data).$delete().then(function() {
                 message.info('main.messages.delete.success');
-                $scope.version.modules = response.modules;
+                ArrayUtils.remove($scope.version.modules, editingModule);
               });
+            } else {
+              ArrayUtils.remove($scope.version.modules, editingModule);
             }
             scope.cancel();
           });
@@ -586,6 +618,29 @@ angular.module('hitsaOis')
             }
           }
 
+        //   data.curriculumVersionSpecialities = $scope.version.specialitiesReferenceNumbers;
+        //   if($scope.version.id) {
+        //     var ModuleEndpoint = QueryUtils.endpoint('/curriculum/version/' + $scope.version.id + '/higherModule');
+        //     var savedModule = new ModuleEndpoint(data);
+        //     if(data.id) {
+        //       savedModule.$update().then(function(response) {
+        //         message.info('main.messages.update.success');
+        //         angular.extend(editingModule, response);
+        //     });
+        //   } else {
+        //     savedModule.$save().then(function(response) {
+        //         message.info('main.messages.create.success');
+        //         $scope.version.modules.push(response);
+        //     });
+        //   }
+        // } else {
+        //   if(editingModule) {
+        //       angular.extend(editingModule, data);
+        //   } else {
+        //       $scope.version.modules.push(data);
+        //   }
+        // }
+
           if (editingModule) {
             $scope.version.modules.splice($scope.version.modules.indexOf(editingModule), 1);
           }
@@ -599,7 +654,7 @@ angular.module('hitsaOis')
               $scope.version.specialitiesReferenceNumbers = response.specialitiesReferenceNumbers;
             });
           }
-        });
+      });
     };
 
     function subjectAddedToOtherModules(subject) {

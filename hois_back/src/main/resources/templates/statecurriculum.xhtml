@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>State Curriculum</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+    </style>
+  </head>
+  <body>
+    <table class="reporttable">
+      <tr>
+        <td class="reporttableheader" colspan="2">{{ "report.statecurriculum.statecurriculum" | translate }} {{ content.nameEt }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.statecurriculum.iscedclass" | translate }}</td>
+        <td>{{ content.iscedClass }}</td>
+      </tr>
+      <tr>
+        <td class="label" rowspan="2">{{ "report.curriculum.name" | translate }}</td>
+        <td class="label">{{ content.nameEt }}</td>
+      </tr>
+      <tr>
+        <td>{{ content.nameEn }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.statecurriculum.credits" | translate }}</td>
+        <td>{{ content.credits }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.curriculum.objectives" | translate }}</td>
+        <td><pre>{{ content.objectives }}</pre></td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.curriculum.outcomes" | translate }}</td>
+        <td><pre>{{ content.outcomes }}</pre></td>
+      </tr>
+      
+
+      <tr>
+        <td class="label">{{ "report.statecurriculum.admissionRequirements" | translate }}</td>
+        <td><pre>{{ content.graduationRequirements }}</pre></td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.statecurriculum.graduationRequirements" | translate }}</td>
+        <td><pre>{{ content.graduationRequirements }}</pre></td>
+      </tr>
+      
+      <tr>
+        <td class="label">{{ "report.statecurriculum.acquiring" | translate }}</td>
+          <table class="reporttable">
+          	<tr>
+          	    <td class="label">{{ "report.statecurriculum.nr" | translate }}</td>
+          		<td class="label">{{ "report.statecurriculum.acquiring.qualifications" | translate }}</td>
+          		<td class="label">{{ "report.statecurriculum.acquiring.partoccupations" | translate }}</td>
+          		<td class="label">{{ "report.statecurriculum.specialties" | translate }}</td>
+          	</tr>
+          	{% for occupation in content.occupations %}
+          	<tr>
+          	    <td>{{loop.index + 1}}</td>
+          		<td>{{ occupation.name }}</td>
+          		<td>
+         		  {% if occupation.partoccupations.size > 0 %}
+         		  	{% for partoccupation in occupation.partoccupations %}
+         		  	    {% if loop.index > 0 %}
+				          <br/>
+				        {% endif %}
+				        {{partoccupation}}
+         		  	{% endfor %}
+		          {% else %}
+		          	{{ "report.statecurriculum.missing" | translate }}
+		          {% endif %}	
+          		</td>
+          		<td>
+          		  {% if occupation.spetsOccupations.size > 0 %}
+         		  	{% for spetsOccupation in occupation.spetsOccupations %}
+         		  	    {% if loop.index > 0 %}
+				          <br/>
+				        {% endif %}
+         		  		{{spetsOccupation}}
+         		  	{% endfor %}
+		          {% else %}
+		          	{{ "report.statecurriculum.missing" | translate }}
+		          {% endif %}
+          		</td>
+          	</tr>
+          	{% endfor %}
+          </table>
+      </tr>
+      
+      <tr>
+        <td class="label">{{ "report.statecurriculum.structure" | translate }}</td>
+        <td>
+		<table class="reporttable reportsubtable">
+	        {% for module in content.modules %}
+	        <tr>
+				<td class="label">{{ "report.statecurriculum.module.module" | translate }} {{loop.index + 1}}: 
+				{{ module.name }} ({{ module.credits }} EKAP) {{ module.module }}</td>
+			</tr>
+			<tr>
+				<td>
+					{% for occupation in module.occupations %}
+					  {% if loop.index > 0 %}
+			            <br/>
+			          {% endif %}
+			          {{ occupation }}
+					{% endfor %}
+				</td>
+			</tr>
+			<br/>
+			{% endfor %}
+		</table>
+
+        
+		</td>
+      </tr>
+      
+      <tr>
+        <td colspan="2">
+        	<span class="label">{{ "report.statecurriculum.description" | translate }}</span>
+        	<pre>{{ content.description }}</pre>
+        </td>
+      </tr>
+    </table>
+    
+    
+    <p class="reporttableheader">{{ content.nameEt }} {{ "report.statecurriculum.module.descriptions" | translate }}</p>
+    {% for module in content.modules %}
+    
+    <table class="reporttable">
+      <tr>
+        <td class="label">{{ "report.statecurriculum.module.nr" | translate }}</td>
+        <td class="label">{{ "report.statecurriculum.module.name" | translate }}</td>
+        <td class="label">{{ "report.statecurriculum.module.credits" | translate }}</td>
+      </tr>
+      <tr>
+        <td>{{loop.index + 1}}</td>
+        <td>{{ module.name }}</td>
+        <td>{{ module.credits }}</td>
+      </tr>
+      <tr>
+        <td colspan="3">
+        	<span class="label">{{ "report.statecurriculum.module.objectives" | translate }}</span>
+        	<pre>{{ module.objectives }}</pre>
+        </td>
+      </tr>
+      <tr>
+        <td colspan="2">
+        	<span class="label">{{ "report.statecurriculum.module.outcomes" | translate }}</span>
+        	<pre>{{ module.outcomes }}</pre>
+        </td>
+        <td>
+        	<span class="label">{{ "report.statecurriculum.module.assessments" | translate }}</span>
+        	<pre>{{ module.assessments }}</pre>
+        </td>
+      </tr>
+	</table>
+	<br/>
+    {% endfor %}
+    
+  </body>
+</html>

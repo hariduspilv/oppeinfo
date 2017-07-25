@@ -65,6 +65,9 @@ public class SubjectForm extends VersionedCommand {
     private String independentStudyEn;
     @Size(max = 4000)
     private String additionalInfo;
+    
+    @NotNull
+    private Boolean isPractice = Boolean.FALSE;
 
     @ClassifierRestriction(MainClassCode.OPPEKEEL)
     private Set<String> languages = new HashSet<>();
@@ -279,5 +282,13 @@ public class SubjectForm extends VersionedCommand {
 
     public void setSubstituteSubjects(Set<EntityConnectionCommand> substituteSubjects) {
         this.substituteSubjects = substituteSubjects;
+    }
+
+    public Boolean getIsPractice() {
+        return isPractice;
+    }
+
+    public void setIsPractice(Boolean isPractice) {
+        this.isPractice = isPractice;
     }
 }

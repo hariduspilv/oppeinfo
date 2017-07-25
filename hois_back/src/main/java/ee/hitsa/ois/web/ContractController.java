@@ -54,9 +54,11 @@ public class ContractController {
     }
 
     @PostMapping
-    public ContractDto create(@Valid @RequestBody ContractForm contractForm, HoisUserDetails user) {
+    public ContractDto create(HoisUserDetails user, @Valid @RequestBody ContractForm contractForm) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(user, contractService.create(contractForm));
+        Contract savedContract = contractService.create(contractForm);
+        contractService.sendUniqueUrlEmailToEnterpriseSupervisor(user, savedContract);
+        return get(user, savedContract);
     }
 
     @PutMapping("/{id:\\d+}")
@@ -89,7 +91,7 @@ public class ContractController {
     @PostMapping("/sendToEkis/{id:\\d+}")
     public ContractDto sendToEkis(HoisUserDetails user, @WithEntity("id") Contract contract) {
         UserUtil.assertIsSchoolAdmin(user);
-        return get(user, contractService.sendToEkis(contract));
+        return get(user, contractService.sendToEkis(user, contract));
     }
 
 }

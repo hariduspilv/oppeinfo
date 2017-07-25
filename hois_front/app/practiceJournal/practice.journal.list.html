@@ -42,7 +42,7 @@
           </div>
         </div>
 
-        <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <div ng-if="!auth.isTeacher()" flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <div layout="column" flex>
             <md-input-container>
               <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
@@ -55,7 +55,7 @@
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button class="md-raised" ng-href="#/practiceJournals/new?_noback">{{'practiceJournal.button.createWithoutContract' | translate}}</md-button>
+        <md-button class="md-raised" ng-href="#/practiceJournals/new">{{'practiceJournal.button.createWithoutContract' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>
@@ -74,24 +74,27 @@
             <th md-column>{{'enterprise.label' | translate}}</th>
             <th md-column>{{'enterprise.supervisor' | translate}}</th>
             <th md-column>{{'practiceJournal.practicePlace' | translate}}</th>
-            <th md-column>{{'practiceJournal.schoolSupervisor' | translate}}</th>
+            <th md-column ng-if="!auth.isTeacher()">{{'practiceJournal.schoolSupervisor' | translate}}</th>
             <th md-column>{{'practiceJournal.studentLastEntryDate' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{currentLanguageNameField(row.student)}}</td>
+            <td md-cell><a ng-href="/#/practiceJournals/{{::row.id}}/view">{{currentLanguageNameField(row.student)}}</a></td>
             <td md-cell>{{row.studentGroup}}</td>
             <td md-cell>{{currentLanguageNameField(row.module) + ' ' + currentLanguageNameField(row.theme)}}</td>
             <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
-            <td md-cell>{{currentLanguageNameField(row.enterprise)}}</td>
+            <td md-cell>{{row.enterpriseName}}</td>
             <td md-cell>{{row.enterpriseContactPersonName}}</td>
             <td md-cell>{{row.practicePlace}}</td>
-            <td md-cell>{{currentLanguageNameField(row.teacher)}}</td>
+            <td md-cell ng-if="!auth.isTeacher()">{{currentLanguageNameField(row.teacher)}}</td>
             <td md-cell>{{row.studentLastEntryDate | hoisDate}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <div layout="row">
+                <md-button ng-if="row.canEdit" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/entries/edit">{{'practiceJournal.button.fill' | translate}}</md-button>
+                <md-button ng-if="row.canEdit" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              </div>
             </td>
           </tr>
         </tbody>

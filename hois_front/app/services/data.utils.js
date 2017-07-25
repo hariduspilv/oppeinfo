@@ -15,9 +15,9 @@ angular.module('hitsaOis').factory('DataUtils',
         return object.map(function (it) { return convertStringToDates(it, dateProperties); });
       }
 
-      for(var i = 0, cnt = dateProperties.length; i < cnt; i++) {
+      for (var i = 0, cnt = dateProperties.length; i < cnt; i++) {
         var property = dateProperties[i];
-        if(object.hasOwnProperty(property) && typeof object[property] === 'string') {
+        if (object.hasOwnProperty(property) && typeof object[property] === 'string') {
           object[property] = moment(object[property], pattern).toDate();
         }
       }
@@ -32,68 +32,79 @@ angular.module('hitsaOis').factory('DataUtils',
       return convert(object, dateProperties, "hh:mm");
     }
 
-    function sortStudyYearsOrPeriods(list) {
-        for(var i = 0; i < list.length; i++) {
-            convertStringToDates(list[i], ["startDate", "endDate"]);
-        }
-        list.sort(function(el1, el2){
-            return el1.endDate - el2.endDate;   //el1.endDate >= el2.endDate did not work in IE11
+    function convertObjectToIdentifier(entity, properties) {
+      if (angular.isArray(properties)) {
+        properties.forEach(function (property) {
+          if (angular.isObject(entity[property])) {
+            entity[property] = entity[property].id;
+          }
         });
+      }
+    }
+
+    function sortStudyYearsOrPeriods(list) {
+      for (var i = 0; i < list.length; i++) {
+        convertStringToDates(list[i], ["startDate", "endDate"]);
+      }
+      list.sort(function (el1, el2) {
+        return el1.endDate - el2.endDate;   //el1.endDate >= el2.endDate did not work in IE11
+      });
     }
     /**
      * Beware that using this method changes the order of initial array
      */
     function getStudyYearOrPeriodAt(date, list) {
-        sortStudyYearsOrPeriods(list);
-        return list.find(function(item){
-            return date <= item.endDate;
-        });
+      sortStudyYearsOrPeriods(list);
+      return list.find(function (item) {
+        return date <= item.endDate;
+      });
     }
     /**
      * Beware that using this method changes the order of initial array
      */
     function getCurrentStudyYearOrPeriod(list) {
-        return getStudyYearOrPeriodAt(new Date().withoutTime(), list);
+      return getStudyYearOrPeriodAt(new Date().withoutTime(), list);
     }
     /**
      * Beware that using this method changes the order of initial array
      */
     function isPastStudyYearOrPeriod(period) {
-        convertStringToDates(period, ["endDate"]);
-        return new Date().withoutTime() > period.endDate;
+      convertStringToDates(period, ["endDate"]);
+      return new Date().withoutTime() > period.endDate;
     }
 
     return {
-      assign: function( path, obj, value ) {
-        return path.split('.').reduce( function( prev, curr, currentIndex, array ) {
-          if(currentIndex === array.length - 1) {
+      assign: function (path, obj, value) {
+        return path.split('.').reduce(function (prev, curr, currentIndex, array) {
+          if (currentIndex === array.length - 1) {
             prev[curr] = value;
-          } else if(!prev[curr]) {
+          } else if (!prev[curr]) {
             prev[curr] = {};
           }
           return prev[curr];
-        }, obj || {} );
+        }, obj || {});
       },
       convertStringToDates: convertStringToDates,
       convertStringToTime: convertStringToTime,
+      convertObjectToIdentifier: convertObjectToIdentifier,
       getCurrentStudyYearOrPeriod: getCurrentStudyYearOrPeriod,
       getStudyYearOrPeriodAt: getStudyYearOrPeriodAt,
       sortStudyYearsOrPeriods: sortStudyYearsOrPeriods,
       isPastStudyYearOrPeriod: isPastStudyYearOrPeriod,
 
-      sexFromIdcode : function (idcode) {
-        if (idcode.length !== 11  || isNaN(idcode)) {
+      sexFromIdcode: function (idcode) {
+        if (idcode.length !== 11 || isNaN(idcode)) {
           return null;
         }
         return Number(idcode.charAt(0)) % 2 === 1 ? 'SUGU_M' : 'SUGU_N';
       },
 
-      birthdayFromIdcode : function (idcode) {
+      birthdayFromIdcode: function (idcode) {
         if (idcode.length !== 11 || isNaN(idcode)) {
           return null;
         }
-        var centuries = {"1": "18", "2": "18", "3": "19", "4": "19", "5": "20", "6": "20", "7": "21", "8": "21"};
-        var date = centuries[idcode.charAt(0)] + idcode.substring(1,7);
+        var centuries = { "1": "18", "2": "18", "3": "19", "4": "19", "5": "20", "6": "20", "7": "21", "8": "21" };
+        var date = centuries[idcode.charAt(0)] + idcode.substring(1, 7);
         return moment(date).toDate();
       }
     };
@@ -101,7 +112,7 @@ angular.module('hitsaOis').factory('DataUtils',
 );
 
 Date.prototype.withoutTime = function () {
-    var date = new Date(this);
-    date.setHours(0, 0, 0, 0);
-    return date;
+  var date = new Date(this);
+  date.setHours(0, 0, 0, 0);
+  return date;
 };

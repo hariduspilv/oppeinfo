@@ -40,7 +40,7 @@ public class ApplicationUtil {
 
     public static void assertStartAfterToday(Application application) {
         LocalDate start = getStartDate(application);
-        if (start.isBefore(LocalDate.now())) {
+        if (LocalDate.now().isAfter(start)) {
             throw new ValidationFailedException("application.messages.startIsEarlierThanToday");
         }
     }

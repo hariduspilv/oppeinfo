@@ -14,9 +14,9 @@
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column">
-        <md-input-container ng-if="!auth.isTeacher()" flex="45" flex-sm="100" flex-xs="100">
+        <div ng-if="!auth.isTeacher()" flex="45" flex-sm="100" flex-xs="100">
           <hois-autocomplete label="teacher.label" ng-model="search.teacher" method="teachers"></hois-autocomplete>
-        </md-input-container>
+        </div>
 
         <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <hois-autocomplete label="module.label" ng-model="search.module" method="vocationalmodules" multiple></hois-autocomplete>
@@ -26,7 +26,7 @@
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'journal.label' | translate}}</label>
-          <hois-select ng-model="criteria.journal" type="journal"></hois-select>
+          <hois-select ng-model="criteria.journal" type="journal" criteria="{studyYear: criteria.studyYear}" load-after-defer="criteriaDefer" ></hois-select>
         </md-input-container>
 
         <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">

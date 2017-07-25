@@ -33,6 +33,9 @@ public class ContractDto extends VersionedCommand {
     private String practicePlan;
 
     public static ContractDto of(Contract contract) {
+        if (contract == null) {
+            return null;
+        }
         return EntityUtil.bindToDto(contract, new ContractDto());
     }
 

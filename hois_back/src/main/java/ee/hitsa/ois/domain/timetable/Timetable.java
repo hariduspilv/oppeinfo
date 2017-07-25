@@ -30,6 +30,7 @@ public class Timetable extends BaseEntityWithId {
 
     private LocalDate startDate;
     private LocalDate endDate;
+    private Boolean isHigher;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "timetable_id", nullable = false, updatable = false)
@@ -73,6 +74,14 @@ public class Timetable extends BaseEntityWithId {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 
     public List<TimetableObject> getTimetableObjects() {

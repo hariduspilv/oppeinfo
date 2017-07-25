@@ -2,19 +2,28 @@ package ee.hitsa.ois.web.dto.curriculum;
 
 import java.time.LocalDateTime;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlRootElement;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import ee.hitsa.ois.LocalDateTimeXmlAdapter;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.CurriculumFileUpdateDto;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 
+@XmlRootElement(name="curriculum")
+@XmlAccessorType(XmlAccessType.NONE)
 public class CurriculumDto extends CurriculumForm {
-
-    private Long id; 
+    private Long id;
     private LocalDateTime inserted;
     private String insertedBy;
     private LocalDateTime changed;
     private String changedBy;
+    private String status;
+
 
     public static CurriculumDto of(Curriculum curriculum) {
         CurriculumDto dto = EntityUtil.bindToDto
@@ -35,6 +44,14 @@ public class CurriculumDto extends CurriculumForm {
 
         return dto;
     }
+    
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 
     public Long getId() {
         return id;
@@ -43,7 +60,7 @@ public class CurriculumDto extends CurriculumForm {
     public void setId(Long id) {
         this.id = id;
     }
-
+    @XmlJavaTypeAdapter(type=LocalDateTime.class, value = LocalDateTimeXmlAdapter.class)
     public LocalDateTime getInserted() {
         return inserted;
     }
@@ -63,7 +80,7 @@ public class CurriculumDto extends CurriculumForm {
     public LocalDateTime getChanged() {
         return changed;
     }
-
+    @XmlJavaTypeAdapter(type=LocalDateTime.class, value = LocalDateTimeXmlAdapter.class)
     public void setChanged(LocalDateTime changed) {
         this.changed = changed;
     }

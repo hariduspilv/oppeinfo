@@ -17,10 +17,10 @@ public class StateCurriculumDto extends StateCurriculumForm {
     private LocalDateTime changed;
     private String changedBy;
     private Set<CurriculumSearchDto> curricula;
+    private String status;
 
     public static StateCurriculumDto of(StateCurriculum stateCurriculum) {
         StateCurriculumDto dto = EntityUtil.bindToDto(stateCurriculum, new StateCurriculumDto(), "modules", "occupations");
-        
         dto.getModules().addAll(StreamUtil.toMappedList(StateCurriculumModuleDto::of, stateCurriculum.getModules()));
         dto.setOccupations(StreamUtil.toMappedSet(occupation -> EntityUtil.getNullableCode(occupation.getOccupation()), stateCurriculum.getOccupations()));
         dto.setCurricula(StreamUtil.toMappedSet(c -> {
@@ -37,6 +37,14 @@ public class StateCurriculumDto extends StateCurriculumForm {
             return curriculumDto;
         }, stateCurriculum.getCurricula()));
         return dto;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Set<CurriculumSearchDto> getCurricula() {

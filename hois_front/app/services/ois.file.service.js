@@ -2,7 +2,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('oisFileService', function() {
+  .factory('oisFileService', function(config) {
     var factory = {};
 
     factory.getFromLfFile = function(lfFile, loadedCallback) {
@@ -26,6 +26,14 @@ angular.module('hitsaOis')
 
     factory.getFileUrl = function(oisFile) {
       return 'data:' + oisFile.ftype + ';base64,' + oisFile.fdata;
+    };
+
+    factory.getUrl = function(file) {
+      if (file && file.oisFile) {
+        return file.id ? config.apiUrl + '/oisfile/get/' + file.oisFile.id : factory.getFileUrl(file.oisFile);
+      } else {
+        return file.id ? config.apiUrl + '/oisfile/get/' + file.id : factory.getFileUrl(file);
+      }
     };
 
     return factory;

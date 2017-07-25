@@ -1,0 +1,41 @@
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column>{{'student.label' | translate}}</th>
+            <th md-column>{{'studentGroup.label' | translate}}</th>
+            <th md-column>{{'practiceJournal.moduleAndTheme' | translate}}</th>
+            <th md-column>{{'practiceJournal.practiceStartAndEnd' | translate}}</th>
+            <th md-column>{{'enterprise.label' | translate}}</th>
+            <th md-column>{{'enterprise.supervisor' | translate}}</th>
+            <th md-column>{{'practiceJournal.practicePlace' | translate}}</th>
+            <th md-column>{{'practiceJournal.schoolSupervisor' | translate}}</th>
+            <th md-column>{{'practiceJournal.studentLastEntryDate' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell><a ng-href="/#/practiceJournals/{{::row.id}}/view">{{currentLanguageNameField(row.student)}}</a></td>
+            <td md-cell>{{row.studentGroup}}</td>
+            <td md-cell>{{currentLanguageNameField(row.module) + ' ' + currentLanguageNameField(row.theme)}}</td>
+            <td md-cell>{{row.startDate | hoisDate}} - {{row.endDate | hoisDate}}</td>
+            <td md-cell>{{row.enterpriseName}}</td>
+            <td md-cell>{{row.enterpriseContactPersonName}}</td>
+            <td md-cell>{{row.practicePlace}}</td>
+            <td md-cell>{{currentLanguageNameField(row.teacher)}}</td>
+            <td md-cell>{{row.studentLastEntryDate | hoisDate}}</td>
+            <td md-cell>
+              <md-button ng-if="(auth.isStudent() && row.canStudentAddEntries) || (auth.isTeacher() && row.canTeacherAddEntries)" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/entries/edit">{{'practiceJournal.button.fill' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

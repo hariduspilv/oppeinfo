@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class PracticeJournalSearchDto {
 
@@ -11,11 +12,14 @@ public class PracticeJournalSearchDto {
     private AutocompleteResult theme;
     private LocalDate startDate;
     private LocalDate endDate;
-    private AutocompleteResult enterprise;
+    private String enterpriseName;
     private String enterpriseContactPersonName;
     private String practicePlace;
     private AutocompleteResult teacher;
-    private LocalDate studentLastEntryDate;
+    private LocalDateTime studentLastEntryDate;
+    private Boolean canEdit;
+    private Boolean canStudentAddEntries;
+    private Boolean canTeacherAddEntries;
 
     public Long getId() {
         return id;
@@ -73,12 +77,12 @@ public class PracticeJournalSearchDto {
         this.endDate = endDate;
     }
 
-    public AutocompleteResult getEnterprise() {
-        return enterprise;
+    public String getEnterpriseName() {
+        return enterpriseName;
     }
 
-    public void setEnterprise(AutocompleteResult enterprise) {
-        this.enterprise = enterprise;
+    public void setEnterpriseName(String enterpriseName) {
+        this.enterpriseName = enterpriseName;
     }
 
     public String getEnterpriseContactPersonName() {
@@ -105,12 +109,36 @@ public class PracticeJournalSearchDto {
         this.teacher = teacher;
     }
 
-    public LocalDate getStudentLastEntryDate() {
+    public LocalDateTime getStudentLastEntryDate() {
         return studentLastEntryDate;
     }
 
-    public void setStudentLastEntryDate(LocalDate studentLastEntryDate) {
+    public void setStudentLastEntryDate(LocalDateTime studentLastEntryDate) {
         this.studentLastEntryDate = studentLastEntryDate;
+    }
+
+    public Boolean getCanEdit() {
+        return canEdit;
+    }
+
+    public void setCanEdit(Boolean canEdit) {
+        this.canEdit = canEdit;
+    }
+
+    public Boolean getCanStudentAddEntries() {
+        return canStudentAddEntries;
+    }
+
+    public void setCanStudentAddEntries(Boolean canStudentAddEntries) {
+        this.canStudentAddEntries = canStudentAddEntries;
+    }
+
+    public Boolean getCanTeacherAddEntries() {
+        return canTeacherAddEntries;
+    }
+
+    public void setCanTeacherAddEntries(Boolean canTeacherAddEntries) {
+        this.canTeacherAddEntries = canTeacherAddEntries;
     }
 
 }

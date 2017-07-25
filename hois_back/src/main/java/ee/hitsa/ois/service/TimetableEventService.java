@@ -50,7 +50,7 @@ public class TimetableEventService {
 
         return data;
     }
-    
+
     public List<TimetableEventSearchDto> getTimetableForWeek(Long studyPeriodId, Long studentGroupId, Long weekNr) {
         TimetableEventSearchCommand command = new TimetableEventSearchCommand();
         command.setStudentGroups(Arrays.asList(studentGroupId));
@@ -58,23 +58,23 @@ public class TimetableEventService {
 
         command.setFrom(start);
         command.setThru(start.plusDays(6));
-        
+
         NativeQueryBuilder qb = getTimetableEventTimeQuery(command);
         String select = "tet.id, te.name, tet.start, sg.code, te.consider_break";
         List<?> result = qb.select(select, em).getResultList();
-        List<TimetableEventSearchDto> resultList = StreamUtil.toMappedList( r -> 
-            new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1),
-                    resultAsLocalDateTime(r, 2).toLocalDate(), resultAsLocalDateTime(r, 2).toLocalTime(),
-                    resultAsString(r, 3), resultAsBoolean(r, 4)), result);
+        List<TimetableEventSearchDto> resultList = StreamUtil
+                .toMappedList(r -> new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1),
+                        resultAsLocalDateTime(r, 2).toLocalDate(), resultAsLocalDateTime(r, 2).toLocalTime(),
+                        resultAsString(r, 3), resultAsBoolean(r, 4)), result);
         setRoomsAndTeachersForSearchDto(resultList);
 
         return resultList;
     }
-    
+
     private LocalDate getStartDateForStudyPeriod(Long studyPeriodId, Long weekNr) {
         StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, studyPeriodId);
         LocalDate start;
-        if(weekNr != null) {
+        if (weekNr != null) {
             start = studyPeriod.getStudyYear().getWeekBeginningDate(weekNr);
         } else {
             start = LocalDate.now();
@@ -84,7 +84,7 @@ public class TimetableEventService {
         }
         return start;
     }
-    
+
     private static NativeQueryBuilder getTimetableEventTimeQuery(TimetableEventSearchCommand criteria) {
         String from = "from timetable_event_time tet"
                 + " inner join timetable_event te on tet.timetable_event_id = te.id"
@@ -119,16 +119,20 @@ public class TimetableEventService {
         qb.optionalCriteria("tet.other_room = :otherRoom", "otherRoom", criteria.getOtherRoom());
         return qb;
     }
-    
+
     private void setRoomsAndTeachersForSearchDto(List<TimetableEventSearchDto> timetableEventTimes) {
         List<Long> timetableEventTimeIds = StreamUtil.toMappedList(r -> r.getId(), timetableEventTimes);
         if (!timetableEventTimeIds.isEmpty()) {
-            Map<Long, List<ResultObject>> teacherNamesByTimetableEventTime = getTeacherNamesByTimetableEventTime(timetableEventTimeIds);
-            Map<Long, List<ResultObject>> roomCodesByTimetableEventTime = getRoomNrsByTimetableEventTime(timetableEventTimeIds);
+            Map<Long, List<ResultObject>> teacherNamesByTimetableEventTime = getTeacherNamesByTimetableEventTime(
+                    timetableEventTimeIds);
+            Map<Long, List<ResultObject>> roomCodesByTimetableEventTime = getRoomNrsByTimetableEventTime(
+                    timetableEventTimeIds);
 
             for (TimetableEventSearchDto dto : timetableEventTimes) {
-                dto.setTeachers(StreamUtil.toMappedList(r -> r.getValue(), teacherNamesByTimetableEventTime.get(dto.getId())));
-                dto.setRooms(StreamUtil.toMappedList(r -> r.getValue(), roomCodesByTimetableEventTime.get(dto.getId())));
+                dto.setTeachers(
+                        StreamUtil.toMappedList(r -> r.getValue(), teacherNamesByTimetableEventTime.get(dto.getId())));
+                dto.setRooms(
+                        StreamUtil.toMappedList(r -> r.getValue(), roomCodesByTimetableEventTime.get(dto.getId())));
             }
         }
     }

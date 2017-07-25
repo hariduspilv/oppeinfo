@@ -12,6 +12,7 @@
                 </md-input-container>
             </div>
 
+            <h2 ng-show="record.teachers.length > 0">{{'subjectStudyPeriod.teachers' | translate}}</h2>
             <table md-table class="secondary-table">
                 <tbody md-body>
                     <tr md-row ng-repeat="teacher in record.teachers" ng-class-odd="'odd'" ng-class-even="'even'">

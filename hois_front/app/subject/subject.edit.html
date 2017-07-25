@@ -84,6 +84,14 @@
       <label>{{'subject.linkDepartment' | translate}}</label>
       <hois-school-department-select ng-model="subject.schoolDepartment.id"></hois-school-department-select>
     </md-input-container>
+
+    <br>
+    <md-input-container flex>
+          <md-checkbox ng-model="subject.isPractice">
+            {{'subject.isPractice' | translate}}
+          </md-checkbox>
+    </md-input-container>
+
     <md-input-container class="top-margin readonly">
       <label>{{'subject.status' | translate}}</label>
       <hois-classifier-value ng-model="subject.status" main-classifier-code="AINESTAATUS"></hois-classifier-value>

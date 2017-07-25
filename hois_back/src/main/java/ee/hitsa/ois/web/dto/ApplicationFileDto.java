@@ -5,7 +5,7 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.application.ApplicationFile;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.commandobject.OisFileCommand;
+import ee.hitsa.ois.web.commandobject.OisFileViewDto;
 
 public class ApplicationFileDto extends InsertedChangedVersionDto {
 
@@ -13,11 +13,11 @@ public class ApplicationFileDto extends InsertedChangedVersionDto {
 
     @NotNull
     @Valid
-    private OisFileCommand oisFile;
+    private OisFileViewDto oisFile;
 
     public static ApplicationFileDto of(ApplicationFile applicationFile) {
         ApplicationFileDto dto = EntityUtil.bindToDto(applicationFile, new ApplicationFileDto(), "oisFile");
-        dto.setOisFile(EntityUtil.bindToDto(applicationFile.getOisFile(), new OisFileCommand()));
+        dto.setOisFile(EntityUtil.bindToDto(applicationFile.getOisFile(), new OisFileViewDto()));
         return dto;
     }
 
@@ -29,11 +29,11 @@ public class ApplicationFileDto extends InsertedChangedVersionDto {
         this.id = id;
     }
 
-    public OisFileCommand getOisFile() {
+    public OisFileViewDto getOisFile() {
         return oisFile;
     }
 
-    public void setOisFile(OisFileCommand oisFile) {
+    public void setOisFile(OisFileViewDto oisFile) {
         this.oisFile = oisFile;
     }
 

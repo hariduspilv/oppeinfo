@@ -8,22 +8,23 @@
  */
 angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School, QueryUtils, DataUtils) {
   return {
-    template: '<md-select>'+
-      '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>'+
-      '<md-option ng-repeat="option in options | orderBy: showProperty ? showProperty : $root.currentLanguageNameField()" ng-value="option[valueProperty]"'+
-      'aria-label="{{$root.currentLanguageNameField(option)}}">{{showProperty ? option[showProperty] : $root.currentLanguageNameField(option)}}</md-option></md-select>',
+    template: '<md-select>' +
+    '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>' +
+    '<md-option ng-repeat="option in options | orderBy: showProperty ? showProperty : $root.currentLanguageNameField()" ng-value="option[valueProperty]"' +
+    'aria-label="{{$root.currentLanguageNameField(option)}}">{{showProperty ? option[showProperty] : $root.currentLanguageNameField(option)}}</md-option></md-select>',
     restrict: 'E',
     replace: true,
     scope: {
       ngModel: '=',
       criteria: '=',
-      multiple:'@',
-      ngRequired:'=',
-      required:'@',
+      multiple: '@',
+      ngRequired: '=',
+      required: '@',
       values: '@',
       valueProperty: '@',
       showProperty: '@',
-      selectCurrentStudyYear: '@'
+      selectCurrentStudyYear: '@',
+      loadAfterDefer: '=',
     },
     link: function postLink(scope, element, attrs) {
       scope.isMultiple = angular.isDefined(scope.multiple);
@@ -32,11 +33,11 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
       //fix select not showing required visuals if required attribute is used
       element.attr('required', scope.isRequired);
 
-      var afterLoad = function(result) {
+      var afterLoad = function (result) {
         scope.options = result.content;
       };
 
-      var afterStudyYearsLoad = function()  {
+      var afterStudyYearsLoad = function () {
         if (angular.isDefined(scope.selectCurrentStudyYear) && !scope.ngModel) {
           var currentStudyYear = DataUtils.getCurrentStudyYearOrPeriod(scope.options);
           if (currentStudyYear) {
@@ -45,32 +46,44 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
         }
       };
 
-      if(angular.isDefined(attrs.type)) {
-        if(attrs.type === 'building') {
-          scope.options = QueryUtils.endpoint('/autocomplete/buildings').query();
-        } else if(attrs.type === 'curriculum') {
-          QueryUtils.endpoint('/autocomplete/curriculums').search(afterLoad);
-        } else if(attrs.type === 'curriculumversion') {
-          scope.options = Curriculum.queryVersions(scope.criteria);
-        } else if(attrs.type === 'directivecoordinator') {
-          scope.options = QueryUtils.endpoint('/autocomplete/directivecoordinators').query(scope.criteria);
-        } else if(attrs.type === 'journal') {
-          scope.options = QueryUtils.endpoint('/autocomplete/journals').query();
-        } else if(attrs.type === 'school') {
-          scope.options = School.getAll();
-        } else if(attrs.type === 'studentgroup') {
-          scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query(scope.criteria);
-        } else if(attrs.type === 'studyyear') {
-          scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query({}, afterStudyYearsLoad);
-        } else if(attrs.type === 'teacher') {
-          scope.options = QueryUtils.endpoint('/autocomplete/teachersList').query();
-        } else if(attrs.type === 'enterprise') {
-          scope.options = QueryUtils.endpoint('/autocomplete/enterprises').query();
+      var loadValues = function () {
+        if (angular.isDefined(attrs.type)) {
+          if (attrs.type === 'building') {
+            scope.options = QueryUtils.endpoint('/autocomplete/buildings').query();
+          } else if (attrs.type === 'curriculum') {
+            QueryUtils.endpoint('/autocomplete/curriculums').search(afterLoad);
+          } else if (attrs.type === 'curriculumversion') {
+            scope.options = Curriculum.queryVersions(scope.criteria);
+          } else if (attrs.type === 'directivecoordinator') {
+            scope.options = QueryUtils.endpoint('/autocomplete/directivecoordinators').query(scope.criteria);
+          } else if (attrs.type === 'journal') {
+            scope.options = QueryUtils.endpoint('/autocomplete/journals').query(scope.criteria);
+          } else if (attrs.type === 'school') {
+            scope.options = School.getAll();
+          } else if (attrs.type === 'studentgroup') {
+            scope.options = QueryUtils.endpoint('/autocomplete/studentgroups').query(scope.criteria);
+          } else if (attrs.type === 'studyyear') {
+            scope.options = QueryUtils.endpoint('/autocomplete/studyYears').query({}, afterStudyYearsLoad);
+          } else if (attrs.type === 'teacher') {
+            scope.options = QueryUtils.endpoint('/autocomplete/teachersList').query();
+          } else if (attrs.type === 'enterprise') {
+            scope.options = QueryUtils.endpoint('/autocomplete/enterprises').query();
+          }else if(attrs.type === 'studyperiod') {
+            scope.options = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+          }
+        } else if (angular.isDefined(scope.values)) {
+          scope.$parent.$watchCollection(scope.values, function (values) {
+            scope.options = values;
+          });
         }
-      } else if(angular.isDefined(scope.values)) {
-        scope.$parent.$watchCollection(scope.values, function(values) {
-          scope.options = values;
+      };
+
+      if (angular.isDefined(scope.loadAfterDefer)) {
+        scope.loadAfterDefer.promise.then(function() {
+          loadValues();
         });
+      } else {
+        loadValues();
       }
     }
   };

@@ -1,58 +1,60 @@
-        <div ng-if="isCreate" layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
-            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
-              <label>{{'application.type' | translate}}</label>
-              <hois-classifier-value ng-model="application.type" main-classifier-code="AVALDUS_LIIK"></hois-classifier-value>
-            </md-input-container>
-        </div>
-        <div ng-if="!isCreate" ng-include="'application/templates/application.information.html'" class="form-readonly"></div>
+<div ng-if="isCreate" layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
+  <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+    <label>{{'application.type' | translate}}</label>
+    <hois-classifier-value ng-model="application.type" main-classifier-code="AVALDUS_LIIK"></hois-classifier-value>
+  </md-input-container>
+</div>
+<div ng-if="!isCreate" ng-include="'application/templates/application.information.html'" class="form-readonly"></div>
 
-        <div ng-if="isCreate && !auth.isStudent()" layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
-            <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
-              <label>{{'student.label' | translate}}</label>
-              <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
-            </md-input-container>
-        </div>
+<div ng-if="isCreate && !auth.isStudent()" layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
+  <md-input-container class="label-only" flex="60" flex-sm="100" flex-xs="100">
+    <label>{{'student.label' | translate}}</label>
+    <hois-value value="application.student.nameEt" href-value="'#/students/' + application.student.id + '/main'"></hois-value>
+  </md-input-container>
+</div>
 
-        <div ng-include="templateUrlByType"></div>
+<div ng-include="templateUrlByType"></div>
 
-        <div layout="row" layout-sm="column" layout-xs="column"  >
-          <md-input-container flex="100" flex-sm="100" flex-xs="100">
-            <label class="textInput">{{'application.additionalInfo' | translate}}</label>
-            <textarea ng-model="application.addInfo" md-maxlength="4000" max-rows="10"></textarea>
-          </md-input-container>
-        </div>
+<div layout="row" layout-sm="column" layout-xs="column">
+  <md-input-container flex="100" flex-sm="100" flex-xs="100">
+    <label class="textInput">{{'application.additionalInfo' | translate}}</label>
+    <textarea ng-model="application.addInfo" md-maxlength="4000" max-rows="10"></textarea>
+  </md-input-container>
+</div>
 
-        <div layout="column" flex>
-          <fieldset>
-		<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
-            <md-button ng-if="(auth.isStudent() && application.status === 'AVALDUS_STAATUS_KOOST') || (auth.isAdmin() && ['AVALDUS_STAATUS_KOOST', 'AVALDUS_STAATUS_ESIT', 'AVALDUS_STAATUS_YLEVAAT'].indexOf(application.status) !== -1)" 
-			class="md-raised" href="" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
-          <table md-table class="secondary-table">
-            <thead md-head>
-              <tr md-row>
-                <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
-                <th md-column><span>{{'file.additionDate' | translate}}</span></th>
-                <th md-column>{{'file.addedBy' | translate}}</th>
-                <th md-column></th>
-              </tr>   
-            </thead>
-            <tbody md-body>
-              <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
-                <td md-cell>
-                  {{file.oisFile.fname}}
-                  <a ng-href="{{getUrl(file.oisFile)}}" target="_blank"><md-icon md-font-set="material-icons">file_download</md-icon></a>
-                </td>
-                <td md-cell>
-                  {{file.inserted | hoisDateTime}}
-                </td>
-                <td md-cell>
-                  {{file.insertedBy}} 
-                </td>
-                <td md-cell>
-                  <md-button class="remove nomargin" ng-click="removeFromArray(application.files, file)">&times;</md-button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-		  </fieldset>
-        </div>
+<div layout="column" flex>
+  <fieldset>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
+    <md-button ng-if="(auth.isStudent() && application.status === 'AVALDUS_STAATUS_KOOST') || (auth.isAdmin() && ['AVALDUS_STAATUS_KOOST', 'AVALDUS_STAATUS_ESIT', 'AVALDUS_STAATUS_YLEVAAT'].indexOf(application.status) !== -1)"
+      class="md-raised" href="" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
+    <table md-table class="secondary-table">
+      <thead md-head>
+        <tr md-row>
+          <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+          <th md-column><span>{{'file.additionDate' | translate}}</span></th>
+          <th md-column>{{'file.addedBy' | translate}}</th>
+          <th md-column></th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="file in application.files | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell>
+            {{file.oisFile.fname}}
+            <a ng-href="{{getUrl(file.oisFile)}}" target="_blank">
+              <md-icon md-font-set="material-icons">file_download</md-icon>
+            </a>
+          </td>
+          <td md-cell>
+            {{file.inserted | hoisDateTime}}
+          </td>
+          <td md-cell>
+            {{file.insertedBy}}
+          </td>
+          <td md-cell>
+            <md-button class="remove nomargin" ng-click="removeFromArray(application.files, file)">&times;</md-button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </fieldset>
+</div>

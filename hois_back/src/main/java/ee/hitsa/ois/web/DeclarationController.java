@@ -31,6 +31,7 @@ import ee.hitsa.ois.service.DeclarationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -112,7 +113,7 @@ public class DeclarationController {
         boolean canCreate = false;
         if(user.isStudent()) {
             Student student = studentRepository.getOne(user.getStudentId());
-            canCreate = StudentUtil.isStudying(student);
+            canCreate = StudentUtil.isStudying(student) && !declarationAlreadyExists(user.getSchoolId(), student);
         }
         return Collections.singletonMap("canCreate", Boolean.valueOf(canCreate));
     }
@@ -225,7 +226,10 @@ public class DeclarationController {
                 LocalDate.now().isBefore(declaration.getStudyPeriod().getEndDate());
     }
 
-    public static boolean canCreateDeclaration(HoisUserDetails user, Student student) {
+    public boolean canCreateDeclaration(HoisUserDetails user, Student student) {
+        if(declarationAlreadyExists(user.getSchoolId(), student)) {
+            return false;
+        }
         if(user.isSchoolAdmin()) {
             return true;
         }
@@ -233,5 +237,9 @@ public class DeclarationController {
             return StudentUtil.isStudying(student);
         }
         return false;
+    }
+    
+    public boolean declarationAlreadyExists(Long schoolId, Student student) {
+        return declarationService.getCurrent(schoolId, EntityUtil.getId(student)) != null;
     }
 }

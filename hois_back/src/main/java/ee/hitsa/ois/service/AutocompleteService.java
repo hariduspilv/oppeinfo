@@ -52,6 +52,7 @@ import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
@@ -333,7 +334,7 @@ public class AutocompleteService {
 
         return subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filtersAnd = new ArrayList<>();
-            
+
             if (schoolId != null) {
                 filtersAnd.add(cb.equal(root.get("school").get("id"), schoolId));
             }
@@ -344,7 +345,7 @@ public class AutocompleteService {
             propertyContains(() -> root.get(nameField), cb, command.getName(), filtersOr::add);
             propertyContains(() -> root.get("code"), cb, command.getName(), filtersOr::add);
             filtersAnd.add(cb.or(filtersOr.toArray(new Predicate[filtersOr.size()])));
-            
+
             return cb.and(filtersAnd.toArray(new Predicate[filtersAnd.size()]));
         }, new PageRequest(0, MAX_ITEM_COUNT)).map(SubjectSearchDto::of);
     }
@@ -370,6 +371,15 @@ public class AutocompleteService {
      */
     public List<StudyPeriodDto> studyPeriods(Long schoolId) {
         return StreamUtil.toMappedList(StudyPeriodDto::of, studyPeriodRepository.findAll((root, query, cb) -> {
+            return cb.equal(root.get("studyYear").get("school").get("id"), schoolId);
+        }));
+    }
+
+    /**
+     * startDate and endDate required to get current studyPeriod in front end
+     */
+    public List<StudyPeriodWithYearDto> studyPeriodsWithYear(Long schoolId) {
+        return StreamUtil.toMappedList(StudyPeriodWithYearDto::of, studyPeriodRepository.findAll((root, query, cb) -> {
             return cb.equal(root.get("studyYear").get("school").get("id"), schoolId);
         }));
     }
@@ -413,12 +423,13 @@ public class AutocompleteService {
         }, sortAndLimit(nameField)).map(AutocompleteResult::of);
     }
 
-    public List<AutocompleteResult> journals(HoisUserDetails user) {
+    public List<AutocompleteResult> journals(HoisUserDetails user, Long studyYear) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from journal j");
         qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
         if (user.isTeacher()) {
             qb.requiredCriteria("j.id in (select jt.journal_id from journal_teacher jt inner join teacher t on jt.teacher_id = t.id and t.person_id = :personId)", "personId", user.getPersonId());
         }
+        qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", studyYear);
 
         List<?> data = qb.select("j.id, j.name_et", em).getResultList();
         return StreamUtil.toMappedList(r -> {

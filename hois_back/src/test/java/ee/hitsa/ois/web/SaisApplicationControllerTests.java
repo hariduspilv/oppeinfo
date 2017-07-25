@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -17,13 +18,28 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.test.context.support.WithUserDetails;
 import org.springframework.test.context.junit4.SpringRunner;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.TransactionDefinition;
+import org.springframework.transaction.TransactionStatus;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.directive.Directive;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.sais.SaisAdmission;
+import ee.hitsa.ois.domain.sais.SaisApplication;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
+import ee.hitsa.ois.repository.SaisApplicationRepository;
+import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.sais.SaisApplicationImportCsvCommand;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationDto;
@@ -36,6 +52,9 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class SaisApplicationControllerTests {
 
+    private static final String ENDPOINT = "/saisApplications";
+    private static final String ENDPOINT_IMPORT_CSV = "/saisApplications/importCsv";
+
     private static final String CSV_HEADER = "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;Oppekava/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;EelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp";
     private static final String ADMISSION_CODE = "SaisApplicationControllerTests/1";
 
@@ -44,10 +63,30 @@ public class SaisApplicationControllerTests {
     @Autowired
     private SaisAdmissionRepository saisAdmissionRepository;
     @Autowired
+    private SaisApplicationRepository saisApplicationRepository;
+    @Autowired
     private TestConfigurationService testConfigurationService;
+    @Autowired
+    private DirectiveRepository directiveRepository;
+    @Autowired
+    private SchoolRepository schoolRepository;
+    @Autowired
+    private ClassifierRepository classifierRepository;
+    @Autowired
+    private PlatformTransactionManager txManager;
+
+    private Directive directive;
 
     @After
     public void cleanUp() {
+        if (directive != null) {
+            TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+            txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+            directive = txTemplate.execute((TransactionStatus status) -> {
+                directiveRepository.delete(directive);
+                return null;
+            });
+        }
         SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
         if (saisAdmission != null) {
             delete(saisAdmission);
@@ -62,11 +101,11 @@ public class SaisApplicationControllerTests {
 
     @Test
     public void search() {
-        ResponseEntity<SaisApplicationSearchDto> responseEntity = restTemplate.getForEntity("/saisApplications", SaisApplicationSearchDto.class);
+        ResponseEntity<SaisApplicationSearchDto> responseEntity = restTemplate.getForEntity(ENDPOINT, SaisApplicationSearchDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/saisApplications");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
         uriBuilder.queryParam("code", "test1", "test2");
         uriBuilder.queryParam("status", "SAIS_AVALDUSESTAATUS_TYH", "SAIS_AVALDUSESTAATUS_ML");
         uriBuilder.queryParam("name", "test");
@@ -74,9 +113,7 @@ public class SaisApplicationControllerTests {
         uriBuilder.queryParam("showRevoked", "false");
         uriBuilder.queryParam("addedToDirective", "false");
 
-        String url = uriBuilder.build().toUriString();
-
-        responseEntity = restTemplate.getForEntity(url, SaisApplicationSearchDto.class);
+        responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), SaisApplicationSearchDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
@@ -87,7 +124,7 @@ public class SaisApplicationControllerTests {
                 ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
@@ -95,9 +132,8 @@ public class SaisApplicationControllerTests {
         Long saisApplicationId = saisAdmission.getApplications().stream().findFirst().get().getId();
 
         //read
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/saisApplications").pathSegment(saisApplicationId.toString());
-        String uri = uriBuilder.build().toUriString();
-        ResponseEntity<Object> response = restTemplate.getForEntity(uri, Object.class);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(saisApplicationId.toString());
+        ResponseEntity<Object> response = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -108,28 +144,26 @@ public class SaisApplicationControllerTests {
                 ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().stream().findFirst().get().getRowNr());
 
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/saisApplications");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
         uriBuilder.queryParam("code", ADMISSION_CODE);
         uriBuilder.queryParam("idcode", "47810010009");
 
-        String url = uriBuilder.build().toUriString();
         @SuppressWarnings("rawtypes")
-        ResponseEntity<Map> searchResponseEntity = restTemplate.getForEntity(url, Map.class);
+        ResponseEntity<Map> searchResponseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Map.class);
         Assert.assertEquals(HttpStatus.OK, searchResponseEntity.getStatusCode());
         @SuppressWarnings({ "rawtypes", "unchecked" })
         List<Map> applications = (List<Map>) searchResponseEntity.getBody().get("content");
 
         Assert.assertEquals(1, applications.size());
 
-        uriBuilder = UriComponentsBuilder.fromUriString("/saisApplications").pathSegment(applications.get(0).get("id").toString());
-        String uri = uriBuilder.build().toUriString();
-        ResponseEntity<SaisApplicationDto> response = restTemplate.getForEntity(uri, SaisApplicationDto.class);
+        uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(applications.get(0).get("id").toString());
+        ResponseEntity<SaisApplicationDto> response = restTemplate.getForEntity(uriBuilder.toUriString(), SaisApplicationDto.class);
         Assert.assertNotNull(response.getBody().getSex());
     }
 
@@ -138,14 +172,14 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().stream().findFirst().get().getRowNr());
 
         cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;37810012580;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
-        responseEntity = restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+        responseEntity = restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -157,7 +191,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -169,7 +203,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + "; ;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -182,7 +216,7 @@ public class SaisApplicationControllerTests {
                 ADMISSION_CODE + ";Nr123456789;Toni;Kuut;37810010008;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
@@ -197,7 +231,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -209,7 +243,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -221,7 +255,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1/1/2001;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -233,7 +267,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -245,7 +279,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009; ;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -257,7 +291,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -269,7 +303,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EESTI;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -281,7 +315,7 @@ public class SaisApplicationControllerTests {
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
@@ -293,33 +327,100 @@ public class SaisApplicationControllerTests {
                 ";Nr223456789;Juku;Juurikas;37810010030;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
 
         ResponseEntity<SaisApplicationImportResultDto> responseEntity =
-                restTemplate.postForEntity("/saisApplications/importCsv", cmd, SaisApplicationImportResultDto.class);
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(2, responseEntity.getBody().getSuccessful().size());
     }
 
     @Test
+    @WithUserDetails(TestConfiguration.USER_ID)
     public void importCsvApplicationTryUpdateWhenAddedToDirective() {
+        String lastname = "Maasikas";
         SaisApplicationImportCsvCommand cmd = csvCmdForRows(
-                ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
-        //TODO
+                ADMISSION_CODE + ";Nr123456789;Mari;" + lastname + ";47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+
         //create
+        ResponseEntity<SaisApplicationImportResultDto> responseEntity =
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
+
+        SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
+        SaisApplication saisApplication = saisAdmission.getApplications().stream().findFirst().get();
+
+        //get
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(saisApplication.getId().toString());
+        ResponseEntity<SaisApplicationDto> response = restTemplate.getForEntity(uriBuilder.toUriString(), SaisApplicationDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assert.assertEquals(lastname, response.getBody().getLastname());
+
         //update
+        lastname = "Mustikas";
+        cmd = csvCmdForRows(
+                ADMISSION_CODE + ";Nr123456789;Mari;" + lastname + ";47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        responseEntity =
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
+
+        saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
+        saisApplication = saisAdmission.getApplications().stream().findFirst().get();
+
+        //get
+        uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(saisApplication.getId().toString());
+        response = restTemplate.getForEntity(uriBuilder.toUriString(), SaisApplicationDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Assert.assertEquals(lastname, response.getBody().getLastname());
+
         //add to directive
+        Long saisApplicationId = saisApplication.getId();
+        TransactionTemplate txTemplate = new TransactionTemplate(txManager);
+        txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
+        directive = txTemplate.execute((TransactionStatus status) -> {
+            DirectiveStudent directiveStudent = new DirectiveStudent();
+            directiveStudent.setSaisApplication(saisApplicationRepository.findOne(saisApplicationId));
+
+            Directive newDirective = new Directive();
+            newDirective.setSchool(schoolRepository.getOne(testConfigurationService.getHoisUserDetails().getSchoolId()));
+            newDirective.setType(classifierRepository.getOne(DirectiveType.KASKKIRI_IMMAT.name()));
+            newDirective.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name()));
+            newDirective.setHeadline("test - importCsvApplicationTryUpdateWhenAddedToDirective");
+            List<DirectiveStudent> students = new ArrayList<>();
+            students.add(directiveStudent);
+            directiveStudent.setDirective(newDirective);
+            newDirective.setStudents(students);
+            newDirective = directiveRepository.save(newDirective);
+            return newDirective;
+        });
+
+
         //try update
+        lastname = "Mustikas2";
+        cmd = csvCmdForRows(
+                ADMISSION_CODE + ";Nr123456789;Mari;" + lastname + ";47810010009;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
+        responseEntity =
+                restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
+        Assert.assertEquals("Avaldusega nr Nr123456789 on seotud käskkiri - seda ei uuendata.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
     }
 
     @Test
     public void csvSampleFile() {
-        ResponseEntity<?> response = restTemplate.getForEntity("/saisApplications/sample.csv", Void.class);
+        ResponseEntity<?> response = restTemplate.getForEntity(ENDPOINT + "/sample.csv", Void.class);
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
     @Test
     public void classifiersFile() {
-        ResponseEntity<?> response = restTemplate.getForEntity("/saisApplications/classifiers.csv", Void.class);
+        ResponseEntity<?> response = restTemplate.getForEntity(ENDPOINT + "/classifiers.csv", Void.class);
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
@@ -329,8 +430,7 @@ public class SaisApplicationControllerTests {
         Long version = saisAdmission.getVersion();
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/saisAdmissions").pathSegment(id.toString());
         uriBuilder.queryParam("version", version);
-        String uri = uriBuilder.build().toUriString();
-        restTemplate.delete(uri);
+        restTemplate.delete(uriBuilder.toUriString());
     }
 
     private static SaisApplicationImportCsvCommand csvCmdForRows(String...rows) {

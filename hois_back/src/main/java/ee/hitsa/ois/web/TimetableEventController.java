@@ -33,7 +33,8 @@ public class TimetableEventController {
     }
 
     @GetMapping
-    public Page<TimetableEventSearchDto> search(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria, Pageable pageable) {
+    public Page<TimetableEventSearchDto> search(HoisUserDetails user, @Valid TimetableEventSearchCommand criteria,
+            Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
         return timetableEventService.search(criteria, pageable);
     }

@@ -233,7 +233,7 @@
       <div layout="row" class="top-margin form-readonly">
         <md-input-container flex="30" flex-sm="100">
           <label>{{'main.status' | translate}}</label>
-          <hois-classifier-value ng-model="currentStatus" main-classifier-code="OPPEKAVA_VERSIOON_STAATUS"></hois-classifier-value>
+          <hois-classifier-value ng-model="version.status" main-classifier-code="OPPEKAVA_VERSIOON_STAATUS"></hois-classifier-value>
         </md-input-container>
       </div>
     </fieldset>
@@ -241,35 +241,35 @@
   </form>
 
   <div layout="row">
-    <div ng-show="currentStatus === VERSION_STATUS.S">
+    <div ng-show="version.status === VERSION_STATUS.S">
       <div ng-show="!version.id">
         <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
       </div>
       <div ng-show="!formState.readOnly && version.id">
         <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-        <md-button ng-click="setStatusVerified()" class="md-raised">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
-        <md-button ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="saveAndConfirm()">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="setStatusClosed()">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
       </div>
       <div ng-show="formState.readOnly">
         <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
-        <md-button ng-click="setStatusVerified()" class="md-raised">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
-        <md-button ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="confirm()">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="setStatusClosed()">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
       </div>
     </div>
-    <div ng-show="currentStatus === VERSION_STATUS.K">
+    <div ng-show="version.status === VERSION_STATUS.K">
       <div ng-show="!formState.readOnly">
         <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
       </div>
       <div ng-show="formState.readOnly">
         <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
-        <md-button ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="setStatusClosed()">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
       </div>
     </div>
-    <div ng-show="currentStatus === VERSION_STATUS.C">
+    <div ng-show="version.status === VERSION_STATUS.C">
       <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
     </div>
 

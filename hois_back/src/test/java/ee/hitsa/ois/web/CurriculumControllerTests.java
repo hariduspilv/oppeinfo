@@ -37,6 +37,7 @@ import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
 import ee.hitsa.ois.enums.CapacityType;
+import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
@@ -156,7 +157,7 @@ public class CurriculumControllerTests {
 
         Assert.assertNotNull(testCurriculum);
         Assert.assertEquals("testCode", testCurriculum.getCode());
-        Assert.assertEquals("OPPEKAVA_STAATUS_S", testCurriculum.getStatus().getCode());
+        Assert.assertEquals(CurriculumStatus.OPPEKAVA_STAATUS_S.name(), testCurriculum.getStatus().getCode());
         Assert.assertTrue(testCurriculum.getHigher().booleanValue());
         Assert.assertTrue(testCurriculum.getValidFrom().isEqual(validFrom));
         Assert.assertTrue(testCurriculum.getIscedClass().getCode().equals("ISCED_RYHM_0812"));
@@ -314,7 +315,6 @@ public class CurriculumControllerTests {
 
         // update curriculum text field and classifier field
         curriculumForm = responseEntity.getBody();
-        curriculumForm.setStatus("OPPEKAVA_STAATUS_M");
         curriculumForm.setNameEt("newName");
         curriculumForm.setVersion(testCurriculum.getVersion());
 
@@ -331,7 +331,6 @@ public class CurriculumControllerTests {
 
         // check
 
-        Assert.assertTrue(updatedCurriculum.getStatus().equals("OPPEKAVA_STAATUS_M"));
         Assert.assertTrue(updatedCurriculum.getNameEt().equals("newName"));
         Assert.assertTrue(updatedCurriculum.getVersion().equals(Long.valueOf(1)));
         /*
@@ -652,11 +651,10 @@ public class CurriculumControllerTests {
         curriculumForm.setConsecution("OPPEKAVA_TYPE_E");
         curriculumForm.setOrigStudyLevel("EKR_2");
         curriculumForm.setDraft("OPPEKAVA_LOOMISE_VIIS_PUUDUB");
-        curriculumForm.setStatus("OPPEKAVA_STAATUS_S");
         curriculumForm.setJointMentor("EHIS_KOOL_1");
         curriculumForm.setHigher(Boolean.TRUE);
         curriculumForm.setValidFrom(validFrom);
-        curriculumForm.setStudyLanguages(new HashSet<>());
+        curriculumForm.setStudyLanguages(Sets.newLinkedHashSet("OPPEKEEL_et_en", "OPPEKEEL_et_ru"));
         curriculumForm.setIscedClass("ISCED_RYHM_0812");
         curriculumForm.setVersions(new HashSet<>());
         curriculumForm.setJoint(Boolean.FALSE);
@@ -665,7 +663,6 @@ public class CurriculumControllerTests {
 
     private static void setCollections(CurriculumForm curriculumForm) {
         curriculumForm.setSchoolDepartments(Sets.newLinkedHashSet(Long.valueOf(1), Long.valueOf(3)));
-        curriculumForm.setStudyLanguages(Sets.newLinkedHashSet("OPPEKEEL_et_en", "OPPEKEEL_et_ru"));
         curriculumForm.setStudyForms(Sets.newLinkedHashSet("OPPEVORM_K", "OPPEVORM_MS"));
 
         Set<CurriculumFileDto> files = new HashSet<>();

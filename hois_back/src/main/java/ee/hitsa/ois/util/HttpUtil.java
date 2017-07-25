@@ -23,6 +23,7 @@ public class HttpUtil {
     private static final Pattern INVALID_FILENAME_SYMBOLS = Pattern.compile("[\\/:*?\"<>|]");
 
     public static final String APPLICATION_PDF = "application/pdf";
+    public static final String APPLICATION_XML = "application/xml";
     public static final String APPLICATION_XLS = "application/vnd.ms-excel";
     public static final String TEXT_CSV_UTF8 = "text/csv; Charset=UTF-8";
     private static final byte[] UTF8_BOM = new byte[] {(byte) 0xEF, (byte) 0xBB, (byte) 0xBF};
@@ -41,13 +42,17 @@ public class HttpUtil {
             bos.write(csvBytes);
         }
     }
-
+    
     public static void pdf(HttpServletResponse response, String filename, byte[] pdf) throws IOException {
         file(response, filename, APPLICATION_PDF, pdf);
     }
 
     public static void xls(HttpServletResponse response, String filename, byte[] xls) throws IOException {
         file(response, filename, APPLICATION_XLS, xls);
+    }
+    
+    public static void xml(HttpServletResponse response, String filename, byte[] xml) throws IOException {
+        file(response, filename, APPLICATION_XML, xml);
     }
 
     public static void file(HttpServletResponse response, String filename, String filetype, byte[] data) throws IOException {

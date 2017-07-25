@@ -262,14 +262,27 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
   $scope.teacherId = id;
   var Endpoint = QueryUtils.endpoint('/teachers');
 
-  function afterLoad() {
-    $scope.teacher.scheduleLoad = angular.isNumber($scope.teacher.scheduleLoad) ? String($scope.teacher.scheduleLoad) : '';
+  function setIsVocationalOrIsHigher() {
     $scope.vocationalHigher = '';
-    $translate(['teacher.isVocational', 'teacher.isHigher']).then(function (value) {
+    var array = [];
+    if($scope.teacher.isVocational) {
+      array.push('teacher.isVocational');
+    }
+    if($scope.teacher.isHigher) {
+      array.push('teacher.isHigher');
+    }
+    $translate(array).then(function (value) {
       $scope.vocationalHigher = Object.keys(value).map(function (key) {
         return value[key];
       }).join('; ');
     });
+  }
+
+  function afterLoad() {
+    $scope.teacher.scheduleLoad = angular.isNumber($scope.teacher.scheduleLoad) ? String($scope.teacher.scheduleLoad) : '';
+
+    setIsVocationalOrIsHigher();
+
     $scope.teacher.teacherPositionEhis.forEach(function (it) {
       it.load = angular.isNumber(it.load) ? String(it.load) : '';
     });

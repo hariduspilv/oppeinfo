@@ -8,5 +8,10 @@
     "name": "hois.mail.disable",
     "type": "java.lang.Boolean",
     "description": "property to disable mail service"
+  },
+  {
+    "name": "hois.frontend.baseUrl",
+    "type": "java.lang.String",
+    "description": "backend must know about frontend host to when it sends out urls"
   }
 ]}

@@ -49,6 +49,7 @@ public class Subject extends BaseEntityWithId {
     private String independentStudyEt;
     private String independentStudyEn;
     private String additionalInfo;
+    private Boolean isPractice;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private SchoolDepartment schoolDepartment;
@@ -287,5 +288,13 @@ public class Subject extends BaseEntityWithId {
 
     public void setParentConnections(Set<SubjectConnect> parentConnections) {
         this.parentConnections = parentConnections;
+    }
+
+    public Boolean getIsPractice() {
+        return isPractice;
+    }
+
+    public void setIsPractice(Boolean isPractice) {
+        this.isPractice = isPractice;
     }
 }
