@@ -1,7 +1,10 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+
+import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -21,6 +24,7 @@ import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.service.JournalService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -128,7 +132,13 @@ public class JournalController {
     @GetMapping("/{id:\\d+}/journalEntry/lessonInfo")
     public JournalEntryLessonInfoDto journalEntryLessonInfo(HoisUserDetails user, @WithEntity("id") Journal journal) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return journalService.journalEntryLessonInfo(user, journal);
+        return journalService.journalEntryLessonInfo(journal);
+    }
+
+    @GetMapping("/{id:\\d+}/journal.xls")
+    public void journalAsExcel(HoisUserDetails user, @WithEntity("id") Journal journal, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "journal.xls", journalService.journalAsExcel(journal));
     }
 
     private static void assertIsConfirmer(HoisUserDetails user, Journal journal) {

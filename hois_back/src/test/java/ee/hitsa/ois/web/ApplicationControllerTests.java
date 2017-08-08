@@ -60,13 +60,14 @@ public class ApplicationControllerTests {
     private TestConfigurationService testConfigurationService;
 
     private Student student;
+    private List<School> userSchools;
     private School userSchool;
 
     @Before
     public void setUp() {
         Role role = Role.ROLL_A;
         if(student == null) {
-            List<School> userSchools = userRepository.findAll((root, query, cb) -> {
+            userSchools = userRepository.findAll((root, query, cb) -> {
                 List<Predicate> filters = new ArrayList<>();
                 filters.add(cb.isNotNull(root.get("school").get("id")));
                 filters.add(cb.equal(root.get("role").get("code"), role.name()));
@@ -160,12 +161,15 @@ public class ApplicationControllerTests {
     public void applicable() {
         List<Student> students = studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), userSchool.getId()));
+            filters.add(root.get("school").in(userSchools));
             filters.add(cb.not(root.get("status").get("code").in(StudentStatus.STUDENT_STATUS_ACTIVE)));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
 
         Assert.assertTrue(!CollectionUtils.isEmpty(students));
+
+        userSchool = students.stream().findFirst().get().getSchool();
+        testConfigurationService.userToRoleInSchool(Role.ROLL_A, EntityUtil.getId(userSchool), restTemplate);
 
         for (Student notStudyingStudent : students) {
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT + "/student/"+notStudyingStudent.getId()+"/applicable");

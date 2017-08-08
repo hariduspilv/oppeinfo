@@ -1,10 +1,9 @@
-<md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
-</md-nav-bar>
+<div ng-cloak>
+  <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+  <div ng-if="!student || student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+</div>
 
-<div layout-padding>
+<div layout-padding ng-cloak>
   <div flex>
     <h2>{{'student.application.label' | translate}}</h2>
     <md-table-container>

@@ -14,7 +14,7 @@ public class TimetableDto {
     private String code;
     private LocalDate startDate;
     private LocalDate endDate;
-    private List<JournalForTimetableDto> journals;
+    private List<TimetableCurriculumDto> curriculums;
     private List<SubjectTeacherPairDto> pairs;
     private String status;
 
@@ -74,12 +74,12 @@ public class TimetableDto {
         this.endDate = endDate;
     }
 
-    public List<JournalForTimetableDto> getJournals() {
-        return journals;
+    public List<TimetableCurriculumDto> getCurriculums() {
+        return curriculums;
     }
 
-    public void setJournals(List<JournalForTimetableDto> journals) {
-        this.journals = journals;
+    public void setCurriculums(List<TimetableCurriculumDto> curriculums) {
+        this.curriculums = curriculums;
     }
 
     public List<SubjectTeacherPairDto> getPairs() {

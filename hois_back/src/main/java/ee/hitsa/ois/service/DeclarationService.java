@@ -29,6 +29,7 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.DeclarationStatus;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionHigherModuleRepository;
 import ee.hitsa.ois.repository.DeclarationRepository;
@@ -36,7 +37,6 @@ import ee.hitsa.ois.repository.DeclarationSubjectRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -95,9 +95,13 @@ public class DeclarationService {
             + "left join teacher t on t.id = sspt.teacher_id left join person p on p.id = t.person_id "
             + "group by ssp2.id) teachers on ssp.id  = teachers.ssp2Id";
 
-    private static final String SUBJECT_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
+    private static final String SUBJECT_CURRICULUM_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
             + "s.name_et, s.name_en, s.code, s.credits, c.value, cvhm.id as moduleId, "
             + "cvhms.is_optional, array_to_string(teachers.teacher, ', ')";
+    
+    private static final String SUBJECT_EXTRACURRICULUM_SELECT = " distinct ssp.id as ssp1Id, s.id as subjectId, "
+            + "s.name_et, s.name_en, s.code, s.credits, c.value, null as moduleId, "
+            + " false as isOptional, array_to_string(teachers.teacher, ', ')";
 
     public Page<DeclarationDto> search(DeclarationSearchCommand criteria, Pageable pageable) {
 
@@ -195,8 +199,11 @@ public class DeclarationService {
         
         declarationSubject.setDeclaration(declaration);
         declarationSubject.setSubjectStudyPeriod(ssp);
-        declarationSubject.setModule(curriculumVersionHigherModuleRepository.getOne(form.getCurriculumVersionHigherModule()));
-
+        Long higherModule = form.getCurriculumVersionHigherModule();
+        if(higherModule != null) {
+            declarationSubject.setModule(curriculumVersionHigherModuleRepository
+                    .getOne(higherModule));
+        }
         declarationSubject.setIsOptional(form.getIsOptional());
         return declarationSubjectRepository.save(declarationSubject);
     }
@@ -257,7 +264,7 @@ public class DeclarationService {
 
     public List<AutocompleteResult> getModules(Declaration declaration) {
         Student student = declaration.getStudent();
-        return StreamUtil.toMappedList(AutocompleteResult::of, student.getCurriculumVersion().getModules());
+        return StreamUtil.toMappedList(AutocompleteResult::of, student.getCurriculumVersion().getModules().stream().filter(m -> Boolean.FALSE.equals(m.getMinorSpeciality())));
     }
 
     public List<DeclarationSubjectDto> getCurriculumSubjectOptions(Declaration declaration) {
@@ -271,31 +278,36 @@ public class DeclarationService {
                 CurriculumVersion);
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriod);
 
-        List<?> result = qb.select(SUBJECT_SELECT, em).getResultList();
+        List<?> result = qb.select(SUBJECT_CURRICULUM_SELECT, em).getResultList();
 
         return subjectsQueryResultToDto(result);
     }
 
     public List<DeclarationSubjectDto> getExtraCurriculumSubjectsOptions(Declaration declaration) {
         Long studyPeriod = EntityUtil.getId(declaration.getStudyPeriod());
-        Student student = declaration.getStudent();
-        Long CurriculumVersion = EntityUtil.getId(student.getCurriculumVersion());
+        Long curriculumVersion = EntityUtil.getId(declaration.getStudent().getCurriculumVersion());
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SUBJECT_FROM);
-
-        qb.requiredCriteria("cvhm.curriculum_version_id <> :curriculumVersionId", "curriculumVersionId",
-                CurriculumVersion);
-        qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriod);
         
+        qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriod);
+
+        // do not select student's curriculum version's subjects
+        qb.requiredCriteria(" ssp.subject_id not in "
+                + "(select cs.subject_id "
+                + "from curriculum_version_hmodule_subject cs "
+                + "join curriculum_version_hmodule m on m.id = cs.curriculum_version_hmodule_id "
+                + "where m.curriculum_version_id = :curriculumVersionId)", "curriculumVersionId",
+                curriculumVersion);
+
         // do not select subject which are already added
         qb.requiredCriteria(
-                " not exists (select * from declaration d where d.study_period_id = :studyPeriod2 and exists("
-                        + "select * from declaration_subject ds "
-                        + "join subject_study_period ssp2 on ssp2.id = ds.subject_study_period_id "
-                        + "where ssp2.subject_id = ssp.subject_id) )",
-                "studyPeriod2", studyPeriod);
+                " not exists "
+                + "(select * from declaration_subject ds "
+                + "join subject_study_period ssp2 on ssp2.id = ds.subject_study_period_id  "
+                + "where ssp2.subject_id = ssp.subject_id and ds.declaration_id = :declarationId)", "declarationId",  
+                EntityUtil.getId(declaration));
 
-        List<?> result = qb.select(SUBJECT_SELECT, em).getResultList();
+        List<?> result = qb.select(SUBJECT_EXTRACURRICULUM_SELECT, em).getResultList();
 
         return subjectsQueryResultToDto(result);
     }

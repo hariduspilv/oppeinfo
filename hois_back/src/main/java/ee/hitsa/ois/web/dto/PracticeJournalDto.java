@@ -35,6 +35,7 @@ public class PracticeJournalDto extends VersionedCommand {
     private List<PracticeJournalEntryDto> practiceJournalEntries;
     private List<PracticeJournalFileDto> practiceJournalFiles;
     private Boolean canDelete;
+    private AutocompleteResult subject;
 
     public static PracticeJournalDto of(PracticeJournal practiceJournal) {
         PracticeJournalDto dto = EntityUtil.bindToDto(practiceJournal, new PracticeJournalDto(), "contract",
@@ -239,6 +240,14 @@ public class PracticeJournalDto extends VersionedCommand {
 
     public void setCanDelete(Boolean canDelete) {
         this.canDelete = canDelete;
+    }
+
+    public AutocompleteResult getSubject() {
+        return subject;
+    }
+
+    public void setSubject(AutocompleteResult subject) {
+        this.subject = subject;
     }
 
 }

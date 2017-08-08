@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -12,15 +13,21 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
 
 @Entity
 public class TimetableEvent extends BaseEntityWithId {
 
     private LocalDateTime start;
+    // FIXME: rename in database
+    @Column(name = "\"end\"")
     private LocalDateTime end;
     private Long lessons;
     private Boolean considerBreak;
     private String name;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Classifier repeat;
+    private Integer lessonNr;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false, insertable = false)
@@ -70,6 +77,14 @@ public class TimetableEvent extends BaseEntityWithId {
         this.name = name;
     }
 
+    public Classifier getRepeatCode() {
+        return repeat;
+    }
+
+    public void setRepeatCode(Classifier repeat) {
+        this.repeat = repeat;
+    }
+
     public TimetableObject getTimetableObject() {
         return timetableObject;
     }
@@ -84,6 +99,14 @@ public class TimetableEvent extends BaseEntityWithId {
 
     public void setTimetableEventTimes(List<TimetableEventTime> timetableEventTimes) {
         this.timetableEventTimes = timetableEventTimes;
+    }
+
+    public Integer getLessonNr() {
+        return lessonNr;
+    }
+
+    public void setLessonNr(Integer lessonNr) {
+        this.lessonNr = lessonNr;
     }
 
 }

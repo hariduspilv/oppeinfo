@@ -1,6 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($scope, $route, dialogService, oisFileService, QueryUtils, message, DataUtils) {
+angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController', function ($scope, $route, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils) {
+
+  $scope.removeFromArray = ArrayUtils.remove;
 
   $scope.practiceJournal = {
     practiceJournalEntries: [],
@@ -37,7 +39,7 @@ angular.module('hitsaOis').controller('PracticeJournalSupervisorEntryController'
     var practiceJournalEntries = new Endpoint(
       {
         supervisorOpinion: $scope.practiceJournal.supervisorOpinion,
-        supervisorComment: $scope.practiceJournal.supervisorOpinion,
+        supervisorComment: $scope.practiceJournal.supervisorComment,
         practiceJournalFiles: $scope.practiceJournal.practiceJournalFiles,
         practiceJournalEntries: $scope.practiceJournal.practiceJournalEntries
       });

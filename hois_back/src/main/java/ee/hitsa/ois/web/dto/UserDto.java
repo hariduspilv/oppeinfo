@@ -2,6 +2,7 @@ package ee.hitsa.ois.web.dto;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.UserForm;
@@ -26,12 +27,11 @@ public class UserDto extends UserForm {
                 userRight.setObject(it.getCode());
                 user.getUserRights().stream().filter(userRights -> it.getCode().equals(EntityUtil.getCode(userRights.getObject()))).forEach(userRights -> {
                     String permissionCode = EntityUtil.getCode(userRights.getPermission());
-                    // TODO use enum constant for classifier code
-                    if ("OIGUS_V".equals(permissionCode)) {
+                    if (Permission.OIGUS_V.name().equals(permissionCode)) {
                         userRight.setOigusV(Boolean.TRUE);
-                    } else if ("OIGUS_K".equals(permissionCode)) {
+                    } else if (Permission.OIGUS_K.name().equals(permissionCode)) {
                         userRight.setOigusK(Boolean.TRUE);
-                    } else if ("OIGUS_M".equals(permissionCode)) {
+                    } else if (Permission.OIGUS_M.name().equals(permissionCode)) {
                         userRight.setOigusM(Boolean.TRUE);
                     }
                 });

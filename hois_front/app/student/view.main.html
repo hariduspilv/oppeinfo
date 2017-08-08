@@ -1,12 +1,10 @@
-<md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
-</md-nav-bar>
+<div ng-cloak>
+  <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+  <div ng-if="!student || student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+</div>
 
 <div layout-padding ng-cloak class="form-readonly">
   <div flex>
-
     <div layout="row" layout-xs="column" flex>
       <div flex="70">
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -40,7 +38,7 @@
             <label>{{'student.language' | translate}}</label>
             <hois-classifier-value ng-model="student.person.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>
           </md-input-container>
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.bankaccount' | translate}}</label>
             <hois-value value="student.person.bankaccount"></hois-value>
           </md-input-container>
@@ -141,7 +139,7 @@
             <label>{{'student.schoolEmail' | translate}}</label>
             <hois-value value="student.schoolEmail"></hois-value>
           </md-input-container>
-          <md-input-container flex="60" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="55" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.phone' | translate}}</label>
             <hois-value value="student.person.phone"></hois-value>
           </md-input-container>

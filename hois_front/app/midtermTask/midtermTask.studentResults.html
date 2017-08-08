@@ -42,16 +42,52 @@
               <td md-cell ng-repeat="result in record.studentResults | filter: filterStudentResults(student)">
                 <md-input-container ng-if="result.isText">
                   <input ng-model="result.pointsTxt" type="text" md-maxlength="10"
-                  aria-label="{{'midtermTask.pointsTxt' | translate}}" ng-disabled="!result.canBeChanged">
+                  aria-label="{{'midtermTask.pointsTxt' | translate}}" ng-disabled="!student.studentResultCanBeChanged">
                 </md-input-container>
                 <md-input-container ng-if="!result.isText">
                   <input ng-model="result.points" type="number" min="0" max="{{result.maxPoints}}" pattern="^\d+(\.\d{2})?$"
-                  aria-label="{{'midtermTask.points' | translate}}" ng-disabled="!result.canBeChanged">
+                  aria-label="{{'midtermTask.points' | translate}}" ng-disabled="!student.studentResultCanBeChanged">
                 </md-input-container>
               </td>
-              <td md-cell></td>
-              <td md-cell></td>
-              <td md-cell></td>
+              <td md-cell>
+                <table>
+                  <tr ng-repeat="protocol in record.protocols | orderBy: 'protocolNr' | filter: filterProtocols(student)">
+                    <td>
+                      <table>
+                        <tr ng-repeat="protocolStudent in protocol.protocolStudents | filter: filterStudentProtocols(student)">
+                          <td>{{protocolStudent.gradeValue}}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+              <td md-cell>
+                <table>
+                  <tr ng-repeat="protocol in record.protocols | orderBy: 'protocolNr' | filter: filterProtocols(student)">
+                    <td>
+                      <a ng-href="#/higherProtocols/{{::protocol.id}}/view">
+                        <span>{{protocol.protocolNr}}</span>
+                        <hois-classifier-value class="inline" ng-model="protocol.protocolType" main-classifier-code="PROTOKOLLI_LIIK">
+                        </hois-classifier-value>
+                      </a>
+                    </td>
+                  </tr>
+                </table>
+              </td>
+              <td md-cell>
+                <table>
+                  <tr ng-repeat="protocol in record.protocols | orderBy: 'protocolNr' | filter: filterProtocols(student)">
+                    <td>
+                      <table>
+                        <tr ng-repeat="protocolStudent in protocol.protocolStudents | filter: filterStudentProtocols(student)">
+                          <td>{{protocolStudent.addInfo}}</td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+              </td>
             </ng-form>
           </tr>
         </tbody>
@@ -62,12 +98,17 @@
 
 
   <div layout="row">
-      <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="save()" ng-hide="record.subjectStudyPeriod.isPracticeSubject || record.students.length === 0">{{'main.button.save' | translate}}</md-button>
       <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods')">{{'main.button.back' | translate}}</md-button>
-      <md-button class="md-raised" ng-href="#/subjectStudyPeriods/{{subjectStudyPeriodId}}/midtermTasks">{{'midtermTask.add' | translate}}</md-button>
+      <md-button class="md-raised" ng-href="#/subjectStudyPeriods/{{subjectStudyPeriodId}}/midtermTasks"
+      ng-hide="record.subjectStudyPeriod.isPracticeSubject">{{'midtermTask.add' | translate}}</md-button>
   </div>
 </div>
 
 
 
-
+<style>
+  .inline {
+    display: inline;
+  }
+</style>

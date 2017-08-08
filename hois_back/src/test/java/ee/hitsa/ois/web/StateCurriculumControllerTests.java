@@ -1,12 +1,14 @@
 package ee.hitsa.ois.web;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.transaction.Transactional;
+
 import org.assertj.core.util.Sets;
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -23,28 +25,36 @@ import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.enums.CurriculumStatus;
+import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.dto.StateCurriculumDto;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@Transactional
 public class StateCurriculumControllerTests {
 
     private static final Long MISSING_ID = Long.valueOf(0);
-    private static final String NAME = "StateCurriculumTest";
+    private static final String NAME = "StateCurriculumControllerTest";
+    
+    private StateCurriculum testStateCurriculum; 
 
     @Autowired
     private TestRestTemplate restTemplate;
+    @Autowired
+    private StateCurriculumRepository stateCurriculumRepository;
+    
+    @After
+    public void cleanUp() {
+        if (testStateCurriculum != null && testStateCurriculum.getId() != null) {
+            this.restTemplate.delete("/stateCurriculum/{id}", testStateCurriculum.getId());
+        }
+    }
     
     @Test	
     public void testIsUniqueTrue() {
         Assert.assertEquals(testIsUnique(NAME.concat(NAME)), Boolean.TRUE);
-    }
-    
-    @Test
-    public void testIsUniqueFalse() {
-        Assert.assertEquals(testIsUnique(NAME), Boolean.FALSE);
     }
 
     private Boolean testIsUnique(String name) {
@@ -119,8 +129,11 @@ public class StateCurriculumControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
-
+        
         StateCurriculumDto stateCurriculumDto = responseEntity.getBody();
+        
+        testStateCurriculum = stateCurriculumRepository.getOne(stateCurriculumDto.getId());
+        
         Assert.assertTrue(stateCurriculumDto.getStatus().equals(CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
         Assert.assertTrue(stateCurriculumDto.getOccupations().size() == 2);
         Assert.assertTrue(stateCurriculumDto.getOccupations().contains("KUTSE_10512175"));
@@ -136,15 +149,15 @@ public class StateCurriculumControllerTests {
 
         
         //update 1
-        stateCurriculumDto.setNameEt("StateCurriculumControllerTest2");
+        stateCurriculumDto.setObjectivesEt(NAME + "2");
         stateCurriculumDto.getOccupations().add("KUTSE_10578607");
         stateCurriculumDto.getOccupations().remove("KUTSE_10512175");
         stateCurriculumDto.setStatus(CurriculumStatus.OPPEKAVA_STAATUS_S.name());
         
         module = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn().equals("StateCurriculumControllerTestNameEn")).findFirst().get();
-        module.setOutcomesEt("StateCurriculumControllerTest2");
-        module.setOutcomesEn("StateCurriculumControllerTest2");
-        module.setNameEt("StateCurriculumControllerTest2");
+        module.setOutcomesEt(NAME + "2");
+        module.setOutcomesEn(NAME + "2");
+        module.setNameEt(NAME + "2");
         module.setModule("KUTSEMOODUL_P");
         
         module.getModuleOccupations().add("KUTSE_10578607");
@@ -157,8 +170,10 @@ public class StateCurriculumControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         stateCurriculumDto = responseEntity.getBody();
+        testStateCurriculum = stateCurriculumRepository.getOne(stateCurriculumDto.getId());
+
         
-        Assert.assertTrue(stateCurriculumDto.getNameEt().equals("StateCurriculumControllerTest2"));
+        Assert.assertTrue(stateCurriculumDto.getObjectivesEt().equals(NAME + "2"));
         Assert.assertTrue(stateCurriculumDto.getStatus().equals(CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
         Assert.assertTrue(stateCurriculumDto.getVersion().equals(Long.valueOf(1)));
 
@@ -169,9 +184,9 @@ public class StateCurriculumControllerTests {
         
         module = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn().equals("StateCurriculumControllerTestNameEn")).findFirst().get();
 
-        Assert.assertTrue(module.getNameEt().equals("StateCurriculumControllerTest2"));
-        Assert.assertTrue(module.getOutcomesEt().equals("StateCurriculumControllerTest2"));
-        Assert.assertTrue(module.getOutcomesEn().equals("StateCurriculumControllerTest2"));
+        Assert.assertTrue(module.getNameEt().equals(NAME + "2"));
+        Assert.assertTrue(module.getOutcomesEt().equals(NAME + "2"));
+        Assert.assertTrue(module.getOutcomesEn().equals(NAME + "2"));
         Assert.assertTrue(module.getModule().equals("KUTSEMOODUL_P"));
         Assert.assertTrue(module.getVersion().equals(Long.valueOf(1)));
         
@@ -182,7 +197,7 @@ public class StateCurriculumControllerTests {
 
         // update 2
         stateCurriculumDto.getOccupations().clear();
-        stateCurriculumDto.setFinalExamDescription("StateCurriculumControllerTest");
+        stateCurriculumDto.setFinalExamDescription(NAME);
         module = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn().equals("StateCurriculumControllerTestNameEn")).findFirst().get();
         module.setCredits(BigDecimal.valueOf(2));
         
@@ -191,9 +206,10 @@ public class StateCurriculumControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         stateCurriculumDto = responseEntity.getBody();
+        testStateCurriculum = stateCurriculumRepository.getOne(stateCurriculumDto.getId());
         
         Assert.assertTrue(stateCurriculumDto.getOccupations().isEmpty());
-        Assert.assertTrue("StateCurriculumControllerTest".equals(stateCurriculumDto.getFinalExamDescription()));
+        Assert.assertTrue(NAME.equals(stateCurriculumDto.getFinalExamDescription()));
         Assert.assertTrue(Long.valueOf(2).equals(stateCurriculumDto.getVersion()));
 
         module = stateCurriculumDto.getModules().stream().filter(m -> "StateCurriculumControllerTestNameEn".equals(m.getNameEn())).findFirst().get();
@@ -202,7 +218,7 @@ public class StateCurriculumControllerTests {
         Assert.assertTrue(Long.valueOf(2).equals(module.getVersion()));
 
         // update 3
-        stateCurriculumDto.setGraduationRequirementsEt("StateCurriculumControllerTest");
+        stateCurriculumDto.setGraduationRequirementsEt(NAME);
         
         stateCurriculumDto.getModules().remove(module);
         stateCurriculumDto.getModules().add(getModuleDto());
@@ -213,6 +229,7 @@ public class StateCurriculumControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         stateCurriculumDto = responseEntity.getBody();
+        testStateCurriculum = stateCurriculumRepository.getOne(stateCurriculumDto.getId());
         
         Set<StateCurriculumModuleDto> deletedModules = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn()
                 .equals("StateCurriculumControllerTestNameEn")).collect(Collectors.toSet());
@@ -222,14 +239,17 @@ public class StateCurriculumControllerTests {
         
         // update 4
         stateCurriculumDto.getModules().clear();
-        stateCurriculumDto.setObjectivesEn("StateCurriculumControllerTest");
+        stateCurriculumDto.setObjectivesEn(NAME);
         
         responseEntity = restTemplate.exchange("/stateCurriculum/{id}", HttpMethod.PUT, new HttpEntity<>(stateCurriculumDto), StateCurriculumDto.class, stateCurriculumDto.getId());
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
         stateCurriculumDto = responseEntity.getBody();
-        Assert.assertTrue(stateCurriculumDto.getObjectivesEn().equals("StateCurriculumControllerTest"));
+        testStateCurriculum = stateCurriculumRepository.getOne(stateCurriculumDto.getId());
+
+        
+        Assert.assertTrue(stateCurriculumDto.getObjectivesEn().equals(NAME));
         Assert.assertTrue(stateCurriculumDto.getVersion().equals(Long.valueOf(4)));
 
         Assert.assertTrue(stateCurriculumDto.getModules().isEmpty());
@@ -239,20 +259,16 @@ public class StateCurriculumControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
-        
-        // delete
-        restTemplate.delete("/stateCurriculum/{id}", stateCurriculumDto.getId());
-    }    
+    }
     
     private static StateCurriculumForm getForm() {
         StateCurriculumForm stateCurriculumForm = new StateCurriculumForm();
-        stateCurriculumForm.setNameEt("StateCurriculumControllerTest");
-        stateCurriculumForm.setOutcomesEt("StateCurriculumControllerTest");
-        stateCurriculumForm.setObjectivesEt("StateCurriculumControllerTest");
-        stateCurriculumForm.setAdmissionRequirementsEt("StateCurriculumControllerTest");
+        stateCurriculumForm.setNameEt(NAME);
+        stateCurriculumForm.setOutcomesEt(NAME);
+        stateCurriculumForm.setObjectivesEt(NAME);
+        stateCurriculumForm.setAdmissionRequirementsEt(NAME);
         stateCurriculumForm.setCredits(Long.valueOf(1));
         stateCurriculumForm.setOptionalStudyCredits(BigDecimal.valueOf(1));
-        stateCurriculumForm.setValidFrom(LocalDate.now());
         stateCurriculumForm.setIscedClass("ISCED_RYHM_0522");
         stateCurriculumForm.setStateCurrClass("EHIS_ROK_15744");
         
@@ -261,12 +277,12 @@ public class StateCurriculumControllerTests {
     
     private static StateCurriculumModuleDto getModuleDto() {
         StateCurriculumModuleDto dto = new StateCurriculumModuleDto();
-        dto.setNameEt("StateCurriculumControllerTest");
-        dto.setObjectivesEt("StateCurriculumControllerTest");
-        dto.setAssessmentsEt("StateCurriculumControllerTest");
+        dto.setNameEt(NAME);
+        dto.setObjectivesEt(NAME);
+        dto.setAssessmentsEt(NAME);
         dto.setModule("KUTSEMOODUL_Y");
         dto.setCredits(BigDecimal.valueOf(1));
-        dto.setOutcomesEt("StateCurriculumControllerTest");
+        dto.setOutcomesEt(NAME);
         Set<String> moduleOccupations = new HashSet<>();
         moduleOccupations.add("KUTSE_10578607");
         dto.setModuleOccupations(moduleOccupations);

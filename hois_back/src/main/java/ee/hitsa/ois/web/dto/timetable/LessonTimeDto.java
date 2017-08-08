@@ -32,6 +32,25 @@ public class LessonTimeDto {
         LessonTimeDto dto = EntityUtil.bindToDto(lessonTime, new LessonTimeDto());
         return dto;
     }
+    
+    public LessonTimeDto() {
+        
+    }
+
+    public LessonTimeDto(Long id, LocalTime startTime, LocalTime endTime, int lessonNr, Boolean dayMon,
+            Boolean dayTue, Boolean dayWed, Boolean dayThu, Boolean dayFri, Boolean daySat, Boolean daySun) {
+        this.id = id;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.lessonNr = Integer.valueOf(lessonNr);
+        this.dayMon = dayMon;
+        this.dayTue = dayTue;
+        this.dayWed = dayWed;
+        this.dayThu = dayThu;
+        this.dayFri = dayFri;
+        this.daySat = daySat;
+        this.daySun = daySun;
+    }
 
     public Long getId() {
         return id;

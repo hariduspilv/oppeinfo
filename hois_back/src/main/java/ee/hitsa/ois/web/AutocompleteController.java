@@ -24,6 +24,7 @@ import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -119,8 +120,13 @@ public class AutocompleteController {
     }
 
     @GetMapping("/subjects")
-    public Page<AutocompleteResult> subjects(HoisUserDetails user, AutocompleteCommand command) {
-        return autocompleteService.subjects(user.getSchoolId(), command).map(AutocompleteResult::of);
+    public Page<AutocompleteResult> subjects(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
+        return asPage(autocompleteService.subjects(user.getSchoolId(), lookup));
+    }
+
+    @GetMapping("/subjectsList")
+    public List<AutocompleteResult> subjectsList(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
+        return autocompleteService.subjects(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/teachers")

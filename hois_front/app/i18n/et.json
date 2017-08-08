@@ -294,6 +294,7 @@
   "student": {
     "label": "Õppur",
     "absences": "Puudumistõendid",
+    "results": "Õpitulemused",
     "address": "Postiaadress",
     "bankaccount": "Arveldusarve",
     "boardingSchool": "Õpilaskodu koht",
@@ -385,6 +386,47 @@
         "rejectReason": "Põhjendus",
         "status": "Staatus",
         "title": "Avalduse kinnitamine"
+      }
+    },
+    "result": {
+      "curriculumCredits": "Õppekava maht",
+      "totalCredits": "Kokku EKAP",
+      "kkh": "KKH",
+      "curriculumFulfilled": "Õppekava täidetud",
+      "notFulfilled": "ei ole täidetud",
+      "fulfilled": "täidetud",
+      "curriculumFulfillment": "Õppekava täitmine",
+      "inOrderOfStudyYear": "Õppeaastate kaupa",
+      "inOrderOfStudyPeriod": "Õppeperioodide kaupa",
+      "inOrderOfPassing": "Sooritamise järjekorras",
+      "moduleTheme": "Moodul/teema",
+      "ekap": "EKAP",
+      "grade": "Hinne",
+      "date": "Kuupäev",
+      "teacher": "Õpetaja",
+      "studyLoad": "Õppekoormus",
+      "higher": {
+        "curriculumVersion": "Õppekava versioon",
+        "totalCredits": "",
+        "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP",
+        "mandatorySubjects": "Kohustuslikud ained",
+        "optionalSubjects": "Valikained",
+        "totalRequired": "Kokku vaja",
+        "totalSubmitted": "Kogutud",
+        "difference": "Hälve",
+        "subject": "Õppeaine",
+        "subjectCode": "Ainekood",
+        "credits": "EAP",
+        "grade": "Hinne",
+        "date": "Kuupäev",
+        "teacher": "Õpetaja",
+        "isOk": "Korras",
+        "module": "Moodul",
+        "electiveModules": "Valikmoodulid",
+        "electiveModulesRequired": "Kohustuslik täitmiseks",
+        "required": "Kohustuslik",
+        "electiveModulesCompleted": "Täidetud"
+
       }
     }
   },
@@ -931,6 +973,7 @@
     "deleteconfirmHigher": "Kas oled kindel, et soovid kõrgharidusõppe õppekava kustutada?",
     "itemDeleteConfirm": "Kas soovid kustutada?",
     "moduleDeleteConfirm": "Kas oled kindel, et soovid mooduli kustutada?",
+    "minorSpecialtyDeleteConfirm": "Kas oled kindel, et soovid kõrvaleriala kustutada?",
     "additionalInfo": "Muu info",
     "approvalInfo": "Õppeasutuse kinnitamise info",
     "sentToEhis": "Õppekava on EHISesse saadetud",
@@ -1027,7 +1070,9 @@
       "occupationsCredits": "Kutse/osakutse moodulite maht ei ole vastavuses õppekava kogu mahuga!",
       "spetsOccupationsCredits": "Spetsialiseerumise moodulite maht (koos kutse- ja valikmoodulite mahuga) ei ole vastavuses õppekava kogu mahuga!",
       "nameNotUnique": "Nimetus pole unikaalne",
-      "implementationPlanNotAllModules": "Igal õppekava moodulil peab olema rakenduskava moodul"
+      "implementationPlanNotAllModules": "Igal õppekava moodulil peab olema rakenduskava moodul",
+      "cannotBeDeleted": "Ei saa olla kustutatud",
+      "cannotBeEdited": "Ei saa olla muudetud"
     },
     "prompt": {
       "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
@@ -1647,7 +1692,8 @@
     "lessonTime": {
       "validFrom": "Kehtivuse algus",
       "addNewBlock": "Lisa uus tundide aegade plokk",
-      "deleteBlock": "Kustuta tundide aegade plokk"
+      "deleteBlock": "Kustuta tundide aegade plokk",
+      "oneRowRequired": "Igal blokil peab olema defineeritud vähemalt üks tunni aeg"
     },
     "management": {
       "period": "Periood",
@@ -1658,6 +1704,21 @@
     },
     "view": {
       "publicize": "Avalikusta"
+    },
+    "timetablePlan": {
+      "createTimetable": "Tunniplaani koostamine",
+      "timetablePeriod": "Tunniplaani periood",
+      "showGroups" : "Kuva rühmad",
+      "planGroupLessons": "Planeeri rühma tunniplaan",
+      "group": "rühm",
+      "selectAll": "Vali kõik",
+      "dayMon": "Esmaspäev",
+      "dayTue": "Teisipäev",
+      "dayWed": "Kolmapäev",
+      "dayThu": "Neljapäev",
+      "dayFri": "Reede",
+      "daySat": "Laupäev",
+      "daySun": "Pühapäev"
     },
     "subjectTeacherPairs": "Aine-õpetaja paarid"
   },
@@ -1750,16 +1811,33 @@
   },
   "higherProtocol": {
     "add": "Protokolli lisamine",
+    "calculate": "Arvuta",
     "comment": "Märkus",
-    "compute": "Arvuta",
     "confirm": "Kinnita",
     "confirmedDate": "Kinnitamise kp",
     "confirmer": "Kinnitaja",
     "curriculumCode": "Õppekava kood",
     "create": "Loo protokoll",
+    "error": {
+      "addInfoRequired": "Kinnitatud protokolli hinde muutmisel on märkuse sisestamine kohustuslik",
+      "duplicatesInPracticeResults": "Õppuril on mitu tulemust ühe praktika aine eest",
+      "noRightsToChange": "Õigused salvestamiseks puuduvad",
+      "noRightsToConfirm": "Õigused kinnitamiseks puuduvad",
+      "noStudents": "Protokoll peab sisaldama õppureid",
+      "protocolStudentsAddedOrRemoved": "Protokollis ei saa muuta õppurite nimekirja"
+    },
     "finalGrade": "Lõpphinne",
     "insertedDate": "Loomise kp",
+    "message": {
+      "confirmed": "Protokoll on kinnitatud",
+      "savedAndConfirmed": "Protokoll on salvestatud ja kinnitatud",
+      "calculated": "Lõpphinne on arvutatud"
+    },
     "number": "Protokolli number",
+    "practiceResult": "Praktika tulemus",
+    "prompt": {
+      "saveConfirmedProtocol": "Kas oled kindel, et soovid kinnitatud protokolli muuta?"
+    },
     "protocolCreatedDate": "Protokolli loomise kp",
     "protocolConfirmedDate": "Protokolli kinnitamise kp",
     "protocolStatus": "Protokolli staatus",
@@ -1924,6 +2002,7 @@
     "curriculumVersion":"Õppekava",
     "status": "Lepingu staatus",
     "theme": "Teema",
+    "subject": "Õppeaine",
     "credits": "Maht EKAP",
     "hours": "Maht tundides",
     "start": "Lepingu kehtivuse algus",
@@ -1938,7 +2017,18 @@
     "contractCoordinator": "Lepingu menetleja EKISes",
     "practicePlan": "Praktika kava",
     "otherSupervisor": "Teised juhendajad",
-    "deleteconfirm":"Kas oled kindel, et soovid lepingu kustutada?"
+    "deleteconfirm":"Kas oled kindel, et soovid lepingu kustutada?",
+    "vocationalOrHigherSelect": "Kas kutseõpe või kõrgõpe?",
+    "vocationalOrHigherContract": "Palun valige, kas soovite lisada kutseõppe või kõrgõppe lepingut?",
+    "button": {
+      "vocational": "Kutseõpe",
+      "higher": "Kõrgõpe"
+    },
+    "messages": {
+      "sendToEkis" : {
+        "success": "Leping Ekis'esse saadetud"
+      }
+    }
   },
   "enterprise": {
     "label": "Ettevõte",
@@ -1958,7 +2048,9 @@
     "descriptionEt": "Vahesoorituse kirjeldus eesti keeles",
     "error": {
       "midtermTaskCantBeDeleted": "Vahesooritus on seotud õppurite tulemustega ja ei saa olla kustutatud",
-      "nopermission": "Vajalikud õigused puuduvad"
+      "nopermission": "Vajalikud õigused puuduvad",
+      "isPractice": "Praktika ainetel puuduvad vahesooritused",
+      "studentResultCannotBeChanded": "Õppuri vahetulemused ei saa olla muudetud"
     },
     "finalGrade": "Lõpphinne",
     "maxPoints": "Max punktid",
@@ -1984,7 +2076,8 @@
     "thresholdPercentage": "Lävendi %"
   },
   "practiceJournal": {
-    "moduleAndTheme": "Moodule ja teema",
+    "moduleAndTheme": "Moodul ja teema",
+    "subject": "Õppeaine",
     "practiceStartAndEnd": "Praktika algus ja lõpp",
     "practicePlace": "Praktika koht",
     "schoolSupervisor": "Õppeasutuse juhendaja",
@@ -2005,9 +2098,13 @@
     "supervisorComment": "Juhendaja kommentaar",
     "grade": "Hinne",
     "deleteconfirm":"Kas oled kindel, et soovid praktika päeviku kustutada?",
+    "vocationalOrHigherSelect": "Kas kutseõpe või kõrgõpe?",
+    "vocationalOrHigherPracticeJournal": "Palun valige, kas soovite lisada kutseõppe või kõrgõppe praktika päevikut?",
     "button": {
       "createWithoutContract": "Lisa uus päevik ilma lepinguta",
-      "fill": "Täida"
+      "fill": "Täida",
+      "vocational": "Kutseõpe",
+      "higher": "Kõrgõpe"
     },
     "practiceJournalEntry": {
       "practiceDate": "Praktika kp",

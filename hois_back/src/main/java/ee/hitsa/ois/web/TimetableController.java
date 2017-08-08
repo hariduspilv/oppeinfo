@@ -23,10 +23,12 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableEventForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
-import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
+import ee.hitsa.ois.web.dto.timetable.TimetablePlanDto;
 
 @RestController
 @RequestMapping("/timetables")
@@ -34,17 +36,23 @@ public class TimetableController {
 
     @Autowired
     TimetableService timetableService;
-    
+
     @GetMapping("/{id:\\d+}")
     public TimetableDto edit(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
         return timetableService.get(user, timetable);
     }
-    
+
     @GetMapping("/{id:\\d+}/view")
     public TimetableDto get(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return timetableService.getForView(user, timetable);
+        return timetableService.getForView(timetable);
+    }
+
+    @GetMapping("/{id:\\d+}/createPlan")
+    public TimetablePlanDto createPlan(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return timetableService.getPlan(timetable);
     }
 
     @GetMapping("/managementSearchFormData")
@@ -67,15 +75,22 @@ public class TimetableController {
         UserUtil.assertIsSchoolAdmin(user);
         return timetableService.getBlockedDatesForPeriod(user, studyPeriod, code, currentTimetable);
     }
-    
+
     @PostMapping()
     public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody TimetableEditForm form) {
         UserUtil.assertIsSchoolAdmin(user);
         return HttpUtil.created(timetableService.createTimetable(user, form));
     }
-    
+
+    @PostMapping("/saveEvent")
+    public void saveEvent(HoisUserDetails user, @Valid @RequestBody TimetableEventForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        timetableService.saveEvent(form, user);
+    }
+
     @PutMapping("/{id:\\d+}")
-    public TimetableDto update(HoisUserDetails user, @Valid @RequestBody TimetableEditForm form, @WithEntity("id") Timetable timetable) {
+    public TimetableDto update(HoisUserDetails user, @Valid @RequestBody TimetableEditForm form,
+            @WithEntity("id") Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
         return get(user, timetableService.save(user, form, timetable));
     }

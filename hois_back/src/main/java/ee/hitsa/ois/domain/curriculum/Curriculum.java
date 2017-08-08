@@ -24,6 +24,7 @@ import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.validation.CurriculumValidator.Confirmed;
 import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedHigher;
 import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedVocational;
+import ee.hitsa.ois.validation.CurriculumValidator.Joint;
 
 @Entity
 public class Curriculum extends BaseEntityWithId implements Translatable {
@@ -133,6 +134,7 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumGrade> grades = new HashSet<>();
 
+    @NotEmpty(groups = {Joint.class})
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumJointPartner> jointPartners = new HashSet<>();

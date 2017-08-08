@@ -10,7 +10,14 @@ public class SubjectStudyPeriodSearchDto {
     private AutocompleteResult subject;
     private AutocompleteResult studyPeriod;
     private Set<AutocompleteResult> midtermTasks;
-
+    private Boolean isPracticeSubject;
+    
+    public Boolean getIsPracticeSubject() {
+        return isPracticeSubject;
+    }
+    public void setIsPracticeSubject(Boolean isPracticeSubject) {
+        this.isPracticeSubject = isPracticeSubject;
+    }
     public Set<AutocompleteResult> getMidtermTasks() {
         return midtermTasks;
     }

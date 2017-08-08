@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.springframework.util.CollectionUtils;
 
@@ -11,23 +12,41 @@ import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.MidtermTaskStudentResult;
+import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
-public class MidtermTaskUtil {
+public abstract class MidtermTaskUtil {
 
     public static void checkIfStudentResultCanBeChanged(DeclarationSubject declarationSubject) {
-        AssertionFailedException.throwIf(!studentResultCanBeChanged(declarationSubject), 
-                "Student's result cannot be updated");
+        if(!studentResultCanBeChanged(declarationSubject)) {
+            throw new ValidationFailedException("midtermTask.error.studentResultCannotBeChanded");
+        }
     }
 
     public static boolean studentResultCanBeChanged(DeclarationSubject declarationSubject) {
         Declaration declaration = declarationSubject.getDeclaration();
         return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_K, declaration.getStatus()) &&
-               !ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_L, declaration.getStudent().getStatus());
+               !ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_L, declaration.getStudent().getStatus()) && 
+               !studentHasConfirmedProtocol(declarationSubject);
+    }
+    
+    private static boolean studentHasConfirmedProtocol(DeclarationSubject declarationSubject) {
+        return !CollectionUtils.isEmpty(declarationSubject.getSubjectStudyPeriod().getProtocols()
+                .stream().filter(p -> HigherProtocolUtil
+                        .isConfirmed(p.getProtocol()) && 
+                        protocolIncludesStudent(p, declarationSubject)).collect(Collectors.toSet()));
+    }
+    
+    private static boolean protocolIncludesStudent(ProtocolHdata p, DeclarationSubject declarationSubject) {
+        Set<Long> protocolStudents = 
+                StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getStudent()), 
+                        p.getProtocol().getProtocolStudents());
+        return protocolStudents.contains(EntityUtil.getId(declarationSubject.getDeclaration().getStudent()));
     }
 
     public static Boolean getStudentResultIsText(MidtermTask midtermTask) {
@@ -58,7 +77,7 @@ public class MidtermTaskUtil {
     }
 
     public static void checkIfMidtermTasksCanBeEdited(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod){
-        AssertionFailedException.throwIf(!MidtermTaskUtil.midtermTaskCanBeEdited(user, subjectStudyPeriod),
+        AssertionFailedException.throwIf(!midtermTaskCanBeEdited(user, subjectStudyPeriod),
                 "You cannot change midtermTasks!");
     }
 
@@ -68,5 +87,15 @@ public class MidtermTaskUtil {
             studentResults.addAll(declarationSubject.getMidtermTaskStudentResults());
         }
         return studentResults;
+    }
+    
+    public static boolean resultIsText(MidtermTask task) {
+        return BigDecimal.ZERO.compareTo(task.getMaxPoints()) == 0;
+    }
+    
+    public static void assertNotPractice(SubjectStudyPeriod ssp){
+        if(Boolean.TRUE.equals(ssp.getSubject().getIsPractice())) {
+            throw new ValidationFailedException("midtermTask.error.isPractice");
+        }
     }
 }

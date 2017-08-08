@@ -16,6 +16,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
@@ -89,6 +90,9 @@ public class Contract extends BaseEntityWithId {
     private LocalDate confirmDate;
 
     private Long wdId;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Subject subject;
 
     public Student getStudent() {
         return student;
@@ -288,6 +292,14 @@ public class Contract extends BaseEntityWithId {
 
     public void setWdId(Long wdId) {
         this.wdId = wdId;
+    }
+
+    public Subject getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Subject subject) {
+        this.subject = subject;
     }
 
 }

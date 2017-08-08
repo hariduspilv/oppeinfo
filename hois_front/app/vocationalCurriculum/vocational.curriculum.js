@@ -691,9 +691,9 @@ angular.module('hitsaOis')
             outcomes: [],
             occupations: []
           };
-          dialogScope.isNew = !angular.isDefined(curriculumModule);
           dialogScope.formState = {
-            readOnly: $scope.formState.readOnly
+            readOnly: $scope.formState.readOnly,
+            isNew: !angular.isDefined(curriculumModule)
           };
           dialogScope.filteredModuleValues = [];
           if ($scope.curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK') {

@@ -1112,3 +1112,17 @@ td.bordered[md-cell] {
     line-height: 32px!important;
     height: 32px!important;
 }
+
+.timetable-drag {
+    width: 70px;
+    height: 40px;
+    border: 1px solid #000;
+    display: inline-block;
+}
+
+.timetable-drop {
+    width: 70px;
+    height: 40px;
+    border: 1px solid #000;
+    display: block;
+}

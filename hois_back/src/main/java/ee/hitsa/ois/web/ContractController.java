@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web;
 
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -31,6 +32,7 @@ import ee.hitsa.ois.web.commandobject.ContractSearchCommand;
 import ee.hitsa.ois.web.dto.ContractDto;
 import ee.hitsa.ois.web.dto.ContractSearchDto;
 import ee.hitsa.ois.web.dto.ContractStudentModuleDto;
+import ee.hitsa.ois.web.dto.ContractStudentSubjectDto;
 
 @RestController
 @RequestMapping("/contracts")
@@ -62,7 +64,8 @@ public class ContractController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public ContractDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Contract contract,
+    public ContractDto update(HoisUserDetails user,
+            @WithVersionedEntity(value = "id", versionRequestBody = true) Contract contract,
             @Valid @RequestBody ContractForm contractForm) {
         UserUtil.assertIsSchoolAdmin(user);
         if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
@@ -72,20 +75,29 @@ public class ContractController {
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Contract contract,
+    public void delete(HoisUserDetails user,
+            @WithVersionedEntity(value = "id", versionRequestParam = "version") Contract contract,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user);
-        if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus()) &&
-                !ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
+        if (!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus())
+                && !ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
             throw new ValidationFailedException("contract.messages.deletionOnlyAllowedForStatusSAndY");
         }
         contractService.delete(contract);
     }
 
     @GetMapping("studentPracticeModules/{studentId:\\d+}")
-    public Collection<ContractStudentModuleDto> studentPracticeModules(HoisUserDetails user, @PathVariable Long studentId) {
+    public Collection<ContractStudentModuleDto> studentPracticeModules(HoisUserDetails user,
+            @PathVariable Long studentId) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return contractService.studentPracticeModules(user, studentId);
+    }
+
+    @GetMapping("studentPracticeSubjects/{studentId:\\d+}")
+    public Collection<ContractStudentSubjectDto> studentSubjects(HoisUserDetails user, @PathVariable Long studentId) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return contractService.studentPracticeHigherModules(user, studentId)
+                .stream().flatMap(it -> it.getSubjects().stream()).collect(Collectors.toList());
     }
 
     @PostMapping("/sendToEkis/{id:\\d+}")

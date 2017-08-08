@@ -617,43 +617,41 @@ angular.module('hitsaOis')
               newModuleTypes.push({ code: null, nameEt: data.typeNameEt, nameEn: data.typeNameEn });
             }
           }
-
-        //   data.curriculumVersionSpecialities = $scope.version.specialitiesReferenceNumbers;
-        //   if($scope.version.id) {
-        //     var ModuleEndpoint = QueryUtils.endpoint('/curriculum/version/' + $scope.version.id + '/higherModule');
-        //     var savedModule = new ModuleEndpoint(data);
-        //     if(data.id) {
-        //       savedModule.$update().then(function(response) {
-        //         message.info('main.messages.update.success');
-        //         angular.extend(editingModule, response);
-        //     });
-        //   } else {
-        //     savedModule.$save().then(function(response) {
-        //         message.info('main.messages.create.success');
-        //         $scope.version.modules.push(response);
+        //  if (editingModule) {
+        //     $scope.version.modules.splice($scope.version.modules.indexOf(editingModule), 1);
+        //   }
+        //   $scope.version.modules.push(data);
+        //   if ($scope.version.id) {
+        //     var ModuleEndpoint = QueryUtils.endpoint('/curriculum/higher/version/modules');
+        //     var savedModule = new ModuleEndpoint($scope.version);
+        //     savedModule.$update().then(function (response) {
+        //       message.info('main.messages.create.success');
+        //       $scope.version.modules = response.modules;
+        //       $scope.version.specialitiesReferenceNumbers = response.specialitiesReferenceNumbers;
         //     });
         //   }
-        // } else {
-        //   if(editingModule) {
-        //       angular.extend(editingModule, data);
-        //   } else {
-        //       $scope.version.modules.push(data);
-        //   }
-        // }
-
-          if (editingModule) {
-            $scope.version.modules.splice($scope.version.modules.indexOf(editingModule), 1);
-          }
-          $scope.version.modules.push(data);
-          if ($scope.version.id) {
-            var ModuleEndpoint = QueryUtils.endpoint('/curriculum/higher/version/modules');
-            var savedModule = new ModuleEndpoint($scope.version);
-            savedModule.$update().then(function (response) {
-              message.info('main.messages.create.success');
-              $scope.version.modules = response.modules;
-              $scope.version.specialitiesReferenceNumbers = response.specialitiesReferenceNumbers;
+          data.curriculumVersionSpecialities = $scope.version.specialitiesReferenceNumbers;
+          if($scope.version.id) {
+            var ModuleEndpoint = QueryUtils.endpoint('/curriculum/version/' + $scope.version.id + '/higherModule');
+            var savedModule = new ModuleEndpoint(data);
+            if(data.id) {
+              savedModule.$update().then(function(response) {
+                message.info('main.messages.update.success');
+                angular.extend(editingModule, response);
+            });
+          } else {
+            savedModule.$save().then(function(response) {
+                message.info('main.messages.create.success');
+                $scope.version.modules.push(response);
             });
           }
+        } else {
+          if(editingModule) {
+              angular.extend(editingModule, data);
+          } else {
+              $scope.version.modules.push(data);
+          }
+        }
       });
     };
 
@@ -762,16 +760,31 @@ angular.module('hitsaOis')
           validateSubjects();
         };
 
+        // scope.delete = function () {
+        //   dialogService.confirmDialog({ prompt: 'curriculum.itemDeleteConfirm' }, function () {
+        //     ArrayUtils.remove($scope.version.modules, editingModule);
+        //     if (scope.data.id) {
+        //       var ModuleEndpoint = QueryUtils.endpoint('/curriculum/higher/version/modules');
+        //       var deletedModule = new ModuleEndpoint($scope.version);
+        //       deletedModule.$update().then(function (response) {
+        //         message.info('main.messages.delete.success');
+        //         $scope.version.modules = response.modules;
+        //       });
+        //     }
+        //     scope.cancel();
+        //   });
+        // };
+
         scope.delete = function () {
-          dialogService.confirmDialog({ prompt: 'curriculum.itemDeleteConfirm' }, function () {
-            ArrayUtils.remove($scope.version.modules, editingModule);
-            if (scope.data.id) {
-              var ModuleEndpoint = QueryUtils.endpoint('/curriculum/higher/version/modules');
-              var deletedModule = new ModuleEndpoint($scope.version);
-              deletedModule.$update().then(function (response) {
+          dialogService.confirmDialog({ prompt: 'curriculum.minorSpecialtyDeleteConfirm' }, function () {
+            if(scope.data.id) {
+              var ModuleEndpoint = QueryUtils.endpoint('/curriculum/version/' + $scope.version.id + '/higherModule');
+              new ModuleEndpoint(scope.data).$delete().then(function() {
                 message.info('main.messages.delete.success');
-                $scope.version.modules = response.modules;
+                ArrayUtils.remove($scope.version.modules, editingModule);
               });
+            } else {
+              ArrayUtils.remove($scope.version.modules, editingModule);
             }
             scope.cancel();
           });
@@ -797,22 +810,47 @@ angular.module('hitsaOis')
       dialogService.showDialog('higherCurriculum/higher.curriculum.version.minorSpecialty.html', DialogController,
         function (submitScope) {
           var data = submitScope.data;
-          if (editingModule) {
-            $scope.version.modules.splice($scope.version.modules.indexOf(editingModule), 1);
-          }
-          $scope.version.modules.push(data);
-          if ($scope.version.id) {
-            var ModuleEndpoint = QueryUtils.endpoint('/curriculum/higher/version/modules');
-            var savedModule = new ModuleEndpoint($scope.version);
-            savedModule.$update().then(function (response) {
-              message.info('main.messages.create.success');
-              $scope.version.modules = response.modules;
-              $scope.version.specialitiesReferenceNumbers = response.specialitiesReferenceNumbers;
+
+
+          // if (editingModule) {
+          //   $scope.version.modules.splice($scope.version.modules.indexOf(editingModule), 1);
+          // }
+          // $scope.version.modules.push(data);
+          // if ($scope.version.id) {
+          //   var ModuleEndpoint = QueryUtils.endpoint('/curriculum/higher/version/modules');
+          //   var savedModule = new ModuleEndpoint($scope.version);
+          //   savedModule.$update().then(function (response) {
+          //     message.info('main.messages.create.success');
+          //     $scope.version.modules = response.modules;
+          //     $scope.version.specialitiesReferenceNumbers = response.specialitiesReferenceNumbers;
+          //   });
+          // }
+        // data.curriculumVersionSpecialities = $scope.version.specialitiesReferenceNumbers;
+
+        //FIXME: redord modified error occures in some cases
+          if($scope.version.id) {
+            var ModuleEndpoint = QueryUtils.endpoint('/curriculum/version/' + $scope.version.id + '/higherModule');
+            var savedModule = new ModuleEndpoint(data);
+            if(data.id) {
+              savedModule.$update().then(function(response) {
+                message.info('main.messages.update.success');
+                angular.extend(editingModule, response);
             });
+            } else {
+              savedModule.$save().then(function(response) {
+                  message.info('main.messages.create.success');
+                  $scope.version.modules.push(response);
+              });
+            }
+          } else {
+            if(editingModule) {
+                angular.extend(editingModule, data);
+            } else {
+                $scope.version.modules.push(data);
+            }
           }
+
         });
     };
-
-
 
   });

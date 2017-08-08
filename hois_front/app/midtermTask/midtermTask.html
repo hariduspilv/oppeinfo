@@ -113,7 +113,7 @@
               <td md-cell>
                 <md-input-container>
                   <input ng-model="row.thresholdPercentage" type="number" min="0" max="100"
-                  ng-disabled="!row.threshold"
+                  ng-disabled="!row.threshold" ng-required="row.threshold"
                   aria-label="{{'midtermTask.thresholdPercentage' | translate}}" pattern="^\d+$">
                 </md-input-container>
               </td>

@@ -15,6 +15,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.ProtocolType;
 import ee.hitsa.ois.enums.Role;
 
@@ -41,6 +42,24 @@ public class HigherProtocolControllerTest {
     }
     
     @Test
+    public void search() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
+        uriBuilder.queryParam("protocolType", ProtocolType.PROTOKOLLI_LIIK_P.name());
+        uriBuilder.queryParam("studyPeriod", Integer.valueOf(1));
+        uriBuilder.queryParam("teacher", Integer.valueOf(1));
+        uriBuilder.queryParam("subject", "012");
+        uriBuilder.queryParam("status", ProtocolStatus.PROTOKOLL_STAATUS_S.name());
+        uriBuilder.queryParam("protocolNr", "123");
+        uriBuilder.queryParam("confirmDateFrom", "2016-12-31T22:00:00.000Z");
+        uriBuilder.queryParam("confirmDateThru", "2016-12-31T22:00:00.000Z");
+        uriBuilder.queryParam("insertedFrom", "2016-12-31T22:00:00.000Z");
+        uriBuilder.queryParam("insertedThru", "2016-12-31T22:00:00.000Z");
+        String url = uriBuilder.build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode()); 
+    }
+    
+    @Test
     public void getSubjectStudyPeriods() {
         String url = ENDPOINT + "/subjectStudyPeriods";
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
@@ -49,11 +68,20 @@ public class HigherProtocolControllerTest {
     }
     
     @Test
-    public void getStudents() {
+    public void getStudentsForBasicProtocol() {
+        getStudents(ProtocolType.PROTOKOLLI_LIIK_P);
+    }
+    
+    @Test
+    public void getStudentsForRepeatingProtocol() {
+        getStudents(ProtocolType.PROTOKOLLI_LIIK_K);
+    }
+    
+    public void getStudents(ProtocolType protocolType) {
         String url = ENDPOINT + "/students";
 
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/generalmessages");
-        uriBuilder.queryParam("protocolType", ProtocolType.PROTOKOLLI_LIIK_P.name());
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("protocolType", protocolType.name());
         uriBuilder.queryParam("subjectStudyPeriod", SUBJECT_STUDY_PERIOD_ID);
         url = uriBuilder.build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);

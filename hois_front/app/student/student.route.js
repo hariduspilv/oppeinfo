@@ -13,6 +13,18 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
+    }).when('/students/:id/results', {
+      templateUrl: 'student/view.results.html',
+      controller: 'StudentViewResultsController',
+      controllerAs: 'controller',
+      data: authorizedRoles,
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        student: function(QueryUtils, $route) {
+          return QueryUtils.endpoint('/students').get({id: $route.current.params.id}).$promise;
+        }
+      }
     }).when('/students/:id/documents', {
       templateUrl: 'student/view.documents.html',
       controller: 'StudentViewDocumentsController',

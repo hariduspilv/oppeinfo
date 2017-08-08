@@ -8,13 +8,16 @@ angular.module('hitsaOis').controller('PracticeJournalEditController', function 
   $scope.formState = {};
 
   function entityToForm(entity) {
-    DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'teacher']);
+    $scope.formState.isHigher = angular.isObject(entity.subject);
+    DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'teacher', 'subject']);
     $scope.practiceJournal = entity;
   }
 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
     entityToForm(entity);
+  } else {
+    $scope.formState.isHigher = $scope.auth.school.higher === true && (($scope.auth.school.vocational === true && $route.current.params.higher === true) || $scope.auth.school.vocational === false);
   }
 
   var clMapper = Classifier.valuemapper({ studyForm: 'OPPEVORM' });
@@ -24,24 +27,42 @@ angular.module('hitsaOis').controller('PracticeJournalEditController', function 
         $scope.formState.student = clMapper.objectmapper(result);
       });
 
-      QueryUtils.endpoint('/practiceJournals/studentPracticeModules/' + student.id).query(function (result) {
-        $scope.formState.modulesById = {};
-        $scope.formState.themesById = {};
-        result.forEach(function (it) {
-          $scope.formState.modulesById[it.module.id] = it;
-          it.themes.forEach(function (it) {
-            $scope.formState.themesById[it.theme.id] = it;
-          });
-        });
-        $scope.formState.modules = result.map(function (it) { return it.module; });
-
-        //in case of when module is set (edit)
-        if (angular.isNumber($scope.practiceJournal.module)) {
-          $scope.moduleChanged($scope.practiceJournal.module);
-        }
-      });
+      if ($scope.formState.isHigher) {
+        loadStudentPracticeSubjects(student);
+      } else {
+        loadStudentPracticeModules(student);
+      }
     }
   });
+
+  function loadStudentPracticeModules(student) {
+    QueryUtils.endpoint('/practiceJournals/studentPracticeModules/' + student.id).query(function (result) {
+      $scope.formState.modulesById = {};
+      $scope.formState.themesById = {};
+      result.forEach(function (it) {
+        $scope.formState.modulesById[it.module.id] = it;
+        it.themes.forEach(function (it) {
+          $scope.formState.themesById[it.theme.id] = it;
+        });
+      });
+      $scope.formState.modules = result.map(function (it) { return it.module; });
+
+      //in case of when module is set (edit)
+      if (angular.isNumber($scope.practiceJournal.module)) {
+        $scope.moduleChanged($scope.practiceJournal.module);
+      }
+    });
+  }
+
+  function loadStudentPracticeSubjects(student) {
+    QueryUtils.endpoint('/practiceJournals/studentPracticeSubjects/' + student.id).query(function (result) {
+      $scope.formState.subjectsById = {};
+      result.forEach(function (it) {
+        $scope.formState.subjectsById[it.id] = it;
+      });
+      $scope.formState.subjects = result;
+    });
+  }
 
   $scope.moduleChanged = function (moduleId) {
     if ($scope.formState.modulesById[moduleId]) {
@@ -64,13 +85,26 @@ angular.module('hitsaOis').controller('PracticeJournalEditController', function 
     }
   };
 
+  $scope.subjectChanged = function (subjectId) {
+    if ($scope.formState.subjectsById[subjectId]) {
+      $scope.practiceJournal.credits = $scope.formState.subjectsById[subjectId].credits;
+      $scope.practiceJournal.hours = $scope.practiceJournal.credits * CREDITS_TO_HOURS_MULTIPLIER;
+
+      if (!angular.isDefined(entity) && angular.isString($scope.formState.subjectsById[subjectId].outcomesEt)) {
+        $scope.practiceJournal.practicePlan = $scope.formState.subjectsById[subjectId].outcomesEt;
+      }
+    }
+  };
+
   var PracticeJournalEndpoint = QueryUtils.endpoint('/practiceJournals');
   $scope.save = function () {
+    $scope.practiceJournal.isHigher = $scope.formState.isHigher;
     var practiceJournal = new PracticeJournalEndpoint($scope.practiceJournal);
     if (angular.isDefined($scope.practiceJournal.id)) {
       practiceJournal.$update().then(function () {
         message.info('main.messages.create.success');
         entityToForm(practiceJournal);
+        $scope.practiceJournalForm.$setPristine();
       });
     } else {
       practiceJournal.$save().then(function () {

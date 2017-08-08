@@ -1,11 +1,11 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -18,8 +18,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
@@ -37,6 +35,8 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
@@ -46,6 +46,8 @@ import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
+import ee.hitsa.ois.web.dto.student.StudentViewDto;
+import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
 
 @Transactional
 @Service
@@ -75,6 +77,8 @@ public class StudentService {
     private StudentAbsenceRepository studentAbsenceRepository;
     @Autowired
     private StudentRepository studentRepository;
+    @Autowired
+    private ProtocolService protocolService;
 
     public Page<StudentSearchDto> search(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_LIST_FROM).sort(pageable);
@@ -95,7 +99,6 @@ public class StudentService {
             dto.setId(resultAsLong(r, 0));
             dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             dto.setIdcode(resultAsString(r, 3));
-            dto.setStudyForm(resultAsString(r, 2));
             String curriculumVersionCode = resultAsString(r, 5);
             dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
                     CurriculumUtil.versionName(curriculumVersionCode, resultAsString(r, 7)),
@@ -187,13 +190,38 @@ public class StudentService {
     }
 
     public List<AutocompleteResult> subjects(Student student) {
-        //TODO single query
-        List<AutocompleteResult> subjects = new ArrayList<>();
-        for(CurriculumVersionHigherModule m : student.getCurriculumVersion().getModules()) {
-            for(CurriculumVersionHigherModuleSubject s : m.getSubjects()) {
-                subjects.add(AutocompleteResult.of(s.getSubject()));
-            }
-        }
-        return subjects;
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject s "
+                + "inner join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = s.id "
+                + "inner join curriculum_version_hmodule cvh on cvh.id = cvhms.curriculum_version_hmodule_id");
+        qb.requiredCriteria("cvh.curriculum_version_id = :curriculumVersioinId", "curriculumVersioinId", EntityUtil.getId(student.getCurriculumVersion()));
+
+        List<?> data = qb.select("s.id, s.name_et, s.name_en, s.code, s.credits", em).getResultList();
+        return StreamUtil.toMappedList(r ->
+            new AutocompleteResult(resultAsLong(r, 0),
+                    SubjectUtil.subjectName(resultAsString(r, 3), resultAsString(r, 1), resultAsDecimal(r, 4)),
+                    SubjectUtil.subjectName(resultAsString(r, 3), resultAsString(r, 2), resultAsDecimal(r, 4))), data);
     }
+
+    public StudentViewDto getStudentView(HoisUserDetails user, Student student) {
+        StudentViewDto dto = StudentViewDto.of(student);
+        // rights for editing student data, adding representative and displaying sensitive fields
+        dto.setUserCanEditStudent(Boolean.valueOf(UserUtil.canEditStudent(user, student)));
+        dto.setUserCanAddRepresentative(Boolean.valueOf(UserUtil.canAddStudentRepresentative(user, student)));
+        dto.setUserIsSchoolAdmin(Boolean.valueOf(UserUtil.isSchoolAdmin(user, student.getSchool())));
+        if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isSame(user, student) || UserUtil.isStudentRepresentative(user, student))) {
+            dto.setSpecialNeed(null);
+            dto.setIsRepresentativeMandatory(null);
+        }
+
+        if (Boolean.TRUE.equals(dto.getIsVocational())) {
+            dto.setCredits(protocolService.vocationalTotalCreditsOnCurrentCurriculum(student));
+            dto.setKkh(protocolService.vocationalWeightedAverageGrade(student));
+        }
+        return dto;
+    }
+
+    public List<StudentVocationalResultModuleThemeDto> vocationalResults(Student student) {
+        return protocolService.vocationalResults(student);
+    }
+
 }

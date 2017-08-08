@@ -37,6 +37,7 @@ import org.springframework.data.domain.Sort.NullHandling;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 public abstract class JpaQueryUtil {
@@ -83,7 +84,7 @@ public abstract class JpaQueryUtil {
         long total;
         if((fetched > 0 || pageable.getPageNumber() == 0) && fetched < pageable.getPageSize()) {
             // on last page, can just calculate total
-            total = pageable.getOffset() + fetched;
+            total = (long) pageable.getOffset() + fetched;
         } else {
             // should query total
             total = countSupplier.get().longValue();
@@ -375,6 +376,12 @@ public abstract class JpaQueryUtil {
             return sb.toString();
         }
 
+        public void validByDateCriteria(String prefix) {
+            LocalDate now = LocalDate.now();
+            requiredCriteria(prefix + ".valid_from <= :now", "now", now);
+            requiredCriteria("coalesce(" + prefix + ".valid_thru, :now) >= :now", "now", now);
+        }
+
     }
 
     public static Boolean resultAsBoolean(Object row, int index) {
@@ -403,6 +410,11 @@ public abstract class JpaQueryUtil {
     public static LocalDateTime resultAsLocalDateTime(Object row, int index) {
         Object value = getValue(row, index);
         return value != null ? ((java.sql.Timestamp)value).toLocalDateTime() : null;
+    }
+
+    public static LocalTime resultAsLocalTime(Object row, int index) {
+        Object value = getValue(row, index);
+        return value != null ? ((java.sql.Time)value).toLocalTime() : null;
     }
 
     public static Long resultAsLong(Object row, int index) {

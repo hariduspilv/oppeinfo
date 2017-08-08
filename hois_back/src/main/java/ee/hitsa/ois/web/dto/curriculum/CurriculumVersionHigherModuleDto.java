@@ -19,6 +19,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.CurriculumValidator.HigherModule;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumVersionHigherModuleDto extends VersionedCommand {
@@ -55,7 +56,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     @NotNull
     @Min(0)
     @Max(999)
-    private Integer electiveModulesNumber;
+    private Long electiveModulesNumber;
     @NotNull
     private Boolean minorSpeciality;
     @NotEmpty
@@ -66,6 +67,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
 
     private Set<CurriculumVersionElectiveModuleDto> electiveModules;
 
+    @NotEmpty(groups = {HigherModule.class})
     private Set<Long> specialitiesReferenceNumbers;
 
     public static CurriculumVersionHigherModuleDto of(CurriculumVersionHigherModule module) {
@@ -74,7 +76,10 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
 
         dto.setElectiveModules(StreamUtil.toMappedSet(CurriculumVersionElectiveModuleDto::of, module.getElectiveModules()));
         dto.setSubjects(StreamUtil.toMappedSet(s -> CurriculumVersionHigherModuleSubjectDto.of(s), module.getSubjects()));
-        dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(m -> EntityUtil.getId(m.getSpeciality().getCurriculumSpeciality()), module.getSpecialities()));
+        if(!Boolean.TRUE.equals(module.getMinorSpeciality())) {
+            dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(m -> 
+            EntityUtil.getId(m.getSpeciality().getCurriculumSpeciality()), module.getSpecialities()));
+        }
         return dto;
     }
 
@@ -184,11 +189,11 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         this.compulsoryStudyCredits = compulsoryStudyCredits;
     }
 
-    public Integer getElectiveModulesNumber() {
+    public Long getElectiveModulesNumber() {
         return electiveModulesNumber;
     }
 
-    public void setElectiveModulesNumber(Integer electiveModulesNumber) {
+    public void setElectiveModulesNumber(Long electiveModulesNumber) {
         this.electiveModulesNumber = electiveModulesNumber;
     }
 

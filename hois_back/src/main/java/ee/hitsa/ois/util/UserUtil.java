@@ -9,6 +9,7 @@ import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class UserUtil {

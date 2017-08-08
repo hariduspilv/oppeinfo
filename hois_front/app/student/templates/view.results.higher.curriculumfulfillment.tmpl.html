@@ -1,0 +1,182 @@
+    <md-table-container>
+      <table md-table>
+        <tbody md-body ng-repeat="module in higherResults.modules">
+          <tr md-row>
+            <td md-cell colspan="7" ng-click="module.clicked = !module.clicked" class="header">
+              <span class="md-title header">
+                {{'curriculum.module' | translate}} {{module[currentLanguageNameField()]}} {{module.totalCredits}} EAP
+                &nbsp;(<span ng-if="module.type !== 'KORGMOODUL_M'"><hois-classifier-value class="inline" ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value></span>
+                <span ng-if="module.type === 'KORGMOODUL_M'">{{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}}</span>)
+                <b ng-if="!module.isOk" class="red">&nbsp;{{ module.totalDifference }}</b>
+                <i class="material-icons green" ng-if="module.isOk">done</i>
+                </span>
+            </td>
+          </tr>
+          <tr md-row ng-hide="module.clicked" class="hideable" ng-if="hasMandatorySubjects(module)">
+            <td colspan="7" class="sub-header1">
+              &nbsp;{{'subject.mandatory' | translate}}
+              <i class="material-icons green" ng-if="module.mandatoryDifference >= 0">done</i>
+            </td>
+          </tr>
+          <tr md-row class="secondary-table-header hideable" ng-hide="module.clicked" ng-if="hasMandatorySubjects(module)">
+            <td md-cell>{{'student.result.higher.subject' | translate}}</td>
+            <td md-cell>{{'student.result.higher.subjectCode' | translate}}</td>
+            <td md-cell>{{'student.result.higher.credits' | translate}}</td>
+            <td md-cell>{{'student.result.higher.grade' | translate}}</td>
+            <td md-cell>{{'student.result.higher.date' | translate}}</td>
+            <td md-cell>{{'student.result.higher.teacher' | translate}}</td>
+            <td md-cell>{{'student.result.higher.isOk' | translate}}</td>
+          </tr>
+          <tr md-row ng-hide="module.clicked" class="hideable"
+          ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) | filter: {isOptional: false} | orderBy: currentLanguageNameField()">
+            <td md-cell>{{subjectResult.subject[currentLanguageNameField()]}}</td>
+            <td md-cell>{{subjectResult.subject.code}}</td>
+            <td md-cell>{{subjectResult.subject.credits}}</td>
+            <td md-cell>
+              <table>
+                <tr>
+                  <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
+                    <span ng-if="$index !== 0">/</span>
+                    {{grade.gradeValue}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>{{subjectResult.lastGrade.gradeDate | hoisDate}}</td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="teacher in subjectResult.lastGrade.teachers | orderBy">
+                  <td>{{teacher}}</td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>{{subjectResult.isOk ? 'main.yes' : 'main.no' | translate}}</td>
+          </tr>
+          <tr md-row class="secondary-table-header hideable" ng-hide="module.clicked" ng-if="hasMandatorySubjects(module)">
+            <td colspan="2">{{'student.result.higher.totalRequired' | translate}}: {{module.compulsoryStudyCredits}}</td>
+            <td colspan="2">{{'student.result.higher.totalSubmitted' | translate}}: {{module.mandatoryCreditsSubmitted}}</td>
+            <td colspan="3">
+              {{'student.result.higher.difference' | translate}}:
+              <span ng-class="{'red': module.mandatoryDifference < 0}">{{module.mandatoryDifference}}</span>
+            </td>
+          </tr>
+          <tr md-row ng-hide="module.clicked" class="hideable" ng-if="hasOptionalSubjects(module)">
+            <td colspan="7" class="sub-header1">
+              {{'subject.optional' | translate}}
+              <i class="material-icons green" ng-if="module.optionalDifference >= 0">done</i>
+            </td>
+          </tr>
+          <tr md-row class="secondary-table-header hideable" ng-hide="module.clicked" ng-if="hasOptionalSubjects(module)">
+            <td md-cell>{{'student.result.higher.subject' | translate}}</td>
+            <td md-cell>{{'student.result.higher.subjectCode' | translate}}</td>
+            <td md-cell>{{'student.result.higher.credits' | translate}}</td>
+            <td md-cell>{{'student.result.higher.grade' | translate}}</td>
+            <td md-cell>{{'student.result.higher.date' | translate}}</td>
+            <td md-cell>{{'student.result.higher.teacher' | translate}}</td>
+            <td md-cell>{{'student.result.higher.isOk' | translate}}</td>
+          </tr>
+          <tr ng-hide="module.clicked" class="hideable" md-row ng-repeat="subjectResult in higherResults.subjectResults
+          | filter: filterSubjectResultsByModule(module) | filter: {isOptional: true} | filter: {electiveModule: '!'}
+          | orderBy: currentLanguageNameField()">
+            <td md-cell>{{subjectResult.subject[currentLanguageNameField()]}}</td>
+            <td md-cell>{{subjectResult.subject.code}}</td>
+            <td md-cell>{{subjectResult.subject.credits}}</td>
+            <td md-cell>
+              <table>
+                <tr>
+                  <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
+                    <span ng-if="$index !== 0">/</span>
+                    {{grade.gradeValue}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>{{subjectResult.lastGrade.gradeDate | hoisDate}}</td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="teacher in subjectResult.lastGrade.teachers | orderBy">
+                  <td>{{teacher}}</td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>{{subjectResult.isOk ? 'main.yes' : 'main.no' | translate}}</td>
+          </tr>
+          <tr md-row ng-hide="module.clicked" class="hideable" ng-if="module.electiveModulesResults.length > 0">
+             <td colspan="1" class="sub-header2">
+               {{'student.result.higher.electiveModules' | translate}}
+              <i class="material-icons green" ng-if="module.electiveModulesNumber <= module.electiveModulesCompleted">done</i>
+              </td>
+             <td colspan="2" class="sub-header2">{{'student.result.higher.electiveModulesRequired' | translate}}: {{module.electiveModulesNumber}}</td>
+             <td colspan="4" class="sub-header2">{{'student.result.higher.electiveModulesCompleted' | translate}}: {{module.electiveModulesCompleted}}</td>
+          </tr>
+          <tr ng-hide="module.clicked" class="hideable" md-row ng-repeat-start="electiveModule in module.electiveModulesResults | orderBy: currentLanguageNameField()">
+            <td md-cell colspan="7" class="sub-header2">
+              {{'module.optional' | translate}}: {{electiveModule[currentLanguageNameField()]}}
+              <i class="material-icons green" ng-if="electiveModule.isOk">done</i>
+            </td>
+          </tr>
+
+          <tr ng-hide="module.clicked" class="hideable" md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) | filter: {isOptional: true} |
+                                filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()">
+            <td md-cell>{{subjectResult.subject[currentLanguageNameField()]}}</td>
+            <td md-cell>{{subjectResult.subject.code}}</td>
+            <td md-cell>{{subjectResult.subject.credits}}</td>
+            <td md-cell>
+              <table>
+                <tr>
+                  <td ng-repeat="grade in subjectResult.grades | orderBy: 'gradeDate'">
+                    <span ng-if="$index !== 0">/</span>
+                    {{grade.gradeValue}}
+                  </td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>{{subjectResult.lastGrade.gradeDate | hoisDate}}</td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="teacher in subjectResult.lastGrade.teachers | orderBy">
+                  <td>{{teacher}}</td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>{{subjectResult.isOk ? 'main.yes' : 'main.no' | translate}}</td>
+          </tr>
+          <tr ng-hide="module.clicked" class="hideable" ng-repeat-end></tr>
+          <tr ng-hide="module.clicked" md-row class="secondary-table-header hideable" ng-if="hasOptionalSubjects(module)">
+            <td colspan="2">{{'student.result.higher.totalRequired' | translate}}: {{module.optionalStudyCredits}}</td>
+            <td colspan="2">{{'student.result.higher.totalSubmitted' | translate}}: {{module.optionalCreditsSubmitted}}</td>
+            <td colspan="3">
+              {{'student.result.higher.difference' | translate}}:
+              <span ng-class="{'red': optionalDifference < 0}">{{module.optionalDifference}}</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+
+<style>
+  .inline {
+    display: inline;
+  }
+  .header {
+     background-color: #d9d9d9;
+  }
+  .header-blue {
+    background-color: #1976D2;
+    color: white;
+  }
+  .green {
+    color: green !important;
+  }
+  .red {
+    color: red;
+  }
+  .hideable.ng-hide {
+    opacity: 0;
+  }
+  .hideable.ng-hide-remove {
+    transition: all linear 0.5s;
+  }
+
+</style>
+

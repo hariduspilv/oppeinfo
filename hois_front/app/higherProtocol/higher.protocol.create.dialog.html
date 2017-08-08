@@ -12,14 +12,14 @@
 
     <md-dialog-content>
       <div class="md-dialog-content" layout="column">
-        <md-input-container flex>
+        <md-input-container>
           <label class="textInput">{{'higherProtocol.subject' | translate}}</label>
-          <hois-select ng-model="record.subjectStudyPeriod" values="subjectStudyPeriods"></hois-select>
+          <hois-select ng-model="record.subjectStudyPeriod" values="subjectStudyPeriods" required></hois-select>
         </md-input-container>
         <br>
-        <div flex layout="row">
-          <label>{{'higherProtocol.type' | translate}}</label>
-          <hois-classifier-radio layout="row" ng-model="record.protocolType" model-value-attr="code" main-classifier-code="PROTOKOLLI_LIIK"></hois-classifier-radio>
+        <div layout="row">
+          <label flex="30" class="common-label">{{'higherProtocol.type' | translate}}</label>
+          <hois-classifier-radio layout="row" ng-model="record.protocolType" model-value-attr="code" main-classifier-code="PROTOKOLLI_LIIK" required ng-disabled="formState.readOnly" class="md-primary"></hois-classifier-radio>
         </div>
         <br>
         <md-table-container>
@@ -41,14 +41,12 @@
             </tbody>
           </table>
         </md-table-container>
-
-
       </div>
     </md-dialog-content>
 
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()">{{'higherProtocol.create' | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="save()">{{'higherProtocol.create' | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

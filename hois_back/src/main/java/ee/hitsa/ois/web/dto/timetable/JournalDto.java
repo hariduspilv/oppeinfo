@@ -7,8 +7,10 @@ import java.util.List;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class JournalDto {
@@ -23,6 +25,7 @@ public class JournalDto {
     private List<JournalModuleDescriptionDto> moduleDescriptions = new ArrayList<>();
     private Integer plannedHours;
     private Integer usedHours;
+    @ClassifierRestriction(MainClassCode.PAEVIK_STAATUS)
     private String status;
     private LocalDate endDate;
     private Boolean hasJournalStudents;

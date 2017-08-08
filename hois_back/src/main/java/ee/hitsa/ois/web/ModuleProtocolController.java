@@ -123,7 +123,7 @@ public class ModuleProtocolController {
             @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
         assertIsTeacherResponsible(user, protocol);
-        return get(moduleProtocolService.confirm(protocol, moduleProtocolSaveForm));
+        return get(moduleProtocolService.confirm(user, protocol, moduleProtocolSaveForm));
     }
 
     private static void assertIsTeacherResponsible(HoisUserDetails user, Protocol protocol) {

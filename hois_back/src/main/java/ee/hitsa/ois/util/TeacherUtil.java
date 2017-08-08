@@ -4,6 +4,7 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherMobility;
 import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
+import ee.hitsa.ois.exception.AssertionFailedException;
 
 public abstract class TeacherUtil {
     public static void assertMobilityBelongsToTeacher(TeacherMobility teacherMobility, Teacher teacher) {

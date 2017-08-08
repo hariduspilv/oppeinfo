@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.UserService;
@@ -75,8 +76,7 @@ public class AuthenticationController {
             User oldUser = userRepository.getOne(oldUserDetails.getUserId());
             User newUser = userRepository.getOne(id);
             if(!EntityUtil.getId(oldUser.getPerson()).equals(EntityUtil.getId(newUser.getPerson()))) {
-                // TODO proper exception
-                throw new RuntimeException("Person has no user with id : " + id);
+                throw new HoisException(String.format("Person has no user with id : %d", id));
             }
 
             HoisUserDetails userDetails = userDetailsService.getHoisUserDetails(newUser);

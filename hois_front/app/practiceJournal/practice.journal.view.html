@@ -19,7 +19,7 @@
           <br>
         </div>
 
-        <div layout="row" flex>
+        <div ng-if="!practiceJournal.subject" layout="row" flex>
           <md-input-container flex>
             <label>{{'practiceJournal.module' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.module)"></hois-value>
@@ -37,6 +37,22 @@
             <hois-value value="practiceJournal.hours"></hois-value>
           </md-input-container>
         </div>
+
+        <div ng-if="practiceJournal.subject" layout="row" flex>
+          <md-input-container flex>
+            <label>{{'practiceJournal.subject' | translate}}</label>
+            <hois-value value="currentLanguageNameField(practiceJournal.subject)"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'practiceJournal.credits' | translate}}</label>
+            <hois-value value="practiceJournal.credits"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'practiceJournal.hours' | translate}}</label>
+            <hois-value value="practiceJournal.hours"></hois-value>
+          </md-input-container>
+        </div>
+
         <div layout="row" flex>
           <md-input-container flex>
             <label>{{'enterprise.label' | translate}}</label>
@@ -131,6 +147,7 @@
       <br>
       <div layout="row">
         <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/')">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-show="practiceJournal.canDelete" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
       </div>
       <br>
     </form>

@@ -9,9 +9,9 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.SaisClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.sais.SaisClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;

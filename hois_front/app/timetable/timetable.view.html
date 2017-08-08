@@ -15,16 +15,16 @@
           </md-input-container>
         </div>
         
-        <div ng-repeat="journal in timetable.journals">
+        <div ng-repeat="curriculum in timetable.curriculums">
           <table md-table >
             <thead md-head>
             <tr md-row>
-              <th md-column>{{journal.curriculumCode}}</th>
+              <th md-column>{{curriculum.curriculumCode}}</th>
             </tr>
             </thead>
             <tbody md-body>
-            <tr md-row ng-repeat="group in journal.groups" ng-class-odd="'odd'" ng-class-even="'even'">
-              <td md-cell>{{group.code}}</td>
+            <tr md-row ng-repeat="group in curriculum.groups" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell><a href="#/timetable/{{timetable.id}}/createPlan/{{group.id}}">{{group.code}}</a></td>
             </tr>
             </tbody>
           </table>

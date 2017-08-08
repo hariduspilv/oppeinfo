@@ -17,10 +17,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.WithEntity;

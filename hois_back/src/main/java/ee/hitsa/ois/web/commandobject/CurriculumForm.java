@@ -23,6 +23,7 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.CurriculumValidator.Confirmed;
 import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedHigher;
 import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedVocational;
+import ee.hitsa.ois.validation.CurriculumValidator.Vocational;
 import ee.hitsa.ois.validation.CurriculumValidator.Joint;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
@@ -142,6 +143,7 @@ public class CurriculumForm extends VersionedCommand {
     @NotNull
     @ClassifierRestriction({MainClassCode.EKR, MainClassCode.OPPEASTE})
     private String origStudyLevel;
+    @NotNull(groups = {Vocational.class})
     @ClassifierRestriction({MainClassCode.ISCED_RYHM, MainClassCode.ISCED_VALD, MainClassCode.ISCED_SUUN})
     private String iscedClass;
     @NotNull

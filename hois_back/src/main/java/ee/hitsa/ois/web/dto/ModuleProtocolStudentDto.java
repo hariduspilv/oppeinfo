@@ -31,8 +31,8 @@ public class ModuleProtocolStudentDto {
         dto.setIdcode(protocolStudent.getStudent().getPerson().getIdcode());
         dto.setStatus(EntityUtil.getCode(protocolStudent.getStudent().getStatus()));
 
-        if (protocolStudent.getJournalStudents() != null) {
-            for (JournalStudent journalStudent : protocolStudent.getJournalStudents()) {
+        if (protocolStudent.getStudent().getJournalStudents() != null) {
+            for (JournalStudent journalStudent : protocolStudent.getStudent().getJournalStudents()) {
                 journalStudent.getJournalEntryStudents().stream()
                         .filter(jes -> JournalEntryType.SISSEKANNE_L.name()
                                 .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))

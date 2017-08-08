@@ -24,7 +24,7 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;

@@ -46,6 +46,7 @@ public class MidtermTaskController {
             @NotNull @Valid @RequestBody MidtermTaskUpdateForm form) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
         MidtermTaskUtil.checkIfMidtermTasksCanBeEdited(user, subjectStudyPeriod);
+        MidtermTaskUtil.assertNotPractice(subjectStudyPeriod);
         midtermTaskService.updateMidtermTasks(subjectStudyPeriod, form);
         return getMidtermTasks(user, subjectStudyPeriod);
     }
@@ -75,7 +76,7 @@ public class MidtermTaskController {
     public SubjectStudyPeriodMidtermTaskDto getStudentsResults(
             HoisUserDetails user, @WithEntity("id") SubjectStudyPeriod subjectStudyPeriod) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
-        return SubjectStudyPeriodMidtermTaskDto.of(subjectStudyPeriod);
+        return SubjectStudyPeriodMidtermTaskDto.ofForMidtermTasksStudentResultsForm(subjectStudyPeriod);
     }
 
     @PutMapping("/studentResults/{id:\\d+}")
@@ -83,6 +84,7 @@ public class MidtermTaskController {
             @WithEntity("id") SubjectStudyPeriod subjectStudyPeriod, 
             @NotNull @Valid @RequestBody SubjectStudyPeriodMidtermTaskForm form) {
         MidtermTaskUtil.checkUserRights(user, subjectStudyPeriod);
+        MidtermTaskUtil.assertNotPractice(subjectStudyPeriod);
         midtermTaskService.updateStudentsResults(form, subjectStudyPeriod);
         return getStudentsResults(user, subjectStudyPeriod);
     }

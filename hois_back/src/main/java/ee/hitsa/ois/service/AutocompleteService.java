@@ -32,7 +32,6 @@ import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
-import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -45,6 +44,7 @@ import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -54,7 +54,6 @@ import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
-import ee.hitsa.ois.web.dto.SubjectSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupResult;
@@ -73,8 +72,6 @@ public class AutocompleteService {
     private PersonRepository personRepository;
     @Autowired
     private SchoolRepository schoolRepository;
-    @Autowired
-    private SubjectRepository subjectRepository;
     @Autowired
     private StudyPeriodRepository studyPeriodRepository;
     @Autowired
@@ -124,11 +121,11 @@ public class AutocompleteService {
 
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
-        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value", em).getResultList();
+        List<?> data = qb.select("c.code, c.name_et, c.name_en, c.name_ru, c.valid, c.is_higher, c.is_vocational, c.main_class_code, c.value, c.value2", em).getResultList();
         List<ClassifierSelection> result = StreamUtil.toMappedList(r -> new ClassifierSelection(resultAsString(r, 0),
                     resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
                     resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
-                    resultAsString(r, 7), resultAsString(r, 8)), data);
+                    resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9)), data);
 
         return ClassifierUtil.sort(mainClassCodes, result);
     }
@@ -146,7 +143,7 @@ public class AutocompleteService {
             ClassifierSelection c = new ClassifierSelection(resultAsString(r, 0),
                     resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3),
                     resultAsBoolean(r, 4), resultAsBoolean(r, 5), resultAsBoolean(r, 6),
-                    resultAsString(r, 7), resultAsString(r, 8));
+                    resultAsString(r, 7), resultAsString(r, 8), resultAsString(r, 9));
             String parents = resultAsString(r, 9);
             if(parents != null) {
                 c.setParents(Arrays.asList(parents.split(", ")));
@@ -330,24 +327,19 @@ public class AutocompleteService {
     /**
      * SubjectService.search() is not used as it does not enable to search by both code and name using autocomplete
      */
-    public Page<SubjectSearchDto> subjects(Long schoolId, AutocompleteCommand command) {
+    public List<AutocompleteResult> subjects(Long schoolId, SubjectAutocompleteCommand lookup) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject s");
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.status_code = :statusCode", "statusCode", SubjectStatus.AINESTAATUS_K.name());
+        qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "name", lookup.getName());
+        qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "code", lookup.getCode());
+        qb.optionalCriteria("is_practice = :isPractice", "isPractice", lookup.getPractice());
 
-        return subjectRepository.findAll((root, query, cb) -> {
-            List<Predicate> filtersAnd = new ArrayList<>();
-
-            if (schoolId != null) {
-                filtersAnd.add(cb.equal(root.get("school").get("id"), schoolId));
-            }
-            filtersAnd.add(cb.equal(root.get("status").get("code"), SubjectStatus.AINESTAATUS_K.name()));
-
-            List<Predicate> filtersOr = new ArrayList<>();
-            String nameField = Language.EN.equals(command.getLang()) ? "nameEn" : "nameEt";
-            propertyContains(() -> root.get(nameField), cb, command.getName(), filtersOr::add);
-            propertyContains(() -> root.get("code"), cb, command.getName(), filtersOr::add);
-            filtersAnd.add(cb.or(filtersOr.toArray(new Predicate[filtersOr.size()])));
-
-            return cb.and(filtersAnd.toArray(new Predicate[filtersAnd.size()]));
-        }, new PageRequest(0, MAX_ITEM_COUNT)).map(SubjectSearchDto::of);
+        List<?> data = qb.select("s.id, s.name_et, s.name_en", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            AutocompleteResult dto = new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2));
+            return dto;
+        }, data);
     }
 
     public List<AutocompleteResult> teachers(Long schoolId, TeacherAutocompleteCommand lookup) {

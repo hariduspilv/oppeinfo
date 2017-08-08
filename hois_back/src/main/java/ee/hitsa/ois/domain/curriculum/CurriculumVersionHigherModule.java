@@ -50,7 +50,7 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
     @NotNull
     private BigDecimal optionalStudyCredits;
     private BigDecimal compulsoryStudyCredits;
-    private Integer electiveModulesNumber;
+    private Long electiveModulesNumber;
 
     @NotNull
     @Column(name="is_minor_speciality")
@@ -77,11 +77,11 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
         this.curriculumVersion = curriculumVersion;
     }
 
-    public Integer getElectiveModulesNumber() {
+    public Long getElectiveModulesNumber() {
         return electiveModulesNumber;
     }
 
-    public void setElectiveModulesNumber(Integer electiveModulesNumber) {
+    public void setElectiveModulesNumber(Long electiveModulesNumber) {
         this.electiveModulesNumber = electiveModulesNumber;
     }
 

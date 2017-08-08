@@ -20,6 +20,7 @@ public class PracticeJournalSearchDto {
     private Boolean canEdit;
     private Boolean canStudentAddEntries;
     private Boolean canTeacherAddEntries;
+    private AutocompleteResult subject;
 
     public Long getId() {
         return id;
@@ -139,6 +140,14 @@ public class PracticeJournalSearchDto {
 
     public void setCanTeacherAddEntries(Boolean canTeacherAddEntries) {
         this.canTeacherAddEntries = canTeacherAddEntries;
+    }
+
+    public AutocompleteResult getSubject() {
+        return subject;
+    }
+
+    public void setSubject(AutocompleteResult subject) {
+        this.subject = subject;
     }
 
 }

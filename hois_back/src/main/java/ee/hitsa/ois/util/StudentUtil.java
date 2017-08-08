@@ -2,7 +2,10 @@ package ee.hitsa.ois.util;
 
 import java.time.LocalDate;
 
+import org.springframework.util.CollectionUtils;
+
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.enums.StudentStatus;
 
 public class StudentUtil {
@@ -27,5 +30,10 @@ public class StudentUtil {
 
     public static boolean isAdult(Student student) {
         return PersonUtil.isAdult(student.getPerson()) && Boolean.FALSE.equals(student.getIsRepresentativeMandatory());
+    }
+
+    public static boolean hasRepresentatives(Student student) {
+        return !CollectionUtils.isEmpty(student.getRepresentatives()) &&
+                student.getRepresentatives().stream().filter(StudentRepresentative::getIsStudentVisible).findFirst().isPresent();
     }
 }

@@ -110,7 +110,7 @@
 
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
-        <md-button ng-if="!auth.isStudent()" class="md-raised" ng-href="#/contracts/new">{{'main.button.create' | translate}}</md-button>
+        <md-button ng-if="!auth.isStudent()" class="md-raised" ng-click="newContract()">{{'main.button.create' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
@@ -123,7 +123,7 @@
       <table md-table md-progress="tabledata.$promise">
         <thead md-head md-order="criteria.order" md-on-reorder="loadData">
           <tr md-row>
-            <th md-column>{{'student.label' | translate}}</th>
+            <th md-column md-order-by="student_person.lastname,student_person.firstname">{{'student.label' | translate}}</th>
             <th md-column>{{'contract.contractNumber' | translate}}</th>
             <th md-column>{{'contract.validity' | translate}}</th>
             <th md-column>{{'enterprise.label' | translate}}</th>

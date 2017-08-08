@@ -8,7 +8,7 @@
         </md-input-container>
       </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column" flex>
+      <div ng-if="!contract.subject" layout="row" layout-sm="column" layout-xs="column" flex>
         <md-input-container flex>
           <label class="textInput">{{'module.practice' | translate}}</label>
           <hois-value value="currentLanguageNameField(contract.module)"></hois-value>
@@ -17,6 +17,23 @@
         <md-input-container flex flex-offset-gt-md="5">
           <label class="textInput">{{'contract.theme' | translate}}</label>
           <hois-value value="currentLanguageNameField(contract.theme)"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
+          <label class="textInput">{{'contract.credits' | translate}}</label>
+          <hois-value value="contract.credits"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'contract.hours' | translate}}</label>
+          <hois-value value="contract.hours"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div ng-if="contract.subject" layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.subject' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.subject)"></hois-value>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">

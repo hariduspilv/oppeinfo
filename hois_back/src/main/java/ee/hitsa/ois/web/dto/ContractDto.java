@@ -31,6 +31,7 @@ public class ContractDto extends VersionedCommand {
     private String otherSupervisor;
     private AutocompleteResult contractCoordinator;
     private String practicePlan;
+    private AutocompleteResult subject;
 
     public static ContractDto of(Contract contract) {
         if (contract == null) {
@@ -213,6 +214,14 @@ public class ContractDto extends VersionedCommand {
 
     public void setPracticePlan(String practicePlan) {
         this.practicePlan = practicePlan;
+    }
+
+    public AutocompleteResult getSubject() {
+        return subject;
+    }
+
+    public void setSubject(AutocompleteResult subject) {
+        this.subject = subject;
     }
 
 }

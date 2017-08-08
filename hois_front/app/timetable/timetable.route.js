@@ -108,5 +108,13 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
-      });
+      })
+    .when('/timetable/:id/createPlan/:groupId', {
+      templateUrl: 'timetable/timetable.createTimetablePlan.html',
+      controller: 'TimetablePlanController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    });
 }]);

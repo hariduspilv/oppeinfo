@@ -157,15 +157,6 @@ public class PracticeJournalControllerTests {
     }
 
     @Test
-    public void studentPracticeModules() {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
-                .pathSegment("studentPracticeModules").pathSegment(student.getId().toString());
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-
-    @Test
     public void saveEntriesStudent() {
         //TODO
     }

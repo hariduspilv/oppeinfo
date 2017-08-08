@@ -386,16 +386,20 @@ public class DirectiveViewStudentDto {
             dto.setApplicationStudyPeriodEnd(application != null && application.getStudyPeriodEnd() != null ? AutocompleteResult.of(application.getStudyPeriodEnd()) : null);
             break;
         case KASKKIRI_ENNIST:
-            dto.setNewCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-            dto.setStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
-            dto.setStudyLoad(EntityUtil.getNullableCode(student.getStudyLoad()));
-            dto.setFin(EntityUtil.getNullableCode(student.getFin()));
-            dto.setFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
-            dto.setLanguage(EntityUtil.getNullableCode(student.getLanguage()));
-            dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
+            if (student != null) {
+                dto.setNewCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+                dto.setStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+                dto.setStudyLoad(EntityUtil.getNullableCode(student.getStudyLoad()));
+                dto.setFin(EntityUtil.getNullableCode(student.getFin()));
+                dto.setFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
+                dto.setLanguage(EntityUtil.getNullableCode(student.getLanguage()));
+            }
+                dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_FINM:
-            dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
+            if (student != null) {
+                dto.setOldFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
+            }
             break;
         case KASKKIRI_IMMAT:
         case KASKKIRI_IMMATV:
@@ -403,20 +407,26 @@ public class DirectiveViewStudentDto {
             dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_LOPET:
-            dto.setNewCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-            // TODO
-            // dto.setIsCumLaude(isCumLaude);
-            // dto.setIsOccupationExamPassed(isOccupationExamPassed);
-            // dto.setCurriculumGrade(curriculumGrade);
+            if (student != null) {
+                dto.setNewCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+                // TODO
+                // dto.setIsCumLaude(isCumLaude);
+                // dto.setIsOccupationExamPassed(isOccupationExamPassed);
+                // dto.setCurriculumGrade(curriculumGrade);
+            }
             break;
         case KASKKIRI_OKAVA:
-            dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
-            dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
-            dto.setNewCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
-            dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
+            if (student != null) {
+                dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+                dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+            }
+                dto.setNewCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
+                dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_OVORM:
-            dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+            if (student != null) {
+                dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+            }
             dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_VALIS:
@@ -429,4 +439,4 @@ public class DirectiveViewStudentDto {
 
         return dto;
     }
-}    
+}

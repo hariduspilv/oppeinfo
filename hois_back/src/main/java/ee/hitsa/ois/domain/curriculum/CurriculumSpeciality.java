@@ -18,7 +18,7 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.util.Translatable;
 @Entity
 public class CurriculumSpeciality extends BaseEntityWithId implements Translatable {

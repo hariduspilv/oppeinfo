@@ -160,10 +160,15 @@ public class MidtermTaskService {
         midtermTaskStudentResultRepository.save(savedStudentResults);
     }
 
-    private static Set<MidtermTaskStudentResultDto> removeEmptyStudentResults(Set<MidtermTaskStudentResultDto> studentResults) {
+    private Set<MidtermTaskStudentResultDto> removeEmptyStudentResults(Set<MidtermTaskStudentResultDto> studentResults) {
         return studentResults.stream()
-                .filter(r -> r.getPoints() != null || (r.getPointsTxt() != null && !r.getPointsTxt().isEmpty()))
-                .collect(Collectors.toSet());
+                .filter(r -> {
+                    MidtermTask task = midtermTaskRepository.getOne(r.getMidtermTask());
+                    if(MidtermTaskUtil.resultIsText(task)) {
+                        return r.getPointsTxt() != null && !r.getPointsTxt().isEmpty();
+                    }
+                    return r.getPoints() != null;
+                }).collect(Collectors.toSet());
     }
 
     private void deleteStudentResults(Set<MidtermTaskStudentResultDto> studentResultsDtos, 
@@ -200,13 +205,13 @@ public class MidtermTaskService {
     }
 
     public void updateStudentResult(MidtermTaskStudentResultDto dto, MidtermTaskStudentResult studentResult) {
-        if(!MidtermTaskUtil.studentResultCanBeChanged(studentResult.getDeclarationSubject())) {
-            return;
-        }
-        if(dto.getPoints() == null && dto.getPointsTxt() != null) {
+
+        MidtermTaskUtil.checkIfStudentResultCanBeChanged(studentResult.getDeclarationSubject());
+
+        if(MidtermTaskUtil.resultIsText(studentResult.getMidtermTask())) {
             studentResult.setPoints(null);
             studentResult.setPointsTxt(dto.getPointsTxt());
-        } else if(dto.getPoints() != null && dto.getPointsTxt() == null) {
+        } else {
             studentResult.setPoints(dto.getPoints());
             studentResult.setPointsTxt(null);
             MidtermTaskUtil.checkStudentResultsPoints(studentResult);

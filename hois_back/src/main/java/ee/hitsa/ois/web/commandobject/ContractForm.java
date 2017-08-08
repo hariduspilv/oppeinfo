@@ -5,6 +5,7 @@ import java.time.LocalDate;
 
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.validation.ContractValidation;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -13,8 +14,9 @@ public class ContractForm extends VersionedCommand {
 
     @NotNull
     private AutocompleteResult student;
-    @NotNull
+    @NotNull(groups = ContractValidation.Vocational.class)
     private Long module;
+    @NotNull(groups = ContractValidation.Vocational.class)
     private Long theme;
     @NotNull
     private BigDecimal credits;
@@ -45,6 +47,9 @@ public class ContractForm extends VersionedCommand {
     private Long contractCoordinator;
     @NotNull
     private String practicePlan;
+    @NotNull(groups = ContractValidation.Higher.class)
+    private Long subject;
+    private Boolean isHigher;
 
     public AutocompleteResult getStudent() {
         return student;
@@ -196,6 +201,22 @@ public class ContractForm extends VersionedCommand {
 
     public void setPracticePlan(String practicePlan) {
         this.practicePlan = practicePlan;
+    }
+
+    public Long getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Long subject) {
+        this.subject = subject;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 
 }

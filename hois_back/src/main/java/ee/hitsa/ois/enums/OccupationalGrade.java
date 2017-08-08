@@ -15,6 +15,9 @@ public enum OccupationalGrade {
 
 
     public static final List<String> OCCUPATIONAL_GRADE_POSITIVE = Arrays.asList(KUTSEHINDAMINE_5.name(), KUTSEHINDAMINE_4.name(),
-            KUTSEHINDAMINE_4.name(), KUTSEHINDAMINE_A.name());
+            KUTSEHINDAMINE_3.name(), KUTSEHINDAMINE_A.name());
+
+    public static final List<String> OCCUPATIONAL_VALUE_GRADE_POSITIVE = Arrays.asList(KUTSEHINDAMINE_5.name(), KUTSEHINDAMINE_4.name(),
+            KUTSEHINDAMINE_3.name());
 
 }

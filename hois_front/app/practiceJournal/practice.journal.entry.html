@@ -19,7 +19,7 @@
           <br>
         </div>
 
-        <div layout="row" flex>
+        <div ng-if="!practiceJournal.subject" layout="row" flex>
           <md-input-container flex>
             <label>{{'practiceJournal.module' | translate}}</label>
             <hois-value value="currentLanguageNameField(practiceJournal.module)"></hois-value>
@@ -37,6 +37,22 @@
             <hois-value value="practiceJournal.hours"></hois-value>
           </md-input-container>
         </div>
+
+        <div ng-if="practiceJournal.subject" layout="row" flex>
+          <md-input-container flex>
+            <label>{{'practiceJournal.subject' | translate}}</label>
+            <hois-value value="currentLanguageNameField(practiceJournal.subject)"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'practiceJournal.credits' | translate}}</label>
+            <hois-value value="practiceJournal.credits"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'practiceJournal.hours' | translate}}</label>
+            <hois-value value="practiceJournal.hours"></hois-value>
+          </md-input-container>
+        </div>
+
         <div layout="row" flex>
           <md-input-container flex>
             <label>{{'enterprise.label' | translate}}</label>
@@ -131,10 +147,10 @@
       </div>
 
       <div ng-if="!auth.isStudent()" class="form-readonly" layout="row">
-          <md-input-container flex>
-            <label>{{'practiceJournal.myPracticeReport' | translate}}</label>
-            <hois-value value="practiceJournal.practiceReport"></hois-value>
-          </md-input-container>
+        <md-input-container flex>
+          <label>{{'practiceJournal.myPracticeReport' | translate}}</label>
+          <hois-value value="practiceJournal.practiceReport"></hois-value>
+        </md-input-container>
       </div>
 
       <div ng-if="!auth.isStudent()" layout="row" flex>
@@ -147,82 +163,88 @@
       <br>
 
       <div class="form-readonly" layout="row">
-          <md-input-container flex>
-            <label>{{'practiceJournal.supervisorComment' | translate}}</label>
-            <hois-value value="practiceJournal.supervisorComment"></hois-value>
-          </md-input-container>
+        <md-input-container flex>
+          <label>{{'practiceJournal.supervisorComment' | translate}}</label>
+          <hois-value value="practiceJournal.supervisorComment"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="column" flex>
+        <fieldset>
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practiceJournal.supervisorOpinionFile' | translate}}</legend>
+          <md-button ng-if="!auth.isStudent()" class="md-raised" href="" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
+          <table md-table class="secondary-table">
+            <thead md-head>
+              <tr md-row>
+                <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+                <th md-column><span>{{'file.additionDate' | translate}}</span></th>
+                <th md-column>{{'file.addedBy' | translate}}</th>
+                <th md-column></th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="file in practiceJournal.practiceJournalFiles | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell>
+                  {{file.oisFile.fname}}
+                  <a ng-href="{{getUrl(file.oisFile)}}" target="_blank">
+                    <md-icon md-font-set="material-icons">file_download</md-icon>
+                  </a>
+                </td>
+                <td md-cell>
+                  {{file.inserted | hoisDateTime}}
+                </td>
+                <td md-cell>
+                  {{file.insertedBy}}
+                </td>
+                <td md-cell>
+                  <md-button class="remove nomargin" ng-click="removeFromArray(practiceJournal.practiceJournalFiles, file)">&times;</md-button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </fieldset>
       </div>
 
       <br>
-      <div layout="row">
-        <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/')">{{'main.button.back' | translate}}</md-button>
-      </div>
-    </form>
 
-    <div layout="column" flex>
-      <fieldset>
-        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'practiceJournal.supervisorOpinionFile' | translate}}</legend>
-        <md-button ng-if="!auth.isStudent()" class="md-raised" href="" ng-click="openAddFileDialog()">{{'main.button.uploadFile' | translate}}</md-button>
-        <table md-table class="secondary-table">
-          <thead md-head>
-            <tr md-row>
-              <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
-              <th md-column><span>{{'file.additionDate' | translate}}</span></th>
-              <th md-column>{{'file.addedBy' | translate}}</th>
-            </tr>
-          </thead>
-          <tbody md-body>
-            <tr md-row ng-repeat="file in practiceJournal.practiceJournalFiles | orderBy: 'id'" ng-class-odd="'odd'" ng-class-even="'even'">
-              <td md-cell>
-                {{file.oisFile.fname}}
-                <a ng-href="{{getUrl(file.oisFile)}}" target="_blank">
-                  <md-icon md-font-set="material-icons">file_download</md-icon>
-                </a>
-              </td>
-              <td md-cell>
-                {{file.inserted | hoisDateTime}}
-              </td>
-              <td md-cell>
-                {{file.insertedBy}}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </fieldset>
-    </div>
-
-    <br>
-
-    <div ng-if="auth.isStudent()" class="form-readonly" layout="row">
+      <div ng-if="auth.isStudent()" class="form-readonly" layout="row">
         <md-input-container flex>
           <label>{{'practiceJournal.teacherOpinion' | translate}}</label>
           <hois-value value="practiceJournal.teacherOpinion"></hois-value>
         </md-input-container>
-    </div>
+      </div>
 
-    <div ng-if="!auth.isStudent()" layout="row">
-      <md-input-container flex>
-        <label>{{'practiceJournal.teacherOpinion' | translate}}</label>
-        <input ng-model="practiceJournal.teacherOpinion" type="text">
-      </md-input-container>
-    </div>
+      <div ng-if="!auth.isStudent()" layout="row">
+        <md-input-container flex>
+          <label>{{'practiceJournal.teacherOpinion' | translate}}</label>
+          <input ng-model="practiceJournal.teacherOpinion" type="text">
+        </md-input-container>
+      </div>
 
-    <br>
+      <br>
 
-    <div  class="form-readonly" layout="row">
+      <div class="form-readonly" layout="row">
         <md-input-container flex>
           <label>{{'practiceJournal.supervisorOpinion' | translate}}</label>
-          <hois-value  value="practiceJournal.supervisorOpinion"></hois-value>
+          <hois-value value="practiceJournal.supervisorOpinion"></hois-value>
         </md-input-container>
-    </div>
+      </div>
 
-    <div ng-if="!auth.isStudent()" layout="row" flex>
-      <md-input-container flex>
-        <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
-        <hois-classifier-select ng-model="practiceJournal.grade" main-classifier-code="KUTSEHINDAMINE" model-value-attr="code"></hois-classifier-select>
-      </md-input-container>
-    </div>
+      <div ng-if="!auth.isStudent()" layout="row">
+        <md-input-container>
+          <label class="textInput">{{'practiceJournal.grade' | translate}}</label>
+          <hois-classifier-select ng-if="practiceJournal.subject" ng-model="practiceJournal.grade" main-classifier-code="KORGHINDAMINE" model-value-attr="code"></hois-classifier-select>
+          <hois-classifier-select ng-if="!practiceJournal.subject" ng-model="practiceJournal.grade" main-classifier-code="KUTSEHINDAMINE" model-value-attr="code"></hois-classifier-select>
+        </md-input-container>
+      </div>
+
+      <br>
+
+      <div layout="row">
+        <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/', practiceJournalEntryForm)">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
 
     <br>
 

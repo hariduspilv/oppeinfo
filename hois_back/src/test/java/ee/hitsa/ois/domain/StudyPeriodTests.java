@@ -18,9 +18,6 @@ public class StudyPeriodTests {
     @Test
     public void getWeekNrs() {
         StudyYear sy = new StudyYear();
-        sy.setStartDate(LocalDate.of(2016, 9, 1));
-        sy.setEndDate(LocalDate.of(2017, 5, 30));
-
         StudyPeriod sp = new StudyPeriod();
         StudyPeriod sp2 = new StudyPeriod();
         StudyPeriod sp3 = new StudyPeriod();
@@ -38,7 +35,7 @@ public class StudyPeriodTests {
         sp2.setStartDate(LocalDate.of(2017, 6, 10));
         sp2.setEndDate(LocalDate.of(2017, 6, 17));
 
-        // 2 weeks - 6, 7
+        // 2 weeks - 5, 6
         sp3.setStudyYear(sy);
         sp3.setStartDate(LocalDate.of(2017, 6, 27));
         sp3.setEndDate(sy.getEndDate());
@@ -48,6 +45,39 @@ public class StudyPeriodTests {
         Assert.assertEquals(Arrays.asList(Integer.valueOf(1), Integer.valueOf(2)), sp.getWeekNrs());
         Assert.assertEquals(Arrays.asList(Integer.valueOf(3)), sp2.getWeekNrs());
         Assert.assertEquals(Arrays.asList(Integer.valueOf(5), Integer.valueOf(6)), sp3.getWeekNrs());
+
+    }
+    
+    @Test
+    public void getWeekNrForDate() {
+        StudyYear sy = new StudyYear();
+        StudyPeriod sp = new StudyPeriod();
+        StudyPeriod sp2 = new StudyPeriod();
+        StudyPeriod sp3 = new StudyPeriod();
+
+        sy.setStartDate(LocalDate.of(2017, 6, 1));
+        sy.setEndDate(LocalDate.of(2017, 7, 3));
+
+        // 2 weeks - 1, 2
+        sp.setStudyYear(sy);
+        sp.setStartDate(sy.getStartDate());
+        sp.setEndDate(LocalDate.of(2017, 6, 6));
+
+        // 1 week - 3
+        sp2.setStudyYear(sy);
+        sp2.setStartDate(LocalDate.of(2017, 6, 10));
+        sp2.setEndDate(LocalDate.of(2017, 6, 17));
+
+        // 2 weeks - 5, 6
+        sp3.setStudyYear(sy);
+        sp3.setStartDate(LocalDate.of(2017, 6, 27));
+        sp3.setEndDate(sy.getEndDate());
+
+        sy.setStudyPeriods(new HashSet<>(Arrays.asList(sp, sp2, sp3)));
+        
+        Assert.assertEquals(Integer.valueOf(2), sp.getWeekNrForDate(LocalDate.of(2017, 6, 5)));
+        Assert.assertEquals(Integer.valueOf(3), sp2.getWeekNrForDate(LocalDate.of(2017, 6, 17)));
+        Assert.assertEquals(Integer.valueOf(6), sp3.getWeekNrForDate(LocalDate.of(2017, 7, 3)));
 
     }
 }

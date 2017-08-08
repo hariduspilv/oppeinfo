@@ -18,9 +18,10 @@ public class ClassifierSelection {
     private final Boolean vocational;
     private final Boolean higher;
     private final String value;
+    private final String value2;
     private Collection<String> parents;
 
-    public ClassifierSelection(String code, String nameEt, String nameEn, String nameRu, Boolean valid, Boolean higher, Boolean vocational, String mainClassCode, String value) {
+    public ClassifierSelection(String code, String nameEt, String nameEn, String nameRu, Boolean valid, Boolean higher, Boolean vocational, String mainClassCode, String value, String value2) {
         this.code = code;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
@@ -30,12 +31,17 @@ public class ClassifierSelection {
         this.vocational = vocational;
         this.mainClassCode = mainClassCode;
         this.value = value;
+        this.value2 = value2;
     }
 
     public static ClassifierSelection of(Classifier c) {
         return new ClassifierSelection(c.getCode(), c.getNameEt(), c.getNameEn(), c.getNameRu(),
                 Boolean.valueOf(c.isValid()), Boolean.valueOf(c.isHigher()), Boolean.valueOf(c.isVocational()),
-                c.getMainClassCode(), c.getValue());
+                c.getMainClassCode(), c.getValue(), c.getValue2());
+    }
+
+    public String getValue2() {
+        return value2;
     }
 
     public Collection<String> getParents() {

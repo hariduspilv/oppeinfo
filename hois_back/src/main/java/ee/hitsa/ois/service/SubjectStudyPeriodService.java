@@ -2,7 +2,6 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -40,8 +39,9 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
+import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.SubjectStatus;
-import ee.hitsa.ois.enums.TimetableType;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
@@ -49,7 +49,6 @@ import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodPlanRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -70,7 +69,6 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentGroupSearchDto;
-import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 
 @Transactional
 @Service
@@ -408,8 +406,7 @@ public class SubjectStudyPeriodService {
         List<Curriculum> curriculums = curriculumRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            // TODO use enum constant
-            filters.add(cb.equal(root.get("status").get("code"), "OPPEKAVA_STAATUS_K"));
+            filters.add(cb.equal(root.get("status").get("code"), CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
             filters.add(cb.equal(root.get("higher"), Boolean.TRUE));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
@@ -639,13 +636,13 @@ public class SubjectStudyPeriodService {
         }, data);
     }
     
-    public List<SubjectStudyPeriod> getSubjectStudyPeriodsForSchoolAndPeriod(Long schoolId, Long studyPeriodId) {
+    public List<Long> getSubjectStudyPeriodsForSchoolAndPeriod(Long schoolId, Long studyPeriodId) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period ssp inner join subject s on ssp.subject_id = s.id");
 
         qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         
         List<?> data = qb.select("ssp.id", em).getResultList();
-        return StreamUtil.toMappedList(r -> { return em.getReference(SubjectStudyPeriod.class, resultAsLong(r, 0)); }, data);
+        return StreamUtil.toMappedList(r -> (resultAsLong(r, 0)), data);
     }
 }

@@ -31,7 +31,10 @@ public class DeclarationSubjectDto extends VersionedCommand {
         dto.setDeclaration(EntityUtil.getId(declarationSubject.getDeclaration()));
         dto.setVersion(declarationSubject.getVersion());
         dto.setIsOptional(declarationSubject.getIsOptional());
-        dto.setModule(AutocompleteResult.of(declarationSubject.getModule()));
+        
+        if(declarationSubject.getModule() != null) {
+            dto.setModule(AutocompleteResult.of(declarationSubject.getModule()));
+        }
         dto.setTeachers(StreamUtil.toMappedSet(t -> t.getTeacher().getPerson().getFullname(), 
                 declarationSubject.getSubjectStudyPeriod().getTeachers()));
         SubjectSearchDto subjectDto = new SubjectSearchDto();

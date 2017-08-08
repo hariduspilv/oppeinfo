@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -21,6 +22,8 @@ public class TimetableEventTime extends BaseEntityWithId {
     private TimetableEvent timetableEvent;
 
     private LocalDateTime start;
+    //FIXME: rename in database
+    @Column(name = "\"end\"")
     private LocalDateTime end;
     private String otherTeacher;
     private String otherRoom;
@@ -30,7 +33,7 @@ public class TimetableEventTime extends BaseEntityWithId {
     private List<TimetableEventTeacher> timetableEventTeachers = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
+    @JoinColumn(name = "timetable_event_room_id", nullable = false, updatable = false)
     private List<TimetableEventRoom> timetableEventRooms = new ArrayList<>();
 
     public TimetableEvent getTimetableEvent() {
@@ -88,6 +91,6 @@ public class TimetableEventTime extends BaseEntityWithId {
     public void setTimetableEventRooms(List<TimetableEventRoom> timetableEventRooms) {
         this.timetableEventRooms = timetableEventRooms;
     }
-    
-    
+
+
 }

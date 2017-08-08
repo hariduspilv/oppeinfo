@@ -3,6 +3,7 @@ package ee.hitsa.ois.web;
 import java.time.LocalDate;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 
@@ -42,6 +43,7 @@ import ee.hitsa.ois.web.commandobject.PracticeJournalEntriesTeacherForm;
 import ee.hitsa.ois.web.commandobject.PracticeJournalForm;
 import ee.hitsa.ois.web.commandobject.PracticeJournalSearchCommand;
 import ee.hitsa.ois.web.dto.ContractStudentModuleDto;
+import ee.hitsa.ois.web.dto.ContractStudentSubjectDto;
 import ee.hitsa.ois.web.dto.PracticeJournalDto;
 import ee.hitsa.ois.web.dto.PracticeJournalSearchDto;
 
@@ -106,6 +108,13 @@ public class PracticeJournalController {
         return contractService.studentPracticeModules(user, studentId);
     }
 
+    @GetMapping("studentPracticeSubjects/{studentId:\\d+}")
+    public Collection<ContractStudentSubjectDto> studentSubjects(HoisUserDetails user, @PathVariable Long studentId) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return contractService.studentPracticeHigherModules(user, studentId)
+                .stream().flatMap(it -> it.getSubjects().stream()).collect(Collectors.toList());
+    }
+
     @PutMapping("/{id:\\d+}/saveEntries/student")
     public PracticeJournalDto saveEntriesStudent(HoisUserDetails user,
             @WithEntity("id") PracticeJournal practiceJournal,
@@ -156,7 +165,7 @@ public class PracticeJournalController {
         return practiceJournal;
     }
 
-    private void assertSupervisorView(PracticeJournal practiceJournal) {
+    private static void assertSupervisorView(PracticeJournal practiceJournal) {
         if (practiceJournal == null) {
             throw new ValidationFailedException("practiceJournal.messages.noPracticeJournalFound");
         } else if (JournalStatus.PAEVIK_STAATUS_K.name()

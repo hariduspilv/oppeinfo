@@ -8,18 +8,21 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
   $scope.formState = {};
 
   function entityToForm(entity) {
-    DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'enterprise', 'teacher', 'contractCoordinator']);
+    $scope.formState.isHigher = angular.isObject(entity.subject);
+    DataUtils.convertObjectToIdentifier(entity, ['module', 'theme', 'enterprise', 'teacher', 'contractCoordinator', 'subject']);
     $scope.contract = entity;
   }
 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
     entityToForm(entity);
+  } else {
+    $scope.formState.isHigher = $scope.auth.school.higher === true && (($scope.auth.school.vocational === true && $route.current.params.higher === true) || $scope.auth.school.vocational === false);
   }
 
   function loadEnterprises() {
     $scope.formState.enterprisesById = {};
-    return QueryUtils.endpoint('/autocomplete/enterprises').query(function(result) {
+    return QueryUtils.endpoint('/autocomplete/enterprises').query(function (result) {
       result.forEach(function (it) {
         $scope.formState.enterprisesById[it.id] = it;
       });
@@ -36,24 +39,42 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
         $scope.formState.student = clMapper.objectmapper(result);
       });
 
-      QueryUtils.endpoint('/contracts/studentPracticeModules/' + student.id).query(function (result) {
-        $scope.formState.modulesById = {};
-        $scope.formState.themesById = {};
-        result.forEach(function (it) {
-          $scope.formState.modulesById[it.module.id] = it;
-          it.themes.forEach(function (it) {
-            $scope.formState.themesById[it.theme.id] = it;
-          });
-        });
-        $scope.formState.modules = result.map(function (it) { return it.module; });
-
-        //in case of when module is set (edit)
-        if (angular.isNumber($scope.contract.module)) {
-          $scope.moduleChanged($scope.contract.module);
-        }
-      });
+      if ($scope.formState.isHigher) {
+        loadStudentPracticeSubjects(student);
+      } else {
+        loadStudentPracticeModules(student);
+      }
     }
   });
+
+  function loadStudentPracticeModules(student) {
+    QueryUtils.endpoint('/contracts/studentPracticeModules/' + student.id).query(function (result) {
+      $scope.formState.modulesById = {};
+      $scope.formState.themesById = {};
+      result.forEach(function (it) {
+        $scope.formState.modulesById[it.module.id] = it;
+        it.themes.forEach(function (it) {
+          $scope.formState.themesById[it.theme.id] = it;
+        });
+      });
+      $scope.formState.modules = result.map(function (it) { return it.module; });
+
+      //in case of when module is set (edit)
+      if (angular.isNumber($scope.contract.module)) {
+        $scope.moduleChanged($scope.contract.module);
+      }
+    });
+  }
+
+  function loadStudentPracticeSubjects(student) {
+    QueryUtils.endpoint('/contracts/studentPracticeSubjects/' + student.id).query(function (result) {
+      $scope.formState.subjectsById = {};
+      result.forEach(function (it) {
+        $scope.formState.subjectsById[it.id] = it;
+      });
+      $scope.formState.subjects = result;
+    });
+  }
 
   $scope.moduleChanged = function (moduleId) {
     if ($scope.formState.modulesById[moduleId]) {
@@ -76,6 +97,17 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
     }
   };
 
+  $scope.subjectChanged = function (subjectId) {
+    if ($scope.formState.subjectsById[subjectId]) {
+      $scope.contract.credits = $scope.formState.subjectsById[subjectId].credits;
+      $scope.contract.hours = $scope.contract.credits * CREDITS_TO_HOURS_MULTIPLIER;
+
+      if (!angular.isDefined(entity) && angular.isString($scope.formState.subjectsById[subjectId].outcomesEt)) {
+        $scope.contract.practicePlan = $scope.formState.subjectsById[subjectId].outcomesEt;
+      }
+    }
+  };
+
   $scope.enterpriseChanged = function (enterpriseId) {
     var enterprise = $scope.formState.enterprisesById[enterpriseId];
     $scope.contract.contactPersonName = enterprise.contactPersonName;
@@ -92,7 +124,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
       enterprise.$save().then(function (result) {
         message.info('main.messages.create.success');
 
-        loadEnterprises().$promise.then(function() {
+        loadEnterprises().$promise.then(function () {
           $scope.contract.enterprise = result.id;
           $scope.enterpriseChanged($scope.contract.enterprise);
         });
@@ -102,12 +134,16 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
 
 
   var ContractEndpoint = QueryUtils.endpoint('/contracts');
-  $scope.save = function () {
+  $scope.save = function (success) {
+    $scope.contract.isHigher = $scope.formState.isHigher;
     var contract = new ContractEndpoint($scope.contract);
     if (angular.isDefined($scope.contract.id)) {
       contract.$update().then(function () {
         message.info('main.messages.create.success');
         entityToForm(contract);
+        if (angular.isFunction(success)) {
+          success();
+        }
       });
     } else {
       contract.$save().then(function () {
@@ -128,9 +164,12 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
   };
 
   $scope.sendToEkis = function () {
-    $scope.save();
-    QueryUtils.endpoint('/contracts/sendToEkis/' + $scope.contract.id).save(function (contract) {
-      entityToForm(contract);
+     $scope.save(function () {
+      var EkisEndpoint = QueryUtils.endpoint('/contracts/sendToEkis/' + $scope.contract.id);
+      new EkisEndpoint().$save().then(function (contract) {
+        message.info('contract.messages.sendToEkis.success');
+        entityToForm(contract);
+      });
     });
   };
 });

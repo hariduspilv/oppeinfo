@@ -320,7 +320,7 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
     };
 
     $rootScope.excel = function(url, params) {
-      return config.apiUrl + '/'+ url + '?' + $httpParamSerializer(params);
+      return config.apiUrl + '/'+ url + (params ? ('?' + $httpParamSerializer(params)) : '');
     };
   })
   .filter('nospace', function () {

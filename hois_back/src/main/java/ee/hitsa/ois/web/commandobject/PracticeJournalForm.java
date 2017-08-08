@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.validation.DateRange;
+import ee.hitsa.ois.validation.PracticeJournalValidation;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 @DateRange(from = "startDate", thru = "endDate")
@@ -13,8 +14,9 @@ public class PracticeJournalForm extends VersionedCommand {
 
     @NotNull
     private AutocompleteResult student;
-    @NotNull
+    @NotNull(groups = PracticeJournalValidation.Vocational.class)
     private Long module;
+    @NotNull(groups = PracticeJournalValidation.Vocational.class)
     private Long theme;
     @NotNull
     private BigDecimal credits;
@@ -30,6 +32,9 @@ public class PracticeJournalForm extends VersionedCommand {
     private Long teacher;
     @NotNull
     private String practicePlan;
+    @NotNull(groups = PracticeJournalValidation.Higher.class)
+    private Long subject;
+    private Boolean isHigher;
 
     public AutocompleteResult getStudent() {
         return student;
@@ -109,6 +114,22 @@ public class PracticeJournalForm extends VersionedCommand {
 
     public void setPracticePlan(String practicePlan) {
         this.practicePlan = practicePlan;
+    }
+
+    public Long getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Long subject) {
+        this.subject = subject;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 
 }

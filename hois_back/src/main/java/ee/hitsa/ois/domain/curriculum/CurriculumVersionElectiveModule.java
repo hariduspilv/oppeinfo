@@ -9,7 +9,7 @@ import javax.persistence.OneToMany;
 import javax.persistence.Transient;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
-import ee.hitsa.ois.util.AssertionFailedException;
+import ee.hitsa.ois.exception.AssertionFailedException;
 
 @Entity
 public class CurriculumVersionElectiveModule extends BaseEntityWithId {

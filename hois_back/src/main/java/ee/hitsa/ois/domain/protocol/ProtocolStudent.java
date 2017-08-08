@@ -50,10 +50,6 @@ public class ProtocolStudent extends BaseEntityWithId {
     @JoinColumn(name = "protocol_student_id", nullable = false, updatable = false)
     private List<ProtocolStudentHistory> protocolStudentHistories;
 
-    @OneToMany
-    @JoinColumn(name = "student_id", referencedColumnName = "student_id", nullable = false, updatable = false, insertable = false)
-    private List<JournalStudent> journalStudents;
-
     public ProtocolStudent() {
     }
 
@@ -124,13 +120,4 @@ public class ProtocolStudent extends BaseEntityWithId {
     public void setProtocolStudentHistories(List<ProtocolStudentHistory> protocolStudentHistories) {
         this.protocolStudentHistories = protocolStudentHistories;
     }
-
-    public List<JournalStudent> getJournalStudents() {
-        return journalStudents;
-    }
-
-    public void setJournalStudents(List<JournalStudent> journalStudents) {
-        this.journalStudents = journalStudents;
-    }
-
 }

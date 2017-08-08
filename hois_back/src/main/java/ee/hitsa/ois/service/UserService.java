@@ -60,12 +60,10 @@ public class UserService {
             "inner join user_rights r on u.id = r.user_id ";
 
     public List<UserProjection> findAllActiveUsers(Long personId) {
-        LocalDate now = LocalDate.now();
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(ACTIVE_FROM);
 
         qb.requiredCriteria("u.person_id = :personId", "personId", personId);
-        qb.requiredCriteria("u.valid_from <= :now", "now", now);
-        qb.requiredCriteria("coalesce(u.valid_thru, :now) >= :now", "now", now);
+        qb.validByDateCriteria("u");
 
         List<?> resultList = qb.select("distinct u.id, s.code, u.role_code", em).getResultList();
         return StreamUtil.toMappedList(r -> new UserProjection(

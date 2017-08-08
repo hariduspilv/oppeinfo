@@ -149,7 +149,9 @@ public class ApplicationUtil {
         LocalDate academicLeaveStart = getStartDate(application.getAcademicApplication());
         LocalDate revocationStart = getStartDate(application);
 
-        if (revocationStart.isBefore(academicLeaveStart)) {
+        if (revocationStart == null) {
+            throw new ValidationFailedException("application.messages.revocationStart.isNull");
+        } else if (revocationStart.isBefore(academicLeaveStart)) {
             throw new ValidationFailedException("application.messages.revocationStartDateBeforeAcademicLeaveStartDate");
         }
 

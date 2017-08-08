@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -22,10 +24,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.service.StudentResultHigherService;
 import ee.hitsa.ois.service.StudentService;
 import ee.hitsa.ois.service.ehis.EhisStudentService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -40,10 +43,10 @@ import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
+import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
-
-import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
+import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
 
 @RestController
 @RequestMapping("/students")
@@ -55,6 +58,9 @@ public class StudentController {
     @Autowired
     private EhisStudentService ehisStudentService;
 
+    @Autowired
+    private StudentResultHigherService studentResultHigherService;
+
     @GetMapping
     public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
         return studentService.search(user.getSchoolId(), criteria, pageable);
@@ -63,16 +69,7 @@ public class StudentController {
     @GetMapping("/{id:\\d+}")
     public StudentViewDto get(HoisUserDetails user, @WithEntity("id") Student student) {
         assertCanView(user, student);
-        StudentViewDto dto = StudentViewDto.of(student);
-        // rights for editing student data, adding representative and displaying sensitive fields
-        dto.setUserCanEditStudent(Boolean.valueOf(UserUtil.canEditStudent(user, student)));
-        dto.setUserCanAddRepresentative(Boolean.valueOf(UserUtil.canAddStudentRepresentative(user, student)));
-        dto.setUserIsSchoolAdmin(Boolean.valueOf(UserUtil.isSchoolAdmin(user, student.getSchool())));
-        if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isSame(user, student) || UserUtil.isStudentRepresentative(user, student))) {
-            dto.setSpecialNeed(null);
-            dto.setIsRepresentativeMandatory(null);
-        }
-        return dto;
+        return studentService.getStudentView(user, student);
     }
 
     @PutMapping("/{id:\\d+}")
@@ -162,4 +159,17 @@ public class StudentController {
     private static void assertCanEditAbsence(HoisUserDetails user, StudentAbsence absence) {
         AssertionFailedException.throwIf(!UserUtil.canEditStudentAbsence(user, absence), "User cannot edit student absence");
     }
+
+    @GetMapping("/{id:\\d+}/vocationalResults")
+    public List<StudentVocationalResultModuleThemeDto> vocationalResults(HoisUserDetails user, @WithEntity("id") Student student) {
+        assertCanView(user, student);
+        return studentService.vocationalResults(student);
+    }
+
+    @GetMapping("/{id:\\d+}/higherResults")
+    public StudentHigherResultDto higherResults(HoisUserDetails user, @WithEntity("id") Student student) {
+        assertCanView(user, student);
+        return studentResultHigherService.higherResults(student);
+    }
+
 }

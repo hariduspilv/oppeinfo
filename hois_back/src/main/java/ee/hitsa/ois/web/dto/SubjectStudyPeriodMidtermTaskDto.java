@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
@@ -15,7 +16,8 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
     private AutocompleteResult assessment;
     private Set<MidtermTaskDto> midtermTasks;
     private Set<MidtermTaskStudentDto> students;
-
+    private Set<HigherProtocolDto> protocols;
+    
     public static SubjectStudyPeriodMidtermTaskDto of(SubjectStudyPeriod subjectStudyPeriod) {
         SubjectStudyPeriodMidtermTaskDto dto = new SubjectStudyPeriodMidtermTaskDto();
         SubjectStudyPeriodSearchDto ssp = new SubjectStudyPeriodSearchDto();
@@ -23,16 +25,23 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
         ssp.setId(EntityUtil.getId(subjectStudyPeriod));
         ssp.setSubject(AutocompleteResult.of(subjectStudyPeriod.getSubject()));
         ssp.setStudyPeriod(AutocompleteResult.of(subjectStudyPeriod.getStudyPeriod()));
+        ssp.setIsPracticeSubject(subjectStudyPeriod.getSubject().getIsPractice());
 
         dto.setSubjectStudyPeriod(ssp);
         dto.setAssessment(getAssessmentValue(subjectStudyPeriod));
         dto.setMidtermTasks(StreamUtil.toMappedSet(MidtermTaskDto::ofForStudentResultsForm, subjectStudyPeriod.getMidtermTasks()));
-
+        return dto;
+    }
+    
+    public static SubjectStudyPeriodMidtermTaskDto ofForMidtermTasksStudentResultsForm(SubjectStudyPeriod subjectStudyPeriod) {
+        SubjectStudyPeriodMidtermTaskDto dto = SubjectStudyPeriodMidtermTaskDto.of(subjectStudyPeriod);
+       
         dto.setStudentResults(StreamUtil.toMappedSet(MidtermTaskStudentResultDto::of, 
                 MidtermTaskUtil.getStudentResults(subjectStudyPeriod)));
 
         dto.setStudents(StreamUtil.toMappedSet(MidtermTaskStudentDto::of, 
                 subjectStudyPeriod.getDeclarationSubjects()));
+        dto.setProtocols(StreamUtil.toMappedSet(p -> HigherProtocolDto.ofForMidtermTasksForm(p.getProtocol()), subjectStudyPeriod.getProtocols()));
         return dto;
     }
     
@@ -43,6 +52,23 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
                 assessmentClassifier.getValue() + " - " + assessmentClassifier.getNameEn());
     }
     
+    public static SubjectStudyPeriodMidtermTaskDto ofForProtocol(Set<Long> studetnIds, 
+            SubjectStudyPeriod subjectStudyPeriod) {
+        SubjectStudyPeriodMidtermTaskDto dto = SubjectStudyPeriodMidtermTaskDto.of(subjectStudyPeriod);      
+        
+        dto.setStudentResults(MidtermTaskUtil.getStudentResults(subjectStudyPeriod).stream()
+                .filter(sr -> studetnIds.contains(EntityUtil.getId(sr.getDeclarationSubject()
+                        .getDeclaration().getStudent())))
+                .map(MidtermTaskStudentResultDto::of).collect(Collectors.toSet()));
+        return dto;
+    }
+
+    public Set<HigherProtocolDto> getProtocols() {
+        return protocols;
+    }
+    public void setProtocols(Set<HigherProtocolDto> protocols) {
+        this.protocols = protocols;
+    }
     public Set<MidtermTaskStudentDto> getStudents() {
         return students;
     }

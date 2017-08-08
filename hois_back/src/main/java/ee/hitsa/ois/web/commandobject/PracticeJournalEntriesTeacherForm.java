@@ -11,7 +11,7 @@ public class PracticeJournalEntriesTeacherForm {
     private String teacherComment;
     private String teacherOpinion;
 
-    @ClassifierRestriction(MainClassCode.KUTSEHINDAMINE)
+    @ClassifierRestriction({MainClassCode.KUTSEHINDAMINE, MainClassCode.KORGHINDAMINE})
     private String grade;
     private List<OisFileForm> practiceJournalFiles;
 

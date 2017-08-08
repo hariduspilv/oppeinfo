@@ -39,6 +39,9 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.EntityRemoveException;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
@@ -131,6 +134,7 @@ public abstract class EntityUtil {
                                 classifierProperties.put(propertyName, restriction);
                             }
                         }
+                      //TODO: add comment why catching throwable (error) instead of exception. (sonarqube warning)
                     } catch (Throwable e) {
                         throw new FatalBeanException("Could not copy property '" + propertyName + "' from command to entity", e);
                     }
@@ -196,6 +200,7 @@ public abstract class EntityUtil {
                                 }
                             }
                         }
+                        //TODO: add comment why catching throwable (error) instead of exception. (sonarqube warning)
                      } catch (Throwable e) {
                         throw new FatalBeanException("Could not copy property '" + propertyName + "' from command to entity", e);
                     }
@@ -228,7 +233,7 @@ public abstract class EntityUtil {
         // remove possible leftovers
         storedValues.removeIf(t -> storedIds.contains(idExtractor.apply(t)));
     }
-    
+
     /**
      * child collection binding when you need to extract id from object and also have other parameters to set (typically holder object with multiple parameters).
      *
@@ -311,7 +316,7 @@ public abstract class EntityUtil {
                 } else {
                     if (r.useClassifierValue()) {
                         if (t.length != 1) {
-                            throw new RuntimeException("only one mainClassCode is allowed, when useClassifierValue=true.");
+                            throw new HoisException("only one mainClassCode is allowed, when useClassifierValue=true.");
                         }
                         c = loader.findByValueAndMainClassCode(classCodeOrValue, t[0].name());
                     } else {

@@ -34,7 +34,7 @@ public class HigherProtocolSearchDto {
         dto.setSubject(AutocompleteResult.of(subjectStudyPeriod.getSubject()));
         dto.setTeachers(StreamUtil.toMappedSet(t -> PersonUtil.fullname(t.getTeacher().getPerson()), 
                 subjectStudyPeriod.getTeachers()));
-        dto.setCanChange(HigherProtocolUtil.canChange(user, protocol));
+        dto.setCanChange(Boolean.valueOf(HigherProtocolUtil.canChange(user, protocol)));
         return dto;
     }
     

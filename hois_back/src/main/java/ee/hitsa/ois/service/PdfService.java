@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.StringWriter;
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -11,6 +12,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
@@ -24,6 +27,7 @@ import com.mitchellbosecke.pebble.loader.Loader;
 import com.mitchellbosecke.pebble.template.PebbleTemplate;
 
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.util.TranslateUtil;
 
 /**
@@ -32,6 +36,7 @@ import ee.hitsa.ois.util.TranslateUtil;
 @Service
 public class PdfService {
 
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String TEMPLATE_PATH = "templates/";
 
     private final PebbleEngine pebble = new PebbleEngine.Builder()
@@ -56,7 +61,8 @@ public class PdfService {
             renderer.finishPDF();
             return os.toByteArray();
         } catch (DocumentException e) {
-            throw new RuntimeException(e);
+            log.error("pdf generation failed", e);
+            throw new HoisException(e);
         }
     }
 
@@ -75,7 +81,8 @@ public class PdfService {
             template.evaluate(w, data);
             return w.toString();
         } catch (IOException | PebbleException e) {
-            throw new RuntimeException(e);
+            log.error("pdf template evaluation failed", e);
+            throw new HoisException(e);
         }
     }
 

@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.ClassifierConnect;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.ClassifierConnectService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.ClassifierConnectSearchCommand;
 import ee.hitsa.ois.web.dto.ClassifierConnectSelection;

@@ -93,8 +93,8 @@ public class TestData {
     
     public StudyYear getStudyYear() {
         StudyYear studyYear = new StudyYear();
-        studyYear.setStartDate(LocalDate.now());
-        studyYear.setEndDate(LocalDate.now());
+        studyYear.setStartDate(LocalDate.now().minusMonths(Long.valueOf(1)));
+        studyYear.setEndDate(LocalDate.now().plusMonths(Long.valueOf(1)));
         studyYear.setSchool(getSchool());
         studyYear.setYear(classifierRepository.getOne("OPPEAASTA_2016_17"));
         return studyYear;

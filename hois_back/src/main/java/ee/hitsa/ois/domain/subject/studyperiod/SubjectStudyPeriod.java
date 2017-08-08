@@ -15,6 +15,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
@@ -57,6 +58,17 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     @OneToMany(mappedBy = "subjectStudyPeriod", fetch = FetchType.LAZY)
     private List<DeclarationSubject> declarationSubjects;
+    
+    @OneToMany(mappedBy = "subjectStudyPeriod", fetch = FetchType.LAZY)
+    private List<ProtocolHdata> protocols;
+
+    public List<ProtocolHdata> getProtocols() {
+        return protocols != null ? protocols : (protocols = new ArrayList<>());
+    }
+
+    public void setProtocols(List<ProtocolHdata> protocols) {
+        this.protocols = protocols;
+    }
 
     public List<DeclarationSubject> getDeclarationSubjects() {
         return declarationSubjects != null ? declarationSubjects : (declarationSubjects = new ArrayList<>());

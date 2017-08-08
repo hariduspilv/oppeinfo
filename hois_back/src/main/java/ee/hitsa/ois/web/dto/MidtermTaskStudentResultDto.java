@@ -18,12 +18,15 @@ public class MidtermTaskStudentResultDto {
     private Long midtermTask;
     @NotNull
     private Long declarationSubject;
+    /**
+     * Is used for higher protocols
+     */
+    private Long studentId;
     @Min(0)
     @Max(999)
     private BigDecimal points;
     @Size(max=10)
     private String pointsTxt;
-    private Boolean canBeChanged;
     private Boolean isText;
     private BigDecimal maxPoints;
     
@@ -33,8 +36,8 @@ public class MidtermTaskStudentResultDto {
         dto.setMidtermTask(EntityUtil.getId(studentResult.getMidtermTask()));
         dto.setDeclarationSubject(EntityUtil.getId(studentResult.getDeclarationSubject()));
         dto.setMaxPoints(studentResult.getMidtermTask().getMaxPoints());
-        dto.setCanBeChanged(Boolean.valueOf(MidtermTaskUtil.studentResultCanBeChanged(studentResult.getDeclarationSubject())));
         dto.setIsText(MidtermTaskUtil.getStudentResultIsText(studentResult.getMidtermTask()));
+        dto.setStudentId(EntityUtil.getId(studentResult.getDeclarationSubject().getDeclaration().getStudent()));
         return dto;
     }
 
@@ -69,6 +72,12 @@ public class MidtermTaskStudentResultDto {
         return true;
     }
 
+    public Long getStudentId() {
+        return studentId;
+    }
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
+    }
     public Boolean getIsText() {
         return isText;
     }
@@ -86,12 +95,6 @@ public class MidtermTaskStudentResultDto {
     }
     public void setDeclarationSubject(Long declarationSubject) {
         this.declarationSubject = declarationSubject;
-    }
-    public Boolean getCanBeChanged() {
-        return canBeChanged;
-    }
-    public void setCanBeChanged(Boolean canBeChanged) {
-        this.canBeChanged = canBeChanged;
     }
     public Long getId() {
         return id;

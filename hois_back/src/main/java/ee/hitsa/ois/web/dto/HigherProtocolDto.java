@@ -1,43 +1,98 @@
 package ee.hitsa.ois.web.dto;
 
+import java.util.List;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
-import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.HigherProtocolGradeUtil;
 import ee.hitsa.ois.util.HigherProtocolUtil;
-import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.web.commandobject.VersionedCommand;
+import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 
-public class HigherProtocolDto extends VersionedCommand {
+public class HigherProtocolDto extends HigherProtocolSaveForm {
     private Long id;
     private String protocolNr;
-    private AutocompleteResult subject;
-    private AutocompleteResult studyPeriod;
-    private Set<String> teachers;
-    
+    private String protocolType;
     private Boolean canChange;
     private Boolean canConfirm;
+    private String status;
+    private SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto;
+    private List<String> possibleGrades;
+    
+
+    
+    public static HigherProtocolDto ofWithIdOnly(Protocol protocol) {
+        HigherProtocolDto dto = new HigherProtocolDto();
+        dto.setId(EntityUtil.getId(protocol));
+        return dto;
+    }
+    
+    public static HigherProtocolDto ofForMidtermTasksForm(Protocol protocol) {
+        HigherProtocolDto dto = new HigherProtocolDto();
+        dto.setId(EntityUtil.getId(protocol));
+        dto.setProtocolNr(protocol.getProtocolNr());
+        dto.setProtocolType(EntityUtil.getCode(protocol.getProtocolHdata().getType()));
+        dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, 
+                protocol.getProtocolStudents()));
+        return dto;
+    }
     
     public static HigherProtocolDto ofWithUserRights(HoisUserDetails user, Protocol protocol) {
         HigherProtocolDto dto = new HigherProtocolDto();
         dto.setId(EntityUtil.getId(protocol));
         dto.setVersion(protocol.getVersion());
         dto.setProtocolNr(protocol.getProtocolNr());
+        dto.setProtocolType(EntityUtil.getCode(protocol.getProtocolHdata().getType()));
+        dto.setStatus(EntityUtil.getCode(protocol.getStatus()));
         
-        SubjectStudyPeriod subjectStudyPeriod = protocol.getProtocolHdata().getSubjectStudyPeriod();
-        dto.setSubject(AutocompleteResult.of(subjectStudyPeriod.getSubject()));
-        dto.setStudyPeriod(AutocompleteResult.of(subjectStudyPeriod.getStudyPeriod()));
-        dto.setTeachers(StreamUtil.toMappedSet(t -> PersonUtil.fullname(t.getTeacher().getPerson()), 
-                subjectStudyPeriod.getTeachers()));
+        dto.setCanConfirm(Boolean.valueOf(HigherProtocolUtil.canConfirm(user, protocol)));
+        dto.setCanChange(Boolean.valueOf(HigherProtocolUtil.canChange(user, protocol)));
         
-        dto.setCanConfirm(HigherProtocolUtil.canConfirm(user, protocol));
-        dto.setCanChange(HigherProtocolUtil.canChange(user, protocol));
+        dto.setProtocolStudents(StreamUtil.toMappedSet(HigherProtocolStudentDto::of, 
+                protocol.getProtocolStudents()));
+        
+        dto.setPossibleGrades(HigherProtocolGradeUtil.getPossibleGrades(protocol));
+        
+        Set<Long> studetnIds = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
+        dto.setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto
+                .ofForProtocol(studetnIds, protocol.getProtocolHdata().getSubjectStudyPeriod()));
         return dto;
     }
     
+    public List<String> getPossibleGrades() {
+        return possibleGrades;
+    }
+
+    public void setPossibleGrades(List<String> possibleGrades) {
+        this.possibleGrades = possibleGrades;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public SubjectStudyPeriodMidtermTaskDto getSubjectStudyPeriodMidtermTaskDto() {
+        return subjectStudyPeriodMidtermTaskDto;
+    }
+
+    public void setSubjectStudyPeriodMidtermTaskDto(SubjectStudyPeriodMidtermTaskDto subjectStudyPeriodMidtermTaskDto) {
+        this.subjectStudyPeriodMidtermTaskDto = subjectStudyPeriodMidtermTaskDto;
+    }
+
+    public String getProtocolType() {
+        return protocolType;
+    }
+
+    public void setProtocolType(String protocolType) {
+        this.protocolType = protocolType;
+    }
+
     public Long getId() {
         return id;
     }
@@ -68,29 +123,5 @@ public class HigherProtocolDto extends VersionedCommand {
 
     public void setProtocolNr(String protocolNr) {
         this.protocolNr = protocolNr;
-    }
-
-    public AutocompleteResult getSubject() {
-        return subject;
-    }
-
-    public void setSubject(AutocompleteResult subject) {
-        this.subject = subject;
-    }
-
-    public AutocompleteResult getStudyPeriod() {
-        return studyPeriod;
-    }
-
-    public void setStudyPeriod(AutocompleteResult studyPeriod) {
-        this.studyPeriod = studyPeriod;
-    }
-
-    public Set<String> getTeachers() {
-        return teachers;
-    }
-
-    public void setTeachers(Set<String> teachers) {
-        this.teachers = teachers;
     }
 }

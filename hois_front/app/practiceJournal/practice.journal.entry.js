@@ -1,7 +1,8 @@
 'use strict';
 
-angular.module('hitsaOis').controller('PracticeJournalEntryController', function ($scope, $route, dialogService, oisFileService, QueryUtils, message, DataUtils) {
+angular.module('hitsaOis').controller('PracticeJournalEntryController', function ($scope, $route, $location, dialogService, oisFileService, QueryUtils, message, DataUtils, ArrayUtils) {
   $scope.auth = $route.current.locals.auth;
+  $scope.removeFromArray = ArrayUtils.remove;
   $scope.practiceJournal = {
     practiceJournalEntries: [],
     practiceJournalFiles: []
@@ -66,6 +67,18 @@ angular.module('hitsaOis').controller('PracticeJournalEntryController', function
     practiceJournalEntries.$update().then(function (result) {
       message.info('main.messages.create.success');
       entityToForm(result);
+      $scope.practiceJournalEntryForm.$setPristine();
+    });
+  };
+
+  var PracticeJournalEndpoint = QueryUtils.endpoint('/practiceJournals');
+  $scope.delete = function () {
+    dialogService.confirmDialog({ prompt: 'practiceJournal.deleteconfirm' }, function () {
+      var practiceJournal = new PracticeJournalEndpoint($scope.practiceJournal);
+      practiceJournal.$delete().then(function () {
+        message.info('main.messages.delete.success');
+        $location.path('/practiceJournals');
+      });
     });
   };
 

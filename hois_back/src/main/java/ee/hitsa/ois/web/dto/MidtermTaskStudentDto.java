@@ -8,12 +8,14 @@ public class MidtermTaskStudentDto {
     private Long declarationSubject;
     private String name;
     private Boolean studentResultCanBeChanged;
+    private Long studentId;
 
     public static MidtermTaskStudentDto of(DeclarationSubject declarationSubject) {
         MidtermTaskStudentDto dto = new MidtermTaskStudentDto();
         dto.setDeclarationSubject(EntityUtil.getId(declarationSubject));
         dto.setName(declarationSubject.getDeclaration().getStudent().getPerson().getFullname());
         dto.setStudentResultCanBeChanged(Boolean.valueOf(MidtermTaskUtil.studentResultCanBeChanged(declarationSubject)));
+        dto.setStudentId(EntityUtil.getId(declarationSubject.getDeclaration().getStudent()));
         return dto;
     }
 
@@ -40,7 +42,13 @@ public class MidtermTaskStudentDto {
             return false;
         return true;
     }
-
+    
+    public Long getStudentId() {
+        return studentId;
+    }
+    public void setStudentId(Long studentId) {
+        this.studentId = studentId;
+    }
     public Boolean getStudentResultCanBeChanged() {
         return studentResultCanBeChanged;
     }

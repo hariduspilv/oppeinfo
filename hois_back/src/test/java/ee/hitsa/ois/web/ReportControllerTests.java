@@ -18,6 +18,7 @@ import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudyLoad;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -157,7 +158,7 @@ public class ReportControllerTests {
         uriBuilder.queryParam("name", "nimi");
         uriBuilder.queryParam("curriculumVersion", Long.valueOf(1));
         uriBuilder.queryParam("studentGroup", Long.valueOf(1));
-        uriBuilder.queryParam("studyLoad", "OPPEKOORMUS_TAIS");
+        uriBuilder.queryParam("studyLoad", StudyLoad.OPPEKOORMUS_TAIS.name());
         uriBuilder.queryParam("studyForm", "OPPEVORM_P");
 
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);

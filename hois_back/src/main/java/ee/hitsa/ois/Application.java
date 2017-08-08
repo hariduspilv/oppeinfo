@@ -51,6 +51,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 
 import ee.hitsa.ois.domain.BaseEntity;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hois.xroad.ehis.service.EhisXroadService;
@@ -197,7 +198,7 @@ public class Application {
                 try {
                     return objectMapper.readValue(s, EntityConnectionCommand.class);
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new HoisException(e);
                 }
             });
         }

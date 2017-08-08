@@ -6,4 +6,6 @@ public interface CurriculumValidator {
     interface Joint{}
     interface ConfirmedHigher{}
     interface ConfirmedVocational{}
+    interface Vocational{}
+    interface HigherModule{}
 }

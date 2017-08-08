@@ -18,6 +18,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
@@ -43,11 +44,11 @@ public class PracticeJournal extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private Student student;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private Contract contract;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "curriculum_version_omodule_id", nullable = false)
     private CurriculumVersionOccupationModule module;
 
@@ -81,6 +82,7 @@ public class PracticeJournal extends BaseEntityWithId {
     @JoinColumn(nullable = false)
     private Classifier status;
 
+    //KUTSEHINDAMINE if module != null and KORGHINDAMINE if subject != null
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier grade;
 
@@ -91,6 +93,9 @@ public class PracticeJournal extends BaseEntityWithId {
     private String supervisorOpinion;
     private String teacherComment;
     private String teacherOpinion;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Subject subject;
 
     public Set<PracticeJournalEntry> getPracticeJournalEntries() {
         return practiceJournalEntries;
@@ -274,6 +279,14 @@ public class PracticeJournal extends BaseEntityWithId {
 
     public void setTeacherOpinion(String teacherOpinion) {
         this.teacherOpinion = teacherOpinion;
+    }
+
+    public Subject getSubject() {
+        return subject;
+    }
+
+    public void setSubject(Subject subject) {
+        this.subject = subject;
     }
 
 }

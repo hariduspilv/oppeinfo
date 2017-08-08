@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>Protocol</title>
+    <style type="text/css">
+      {% include "styles.css" %}
+    </style>
+  </head>
+  <body>
+    <table class="reporttable">
+      <tr>
+        <td class="reporttableheader" colspan="2">{{ "report.higher.protocol.protocol" | translate }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.higher.protocol.protocolNr" | translate }}</td>
+        <td>{{ content.protocolNr }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.higher.protocol.type" | translate }}</td>
+        <td>{{ content.type }}</td>
+      </tr>
+      
+      <tr>
+        <td class="label">{{ "report.higher.protocol.subject" | translate }}</td>
+        <td>{{ content.subject }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.higher.protocol.studyPeriod" | translate }}</td>
+        <td>{{ content.studyPeriod }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.higher.protocol.teacher" | translate }}</td>
+        <td>
+        {% for teacher in content.teachers %}
+          {% if loop.index > 0 %}
+            <br/>
+          {% endif %}
+          {{ teacher }}
+        {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.higher.protocol.status" | translate }}</td>
+        <td>{{ content.status }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.higher.protocol.inserted" | translate }}</td>
+        <td>{{ content.inserted }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.higher.protocol.confirmDate" | translate }}</td>
+        <td>{{ content.confirmDate }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.higher.protocol.confirmer" | translate }}</td>
+        <td>{{ content.confirmer }}</td>
+      </tr>
+      <tr>
+        <td colspan="2">
+			<table class="reporttable reportsubtable">
+		        <tr>
+					<td class="label">{{ "report.higher.protocol.student" | translate }}</td>
+					<td class="label">{{ "report.higher.protocol.student.finalGrade" | translate }}</td>
+				</tr>
+				{% for student in content.protocolStudents %}
+				<tr>
+					<td>{{ student.fullname }}</td>
+					<td>{{ student.grade }}</td>
+				</tr>
+				{% endfor %}
+				<br/>
+			</table>
+        </td>
+      </tr>
+    </table>
+  </body>
+</html>

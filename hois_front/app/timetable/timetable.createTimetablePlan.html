@@ -1,0 +1,93 @@
+<table md-table>
+  <thead md-head>
+    <tr md-row>
+      <th md-column>{{'timetable.timetablePlan.createTimetable' |
+        translate}}</th>
+    </tr>
+  </thead>
+</table>
+<div layout-padding id="groupSelection">
+  <div layout="row">
+    <label>{{'timetable.timetablePlan.timetablePeriod' |
+      translate}} {{plan.startDate | hoisDate}} - {{plan.endDate |
+      hoisDate}}</label>
+  </div>
+  <div layout="row">
+    <label>{{'timetable.timetablePlan.showGroups' | translate}}</label>
+    <md-checkbox ng-model="plan.selectAll">
+    {{'timetable.timetablePlan.selectAll' | translate}} </md-checkbox>
+  </div>
+  <div>
+    <md-list flex-xs="100" flex-gt-xs="100" flex="60"> <md-list-item
+      ng-repeat="group in plan.studentGroups"> <span>
+      <md-checkbox ng-model="group._selected" ng-change="updateGroups()">
+      {{group.code}} </md-checkbox>
+    </span> </md-list-item> </md-list>
+  </div>
+  <div layout="row">
+    <label layout-padding>{{'timetable.timetablePlan.planGroupLessons'
+      | translate}}</label>
+    <md-input-container flex="50" flex-sm="100" flex-xs="100">
+    <label>{{'timetable.timetablePlan.group' | translate}}</label> <hois-select
+      ng-model="plan.selectedGroup" values="plan.studentGroups"
+      show-property="code" value-property="id"></hois-select> </md-input-container>
+  </div>
+  <div>
+    <table md-table>
+      <thead md-head>
+        <tr md-row>
+          <th md-column ng-repeat="journal in plan.currentJournals" ng-if="getByJournal(journal, 'thisPlannedLessons') > 0">
+            {{journal.name.substring(0, 4)}} <br>{{getByJournal(journal,
+            'thisPlannedLessons')}}/{{getByJournal(journal,
+            'thisAllocatedLessons')}} ({{getByJournal(journal,
+            'totalPlannedLessons')}}/{{getByJournal(journal,
+            'totalAllocatedLessons')}})
+          </th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-class-odd="'odd'" ng-class-even="'even'">
+          <td md-cell ng-repeat="capacity in plan.currentCapacities">
+            <div ng-repeat="count in range(capacity.lessonsLeft)"
+              id="{{capacity.journal}}-{{count}}" ois-drag
+              class="timetable-drag">
+              <span>{{getByCapacity(capacity,
+                'name').substring(0, 4)}}</span>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<div layout-padding id="timetableCreation">
+  <md-table-container>
+  <table md-table>
+    <thead md-head>
+      <tr md-row>
+        <th md-column></th>
+        <th md-column ng-repeat="date in plan.datesForTimetable"
+          colspan="{{lessonsInDay[weekday[date.getDay()]].length}}">{{'timetable.timetablePlan.'
+          + weekday[date.getDay()] | translate}}</th>
+      </tr>
+    </thead>
+    <tbody md-body>
+      <tr md-row ng-class-odd="'odd'" ng-class-even="'even'">
+        <td></td>
+        <td style="text-align: center"
+          ng-repeat="lessonTime in currentLessonTimes track by $index">
+          <span>{{lessonTime.lessonNr}}</span>
+        </td>
+      </tr>
+      <tr md-row ng-repeat="group in plan.currentStudentGroups"
+        ng-class-odd="'odd'" ng-class-even="'even'">
+        <td>{{group.code}}</td>
+        <td ng-repeat="lessonTime in currentLessonTimes track by $index">
+          <div ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" drop-fn="saveNewEvent({param1: group.id, param2: param2, index: $index})" id="{{group.id + '-' + $index}}" class="timetable-drop" />
+        </td>
+      </tr>
+    </tbody>
+  </table>
+  </md-table-container>
+</div>

@@ -1,0 +1,84 @@
+
+
+<div layout-padding ng-cloak class="form-readonly">
+  <div flex>
+    <div layout="row" layout-xs="column" flex>
+      <div flex="90">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'student.label' | translate}}</label>
+            <hois-value value="student.person.firstname + ' ' + student.person.lastname"></hois-value>
+          </md-input-container>
+          <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.idcode' | translate}}</label>
+            <hois-value value="student.person.idcode"></hois-value>
+          </md-input-container>
+          <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.studyForm' | translate}}</label>
+            <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+          </md-input-container>
+            <md-input-container flex="35" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.higher.consideredCredits' | translate}}</label>
+            <hois-value value="student.higherResults.creditsSubmitted.toString() + ' / ' + student.higherResults.creditsSubmittedConsidered.toString()"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+    </div>
+
+    <div layout="row" layout-xs="column" flex>
+      <div flex="90">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100">
+            <label>{{'student.result.higher.curriculumVersion' | translate}}</label>
+            <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
+          </md-input-container>
+          <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.curriculumCredits' | translate}}</label>
+            <hois-value value="student.curriculumCredits != null ? student.curriculumCredits + ' EAP' : ''"></hois-value>
+          </md-input-container>
+          <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.studyLoad' | translate}}</label>
+            <hois-classifier-value ng-model="student.studyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
+          </md-input-container>
+          <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.kkh' | translate}}</label>
+            <hois-value value="student.higherResults.averageGrade.toString()"></hois-value>
+          </md-input-container>
+          <md-input-container flex="15" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.curriculumFulfilled' | translate}}</label>
+            <hois-value value="student.higherResults.isCurriculumFulfilled ? ('student.result.fulfilled' | translate) : ('student.result.notFulfilled' | translate)"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+    </div>
+
+    <div ng-controller="StudentViewResultsHigherController as controller" flex="90" ng-cloak>
+      <md-content>
+        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection">
+          <md-nav-item md-nav-click="loadCurriculumFulfillment()" name="student.curriculumFulfillment">
+            {{'student.result.curriculumFulfillment' | translate}}
+          </md-nav-item>
+          <md-nav-item md-nav-click="loadStudyYearResults()" name="student.inOrderOfStudyPeriod">
+            {{'student.result.inOrderOfStudyPeriod' | translate}}
+          </md-nav-item>
+          <md-nav-item md-nav-click="loadModuleThemeResults()" name="student.inOrderOfPassing">
+            {{'student.result.inOrderOfPassing' | translate}}
+          </md-nav-item>
+        </md-nav-bar>
+        <div layout-margin>
+          <div ng-show="resultsCurrentNavItem === 'student.curriculumFulfillment'">
+            <div ng-include="'student/templates/view.results.higher.curriculumfulfillment.tmpl.html'"></div>
+          </div>
+          <div ng-show="resultsCurrentNavItem === 'student.inOrderOfStudyPeriod'">
+            <div ng-include="'student/templates/view.results.higher.orderofstudyperiod.tmpl.html'"></div>
+          </div>
+          <div ng-show="resultsCurrentNavItem === 'student.inOrderOfPassing'">
+            <div ng-include="'student/templates/view.results.higher.orderofpassing.tmpl.html'"></div>
+          </div>
+        </div>
+      </md-content>
+    </div>
+
+
+  </div>
+</div>

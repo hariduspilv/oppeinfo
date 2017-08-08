@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.lang.invoke.MethodHandles;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -25,9 +26,11 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.protocol.ProtocolVdata;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.OccupationalGrade;
@@ -90,6 +93,7 @@ public class ModuleProtocolService {
             Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from protocol p").sort(pageable);
 
+        qb.filter("p.is_vocational = true");
         qb.requiredCriteria("p.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria(
                 "exists (select protocol_id from protocol_vdata pvd where pvd.study_year_id = :studyYearId)",
@@ -181,7 +185,7 @@ public class ModuleProtocolService {
         List<AutocompleteResult> results = new ArrayList<>();
         for (Object r : data) {
             results.add(new AutocompleteResult(resultAsLong(r, 0),
-                    CurriculumUtil.moduleName(resultAsString(r, 2), resultAsString(r, 3),  resultAsString(r, 1)),
+                    CurriculumUtil.moduleName(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 1)),
                     CurriculumUtil.moduleName(resultAsString(r, 4), resultAsString(r, 5), resultAsString(r, 1))));
         }
         return results;
@@ -236,7 +240,8 @@ public class ModuleProtocolService {
                 "js.student_id not in (select ps.student_id from protocol_student ps "
                         + "inner join protocol p on p.id = ps.protocol_id "
                         + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
-                        + "where grade_code in :positiveGrades and pvd.curriculum_version_omodule_id = cvo.id)",
+                        + "where p.is_vocational = true and "
+                        + "grade_code in :positiveGrades and pvd.curriculum_version_omodule_id = cvo.id)",
                 "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
         // kelle andmeid ei ole veel protokollile lisatud
@@ -248,15 +253,14 @@ public class ModuleProtocolService {
         List<?> students = studentsQb.select("distinct s.id, p.firstname, p.lastname, p.idcode, s.status_code", em)
                 .getResultList();
 
-        return students.stream()
-            .collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
-                ModuleProtocolStudentSelectDto dto = new ModuleProtocolStudentSelectDto();
-                dto.setStudentId(resultAsLong(r, 0));
-                dto.setFullname(resultAsString(r, 1) + " " + resultAsString(r, 2));
-                dto.setIdcode(resultAsString(r, 3));
-                dto.setStatus(resultAsString(r, 4));
-                return dto;
-            }));
+        return students.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
+            ModuleProtocolStudentSelectDto dto = new ModuleProtocolStudentSelectDto();
+            dto.setStudentId(resultAsLong(r, 0));
+            dto.setFullname(resultAsString(r, 1) + " " + resultAsString(r, 2));
+            dto.setIdcode(resultAsString(r, 3));
+            dto.setStatus(resultAsString(r, 4));
+            return dto;
+        }));
     }
 
     @org.springframework.transaction.annotation.Transactional(isolation = Isolation.SERIALIZABLE, propagation = Propagation.REQUIRES_NEW)
@@ -356,8 +360,10 @@ public class ModuleProtocolService {
         return protocolRepository.save(protocol);
     }
 
-    public Protocol confirm(Protocol protocol, ModuleProtocolSaveForm moduleProtocolSaveForm) {
+    public Protocol confirm(HoisUserDetails user, Protocol protocol, ModuleProtocolSaveForm moduleProtocolSaveForm) {
         protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
+        protocol.setConfirmDate(LocalDate.now());
+        protocol.setConfirmer(user.getUsername());
         Protocol confirmedProtocol = save(protocol, moduleProtocolSaveForm);
         for (ProtocolStudent protocolStudent : confirmedProtocol.getProtocolStudents()) {
             if (protocolStudent.getGrade() == null) {
@@ -369,6 +375,22 @@ public class ModuleProtocolService {
 
     public void delete(Protocol protocol) {
         EntityUtil.deleteEntity(protocolRepository, protocol);
+    }
+
+    public boolean hasStudentPositiveGradeInModule(Student student,
+            CurriculumVersionOccupationModule module) {
+
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from protocol_student ps "
+                + "inner join protocol p on p.id = ps.protocol_id "
+                + "inner join protocol_vdata pvd on pvd.protocol_id = p.id ");
+
+        qb.filter("p.is_vocational = true");
+        qb.requiredCriteria("p.status_code = :status", "status", ProtocolStatus.PROTOKOLL_STAATUS_K.name());
+        qb.requiredCriteria("ps.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.requiredCriteria("pvd.curriculum_version_omodule_id = :curriculumVersionOmoduleId", "curriculumVersionOmoduleId", EntityUtil.getId(module));
+        qb.requiredCriteria("ps.grade_code in :positiveGrades", "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
+
+        return !qb.select("true", em).getResultList().isEmpty();
     }
 
 }

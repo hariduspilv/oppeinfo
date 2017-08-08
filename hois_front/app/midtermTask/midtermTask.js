@@ -1,9 +1,10 @@
 'use strict';
 
-angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', '$route', '$rootScope', 'message', 'orderByFilter', function ($scope, $sessionStorage, QueryUtils, DataUtils, $route, $rootScope, message, orderBy) {
+angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$scope', '$sessionStorage', 'QueryUtils',  '$route', 'message', 'MidtermTaskUtil', 'ArrayUtils', function ($scope, $sessionStorage, QueryUtils, $route, message, MidtermTaskUtil, ArrayUtils) {
 
   $scope.subjectStudyPeriodId = $route.current.params.id;
   var Endpoint = QueryUtils.endpoint('/midtermTasks/studentResults');
+  var midtermTaskUtil = new MidtermTaskUtil();
 
   function studentHasResultForTask(student, midtermTask) {
     var result = $scope.record.studentResults.find(function(studentResult){
@@ -12,19 +13,11 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
     return angular.isDefined(result);
   }
 
-  function indexOfMidtermTask(midtermTaskId) {
-    var midtermTask = $scope.record.midtermTasks.find(function(el){
-      return el.id === midtermTaskId;
-    });
-    return $scope.record.midtermTasks.indexOf(midtermTask);
-  }
-
   function getEmptyStudentResult(student, midtermTask) {
     return {
             midtermTask: midtermTask.id,
             declarationSubject: student.declarationSubject,
             maxPoints: midtermTask.maxPoints,
-            canBeChanged: student.studentResultCanBeChanged,
             isText: midtermTask.studentResultIsText
           };
   }
@@ -42,14 +35,10 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
   }
 
   function afterload() {
-    $scope.record.midtermTasks.forEach(function(el){
-      DataUtils.convertStringToDates(el, ["taskDate"]);
-    });
-    $scope.record.midtermTasks = orderBy($scope.record.midtermTasks, ['taskDate', $rootScope.currentLanguageNameField()]);
+    $scope.record.midtermTasks = midtermTaskUtil.getSortedMidtermTasks($scope.record.midtermTasks);
+  // TODO add to MidtermTaskUtil
     addEmptyStudentResults();
-    $scope.record.studentResults.sort(function(val1, val2){
-      return indexOfMidtermTask(val1.midtermTask) - indexOfMidtermTask(val2.midtermTask);
-    });
+    midtermTaskUtil.sortStudentResults($scope.record.studentResults, $scope.record.midtermTasks);
   }
 
   Endpoint.get({id: $scope.subjectStudyPeriodId}).$promise.then(function(response){
@@ -57,16 +46,7 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
     afterload();
   });
 
-  function getNumberWithZero(number) {
-    return number < 10 ? "0" + number : number;
-  }
-
-  $scope.getMidtermTaskHeader = function(midtermTask) {
-    var date = midtermTask.taskDate ?
-      getNumberWithZero(midtermTask.taskDate.getDate()) + "." +
-      getNumberWithZero(midtermTask.taskDate.getMonth() + 1) : "";
-    return $rootScope.currentLanguageNameField(midtermTask) + " " + date + " (" + midtermTask.percentage + "%), max " + midtermTask.maxPoints;
-  };
+  $scope.getMidtermTaskHeader = midtermTaskUtil.getMidtermTaskHeader;
 
   $scope.filterStudentResults = function(student) {
     return function(studentResult) {
@@ -86,6 +66,21 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
       $scope.record = response;
       afterload();
     });
+  };
+
+  $scope.filterProtocols = function(student) {
+    return function(protocol){
+      var protocolStudents = protocol.protocolStudents.map(function(ps){
+        return ps.student.id;
+      });
+      return ArrayUtils.contains(protocolStudents, student.studentId);
+    };
+  };
+
+  $scope.filterStudentProtocols = function(student) {
+    return function(protocolStudent) {
+      return student.studentId === protocolStudent.student.id;
+    };
   };
 
 }]).controller('MidtermTaskController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils', 'message', 'dialogService', 'orderByFilter', '$rootScope', function ($scope, $sessionStorage, QueryUtils, DataUtils, $route, ArrayUtils, message, dialogService, orderBy, $rootScope) {

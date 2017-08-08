@@ -7,7 +7,7 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
 
     function afterLoad() {
       if($scope.school.logo) {
-        $scope.school.imageUrl = 'data:' + $scope.school.logo.ftype + ';base64,' + $scope.school.logo.fdata;
+        $scope.school.imageUrl = oisFileService.getUrl($scope.school.logo);
       } else {
         $scope.school.imageUrl = '?' + new Date().getTime();
       }

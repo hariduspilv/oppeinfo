@@ -160,6 +160,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
 ]).controller('TimetableViewController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope',
   function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope) {
   
+  
   $scope.timetableId = $route.current.params.id;
   var baseUrl = '/timetables';
   $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;

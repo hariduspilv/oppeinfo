@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import javax.validation.ValidationException;
+import javax.validation.Validator;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,12 +43,15 @@ import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleThemeRepository;
 import ee.hitsa.ois.repository.PracticeJournalRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.validation.ContractValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.OisFileForm;
 import ee.hitsa.ois.web.commandobject.PracticeJournalEntriesStudentForm;
@@ -86,9 +91,13 @@ public class PracticeJournalService {
     @Autowired
     private StudyYearService studyYearService;
     @Autowired
-    private ProtocolService protocolService;
+    private ModuleProtocolService moduleProtocolService;
     @Autowired
     private ContractRepository contractRepository;
+    @Autowired
+    private SubjectRepository subjectRepository;
+    @Autowired
+    private Validator validator;
     @Autowired
     private ObjectMapper objectMapper;
 
@@ -102,11 +111,12 @@ public class PracticeJournalService {
             + "left join enterprise enterprise on contract.enterprise_id = enterprise.id "
             + "inner join teacher teacher on pj.teacher_id = teacher.id "
             + "inner join person teacher_person on teacher.person_id = teacher_person.id "
-            + "inner join curriculum_version_omodule cvo on pj.curriculum_version_omodule_id = cvo.id "
-            + "inner join curriculum_module cm on cm.id = cvo.curriculum_module_id "
-            + "inner join curriculum_version cv on cv.id = cvo.curriculum_version_id "
-            + "inner join classifier mcl on mcl.code = cm.module_code "
-            + "left join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id ";
+            + "left join curriculum_version_omodule cvo on pj.curriculum_version_omodule_id = cvo.id "
+            + "left join curriculum_module cm on cm.id = cvo.curriculum_module_id "
+            + "left join curriculum_version cv on cv.id = cvo.curriculum_version_id "
+            + "left join classifier mcl on mcl.code = cm.module_code "
+            + "left join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id "
+            + "left join subject subject on subject.id = pj.subject_id ";
 
     private static final String SEARCH_SELECT = "pj.id, pj.start_date, pj.end_date, pj.practice_place, pj.status_code, "
             + "student.id student_id, student_person.firstname student_person_firstname, student_person.lastname student_person_lastname, student_group.code, "
@@ -117,7 +127,8 @@ public class PracticeJournalService {
             + "cvot.id as cvot_id, cvot.name_et as cvot_name_et, length(trim(coalesce(pj.supervisor_opinion, ''))) > 0 as has_supervisor_opinion, "
             + "exists(select true from protocol_student ps inner join protocol p on p.id = ps.protocol_id inner join protocol_vdata pvd on pvd.protocol_id = p.id "
                 + "where ps.grade_code in (" + String.join(",", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE.stream().map(StringUtils::quote).collect(Collectors.toList())) + ") and pvd.curriculum_version_omodule_id = cvo.id "
-                + "and ps.student_id = student_id) as has_positive_module_grade";
+                + "and ps.student_id = student_id) as has_positive_module_grade, "
+            + "subject.id as subject_id, subject.name_et as subject_name_et, subject.name_en as subject_name_en";
 
     public Page<PracticeJournalSearchDto> search(HoisUserDetails user, PracticeJournalSearchCommand command,
             Pageable pageable) {
@@ -167,8 +178,17 @@ public class PracticeJournalService {
             AutocompleteResult module = new AutocompleteResult(resultAsLong(r, 15),
                     CurriculumUtil.moduleName(resultAsString(r, 17), resultAsString(r, 18), resultAsString(r, 16)),
                     CurriculumUtil.moduleName(resultAsString(r, 19), resultAsString(r, 20), resultAsString(r, 16)));
-            dto.setModule(module);
-            dto.setTheme(new AutocompleteResult(resultAsLong(r, 21), resultAsString(r, 22), resultAsString(r, 22)));
+            if (module.getId() != null) {
+                dto.setModule(module);
+                AutocompleteResult theme = new AutocompleteResult(resultAsLong(r, 21), resultAsString(r, 22), resultAsString(r, 22));
+                if (theme.getId() != null) {
+                    dto.setTheme(theme);
+                }
+            }
+            AutocompleteResult subject = new AutocompleteResult(resultAsLong(r, 25), resultAsString(r, 26), resultAsString(r, 27));
+            if (subject.getId() != null) {
+                dto.setSubject(subject);
+            }
             return dto;
         });
     }
@@ -177,6 +197,10 @@ public class PracticeJournalService {
         PracticeJournalDto dto = PracticeJournalDto.of(practiceJournal);
         dto.setCanDelete(Boolean.valueOf(canDelete(practiceJournal)));
         return dto;
+    }
+
+    private static boolean canDelete(PracticeJournal practiceJournal) {
+        return !hasPracticeEnded(practiceJournal);
     }
 
     public PracticeJournal create(HoisUserDetails user, PracticeJournalForm practiceJournalForm) {
@@ -189,19 +213,31 @@ public class PracticeJournalService {
     }
 
     public PracticeJournal save(PracticeJournal practiceJournal, PracticeJournalForm practiceJournalForm) {
+        assertValidationRules(practiceJournalForm);
         PracticeJournal changedPracticeJournal = EntityUtil.bindToEntity(practiceJournalForm, practiceJournal,
-                "student", "module", "theme", "teacher");
+                "student", "module", "theme", "teacher", "subject");
         EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal, studentRepository, "student");
         EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal,
                 curriculumVersionOccupationModuleRepository, "module");
         EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal,
                 curriculumVersionOccupationModuleThemeRepository, "theme");
         EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal, teacherRepository, "teacher");
+        EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal, subjectRepository, "subject");
         return practiceJournalRepository.save(changedPracticeJournal);
     }
 
+    private void assertValidationRules(PracticeJournalForm practiceJournalForm) {
+        if (Boolean.TRUE.equals(practiceJournalForm.getIsHigher()) &&
+                !validator.validate(practiceJournalForm, ContractValidation.Higher.class).isEmpty()) {
+            throw new ValidationException("contract.messages.subjectRequired");
+        } else if (Boolean.FALSE.equals(practiceJournalForm.getIsHigher()) &&
+                !validator.validate(practiceJournalForm, ContractValidation.Vocational.class).isEmpty()) {
+            throw new ValidationException("contract.messages.moduleAndThemerequired");
+        }
+    }
+
     public void delete(PracticeJournal practiceJournal) {
-        if (canDelete(practiceJournal)) {
+        if (hasPracticeEnded(practiceJournal)) {
             throw new ValidationFailedException("practiceJournal.messages.deletionNotAllowedPracticeHasEnded");
         }
         practiceJournalRepository.delete(practiceJournal);
@@ -216,7 +252,7 @@ public class PracticeJournalService {
         return practiceJournalRepository.save(practiceJournal);
     }
 
-    private void updatePracticeJournalStudentEntries(PracticeJournal practiceJournal,
+    private static void updatePracticeJournalStudentEntries(PracticeJournal practiceJournal,
             PracticeJournalEntriesStudentForm practiceJournalEntriesStudentForm) {
         EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalEntries(), PracticeJournalEntry::getId,
             practiceJournalEntriesStudentForm.getPracticeJournalEntries(), PracticeJournalEntryStudentForm::getId, dto -> {
@@ -244,7 +280,7 @@ public class PracticeJournalService {
         return practiceJournalRepository.save(practiceJournal);
     }
 
-    private void updatePracticeJournalSupervisorFiles(PracticeJournal practiceJournal,
+    private static void updatePracticeJournalSupervisorFiles(PracticeJournal practiceJournal,
             PracticeJournalEntriesSupervisorForm practiceJournalEntriesSupervisorForm) {
         EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalFiles(), PracticeJournalFile::getId,
                 practiceJournalEntriesSupervisorForm.getPracticeJournalFiles(), OisFileForm::getId, dto -> {
@@ -254,7 +290,7 @@ public class PracticeJournalService {
                 });
     }
 
-    private void updatePracticeJournalSupervisorEntries(PracticeJournal practiceJournal,
+    private static void updatePracticeJournalSupervisorEntries(PracticeJournal practiceJournal,
             PracticeJournalEntriesSupervisorForm practiceJournalEntriesSupervisorForm) {
             EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalEntries(), PracticeJournalEntry::getId,
                     practiceJournalEntriesSupervisorForm.getPracticeJournalEntries(), PracticeJournalEntrySupervisorForm::getId, dto -> {
@@ -262,19 +298,23 @@ public class PracticeJournalService {
                     }, EntityUtil::bindToEntity);
     }
 
-    private void assertSupervisorSaveEntries(PracticeJournal practiceJournal) {
-        if (JournalStatus.PAEVIK_STAATUS_K.name().equals(EntityUtil.getNullableCode(practiceJournal.getStatus()))) {
+    private static void assertSupervisorSaveEntries(PracticeJournal practiceJournal) {
+        if (ClassifierUtil.equals(JournalStatus.PAEVIK_STAATUS_K, practiceJournal.getStatus())) {
             throw new ValidationFailedException("practiceJournal.messages.editNotAllowedJournalStatusIsConfirmed");
         }
     }
 
     private void assertTeacherSaveEntries(PracticeJournal practiceJournal) {
-        if (protocolService.hasStudentPositiveGradeInOccupationModule(practiceJournal.getStudent(), practiceJournal.getModule())) {
+        if (!isHigher(practiceJournal) && moduleProtocolService.hasStudentPositiveGradeInModule(practiceJournal.getStudent(), practiceJournal.getModule())) {
             throw new ValidationFailedException("practiceJournal.messages.editnNotAllowedStudentHasPositiveGradeInOccupationModule");
         }
     }
 
-    private void updatePracticeJournalTeacherEntries(PracticeJournal practiceJournal,
+    private static boolean isHigher(PracticeJournal practiceJournal) {
+        return practiceJournal.getModule() == null;
+    }
+
+    private static void updatePracticeJournalTeacherEntries(PracticeJournal practiceJournal,
             PracticeJournalEntriesTeacherForm practiceJournalEntriesTeacherForm) {
         EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalEntries(), PracticeJournalEntry::getId,
                 practiceJournalEntriesTeacherForm.getPracticeJournalEntries(), PracticeJournalEntryTeacherForm::getId, dto -> {
@@ -282,16 +322,15 @@ public class PracticeJournalService {
                 }, EntityUtil::bindToEntity);
     }
 
-    private void assertStudentSaveEntries(PracticeJournal practiceJournal) {
-        if (JournalStatus.PAEVIK_STAATUS_K.name().equals(EntityUtil.getNullableCode(practiceJournal.getStatus()))) {
+    private static void assertStudentSaveEntries(PracticeJournal practiceJournal) {
+        if (ClassifierUtil.equals(JournalStatus.PAEVIK_STAATUS_K, practiceJournal.getStatus())) {
             throw new ValidationFailedException("practiceJournal.messages.editNotAllowedJournalStatusIsConfirmed");
         } else if (!StringUtils.isEmpty(practiceJournal.getSupervisorOpinion())) {
             throw new ValidationFailedException("practiceJournal.messages.editNotAllowedSupervisorOpinionExists");
         }
     }
 
-
-    private void updatePracticeJournalFiles(PracticeJournal practiceJournal,
+    private static void updatePracticeJournalFiles(PracticeJournal practiceJournal,
             PracticeJournalEntriesTeacherForm practiceJournalEntriesForm) {
         EntityUtil.bindEntityCollection(practiceJournal.getPracticeJournalFiles(), PracticeJournalFile::getId,
                 practiceJournalEntriesForm.getPracticeJournalFiles(), OisFileForm::getId, dto -> {
@@ -301,7 +340,7 @@ public class PracticeJournalService {
                 });
     }
 
-    private static boolean canDelete(PracticeJournal practiceJournal) {
+    private static boolean hasPracticeEnded(PracticeJournal practiceJournal) {
         return LocalDate.now().isBefore(practiceJournal.getEndDate());
     }
 

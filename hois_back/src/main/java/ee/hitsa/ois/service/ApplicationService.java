@@ -261,7 +261,7 @@ public class ApplicationService {
         if (UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) &&
                 ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_ESIT, application.getStatus())) {
             application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
-            application = applicationRepository.save(application);
+            return applicationRepository.save(application);
         }
         return application;
     }
@@ -360,7 +360,7 @@ public class ApplicationService {
     public void sendConfirmNeededNotificationMessage(Application application) {
         Student student = application.getStudent();
         ConfirmationNeededMessage data = new ConfirmationNeededMessage(application);
-        if (student.getRepresentatives() != null && !student.getRepresentatives().isEmpty()) {
+        if (StudentUtil.hasRepresentatives(student)) {
             log.info("rejection notification message sent to student {} representatives", EntityUtil.getId(application.getStudent()));
             automaticMessageService.sendMessageToStudentRepresentatives(MessageType.TEATE_LIIK_AV_KINNIT, student, data);
         } else {
@@ -368,6 +368,7 @@ public class ApplicationService {
             automaticMessageService.sendMessageToSchoolAdmins(MessageType.TEATE_LIIK_AV_KINNIT, student.getSchool(), data);
         }
     }
+
 
     public void sendRejectionNotificationMessage(Application application, HoisUserDetails user) {
         log.info("rejection notification message sent to student {}", EntityUtil.getId(application.getStudent()));

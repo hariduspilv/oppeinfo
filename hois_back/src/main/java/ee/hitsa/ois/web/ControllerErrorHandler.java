@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -29,8 +30,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import ee.hitsa.ois.util.AssertionFailedException;
-import ee.hitsa.ois.util.EntityRemoveException;
+import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.EntityRemoveException;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
@@ -44,62 +45,64 @@ public class ControllerErrorHandler {
         HttpStatus status = null;
         ErrorInfo info = null;
 
-        if(e instanceof EntityNotFoundException) {
+        if (e instanceof EntityNotFoundException) {
             status = HttpStatus.NOT_FOUND;
-        }else if(e instanceof IllegalArgumentException) {
+        } else if (e instanceof IllegalArgumentException) {
             status = HttpStatus.BAD_REQUEST;
-        }else if(e instanceof AssertionFailedException) {
+        } else if (e instanceof AssertionFailedException) {
             status = HttpStatus.BAD_REQUEST;
             log.error("Assertion failure:", e);
-        }else if(e instanceof BindException) {
+        } else if (e instanceof BindException) {
             info = ErrorInfo.of(((BindException) e).getBindingResult());
             status = HttpStatus.PRECONDITION_FAILED;
-        }else if(e instanceof MethodArgumentNotValidException) {
+        } else if (e instanceof MethodArgumentNotValidException) {
             info = ErrorInfo.of(((MethodArgumentNotValidException) e).getBindingResult());
             status = HttpStatus.PRECONDITION_FAILED;
-        }else if(e instanceof MissingServletRequestParameterException) {
+        } else if (e instanceof MissingServletRequestParameterException) {
             info = ErrorInfo.of("Missing", ((MissingServletRequestParameterException) e).getParameterName());
             status = HttpStatus.PRECONDITION_FAILED;
-        }else if(e instanceof ValidationFailedException) {
+        } else if (e instanceof ValidationFailedException) {
             info = ((ValidationFailedException) e).getErrorInfo();
             status = HttpStatus.PRECONDITION_FAILED;
-        }else if(e instanceof EntityRemoveException) {
+        } else if (e instanceof EntityRemoveException) {
             String errorCode = e.getMessage();
-            info = ErrorInfo.of(errorCode != null ? errorCode: "main.messages.record.referenced", null);
+            info = ErrorInfo.of(errorCode != null ? errorCode : "main.messages.record.referenced", null);
             // FIXME better status code?
             status = HttpStatus.PRECONDITION_FAILED;
-        }else if(e instanceof DataIntegrityViolationException) {
+        } else if (e instanceof DataIntegrityViolationException) {
             // if real cause is unique violation, report as "validation failed"
-            // otherwise it's internal error - invalid data should not pass validation
+            // otherwise it's internal error - invalid data should not pass
+            // validation
             Throwable cause = ((DataIntegrityViolationException) e).getRootCause();
-            if(cause instanceof SQLException && POSTGRESQL_UNIQUE_VIOLATION.equals(((SQLException)cause).getSQLState())) {
+            if (cause instanceof SQLException
+                    && POSTGRESQL_UNIQUE_VIOLATION.equals(((SQLException) cause).getSQLState())) {
                 status = HttpStatus.PRECONDITION_FAILED;
                 info = uniqueViolation((SQLException) cause);
             }
 
-            if(status == null) {
+            if (status == null) {
                 status = HttpStatus.INTERNAL_SERVER_ERROR;
                 log.error("Data violation error occured during request handling:", e);
             }
-        }else if(e instanceof OptimisticLockingFailureException || e instanceof OptimisticLockException) {
+        } else if (e instanceof OptimisticLockingFailureException || e instanceof OptimisticLockException) {
             status = HttpStatus.CONFLICT;
-        }else if(e instanceof AuthenticationException) {
+        } else if (e instanceof AuthenticationException) {
             status = HttpStatus.FORBIDDEN;
-        } else if(e instanceof HttpRequestMethodNotSupportedException) {
+        } else if (e instanceof HttpRequestMethodNotSupportedException) {
             status = HttpStatus.METHOD_NOT_ALLOWED;
-        }else {
+        } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             log.error("Error occured during request handling:", e);
         }
 
-        e.printStackTrace();
+        log.error(Arrays.toString(e.getStackTrace()));
         return new ResponseEntity<>(info, status);
     }
 
     private static ErrorInfo uniqueViolation(SQLException cause) {
         String tableName = null;
-        if(cause instanceof PSQLException && ((PSQLException)cause).getServerErrorMessage() != null) {
-            tableName = ((PSQLException)cause).getServerErrorMessage().getTable();
+        if (cause instanceof PSQLException && ((PSQLException) cause).getServerErrorMessage() != null) {
+            tableName = ((PSQLException) cause).getServerErrorMessage().getTable();
         }
         String msgId = UNIQUE_VIOLATION_MESSAGES.getOrDefault(tableName, "main.messages.error.unique");
         return ErrorInfo.of(msgId, null);
@@ -119,7 +122,9 @@ public class ControllerErrorHandler {
         }
 
         public static ErrorInfo of(Errors errors) {
-            List<Error> err = StreamUtil.toMappedList(e -> new ErrorForField(e.getCode(), e instanceof FieldError ? ((FieldError)e).getField() : null), errors.getAllErrors());
+            List<Error> err = StreamUtil.toMappedList(
+                    e -> new ErrorForField(e.getCode(), e instanceof FieldError ? ((FieldError) e).getField() : null),
+                    errors.getAllErrors());
             return new ErrorInfo(err);
         }
 
@@ -161,7 +166,6 @@ public class ControllerErrorHandler {
             }
         }
 
-
     }
 
     private static Map<String, String> UNIQUE_VIOLATION_MESSAGES = new HashMap<>();
@@ -172,7 +176,8 @@ public class ControllerErrorHandler {
         UNIQUE_VIOLATION_MESSAGES.put("room", "room.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("school", "school.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("student_representative", "student.representative.alreadyexist");
-        UNIQUE_VIOLATION_MESSAGES.put("student_representative_application", "student.representative.application.alreadyexist");
+        UNIQUE_VIOLATION_MESSAGES.put("student_representative_application",
+                "student.representative.application.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("subject", "subject.alreadyexist");
         UNIQUE_VIOLATION_MESSAGES.put("teacher", "teacher.person.alreadyexist");
     }

@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.student;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 
 import ee.hitsa.ois.domain.OisFile;
@@ -37,6 +38,9 @@ public class StudentViewDto extends StudentForm {
     private Boolean userCanEditStudent;
     private Boolean userCanAddRepresentative;
     private Boolean userIsSchoolAdmin;
+    private BigDecimal curriculumCredits;
+    private BigDecimal credits;
+    private BigDecimal kkh;
 
     public Long getId() {
         return id;
@@ -206,12 +210,36 @@ public class StudentViewDto extends StudentForm {
         this.userIsSchoolAdmin = userIsSchoolAdmin;
     }
 
+    public BigDecimal getCurriculumCredits() {
+        return curriculumCredits;
+    }
+
+    public void setCurriculumCredits(BigDecimal curriculumCredits) {
+        this.curriculumCredits = curriculumCredits;
+    }
+
+    public BigDecimal getCredits() {
+        return credits;
+    }
+
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
+    }
+
+    public BigDecimal getKkh() {
+        return kkh;
+    }
+
+    public void setKkh(BigDecimal kkh) {
+        this.kkh = kkh;
+    }
+
     public static StudentViewDto of(Student student) {
         StudentViewDto dto = EntityUtil.bindToDto(student, new StudentViewDto());
 
         // header
         OisFile photo = student.getPhoto();
-        if(photo != null) {
+        if (photo != null) {
             dto.setPhoto(EntityUtil.bindToDto(photo, new OisFileCommand()));
         }
         dto.setPerson(EntityUtil.bindToDto(student.getPerson(), new StudentViewPersonDto()));
@@ -219,12 +247,14 @@ public class StudentViewDto extends StudentForm {
         // study
         dto.setStudyLanguage(EntityUtil.getNullableCode(student.getLanguage()));
         dto.setCourse(student.getStudentGroup() != null ? student.getStudentGroup().getCourse() : null);
-        dto.setIsVocational(Boolean.valueOf(CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel())));
-        if(!Boolean.TRUE.equals(dto.getIsVocational())) {
+        dto.setIsVocational(Boolean.valueOf(
+                CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel())));
+        if (!Boolean.TRUE.equals(dto.getIsVocational())) {
             dto.setStudyCompany(null);
             dto.setBoardingSchool(null);
         }
 
+        dto.setCurriculumCredits(student.getCurriculumVersion().getCurriculum().getCredits());
         dto.setSchoolEmail(student.getEmail());
         return dto;
     }
