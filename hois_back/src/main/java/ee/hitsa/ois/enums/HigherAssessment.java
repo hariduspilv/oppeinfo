@@ -32,8 +32,8 @@ public enum HigherAssessment {
     public Boolean getIsPositive() {
         return isPositive;
     }
-    
-    public static Boolean isPositive(String grade) {
+
+    public static boolean isPositive(String grade) {
         List<String> postiveGrades = Arrays.asList(HigherAssessment.values())
                 .stream().filter(HigherAssessment::getIsPositive)
                 .map(HigherAssessment::name).collect(Collectors.toList());

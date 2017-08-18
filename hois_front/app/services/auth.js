@@ -1,7 +1,8 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier) {
+  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $sce) {
+    var JWT_TOKEN_HEADER = 'Authorization';
     var authService = {};
     var roleMapper = Classifier.valuemapper({role: 'ROLL'});
 
@@ -33,6 +34,18 @@ angular.module('hitsaOis')
       return $http.get(config.apiUrl + '/user', {headers : headers})
         .then(function (res) {
           return newUser(res);
+        });
+    };
+
+    authService.loginIdCard = function () {
+      return $http.get($sce.trustAsUrl(config.idCardLoginUrl))
+        .then(function (idLoginResult) {
+          var headers = {headers: {}};
+          headers[JWT_TOKEN_HEADER] = idLoginResult.headers(JWT_TOKEN_HEADER);
+          return $http.get(config.apiUrl + '/user', {headers: headers})
+          .then(function (res) {
+            return newUser(res);
+          });
         });
     };
 

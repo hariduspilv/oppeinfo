@@ -279,10 +279,10 @@ public class CurriculumValidationService {
         return true;
     } 
 
-    private boolean hasAnyConfirmedVersion(Curriculum curriculum) {
+    private static boolean hasAnyConfirmedVersion(Curriculum curriculum) {
         return curriculum.getVersions().stream().anyMatch(v -> ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, v.getStatus()));
     }
-    
+
     public void assertCurriculumCanBeDeleted(Curriculum curriculum) {
         if(!ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_S, curriculum.getStatus()) && 
                 !ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_M, curriculum.getStatus())) {
@@ -300,7 +300,7 @@ public class CurriculumValidationService {
     
     public void validateCurriculumVersionForm(CurriculumVersion curriculumVersion, CurriculumVersionDto form) {
         Boolean isHigherCurriculum = curriculumVersion.getCurriculum().getHigher();
-        if(isHigherCurriculum) {
+        if(Boolean.TRUE.equals(isHigherCurriculum)) {
             assertCurriculumVersionSpecialitiesHaveModules(form, curriculumVersion);
             assertMinorSpecialitiesHaveSubjects(form);
             assertHigherModulesHaveSubjects(form);
@@ -312,7 +312,7 @@ public class CurriculumValidationService {
 
     public void validateCurriculumVersion(CurriculumVersion curriculumVersion) {
         Boolean isHigherCurriculum = curriculumVersion.getCurriculum().getHigher();
-        if(isHigherCurriculum) {
+        if(Boolean.TRUE.equals(isHigherCurriculum)) {
             CurriculumVersionDto dto = CurriculumVersionDto.of(curriculumVersion);
             assertCurriculumVersionSpecialitiesHaveModules(dto, curriculumVersion);
             assertMinorSpecialitiesHaveSubjects(dto);
@@ -332,7 +332,7 @@ public class CurriculumValidationService {
     // Higher Curriculum version validation
     
     
-    private void assertCurriculumVersionSpecialitiesHaveModules(CurriculumVersionDto dto, CurriculumVersion version) {
+    private static void assertCurriculumVersionSpecialitiesHaveModules(CurriculumVersionDto dto, CurriculumVersion version) {
         for(Long speciality : dto.getSpecialitiesReferenceNumbers()) {
             Set<CurriculumVersionHigherModule> specialitiesModules = getSpecialitiesModules(speciality, version);
             if(CollectionUtils.isEmpty(specialitiesModules)) {
@@ -340,8 +340,8 @@ public class CurriculumValidationService {
             }
         }
     }
-    
-    private Set<CurriculumVersionHigherModule> getSpecialitiesModules(Long speciality, CurriculumVersion version) {
+
+    private static Set<CurriculumVersionHigherModule> getSpecialitiesModules(Long speciality, CurriculumVersion version) {
         return version.getModules().stream().filter(m -> {
             Set<Long> specialities = StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getSpeciality()
                     .getCurriculumSpeciality()), m.getSpecialities());
@@ -349,9 +349,9 @@ public class CurriculumValidationService {
         }).collect(Collectors.toSet());
     }
 
-    private void assertMinorSpecialitiesHaveSubjects(CurriculumVersionDto dto) {
+    private static void assertMinorSpecialitiesHaveSubjects(CurriculumVersionDto dto) {
         Set<CurriculumVersionHigherModuleDto> minorSpecialities = dto.getModules().stream()
-                .filter(m -> m.getMinorSpeciality()).collect(Collectors.toSet());
+                .filter(m -> Boolean.TRUE.equals(m.getMinorSpeciality())).collect(Collectors.toSet());
         for(CurriculumVersionHigherModuleDto minorSpeciality : minorSpecialities) {
             if(CollectionUtils.isEmpty(minorSpeciality.getSubjects())) {
                 throw new ValidationFailedException("curriculum.error.noSubject");
@@ -359,9 +359,9 @@ public class CurriculumValidationService {
         }
     }
     
-    private void assertHigherModulesHaveSubjects(CurriculumVersionDto dto) {
+    private static void assertHigherModulesHaveSubjects(CurriculumVersionDto dto) {
         Set<CurriculumVersionHigherModuleDto> modules = dto.getModules().stream()
-                .filter(m -> !m.getMinorSpeciality()).collect(Collectors.toSet());
+                .filter(m -> !Boolean.TRUE.equals(m.getMinorSpeciality())).collect(Collectors.toSet());
         for(CurriculumVersionHigherModuleDto module : modules) {
             if(higherModuleMustHaveSubjects(module) && CollectionUtils.isEmpty(module.getSubjects())) {
                 throw new ValidationFailedException("curriculum.error.noSubject");
@@ -369,9 +369,8 @@ public class CurriculumValidationService {
         }
     }
     
-    private boolean higherModuleMustHaveSubjects(CurriculumVersionHigherModuleDto module) {
-        return !HigherModuleType.KORGMOODUL_L.name().equals(module.getType()) && 
-                !HigherModuleType.KORGMOODUL_L.name().equals(module.getType());
+    private static boolean higherModuleMustHaveSubjects(CurriculumVersionHigherModuleDto module) {
+        return !HigherModuleType.KORGMOODUL_V.name().equals(module.getType());
     }
     
     private void assertHigherModulesHaveSpecialities(CurriculumVersionDto form) {
@@ -404,7 +403,7 @@ public class CurriculumValidationService {
         }        
     }
 
-    private void assertAllOccupationModulesValid(CurriculumVersion implementationPlan) {
+    private static void assertAllOccupationModulesValid(CurriculumVersion implementationPlan) {
         Curriculum curriculum = implementationPlan.getCurriculum();
         if(curriculum.getModules().size() != implementationPlan.getOccupationModules().size()) {
             throw new ValidationFailedException("curriculum.error.implementationPlanNotAllModules");
@@ -416,7 +415,7 @@ public class CurriculumValidationService {
         }
     }
     
-    private boolean moduleHasOccupationModule(CurriculumModule module, CurriculumVersion implementationPlan) {
+    private static boolean moduleHasOccupationModule(CurriculumModule module, CurriculumVersion implementationPlan) {
         Optional<CurriculumVersionOccupationModule> occupationModule = implementationPlan.getOccupationModules().stream()
                 .filter(om -> module.equals(om.getCurriculumModule())).findFirst();
         return occupationModule.isPresent();

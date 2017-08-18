@@ -358,6 +358,17 @@ angular.module('hitsaOis')
     });
 
     sections.push({
+      name: 'main.menu.graduation.label',
+      type: 'toggle',
+      pages: [
+        {
+          name: 'main.menu.graduation.committees',
+          url: "/committees?_menu"
+        }
+      ]
+    });
+
+    sections.push({
       name: 'main.menu.more.label',
       type: 'toggle',
       pages: [

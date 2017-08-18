@@ -16,7 +16,7 @@ public class CurriculumVersionOccupationModuleYearCapacityDto extends VersionedC
     @NotNull
     @Min(1)
     @Max(1000)
-    private Integer studyYearNumber;
+    private Short studyYearNumber;
     @NotNull
     @Min(0)
     @Max(999)
@@ -36,11 +36,11 @@ public class CurriculumVersionOccupationModuleYearCapacityDto extends VersionedC
         this.id = id;
     }
 
-    public Integer getStudyYearNumber() {
+    public Short getStudyYearNumber() {
         return studyYearNumber;
     }
 
-    public void setStudyYearNumber(Integer studyYearNumber) {
+    public void setStudyYearNumber(Short studyYearNumber) {
         this.studyYearNumber = studyYearNumber;
     }
 

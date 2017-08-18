@@ -12,6 +12,6 @@ public interface CurriculumVersionRepository extends JpaRepository<CurriculumVer
 
     CurriculumVersion findByCodeAndCurriculumSchoolId(String curriculumVersionCode, Long schoolId);
 
-    Boolean existsByCurriculumSchoolIdAndCodeAndIdNot(Long schoolId, String code, Long curriculumId);
-    Boolean existsByCurriculumSchoolIdAndCode(Long schoolId, String paramValue);
+    boolean existsByCurriculumSchoolIdAndCodeAndIdNot(Long schoolId, String code, Long curriculumId);
+    boolean existsByCurriculumSchoolIdAndCode(Long schoolId, String paramValue);
 }

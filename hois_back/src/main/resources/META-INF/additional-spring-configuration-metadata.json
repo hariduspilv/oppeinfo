@@ -13,5 +13,20 @@
     "name": "hois.frontend.baseUrl",
     "type": "java.lang.String",
     "description": "backend must know about frontend host to when it sends out urls"
+  },
+  {
+    "name": "hois.jwt.secret",
+    "type": "java.lang.String",
+    "description": "jwt secret"
+  },
+  {
+    "name": "hois.jwt.header",
+    "type": "java.lang.String",
+    "description": "jwt http header. Default Authorization"
+  },
+  {
+    "name": "hois.jwt.tokenPrefix",
+    "type": "java.lang.String",
+    "description": "jwt prefix in http header value, Default Bearer"
   }
 ]}

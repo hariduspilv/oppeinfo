@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('HigherCurriculumVersionController', function ($scope, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, $translate, $rootScope, $routeParams, DataUtils) {
+  .controller('HigherCurriculumVersionController', function ($scope, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, $translate, $rootScope, $routeParams, DataUtils, config) {
 
     var baseUrl = '/curriculum';
     $scope.curriculum = $route.current.locals.curriculum;
@@ -55,6 +55,7 @@ angular.module('hitsaOis')
       $scope.version = entity;
     }
     DataUtils.convertStringToDates($scope.version, ["validFrom", "validThru"]);
+    $scope.formState.curriculumPdfUrl = config.apiUrl + baseUrl + '/print/' + $scope.version.id + '/curriculum.pdf';
 
     var CurriculumVersionEndpoint = QueryUtils.endpoint('/curriculum/' + $scope.version.curriculum + '/versions');
 
@@ -259,7 +260,7 @@ angular.module('hitsaOis')
     };
 
     $scope.copy = function () {
-      var copy = angular.merge({}, $scope.version);
+      var copy = angular.copy($scope.version);
       ['id', 'version', 'changed', 'changedBy', 'inserted', 'insertedBy', 'status', 'validFrom', 'validThru']
         .forEach(function (property) {
           delete copy[property];
@@ -343,11 +344,15 @@ angular.module('hitsaOis')
       return version.modules.filter(function (el) { return !el.minorSpeciality; }).length > 0;
     };
 
+    $scope.moduleMustHaveSubjects = function(module) {
+      return module.type !== 'KORGMOODUL_V';
+    };
+
     $scope.moduleHasSubjects = function (module1) {
       if (module1.minorSpeciality) {
         return module1.subjects && module1.subjects.length > 0;
       } else {
-        return module1.type === 'KORGMOODUL_L' || module1.type === 'KORGMOODUL_V' || module1.subjects && module1.subjects.length > 0;
+        return !$scope.moduleMustHaveSubjects(module1) || module1.subjects && module1.subjects.length > 0;
       }
     };
 
@@ -442,6 +447,37 @@ angular.module('hitsaOis')
       return subjects;
     }
 
+    $scope.$watchCollection('version.specialitiesReferenceNumbers', function(newValues, oldValues){
+      if(specialityRemoved(newValues, oldValues)) {
+        var removedSpecialities = getRemovedSpecialities(newValues, oldValues);
+        for(var i = 0; i < removedSpecialities.length; i++) {
+          if(getModulesBySpeciality(removedSpecialities[i]).length > 0) {
+            message.error("curriculum.error.specAddedToModule");
+            $scope.version.specialitiesReferenceNumbers = oldValues;
+            return;
+          }
+        }
+      }
+    });
+
+    function specialityRemoved(newValues, oldValues) {
+      return !angular.isDefined(newValues) && angular.isDefined(oldValues) ||
+      angular.isDefined(newValues) && angular.isDefined(oldValues) && newValues.length < oldValues.length;
+    }
+
+    function getRemovedSpecialities(newValues, oldValues) {
+      if(!angular.isDefined(newValues)) {
+        return oldValues;
+      }
+      var removedSpecialities = [];
+      for(var i = 0; i < oldValues.length; i++) {
+        if(!ArrayUtils.contains(newValues, oldValues[i])) {
+          removedSpecialities.push(oldValues[i]);
+        }
+      }
+      return removedSpecialities;
+    }
+
 
     function getSubjects(callback) {
       QueryUtils.endpoint('/curriculum/' + $scope.version.curriculum + '/possibleSubjects').query().$promise.then(callback);
@@ -458,11 +494,15 @@ angular.module('hitsaOis')
           return $scope.version.specialitiesReferenceNumbers && $scope.version.specialitiesReferenceNumbers.indexOf(s.referenceNumber) !== -1;
         });
         scope.myEhisSchool = $scope.myEhisSchool;
+
+        scope.formState = {
+          moduleMustHaveSubjects: !editingModule ||  $scope.moduleMustHaveSubjects(editingModule),
+          readOnly: $scope.formState.readOnly
+        };
         scope.readOnly = $scope.formState.readOnly;
 
         QueryUtils.endpoint(baseUrl + '/versionHmoduleTypes').query().$promise.then(function (response) {
           scope.moduleTypes = response.concat(newModuleTypes);
-
           scope.data.typeObject = scope.moduleTypes.find(function (el) {
             if (scope.data.type !== 'KORGMOODUL_M') {
               return el.code === scope.data.type;
@@ -471,6 +511,25 @@ angular.module('hitsaOis')
             }
           });
         });
+
+        scope.$watch('data.typeObject', function(newValue){
+          if(newValue && newValue.code === 'KORGMOODUL_V') {
+            scope.formState.moduleMustHaveSubjects = false;
+            clearFreeModulesProperties();
+            validateSubjects();
+          } else if(newValue) {
+            scope.formState.moduleMustHaveSubjects = true;
+            validateSubjects();
+          }
+        });
+
+        function clearFreeModulesProperties() {
+          scope.data.subjects = [];
+          scope.data.electiveModules = [];
+          scope.data.compulsoryStudyCredits = 0;
+          scope.data.electiveModulesNumber = 0;
+          scope.data.totalCredits = scope.data.optionalStudyCredits;
+        }
 
         scope.addElectiveModule = function () {
           var newElectiveModule = {
@@ -562,7 +621,13 @@ angular.module('hitsaOis')
         };
 
         function validateSubjects() {
-          scope.data.subjectAdded = scope.data.subjects.length > 0 ? 'true' : null;
+          if(!scope.formState.moduleMustHaveSubjects) {
+            scope.data.subjectAdded = 'true';
+          } else if(scope.data.type !== 'KORGMOODUL_V') {
+            scope.data.subjectAdded = scope.data.subjects.length > 0 ? 'true' : null;
+          } else {
+            scope.data.subjectAdded = 'true';
+          }
         }
 
         if (editingModule) {

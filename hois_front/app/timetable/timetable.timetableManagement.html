@@ -40,7 +40,7 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell ng-if="row.id" ><a ng-href="#/timetable/{{::row.id}}/view">{{row.start | hoisDate}} - {{row.end | hoisDate}}</a></td>
-            <td md-cell ng-if="!row.id" >{{row.start | hoisDate}} - {{row.end | hoisDate}}</a></td>
+            <td md-cell ng-if="!row.id" >{{row.start | hoisDate}} - {{row.end | hoisDate}}</td>
             <td md-cell>{{currentLanguageNameField(row.status)}}</td>
             <td md-cell>
               <md-button ng-if="!row.id" md-no-ink class="md-primary change-button" ng-href="#/timetable/new?type={{criteria.type}}&from={{row.start}}&thru={{row.end}}">{{'main.button.create' | translate}}</md-button>

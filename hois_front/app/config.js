@@ -2,5 +2,6 @@
 
 angular.module('hitsaOis')
   .constant('config', {
-    'apiUrl': 'http://localhost:9000/hois_back'
+    'apiUrl': 'https://localhost:9000/hois_back',
+    'idCardLoginUrl': 'https://idlogin.devhois'
   });

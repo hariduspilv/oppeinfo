@@ -62,12 +62,19 @@ dependencies {
 	compile('org.springframework.session:spring-session')
 	compile('org.liquibase:liquibase-core')
 	compile('org.postgresql:postgresql')
-	compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.7')
-    compile('com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.8.7')
-    compile('org.xhtmlrenderer:flying-saucer-pdf:9.1.5')
+	compile('com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.8.9')
+    compile('com.fasterxml.jackson.dataformat:jackson-dataformat-csv:2.8.9')
+    compile('org.xhtmlrenderer:flying-saucer-pdf:9.1.6') {
+    	//because of digidoc4j libraries conflicts
+    	exclude group: 'org.bouncycastle', module: 'bctsp-jdk14'
+    	exclude group: 'org.bouncycastle', module: 'bcprov-jdk14'
+	    exclude group: 'org.bouncycastle', module: 'bcmail-jdk14'
+    }
     compile('com.mitchellbosecke:pebble:2.4.0')
 	compile('org.jxls:jxls:2.4.1')
 	compile('org.jxls:jxls-poi:1.0.13')
+	compile('io.jsonwebtoken:jjwt:0.7.0')
+	compile('org.digidoc4j:digidoc4j:1.0.6')
 	compile(':hois_ws')
 	testCompile('org.springframework.boot:spring-boot-starter-test')
 	testCompile('com.h2database:h2')

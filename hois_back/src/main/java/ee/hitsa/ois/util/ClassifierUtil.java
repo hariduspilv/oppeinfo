@@ -27,6 +27,18 @@ public class ClassifierUtil {
         return value.name().equals(EntityUtil.getNullableCode(classifier));
     }
 
+    public static boolean oneOf(Classifier classifier, Enum<?>... values) {
+        if(values.length == 0) {
+            throw new IllegalArgumentException("At least one value is required");
+        }
+        for(Enum<?> value : values) {
+            if(equals(value, classifier)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static List<ClassifierSelection> sort(List<String> mainClassCodes, List<ClassifierSelection> data) {
         if(mainClassCodes.size() == 1) {
             String mainClassCode = mainClassCodes.get(0);

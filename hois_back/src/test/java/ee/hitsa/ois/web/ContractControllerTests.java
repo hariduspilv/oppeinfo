@@ -235,7 +235,7 @@ public class ContractControllerTests {
         form.setStudent(AutocompleteResult.of(student));
         form.setModule(curriculumVersionOccupationModuleRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
         form.setCredits(BigDecimal.ONE);
-        form.setHours(Integer.valueOf(1));
+        form.setHours(Short.valueOf((short) 1));
         form.setStartDate(LocalDate.now());
         form.setEndDate(LocalDate.now().plusDays(1));
         form.setPracticePlace("place");

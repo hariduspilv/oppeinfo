@@ -22,7 +22,7 @@ public class CurriculumVersionOccupationModuleThemeCapacityDto extends Versioned
     @NotNull
     @Min(0)
     @Max(10000)
-    private Integer hours;
+    private Short hours;
 
     private Boolean contact = Boolean.FALSE;
 
@@ -48,11 +48,11 @@ public class CurriculumVersionOccupationModuleThemeCapacityDto extends Versioned
         this.capacityType = capacityType;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 

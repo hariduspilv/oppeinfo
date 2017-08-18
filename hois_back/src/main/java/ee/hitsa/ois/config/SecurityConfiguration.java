@@ -12,6 +12,9 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
 
+import ee.hitsa.ois.auth.EstonianIdCardAuthenticationProvider;
+import ee.hitsa.ois.filter.EstonianIdCardAuthenticationFilter;
+import ee.hitsa.ois.filter.JwtAuthorizationFilter;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 
 @Configuration
@@ -20,24 +23,16 @@ import ee.hitsa.ois.service.security.HoisUserDetailsService;
 @EnableRedisHttpSession
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    private final HoisUserDetailsService userDetailsService;
+    @Autowired
+    private HoisUserDetailsService userDetailsService;
+    @Autowired
+    private HoisJwtProperties hoisJwtProperties;
 
-    public SecurityConfiguration(HoisUserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
-
-    /**
-     * DISCLAIMER: this is mock security and protects from nothing TODO: Setup
-     * security.
-     */
     @Autowired
     public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService);// .passwordEncoder(passwordencoder());
+        auth.userDetailsService(userDetailsService);
     }
 
-    /**
-     * TODO: All is allowed before user rights and roles etc is done.
-     */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
@@ -47,21 +42,46 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .antMatchers(HttpMethod.GET, "/autocomplete/schools").permitAll()
                 .anyRequest().authenticated()
                 .and()
+            .httpBasic()
+                .and()
             .exceptionHandling()
                 .accessDeniedPage("/403")
                 .and()
-            .logout()
+            .addFilter(new JwtAuthorizationFilter(authenticationManager(), userDetailsService, hoisJwtProperties))
+            .csrf().disable();
+                //.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+    }
+}
+
+
+@Configuration
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 1)
+@EnableGlobalMethodSecurity(securedEnabled = true)
+class IdCardLoginSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private EstonianIdCardAuthenticationProvider estonianIdCardAuthenticationProvider;
+
+    @Autowired
+    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(estonianIdCardAuthenticationProvider);
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.antMatcher("/idlogin")
+            .authorizeRequests()
+                .anyRequest()
                 .permitAll()
                 .and()
-            .httpBasic()
-                .and()
+            .addFilter(new EstonianIdCardAuthenticationFilter(authenticationManager()))
             .csrf()
                 .disable();
     }
 }
 
 @Configuration
-@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 1)
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 2)
 class UniqueUrlSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override

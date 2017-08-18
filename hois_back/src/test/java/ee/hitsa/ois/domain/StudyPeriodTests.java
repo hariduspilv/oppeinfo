@@ -41,13 +41,13 @@ public class StudyPeriodTests {
         sp3.setEndDate(sy.getEndDate());
 
         sy.setStudyPeriods(new HashSet<>(Arrays.asList(sp, sp2, sp3)));
-        
-        Assert.assertEquals(Arrays.asList(Integer.valueOf(1), Integer.valueOf(2)), sp.getWeekNrs());
-        Assert.assertEquals(Arrays.asList(Integer.valueOf(3)), sp2.getWeekNrs());
-        Assert.assertEquals(Arrays.asList(Integer.valueOf(5), Integer.valueOf(6)), sp3.getWeekNrs());
+
+        Assert.assertEquals(Arrays.asList(Short.valueOf((short) 1), Short.valueOf((short) 2)), sp.getWeekNrs());
+        Assert.assertEquals(Arrays.asList(Short.valueOf((short) 3)), sp2.getWeekNrs());
+        Assert.assertEquals(Arrays.asList(Short.valueOf((short) 5), Short.valueOf((short) 6)), sp3.getWeekNrs());
 
     }
-    
+
     @Test
     public void getWeekNrForDate() {
         StudyYear sy = new StudyYear();
@@ -74,7 +74,7 @@ public class StudyPeriodTests {
         sp3.setEndDate(sy.getEndDate());
 
         sy.setStudyPeriods(new HashSet<>(Arrays.asList(sp, sp2, sp3)));
-        
+
         Assert.assertEquals(Integer.valueOf(2), sp.getWeekNrForDate(LocalDate.of(2017, 6, 5)));
         Assert.assertEquals(Integer.valueOf(3), sp2.getWeekNrForDate(LocalDate.of(2017, 6, 17)));
         Assert.assertEquals(Integer.valueOf(6), sp3.getWeekNrForDate(LocalDate.of(2017, 7, 3)));

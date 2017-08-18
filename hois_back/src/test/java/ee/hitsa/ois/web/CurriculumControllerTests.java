@@ -67,7 +67,7 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleThemeDto
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @Transactional
 public class CurriculumControllerTests {
-    
+
     private static final String NAME = "CurriculumControllerTest2";
     private static final String CODE = "testCode2";
 
@@ -185,7 +185,7 @@ public class CurriculumControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertTrue(responseEntity.getBody().getId().equals(testCurriculum.getId()));
     }
-    
+
     @Test
     public void createAndGetVocational() {
         CurriculumForm curriculumForm = getForm(LocalDate.now());
@@ -231,12 +231,12 @@ public class CurriculumControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity);
         testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
-        
+
         // create version with collections
         CurriculumVersionDto version1 = getCurriculumVersionDto();
         setCurriculumVersionsCollections(version1);
 
-        ResponseEntity<CurriculumVersionDto> curriculumVersionResponseEntity = 
+        ResponseEntity<CurriculumVersionDto> curriculumVersionResponseEntity =
                 this.restTemplate.postForEntity("/curriculum/" + testCurriculum.getId() + "/versions", version1,
                 CurriculumVersionDto.class);
         Assert.assertEquals(HttpStatus.OK, curriculumVersionResponseEntity.getStatusCode());
@@ -251,7 +251,7 @@ public class CurriculumControllerTests {
         Assert.assertTrue(testCurriculum.getVersions().stream().findFirst().get().getModules().stream()
                 .findFirst().get().getElectiveModules().stream().findFirst().get().getSubjects().size() == 1);
     }
-    
+
     @Test
     public void testGetAreasOfStudyByGroupOfStudy() {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity
@@ -277,13 +277,13 @@ public class CurriculumControllerTests {
         Assert.assertNotNull(responseEntity);
         // for deleting
         testCurriculum = curriculumRepository.getOne(responseEntity.getBody().getId());
-        
-        
-        
+
+
+
         CurriculumVersionDto version1 = getCurriculumVersionDto();
-        
+
         Long specRefNum = testCurriculum.getSpecialities().stream().findFirst().get().getReferenceNumber();
-        
+
         version1.getSpecialitiesReferenceNumbers().add(specRefNum);
         CurriculumVersionHigherModuleDto module = getCurriculumVersionHigherModuleDto();
         module.getSpecialitiesReferenceNumbers().add(specRefNum);
@@ -293,9 +293,9 @@ public class CurriculumControllerTests {
                 CurriculumVersionDto.class);
         Assert.assertEquals(HttpStatus.OK, versionResponse.getStatusCode());
         Assert.assertNotNull(versionResponse.getBody().getId());
-        
+
         CurriculumVersionDto versionDto = versionResponse.getBody();
-        
+
         CurriculumDto curriculumDto = responseEntity.getBody();
         CurriculumSpecialityDto someSpec = curriculumDto.getSpecialities().stream().findFirst().get();
         Assert.assertEquals(someSpec.getId(), someSpec.getReferenceNumber());
@@ -320,20 +320,20 @@ public class CurriculumControllerTests {
         CurriculumDto curriculumDto = responseEntity.getBody();
         Assert.assertNotNull(curriculumDto);
         testCurriculum = curriculumRepository.getOne(curriculumDto.getId());
-        
+
         CurriculumVersionDto version1 = getCurriculumVersionDto();
-        
+
         CurriculumVersionHigherModuleDto versionModule = getCurriculumVersionHigherModuleDto();
         CurriculumVersionHigherModuleSubjectDto subject1 = getCurriculumVersionHigherModuleSubjectDto(Long.valueOf(33), Boolean.TRUE);
         CurriculumVersionHigherModuleSubjectDto subject2 = getCurriculumVersionHigherModuleSubjectDto(Long.valueOf(34), Boolean.TRUE);
-        
+
         CurriculumVersionElectiveModuleDto electiveModule = getCurriculumVersionElectiveModuleDto();
-          
+
         subject1.setElectiveModule(electiveModule.getReferenceNumber());
         subject2.setElectiveModule(electiveModule.getReferenceNumber());
-          
+
         versionModule.setSubjects(Sets.newLinkedHashSet(subject1, subject2));
-        
+
         versionModule.setElectiveModules(Sets.newLinkedHashSet(electiveModule));
         version1.setModules(Sets.newLinkedHashSet(versionModule));
 
@@ -341,14 +341,14 @@ public class CurriculumControllerTests {
                 CurriculumVersionDto.class);
         Assert.assertEquals(HttpStatus.OK, versionResponse.getStatusCode());
         Assert.assertNotNull(versionResponse.getBody().getId());
-        
+
         CurriculumVersionDto versionDto = versionResponse.getBody();
 
         versionModule = versionDto.getModules().stream().findFirst().get();
         electiveModule = versionModule.getElectiveModules().stream().findFirst().get();
         Long electiveModuleReferenceNumber = electiveModule.getReferenceNumber();
         List<CurriculumVersionHigherModuleSubjectDto> subjects = versionModule.getSubjects().stream().collect(Collectors.toList());
-        
+
         Assert.assertTrue(subjects.size() == 2);
         Assert.assertTrue(subjects.get(0).getElectiveModule().equals(electiveModuleReferenceNumber));
         Assert.assertTrue(subjects.get(1).getElectiveModule().equals(electiveModuleReferenceNumber));
@@ -428,8 +428,8 @@ public class CurriculumControllerTests {
         Assert.assertNotNull(updatedCurriculum);
         Assert.assertTrue(updatedCurriculum.getStudyLanguages().size() == 3);
     }
-    
-    
+
+
     @Test
     public void updateVocational() {
         // create
@@ -493,18 +493,18 @@ public class CurriculumControllerTests {
         CurriculumVersionOccupationModuleCapacityDto capacity = new CurriculumVersionOccupationModuleCapacityDto();
         capacity.setCapacityType(CapacityType.MAHT_a.name());
         capacity.setContact(Boolean.TRUE);
-        capacity.setHours(Integer.valueOf(2));
+        capacity.setHours(Short.valueOf((short) 2));
         savedOccupationModule.getCapacities().add(capacity);
 
         CurriculumVersionOccupationModuleThemeDto theme = new CurriculumVersionOccupationModuleThemeDto();
         theme.setNameEt("themeNameEt");
         theme.setCredits(new BigDecimal("1.0"));
-        theme.setHours(Integer.valueOf(1));
+        theme.setHours(Short.valueOf((short) 1));
 
         CurriculumVersionOccupationModuleThemeCapacityDto themeCapacity = new CurriculumVersionOccupationModuleThemeCapacityDto();
         themeCapacity.setCapacityType(CapacityType.MAHT_a.name());
         themeCapacity.setContact(Boolean.TRUE);
-        themeCapacity.setHours(Integer.valueOf(2));
+        themeCapacity.setHours(Short.valueOf((short) 2));
         theme.getCapacities().add(themeCapacity);
 
         CurriculumVersionOccupationModuleOutcomeDto themeOutcome = new CurriculumVersionOccupationModuleOutcomeDto();
@@ -532,9 +532,9 @@ public class CurriculumControllerTests {
         Assert.assertEquals("themeNameEt", updatedOccupationModule.getThemes().stream().findFirst().get().getNameEt());
         Assert.assertNotNull(updatedOccupationModule.getThemes().stream().findFirst().get().getId());
     }
-    
+
     /**
-     * New requirement: versions must be handled on their own form. 
+     * New requirement: versions must be handled on their own form.
      * Managing list of CurriculumVersionSpecialities now causes an exception.
      */
     @Test
@@ -544,7 +544,7 @@ public class CurriculumControllerTests {
         curriculumForm.setSpecialities(new HashSet<>());
         CurriculumSpecialityDto spec1 = getCurriculumSpecialityDto();
         curriculumForm.getSpecialities().add(spec1);
-        
+
         /*
          * Curriculum must be saved before
          */
@@ -555,11 +555,11 @@ public class CurriculumControllerTests {
         testCurriculum = curriculumRepository.getOne(curriculumResponse.getBody().getId());
         CurriculumDto curriculumDto = curriculumResponse.getBody();
         CurriculumSpecialityDto specDto = curriculumDto.getSpecialities().stream().findFirst().get();
-        
+
         CurriculumVersionDto versionDto = getCurriculumVersionDto();
         versionDto.setSpecialitiesReferenceNumbers(new HashSet<>());
         versionDto.getSpecialitiesReferenceNumbers().add(specDto.getReferenceNumber());
-        
+
         /*
          * Save Curriculum version with speciality
          */
@@ -612,7 +612,7 @@ public class CurriculumControllerTests {
         curriculumForm.setJoint(Boolean.FALSE);
         return curriculumForm;
     }
-    
+
     private static void setCollections(CurriculumForm curriculumForm) {
         curriculumForm.setSchoolDepartments(Sets.newLinkedHashSet(Long.valueOf(1), Long.valueOf(3)));
         curriculumForm.setStudyForms(Sets.newLinkedHashSet("OPPEVORM_K", "OPPEVORM_MS"));
@@ -644,12 +644,12 @@ public class CurriculumControllerTests {
 
         curriculumForm.setModules(Sets.newLinkedHashSet(getCurriculumModuleDto(), getCurriculumModuleDto()));
     }
-    
+
     private static CurriculumFileDto getCurriculumFileDto() {
         CurriculumFileDto dto = new CurriculumFileDto();
         dto.setEhis(Boolean.FALSE);
         dto.setSendEhis(Boolean.FALSE);
-        dto.setEhisFile("EHIS_FAIL_17884");  
+        dto.setEhisFile("EHIS_FAIL_17884");
         OisFileDto oisFile = new OisFileDto();
         oisFile.setFname(NAME);
         oisFile.setFtype(NAME);
@@ -725,7 +725,7 @@ public class CurriculumControllerTests {
         dto.setAdmissionYear(Integer.valueOf(2017));
         return dto;
     }
-    
+
     private static void setCurriculumVersionsCollections(CurriculumVersionDto dto) {
         CurriculumVersionHigherModuleDto versionModule = getCurriculumVersionHigherModuleDto();
 
@@ -746,7 +746,7 @@ public class CurriculumControllerTests {
         dto.setType(HigherModuleType.KORGMOODUL_F.name());
         dto.setNameEn(NAME);
         dto.setNameEt(NAME);
-        dto.setElectiveModulesNumber(Long.valueOf(1));
+        dto.setElectiveModulesNumber(Short.valueOf((short) 1));
         dto.setCompulsoryStudyCredits(BigDecimal.valueOf(1));
         return dto;
     }

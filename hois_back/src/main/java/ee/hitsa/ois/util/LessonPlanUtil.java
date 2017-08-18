@@ -25,7 +25,7 @@ public class LessonPlanUtil {
 
     public static class LessonPlanCapacityMapper {
         private final List<StudyPeriod> orderedStudyPeriods;
-        private final Map<Long, List<Integer>> studyPeriodWeekNrs;
+        private final Map<Long, List<Short>> studyPeriodWeekNrs;
         private final Map<Long, Integer> studyPeriodOffsets = new HashMap<>();
         private final int weekNrsCount;
 
@@ -43,8 +43,8 @@ public class LessonPlanUtil {
             }
         }
 
-        public Map<String, List<Integer>> mapOutput(Journal journal) {
-            Map<String, List<Integer>> hours = StreamUtil.toMap(jct -> EntityUtil.getCode(jct.getCapacityType()), k -> new ArrayList<>(Collections.nCopies(weekNrsCount, null)), journal.getJournalCapacityTypes());
+        public Map<String, List<Short>> mapOutput(Journal journal) {
+            Map<String, List<Short>> hours = StreamUtil.toMap(jct -> EntityUtil.getCode(jct.getCapacityType()), k -> new ArrayList<>(Collections.nCopies(weekNrsCount, null)), journal.getJournalCapacityTypes());
             // put every JournalCapacity into it's position, determined by capacity type, study period and week nr
             for(JournalCapacity jc : journal.getJournalCapacities()) {
                 Long key = EntityUtil.getId(jc.getStudyPeriod());
@@ -52,7 +52,7 @@ public class LessonPlanUtil {
                 if(offset != null) {
                     int index = studyPeriodWeekNrs.get(key).indexOf(jc.getWeekNr());
                     if(index != -1) {
-                        List<Integer> capacityHours = hours.get(EntityUtil.getCode(jc.getJournalCapacityType().getCapacityType()));
+                        List<Short> capacityHours = hours.get(EntityUtil.getCode(jc.getJournalCapacityType().getCapacityType()));
                         if(capacityHours != null) {
                             capacityHours.set(index + offset.intValue(), jc.getHours());
                         }
@@ -62,8 +62,8 @@ public class LessonPlanUtil {
             return hours;
         }
 
-        public void mapInput(Journal journal, Map<String, List<Integer>> hours) {
-            Map<String, Map<Long, Map<Integer, JournalCapacity>>> existing = journal.getJournalCapacities().stream().collect(
+        public void mapInput(Journal journal, Map<String, List<Short>> hours) {
+            Map<String, Map<Long, Map<Short, JournalCapacity>>> existing = journal.getJournalCapacities().stream().collect(
                     Collectors.groupingBy(c -> EntityUtil.getCode(c.getJournalCapacityType().getCapacityType()),
                             Collectors.groupingBy(c -> EntityUtil.getId(c.getStudyPeriod()),
                                     Collectors.toMap(c -> c.getWeekNr(), c -> c))));
@@ -74,13 +74,13 @@ public class LessonPlanUtil {
             }
             Map<Long, StudyPeriod> studyPeriodsById = StreamUtil.toMap(StudyPeriod::getId, orderedStudyPeriods);
             Map<String, JournalCapacityType> JournalCapacityTypes = StreamUtil.toMap(r -> EntityUtil.getCode(r.getCapacityType()), journal.getJournalCapacityTypes());
-            for(Map.Entry<String, List<Integer>> me : hours.entrySet()) {
+            for(Map.Entry<String, List<Short>> me : hours.entrySet()) {
                 String capacityType = me.getKey();
-                Map<Long, Map<Integer, JournalCapacity>> existingCapacityTypeHours = existing.get(capacityType);
-                List<Integer> capacityTypeHours = me.getValue();
+                Map<Long, Map<Short, JournalCapacity>> existingCapacityTypeHours = existing.get(capacityType);
+                List<Short> capacityTypeHours = me.getValue();
 
                 for(int i = 0, cnt = capacityTypeHours.size(); i < cnt; i++) {
-                    Integer weekNrHours = capacityTypeHours.get(i);
+                    Short weekNrHours = capacityTypeHours.get(i);
                     if(weekNrHours == null) {
                         // no value, don't store
                         continue;
@@ -88,7 +88,7 @@ public class LessonPlanUtil {
 
                     // map List index into StudyPeriod and weekNr
                     Long studyPeriodId = studyPeriodPos.get(i);
-                    Integer weekNr = studyPeriodWeekNrs.get(studyPeriodId).get(i - studyPeriodOffsets.get(studyPeriodId).intValue());
+                    Short weekNr = studyPeriodWeekNrs.get(studyPeriodId).get(i - studyPeriodOffsets.get(studyPeriodId).intValue());
                     JournalCapacity journalCapacity = null;
                     if(existingCapacityTypeHours != null) {
                         journalCapacity = existingCapacityTypeHours.computeIfAbsent(studyPeriodId, key -> Collections.emptyMap()).get(weekNr);

@@ -36,7 +36,7 @@ public class CurriculumVersion extends BaseEntityWithId {
     @Size(max=255)
     private String code;
 
-    private Integer admissionYear;
+    private Short admissionYear;
 
     @Size(max=4000)
     private String targetGroup;
@@ -130,11 +130,11 @@ public class CurriculumVersion extends BaseEntityWithId {
         this.code = code;
     }
 
-    public Integer getAdmissionYear() {
+    public Short getAdmissionYear() {
         return admissionYear;
     }
 
-    public void setAdmissionYear(Integer admissionYear) {
+    public void setAdmissionYear(Short admissionYear) {
         this.admissionYear = admissionYear;
     }
 

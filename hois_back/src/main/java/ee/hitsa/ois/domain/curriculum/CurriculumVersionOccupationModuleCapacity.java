@@ -22,7 +22,7 @@ public class CurriculumVersionOccupationModuleCapacity  extends BaseEntityWithId
     private Classifier capacityType;
 
     @Column(nullable = false)
-    private Integer hours;
+    private Short hours;
 
     @Column(name = "is_contact", nullable = false)
     private Boolean contact;
@@ -35,11 +35,11 @@ public class CurriculumVersionOccupationModuleCapacity  extends BaseEntityWithId
         this.capacityType = capacityType;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 

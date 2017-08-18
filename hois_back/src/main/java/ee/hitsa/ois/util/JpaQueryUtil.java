@@ -399,6 +399,11 @@ public abstract class JpaQueryUtil {
         return value != null ? Integer.valueOf(((Number)value).intValue()) : null;
     }
 
+    public static Short resultAsShort(Object row, int index) {
+        Object value = getValue(row, index);
+        return value != null ? Short.valueOf(((Number)value).shortValue()) : null;
+    }
+
     public static LocalDate resultAsLocalDate(Object row, int index) {
         Object value = getValue(row, index);
         if(value instanceof java.sql.Date) {

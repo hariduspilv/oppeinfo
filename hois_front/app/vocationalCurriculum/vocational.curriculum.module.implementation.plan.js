@@ -402,7 +402,7 @@ angular.module('hitsaOis')
     };
 
     $scope.copy = function() {
-      var copy = angular.merge({}, $scope.implementationPlan);
+      var copy = angular.copy($scope.implementationPlan);
       ['id', 'version', 'changed', 'changedBy', 'inserted', 'insertedBy', 'status', 'validFrom', 'validThru']
       .forEach(function(property) {
         delete copy[property];

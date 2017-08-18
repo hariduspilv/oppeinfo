@@ -7,6 +7,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.AssertionFailedException;
@@ -43,13 +44,12 @@ public abstract class UserUtil {
     }
 
     public static boolean canAddStudentAbsence(HoisUserDetails user, Student student) {
-        return isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student);
+        return isAdultStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentTeacher(user, student) || isStudentRepresentative(user, student);
     }
 
     public static boolean canEditStudentAbsence(HoisUserDetails user, StudentAbsence absence) {
         Student student = absence.getStudent();
-        // TODO representative can only edit absence created by him/her
-        return isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student);
+        return isAdultStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentTeacher(user, student) || isStudentRepresentative(user, student);
     }
 
     /**
@@ -104,6 +104,14 @@ public abstract class UserUtil {
 
     public static boolean isStudentRepresentative(HoisUserDetails user, Student student) {
         return student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
+    }
+
+    public static boolean isStudentTeacher(HoisUserDetails user, Student student) {
+        if(isTeacher(user, student.getSchool()) && student.getStudentGroup() != null) {
+            Teacher teacher = student.getStudentGroup().getTeacher();
+            return user.getPersonId().equals(EntityUtil.getId(teacher.getPerson()));
+        }
+        return false;
     }
 
     /**

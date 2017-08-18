@@ -20,9 +20,9 @@ public class JournalCapacity extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private StudyPeriod studyPeriod;
-    private Integer weekNr;
+    private Short weekNr;
     //academic hours count
-    private Integer hours;
+    private Short hours;
 
     public Journal getJournal() {
         return journal;
@@ -48,19 +48,19 @@ public class JournalCapacity extends BaseEntityWithId {
         this.studyPeriod = studyPeriod;
     }
 
-    public Integer getWeekNr() {
+    public Short getWeekNr() {
         return weekNr;
     }
 
-    public void setWeekNr(Integer weekNr) {
+    public void setWeekNr(Short weekNr) {
         this.weekNr = weekNr;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 }

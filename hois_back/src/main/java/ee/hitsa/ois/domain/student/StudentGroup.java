@@ -21,7 +21,7 @@ import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 public class StudentGroup extends BaseEntityWithId {
 
     private String code;
-    private Integer course;
+    private Short course;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private School school;
@@ -77,11 +77,11 @@ public class StudentGroup extends BaseEntityWithId {
         this.code = code;
     }
 
-    public Integer getCourse() {
+    public Short getCourse() {
         return course;
     }
 
-    public void setCourse(Integer course) {
+    public void setCourse(Short course) {
         this.course = course;
     }
 

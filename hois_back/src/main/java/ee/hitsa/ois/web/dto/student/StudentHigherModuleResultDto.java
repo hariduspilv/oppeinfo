@@ -11,7 +11,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
 
 public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleDto {
-    
+
     private BigDecimal mandatoryCreditsSubmitted;
     private BigDecimal optionalCreditsSubmitted;
     private BigDecimal mandatoryDifference;
@@ -27,7 +27,7 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
         dto.setElectiveModulesResults(StreamUtil.toMappedSet(StudentHigherElectiveModuleResultDto::of, higherModule.getElectiveModules()));
         return dto;
     }
-    
+
     public static StudentHigherModuleResultDto createFreeModule() {
         StudentHigherModuleResultDto dto = new StudentHigherModuleResultDto();
         dto.setId(Long.valueOf(-1));
@@ -35,17 +35,17 @@ public class StudentHigherModuleResultDto extends CurriculumVersionHigherModuleD
         dto.setCompulsoryStudyCredits(BigDecimal.ZERO);
         dto.setMandatoryCreditsSubmitted(BigDecimal.ZERO);
         dto.setOptionalStudyCredits(BigDecimal.ZERO);
-        dto.setElectiveModulesNumber(Long.valueOf(0));
+        dto.setElectiveModulesNumber(Short.valueOf((short) 0));
         dto.setMinorSpeciality(Boolean.FALSE);
         dto.setElectiveModulesResults(new HashSet<>());
         return dto;
     }
-    
+
     public void calculateIsOk() {
-        electiveModulesCompleted = electiveModulesResults.stream().filter(e -> Boolean.TRUE.equals(e.getIsOk())).count();
-        this.isOk = BigDecimal.ZERO.compareTo(this.totalDifference) <= 0 && electiveModulesCompleted.compareTo(this.getElectiveModulesNumber()) != -1;
+        electiveModulesCompleted = Long.valueOf(electiveModulesResults.stream().filter(e -> Boolean.TRUE.equals(e.getIsOk())).count());
+        this.isOk = Boolean.valueOf(BigDecimal.ZERO.compareTo(this.totalDifference) <= 0 && electiveModulesCompleted.compareTo(this.getElectiveModulesNumber().longValue()) != -1);
     }
-    
+
     public Set<StudentHigherElectiveModuleResultDto> getElectiveModulesResults() {
         return electiveModulesResults;
     }

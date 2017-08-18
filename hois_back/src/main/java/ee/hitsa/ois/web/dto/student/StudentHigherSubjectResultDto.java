@@ -66,11 +66,22 @@ public class StudentHigherSubjectResultDto {
     public void calculateIsOk() {
         if(!CollectionUtils.isEmpty(grades)) {
             Collections.sort(grades, byDate);
-            lastGrade = grades.get(grades.size() - 1);
-            isOk = lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade());
+            lastGrade = calculateLastGrade();
+            isOk = Boolean.valueOf(lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade()));
         } else {
             isOk = Boolean.FALSE;
         }
+    }
+    
+    private StudentHigherSubjectResultGradeDto calculateLastGrade() {
+        for(int i = grades.size() - 1; i >= 0; i--) {
+            StudentHigherSubjectResultGradeDto grade = grades.get(i);
+            if(HigherAssessment.KORGHINDAMINE_MI.name().equals(grade.getGrade()) && i != 0) {
+                continue;
+            }
+            return grades.get(i);
+        }
+        return null;
     }
     
     public boolean isDistinctiveAssessment() {

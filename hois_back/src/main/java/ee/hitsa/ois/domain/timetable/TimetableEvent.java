@@ -22,15 +22,15 @@ public class TimetableEvent extends BaseEntityWithId {
     // FIXME: rename in database
     @Column(name = "\"end\"")
     private LocalDateTime end;
-    private Long lessons;
+    private Short lessons;
     private Boolean considerBreak;
     private String name;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier repeat;
-    private Integer lessonNr;
+    private Short lessonNr;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private TimetableObject timetableObject;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -53,11 +53,11 @@ public class TimetableEvent extends BaseEntityWithId {
         this.end = end;
     }
 
-    public Long getLessons() {
+    public Short getLessons() {
         return lessons;
     }
 
-    public void setLessons(Long lessons) {
+    public void setLessons(Short lessons) {
         this.lessons = lessons;
     }
 
@@ -101,11 +101,11 @@ public class TimetableEvent extends BaseEntityWithId {
         this.timetableEventTimes = timetableEventTimes;
     }
 
-    public Integer getLessonNr() {
+    public Short getLessonNr() {
         return lessonNr;
     }
 
-    public void setLessonNr(Integer lessonNr) {
+    public void setLessonNr(Short lessonNr) {
         this.lessonNr = lessonNr;
     }
 

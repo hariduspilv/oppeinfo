@@ -15,7 +15,6 @@ angular.module('hitsaOis')
 
     $scope.formState = {
         readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
-        curriculumPdfUrl: config.apiUrl + baseUrl + '/print/' + id + '/curriculum.pdf',
         curriculumXmlUrl: config.apiUrl + baseUrl + '/xml/' + id + '/curriculum.xml',
         strictValidation: false
     };
@@ -423,6 +422,10 @@ angular.module('hitsaOis')
         scope.isNew = !angular.isDefined(editedSpecialty);
 
         scope.delete = function() {
+          if(scope.data.addedToVersion) {
+            message.error("curriculum.error.specAddedToVersion");
+            return;
+          }
           deleteListItem($scope.curriculum.specialities, scope, editedSpecialty,
             QueryUtils.endpoint('/curriculum/' + $scope.curriculum.id + '/speciality'));
         };
@@ -439,14 +442,6 @@ angular.module('hitsaOis')
               data, $scope.curriculum.specialities, editedSpecialty);
         });
     };
-
-    function specAddedToVersion(spec) {
-        var spescIds = [];
-        $scope.curriculum.versions.forEach(function(v){
-            spescIds = spescIds.concat(v.specialitiesReferenceNumbers);
-        });
-        return spescIds.indexOf(spec.id) !== -1;
-    }
 
     $scope.openAddGradeDialog = function (editingGrade) {
       var DialogController = null;

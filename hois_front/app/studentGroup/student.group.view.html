@@ -1,0 +1,107 @@
+<div layout="column" class="ois-form-layout-padding form-readonly">
+  <div>
+
+    <div layout="column">
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label>{{'studentGroup.code' | translate}}</label>
+          <hois-value value="record.code"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'studentGroup.course' | translate}}</label>
+          <hois-value value="record.course.toString()"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'studentGroup.places' | translate}}</label>
+          <hois-value value="record.places.toString()"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <hois-autocomplete ng-model="record.curriculum" method="curriculums" name="curriculum" disabled label="studentGroup.curriculum"></hois-autocomplete>
+        </div>
+
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{formState.curriculumVersionLabel | translate}}</label>
+          <hois-select ng-model="record.curriculumVersion" name="curriculumVersion" disabled values="formState.curriculumVersions"></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'studentGroup.studyForm' | translate}}</label>
+          <hois-classifier-value ng-model="record.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+        </md-input-container>
+
+        <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'studentGroup.language' | translate}}</label>
+          <hois-classifier-value ng-model="record.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>
+        </md-input-container>
+
+
+        <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label>{{'student.studyLevel' | translate}}</label>
+		      <hois-classifier-value ng-model="formState.origStudyLevel" main-classifier-code="OPPEASTE"></hois-classifier-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="formState.onlyvocational || formState.isVocational">
+        <div flex="45" flex-sm="100" flex-xs="100">
+          <hois-autocomplete ng-model="record.teacher" method="teachers" name="teacher" disabled label="studentGroup.teacher"></hois-autocomplete>
+        </div>
+
+        <md-input-container flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <label class="textInput">{{'studentGroup.speciality' | translate}}</label>
+          <hois-classifier-value ng-model="record.speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <div layout="column" flex="45">
+          <br>
+          <div layout="row" layout-sm="column" layout-xs="column" >
+            <md-input-container flex flex-sm="100" flex-xs="100">
+              <label>{{'main.validFrom' | translate}}</label>
+              <hois-value value="record.validFrom | hoisDate"></hois-value>
+            </md-input-container>
+            <md-input-container flex flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+              <label>{{'main.validThru' | translate}}</label>
+              <hois-value value="record.validThru | hoisDate"></hois-value>
+            </md-input-container>
+          </div>
+        </div>
+      </div>
+
+
+</div>
+
+	<div>&nbsp;</div>
+    <md-table-container ng-if="formState.students">
+      <table md-table>
+        <thead md-head md-order="criteria.order">
+          <tr md-row>
+            <th md-column>{{'studentGroup.studentname' | translate}}</th>
+            <th md-column>{{'studentGroup.idcode' | translate}}</th>
+            <th md-column>{{formState.curriculumVersionLabel | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row md-select="row" ng-repeat="row in formState.students" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
+            </td>
+            <td md-cell>{{::row.idcode}}</td>
+            <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+
+    <md-button ng-href="#/studentgroups/{{record.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+    <md-button ng-click="delete()" ng-if="record.id" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+    <md-button ng-href="#/studentgroups" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

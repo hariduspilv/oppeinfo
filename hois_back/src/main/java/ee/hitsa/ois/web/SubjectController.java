@@ -11,6 +11,7 @@ import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
+import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
@@ -36,15 +37,29 @@ public class SubjectController {
     @Autowired
     private CurriculumVersionRepository curriculumVersionRepository;
 
-    @PostMapping("")
+    @PostMapping
     public SubjectDto create(HoisUserDetails user, @Valid @RequestBody SubjectForm newSubject) {
         return get(user, subjectService.create(user, newSubject));
     }
 
     @PutMapping("/{id:\\d+}")
-    public SubjectDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Subject subject, @Valid @RequestBody SubjectForm newSubject) {
+    public SubjectDto save(HoisUserDetails user, 
+            @WithVersionedEntity(value = "id", versionRequestBody = true) Subject subject, 
+            @Valid @RequestBody SubjectForm newSubject) {
         UserUtil.assertSameSchool(user, subject.getSchool());
         return get(user, subjectService.save(user, subject, newSubject));
+    }
+    
+    @PutMapping("saveAndConfirm/{id:\\d+}")
+    public SubjectDto saveAndConfirm(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Subject subject, @Valid @RequestBody SubjectForm newSubject) {
+        UserUtil.assertSameSchool(user, subject.getSchool());
+        return get(user, subjectService.saveAndConfirm(user, subject, newSubject));
+    }
+    
+    @PutMapping("saveAndUnconfirm/{id:\\d+}")
+    public SubjectDto saveAndUnconfirm(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Subject subject, @Valid @RequestBody SubjectForm newSubject) {
+        UserUtil.assertSameSchool(user, subject.getSchool());
+        return get(user, subjectService.saveAndUnconfirm(user, subject, newSubject));
     }
 
     @GetMapping("/{id:\\d+}")
@@ -53,7 +68,7 @@ public class SubjectController {
         return SubjectDto.of(subject, curriculumVersionRepository.findAllDistinctByModules_Subjects_Subject_id(subject.getId()));
     }
 
-    @GetMapping("")
+    @GetMapping
     public Page<SubjectSearchDto> search(@Valid SubjectSearchCommand subjectSearchCommand, HoisUserDetails user, Pageable pageable) {
         return subjectService.search(user.getSchoolId(), subjectSearchCommand, pageable);
     }
@@ -81,5 +96,10 @@ public class SubjectController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Subject subject, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertSameSchool(user, subject.getSchool());
         subjectService.delete(subject);
+    }
+    
+    @GetMapping("/unique/code")
+    public boolean isCodeUnique(HoisUserDetails user, UniqueCommand command) {
+        return subjectService.isCodeUnique(user.getSchoolId(), command);
     }
 }

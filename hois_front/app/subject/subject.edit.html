@@ -2,7 +2,13 @@
   <form name="subjectForm" layout="column">
     <md-input-container flex>
       <label>{{'subject.code' | translate}}</label>
-      <input ng-model="subject.code" type="text" md-maxlength="20" ng-required="true">
+      <input ng-model="subject.code" name="code" type="text" md-maxlength="20" ng-required="true"
+      ng-model-options="{ debounce: 250 }" unique="subjectCodeUniqueQuery">
+      <div ng-messages="subjectForm.code.$error">
+        <div ng-message="notUnique">
+          {{'subject.alreadyexist' | translate}}
+        </div>
+      </div>
     </md-input-container>
     <md-input-container flex>
       <label>{{'subject.nameEt' | translate}}</label>
@@ -96,12 +102,7 @@
       <label>{{'subject.status' | translate}}</label>
       <hois-classifier-value ng-model="subject.status" main-classifier-code="AINESTAATUS"></hois-classifier-value>
     </md-input-container>
-    <div>
-      <md-button ng-if="subject.id && (subject.status != 'AINESTAATUS_K')" ng-click="subject.status = 'AINESTAATUS_K'"
-                 class="md-primary" style="max-width: 15em">{{'subject.activate' | translate}}</md-button>
-      <md-button ng-if="subject.id && (subject.status == 'AINESTAATUS_K')" ng-click="subject.status = 'AINESTAATUS_P'"
-                 class="md-primary">{{'subject.passive' | translate}}</md-button>
-    </div>
+
     <!-- info tund -->
     <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
     <div ng-repeat="it in subject.primarySubjects">
@@ -114,6 +115,12 @@
     <hois-created-modified object="subject"></hois-created-modified>
     <div layout="row">
       <md-button ng-click="update()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
+
+      <md-button ng-if="subject.id && (subject.status != 'AINESTAATUS_K')" ng-click="saveAndConfirm()"
+                 class="md-raised">{{'subject.activate' | translate}}</md-button>
+      <md-button ng-if="subject.id && (subject.status == 'AINESTAATUS_K')" ng-click="saveAndUnconfirm()"
+                 class="md-raised">{{'subject.passive' | translate}}</md-button>
+
       <md-button ng-if="subject.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
       <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </div>

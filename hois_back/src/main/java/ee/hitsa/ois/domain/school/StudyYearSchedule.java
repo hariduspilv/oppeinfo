@@ -28,7 +28,7 @@ public class StudyYearSchedule extends BaseEntityWithId {
     @JoinColumn(name = "study_period_id", updatable = false)
     private StudyPeriod studyPeriod;
 
-    private Long weekNr;
+    private Short weekNr;
 
     public School getSchool() {
         return school;
@@ -54,10 +54,10 @@ public class StudyYearSchedule extends BaseEntityWithId {
     public void setStudyPeriod(StudyPeriod studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
-    public Long getWeekNr() {
+    public Short getWeekNr() {
         return weekNr;
     }
-    public void setWeekNr(Long weekNr) {
+    public void setWeekNr(Short weekNr) {
         this.weekNr = weekNr;
-    }    
+    }
 }

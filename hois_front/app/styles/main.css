@@ -25,6 +25,10 @@ md-checkbox.md-checked .md-icon {
 {
 	margin-bottom: 0px;
 }
+.hois-collapse-header {
+  color: rgb(13,71,161);
+  font-weight: 500;
+}
 
 md-table-container .md-button
 {

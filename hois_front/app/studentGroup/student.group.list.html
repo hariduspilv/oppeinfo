@@ -9,10 +9,9 @@
 						<input ng-model="criteria.code" name="code" type="text" autofocus>
 						</md-input-container>
 						<div layout="row" flex>
-							<md-input-container flex="45">
+              <div flex="45">
 								<hois-autocomplete ng-model="criteria.curriculum" method="curriculums" name="curriculum" label="studentGroup.curriculum" md-selected-item-change="curriculumChanged()"></hois-autocomplete>
-							</md-input-container>
-
+              </div>
 							<md-input-container flex="50" flex-offset="5">
 								<label>{{formState.curriculumVersionLabel | translate}}</label>
 								<hois-select ng-model="criteria.curriculumVersion" values="formState.curriculumVersions" name="curriculumVersion" ng-change="curriculumVersionChanged()" multiple></hois-select>
@@ -67,7 +66,7 @@
 					</thead>
 					<tbody md-body>
 						<tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-							<td md-cell>{{::row.code}}</td>
+							<td md-cell><a ng-href="#/studentgroups/{{::row.id}}/view">{{::row.code}}</a></td>
 							<td md-cell>{{currentLanguageNameField(row.curriculum)}}</td>
 							<td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
 							<td md-cell>{{::row.course}}</td>

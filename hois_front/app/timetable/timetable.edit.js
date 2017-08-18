@@ -6,12 +6,12 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
     $scope.formState = {};
     var baseUrl = '/timetables';
     var blockedDates = [];
-    var Endpoint = QueryUtils.endpoint(baseUrl);;
+    var Endpoint = QueryUtils.endpoint(baseUrl);
     var lastDateForCurrentRange = Date.now();
     var firstDateForCurrentRange;
     if(id) {
       $scope.timetable = Endpoint.get({id: id});
-      $scope.timetable.$promise.then(function(result) {
+      $scope.timetable.$promise.then(function() {
         $scope.formState.studyYears =  $scope.timetable.studyYears;
         $scope.allStudyPeriods = $scope.timetable.studyPeriods;
         var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
@@ -91,7 +91,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
         }
       }
       blockedDates = blockedDates.sort();
-    };
+    }
     
     function getCurrentStudyPeriod() {
       if($scope.allStudyPeriods !== undefined) {
@@ -99,7 +99,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
           return obj.id === $scope.timetable.studyPeriod;
         })[0];
       }
-    };
+    }
     
     function setBlockedDateRange() {
       if($scope.timetable.studyPeriod !== undefined) {
@@ -119,7 +119,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
     }
     
     $scope.blockedFromDatesPredicate = function(date) {
-      if(blockedDates.lenght !== 0 && blockedDates.indexOf(date.getTime()) !== -1 || date.getTime() < firstDateForCurrentRange) {
+      if(blockedDates.length !== 0 && blockedDates.indexOf(date.getTime()) !== -1 || date.getTime() < firstDateForCurrentRange) {
         return false;
       }
       return true;

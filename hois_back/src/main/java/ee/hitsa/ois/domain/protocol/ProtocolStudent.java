@@ -15,7 +15,6 @@ import javax.validation.constraints.Size;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.timetable.JournalStudent;
 
 @Entity
 public class ProtocolStudent extends BaseEntityWithId {
@@ -39,7 +38,7 @@ public class ProtocolStudent extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier grade;
 
-    private Integer gradeMark;
+    private Short gradeMark;
 
     private LocalDate gradeDate;
 
@@ -89,11 +88,11 @@ public class ProtocolStudent extends BaseEntityWithId {
         this.grade = grade;
     }
 
-    public Integer getGradeMark() {
+    public Short getGradeMark() {
         return gradeMark;
     }
 
-    public void setGradeMark(Integer gradeMark) {
+    public void setGradeMark(Short gradeMark) {
         this.gradeMark = gradeMark;
     }
 

@@ -12,10 +12,10 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 public class DeclarationDto {
-    
+
     private Long id;
     private AutocompleteResult studyPeriod;
-    private Integer course;
+    private Short course;
     private StudentSearchDto student;
     private String status;
     private LocalDateTime inserted;
@@ -25,7 +25,7 @@ public class DeclarationDto {
     private Boolean canBeChanged;
     private Boolean canBeSetUnconfirmed;
     private Boolean canBeSetConfirmed;
-    
+
     public static DeclarationDto of(Declaration declaration) {
         DeclarationDto dto = new DeclarationDto();
         EntityUtil.bindToDto(declaration, dto, "studyPeriod", "student", "subjects");
@@ -45,7 +45,7 @@ public class DeclarationDto {
                 student.setCurriculumVersion(AutocompleteResult.of(cv));
             }
         }
-        dto.setStudent(student); 
+        dto.setStudent(student);
         return dto;
     }
     public Boolean getCanBeSetConfirmed() {
@@ -66,10 +66,10 @@ public class DeclarationDto {
     public void setCanBeSetUnconfirmed(Boolean canBeSetUnconfirmed) {
         this.canBeSetUnconfirmed = canBeSetUnconfirmed;
     }
-    public Integer getCourse() {
+    public Short getCourse() {
         return course;
     }
-    public void setCourse(Integer course) {
+    public void setCourse(Short course) {
         this.course = course;
     }
     public Long getId() {

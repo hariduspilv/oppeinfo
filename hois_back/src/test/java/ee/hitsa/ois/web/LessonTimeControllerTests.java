@@ -109,7 +109,7 @@ public class LessonTimeControllerTests {
         lessonTimeBuildingGroupDto.setBuildings(new HashSet<>(Arrays.asList(buildings.get(0))));
         LessonTimeDto lessonTimeDto = new LessonTimeDto();
         lessonTimeDto.setDayMon(Boolean.TRUE);
-        lessonTimeDto.setLessonNr(Integer.valueOf(1));
+        lessonTimeDto.setLessonNr(Short.valueOf((short) 1));
         lessonTimeDto.setStartTime(LocalTime.of(8, 0));
         lessonTimeDto.setEndTime(LocalTime.of(9, 0));
         lessonTimeBuildingGroupDto.setLessonTimes(new HashSet<>(Arrays.asList(lessonTimeDto)));
@@ -136,7 +136,7 @@ public class LessonTimeControllerTests {
         form = responseEntity.getBody();
         LessonTimeDto secondLessonTimeDto = new LessonTimeDto();
         secondLessonTimeDto.setDayMon(Boolean.TRUE);
-        secondLessonTimeDto.setLessonNr(Integer.valueOf(2));
+        secondLessonTimeDto.setLessonNr(Short.valueOf((short) 2));
         secondLessonTimeDto.setStartTime(LocalTime.of(10, 0));
         secondLessonTimeDto.setEndTime(LocalTime.of(12, 0));
         form.getLessonTimeBuildingGroups().stream().findFirst().get().getLessonTimes().add(secondLessonTimeDto);
@@ -170,7 +170,7 @@ public class LessonTimeControllerTests {
         lessonTimeBuildingGroupDto.setBuildings(new HashSet<>(Arrays.asList(buildings.get(0))));
         LessonTimeDto lessonTimeDto = new LessonTimeDto();
         lessonTimeDto.setDayMon(Boolean.TRUE);
-        lessonTimeDto.setLessonNr(Integer.valueOf(1));
+        lessonTimeDto.setLessonNr(Short.valueOf((short) 1));
         lessonTimeDto.setStartTime(LocalTime.of(8, 0));
         lessonTimeDto.setEndTime(LocalTime.of(9, 0));
         lessonTimeBuildingGroupDto.setLessonTimes(new HashSet<>(Arrays.asList(lessonTimeDto)));
@@ -193,7 +193,7 @@ public class LessonTimeControllerTests {
         lessonTimeBuildingGroupDto.setBuildings(new HashSet<>(Arrays.asList(buildings.get(0))));
         lessonTimeDto = new LessonTimeDto();
         lessonTimeDto.setDayMon(Boolean.TRUE);
-        lessonTimeDto.setLessonNr(Integer.valueOf(1));
+        lessonTimeDto.setLessonNr(Short.valueOf((short) 1));
         lessonTimeDto.setStartTime(LocalTime.of(8, 0));
         lessonTimeDto.setEndTime(LocalTime.of(9, 0));
         lessonTimeBuildingGroupDto.setLessonTimes(new HashSet<>(Arrays.asList(lessonTimeDto)));

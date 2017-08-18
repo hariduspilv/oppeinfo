@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.BadConfigurationExcecption;
 import ee.hitsa.ois.exception.EntityRemoveException;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -66,7 +67,7 @@ public class ControllerErrorHandler {
             status = HttpStatus.PRECONDITION_FAILED;
         } else if (e instanceof EntityRemoveException) {
             String errorCode = e.getMessage();
-            info = ErrorInfo.of(errorCode != null ? errorCode : "main.messages.record.referenced", null);
+            info = ErrorInfo.of(errorCode != null ? errorCode : "main.messages.record.referenced", (String)null);
             // FIXME better status code?
             status = HttpStatus.PRECONDITION_FAILED;
         } else if (e instanceof DataIntegrityViolationException) {
@@ -90,6 +91,10 @@ public class ControllerErrorHandler {
             status = HttpStatus.FORBIDDEN;
         } else if (e instanceof HttpRequestMethodNotSupportedException) {
             status = HttpStatus.METHOD_NOT_ALLOWED;
+        } else if (e instanceof BadConfigurationExcecption ) {
+            status = HttpStatus.INTERNAL_SERVER_ERROR;
+            BadConfigurationExcecption bce = (BadConfigurationExcecption)e;
+            info = ErrorInfo.of(bce.getMessage(), bce.getParams());
         } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             log.error("Error occured during request handling:", e);
@@ -105,7 +110,7 @@ public class ControllerErrorHandler {
             tableName = ((PSQLException) cause).getServerErrorMessage().getTable();
         }
         String msgId = UNIQUE_VIOLATION_MESSAGES.getOrDefault(tableName, "main.messages.error.unique");
-        return ErrorInfo.of(msgId, null);
+        return ErrorInfo.of(msgId, (String)null);
     }
 
     // TODO error format
@@ -136,21 +141,35 @@ public class ControllerErrorHandler {
             return new ErrorInfo(Collections.singletonList(new Error(code)));
         }
 
+        public static ErrorInfo of(String code, Map<Object, Object> params) {
+            return new ErrorInfo(Collections.singletonList(new Error(code, params)));
+        }
+
         public static ErrorInfo of(List<Map.Entry<String, String>> errors) {
             return new ErrorInfo(StreamUtil.toMappedList(me -> new ErrorForField(me.getValue(), me.getKey()), errors));
         }
 
         public static class Error {
             private final String code;
+            private final Map<Object, Object> params;
 
             public Error(String code) {
                 this.code = code;
+                this.params = null;
+            }
+
+            public Error(String code, Map<Object, Object> params) {
+                this.code = code;
+                this.params = params;
             }
 
             public String getCode() {
                 return code;
             }
 
+            public Map<Object, Object> getParams() {
+                return params;
+            }
         }
 
         public static class ErrorForField extends Error {

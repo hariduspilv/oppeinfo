@@ -18,7 +18,7 @@ import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 public class LessonPlanByTeacherDto {
 
     private final List<StudyPeriodDto> studyPeriods;
-    private final List<Integer> weekNrs;
+    private final List<Short> weekNrs;
     private final List<LessonPlanModuleJournalDto> journals;
     private final List<LessonPlanByTeacherSubjectDto> subjects;
 
@@ -35,7 +35,7 @@ public class LessonPlanByTeacherDto {
         return studyPeriods;
     }
 
-    public List<Integer> getWeekNrs() {
+    public List<Short> getWeekNrs() {
         return weekNrs;
     }
 

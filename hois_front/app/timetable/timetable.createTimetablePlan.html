@@ -39,7 +39,8 @@
           <th md-column ng-repeat="journal in plan.currentJournals" ng-if="getByJournal(journal, 'thisPlannedLessons') > 0">
             {{journal.name.substring(0, 4)}} <br>{{getByJournal(journal,
             'thisPlannedLessons')}}/{{getByJournal(journal,
-            'thisAllocatedLessons')}} ({{getByJournal(journal,
+            'thisPlannedLessons') - getByJournal(journal,
+            'lessonsLeft')}} ({{getByJournal(journal,
             'totalPlannedLessons')}}/{{getByJournal(journal,
             'totalAllocatedLessons')}})
           </th>
@@ -48,9 +49,9 @@
       <tbody md-body>
         <tr md-row ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell ng-repeat="capacity in plan.currentCapacities">
-            <div ng-repeat="count in range(capacity.lessonsLeft)"
-              id="{{capacity.journal}}-{{count}}" ois-drag
-              class="timetable-drag">
+            <div ng-repeat="count in range(capacity.lessonsLeft)" style="background-color: {{getByCapacity(capacity, 'color')}}"
+              id="{{capacity.journal}}-{{count}}" ois-drag journal-id="{{capacity.journal}}"
+              class="timetable-drag" >
               <span>{{getByCapacity(capacity,
                 'name').substring(0, 4)}}</span>
             </div>
@@ -61,13 +62,13 @@
   </div>
 </div>
 
-<div layout-padding id="timetableCreation">
+<div id="timetableCreation">
   <md-table-container>
   <table md-table>
     <thead md-head>
       <tr md-row>
         <th md-column></th>
-        <th md-column ng-repeat="date in plan.datesForTimetable"
+        <th md-column ng-repeat="date in plan.datesForTimetable" 
           colspan="{{lessonsInDay[weekday[date.getDay()]].length}}">{{'timetable.timetablePlan.'
           + weekday[date.getDay()] | translate}}</th>
       </tr>
@@ -84,7 +85,11 @@
         ng-class-odd="'odd'" ng-class-even="'even'">
         <td>{{group.code}}</td>
         <td ng-repeat="lessonTime in currentLessonTimes track by $index">
-          <div ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" drop-fn="saveNewEvent({param1: group.id, param2: param2, index: $index})" id="{{group.id + '-' + $index}}" class="timetable-drop" />
+          <div ng-attr-ois-drop="{{plan.selectedGroup === group.id}}" index-value="{{$index}}" drop-fn="saveEvent(data)" id="{{group.id + '-' + $index}}" class="timetable-drop">
+            <div ng-click="changeEvent(currentEvent)" ng-if="currentEvent = getEventForLesson($index, lessonTime, group)" ois-drag id="{{currentEvent.journalObject.id + '-' + $index}}" journal-id="{{currentEvent.journal}}" class="timetable-drag" style="background-color:{{currentEvent.journalObject.color}}" old-event-id="{{currentEvent.id}}">
+              {{currentEvent.journalObject.name.substr(0, 4)}}
+            </div>
+          </div>
         </td>
       </tr>
     </tbody>

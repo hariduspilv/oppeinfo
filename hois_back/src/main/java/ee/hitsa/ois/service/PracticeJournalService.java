@@ -9,12 +9,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import javax.validation.ValidationException;
 import javax.validation.Validator;
 
 import org.slf4j.Logger;
@@ -24,9 +22,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
-
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.OisFile;
@@ -48,6 +43,7 @@ import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.DataUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -98,8 +94,6 @@ public class PracticeJournalService {
     private SubjectRepository subjectRepository;
     @Autowired
     private Validator validator;
-    @Autowired
-    private ObjectMapper objectMapper;
 
     private static final int DAYS_BEFORE_END_CAN_EDIT = 30;
 
@@ -229,10 +223,10 @@ public class PracticeJournalService {
     private void assertValidationRules(PracticeJournalForm practiceJournalForm) {
         if (Boolean.TRUE.equals(practiceJournalForm.getIsHigher()) &&
                 !validator.validate(practiceJournalForm, ContractValidation.Higher.class).isEmpty()) {
-            throw new ValidationException("contract.messages.subjectRequired");
+            throw new ValidationFailedException("contract.messages.subjectRequired");
         } else if (Boolean.FALSE.equals(practiceJournalForm.getIsHigher()) &&
                 !validator.validate(practiceJournalForm, ContractValidation.Vocational.class).isEmpty()) {
-            throw new ValidationException("contract.messages.moduleAndThemerequired");
+            throw new ValidationFailedException("contract.messages.moduleRequired");
         }
     }
 
@@ -347,33 +341,15 @@ public class PracticeJournalService {
     public PracticeJournal getFromSupervisorUrl(String uuid) {
         Contract contract = contractRepository.findBySupervisorUrl(uuid);
         if (contract == null) {
-            log.error("no contract found. {}", asJson("uuid", uuid));
+            log.error("no contract found. {}", DataUtil.asMap("uuid", uuid));
             return null;
         }
         PracticeJournal practiceJournal = practiceJournalRepository.findByContractId(EntityUtil.getId(contract));
         if (practiceJournal == null) {
-            log.error("no practice journal found. {}", asJson("uuid", uuid, "contractId", EntityUtil.getId(contract)));
+            log.error("no practice journal found. {}", DataUtil.asMap("uuid", uuid, "contractId", EntityUtil.getId(contract)));
         }
 
         return practiceJournal;
     }
-
-    private Object asJson(Object...objects) {
-        HashMap<String, Object> jsonMap = new HashMap<>();
-
-        for (int i = 0; i < objects.length; i += 2) {
-            jsonMap.put(objects[i].toString(), objects[i+1]);
-        }
-        try {
-            return objectMapper.writeValueAsString(jsonMap);
-        } catch (JsonProcessingException e) {
-            log.error("as json failed for input {}", Arrays.toString(objects), e);
-            return "{}";
-        }
-    }
-
-
-
-
 
 }

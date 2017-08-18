@@ -21,6 +21,10 @@
         <td>{{ content.nameEn }}</td>
       </tr>
       <tr>
+        <td class="label">3. {{ "report.curriculum.origStudyLevel" | translate }}</td>
+        <td>{{ content.origStudyLevel }}</td>
+      </tr>
+      <tr>
         <td class="label">4. {{ "report.curriculum.studyForm" | translate }}</td>
         <td>{{ content.studyForm }}</td>
       </tr>
@@ -57,6 +61,10 @@
         <td>{{ content.merRegDate | hoisDate }}</td>
       </tr>
       <tr>
+        <td class="label">13. {{ "report.curriculum.approvalDate" | translate }}</td>
+        <td>{{ content.approvalDate | hoisDate }}</td>
+      </tr>
+      <tr>
         <td class="label">14. {{ "report.curriculum.admissionRequirements" | translate }}</td>
         <td>{{ content.admissionRequirements }}</td>
       </tr>
@@ -64,6 +72,17 @@
         <td class="label">15. {{ "report.curriculum.specialities" | translate }}</td>
         <td>
         {% for specialty in content.specialities %}
+          {% if loop.index > 0 %}
+            <br/>
+          {% endif %}
+          {{ specialty }}
+        {% endfor %}
+        </td>
+      </tr>
+      <tr>
+        <td class="label">16. {{ "report.curriculum.minorSpecialities" | translate }}</td>
+        <td>
+        {% for specialty in content.minorSpecialities %}
           {% if loop.index > 0 %}
             <br/>
           {% endif %}
@@ -84,8 +103,24 @@
         <td>{{ content.grade }}</td>
       </tr>
       <tr>
+        <td class="label">20. {{ "report.curriculum.documents" | translate }}</td>
+        <td>{{ content.documents }}</td>
+      </tr>
+      <tr>
         <td class="label">21. {{ "report.curriculum.structure" | translate }}</td>
-        <td>{{ content.structure }}</td>
+        <td>
+          <ul>
+          {% for specialty in content.structure %}
+            <li>{{ specialty.name }}
+              <ul>
+              {% for module in specialty.modules %}
+                <li>{{ module }}</li>
+              {% endfor %}
+              </ul>
+            </li>
+          {% endfor %}
+          </ul>
+        </td>
       </tr>
       <tr>
         <td class="label">22. {{ "report.curriculum.specialization" | translate }}</td>

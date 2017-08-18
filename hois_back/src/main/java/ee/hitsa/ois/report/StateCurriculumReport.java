@@ -4,7 +4,6 @@ import java.util.List;
 import java.util.Objects;
 
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
-import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.StreamUtil;
 
 public class StateCurriculumReport {
@@ -22,12 +21,8 @@ public class StateCurriculumReport {
     private final String description;
     private final List<StateCurriculumModuleReport> modules;
     private final List<StateCurriculumOccupationReport> occupations;
-    
-    public StateCurriculumReport(StateCurriculum stateCurriculum) {
-        this(stateCurriculum, Language.ET);
-    }
 
-    public StateCurriculumReport(StateCurriculum stateCurriculum, Language lang) {
+    public StateCurriculumReport(StateCurriculum stateCurriculum) {
         Objects.requireNonNull(stateCurriculum);
 
         nameEt = stateCurriculum.getNameEt();

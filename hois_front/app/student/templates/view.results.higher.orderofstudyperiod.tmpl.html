@@ -1,12 +1,12 @@
 <md-table-container>
   <table md-table>
-    <tbody md-body ng-repeat="studyPeriod in higherResults.studyPeriods | orderBy: 'endDate'">
-      <tr md-row ng-click="studyPeriod.clicked = !studyPeriod.clicked">
+    <tbody md-body ng-repeat="studyPeriodResult in higherResults.studyPeriodResults | orderBy: 'studyPeriod.endDate'">
+      <tr md-row ng-click="studyPeriodResult.clicked = !studyPeriodResult.clicked">
         <td md-cell colspan="8" class="md-title header-blue">
-          <span class="md-title header-blue">{{currentLanguageNameField(studyPeriod)}}</span>
+          <span class="md-title header-blue">{{currentLanguageNameField(studyPeriodResult.studyPeriod)}}</span>
         </td>
       </tr>
-      <tr md-row ng-hide="studyPeriod.clicked" class="secondary-table-header hideable">
+      <tr md-row ng-hide="studyPeriodResult.clicked" class="secondary-table-header hideable">
         <td md-cell>{{'student.result.higher.subject' | translate}}</td>
         <td md-cell>{{'student.result.higher.subjectCode' | translate}}</td>
         <td md-cell>{{'student.result.higher.module' | translate}}</td>
@@ -16,7 +16,7 @@
         <td md-cell>{{'student.result.higher.date' | translate}}</td>
         <td md-cell>{{'student.result.higher.teacher' | translate}}</td>
       </tr>
-      <tr md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByStudyPeriod(studyPeriod) | orderBy: 'lastGrade.gradeDate'" ng-hide="studyPeriod.clicked" class="hideable">
+      <tr md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByStudyPeriod(studyPeriodResult.studyPeriod) | orderBy: 'lastGrade.gradeDate'" ng-hide="studyPeriodResult.clicked" class="hideable">
         <td md-cell>{{subjectResult.subject[currentLanguageNameField()]}}</td>
         <td md-cell>{{subjectResult.subject.code}}</td>
         <td md-cell>{{subjectResult.higherModule[currentLanguageNameField()]}}</td>
@@ -40,6 +40,10 @@
             </tr>
           </table>
         </td>
+      </tr>
+      <tr md-row class="secondary-table-header hideable" ng-hide="studyPeriodResult.clicked">
+        <td md-cell>{{'student.result.higher.overallCredits' | translate}}: {{studyPeriodResult.total}}</td>
+        <td md-cell colspan="7">{{'student.result.kkh' | translate}}: {{studyPeriodResult.averageGrade}}</td>
       </tr>
     </tbody>
   </table>

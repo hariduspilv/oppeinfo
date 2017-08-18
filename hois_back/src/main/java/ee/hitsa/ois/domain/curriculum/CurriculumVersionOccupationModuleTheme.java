@@ -31,11 +31,11 @@ public class CurriculumVersionOccupationModuleTheme extends BaseEntityWithId {
     private BigDecimal credits;
 
     @Column(nullable = false)
-    private Integer hours;
+    private Short hours;
 
     private BigDecimal proportion;
     private String subthemes;
-    private Integer studyYearNumber;
+    private Short studyYearNumber;
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier assessment;
@@ -76,11 +76,11 @@ public class CurriculumVersionOccupationModuleTheme extends BaseEntityWithId {
         this.credits = credits;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 
@@ -100,11 +100,11 @@ public class CurriculumVersionOccupationModuleTheme extends BaseEntityWithId {
         this.subthemes = subthemes;
     }
 
-    public Integer getStudyYearNumber() {
+    public Short getStudyYearNumber() {
         return studyYearNumber;
     }
 
-    public void setStudyYearNumber(Integer studyYearNumber) {
+    public void setStudyYearNumber(Short studyYearNumber) {
         this.studyYearNumber = studyYearNumber;
     }
 

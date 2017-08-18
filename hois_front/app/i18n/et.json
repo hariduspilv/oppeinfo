@@ -35,6 +35,7 @@
       "send": "Saada",
       "update": "Uuenda",
       "uploadFile": "Lae fail",
+      "selectFile": "Vali fail",
       "updateFromEhis": "Uuenda staatust EHISest",
       "submit": "Esita",
       "allowSubmit": "Luba esitada",
@@ -77,7 +78,10 @@
         "atLeastOneMustBeSelected": "Vähemalt üks peab olema valitud",
         "unique": "Kirje pole unikaalne",
         "fileAlreadyExists": "Sama fail juba eksisteerib",
-        "integer": "Peab olema täisarv!"
+        "integer": "Peab olema täisarv!",
+        "configuration": {
+          "missingAutomaticMessageTempalate": "Süsteemis on puudu automaatse teate mall {{template}} koolile {{school}}"
+        }
       },
       "form-has-errors": "Vormil on vigu",
       "record": {
@@ -213,6 +217,10 @@
         "studentstatistics": "Õppurite statistika",
         "studentstatisticsbyperiod": "Õppurite statistika perioodis",
         "teachersload": "Õpetaja koormus"
+      },
+      "graduation": {
+        "label": "Lõpetamine",
+        "committees": "Kaitsmiskomisjoni otsing"
       },
       "student": {
         "label": "Õppurid",
@@ -400,27 +408,32 @@
       "inOrderOfStudyPeriod": "Õppeperioodide kaupa",
       "inOrderOfPassing": "Sooritamise järjekorras",
       "moduleTheme": "Moodul/teema",
+      "theme": "Teema",
       "ekap": "EKAP",
       "grade": "Hinne",
       "date": "Kuupäev",
       "teacher": "Õpetaja",
       "studyLoad": "Õppekoormus",
+      "isOk": "Korras",
+      "totalRequired": "Kokku vaja",
+      "totalSubmitted": "Kogutud",
+      "difference": "Hälve",
+      "moduleNotGraded": "Moodul hindamata",
+      "otherModuleResults": "Õppekava välised sooritused",
+      "missing": "Tulemused puuduvad",
       "higher": {
         "curriculumVersion": "Õppekava versioon",
         "totalCredits": "",
         "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP",
         "mandatorySubjects": "Kohustuslikud ained",
         "optionalSubjects": "Valikained",
-        "totalRequired": "Kokku vaja",
-        "totalSubmitted": "Kogutud",
-        "difference": "Hälve",
         "subject": "Õppeaine",
         "subjectCode": "Ainekood",
         "credits": "EAP",
+        "overallCredits": "KOKKU EAP",
         "grade": "Hinne",
         "date": "Kuupäev",
         "teacher": "Õpetaja",
-        "isOk": "Korras",
         "module": "Moodul",
         "electiveModules": "Valikmoodulid",
         "electiveModulesRequired": "Kohustuslik täitmiseks",
@@ -471,8 +484,16 @@
     "mandatoryPrerequisiteSubjects": "Kohustuslikud eeldusained",
     "recommendedPrerequisiteSubjects": "Soovituslikud eeldusained",
     "substituteSubjects": "Asendusained",
-    "alreadyexist": "Õppeaine kood peab olema unikaalne õppeasutuse lõikes",
-    "alreadyConnected": "Õppeaine {{subject}} on juba seotud"
+    "alreadyexist": "Õppeaine kood peab olema unikaalne õppeasutuse raames",
+    "alreadyConnected": "Õppeaine {{subject}} on juba seotud",
+    "prompt": {
+      "saveAndConfirm": "Kas soovid salvestada ja muuta õppeaine staatuse kehtivaks?",
+      "saveAndUnconfirm": "Kas soovid salvestada ja muuta õppeaine staatuse passiivseks?"
+    },
+    "message": {
+      "savedAndConfirmed": "Salvestamine õnnestus. Õppeaine staatus on \"kehtiv\"",
+      "savedAndUnconfirmed": "Salvestamine õnnestus. Õppeaine staatus on \"passiivne\""
+    }
   },
   "school": {
     "address": "Aadress",
@@ -534,7 +555,10 @@
     "isVocational": "Kutseõpe",
     "isHigher": "Kõrgharidusõpe",
     "studyLevels": "Õppetasemed",
-    "deleteconfirm": "Kas oled kindel, et soovid klassifikaatori kustutada?"
+    "deleteconfirm": "Kas oled kindel, et soovid klassifikaatori kustutada?",
+    "prompt": {
+      "deleteParent": "Kas oled kindel, et soovid seost kustutada?"
+    }
   },
   "saisClassifier": {
     "name": "Nimetus",
@@ -1049,6 +1073,7 @@
     "error": {
       "numberOfElectiveModules": "Ei tohi olla suurem kui valikmoodulite arv",
       "specAddedToVersion": "Peaeriala on lisatud õppekava versioonisse ja ei saa olla kustutatud",
+      "specAddedToModule": "Mooduliga seotud peaeriala ei saa kustutada",
       "max999": "Peab olema kuni 3-kohaline number!",
       "monthsMax11": "Peab olema kuni 11!",
       "max": "Peab olema kuni {{max}}!",
@@ -1167,8 +1192,8 @@
     "deleteConfirm": "Kas oled kindel, et soovid õpetaja kustutada?",
     "email": "E-posti aadress",
     "phone": "Kontakttelefon",
-    "studyPeriodLoad": "Õppeaasta koormus",
-    "studyYearLoad": "Õppeperioodi koormus",
+    "studyPeriodLoad": "Õppeperioodi koormus",
+    "studyYearLoad": "Õppeaasta koormus",
     "person": {
       "alreadyexist": "Sisestatud õpetaja on juba süsteemis olemas",
       "name": "Õpetaja nimi",
@@ -1222,7 +1247,8 @@
       "positionSpecificationEn": "Ametikoha täpsustus (inglise keeles)",
       "positionSpecificationEt": "Täpsustus",
       "error": "Vähemalt üks EHISe ametikoht peab olema lisatud",
-      "deleteConfirm": "Kas oled kindel, et soovid õpetaja EHISe ametikohta kustutada?"
+      "deleteConfirm": "Kas oled kindel, et soovid õpetaja EHISe ametikohta kustutada?",
+      "schoolDepartment": "Struktuuriüksus"
     },
     "qualification": {
       "add": "lisa Kvalifikatsioon",
@@ -2113,5 +2139,29 @@
       "supervisorComment": "Juhendaja kommmentaar",
       "teacherComment": "Õppeasutuse juhendaja kommentaar"
     }
+  },
+  "committee": {
+    "addInfo": "Märkused",
+    "addMember": "Lisa uus",
+    "chairman": "Kaitsmiskomisjoni esimees",
+    "error": {
+      "chairman": "Kaitsmiskomisjonis peab olema üks esimees"
+    },
+    "external": "Väline",
+    "isChairman": "Esimees",
+    "member": "Kaitsmiskomisjoni liige",
+    "memberIs": "Kaitsmiskomisjoni liige on:",
+    "members": "Kaitsmiskomisjoni liikmed",
+    "message": {
+      "deleted": "Kaitsmiskomisjon on kustutatud"
+    },
+    "name": "Nimi",
+    "prompt": {
+      "deleteconfirm": "Kas oled kindel, et soovid kaitsmiskomisjoni kustutada?"
+    },
+    "showInvalid": "Kuva mittekehtivad kaitsmiskomisjonid",
+    "validDate": "Kaitsmiskomisjoni kehtivuse kuupäev",
+    "validFromDate": "Kehtivuse kuupäev alates",
+    "validThruDate": "Kehtivuse kuupäev kuni"
   }
 }

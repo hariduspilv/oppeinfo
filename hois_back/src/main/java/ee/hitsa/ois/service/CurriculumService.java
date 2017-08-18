@@ -84,6 +84,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.CurriculumFileForm;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.CurriculumModuleForm;
@@ -778,17 +779,17 @@ public class CurriculumService {
     }
 
     public boolean isVersionUnique(Long schoolId, UniqueCommand command) {
-        Boolean codeExists;
+        boolean codeExists;
         if(command.getId() == null) {
             codeExists = curriculumVersionRepository.existsByCurriculumSchoolIdAndCode(schoolId, command.getParamValue());
         } else {
             codeExists = curriculumVersionRepository.existsByCurriculumSchoolIdAndCodeAndIdNot(schoolId, command.getParamValue(), command.getId());
         }
-        return Boolean.FALSE.equals(codeExists);
+        return !codeExists;
     }
 
     public boolean isMerCodeUnique(UniqueCommand command) {
-        Boolean codeExists;
+        boolean codeExists;
         if(command.getParamValue() == null) {
             return true;
         } else if(command.getId() == null) {
@@ -796,17 +797,17 @@ public class CurriculumService {
         } else {
             codeExists = curriculumRepository.existsByMerCodeAndIdNot(command.getParamValue(), command.getId());
         }
-        return Boolean.FALSE.equals(codeExists);
+        return !codeExists;
     }
 
     public boolean isCodeUnique(Long schoolId, UniqueCommand command) {
-        Boolean codeExists;
+        boolean codeExists;
         if(command.getId() == null) {
             codeExists = curriculumRepository.existsBySchoolIdAndCode(schoolId, command.getParamValue());
         } else {
             codeExists = curriculumRepository.existsBySchoolIdAndCodeAndIdNot(schoolId, command.getParamValue(), command.getId());
         }
-        return Boolean.FALSE.equals(codeExists);
+        return !codeExists;
     }
     
     public CurriculumGrade createCurriculumGrade(Curriculum curriculum, CurriculumGradeDto dto){
@@ -836,6 +837,9 @@ public class CurriculumService {
     }
 
     public void deleteCurriculumSpeciality(CurriculumSpeciality speciality) {
+        if(speciality.isAddedToVersion()) {
+            throw new ValidationFailedException("curriculum.error.specAddedToVersion");
+        }
         EntityUtil.deleteEntity(curriculumSpecialityRepository, speciality);
         speciality.getCurriculum().getSpecialities().remove(speciality);        
     }

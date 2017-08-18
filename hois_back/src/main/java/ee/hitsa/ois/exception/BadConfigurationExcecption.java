@@ -1,10 +1,15 @@
 package ee.hitsa.ois.exception;
 
-public class BadConfigurationExcecption extends RuntimeException {
-    private static final long serialVersionUID = 3625599093932597086L;
+import java.util.Map;
+
+public class BadConfigurationExcecption extends SingleMessageWithParamsException {
 
     public BadConfigurationExcecption(String message) {
         super(message);
+    }
+
+    public BadConfigurationExcecption(String message, Map<Object, Object> params) {
+        super(message, params);
     }
 
     public BadConfigurationExcecption(String message, Throwable cause) {

@@ -1,13 +1,18 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier',
-  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier) {
+angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService',
+  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService) {
+  $scope.journalColors = ['#CD6155', '#FADBD8', '#C39BD3', '#E8DAEF', '#85C1E9', '#D1F2EB', '#ABEBC6', '#F9E79F', '#FAD7A0', '#EDBB99', '#D5DBDB', '#D5D8DC'];
   $scope.plan = {};
   $scope.timetableId = $route.current.params.id;
   $scope.weekday = ["daySun", "dayMon", "dayTue", "dayWed", "dayThu", "dayFri", "daySat"];
   var baseUrl = '/timetables';
   $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
   QueryUtils.endpoint(baseUrl + '/:id/createPlan').search({id: $scope.timetableId}).$promise.then(function(result) {
+    initializeData(result);
+  });
+  
+  function initializeData(result) {
     $scope.plan = result;
     $scope.plan.selectAll = true;
     $scope.plan.journals.sort(function(a, b) {
@@ -34,15 +39,26 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
       var currentDay = $scope.weekday[j];
       $scope.lessonsInDay[currentDay] = $scope.plan.lessonTimes.filter(function(it) {
         return it[currentDay] === true;
-      })
+      });
+      var previousLessonNrs = [],
+        index = $scope.lessonsInDay[currentDay].length - 1,
+        currentLessons = $scope.lessonsInDay[currentDay];
+      while(index >= 0) {
+        if(!previousLessonNrs.includes(currentLessons[index].lessonNr)) {
+          previousLessonNrs.push(currentLessons[index].lessonNr);
+        } else {
+          currentLessons.splice(index, 1);
+        }
+        index -= 1;
+      }
     }
     $scope.lessonsInDay.sort(function(a, b) {
-      return weekday.indexOf(a) - weekday.indexOf(b);
+      return $scope.weekday.indexOf(a) - $scope.weekday.indexOf(b);
     });
     
     $scope.firstDay = $scope.weekday[new Date($scope.plan.startDate).getDay()];
     $scope.dayOrder = $scope.weekday.slice();
-    while($scope.dayOrder[0] != $scope.firstDay) {
+    while($scope.dayOrder[0] !== $scope.firstDay) {
       $scope.dayOrder[$scope.dayOrder.length-1] = $scope.dayOrder.shift();
     }
     $scope.currentLessonTimes = [];
@@ -52,11 +68,24 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
         $scope.currentLessonTimes.push(currentDay.shift());
       }
     }
-  });
+    
+    //creating object for each group to hold all planed lessons
+    var plannedLessonsByGroup = {};
+    for(var s = 0; $scope.plan.plannedLessons.length > s; s++) {
+      var groupNr = $scope.plan.plannedLessons[s].studentGroup;
+      if(!angular.isDefined(plannedLessonsByGroup[groupNr])) {
+        plannedLessonsByGroup[groupNr] = {};
+        plannedLessonsByGroup[groupNr].id = groupNr;
+        plannedLessonsByGroup[groupNr].lessons = [];
+      }
+      plannedLessonsByGroup[groupNr].lessons.push($scope.plan.plannedLessons[s]);
+    }
+    $scope.plan.plannedLessonsByGroup = plannedLessonsByGroup;
+  }
   
   $scope.$watch('plan.selectedGroup', function () {
     if(angular.isDefined($scope.plan.selectedGroup)) {
-      $scope.plan.currentCapacities = $scope.plan.studentGroupCapacities.filter(function (t) { return t.studentGroup === $scope.plan.selectedGroup });
+      $scope.plan.currentCapacities = $scope.plan.studentGroupCapacities.filter(function (t) { return t.studentGroup === $scope.plan.selectedGroup; });
       $scope.plan.currentCapacities = $scope.plan.currentCapacities.sort(function (a, b) {
         return a.journal - b.journal;
       });
@@ -64,6 +93,9 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
         return obj.journal;
       });
       if(angular.isDefined($scope.plan.journals)) {
+        $scope.plan.journals.forEach(function(item, index) {
+          item.color = $scope.journalColors[index];
+        });
         $scope.plan.currentJournals = $scope.plan.journals.filter(function (t) {
           return currentCapacities.indexOf(t.id) !== -1;
         });
@@ -74,23 +106,71 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
   $scope.getByJournal = function(journal, param) {
     var capacity = $scope.plan.currentCapacities.find(function (it) {
       return it.journal === journal.id;
-    })
+    });
     return capacity[param];
-  }
+  };
   
   $scope.getByCapacity = function(capacity, param) {
     var journal = $scope.plan.currentJournals.find(function (it) {
       return it.id === capacity.journal;
-    })
+    });
     return journal[param];
-  }
+  };
   
   $scope.getCountForCapacity = function(capacity) {
     capacity.thisAllocatedLessons = 0;
     return capacity.thisPlannedLessons - capacity.thisAllocatedLessons;
-  }
+  };
   
-  $scope.saveNewEvent = function(params) {
+  $scope.getEventForLesson = function(index, lesson, group) {
+    var selectedDay, daysSoFar = 0;
+    for(var k = 0; $scope.dayOrder.length > k; k++) {
+      daysSoFar += $scope.lessonsInDay[$scope.dayOrder[k]].length;
+      if(index < daysSoFar) {
+        selectedDay = $scope.dayOrder[k];
+        break;
+      }
+    }
+    
+    if(angular.isDefined($scope.plan.plannedLessonsByGroup[group.id])) {
+      var groupLesson = $scope.plan.plannedLessonsByGroup[group.id].lessons.filter(function(t) {
+        return $scope.weekday[new Date(t.start).getDay()] === selectedDay && lesson.lessonNr === t.lessonNr;
+      });
+      if(groupLesson.length !== 0) {
+        groupLesson[0].journalObject = $scope.plan.journals.filter(function(item) {
+          return item.id === groupLesson[0].journal;
+        })[0];
+        var buildingObjects = $scope.plan.lessonTimes.filter(function(item) {
+          return item[selectedDay] === true && item.lessonNr === lesson.lessonNr;
+        });
+        if(buildingObjects.length > 1) {
+          var buildingIds = buildingObjects.reduce(function(ids, currArr) {
+            if(ids.constructor === Array) {
+              return ids.concat(currArr.buildingIds);
+            }
+            return ids.buildingIds.concat(currArr.buildingIds);
+          });
+          if(buildingIds) {
+            groupLesson[0].buildingIds = buildingIds.filter(function(item, i, ar){ return ar.indexOf(item) === i; });
+          }
+        } else {
+          groupLesson[0].buildingIds = buildingObjects[0].buildingIds;
+        }
+        return groupLesson[0];
+      }
+    }
+    return null;
+  };
+  
+  $scope.changeEvent = function(currentEvent) {
+    
+    dialogService.showDialog('timetable/timetable.event.change.dialog.html', function(dialogScope) {
+      dialogScope.lesson = currentEvent;
+    });
+  };
+  
+  
+  $scope.saveEvent = function(params) {
     var selectedDay, daysSoFar = 0;
     for(var k = 0; $scope.dayOrder.length > k; k++) {
       daysSoFar += $scope.lessonsInDay[$scope.dayOrder[k]].length;
@@ -99,17 +179,18 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
         break;
       }
     }
-    var journalId = params.param2.substr(0, params.param2.indexOf('-'));
+    var journalId = params.journalId;
     var query = { 
         journal: journalId,
         timetable: $scope.timetableId,
         lessonTime: this.lessonTime.id,
         selectedDay: selectedDay,
+        oldEventId: params.oldEventId
     };
-    QueryUtils.endpoint(baseUrl + '/saveEvent').post(query).$promise.then(function(result) {
-        console.log(result);
+    QueryUtils.endpoint(baseUrl + '/saveEvent').save(query).$promise.then(function(result) {
+      initializeData(result);
     });
-  }
+  };
   
   $scope.range = function(count){
     var array = []; 
@@ -117,14 +198,14 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
       array.push(i);
     } 
     return array;
-  }
+  };
 
   $scope.updateGroups = function() {
     var selectedCodes = Classifier.getSelectedCodes($scope.plan.studentGroups);
     $scope.plan.currentStudentGroups = $scope.plan.studentGroups.filter(function(t) {
       return selectedCodes.indexOf(t.code) !== -1;
     });
-  }
+  };
   
 }
 ]);

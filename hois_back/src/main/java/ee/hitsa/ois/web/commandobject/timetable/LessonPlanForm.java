@@ -78,7 +78,7 @@ public class LessonPlanForm extends VersionedCommand {
         @NotNull
         private Long id;
         // {capabilityType: [weekNrs from all studyPeriods ordered by studyPeriod.startDate]}
-        private Map<String, List<Integer>> hours;
+        private Map<String, List<Short>> hours;
 
         public Long getId() {
             return id;
@@ -88,11 +88,11 @@ public class LessonPlanForm extends VersionedCommand {
             this.id = id;
         }
 
-        public Map<String, List<Integer>> getHours() {
+        public Map<String, List<Short>> getHours() {
             return hours;
         }
 
-        public void setHours(Map<String, List<Integer>> hours) {
+        public void setHours(Map<String, List<Short>> hours) {
             this.hours = hours;
         }
     }

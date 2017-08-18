@@ -25,7 +25,7 @@ public class StudentViewDto extends StudentForm {
     private String studyLanguage;
     private AutocompleteResult curriculumSpeciality;
     private AutocompleteResult studentGroup;
-    private Integer course;
+    private Short course;
     private LocalDate studyStart;
     private LocalDate nominalStudyEnd;
     private String studyForm;
@@ -106,11 +106,11 @@ public class StudentViewDto extends StudentForm {
         this.studentGroup = studentGroup;
     }
 
-    public Integer getCourse() {
+    public Short getCourse() {
         return course;
     }
 
-    public void setCourse(Integer course) {
+    public void setCourse(Short course) {
         this.course = course;
     }
 

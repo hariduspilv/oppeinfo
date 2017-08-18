@@ -3,26 +3,33 @@
 angular.module('hitsaOis')
   .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog) {
 
+    function successfulAuthentication(auth) {
+      if (auth) {
+        $rootScope.$broadcast(AUTH_EVENTS.loginSuccess);
+        $rootScope.setCurrentUser(auth);
+        setLoggedInVisuals(auth);
+        $scope.error = false;
+        $mdDialog.hide();
+      } else {
+        $rootScope.setCurrentUser(null);
+        setLoggedInVisuals({});
+      }
+    }
+
+    function failedAuthentication() {
+      $scope.error = true;
+      $rootScope.$broadcast(AUTH_EVENTS.loginFailed);
+    }
+
     var authenticate = function(credentials) {
       var headers = credentials ? {authorization : "Basic " +
         btoa(credentials.username + ":" + "undefined")
         } : {};
-      AuthService.login(headers).then(function (auth) {
-        if (auth) {
-          $rootScope.$broadcast(AUTH_EVENTS.loginSuccess);
-          $rootScope.setCurrentUser(auth);
-          setLoggedInVisuals(auth);
-          $scope.error = false;
-          $mdDialog.hide();
-        } else {
-          $rootScope.setCurrentUser(null);
-          setLoggedInVisuals({});
-        }
-      }, function () {
-        console.log('udonth happen right?');
-        $scope.error = true;
-        $rootScope.$broadcast(AUTH_EVENTS.loginFailed);
-      });
+      AuthService.login(headers).then(successfulAuthentication, failedAuthentication);
+    };
+
+    var authenticateIdCard = function() {
+      AuthService.loginIdCard().then(successfulAuthentication, failedAuthentication);
     };
 
     var showAlert = function () {
@@ -41,6 +48,13 @@ angular.module('hitsaOis')
 
     $scope.login = function () {
       authenticate($scope.credentials);
+      if (AuthService.isAuthenticated()) {
+        $location.path("/");
+      }
+    };
+
+    $scope.idlogin = function () {
+      authenticateIdCard();
       if (AuthService.isAuthenticated()) {
         $location.path("/");
       }

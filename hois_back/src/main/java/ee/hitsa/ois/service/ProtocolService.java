@@ -96,7 +96,7 @@ public class ProtocolService {
                 + "inner join curriculum c on c.id = cv.curriculum_id "
                 + "where p.is_vocational = true and " + "ps.student_id = :studentId and "
                 + "p.status_code = :protocolStatusCode "
-                + "order by cm.id desc) as module_result " + "order by module_result.p_confirm_date desc");
+                + "order by cm.id desc, confirm_date desc) as module_result " + "order by module_result.p_confirm_date desc");
 
         qb.parameter("protocolStatusCode", ProtocolStatus.PROTOKOLL_STAATUS_K.name());
         qb.parameter("studentId", EntityUtil.getId(student));

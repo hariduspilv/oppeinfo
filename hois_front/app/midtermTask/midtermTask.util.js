@@ -4,8 +4,6 @@ angular.module('hitsaOis').factory('MidtermTaskUtil', ['$rootScope', 'DataUtils'
 
     var MidtermTaskUtil = function() {
 
-      var self = this;
-
       function getNumberWithZero(number) {
         return number < 10 ? "0" + number : number;
       }

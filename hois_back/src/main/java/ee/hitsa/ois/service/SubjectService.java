@@ -3,7 +3,6 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.math.BigDecimal;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -17,6 +16,12 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
+
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -33,19 +38,14 @@ import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
-import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
-import ee.hitsa.ois.web.commandobject.SubjectForm;
-import ee.hitsa.ois.web.dto.SubjectSearchDto;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import ee.hitsa.ois.web.commandobject.SubjectForm;
+import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
+import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.dto.SubjectSearchDto;
 
 @Transactional
 @Service
@@ -69,8 +69,7 @@ public class SubjectService {
     }
 
     public Subject save(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
-        // TODO remove comment when status change logic is resolved
-        EntityUtil.bindToEntity(newSubject, subject, classifierRepository /*, "status"*/);
+        EntityUtil.bindToEntity(newSubject, subject, classifierRepository, "status");
         subject.setSchool(schoolRepository.getOne(user.getSchoolId()));
         SchoolDepartment schoolDepartment = null;
         if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().getId() != null && newSubject.getSchoolDepartment().getId().longValue() > 0) {
@@ -199,5 +198,22 @@ public class SubjectService {
 
     public void delete(Subject subject) {
         EntityUtil.deleteEntity(subjectRepository, subject);
+    }
+
+    public boolean isCodeUnique(Long schoolId, UniqueCommand command) {
+        if(command.getId() == null) {
+            return !subjectRepository.existsBySchoolIdAndCode(schoolId, command.getParamValue());
+        }
+        return !subjectRepository.existsBySchoolIdAndCodeAndIdNot(schoolId, command.getParamValue(), command.getId());
+    }
+
+    public Subject saveAndConfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
+        subject.setStatus(classifierRepository.getOne(SubjectStatus.AINESTAATUS_K.name()));
+        return save(user, subject, newSubject);
+    }
+
+    public Subject saveAndUnconfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
+        subject.setStatus(classifierRepository.getOne(SubjectStatus.AINESTAATUS_P.name()));
+        return save(user, subject, newSubject);
     }
 }

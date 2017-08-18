@@ -19,7 +19,7 @@ public class LessonTime extends BaseEntityWithId {
 
     private LocalTime startTime;
     private LocalTime endTime;
-    private Integer lessonNr;
+    private Short lessonNr;
     private Boolean dayMon;
     private Boolean dayTue;
     private Boolean dayWed;
@@ -56,11 +56,11 @@ public class LessonTime extends BaseEntityWithId {
         this.endTime = endTime;
     }
 
-    public Integer getLessonNr() {
+    public Short getLessonNr() {
         return lessonNr;
     }
 
-    public void setLessonNr(Integer lessonNr) {
+    public void setLessonNr(Short lessonNr) {
         this.lessonNr = lessonNr;
     }
 

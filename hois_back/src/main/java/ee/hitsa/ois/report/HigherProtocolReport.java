@@ -1,5 +1,7 @@
 package ee.hitsa.ois.report;
 
+import static ee.hitsa.ois.util.TranslateUtil.name;
+
 import java.time.LocalDate;
 import java.util.Objects;
 import java.util.Set;
@@ -35,12 +37,12 @@ public class HigherProtocolReport {
         Objects.requireNonNull(protocol);
         protocolNr = protocol.getProtocolNr();
         inserted = protocol.getInserted().toLocalDate();
-        status = protocol.getStatus().getNameEt();
-        type = protocol.getProtocolHdata().getType().getNameEt();
+        status = name(protocol.getStatus(), lang);
+        type = name(protocol.getProtocolHdata().getType(), lang);
         SubjectStudyPeriod ssp = protocol.getProtocolHdata().getSubjectStudyPeriod();
         Subject s = ssp.getSubject();
         subject = SubjectUtil.subjectName(s.getCode(), s.getNameEt(), s.getCredits());
-        studyPeriod = ssp.getStudyPeriod().getNameEt();
+        studyPeriod = name(ssp.getStudyPeriod(), lang);
         confirmer = protocol.getConfirmer();
         confirmDate = protocol.getConfirmDate();
         teachers = StreamUtil.toMappedSet(t -> PersonUtil.fullname(t.getTeacher().getPerson()), 
@@ -48,7 +50,7 @@ public class HigherProtocolReport {
         protocolStudents = StreamUtil.toMappedSet(ps -> new HigherProtocolStudentReport(ps), 
                 protocol.getProtocolStudents());
     }
-    
+
     public Set<HigherProtocolStudentReport> getProtocolStudents() {
         return protocolStudents;
     }

@@ -3,6 +3,10 @@ package ee.hitsa.ois.web.commandobject;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
+import javax.validation.constraints.DecimalMax;
+import javax.validation.constraints.DecimalMin;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.validation.ContractValidation;
@@ -16,12 +20,15 @@ public class ContractForm extends VersionedCommand {
     private AutocompleteResult student;
     @NotNull(groups = ContractValidation.Vocational.class)
     private Long module;
-    @NotNull(groups = ContractValidation.Vocational.class)
     private Long theme;
     @NotNull
+    @DecimalMin("0")
+    @DecimalMax("999.9")
     private BigDecimal credits;
     @NotNull
-    private Integer hours;
+    @Min(0)
+    @Max(Short.MAX_VALUE)
+    private Short hours;
     @NotNull
     private LocalDate startDate;
     @NotNull
@@ -83,11 +90,11 @@ public class ContractForm extends VersionedCommand {
         this.credits = credits;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 

@@ -101,49 +101,110 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
   $scope.auth = $route.current.locals.auth;
 
   $scope.student = $route.current.locals.student;
+  $scope.studentId = $route.current.params.id;  //used in links in html files
 
   $scope.isStudentCurriculumFulfilled = function (student) {
     return student && angular.isNumber(student.credits) && student.credits >= student.curriculumCredits;
   };
-}]).controller('StudentViewResultsVocationalController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', function ($q, $route, $scope, Classifier, QueryUtils) {
+}]).controller('StudentViewResultsVocationalController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', function ($q, $route, $scope, Classifier, QueryUtils, $rootScope) {
   var gradeMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', studyYear: 'OPPEAASTA' });
+  var moduleMapper = Classifier.valuemapper({ module: 'KUTSEMOODUL' });
   $scope.loadCurriculumFulfillment = function () {
     if (!angular.isObject($scope.vocationalResultsCurriculum)) {
-      $scope.vocationalResultsCurriculum = $scope.vocationalResults;
+      var curriculumModulesById = {};
+      $scope.vocationalResults.curriculumModules.forEach(function (it) {
+        curriculumModulesById[it.id] = it;
+      });
+      $scope.vocationalResults.extraCurriculaModules.forEach(function (it) {
+        curriculumModulesById[it.id] = it;
+      });
+
+      var extracurricularVocationalModuleResults = [];
+      var moduleResultById = {};
+      $scope.vocationalResults.results.forEach(function (it) {
+        if (!angular.isObject(moduleResultById[it.module.id])) {
+          moduleResultById[it.module.id] = { themeResultById: {}, totalSubmitted: 0 };
+        }
+
+        if (angular.isObject(it.theme)) {
+          moduleResultById[it.module.id].themeResultById[it.theme.id] = it;
+          moduleResultById[it.module.id].totalSubmitted += it.credits;
+        } else {
+          angular.extend(moduleResultById[it.module.id], it);
+          //extra curricula module results
+          if (!angular.isObject(curriculumModulesById[it.module.id])) {
+            extracurricularVocationalModuleResults.push(it);
+          }
+        }
+      });
+
+      $scope.moduleResultById = moduleResultById;
+      $scope.positiveThemeResult = function (themeResult) {
+        return angular.isObject(themeResult) && angular.isObject(themeResult.grade) && angular.isString(themeResult.grade.value) && parseInt(themeResult.grade.value) > 2;
+      };
+      $scope.vocationalResultsCurriculum = {};
+      $scope.vocationalResultsCurriculum.vocationalResultsModules = $scope.vocationalResults.curriculumModules.sort(function (m1, m2) {
+        return $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
+      });
+      $scope.vocationalResultsCurriculum.extraCurriculaVocationalResultsModules = $scope.vocationalResults.extraCurriculaModules.sort(function (m1, m2) {
+        return $rootScope.currentLanguageNameField(m1.curriculumModule).localeCompare($rootScope.currentLanguageNameField(m2.curriculumModule));
+      });
+
+      $scope.allThemesHavePositiveGrade = function (module) {
+        var themes = curriculumModulesById[module.id].themes;
+        if (themes.length === 0) {
+          return false;
+        }
+
+        var allThemesGraded = true;
+        for (var i = 0; i < themes.length; i++) {
+          var theme = themes[i];
+          if (!angular.isObject(moduleResultById[module.id]) || !angular.isObject(moduleResultById[module.id].themeResultById[theme.id]) || !$scope.positiveThemeResult(moduleResultById[module.id].themeResultById[theme.id])) {
+            allThemesGraded = false;
+            break;
+          }
+        }
+        return allThemesGraded;
+      };
     }
   };
+
+
   $scope.loadStudyYearResults = function () {
     if (!angular.isObject($scope.vocationalResultsStudyYear)) {
       var yearToModule = {};
-      $scope.vocationalResults.forEach(function (it) {
+      $scope.vocationalResults.results.forEach(function (it) {
         if (!angular.isObject(yearToModule[it.studyYear.code])) {
           yearToModule[it.studyYear.code] = { studyYear: it.studyYear, studyYearStartDate: it.studyYearStartDate, kkh: 0, credits: 0, results: [] };
         }
         yearToModule[it.studyYear.code].results.push(it);
       });
 
-      var vocationalResultsStudyYear = Object.values(yearToModule).sort(function (a, b) { return a.studyYearStartDate > b.studyYearStartDate; });
-      var accumulatedCredits = 0;
+      var vocationalResultsStudyYear = Object.values(yearToModule);
       vocationalResultsStudyYear.forEach(function (studyYearModulesThemes) {
         var creditsSum = 0;
         var gradeCreditsSum = 0;
         studyYearModulesThemes.results.forEach(function (moduleTheme) {
           if (moduleTheme.theme === null) {
-            accumulatedCredits += moduleTheme.credits;
-            creditsSum += moduleTheme.credits;
-            gradeCreditsSum += moduleTheme.credits * parseInt(moduleTheme.grade.value);
+            var grade = parseInt(moduleTheme.grade.value);
+            if ($scope.positiveGrade(grade)) {
+              creditsSum += moduleTheme.credits;
+              gradeCreditsSum += moduleTheme.credits * parseInt(grade);
+            }
           }
         });
 
         if (creditsSum !== 0) {
           studyYearModulesThemes.kkh = gradeCreditsSum / creditsSum;
         }
-        studyYearModulesThemes.credits = accumulatedCredits;
+        studyYearModulesThemes.credits = creditsSum;
       });
 
       $scope.vocationalResultsStudyYear = vocationalResultsStudyYear.sort(function (a, b) { return a.studyYearStartDate < b.studyYearStartDate; });
     }
   };
+
+
   $scope.loadModuleThemeResults = function () {
     if (!angular.isObject($scope.vocationalResultsPassing)) {
       $scope.vocationalResultsPassing = $scope.vocationalResults;
@@ -151,19 +212,34 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
   };
 
   $scope.displayTeachers = function (teachers) {
-    return teachers.map(function (teacher) { return teacher.nameEt; }).sort().join(', ');
+    if (angular.isArray(teachers)) {
+      return teachers.map(function (teacher) { return teacher.nameEt; }).sort().join(', ');
+    }
+  };
+
+  $scope.positiveGrade = function (grade) {
+    return (angular.isNumber(grade) && grade > 2) || (angular.isString(grade) && parseInt(grade) > 2);
   };
 
   function loadVocationalResults() {
     if (!angular.isObject($scope.vocationalResults)) {
-      QueryUtils.endpoint('/students/' + $scope.student.id + '/vocationalResults').query(function (result) {
-        $scope.vocationalResults = gradeMapper.objectmapper(result);
+      QueryUtils.endpoint('/students/' + $scope.student.id + '/vocationalResults').get(function (vocationalResults) {
+        vocationalResults.results = gradeMapper.objectmapper(vocationalResults.results);
+        vocationalResults.curriculumModules.forEach(function (it) {
+          it.curriculumModule = moduleMapper.objectmapper(it.curriculumModule);
+        });
+        vocationalResults.extraCurriculaModules.forEach(function (it) {
+          it.curriculumModule = moduleMapper.objectmapper(it.curriculumModule);
+        });
+        $scope.vocationalResults = vocationalResults;
+        //load first tab
+        $scope.loadCurriculumFulfillment();
       });
     }
   }
 
   loadVocationalResults();
-  $scope.loadCurriculumFulfillment();
+
 }]).controller('StudentViewResultsHigherController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope',
   function ($q, $route, $scope, Classifier, QueryUtils, $rootScope) {
 
@@ -286,17 +362,27 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
         $location.path('/students/' + id + '/main');
       });
     };
-  }]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
-    function ($mdDialog, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
+  }]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'QueryUtils',
+    function ($mdDialog, $route, $scope, dialogService, message, QueryUtils) {
       $scope.studentId = $route.current.params.id;
       $scope.currentNavItem = 'student.absences';
-      QueryUtils.createQueryForm($scope, '/students/' + $scope.studentId + '/absences', { order: 'validFrom' }, function (rows) {
-        DataUtils.convertStringToDates(rows, ['validFrom', 'validThru']);
-      });
+      QueryUtils.createQueryForm($scope, '/students/' + $scope.studentId + '/absences', { order: 'validFrom'});
+
+      var oldAfterLoadData = $scope.afterLoadData;
+      $scope.afterLoadData = function(resultData) {
+        $scope.tabledata.studentName = resultData.studentName;
+        $scope.tabledata.studentGroup = resultData.studentGroup;
+        $scope.tabledata.canAddAbsence = resultData.canAddAbsence;
+        oldAfterLoadData(resultData);
+      };
 
       $scope.editAbsence = function (absence) {
         var AbsenceEndpoint = QueryUtils.endpoint('/students/' + $scope.studentId + '/absences');
         var loadAbsences = $scope.loadData;
+
+        absence = angular.copy(absence, {});
+        absence.studentName = $scope.tabledata.studentName;
+        absence.studentGroup = $scope.tabledata.studentGroup;
 
         $mdDialog.show({
           controller: function ($scope) {

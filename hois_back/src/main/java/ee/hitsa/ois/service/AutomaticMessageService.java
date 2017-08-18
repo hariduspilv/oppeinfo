@@ -33,6 +33,7 @@ import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.BadConfigurationExcecption;
 import ee.hitsa.ois.repository.MessageRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.DataUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -171,7 +172,7 @@ public class AutomaticMessageService {
         Long schoolId = EntityUtil.getId(school);
         MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
         if (template == null) {
-            throw new BadConfigurationExcecption(String.format("no message template %s found for school %d", type.name(), schoolId));
+            throw new BadConfigurationExcecption("main.messages.error.configuration.missingAutomaticMessageTempalate", DataUtil.asMap("template", type.name(), "school", schoolId));
         }
 
         try {

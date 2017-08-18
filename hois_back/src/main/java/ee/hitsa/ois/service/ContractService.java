@@ -14,7 +14,6 @@ import java.util.UUID;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import javax.validation.ValidationException;
 import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,6 +47,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.validation.ContractValidation;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ContractForm;
 import ee.hitsa.ois.web.commandobject.ContractSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -279,10 +279,10 @@ public class ContractService {
     private void assertValidationRules(ContractForm contractForm) {
         if (Boolean.TRUE.equals(contractForm.getIsHigher()) &&
                 !validator.validate(contractForm, ContractValidation.Higher.class).isEmpty()) {
-            throw new ValidationException("contract.messages.subjectRequired");
+            throw new ValidationFailedException("contract.messages.subjectRequired");
         } else if (Boolean.FALSE.equals(contractForm.getIsHigher()) &&
                 !validator.validate(contractForm, ContractValidation.Vocational.class).isEmpty()) {
-            throw new ValidationException("contract.messages.moduleAndThemerequired");
+            throw new ValidationFailedException("contract.messages.moduleRequired");
         }
     }
 

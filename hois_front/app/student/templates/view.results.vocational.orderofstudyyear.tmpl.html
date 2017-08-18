@@ -1,6 +1,5 @@
 <div ng-repeat="studyYearResult in vocationalResultsStudyYear">
   <hois-collapsable label="currentLanguageNameField(studyYearResult.studyYear) + ' ' + ('studyYear.label' | translate)" expanded="false">
-
     <md-table-container>
       <table md-table>
         <thead md-head>
@@ -23,9 +22,14 @@
         </tbody>
       </table>
     </md-table-container>
-    <div class="md-body-2 bold">
-      <span>{{'student.result.totalCredits' | translate}}: {{studyYearResult.credits}}</span> <span>{{'student.result.kkh' | translate}}: {{studyYearResult.kkh.toFixed(2)}}</span>
+    <div class="md-body-2 bold" layout="row">
+      <div>{{'student.result.totalCredits' | translate}}: {{studyYearResult.credits}}</div>
+      <div flex-offset="10">{{'student.result.kkh' | translate}}: {{studyYearResult.kkh.toFixed(2)}}</div>
     </div>
     <br><br>
   </hois-collapsable>
+</div>
+
+<div ng-if="vocationalResultsStudyYear && vocationalResultsStudyYear.length==0">
+  <span>{{'student.result.missing' | translate}}</span>
 </div>

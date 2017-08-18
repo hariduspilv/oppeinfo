@@ -82,7 +82,7 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
         this.endDate = endDate;
     }
 
-    private int firstWeekNr() {
+    private short firstWeekNr() {
         LocalDate yearStart = studyYear.getStartDate();
         if (yearStart.getDayOfWeek() != DayOfWeek.MONDAY) {
             yearStart = yearStart.with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
@@ -93,13 +93,13 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
         }
 
         //find the first week in the current study period
-        int weekNr = 1;
+        short weekNr = 1;
         while (!spStart.isEqual(yearStart)) {
             yearStart = yearStart.plusDays(7);
             weekNr++;
         }
 
-        //search for another study period in the first week of this study period 
+        //search for another study period in the first week of this study period
         //if such a study period exists, add a week
         Set<StudyPeriod> periods = studyYear.getStudyPeriods();
         for (StudyPeriod period : periods) {
@@ -116,17 +116,17 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
      * returns all the week nrs in this study period
      */
     @Transient
-    public List<Integer> getWeekNrs() {
-        int weekNr = firstWeekNr();
+    public List<Short> getWeekNrs() {
+        short weekNr = firstWeekNr();
         //get all the week nrs from the first until the end
-        List<Integer> weekNrs = new ArrayList<>();
+        List<Short> weekNrs = new ArrayList<>();
         while (endDate.isAfter(spStart) || endDate.isEqual(spStart)) {
-            weekNrs.add(Integer.valueOf(weekNr++));
+            weekNrs.add(Short.valueOf(weekNr++));
             spStart = spStart.plusDays(7);
         }
         return weekNrs;
     }
-    
+
     public Integer getWeekNrForDate(LocalDate date) {
         if((date.isAfter(startDate) || date.isEqual(startDate)) && (date.isBefore(endDate) || endDate.isEqual(date))) {
             int weekNr = firstWeekNr();

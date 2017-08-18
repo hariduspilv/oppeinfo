@@ -1,9 +1,9 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
@@ -151,13 +151,13 @@ public class TimetableEventService {
     }
 
     private Map<Long, List<ResultObject>> getTeacherNamesByTimetableEventTime(List<Long> tetIds) {
-        String from = "timetable_event_teacher tet" + " inner join teacher t on t.id = teteacher.teacher_id"
+        String from = "from timetable_event_teacher tet" + " inner join teacher t on t.id = tet.teacher_id"
                 + " inner join person p on p.id = t.person_id";
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
 
-        qb.requiredCriteria("teteacher.timetable_event_time_id in (:tetIds)", "tetIds", tetIds);
+        qb.requiredCriteria("tet.timetable_event_time_id in (:tetIds)", "tetIds", tetIds);
 
-        List<?> queryResult = qb.select("tet.timetable_event_time_id, p.firstname, p.lastname", em).getResultList();
+        List<?> queryResult = qb.select("timetable_event_time_id, p.firstname, p.lastname", em).getResultList();
         List<ResultObject> resultObjects = StreamUtil.toMappedList(
                 r -> new ResultObject(resultAsLong(r, 0), resultAsString(r, 1) + " " + resultAsString(r, 2)),
                 queryResult);
@@ -165,10 +165,10 @@ public class TimetableEventService {
     }
 
     private Map<Long, List<ResultObject>> getRoomNrsByTimetableEventTime(List<Long> tetIds) {
-        String from = "timetable_event_room ter" + " inner join room r on r.id = ter.room_id";
+        String from = "from timetable_event_room ter" + " inner join room r on r.id = ter.room_id";
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
 
-        qb.requiredCriteria("tet.timetable_event_time_id in (:tetIds)", "tetIds", tetIds);
+        qb.requiredCriteria("ter.timetable_event_time_id in (:tetIds)", "tetIds", tetIds);
 
         List<?> queryResult = qb.select("ter.timetable_event_time_id, r.code", em).getResultList();
         List<ResultObject> resultObjects = StreamUtil

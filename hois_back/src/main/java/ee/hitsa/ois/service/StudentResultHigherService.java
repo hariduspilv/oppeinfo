@@ -25,10 +25,10 @@ import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
-import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherElectiveModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherModuleResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
+import ee.hitsa.ois.web.dto.student.StudentHigherStudyPeriodResultDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultDto;
 
 @Service
@@ -56,11 +56,11 @@ public class StudentResultHigherService {
         calculateModulesCompletion(dto);
         calculateAverageGrade(dto);
         calculateCurriculumCompletion(dto);
-        setStudyPeriods(dto);
+        setStudyPeriodResults(dto);
         return dto;
     }
 
-    private void setExtraCurriculumSubjects(StudentHigherResultDto dto) {
+    private static void setExtraCurriculumSubjects(StudentHigherResultDto dto) {
         List<StudentHigherSubjectResultDto> extraCurriculumSubjects = dto.getSubjectResults().stream()
                 .filter(s -> Boolean.TRUE.equals(s.getIsExtraCurriculum())).collect(Collectors.toList());
         if(!CollectionUtils.isEmpty(extraCurriculumSubjects)) {
@@ -70,19 +70,19 @@ public class StudentResultHigherService {
                 StudentHigherModuleResultDto freeModule = StudentHigherModuleResultDto.createFreeModule();
                 setSubjectsToModule(freeModule, extraCurriculumSubjects);
                 dto.getModules().add(freeModule);
-            } else if (freeModules.size() == 1) {
+            } else {
                 setSubjectsToModule(freeModules.get(0), extraCurriculumSubjects);
             }
         }
     }
 
-    private void setSubjectsToModule(StudentHigherModuleResultDto module, List<StudentHigherSubjectResultDto> subjects) {
+    private static void setSubjectsToModule(StudentHigherModuleResultDto module, List<StudentHigherSubjectResultDto> subjects) {
         for(StudentHigherSubjectResultDto subject : subjects) {
             subject.setHigherModule(new AutocompleteResult(module.getId(), module.getNameEt(), module.getNameEn()));
         }
     }
 
-    private List<StudentHigherSubjectResultDto> getModuleSubjects(List<CurriculumVersionHigherModule> modules) {
+    private static List<StudentHigherSubjectResultDto> getModuleSubjects(List<CurriculumVersionHigherModule> modules) {
         List<CurriculumVersionHigherModuleSubject> moduleSubjects = new ArrayList<>();
         for(CurriculumVersionHigherModule module : modules) {
             moduleSubjects.addAll(module.getSubjects());
@@ -97,7 +97,7 @@ public class StudentResultHigherService {
         return StreamUtil.toMappedList(StudentHigherSubjectResultDto::ofFromProtocolStudent, studentResults);
     }
 
-    private List<StudentHigherSubjectResultDto> mergeModuleSubjectsAndResults(
+    private static List<StudentHigherSubjectResultDto> mergeModuleSubjectsAndResults(
             List<StudentHigherSubjectResultDto> moduleSubjects, List<StudentHigherSubjectResultDto> studentResults) {
         for(StudentHigherSubjectResultDto moduleSubject : moduleSubjects) {
             List<StudentHigherSubjectResultDto> subjectsResults = getStudentResultsForSubject(moduleSubject.getSubject().getId(), studentResults);
@@ -107,11 +107,11 @@ public class StudentResultHigherService {
         return moduleSubjects;
     }
 
-    private List<StudentHigherSubjectResultDto> getStudentResultsForSubject(Long subjectId, List<StudentHigherSubjectResultDto> studentResults) {
+    private static List<StudentHigherSubjectResultDto> getStudentResultsForSubject(Long subjectId, List<StudentHigherSubjectResultDto> studentResults) {
         return studentResults.stream().filter(sr -> sr.getSubject().getId().equals(subjectId)).collect(Collectors.toList());
     }
 
-    private void addGrades(StudentHigherSubjectResultDto moduleSubject,
+    private static void addGrades(StudentHigherSubjectResultDto moduleSubject,
             List<StudentHigherSubjectResultDto> subjectsResults) {
         for(StudentHigherSubjectResultDto subjectResult : subjectsResults) {
             moduleSubject.getGrades().addAll(subjectResult.getGrades());
@@ -119,7 +119,7 @@ public class StudentResultHigherService {
         }
     }
 
-    private void addResultsForExtraCurriculumSubjects(List<StudentHigherSubjectResultDto> moduleSubjects,
+    private static void addResultsForExtraCurriculumSubjects(List<StudentHigherSubjectResultDto> moduleSubjects,
             List<StudentHigherSubjectResultDto> studentResults) {
         List<StudentHigherSubjectResultDto> extraCurriculumResults =
                 studentResults.stream().filter(sr ->
@@ -128,7 +128,7 @@ public class StudentResultHigherService {
         moduleSubjects.addAll(extraCurriculumResults);
     }
 
-    private void mergeEstraCurriculumResutls(List<StudentHigherSubjectResultDto> extraCurriculumResults) {
+    private static void mergeEstraCurriculumResutls(List<StudentHigherSubjectResultDto> extraCurriculumResults) {
         Map<Long, StudentHigherSubjectResultDto> map = new HashMap<>();
         Iterator<StudentHigherSubjectResultDto> iterator = extraCurriculumResults.iterator();
         while(iterator.hasNext()) {
@@ -143,13 +143,13 @@ public class StudentResultHigherService {
         }
     }
 
-    private void calculateIsOk(List<StudentHigherSubjectResultDto> mergedList) {
+    private static void calculateIsOk(List<StudentHigherSubjectResultDto> mergedList) {
         for(StudentHigherSubjectResultDto studentResult : mergedList) {
             studentResult.calculateIsOk();
         }
     }
 
-    private void calculateModulesCompletion(StudentHigherResultDto dto) {
+    private static void calculateModulesCompletion(StudentHigherResultDto dto) {
         for(StudentHigherModuleResultDto module : dto.getModules()) {
             List<StudentHigherSubjectResultDto> modulesPositiveResults = filterModulesPositiveResults(module.getId(), dto.getSubjectResults());
             module.setMandatoryCreditsSubmitted(calculateCredits(modulesPositiveResults, Boolean.FALSE));
@@ -163,29 +163,29 @@ public class StudentResultHigherService {
     }
 
 
-    private void calculateElectiveModulesCompletion(List<StudentHigherSubjectResultDto> subjectResults,
+    private static void calculateElectiveModulesCompletion(List<StudentHigherSubjectResultDto> subjectResults,
             StudentHigherModuleResultDto module) {
         for(StudentHigherElectiveModuleResultDto electiveModule : module.getElectiveModulesResults()) {
             List<StudentHigherSubjectResultDto> subjects = subjectResults.stream()
                     .filter(s -> s.getElectiveModule() != null && electiveModule.getId()
                     .equals(s.getElectiveModule())).collect(Collectors.toList());
-            electiveModule.setIsOk(subjects.stream().allMatch(s -> Boolean.TRUE.equals(s.getIsOk())));
+            electiveModule.setIsOk(Boolean.valueOf(subjects.stream().allMatch(s -> Boolean.TRUE.equals(s.getIsOk()))));
         }
     }
 
-    private List<StudentHigherSubjectResultDto> filterModulesPositiveResults(
+    private static List<StudentHigherSubjectResultDto> filterModulesPositiveResults(
             Long module, List<StudentHigherSubjectResultDto> subjectResults) {
         return subjectResults.stream().filter(r -> r.getHigherModule() != null &&
                 module.equals(r.getHigherModule().getId())).filter(r -> Boolean.TRUE.equals(r.getIsOk())).collect(Collectors.toList());
     }
 
-    private BigDecimal calculateCredits(List<StudentHigherSubjectResultDto> modulesPositiveResults, Boolean isOptional) {
+    private static BigDecimal calculateCredits(List<StudentHigherSubjectResultDto> modulesPositiveResults, Boolean isOptional) {
         Optional<BigDecimal> credits = modulesPositiveResults.stream().filter(r -> isOptional.equals(r.getIsOptional()))
                 .map(r -> r.getSubject().getCredits()).reduce((c, sum) -> c.add(sum));
         return credits.isPresent() ? credits.get() : BigDecimal.ZERO;
     }
 
-    private BigDecimal calculateTotalDifference(StudentHigherModuleResultDto module) {
+    private static BigDecimal calculateTotalDifference(StudentHigherModuleResultDto module) {
 
         if (optionalCreditsDebt(module) && !mandatoryCreditsDebt(module)) {
             return module.getOptionalDifference();
@@ -195,15 +195,15 @@ public class StudentResultHigherService {
         return module.getOptionalDifference().add(module.getMandatoryDifference());
     }
 
-    private boolean optionalCreditsDebt(StudentHigherModuleResultDto module) {
+    private static boolean optionalCreditsDebt(StudentHigherModuleResultDto module) {
         return BigDecimal.ZERO.compareTo(module.getOptionalDifference()) == 1;
     }
 
-    private boolean mandatoryCreditsDebt(StudentHigherModuleResultDto module) {
+    private static boolean mandatoryCreditsDebt(StudentHigherModuleResultDto module) {
         return BigDecimal.ZERO.compareTo(module.getMandatoryDifference()) == 1;
     }
 
-    private void calculateAverageGrade(StudentHigherResultDto dto) {
+    private static void calculateAverageGrade(StudentHigherResultDto dto) {
         BigDecimal numerator = BigDecimal.ZERO;
         BigDecimal denominator = BigDecimal.ZERO;
 
@@ -216,7 +216,7 @@ public class StudentResultHigherService {
                 BigDecimal credits = subjectResult.getSubject().getCredits();
 
                 if(subjectResult.isDistinctiveAssessment()) {
-                    BigDecimal gradeMark = BigDecimal.valueOf(subjectResult.getLastGrade().getGradeMark());
+                    BigDecimal gradeMark = BigDecimal.valueOf(subjectResult.getLastGrade().getGradeMark().longValue());
                     numerator = numerator.add(gradeMark.multiply(credits));
                     denominator = denominator.add(credits);
                 }
@@ -233,13 +233,12 @@ public class StudentResultHigherService {
         dto.setCreditsSubmitted(creditsSubmitted);
     }
 
-    private void calculateCurriculumCompletion(StudentHigherResultDto dto) {
+    private static void calculateCurriculumCompletion(StudentHigherResultDto dto) {
         boolean isOk = !CollectionUtils.isEmpty(dto.getModules()) && dto.getModules().stream().allMatch(m -> Boolean.TRUE.equals(m.getIsOk()));
         dto.setIsCurriculumFulfilled(Boolean.valueOf(isOk));
     }
     
-
-    private void setStudyPeriods(StudentHigherResultDto dto) {
+    private void setStudyPeriodResults(StudentHigherResultDto dto) {
         Set<Long> studyPeriodIds = StreamUtil.toMappedSet(r -> r.getLastGrade().getStudyPeriod(), 
                 dto.getSubjectResults().stream()
                 .filter(r -> r.getLastGrade() != null && 
@@ -249,7 +248,52 @@ public class StudentResultHigherService {
             List<StudyPeriod> studyPeriods = studyPeriodRepository.findAll((root, query, cb) -> {
                 return root.get("id").in(studyPeriodIds);
             });
-            dto.setStudyPeriods(StreamUtil.toMappedList(StudyPeriodDto::of, studyPeriods));
+            List<StudentHigherStudyPeriodResultDto> results = StreamUtil.toMappedList(StudentHigherStudyPeriodResultDto::of, studyPeriods);
+            for(StudentHigherStudyPeriodResultDto result : results) {
+                List<StudentHigherSubjectResultDto> subjects = filterSubjectsByStudyPeriod(result, dto.getSubjectResults());
+                result.setAverageGrade(calculateStudyPeriodAverageGrade(subjects));
+                result.setTotal(calculateTotalCredits(subjects));
+            }
+            dto.setStudyPeriodResults(results);
         }
+    }
+    
+    private static List<StudentHigherSubjectResultDto> filterSubjectsByStudyPeriod(
+            StudentHigherStudyPeriodResultDto result, List<StudentHigherSubjectResultDto> studyPeriodResults) {
+        return studyPeriodResults.stream().filter(s -> s.getLastGrade() != null && 
+                Boolean.TRUE.equals(s.getIsOk()) && 
+                s.getLastGrade().getStudyPeriod()
+                .equals(result.getStudyPeriod().getId()))
+                .collect(Collectors.toList());
+    }
+
+    private static BigDecimal calculateTotalCredits(List<StudentHigherSubjectResultDto> subjects) {
+        BigDecimal sum = BigDecimal.ZERO;
+        for(StudentHigherSubjectResultDto subject : subjects) {
+            sum = sum.add(subject.getSubject().getCredits());
+        }
+        return sum;
+    }
+
+    private static BigDecimal calculateStudyPeriodAverageGrade(List<StudentHigherSubjectResultDto> subjects) {
+        BigDecimal numerator = BigDecimal.ZERO;
+        BigDecimal denominator = BigDecimal.ZERO;
+
+        for(StudentHigherSubjectResultDto subjectResult : subjects) {
+
+            if(Boolean.TRUE.equals(subjectResult.getIsOk())) {
+                BigDecimal credits = subjectResult.getSubject().getCredits();
+
+                if(subjectResult.isDistinctiveAssessment()) {
+                    BigDecimal gradeMark = BigDecimal.valueOf(subjectResult.getLastGrade().getGradeMark().longValue());
+                    numerator = numerator.add(gradeMark.multiply(credits));
+                    denominator = denominator.add(credits);
+                }
+            }
+        }
+        if(BigDecimal.ZERO.compareTo(denominator) != 0) {
+            return numerator.divide(denominator, 3, BigDecimal.ROUND_HALF_UP);
+        } 
+        return null;
     }
 }

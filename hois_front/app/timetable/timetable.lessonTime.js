@@ -251,7 +251,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
         });
       }
     } else if(!eachBlockHasOneValidRow()){
-      message.error('timetable.lessonTime.oneRowRequired')
+      message.error('timetable.lessonTime.oneRowRequired');
     } else {
       console.log($scope.lessonTimeForm.$error);
     }

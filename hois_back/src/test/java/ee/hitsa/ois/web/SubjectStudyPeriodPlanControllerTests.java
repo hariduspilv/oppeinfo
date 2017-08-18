@@ -25,12 +25,12 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanDto;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class SubjectStudyPeriodPlanControllerTests {
-    
+
     private static final String BASE_URL = "/subjectStudyPeriodPlans";
-    
+
     @Autowired
     private TestRestTemplate restTemplate;
-    
+
     @Autowired
     private TestConfigurationService testConfigurationService;
 
@@ -43,7 +43,7 @@ public class SubjectStudyPeriodPlanControllerTests {
     public void cleanUp() {
         testConfigurationService.setSessionCookie(null);
     }
-    
+
     @Test
     public void search() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL);
@@ -54,7 +54,7 @@ public class SubjectStudyPeriodPlanControllerTests {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void get() {
         Long id = Long.valueOf(3);
@@ -67,11 +67,11 @@ public class SubjectStudyPeriodPlanControllerTests {
         Assert.assertNotNull(dto);
         Assert.assertNotNull(dto.getId());
     }
-    
+
     @Test
     public void createDelete() {
         SubjectStudyPeriodPlanDto form = getForm();
-        
+
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL);
         String uri = uriBuilder.build().toUriString();
         ResponseEntity<SubjectStudyPeriodPlanDto> responseEntity = restTemplate.postForEntity(uri, form, SubjectStudyPeriodPlanDto.class);
@@ -92,29 +92,29 @@ public class SubjectStudyPeriodPlanControllerTests {
         restTemplate.delete(uri);
     }
 
-    public SubjectStudyPeriodPlanDto getForm() { 
+    public SubjectStudyPeriodPlanDto getForm() {
         final Long subjectId = Long.valueOf(41);
         final Long studyPeriodId = Long.valueOf(27);
-        
+
         SubjectStudyPeriodPlanDto form = new SubjectStudyPeriodPlanDto();
         form.setSubject(subjectId);
         form.setStudyPeriod(studyPeriodId);
-        
+
         form.setCapacities(new HashSet<>());
         form.getCapacities().add(getCapacity());
-        
+
         form.setStudyForms(new HashSet<>());
         form.getStudyForms().add("OPPEVORM_P");
-        
+
         form.setCurriculums(new HashSet<>());
         form.getCurriculums().add(Long.valueOf(3));
         return form;
     }
 
     public SubjectStudyPeriodPlanCapacityDto getCapacity() {
-        
+
         SubjectStudyPeriodPlanCapacityDto dto = new SubjectStudyPeriodPlanCapacityDto();
-        dto.setHours(Long.valueOf(1));
+        dto.setHours(Short.valueOf((short) 1));
         dto.setIsContact(Boolean.FALSE);
         dto.setCapacityType(CapacityType.MAHT_a.name());
         return dto;

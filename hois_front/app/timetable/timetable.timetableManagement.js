@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableManagementController', ['$scope', 'message', 'QueryUtils', 'DataUtils', 'Classifier', '$q',
-  function ($scope, message, QueryUtils, DataUtils, Classifier, $q) {
+angular.module('hitsaOis').controller('TimetableManagementController', ['$scope', 'message', 'QueryUtils', 'DataUtils', 'Classifier',
+  function ($scope, message, QueryUtils, DataUtils, Classifier) {
   $scope.formState = {};
   var baseUrl = '/timetables';
   

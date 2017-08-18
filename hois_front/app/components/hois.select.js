@@ -8,7 +8,7 @@
  */
 angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School, QueryUtils, DataUtils) {
   return {
-    template: '<md-select>' +
+    template: '<md-select md-on-open="queryPromise">' +
     '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>' +
     '<md-option ng-repeat="option in options | orderBy: showProperty ? showProperty : $root.currentLanguageNameField()" ng-value="option[valueProperty]"' +
     'aria-label="{{$root.currentLanguageNameField(option)}}">{{showProperty ? option[showProperty] : $root.currentLanguageNameField(option)}}</md-option></md-select>',
@@ -72,6 +72,10 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
             scope.options = QueryUtils.endpoint('/autocomplete/subjectsList').query();
           } else if(attrs.type === 'studyperiod') {
             scope.options = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+          }
+
+          if (angular.isDefined(scope.options) && angular.isDefined(scope.options.$promise)) {
+            scope.queryPromise = scope.options.$promise;
           }
         } else if (angular.isDefined(scope.values)) {
           scope.$parent.$watchCollection(scope.values, function (values) {

@@ -20,8 +20,8 @@ public class MidtermTask extends BaseEntityWithId {
     private String nameEn;
     private String descriptionEt;
     private String descriptionEn;
-    private Long percentage;
-    private Long thresholdPercentage;
+    private Short percentage;
+    private Short thresholdPercentage;
     private BigDecimal maxPoints;
     private Boolean threshold;
     private LocalDate taskDate;
@@ -65,19 +65,19 @@ public class MidtermTask extends BaseEntityWithId {
         this.descriptionEn = descriptionEn;
     }
 
-    public Long getPercentage() {
+    public Short getPercentage() {
         return percentage;
     }
 
-    public void setPercentage(Long percentage) {
+    public void setPercentage(Short percentage) {
         this.percentage = percentage;
     }
 
-    public Long getThresholdPercentage() {
+    public Short getThresholdPercentage() {
         return thresholdPercentage;
     }
 
-    public void setThresholdPercentage(Long thresholdPercentage) {
+    public void setThresholdPercentage(Short thresholdPercentage) {
         this.thresholdPercentage = thresholdPercentage;
     }
 

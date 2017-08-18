@@ -20,8 +20,8 @@ import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.enums.CapacityType;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
-import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -29,7 +29,7 @@ public class LessonPlanDto extends LessonPlanForm {
 
     private Long id;
     private List<StudyPeriodDto> studyPeriods;
-    private List<Integer> weekNrs;
+    private List<Short> weekNrs;
     private List<LessonPlanLegendDto> legends;
 
     public static LessonPlanDto of(LessonPlan lessonPlan, Map<Long, Long> weekNrsLegends) {
@@ -60,11 +60,11 @@ public class LessonPlanDto extends LessonPlanForm {
         this.studyPeriods = studyPeriods;
     }
 
-    public List<Integer> getWeekNrs() {
+    public List<Short> getWeekNrs() {
         return weekNrs;
     }
 
-    public void setWeekNrs(List<Integer> weekNrs) {
+    public void setWeekNrs(List<Short> weekNrs) {
         this.weekNrs = weekNrs;
     }
 
@@ -171,9 +171,9 @@ public class LessonPlanDto extends LessonPlanForm {
             this.teachers = teachers;
         }
     }
-    
+
     public static class LessonPlanModuleJournalForTeacherDto extends LessonPlanModuleJournalDto {
-        
+
         private Boolean isConfirmer;
         private Boolean isFiller;
 
@@ -219,8 +219,8 @@ public class LessonPlanDto extends LessonPlanForm {
             nameEt = theme.getNameEt();
             credits = theme.getCredits();
 
-            Map<String, Integer> capacityHours = StreamUtil.toMap(r -> EntityUtil.getCode(r.getCapacityType()), r -> r.getHours(), theme.getCapacities());
-            hours = Arrays.stream(CapacityType.values()).filter(ct -> capacityHours.containsKey(ct.name())).map(ct -> String.format("%s%s", ct.getId(), capacityHours.get(ct.name()))).collect(Collectors.joining("/")); 
+            Map<String, Short> capacityHours = StreamUtil.toMap(r -> EntityUtil.getCode(r.getCapacityType()), r -> r.getHours(), theme.getCapacities());
+            hours = Arrays.stream(CapacityType.values()).filter(ct -> capacityHours.containsKey(ct.name())).map(ct -> String.format("%s%s", ct.getId(), capacityHours.get(ct.name()))).collect(Collectors.joining("/"));
         }
 
         public String getNameEt() {
@@ -255,7 +255,7 @@ public class LessonPlanDto extends LessonPlanForm {
         private final Long id;
         private final String nameEt;
         private final String nameEn;
-        private final List<Integer> weekNrs;
+        private final List<Short> weekNrs;
 
         public StudyPeriodDto(StudyPeriod studyPeriod) {
             id = studyPeriod.getId();
@@ -276,7 +276,7 @@ public class LessonPlanDto extends LessonPlanForm {
             return nameEn;
         }
 
-        public List<Integer> getWeekNrs() {
+        public List<Short> getWeekNrs() {
             return weekNrs;
         }
     }

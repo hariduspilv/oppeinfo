@@ -83,9 +83,10 @@ public class TimetableController {
     }
 
     @PostMapping("/saveEvent")
-    public void saveEvent(HoisUserDetails user, @Valid @RequestBody TimetableEventForm form) {
+    public TimetablePlanDto saveEvent(HoisUserDetails user, @Valid @RequestBody TimetableEventForm form) {
         UserUtil.assertIsSchoolAdmin(user);
-        timetableService.saveEvent(form, user);
+        Timetable timetable = timetableService.saveEvent(form, user);
+        return createPlan(user, timetable);
     }
 
     @PutMapping("/{id:\\d+}")

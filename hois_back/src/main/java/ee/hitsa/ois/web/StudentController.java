@@ -46,7 +46,7 @@ import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
 import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
-import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
+import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 
 @RestController
 @RequestMapping("/students")
@@ -83,7 +83,7 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/absences")
     public Page<StudentAbsenceDto> absences(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
         assertCanView(user, student);
-        return studentService.absences(EntityUtil.getId(student), pageable);
+        return studentService.absences(user, student, pageable);
     }
 
     @PostMapping("/{studentId:\\d+}/absences")
@@ -161,7 +161,7 @@ public class StudentController {
     }
 
     @GetMapping("/{id:\\d+}/vocationalResults")
-    public List<StudentVocationalResultModuleThemeDto> vocationalResults(HoisUserDetails user, @WithEntity("id") Student student) {
+    public StudentVocationalResultDto vocationalResults(HoisUserDetails user, @WithEntity("id") Student student) {
         assertCanView(user, student);
         return studentService.vocationalResults(student);
     }

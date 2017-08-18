@@ -53,7 +53,7 @@ public class Contract extends BaseEntityWithId {
     private BigDecimal credits;
 
     @Column(nullable = false)
-    private Integer hours;
+    private Short hours;
 
     @Column(nullable = false)
     private LocalDate startDate;
@@ -158,11 +158,11 @@ public class Contract extends BaseEntityWithId {
         this.credits = credits;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 

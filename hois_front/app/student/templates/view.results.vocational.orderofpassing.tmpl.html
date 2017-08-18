@@ -1,5 +1,6 @@
-<md-table-container>
-  <table md-table md-progress="vocationalResultsPassing.$promise">
+<div ng-if="vocationalResultsPassing.results && vocationalResultsPassing.results.length!=0">
+  <md-table-container>
+  <table md-table>
     <thead md-head>
       <tr md-row>
         <th md-column>{{'student.result.moduleTheme' | translate}}</th>
@@ -10,7 +11,7 @@
       </tr>
     </thead>
     <tbody md-body>
-      <tr md-row ng-repeat="row in vocationalResultsPassing" ng-class-odd="'odd'" ng-class-even="'even'">
+      <tr md-row ng-repeat="row in vocationalResultsPassing.results" ng-class-odd="'odd'" ng-class-even="'even'">
         <td md-cell><span ng-class="!row.theme ? 'md-body-2 bold' : ''">{{!row.theme ? currentLanguageNameField(row.module) : currentLanguageNameField(row.theme) + " (" +currentLanguageNameField(row.module) + ")"}}</span></td>
         <td md-cell>{{row.credits}}</td>
         <td md-cell><span ng-class="!row.theme ? 'md-body-2 bold' : ''">{{row.grade.value}}</span></td>
@@ -20,3 +21,8 @@
     </tbody>
   </table>
 </md-table-container>
+</div>
+
+<div ng-if="vocationalResultsPassing.results && vocationalResultsPassing.results.length==0">
+  <span>{{'student.result.missing' | translate}}</span>
+</div>

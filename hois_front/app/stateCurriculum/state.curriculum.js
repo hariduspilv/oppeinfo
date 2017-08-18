@@ -69,9 +69,9 @@ angular.module('hitsaOis')
         // ----------- save and delete
 
     $scope.delete = function() {
-      if($scope.formState.waitingResponse) {
-        return;
-      }
+      // if($scope.formState.waitingResponse) {
+      //   return;
+      // }
       if(!ArrayUtils.isEmpty($scope.stateCurriculum.curricula)) {
         message.error("stateCurriculum.error.hasCurricula");
         return;
@@ -86,9 +86,9 @@ angular.module('hitsaOis')
     };
 
     function validationPassed(messages) {
-      if($scope.formState.waitingResponse) {
-        return false;
-      }
+      // if($scope.formState.waitingResponse) {
+      //   return false;
+      // }
       $scope.stateCurriculumForm.$setSubmitted();
       if (!stateCurriculumFormIsValid()) {
           message.error(messages.errorMessage);

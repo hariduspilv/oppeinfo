@@ -47,7 +47,7 @@
 				</div>
 				<md-input-container flex="50" flex-offset="5">
 					<label>{{'curriculum.code' | translate}}</label>
-					<input ng-model="curriculum.code" name="code" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData"md-maxlength="25" unique="codeUniqueQuery" ng-model-options="{ debounce: 250 }">
+					<input ng-model="curriculum.code" name="code" type="text" required ng-readonly="formState.readOnly || formState.notEditableBasicData" md-maxlength="25" unique="codeUniqueQuery" ng-model-options="{ debounce: 250 }">
           <div ng-messages="vocationalCurriculumForm.code.$error" ng-show="vocationalCurriculumForm.code.$dirty">
             <div ng-message="notUnique">
               {{'main.messages.error.mustBeUnique' | translate}}

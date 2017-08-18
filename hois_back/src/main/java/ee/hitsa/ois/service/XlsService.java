@@ -79,31 +79,31 @@ public class XlsService {
      *
      * FIXME: Hacky solution for post processing, refactor to use AreaListener, if possible.
      */
-    @SuppressWarnings("resource")
-    private byte[] postProcess(byte[] excel) {
+    private static byte[] postProcess(byte[] excel) {
         try (ByteArrayInputStream is = new ByteArrayInputStream(excel)) {
             try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
                 JxlsHelper jxlsHelper = JxlsHelper.getInstance();
                 Transformer transformer = jxlsHelper.createTransformer(is, os);
                 if (transformer instanceof PoiTransformer) {
-                    Workbook workbook = ((PoiTransformer) transformer).getWorkbook();
-                    Sheet sheet = workbook.getSheetAt(0);
-                    List<CellData> list = transformer.getCommentedCells();
-                    for (CellData cellData : list) {
-                        if (cellData.getCellComment().contains("hois:autoheight")) {
-                            Row row = sheet.getRow(cellData.getRow());
-                            if (row != null) {
-                                Cell cell = row.getCell(cellData.getCol());
-                                if (cell != null) {
-                                    cell.setCellComment(null);
-                                    cell.getCellStyle().setWrapText(true);
-                                    row.setHeight((short) -1);
+                    try(Workbook workbook = ((PoiTransformer) transformer).getWorkbook()) {
+                        Sheet sheet = workbook.getSheetAt(0);
+                        List<CellData> list = transformer.getCommentedCells();
+                        for (CellData cellData : list) {
+                            if (cellData.getCellComment().contains("hois:autoheight")) {
+                                Row row = sheet.getRow(cellData.getRow());
+                                if (row != null) {
+                                    Cell cell = row.getCell(cellData.getCol());
+                                    if (cell != null) {
+                                        cell.setCellComment(null);
+                                        cell.getCellStyle().setWrapText(true);
+                                        row.setHeight((short) -1);
+                                    }
                                 }
                             }
                         }
                     }
                     jxlsHelper.processTemplate(new Context(), transformer);
-                    return os.toByteArray();
+                    excel = os.toByteArray();
                 }
 
             }

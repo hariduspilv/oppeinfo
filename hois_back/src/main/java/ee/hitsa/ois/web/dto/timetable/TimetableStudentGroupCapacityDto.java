@@ -4,16 +4,18 @@ public class TimetableStudentGroupCapacityDto {
     private Long studentGroup;
     private Long totalPlannedLessons;
     private Long thisPlannedLessons;
-    private Long totalAllocatedLessons;
     private Long journal;
     private Long lessonsLeft;
+    //default value if the value is any different you need to set it with the setter
+    private Long totalAllocatedLessons = Long.valueOf(0);
 
     public TimetableStudentGroupCapacityDto(Long studentGroup, Long journal, Long totalPlannedLessons,
-            Long thisPlannedLessons) {
+            Long thisPlannedLessons/*, Long totalAllocatedLessons, Long thisAllocatedLessons*/) {
         this.studentGroup = studentGroup;
         this.journal = journal;
         this.totalPlannedLessons = totalPlannedLessons;
         this.thisPlannedLessons = thisPlannedLessons;
+        //this is the default value, if the value is any different you need to set it with the setter
         this.lessonsLeft = thisPlannedLessons;
     }
 

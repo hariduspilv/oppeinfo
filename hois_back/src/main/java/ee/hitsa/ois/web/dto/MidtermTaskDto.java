@@ -33,10 +33,10 @@ public class MidtermTaskDto {
     @NotNull
     @Min(0)
     @Max(100)
-    private Long percentage;
+    private Short percentage;
     @Min(0)
     @Max(100)
-    private Long thresholdPercentage;
+    private Short thresholdPercentage;
     private LocalDate taskDate;
     private Boolean canBeDeleted;
     private Boolean studentResultIsText;
@@ -48,7 +48,7 @@ public class MidtermTaskDto {
     }
 
     public static MidtermTaskDto ofForStudentResultsForm(MidtermTask midtermTask) {
-        MidtermTaskDto dto = EntityUtil.bindToDto(midtermTask, new MidtermTaskDto(), 
+        MidtermTaskDto dto = EntityUtil.bindToDto(midtermTask, new MidtermTaskDto(),
                 "descriptionEt", "descriptionEn", "thresholdPercentage", "threshold");
         dto.setStudentResultIsText(MidtermTaskUtil.getStudentResultIsText(midtermTask));
         return dto;
@@ -108,16 +108,16 @@ public class MidtermTaskDto {
     public void setThreshold(Boolean threshold) {
         this.threshold = threshold;
     }
-    public Long getPercentage() {
+    public Short getPercentage() {
         return percentage;
     }
-    public void setPercentage(Long percentage) {
+    public void setPercentage(Short percentage) {
         this.percentage = percentage;
     }
-    public Long getThresholdPercentage() {
+    public Short getThresholdPercentage() {
         return thresholdPercentage;
     }
-    public void setThresholdPercentage(Long thresholdPercentage) {
+    public void setThresholdPercentage(Short thresholdPercentage) {
         this.thresholdPercentage = thresholdPercentage;
     }
     public LocalDate getTaskDate() {

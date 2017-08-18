@@ -27,7 +27,7 @@ public class TimetableObject extends BaseEntityWithId {
     private SubjectStudyPeriod subjectStudyPeriod;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "timetable_object_id", nullable = false, updatable = false)
+    @JoinColumn(name = "timetable_object_id", nullable = true, updatable = true)
     private List<TimetableEvent> timetableEvents = new ArrayList<>();
     
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)

@@ -51,12 +51,12 @@
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
           <label class="textInput">{{'practiceJournal.credits' | translate}}</label>
-          <input type="number" ng-model="practiceJournal.credits" required>
+          <input type="number" ng-model="practiceJournal.credits" ng-min="0" ng-max="999.9" required>
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'practiceJournal.hours' | translate}}</label>
-          <input type="number" ng-model="practiceJournal.hours" required>
+          <input type="number" ng-model="practiceJournal.hours" ng-min="0" ng-max="32767" required>
         </md-input-container>
       </div>
 

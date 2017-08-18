@@ -35,6 +35,9 @@ module.exports = function(config) {
       'bower_components/moment/moment.js',
       'bower_components/ng-storage/ngStorage.js',
       'bower_components/angular-cache/dist/angular-cache.js',
+      'bower_components/js-polyfills/polyfill.js',
+      'bower_components/hwcrypto/hwcrypto.js',
+      'bower_components/hwcrypto/hwcrypto-legacy.js',
       'bower_components/angular-mocks/angular-mocks.js',
       // endbower
       'app/scripts/**/*.js',

@@ -291,6 +291,13 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     });
   }
 
+  QueryUtils.endpoint('/autocomplete/schooldepartments').query(function(result) {
+    $scope.schoolDepartmentsById = result.reduce(function(map, it) {
+      map[it.id] = it;
+      return map;
+    });
+  });
+
   $scope.teacher = Endpoint.get({id: id}, afterLoad);
 }]);
 

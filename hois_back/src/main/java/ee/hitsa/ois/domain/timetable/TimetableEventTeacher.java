@@ -16,7 +16,7 @@ public class TimetableEventTeacher extends BaseEntityWithId {
     private TimetableEventTime timetableEventTime;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false)
     private Teacher teacher;
 
     public TimetableEventTime getTimetableEventTime() {

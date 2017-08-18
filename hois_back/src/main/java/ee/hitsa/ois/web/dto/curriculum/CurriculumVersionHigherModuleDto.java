@@ -18,8 +18,8 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
-import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.validation.CurriculumValidator.HigherModule;
+import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class CurriculumVersionHigherModuleDto extends VersionedCommand {
@@ -56,7 +56,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     @NotNull
     @Min(0)
     @Max(999)
-    private Long electiveModulesNumber;
+    private Short electiveModulesNumber;
     @NotNull
     private Boolean minorSpeciality;
     @NotEmpty
@@ -77,7 +77,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         dto.setElectiveModules(StreamUtil.toMappedSet(CurriculumVersionElectiveModuleDto::of, module.getElectiveModules()));
         dto.setSubjects(StreamUtil.toMappedSet(s -> CurriculumVersionHigherModuleSubjectDto.of(s), module.getSubjects()));
         if(!Boolean.TRUE.equals(module.getMinorSpeciality())) {
-            dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(m -> 
+            dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(m ->
             EntityUtil.getId(m.getSpeciality().getCurriculumSpeciality()), module.getSpecialities()));
         }
         return dto;
@@ -189,11 +189,11 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         this.compulsoryStudyCredits = compulsoryStudyCredits;
     }
 
-    public Long getElectiveModulesNumber() {
+    public Short getElectiveModulesNumber() {
         return electiveModulesNumber;
     }
 
-    public void setElectiveModulesNumber(Long electiveModulesNumber) {
+    public void setElectiveModulesNumber(Short electiveModulesNumber) {
         this.electiveModulesNumber = electiveModulesNumber;
     }
 
@@ -221,7 +221,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     public void setSubjects(Set<CurriculumVersionHigherModuleSubjectDto> subjects) {
         this.subjects = subjects;
     }
-    
+
     @XmlElementWrapper(name = "electiveModules")
     @XmlElement(name="electiveModule")
     public Set<CurriculumVersionElectiveModuleDto> getElectiveModules() {

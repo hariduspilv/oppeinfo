@@ -7,6 +7,7 @@ public class TimetableEventForm {
     private Long lessonTime;
     private String selectedDay;
     private Long timetable;
+    private Long oldEventId;
 
     public Long getJournal() {
         return journal;
@@ -65,6 +66,14 @@ public class TimetableEventForm {
 
     public void setTimetable(Long timetable) {
         this.timetable = timetable;
+    }
+
+    public Long getOldEventId() {
+        return oldEventId;
+    }
+
+    public void setOldEventId(Long oldEventId) {
+        this.oldEventId = oldEventId;
     }
 
 }

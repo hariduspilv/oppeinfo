@@ -9,7 +9,7 @@ import ee.hitsa.ois.domain.directive.Directive;
 
 public interface DirectiveRepository extends JpaRepository<Directive, Long> {
 
-    Boolean existsByCanceledDirectiveId(Long canceledDirectiveId);
+    boolean existsByCanceledDirectiveIdAndStatusCodeEquals(Long canceledDirectiveId, String statusCode);
 
     // fixme: instead of ConfirmDateIsNotNull - DirectiveNrIsNotNull ?
     List<Directive> findDistinctBySchool_IdAndConfirmDateGreaterThanEqualAndConfirmDateLessThanEqualAndType_CodeEqualsAndConfirmDateIsNotNull(Long schoolId, LocalDate from, LocalDate thru, String type);

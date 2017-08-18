@@ -19,11 +19,12 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.util.Translatable;
 
 @Entity
 @Table(name="curriculum_version_hmodule")
-public class CurriculumVersionHigherModule extends BaseEntityWithId {
-    
+public class CurriculumVersionHigherModule extends BaseEntityWithId implements Translatable {
+
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private CurriculumVersion curriculumVersion;
@@ -50,7 +51,7 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
     @NotNull
     private BigDecimal optionalStudyCredits;
     private BigDecimal compulsoryStudyCredits;
-    private Long electiveModulesNumber;
+    private Short electiveModulesNumber;
 
     @NotNull
     @Column(name="is_minor_speciality")
@@ -77,11 +78,11 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
         this.curriculumVersion = curriculumVersion;
     }
 
-    public Long getElectiveModulesNumber() {
+    public Short getElectiveModulesNumber() {
         return electiveModulesNumber;
     }
 
-    public void setElectiveModulesNumber(Long electiveModulesNumber) {
+    public void setElectiveModulesNumber(Short electiveModulesNumber) {
         this.electiveModulesNumber = electiveModulesNumber;
     }
 
@@ -93,6 +94,7 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
         this.compulsoryStudyCredits = compulsoryStudyCredits;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -101,6 +103,7 @@ public class CurriculumVersionHigherModule extends BaseEntityWithId {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

@@ -10,7 +10,7 @@
 angular.module('hitsaOis')
   .directive('hoisClassifierSelect', function (Classifier, ClassifierConnect) {
     return {
-      template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }">'+
+      template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }" md-on-open="queryPromise">'+
       '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>'+
       '<md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
       'aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-option></md-select>',
@@ -282,7 +282,7 @@ angular.module('hitsaOis')
     };
 
     if(params.mainClassCode || params.mainClassCodes) {
-      Classifier.queryForDropdown(params, function(arrayResult) {
+      var query = Classifier.queryForDropdown(params, function(arrayResult) {
         arrayResult.forEach(function(classifier) {
           var option = {code: classifier.code, nameEt: classifier.nameEt, nameEn: classifier.nameEn, labelRu: classifier.labelRu};
           optionsByCode[option.code] = option;
@@ -290,6 +290,7 @@ angular.module('hitsaOis')
         scope.optionsByCode = optionsByCode;
         postLoad();
       });
+     scope.queryPromise = query.$promise;
     }
 }
 })();

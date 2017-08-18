@@ -9,6 +9,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,6 +34,7 @@ import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.DirectiveCancelType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MessageType;
@@ -62,6 +64,8 @@ public class DirectiveConfirmService {
     @Autowired
     private DirectiveRepository directiveRepository;
     @Autowired
+    private DirectiveService directiveService;
+    @Autowired
     private EntityManager em;
     @Autowired
     private StudentService studentService;
@@ -77,6 +81,7 @@ public class DirectiveConfirmService {
             allErrors.add(new AbstractMap.SimpleImmutableEntry<>("directiveCoordinator", "NotNull"));
         }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
+        Set<Long> changedStudents = DirectiveType.KASKKIRI_TYHIST.equals(directiveType) ? new HashSet<>(directiveService.changedStudentsForCancel(directive.getCanceledDirective())) : Collections.emptySet();
         // validate each student's data for given directive
         long rowNum = 0;
         for(DirectiveStudent ds : directive.getStudents()) {
@@ -103,7 +108,10 @@ public class DirectiveConfirmService {
                     allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "nominalStudyEnd"), "NotNull"));
                 }
             } else if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
-                // TODO check that it's last modification of student
+                // check that it's last modification of student
+                if(changedStudents.contains(EntityUtil.getId(ds.getStudent()))) {
+                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "fullname"), "StudentChanged"));
+                }
             } else if(DirectiveType.KASKKIRI_VALIS.equals(directiveType)) {
                 boolean isAbroad = Boolean.TRUE.equals(ds.getIsAbroad());
                 if(isAbroad ? !StringUtils.hasText(ds.getAbroadSchool()) : ds.getEhisSchool() == null) {
@@ -254,6 +262,10 @@ public class DirectiveConfirmService {
                 // TODO cancel task from task queue, if there is one for given student and directive
                 studentService.saveWithHistory(student);
             }
+        }
+        // FIXME what happens when student is changed between send-to-confirm and confirm
+        if(ClassifierUtil.equals(DirectiveCancelType.KASKKIRI_TYHISTAMISE_VIIS_T, directive.getCancelType())) {
+            directive.getCanceledDirective().setStatus(em.getReference(Classifier.class, DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD.name()));
         }
     }
 

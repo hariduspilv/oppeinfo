@@ -6,7 +6,10 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentBase;
+import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -357,11 +360,11 @@ public class DirectiveViewStudentDto {
 
     public static DirectiveViewStudentDto of(DirectiveStudent directiveStudent) {
         DirectiveViewStudentDto dto = EntityUtil.bindToDto(directiveStudent, new DirectiveViewStudentDto());
-        Student student = directiveStudent.getStudent();
+        StudentBase student = directiveStudent.getStudent();
         Person person;
         if(student != null) {
             dto.setStudent(student.getId());
-            person = student.getPerson();
+            person = ((Student)student).getPerson();
         } else {
             // possible only on unconfirmed IMMAT or IMMATV
             person = directiveStudent.getPerson();
@@ -373,6 +376,10 @@ public class DirectiveViewStudentDto {
             dto.setFullname(person.getFullname());
         }
 
+        if(ClassifierUtil.oneOf(directiveStudent.getDirective().getStatus(), DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD)) {
+            // for confirmed and canceled directives, get pre-directive status from history
+            student = directiveStudent.getStudentHistory();
+        }
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directiveStudent.getDirective().getType()));
         Application application = directiveStudent.getApplication();
         switch(directiveType) {
@@ -394,7 +401,7 @@ public class DirectiveViewStudentDto {
                 dto.setFinSpecific(EntityUtil.getNullableCode(student.getFinSpecific()));
                 dto.setLanguage(EntityUtil.getNullableCode(student.getLanguage()));
             }
-                dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
+            dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_FINM:
             if (student != null) {
@@ -420,8 +427,8 @@ public class DirectiveViewStudentDto {
                 dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
                 dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             }
-                dto.setNewCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
-                dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
+            dto.setNewCurriculumVersion(directiveStudent.getCurriculumVersion() != null ? AutocompleteResult.of(directiveStudent.getCurriculumVersion()) : null);
+            dto.setStudentGroup(directiveStudent.getStudentGroup() != null ? directiveStudent.getStudentGroup().getCode() : null);
             break;
         case KASKKIRI_OVORM:
             if (student != null) {

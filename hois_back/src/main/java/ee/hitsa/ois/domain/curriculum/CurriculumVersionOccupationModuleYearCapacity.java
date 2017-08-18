@@ -20,16 +20,16 @@ public class CurriculumVersionOccupationModuleYearCapacity extends BaseEntityWit
     private CurriculumVersionOccupationModule module;
 
     @Column(nullable = false)
-    private Integer studyYearNumber;
+    private Short studyYearNumber;
 
     @Column(nullable = false)
     private BigDecimal credits;
 
-    public Integer getStudyYearNumber() {
+    public Short getStudyYearNumber() {
         return studyYearNumber;
     }
 
-    public void setStudyYearNumber(Integer studyYearNumber) {
+    public void setStudyYearNumber(Short studyYearNumber) {
         this.studyYearNumber = studyYearNumber;
     }
 

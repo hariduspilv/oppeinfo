@@ -229,8 +229,8 @@ public class DirectiveService {
             AssertionFailedException.throwIf(canceledDirective == null, "Canceled directive is missing");
 
             assertSameSchool(directive, canceledDirective.getSchool());
-            // check that there is no cancel directive already
-            if(Boolean.TRUE.equals(directiveRepository.existsByCanceledDirectiveId(canceledDirective.getId()))) {
+            // check that there is no cancel directive already in "entry" state
+            if(directiveRepository.existsByCanceledDirectiveIdAndStatusCodeEquals(canceledDirective.getId(), DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL.name())) {
                 throw new ValidationFailedException("directive.duplicatecancel");
             }
         }

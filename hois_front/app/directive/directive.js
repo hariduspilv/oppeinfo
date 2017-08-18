@@ -59,6 +59,16 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       }
     }
 
+    function idgetter(it) {
+      return it.id;
+    }
+
+    function getCurriculumVersionIds(sg) {
+      return sg.curriculumVersion ? [sg.curriculumVersion] : $scope.formState.curriculumVersions.filter(function(it){
+        return it.curriculum === sg.curriculum;
+      }).map(idgetter);
+    }
+
     function loadFormData() {
       var type = $scope.record.type;
       if(type === 'KASKKIRI_ENNIST' || type === 'KASKKIRI_IMMAT' || type === 'KASKKIRI_IMMATV' || type === 'KASKKIRI_OKAVA') {
@@ -73,13 +83,12 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
           // create mapping curriculumversion -> all possible student groups
           $q.all([$scope.formState.studentGroups.$promise, $scope.formState.curriculumVersions.$promise]).then(function() {
             var groups = $scope.formState.studentGroups;
-            function idgetter(it) {
-              return it.id;
-            }
+
             $scope.formState.studentGroupMap = {};
             for(var i = 0; i < groups.length; i++) {
               var sg = groups[i];
-              var cvids = sg.curriculumVersion ? [sg.curriculumVersion] : $scope.formState.curriculumVersions.filter(function(it) { return it.curriculum === sg.curriculum;}).map(idgetter);
+              var cvids = getCurriculumVersionIds(sg);
+
               for(var j = 0; j < cvids.length; j++) {
                 var cv = cvids[j];
                 var cvgroups = $scope.formState.studentGroupMap[cv];

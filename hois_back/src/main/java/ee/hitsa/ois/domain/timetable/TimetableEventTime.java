@@ -18,7 +18,7 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 public class TimetableEventTime extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false, insertable = false, updatable = false)
     private TimetableEvent timetableEvent;
 
     private LocalDateTime start;

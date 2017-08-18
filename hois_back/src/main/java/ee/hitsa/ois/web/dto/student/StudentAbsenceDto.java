@@ -1,13 +1,12 @@
 package ee.hitsa.ois.web.dto.student;
 
-import ee.hitsa.ois.domain.student.StudentAbsence;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 
 public class StudentAbsenceDto extends StudentAbsenceForm {
 
     private Long id;
     private Boolean isAccepted;
+    private Boolean userCanEdit;
 
     public Long getId() {
         return id;
@@ -25,7 +24,11 @@ public class StudentAbsenceDto extends StudentAbsenceForm {
         this.isAccepted = isAccepted;
     }
 
-    public static StudentAbsenceDto of(StudentAbsence absence) {
-        return EntityUtil.bindToDto(absence, new StudentAbsenceDto());
+    public Boolean getUserCanEdit() {
+        return userCanEdit;
+    }
+
+    public void setUserCanEdit(Boolean userCanEdit) {
+        this.userCanEdit = userCanEdit;
     }
 }

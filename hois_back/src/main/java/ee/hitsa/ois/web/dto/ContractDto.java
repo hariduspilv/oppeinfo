@@ -16,7 +16,7 @@ public class ContractDto extends VersionedCommand {
     private AutocompleteResult module;
     private AutocompleteResult theme;
     private BigDecimal credits;
-    private Integer hours;
+    private Short hours;
     private LocalDate startDate;
     private LocalDate endDate;
     private String practicePlace;
@@ -96,11 +96,11 @@ public class ContractDto extends VersionedCommand {
         this.credits = credits;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 

@@ -19,7 +19,7 @@ public class PracticeJournalEntry extends BaseEntityWithId {
 
     @NotNull
     private LocalDate practiceDate;
-    private Integer hours;
+    private Short hours;
     private String supervisorComment;
     private String teacherComment;
 
@@ -47,11 +47,11 @@ public class PracticeJournalEntry extends BaseEntityWithId {
         this.practiceDate = practiceDate;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 

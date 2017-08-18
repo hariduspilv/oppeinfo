@@ -3,24 +3,22 @@ package ee.hitsa.ois.web.dto.student;
 import java.math.BigDecimal;
 import java.util.List;
 
-import ee.hitsa.ois.web.dto.StudyPeriodDto;
-
 public class StudentHigherResultDto {
 
     private List<StudentHigherModuleResultDto> modules;
     private List<StudentHigherSubjectResultDto> subjectResults;
-    private List<StudyPeriodDto> studyPeriods;
+    private List<StudentHigherStudyPeriodResultDto> studyPeriodResults;
     private BigDecimal averageGrade;
     private Boolean isCurriculumFulfilled;
     private BigDecimal creditsSubmitted;
     private BigDecimal creditsSubmittedConsidered;
     
-    public List<StudyPeriodDto> getStudyPeriods() {
-        return studyPeriods;
+    public List<StudentHigherStudyPeriodResultDto> getStudyPeriodResults() {
+        return studyPeriodResults;
     }
 
-    public void setStudyPeriods(List<StudyPeriodDto> studyPeriods) {
-        this.studyPeriods = studyPeriods;
+    public void setStudyPeriodResults(List<StudentHigherStudyPeriodResultDto> studyPeriodResults) {
+        this.studyPeriodResults = studyPeriodResults;
     }
 
     public BigDecimal getCreditsSubmitted() {

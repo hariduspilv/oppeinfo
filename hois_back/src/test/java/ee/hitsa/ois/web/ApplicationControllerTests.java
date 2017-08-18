@@ -159,19 +159,21 @@ public class ApplicationControllerTests {
     @SuppressWarnings("unchecked")
     @Test
     public void applicable() {
-        List<Student> students = studentRepository.findAll((root, query, cb) -> {
+        List<Student> allNotStudyingStudents = studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(root.get("school").in(userSchools));
             filters.add(cb.not(root.get("status").get("code").in(StudentStatus.STUDENT_STATUS_ACTIVE)));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
 
-        Assert.assertTrue(!CollectionUtils.isEmpty(students));
+        Assert.assertTrue(!CollectionUtils.isEmpty(allNotStudyingStudents));
 
-        userSchool = students.stream().findFirst().get().getSchool();
+        userSchool = allNotStudyingStudents.stream().findFirst().get().getSchool();
         testConfigurationService.userToRoleInSchool(Role.ROLL_A, EntityUtil.getId(userSchool), restTemplate);
+        List<Student> notStudyingStudents = allNotStudyingStudents.stream()
+                .filter(s -> s.getSchool().getId() == userSchool.getId()).collect(Collectors.toList());
 
-        for (Student notStudyingStudent : students) {
+        for (Student notStudyingStudent : notStudyingStudents) {
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT + "/student/"+notStudyingStudent.getId()+"/applicable");
             ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
             Assert.assertNotNull(responseEntity);

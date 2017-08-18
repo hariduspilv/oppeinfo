@@ -16,8 +16,8 @@ public class StudentHigherSubjectResultGradeDto {
     private LocalDate gradeDate;
     private Set<String> teachers;
     private Long studyPeriod;
-    private Integer gradeMark;
-    
+    private Short gradeMark;
+
     public static StudentHigherSubjectResultGradeDto of(ProtocolStudent protocolStudent) {
         StudentHigherSubjectResultGradeDto dto = new StudentHigherSubjectResultGradeDto();
         dto.setGrade(EntityUtil.getNullableCode(protocolStudent.getGrade()));
@@ -33,10 +33,10 @@ public class StudentHigherSubjectResultGradeDto {
         return dto;
     }
 
-    public Integer getGradeMark() {
+    public Short getGradeMark() {
         return gradeMark;
     }
-    public void setGradeMark(Integer gradeMark) {
+    public void setGradeMark(Short gradeMark) {
         this.gradeMark = gradeMark;
     }
     public String getGradeValue() {

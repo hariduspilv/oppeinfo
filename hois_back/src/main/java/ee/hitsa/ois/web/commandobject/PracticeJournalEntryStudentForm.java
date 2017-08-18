@@ -7,8 +7,7 @@ public class PracticeJournalEntryStudentForm {
     private Long id;
     private LocalDate practiceDate;
     private String description;
-    private Integer hours;
-
+    private Short hours;
 
     public Long getId() {
         return id;
@@ -34,11 +33,11 @@ public class PracticeJournalEntryStudentForm {
         this.description = description;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 

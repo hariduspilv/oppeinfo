@@ -91,9 +91,9 @@ public class CurriculumController {
     }
 
     @GetMapping("/print/{id:\\d+}/curriculum.pdf")
-    public void print(@WithEntity("id") Curriculum curriculum, HttpServletResponse response) throws IOException {
-        HttpUtil.pdf(response, curriculum.getNameEt() + ".pdf",
-                pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculum)));
+    public void print(@WithEntity("id") CurriculumVersion curriculumVersion, HttpServletResponse response) throws IOException {
+        HttpUtil.pdf(response, curriculumVersion.getCode() + ".pdf",
+                pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculumVersion)));
     }
 
     @GetMapping

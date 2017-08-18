@@ -92,14 +92,14 @@ public abstract class HigherProtocolGradeUtil {
 
     private static boolean threshHoldExceeded(MidtermTaskStudentResult result) {
         BigDecimal maxPoints = result.getMidtermTask().getMaxPoints();
-        BigDecimal threshold = BigDecimal.valueOf(result.getMidtermTask().getThresholdPercentage());
+        BigDecimal threshold = BigDecimal.valueOf(result.getMidtermTask().getThresholdPercentage().longValue());
         BigDecimal points = result.getPoints();
         return points.compareTo(maxPoints.multiply(threshold).divide(BigDecimal.valueOf(100))) != -1;
     }
 
     private static BigDecimal getTaskScore(MidtermTaskStudentResult result) {
         BigDecimal maxPoints = result.getMidtermTask().getMaxPoints();
-        BigDecimal percenage = BigDecimal.valueOf(result.getMidtermTask().getPercentage());
+        BigDecimal percenage = BigDecimal.valueOf(result.getMidtermTask().getPercentage().longValue());
         BigDecimal points = result.getPoints();
         return points.divide(maxPoints).multiply(percenage);
     }

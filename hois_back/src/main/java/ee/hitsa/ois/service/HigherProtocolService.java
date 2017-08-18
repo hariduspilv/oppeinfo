@@ -66,10 +66,10 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 @Transactional
 @Service
 public class HigherProtocolService {
-        
+
     private static final String STUDENT_SELECT = "s.id, p.firstname, p.lastname, "
             + "sg.code as studentGroupCode, c.code as curriculumCode";
-    private static final String STUDENT_FROM = 
+    private static final String STUDENT_FROM =
               "from student s "
             + "join person p on p.id = s.person_id "
             + "join student_group sg on sg.id = s.student_group_id "
@@ -77,15 +77,15 @@ public class HigherProtocolService {
             + "join curriculum c on c.id = cv.curriculum_id "
             + "left join declaration d on d.student_id = s.id "
             + "left join declaration_subject ds on d.id = ds.declaration_id";
-    
-    private static final String STUDENT_HAS_BASIC_PROTOCOL = 
+
+    private static final String STUDENT_HAS_BASIC_PROTOCOL =
             " exists ( select p.id from protocol p "
           + "join protocol_hdata ph on p.id = ph.protocol_id "
           + "left join protocol_student ps on p.id = ps.protocol_id "
           + "where ph.type_code = '" + ProtocolType.PROTOKOLLI_LIIK_P.name() + "' "
           + "and ph.subject_study_period_id = ds.subject_study_period_id "
           + "and ps.student_id = s.id ) ";
-            
+
     @Autowired
     private EntityManager em;
     @Autowired
@@ -102,19 +102,19 @@ public class HigherProtocolService {
     private StudyYearService studyYearService;
     @Autowired
     private ProtocolStudentRepository protocolStudentRepository;
-    
-    public Page<HigherProtocolSearchDto> search(HoisUserDetails user, HigherProtocolSearchCommand criteria, 
+
+    public Page<HigherProtocolSearchDto> search(HoisUserDetails user, HigherProtocolSearchCommand criteria,
             Pageable pageable) {
-        
+
         Page<Protocol> protocols = protocolRepository.findAll((root, query, cb) -> {
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("isVocational"), Boolean.FALSE));
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
-            
+
             filters.add(cb.equal(root.get("protocolHdata").get("subjectStudyPeriod")
                     .get("studyPeriod").get("id"), criteria.getStudyPeriod()));
-            
+
             if(criteria.getStatus() != null) {
                 filters.add(cb.equal(root.get("status").get("code"), criteria.getStatus()));
             }
@@ -123,11 +123,11 @@ public class HigherProtocolService {
             }
             if(criteria.getSubject() != null) {
                 List<Predicate> subjectFilters = new ArrayList<>();
-                propertyContains(() -> root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("code"), 
+                propertyContains(() -> root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("code"),
                         cb, criteria.getSubject(), subjectFilters::add);
-                propertyContains(() -> root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("nameEt"), 
+                propertyContains(() -> root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("nameEt"),
                         cb, criteria.getSubject(), subjectFilters::add);
-                propertyContains(() -> root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("nameEn"), 
+                propertyContains(() -> root.get("protocolHdata").get("subjectStudyPeriod").get("subject").get("nameEn"),
                         cb, criteria.getSubject(), subjectFilters::add);
                 filters.add(cb.or(subjectFilters.toArray(new Predicate[subjectFilters.size()])));
             }
@@ -135,18 +135,18 @@ public class HigherProtocolService {
                 Subquery<Long> targetQuery = query.subquery(Long.class);
                 Root<SubjectStudyPeriodTeacher> targetRoot = targetQuery.from(SubjectStudyPeriodTeacher.class);
                 targetQuery = targetQuery.select(targetRoot.get("subjectStudyPeriod").get("id"))
-                        .where(cb.equal(targetRoot.get("teacher").get("person").get("id"), user.getPersonId()));                
+                        .where(cb.equal(targetRoot.get("teacher").get("person").get("id"), user.getPersonId()));
                 filters.add(root.get("protocolHdata").get("subjectStudyPeriod").get("id").in(targetQuery));
             } else {
                 if(criteria.getTeacher() != null) {
                     Subquery<Long> targetQuery = query.subquery(Long.class);
                     Root<SubjectStudyPeriodTeacher> targetRoot = targetQuery.from(SubjectStudyPeriodTeacher.class);
                     targetQuery = targetQuery.select(targetRoot.get("subjectStudyPeriod").get("id"))
-                            .where(cb.equal(targetRoot.get("teacher").get("id"), criteria.getTeacher()));                
+                            .where(cb.equal(targetRoot.get("teacher").get("id"), criteria.getTeacher()));
                     filters.add(root.get("protocolHdata").get("subjectStudyPeriod").get("id").in(targetQuery));
                 }
             }
-            
+
             if(criteria.getInsertedFrom() != null) {
                 filters.add(cb.greaterThanOrEqualTo(root.get("inserted"), DateUtils.firstMomentOfDay(criteria.getInsertedFrom())));
             }
@@ -161,7 +161,7 @@ public class HigherProtocolService {
             }
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable);
-                
+
         return protocols.map(p -> HigherProtocolSearchDto.ofWithUserRithts(p, user));
     }
 
@@ -177,7 +177,7 @@ public class HigherProtocolService {
         protocolHData.setSubjectStudyPeriod(subjectStudyPeriodRepository.getOne(form.getSubjectStudyPeriod()));
         protocolHData.setProtocol(protocol);
         protocol.setProtocolHdata(protocolHData);
-        
+
         protocol.setProtocolStudents(form.getStudents().stream().map(studentId -> {
             ProtocolStudent protocolStudent =  new ProtocolStudent();
             protocolStudent.setStudent(studentRepository.getOne(studentId));
@@ -193,7 +193,7 @@ public class HigherProtocolService {
         unconfirmProtocol(protocol);
         return protocolRepository.save(protocol);
     }
-    
+
     private void unconfirmProtocol(Protocol protocol) {
         if(HigherProtocolUtil.isConfirmed(protocol)) {
             protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
@@ -230,36 +230,36 @@ public class HigherProtocolService {
     }
 
     private static boolean gradeChangedButNotRemoved(HigherProtocolStudentDto dto, ProtocolStudent ps) {
-        return dto.getGrade() != null && !dto.getGrade().isEmpty() && 
-                !dto.getGrade().equals(EntityUtil.getNullableCode(ps.getGrade()));        
+        return dto.getGrade() != null && !dto.getGrade().isEmpty() &&
+                !dto.getGrade().equals(EntityUtil.getNullableCode(ps.getGrade()));
     }
-    
+
     private static boolean gradeRemoved(HigherProtocolStudentDto dto, ProtocolStudent ps) {
-        return dto.getGrade() == null || dto.getGrade().isEmpty() && 
+        return dto.getGrade() == null || dto.getGrade().isEmpty() &&
                 EntityUtil.getNullableCode(ps.getGrade()) != null;
     }
 
     public void gradeStudent(ProtocolStudent ps, Classifier grade) {
-        Integer gradeMark = null;
+        Short gradeMark = null;
         String gradeValue = grade.getValue();
 
         if(gradeValue.matches("[0-5]")) {
-            gradeMark = Integer.valueOf(gradeValue);
+            gradeMark = Short.valueOf(gradeValue);
         }
-        
+
         ps.setGradeMark(gradeMark);
         ps.setGradeValue(gradeValue);
         ps.setGrade(grade);
         ps.setGradeDate(LocalDate.now());
     }
-    
+
     public void removeGrade(ProtocolStudent ps) {
         ps.setGrade(null);
         ps.setGradeDate(LocalDate.now());
         ps.setGradeMark(null);
         ps.setGradeValue(null);
     }
-    
+
     private void confirmProtocol(Protocol protocol, HoisUserDetails user) {
         protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
         protocol.setConfirmDate(LocalDate.now());
@@ -279,7 +279,7 @@ public class HigherProtocolService {
 
     public List<AutocompleteResult> getSubjectStudyPeriods(Long schoolId) {
         Long studyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
-        
+
         List<SubjectStudyPeriod> ssps = subjectStudyPeriodRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("studyPeriod").get("id"), studyPeriod));
@@ -287,7 +287,7 @@ public class HigherProtocolService {
         });
         return subjectStudyPeriodsToAutocompleteResultList(ssps);
     }
-    
+
     public List<AutocompleteResult> subjectStudyPeriodsToAutocompleteResultList(List<SubjectStudyPeriod> ssps) {
         return StreamUtil.toMappedList(ssp -> {
             Subject s = ssp.getSubject();
@@ -296,16 +296,16 @@ public class HigherProtocolService {
             return new AutocompleteResult(ssp.getId(), nameEt, nameEn);
         }, ssps);
     }
-    
+
     public List<StudentSearchDto> getStudents(Long schoolId, HigherProtocolStudentSearchCommand criteria) {
-        
+
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_FROM);
-        
+
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.filter("d.status_code = '" + DeclarationStatus.OPINGUKAVA_STAATUS_K.name() + "'");
-        qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriodId", 
+        qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriodId",
                 "subjectStudyPeriodId", criteria.getSubjectStudyPeriod());
-        
+
         if(ProtocolType.PROTOKOLLI_LIIK_P.name().equals(criteria.getProtocolType())) {
             qb.filter(" not " + STUDENT_HAS_BASIC_PROTOCOL);
         } else {
@@ -340,7 +340,7 @@ public class HigherProtocolService {
 
     public void setStudentsPracticeResults(HigherProtocolDto dto) {
         if(Boolean.TRUE.equals(dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getIsPracticeSubject())) {
-            
+
             Set<Long> students = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
             JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from practice_journal pj join classifier c on c.code = pj.grade_code");
 
@@ -348,11 +348,11 @@ public class HigherProtocolService {
             qb.requiredCriteria("pj.subject_id = :subjectId", "subjectId", dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getSubject().getId());
 
             List<?> data = qb.select("pj.student_id, c.value", em).getResultList();
-            
+
             assertDoesNotHaveDuplicates(data);
-            
+
             Map<Long, String> practiceResults = StreamUtil.toMap(r -> resultAsLong(r, 0),  r -> resultAsString(r, 1), data);
-            
+
             for(HigherProtocolStudentDto protocolStudent : dto.getProtocolStudents()) {
                 if(practiceResults.containsKey(protocolStudent.getStudent().getId())) {
                     protocolStudent.setPracticeResult(practiceResults.get(protocolStudent.getStudent().getId()));
@@ -361,7 +361,7 @@ public class HigherProtocolService {
         }
     }
 
-    private void assertDoesNotHaveDuplicates(List<?> data) {
+    private static void assertDoesNotHaveDuplicates(List<?> data) {
         Set<Long> existingIds = new HashSet<>();
         for (Object r : data) {
             Long id = resultAsLong(r, 0);
