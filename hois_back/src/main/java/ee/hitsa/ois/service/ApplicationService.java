@@ -66,9 +66,9 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.commandobject.ApplicationRejectForm;
 import ee.hitsa.ois.web.commandobject.ApplicationSearchCommand;
+import ee.hitsa.ois.web.commandobject.OisFileForm;
 import ee.hitsa.ois.web.dto.ApplicationApplicableDto;
 import ee.hitsa.ois.web.dto.ApplicationDto;
-import ee.hitsa.ois.web.dto.ApplicationFileDto;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectEquivalentDto;
 import ee.hitsa.ois.web.dto.ApplicationSearchDto;
@@ -215,7 +215,7 @@ public class ApplicationService {
     }
 
     private static void updateFiles(Application application, ApplicationForm applicationForm) {
-        EntityUtil.bindEntityCollection(application.getFiles(), ApplicationFile::getId, applicationForm.getFiles(), ApplicationFileDto::getId, dto -> {
+        EntityUtil.bindEntityCollection(application.getFiles(), ApplicationFile::getId, applicationForm.getFiles(), OisFileForm::getId, dto -> {
             ApplicationFile file = new ApplicationFile();
             file.setOisFile(EntityUtil.bindToEntity(dto.getOisFile(), new OisFile()));
             return file;

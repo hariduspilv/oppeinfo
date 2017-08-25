@@ -40,7 +40,7 @@ public class PersonController {
     private PersonService personService;
 
     //TODO: permission checks
-    @PostMapping("")
+    @PostMapping
     public PersonWithUsersDto create(@Valid @RequestBody PersonForm request) {
         return PersonWithUsersDto.of(personService.create(request), null);
     }

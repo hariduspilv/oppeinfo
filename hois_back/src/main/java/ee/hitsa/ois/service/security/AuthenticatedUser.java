@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.springframework.security.core.GrantedAuthority;
 
+import ee.hitsa.ois.auth.LoginMethod;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -22,16 +23,20 @@ public class AuthenticatedUser implements Serializable {
     private String fullname;
     private Collection<GrantedAuthority> authorizedRoles;
     private List<UserProjection> users;
+    private LoginMethod loginMethod;
+    private Integer sessionTimeoutInSeconds;
 
-    public AuthenticatedUser(String name, Long user, String roleCode, Long student) {
+    public AuthenticatedUser(String name, Long user, String roleCode, Long student, Integer sessionTimeoutInSeconds) {
         this.name = name;
         this.user = user;
         this.roleCode = roleCode;
         this.student = student;
+        this.sessionTimeoutInSeconds = sessionTimeoutInSeconds;
     }
 
-    public AuthenticatedUser(User user) {
-        this(user.getPerson().getIdcode(), user.getId(), EntityUtil.getCode(user.getRole()), EntityUtil.getNullableId(user.getStudent()));
+    public AuthenticatedUser(User user, Integer sessionTimeoutInSeconds) {
+        this(user.getPerson().getIdcode(), user.getId(), EntityUtil.getCode(user.getRole()), EntityUtil.getNullableId(user.getStudent()),
+                sessionTimeoutInSeconds);
     }
 
     public Long getUser() {
@@ -85,4 +90,21 @@ public class AuthenticatedUser implements Serializable {
     public Long getStudent() {
         return student;
     }
+
+    public LoginMethod getLoginMethod() {
+        return loginMethod;
+    }
+
+    public void setLoginMethod(LoginMethod loginMethod) {
+        this.loginMethod = loginMethod;
+    }
+
+    public Integer getSessionTimeoutInSeconds() {
+        return sessionTimeoutInSeconds;
+    }
+
+    public void setSessionTimeoutInSeconds(Integer sessionTimeoutInSeconds) {
+        this.sessionTimeoutInSeconds = sessionTimeoutInSeconds;
+    }
+
 }

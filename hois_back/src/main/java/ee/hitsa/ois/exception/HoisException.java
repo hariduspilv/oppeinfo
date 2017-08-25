@@ -10,4 +10,8 @@ public class HoisException extends SingleMessageWithParamsException {
         super(message);
     }
 
+    public HoisException(String message, Throwable cause) {
+        super(message, cause);
+    }
+
 }

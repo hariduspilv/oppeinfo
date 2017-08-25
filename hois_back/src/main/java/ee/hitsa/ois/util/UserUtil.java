@@ -3,12 +3,15 @@ package ee.hitsa.ois.util;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -33,6 +36,12 @@ public abstract class UserUtil {
             return isSchoolAdmin(user, student.getSchool());
         }
         return false;
+    }
+
+    public static boolean canCancelDirective(HoisUserDetails user, Directive directive) {
+        return !ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())
+            && ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, directive.getStatus())
+            && isSchoolAdmin(user, directive.getSchool());
     }
 
     public static boolean canViewStudent(HoisUserDetails user, Student student) {
@@ -76,7 +85,7 @@ public abstract class UserUtil {
             return true;
         }
         // representative can edit it's own record if student's data is visible to him/her
-        return EntityUtil.getId(representative.getPerson()).equals(user.getPersonId()) && Boolean.TRUE.equals(representative.getIsStudentVisible());
+        return user.isRepresentative() && EntityUtil.getId(representative.getPerson()).equals(user.getPersonId()) && Boolean.TRUE.equals(representative.getIsStudentVisible());
     }
 
     /**
@@ -91,7 +100,7 @@ public abstract class UserUtil {
     }
 
     public static boolean isAdultStudent(HoisUserDetails user, Student student) {
-        return isSame(user, student) && StudentUtil.isAdult(student);
+        return isStudent(user, student) && StudentUtil.isAdult(student);
     }
 
     public static boolean isSame(HoisUserDetails user, Student student) {
@@ -103,7 +112,7 @@ public abstract class UserUtil {
     }
 
     public static boolean isStudentRepresentative(HoisUserDetails user, Student student) {
-        return student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
+        return user.isRepresentative() && student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
     }
 
     public static boolean isStudentTeacher(HoisUserDetails user, Student student) {

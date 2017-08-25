@@ -27,11 +27,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.UserRights;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveCancelType;
@@ -68,6 +70,8 @@ public class DirectiveConfirmService {
     @Autowired
     private EntityManager em;
     @Autowired
+    private EmailGeneratorService emailGeneratorService;
+    @Autowired
     private StudentService studentService;
     @Autowired
     private Validator validator;
@@ -79,6 +83,9 @@ public class DirectiveConfirmService {
         List<Map.Entry<String, String>> allErrors = new ArrayList<>();
         if(directive.getDirectiveCoordinator() == null) {
             allErrors.add(new AbstractMap.SimpleImmutableEntry<>("directiveCoordinator", "NotNull"));
+        }
+        if(directive.getStudents().isEmpty()) {
+            allErrors.add(new AbstractMap.SimpleImmutableEntry<>(null, "directive.missingstudents"));
         }
         Map<Long, DirectiveStudent> academicLeaves = findAcademicLeaves(directive);
         Set<Long> changedStudents = DirectiveType.KASKKIRI_TYHIST.equals(directiveType) ? new HashSet<>(directiveService.changedStudentsForCancel(directive.getCanceledDirective())) : Collections.emptySet();
@@ -257,6 +264,13 @@ public class DirectiveConfirmService {
                     copyDirectiveProperties(canceledDirectiveType, ds.getStudentHistory(), student, true);
                     if(KASKKIRI_AKAD.equals(canceledDirectiveType) || KASKKIRI_AKADK.equals(canceledDirectiveType)) {
                         student.setNominalStudyEnd(ds.getStudentHistory().getNominalStudyEnd());
+                    } else if(KASKKIRI_EKSMAT.equals(canceledDirectiveType)) {
+                        student.setStudyEnd(null);
+                        student.setStatus(ds.getStudentHistory().getStatus());
+                        User user = userForStudent(student);
+                        if(user != null) {
+                            user.setValidThru(null);
+                        }
                     }
                 }
                 // TODO cancel task from task queue, if there is one for given student and directive
@@ -310,14 +324,27 @@ public class DirectiveConfirmService {
     }
 
     private Student createStudent(DirectiveStudent directiveStudent) {
+        School school = directiveStudent.getDirective().getSchool();
+
         Student student = new Student();
         student.setPerson(directiveStudent.getPerson());
-        student.setSchool(directiveStudent.getDirective().getSchool());
+        student.setSchool(school);
         student.setStudyStart(directiveStudent.getStartDate());
         student.setIsRepresentativeMandatory(Boolean.FALSE);
         student.setIsSpecialNeed(Boolean.FALSE);
-        // if student's email is not generated, copy from person
-        student.setEmail(directiveStudent.getPerson().getEmail());
+
+        // student's email
+        Person person = student.getPerson();
+        String email = emailGeneratorService.lookupSchoolEmail(school, person);
+        if(email == null && Boolean.TRUE.equals(school.getGenerateUserEmail())) {
+            email = emailGeneratorService.generateEmail(school, person.getFirstname(), person.getLastname());
+        }
+        if(email == null) {
+            // if student's email is not generated, copy from person
+            email = directiveStudent.getPerson().getEmail();
+        }
+        student.setEmail(email);
+
         // new role for student
         createUser(student, directiveStudent.getDirective().getConfirmDate());
         return student;

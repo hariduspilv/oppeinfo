@@ -37,9 +37,15 @@ public class TestConfiguration {
 
         return new RestTemplateBuilder()
                 .additionalInterceptors((request, body, execution) -> {
-                    request.getHeaders().add(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_UTF8_VALUE);
+                    request.getHeaders().set(HttpHeaders.ACCEPT, MediaType.APPLICATION_JSON_UTF8_VALUE);
                     if (!StringUtils.isEmpty(testConfigurationService.getSessionCookie())) {
                         request.getHeaders().add(HttpHeaders.COOKIE, testConfigurationService.getSessionCookie());
+
+                        if (!StringUtils.isEmpty(testConfigurationService.getXsrfCookie())) {
+                            request.getHeaders().add(HttpHeaders.COOKIE, testConfigurationService.getXsrfCookie());
+                            String xsrfValue = testConfigurationService.getXsrfCookie().substring("XSRF-TOKEN=".length(), testConfigurationService.getXsrfCookie().indexOf("; Path=/"));
+                            request.getHeaders().set("X-XSRF-TOKEN", xsrfValue);
+                        }
                     } else {
                         return new BasicAuthorizationInterceptor(USER_ID, "undefined").intercept(request, body, execution);
                     }

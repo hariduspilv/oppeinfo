@@ -20,10 +20,8 @@ angular.module('hitsaOis').controller('TeacherExportController', function ($scop
         message.info('ehis.messages.exportFinished');
         $mdDialog.hide();
         $scope.result = result;
-      }).catch(function() {
-        $mdDialog.hide();
-      });
-      
+      }).catch($mdDialog.hide);
+
     } else {
       message.error('main.messages.form-has-errors');
     }

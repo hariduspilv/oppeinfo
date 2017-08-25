@@ -1,5 +1,5 @@
 <div layout-padding>
-  <div ng-if="currentUser" ng-controller="AuthenticatedHomeController as ctrl">
+  <div ng-if="state.currentUser" ng-controller="AuthenticatedHomeController as ctrl">
     <span>{{ 'home.greeting' | translate }}</span>
     <h3>{{'home.generalmessages' | translate}}</h3>
     <md-table-container>
@@ -48,7 +48,7 @@
     </md-table-container>
 
   </div>
-  <div ng-if="!currentUser">
+  <div ng-if="!state.currentUser">
     <span>{{ 'home.joinedSchools' | translate }}</span>
     <md-list>
       <md-list-item ng-repeat="school in schools">

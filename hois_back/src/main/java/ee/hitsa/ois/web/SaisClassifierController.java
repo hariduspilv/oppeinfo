@@ -23,7 +23,7 @@ public class SaisClassifierController {
     @Autowired
     private SaisClassifierService saisClassifierService;
 
-    @GetMapping("")
+    @GetMapping
     public Page<SaisClassifierSearchDto> list(SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
         assertIsMainAdmin(user);
         return saisClassifierService.list(command, pageable);

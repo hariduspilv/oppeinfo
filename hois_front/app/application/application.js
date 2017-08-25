@@ -343,7 +343,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       var application = new ApplicationsEndpoint($scope.application);
       if (angular.isDefined($scope.application.id)) {
         application.$update().then(function () {
-          message.info('main.messages.create.success');
+          message.info('main.messages.update.success');
           entityToForm(application);
           $scope.applicationForm.$setPristine();
         });
@@ -353,8 +353,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           $location.path('/applications/' + application.id + '/edit');
         });
       }
-    } else {
-      console.log($scope.applicationForm.$error);
     }
   };
 

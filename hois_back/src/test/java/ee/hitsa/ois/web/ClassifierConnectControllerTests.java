@@ -7,7 +7,9 @@ import java.util.List;
 
 import javax.transaction.Transactional;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +22,9 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.web.dto.ClassifierConnectSelection;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -34,6 +38,18 @@ public class ClassifierConnectControllerTests {
     private TestRestTemplate restTemplate;
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private TestConfigurationService testConfigurationService;
+
+    @Before
+    public void setUp() {
+        testConfigurationService.userToRole(Role.ROLL_P, restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
+    }
 
     @Test
     public void testChangeListOfParents() throws RestClientException {

@@ -34,6 +34,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -72,6 +73,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
@@ -164,7 +166,40 @@ public class DirectiveService {
             List<?> data = qb.select("s.id", em).getResultList();
             filtered = StreamUtil.toMappedSet(r -> Long.valueOf(((Number)r).longValue()), data);
         }
-        return DirectiveViewDto.of(directive, filtered);
+        DirectiveViewDto dto = DirectiveViewDto.of(directive, filtered);
+
+        if(!ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())
+           && ClassifierUtil.oneOf(directive.getStatus(), DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD,  DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD)) {
+            // look for optional canceling directives
+            JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(DIRECTIVE_LIST_FROM).sort(new Sort(Direction.DESC, "d.inserted"));
+            qb.requiredCriteria("d.school_id = :schoolId", "schoolId", EntityUtil.getId(directive.getSchool()));
+            qb.requiredCriteria("d.canceled_directive_id = :canceledDirectiveId", "canceledDirectiveId", directive.getId());
+
+            List<?> data = qb.select(DIRECTIVE_LIST_SELECT, em).getResultList();
+            List<DirectiveSearchDto> directives = StreamUtil.toMappedList(r -> {
+                DirectiveSearchDto d = new DirectiveSearchDto();
+                d.setId(resultAsLong(r, 0));
+                d.setHeadline(resultAsString(r, 1));
+                d.setDirectiveNr(resultAsString(r, 2));
+                d.setType(resultAsString(r, 3));
+                d.setStatus(resultAsString(r, 4));
+                d.setInserted(resultAsLocalDate(r, 5));
+                d.setConfirmDate(resultAsLocalDate(r, 6));
+                return d;
+            }, data);
+            dto.setCancelingDirectives(directives);
+        }
+
+        boolean canCancel = UserUtil.canCancelDirective(user, directive);
+        if(canCancel) {
+            // verify there are cancellable students still on the directive
+            int studentCount = directive.getStudents().size();
+            if(studentCount == 0 || changedStudentsForCancel(directive).size() == studentCount) {
+                canCancel = false;
+            }
+        }
+        dto.setUserCanCancel(Boolean.valueOf(canCancel));
+        return dto;
     }
 
     public Page<DirectiveSearchDto> search(Long schoolId, DirectiveSearchCommand criteria, Pageable pageable) {
@@ -226,7 +261,9 @@ public class DirectiveService {
             // canceled directive can added only during directive create, check for same school
             EntityUtil.setEntityFromRepository(form, directive, directiveRepository, "canceledDirective");
             Directive canceledDirective = directive.getCanceledDirective();
-            AssertionFailedException.throwIf(canceledDirective == null, "Canceled directive is missing");
+            if(canceledDirective == null) {
+                throw new AssertionFailedException("Canceled directive is missing");
+            }
 
             assertSameSchool(directive, canceledDirective.getSchool());
             // check that there is no cancel directive already in "entry" state
@@ -552,8 +589,9 @@ public class DirectiveService {
 
     List<Long> changedStudentsForCancel(Directive directive) {
         // fetch list of students which cannot canceled
+        // TODO skip history for direct student modifications (from student form)
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student s inner join student_history sh on s.student_history_id = sh.id " +
-                "inner join directive_student ds on s.id = ds.student_id and ds.student_history_id <> sh.prev_student_history_id");
+                "inner join directive_student ds on s.id = ds.student_id and (ds.student_history_id <> sh.prev_student_history_id or ds.student_history_id is null)");
         qb.requiredCriteria("ds.directive_id = :directiveId", "directiveId", directive.getId());
         List<?> data = qb.select("s.id", em).getResultList();
         return StreamUtil.toMappedList(r -> Long.valueOf(((Number)r).longValue()), data);

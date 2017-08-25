@@ -351,8 +351,18 @@ angular.module('hitsaOis')
           url: "/reports/curriculums/completion?_menu"
         },
         {
-          name: 'main.menu.reports.teachersload',
-          url: "/reports/teachers/load?_menu"
+          name: 'main.menu.reports.teachersloadvocational',
+          url: "/reports/teachers/load/vocational?_menu",
+          studyLevel: {
+              vocational: true
+          }
+        },
+        {
+          name: 'main.menu.reports.teachersloadhigher',
+          url: "/reports/teachers/load/higher?_menu",
+          studyLevel: {
+              higher: true
+          }
         }
       ]
     });
@@ -430,8 +440,8 @@ angular.module('hitsaOis')
     self = {
       sections: {},
 
-      setMenu: function (auth) {
-        buildMenu(auth);
+      setMenu: function (authenticatedUser) {
+        buildMenu(authenticatedUser);
       },
       selectSection: function(section) {
         self.openedSection = section;
@@ -511,14 +521,14 @@ angular.module('hitsaOis')
     }
 
     // todo: generalize
-    function buildMenu(auth) {
-      var roles = auth.authorizedRoles || [''];
+    function buildMenu(authenticatedUser) {
+      var roles = authenticatedUser.authorizedRoles || [''];
       menu = [];
       for (var i = 0; i < sections.length; i++) {
         var pages = [];
         if (sections[i].pages.length > 0) {
           for (var j = 0; j < sections[i].pages.length; j++) {
-            addSubmenuItem(pages, sections[i].pages[j], roles, auth.school);
+            addSubmenuItem(pages, sections[i].pages[j], roles, authenticatedUser.school);
           }
         }
         if (pages.length > 0) {

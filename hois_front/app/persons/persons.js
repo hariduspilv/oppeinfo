@@ -132,9 +132,7 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
       if (users) {
         clMapper.objectmapper(users);
       }
-      users.forEach(function (it) {
-        DataUtils.convertStringToDates(it, ['validThru', 'validFrom']);
-      });
+      DataUtils.convertStringToDates(users, ['validThru', 'validFrom']);
 
       var now = new moment();
       for (var i = 0; i < users.length; i++) {

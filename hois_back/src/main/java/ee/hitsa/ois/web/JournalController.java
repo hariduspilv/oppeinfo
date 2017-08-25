@@ -48,7 +48,7 @@ public class JournalController {
     @Autowired
     private JournalService journalService;
 
-    @GetMapping("")
+    @GetMapping
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return journalService.search(user, command, pageable);

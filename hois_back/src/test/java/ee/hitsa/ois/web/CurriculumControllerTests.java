@@ -722,7 +722,7 @@ public class CurriculumControllerTests {
         dto.setCode(NAME);
         dto.setType("OPPEKAVA_VERSIOON_LIIK_O");
         dto.setStatus(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S.name());
-        dto.setAdmissionYear(Integer.valueOf(2017));
+        dto.setAdmissionYear(Short.valueOf((short) 2017));
         return dto;
     }
 

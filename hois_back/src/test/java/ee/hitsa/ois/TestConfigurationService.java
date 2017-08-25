@@ -1,9 +1,8 @@
 package ee.hitsa.ois;
 
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 
 import javax.persistence.criteria.Predicate;
 
@@ -29,6 +28,7 @@ public class TestConfigurationService {
     private HoisUserDetailsService hoisUserDetailsService;
 
     private String sessionCookie;
+    private String xsrfCookie;
     private User currentUser;
 
     public String getSessionCookie() {
@@ -37,6 +37,14 @@ public class TestConfigurationService {
 
     public void setSessionCookie(String sessionCookie) {
         this.sessionCookie = sessionCookie;
+    }
+
+    public String getXsrfCookie() {
+        return xsrfCookie;
+    }
+
+    public void setXsrfCookie(String xsrfCookie) {
+        this.xsrfCookie = xsrfCookie;
     }
 
     public void userToRole(Role role, TestRestTemplate restTemplate) {
@@ -52,19 +60,32 @@ public class TestConfigurationService {
             filters.add(cb.equal(root.get("school").get("id"), schoolId != null ? schoolId : hoisUserDetails.getSchoolId()));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
-        if (!CollectionUtils.isEmpty(usersWithRole)) {
-            currentUser = usersWithRole.stream().findFirst().get();
-            Map<String, Long> postData = new HashMap<>();
-            postData.put("id", currentUser.getId());
-            ResponseEntity<Object> changeUserResponse = restTemplate.withBasicAuth(TestConfiguration.USER_ID, "undefined").postForEntity("/changeUser", postData, Object.class);
-            HttpHeaders headers = changeUserResponse.getHeaders();
-            headers.forEach((name, values) -> {
-                if (name.equalsIgnoreCase("Set-Cookie")) {
-                    setSessionCookie(values.get(0));
-                }
-            });
-        }
 
+        if (!CollectionUtils.isEmpty(usersWithRole)) {
+            ResponseEntity<Object> userResponse = restTemplate.withBasicAuth(TestConfiguration.USER_ID, "undefined")
+                    .getForEntity("/user", null, Object.class);
+            setHeaders(userResponse);
+
+            if (getSessionCookie() != null && getXsrfCookie() != null) {
+                currentUser = usersWithRole.stream().findFirst().get();
+                restTemplate.postForEntity("/changeUser", Collections.singletonMap("id", currentUser.getId()), Object.class);
+            }
+        }
+    }
+
+    private void setHeaders(ResponseEntity<Object> changeUserResponse) {
+        HttpHeaders headers = changeUserResponse.getHeaders();
+        headers.forEach((name, values) -> {
+            if (name.equalsIgnoreCase("Set-Cookie")) {
+                for (String value : values) {
+                    if (value.contains("XSRF-TOKEN")) {
+                        setXsrfCookie(value);
+                    } else {
+                        setSessionCookie(value);
+                    }
+                }
+            }
+        });
     }
 
     public HoisUserDetails getHoisUserDetails() {

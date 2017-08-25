@@ -6,22 +6,26 @@ import java.io.StringWriter;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.xhtmlrenderer.pdf.ITextRenderer;
 
+import com.coverity.security.Escape;
 import com.lowagie.text.DocumentException;
 import com.mitchellbosecke.pebble.PebbleEngine;
 import com.mitchellbosecke.pebble.error.PebbleException;
 import com.mitchellbosecke.pebble.extension.AbstractExtension;
 import com.mitchellbosecke.pebble.extension.Filter;
+import com.mitchellbosecke.pebble.extension.escaper.EscapingStrategy;
 import com.mitchellbosecke.pebble.loader.ClasspathLoader;
 import com.mitchellbosecke.pebble.loader.Loader;
 import com.mitchellbosecke.pebble.template.PebbleTemplate;
@@ -40,7 +44,9 @@ public class PdfService {
     private static final String TEMPLATE_PATH = "templates/";
 
     private final PebbleEngine pebble = new PebbleEngine.Builder()
-            .strictVariables(true).loader(templateLoader()).extension(new HoisExtension()).build();
+            .strictVariables(true).loader(templateLoader()).extension(new HoisExtension())
+            .addEscapingStrategy("text", new TextEscapingStrategy())
+            .defaultEscapingStrategy("text").build();
 
     /**
      * Generates pdf using flying saucer
@@ -125,6 +131,24 @@ public class PdfService {
                 return null;
             }
             return ((LocalDate)input).format(format);
+        }
+    }
+
+    /**
+     * Multi-row text split, rows escaped and joined using &lt;br/&gt;
+     */
+    static class TextEscapingStrategy implements EscapingStrategy {
+
+        @Override
+        public String escape(String input) {
+            if(input == null) {
+                return null;
+            }
+            String[] rows = input.split("\n");
+            if(rows.length == 1) {
+                return Escape.htmlText(input);
+            }
+            return Arrays.asList(rows).stream().map(Escape::htmlText).collect(Collectors.joining("<br/>"));
         }
     }
 

@@ -30,7 +30,7 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.exception.BadConfigurationExcecption;
+import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.repository.MessageRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DataUtil;
@@ -172,7 +172,7 @@ public class AutomaticMessageService {
         Long schoolId = EntityUtil.getId(school);
         MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
         if (template == null) {
-            throw new BadConfigurationExcecption("main.messages.error.configuration.missingAutomaticMessageTempalate", DataUtil.asMap("template", type.name(), "school", schoolId));
+            throw new BadConfigurationException("main.messages.error.configuration.missingAutomaticMessageTempalate", DataUtil.asMap("template", type.name(), "school", schoolId));
         }
 
         try {

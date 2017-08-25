@@ -25,9 +25,8 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController'
         $scope.result = true;
         message.info('reception.application.importFinished');
         $mdDialog.hide();
-      }).catch(function() {
-        $mdDialog.hide();
-      });
+      }).catch($mdDialog.hide);
+
       var parentEl = angular.element(document.body);
       $mdDialog.show({
         parent: parentEl,

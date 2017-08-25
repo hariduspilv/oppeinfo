@@ -25,7 +25,7 @@
       <div layout="row">
         <md-input-container flex="45" flex-sm="100" flex-xs="100" ng-show="showSchool">
           <label>{{'school.label' | translate}}</label>
-          <hois-school-select ng-model="criteria.school"></hois-school-select>
+          <hois-select ng-model="criteria.school" type="school"></hois-select>
         </md-input-container>
       </div>
       <div layout="row" layout-sm="column" layout-xs="column" class="top-margin" ng-show="!showSchool">

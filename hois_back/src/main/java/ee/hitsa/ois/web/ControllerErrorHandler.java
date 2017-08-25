@@ -28,11 +28,13 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.JsonProperty;
 
 import ee.hitsa.ois.exception.AssertionFailedException;
-import ee.hitsa.ois.exception.BadConfigurationExcecption;
 import ee.hitsa.ois.exception.EntityRemoveException;
+import ee.hitsa.ois.exception.SingleMessageWithParamsException;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
@@ -91,10 +93,10 @@ public class ControllerErrorHandler {
             status = HttpStatus.FORBIDDEN;
         } else if (e instanceof HttpRequestMethodNotSupportedException) {
             status = HttpStatus.METHOD_NOT_ALLOWED;
-        } else if (e instanceof BadConfigurationExcecption ) {
+        }  else if (e instanceof SingleMessageWithParamsException) {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
-            BadConfigurationExcecption bce = (BadConfigurationExcecption)e;
-            info = ErrorInfo.of(bce.getMessage(), bce.getParams());
+            SingleMessageWithParamsException singleMessageWithParamsException = (SingleMessageWithParamsException)e;
+            info = ErrorInfo.of(singleMessageWithParamsException.getMessage(), singleMessageWithParamsException.getParams());
         } else {
             status = HttpStatus.INTERNAL_SERVER_ERROR;
             log.error("Error occured during request handling:", e);
@@ -149,6 +151,7 @@ public class ControllerErrorHandler {
             return new ErrorInfo(StreamUtil.toMappedList(me -> new ErrorForField(me.getValue(), me.getKey()), errors));
         }
 
+        @JsonInclude(value = Include.NON_NULL)
         public static class Error {
             private final String code;
             private final Map<Object, Object> params;

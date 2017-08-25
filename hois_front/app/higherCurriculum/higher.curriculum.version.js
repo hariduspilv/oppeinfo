@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('HigherCurriculumVersionController', function ($scope, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, $translate, $rootScope, $routeParams, DataUtils, config) {
+  .controller('HigherCurriculumVersionController', function ($scope, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, $translate, $rootScope, $routeParams, DataUtils, config, Session) {
 
     var baseUrl = '/curriculum';
     $scope.curriculum = $route.current.locals.curriculum;
@@ -9,7 +9,7 @@ angular.module('hitsaOis')
       readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
       strictValidation: false
     };
-    $scope.myEhisSchool = $rootScope.currentUser.school ? $rootScope.currentUser.school.ehisSchool : null;
+    $scope.myEhisSchool = Session.school ? Session.school.school.ehisSchool : null;
     $scope.ehisSchools = $scope.curriculum.jointPartners.map(function (p) { return p.ehisSchool; });
     $scope.ehisSchools.push($scope.myEhisSchool);
     // var SpecialityEndpoint = QueryUtils.endpoint(baseUrl + '/speciality');

@@ -111,7 +111,7 @@
         <td>
           <ul>
           {% for specialty in content.structure %}
-            <li>{{ specialty.name }}
+            <li>{{ "report.curriculum.major" | translate}} {{ specialty.name }}
               <ul>
               {% for module in specialty.modules %}
                 <li>{{ module }}</li>
@@ -123,8 +123,8 @@
         </td>
       </tr>
       <tr>
-        <td class="label">22. {{ "report.curriculum.specialization" | translate }}</td>
-        <td>{{ content.specialization }}</td>
+        <td class="label">22. {{ "report.curriculum.optionalStudyDescription" | translate }}</td>
+        <td>{{ content.optionalStudyDescription }}</td>
       </tr>
       <tr>
         <td class="label">23. {{ "report.curriculum.graduationRequirements" | translate }}</td>

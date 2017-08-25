@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.StudentStatus;
@@ -49,6 +50,7 @@ import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.EnterpriseResult;
+import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
@@ -69,6 +71,8 @@ public class AutocompleteService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
+    private EmailGeneratorService emailGeneratorService;
+    @Autowired
     private PersonRepository personRepository;
     @Autowired
     private SchoolRepository schoolRepository;
@@ -78,7 +82,6 @@ public class AutocompleteService {
     private SaisAdmissionRepository saisAdmissionRepository;
     @Autowired
     private CurriculumModuleRepository curriculumModuleRepository;
-
 
     public List<AutocompleteResult> buildings(Long schoolId) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from building b");
@@ -181,6 +184,7 @@ public class AutocompleteService {
             qb.filter("exists(select sa.id from sais_admission sa where sa.curriculum_version_id = cv.id)");
         }
         qb.optionalCriteria("c.is_higher = :higher", "higher", lookup.getHigher());
+        qb.optionalContains(Arrays.asList("c.name_et", "cv.code"), "name", lookup.getName());
 
         List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code, sl.value", em).getResultList();
         return StreamUtil.toMappedList(r -> {
@@ -237,13 +241,23 @@ public class AutocompleteService {
         }, data);
     }
 
-    public Person person(PersonLookupCommand lookup) {
+    public PersonDto person(HoisUserDetails user, PersonLookupCommand lookup) {
+        Person person;
         if("student".equals(lookup.getRole())) {
             // FIXME multiple students with same idcode?
             // FIXME should filter by school?
-            return personRepository.findByIdcodeStudent(lookup.getIdcode());
+            person = personRepository.findByIdcodeStudent(lookup.getIdcode());
+        } else {
+           person = personRepository.findByIdcode(lookup.getIdcode());
         }
-        return personRepository.findByIdcode(lookup.getIdcode());
+        PersonDto dto = null;
+        if(person != null) {
+            dto = PersonDto.of(person);
+            if("forteacher".equals(lookup.getRole()) && user.isSchoolAdmin()) {
+                dto.setSchoolEmail(emailGeneratorService.lookupSchoolEmail(em.getReference(School.class, user.getSchoolId()), person));
+            }
+        }
+        return dto;
     }
 
     public List<SchoolWithoutLogo> schools() {

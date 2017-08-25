@@ -22,6 +22,9 @@ public class SchoolForm extends VersionedCommand {
     private String address;
     @Size(max = 100)
     private String phone;
+    @Size(max = 255)
+    private String emailDomain;
+    private Boolean generateUserEmail;
     @Valid
     private OisFileCommand logo;
     private Boolean deleteCurrentLogo;
@@ -75,6 +78,22 @@ public class SchoolForm extends VersionedCommand {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getEmailDomain() {
+        return emailDomain;
+    }
+
+    public void setEmailDomain(String emailDomain) {
+        this.emailDomain = emailDomain;
+    }
+
+    public Boolean getGenerateUserEmail() {
+        return generateUserEmail;
+    }
+
+    public void setGenerateUserEmail(Boolean generateUserEmail) {
+        this.generateUserEmail = generateUserEmail;
     }
 
     public OisFileCommand getLogo() {

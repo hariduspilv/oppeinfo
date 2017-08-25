@@ -17,6 +17,8 @@ import ee.hitsa.ois.util.WithEntity;
 public class OisFileController {
 
     /**
+     * FIXME: Add authorization. This solution is bad, currently any user can download any file.
+     *
      * Method for downloading or displaying files. Firstly was used on
      * higher/vocational curriculum forms
      */

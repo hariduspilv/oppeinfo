@@ -1,7 +1,5 @@
 package ee.hitsa.ois.service;
 
-import java.io.ByteArrayInputStream;
-
 import org.junit.Assert;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -25,7 +23,7 @@ public class BdocServiceTests {
     @Test
     public void createUnsignedBdocContainer() {
         UnsignedBdocContainer unsignedBdocContainer =  bdocService.createUnsignedBdocContainer("test.pdf",
-                MediaType.APPLICATION_PDF_VALUE, new ByteArrayInputStream("test".getBytes()), certInHex);
+                MediaType.APPLICATION_PDF_VALUE, "test".getBytes(), certInHex);
         Assert.assertNotNull(unsignedBdocContainer.getContainer());
         Assert.assertNotNull(unsignedBdocContainer.getDataToSign());
         Assert.assertFalse(StringUtils.isEmpty(unsignedBdocContainer.getDigestToSign()));

@@ -13,7 +13,7 @@
       </div>
       <md-input-container flex>
         <label>{{'school.label' | translate}}</label>
-        <hois-school-select ng-disabled="noSchool.indexOf(user.role) !== -1 || !showSchool" ng-model="user.school.id" ng-required="noSchool.indexOf(user.role) === -1"></hois-school-select>
+        <hois-select ng-disabled="noSchool.indexOf(user.role) !== -1 || !showSchool" ng-model="user.school.id" ng-required="noSchool.indexOf(user.role) === -1" type="school"></hois-select>
       </md-input-container>
       <md-input-container flex>
         <label>{{'user.role' | translate}}</label>

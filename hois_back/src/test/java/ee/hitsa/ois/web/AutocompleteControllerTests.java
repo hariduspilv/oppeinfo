@@ -190,6 +190,16 @@ public class AutocompleteControllerTests {
     }
 
     @Test
+    public void personForTeacher() {
+        String uri = "/autocomplete/persons";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(uri);
+        uriBuilder.queryParam("idcode", "48908209998");
+        uriBuilder.queryParam("role", "forteacher");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));
+    }
+
+    @Test
     public void rooms() {
         ResponseEntity<Object> response = restTemplate.getForEntity("/autocomplete/rooms", Object.class);
         Assert.assertNotNull(response);

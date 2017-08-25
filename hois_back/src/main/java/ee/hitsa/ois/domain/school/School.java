@@ -56,6 +56,9 @@ public class School extends BaseEntityWithId implements Translatable {
     private Classifier ehisSchool;
     private String address;
     private String phone;
+    private String emailDomain;
+    private Boolean generateUserEmail;
+
     @JsonIgnore
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<StudyYearScheduleLegend> studyYearScheduleLegends;
@@ -132,6 +135,22 @@ public class School extends BaseEntityWithId implements Translatable {
 
     public void setPhone(String phone) {
         this.phone = phone;
+    }
+
+    public String getEmailDomain() {
+        return emailDomain;
+    }
+
+    public void setEmailDomain(String emailDomain) {
+        this.emailDomain = emailDomain;
+    }
+
+    public Boolean getGenerateUserEmail() {
+        return generateUserEmail;
+    }
+
+    public void setGenerateUserEmail(Boolean generateUserEmail) {
+        this.generateUserEmail = generateUserEmail;
     }
 
     public List<SchoolDepartment> getSchoolDepartments() {

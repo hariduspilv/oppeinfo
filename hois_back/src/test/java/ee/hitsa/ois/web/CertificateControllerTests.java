@@ -2,7 +2,9 @@ package ee.hitsa.ois.web;
 
 import java.util.Arrays;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -17,6 +19,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.dto.CertificateDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
@@ -34,6 +38,18 @@ public class CertificateControllerTests {
 
     @Autowired
     private TestRestTemplate restTemplate;
+    @Autowired
+    private TestConfigurationService testConfigurationService;
+
+    @Before
+    public void setUp() {
+        testConfigurationService.userToRole(Role.ROLL_P, restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
+    }
 
     @Test
     public void search() {
@@ -55,8 +71,8 @@ public class CertificateControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
     /**
-     * This test is vulnerable to database changes. 
-     * This was the reasons for failing last times. 
+     * This test is vulnerable to database changes.
+     * This was the reasons for failing last times.
      */
     @Test
     public void crud() {
@@ -74,7 +90,7 @@ public class CertificateControllerTests {
         Long version = dto.getVersion();
         Assert.assertNotNull(version);
         Assert.assertEquals(Long.valueOf(0), version);
-        
+
         //read
         uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).pathSegment(id.toString());
         uri = uriBuilder.build().toUriString();
@@ -84,7 +100,7 @@ public class CertificateControllerTests {
         Assert.assertNotNull(response.getBody());
         Assert.assertNotNull(response.getBody().getId());
 
-        //update 
+        //update
         form = response.getBody();
         Assert.assertNotNull(form);
         String newContent = TEXT.concat("2");
@@ -96,7 +112,7 @@ public class CertificateControllerTests {
         version = dto.getVersion();
         Assert.assertEquals(Long.valueOf(1), version);
         Assert.assertEquals(newContent, dto.getContent());
-        
+
         // delete
         uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL).pathSegment(id.toString());
         uriBuilder.queryParam("version", version);
@@ -132,7 +148,7 @@ public class CertificateControllerTests {
         Assert.assertNull(response.getBody().getId());
         Assert.assertNotNull(response.getBody().getIdcode());
         Assert.assertNotNull(response.getBody().getFullname());
-        
+
         // get person, who is student in another school
         uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
         uriBuilder.queryParam("idcode", "37810010008");
@@ -155,7 +171,7 @@ public class CertificateControllerTests {
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
         Assert.assertNull(response.getBody());
     }
-    
+
     public CertificateForm getForm() {
         CertificateForm form = new CertificateForm();
         form.setHeadline(TEXT);

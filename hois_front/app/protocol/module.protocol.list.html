@@ -105,7 +105,7 @@
             <td md-cell>{{row.confirmDate | hoisDate}}</td>
             <td md-cell>{{::row.confirmer}}</td>
             <td md-cell>
-              <md-button md-no-ink class="md-primary change-button" ng-href="#/moduleProtocols/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+              <md-button ng-if="!row.confirmDate || (row.confirmDate && auth.isAdmin())" md-no-ink class="md-primary change-button" ng-href="#/moduleProtocols/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
             </td>
           </tr>
         </tbody>

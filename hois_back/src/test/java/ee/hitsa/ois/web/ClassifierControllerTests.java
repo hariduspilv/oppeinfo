@@ -18,7 +18,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.web.dto.ClassifierDto;
 
@@ -30,19 +32,22 @@ public class ClassifierControllerTests {
 
 	@Autowired
     private TestRestTemplate restTemplate;
-
 	@Autowired
     private ClassifierService classifierService;
+	@Autowired
+    private TestConfigurationService testConfigurationService;
 
 	@Before
     public void setUp() {
 		Classifier classifier = getNewClassifierByCode(CLASSIFIER_CODE);
 		classifierService.save(classifier);
+		testConfigurationService.userToRole(Role.ROLL_P, restTemplate);
     }
 
 	@After
     public void cleanUp() {
 		classifierService.delete(CLASSIFIER_CODE);
+		testConfigurationService.setSessionCookie(null);
     }
 
 	@Test

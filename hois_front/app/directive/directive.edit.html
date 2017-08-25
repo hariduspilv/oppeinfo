@@ -50,6 +50,7 @@
         <md-button class="md-raised" ng-click="addDirective()" ng-if="formState.state === 'CHOOSETYPE' && formState.students">{{'directive.addToDirective' | translate}}</md-button>
         <md-button ng-href="#/directives" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
+
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
 
       <div flex ng-if="formState.state === 'EDIT'">
@@ -62,19 +63,20 @@
           <label class="textInput">{{'directive.headline' | translate}}</label>
           <input type="text" ng-model="record.headline" name="headline" required md-maxlength="500">
         </md-input-container>
-		
-		<div class="form-readonly top-margin">
-			<md-input-container class="md-block">
-			  <label class="textInput">{{'directive.inserted' | translate}}</label>
-			  <hois-value value="record.inserted | hoisDate"></hois-value>
-			</md-input-container>
-		</div>
-		<div class="form-readonly top-margin">
-        <md-input-container class="md-block">
-          <label class="textInput">{{'directive.insertedBy' | translate}}</label>
-          <hois-value value="record.insertedBy"></hois-value>
-        </md-input-container>
-		</div>
+
+        <div class="form-readonly top-margin">
+          <md-input-container class="md-block">
+            <label class="textInput">{{'directive.inserted' | translate}}</label>
+            <hois-value value="record.inserted | hoisDate"></hois-value>
+          </md-input-container>
+        </div>
+
+        <div class="form-readonly top-margin">
+          <md-input-container class="md-block">
+            <label class="textInput">{{'directive.insertedBy' | translate}}</label>
+            <hois-value value="record.insertedBy"></hois-value>
+          </md-input-container>
+        </div>
 
         <md-input-container class="md-block">
           <label class="textInput">{{'directive.addInfo' | translate}}</label>
@@ -88,24 +90,17 @@
 
         <md-input-container class="md-block" ng-if="record.type === 'KASKKIRI_TYHIST'">
           <label class="textInput">{{'directive.cancelType' | translate}}</label>
-          <hois-classifier-select ng-model="formState.cancelType" ng-required="record.type === 'KASKKIRI_TYHIST'" main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
+          <hois-classifier-select ng-model="record.cancelType" ng-change="cancelTypeChanged()" filter-values="[formState.changedStudents ? 'KASKKIRI_TYHISTAMISE_VIIS_T' : undefined]" ng-required="record.type === 'KASKKIRI_TYHIST'" main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
 
-        <!--div layout="row" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">
-          <h3>{{'directive.studentList' | translate}}</h3>
-          <md-button class="md-raised" ng-click="addStudents()">{{'directive.addStudents' | translate}}</md-button>
-        </div-->
-		
-		 <div>&nbsp;</div>
-		 <md-table-container>
-			<fieldset>
-				<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'directive.studentList' | translate}}</legend>
-				<md-button class="md-raised" ng-click="addStudents()">{{'directive.addStudents' | translate}}</md-button>
-				<div ng-include="formState.templateUrl" flex></div>
-			</fieldset>	
-		</md-table-container>
-
-        <!--div ng-include="formState.templateUrl"></div-->
+        <div>&nbsp;</div>
+        <md-table-container>
+          <fieldset>
+            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'directive.studentList' | translate}}</legend>
+            <md-button class="md-raised" ng-click="addStudents()" ng-if="record.type !== 'KASKKIRI_TYHIST' && record.type !== 'KASKKIRI_IMMATV'">{{'directive.addStudents' | translate}}</md-button>
+            <div ng-include="formState.templateUrl" flex></div>
+          </fieldset>
+        </md-table-container>
 
         <div layout="row">
           <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>

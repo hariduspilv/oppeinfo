@@ -55,8 +55,8 @@ angular
   .config(function ($httpProvider) {
     $httpProvider.defaults.withCredentials = true;
     $httpProvider.defaults.headers.common["X-Requested-With"] = 'XMLHttpRequest';
-    /*$httpProvider.defaults.xsrfCookieName = 'XSRF-TOKEN';
-    $httpProvider.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';*/
+    $httpProvider.defaults.xsrfCookieName = 'XSRF-TOKEN';
+    $httpProvider.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
   })
   .config(['$resourceProvider', function ($resourceProvider) {
     $resourceProvider.defaults.actions.update = {method: 'PUT', params: {id: '@id'}};

@@ -9,15 +9,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
+import ee.hitsa.ois.auth.LoginMethod;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 
-
 /**
- * DISCLAIMER: "undefined" is a placeholder before proper authentication is setup.
- * TODO: Setup security.
+ * DISCLAIMER: "undefined" is a placeholder before proper authentication is
+ * setup. TODO: Setup security.
  */
 public class HoisUserDetails extends org.springframework.security.core.userdetails.User {
     private static final long serialVersionUID = -7947997673955215575L;
@@ -27,6 +27,7 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     private String role;
     private Long schoolId;
     private Long studentId;
+    private LoginMethod loginMethod;
 
     HoisUserDetails(User user, List<String> roles) {
         super(PersonUtil.fullnameAndIdcode(user.getPerson()), "undefined", getAuthorities(roles));
@@ -75,6 +76,14 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
 
     public boolean isTeacher() {
         return Role.ROLL_O.name().equals(role);
+    }
+
+    public LoginMethod getLoginMethod() {
+        return loginMethod;
+    }
+
+    public void setLoginMethod(LoginMethod loginMethod) {
+        this.loginMethod = loginMethod;
     }
 
     public String getRole() {

@@ -31,7 +31,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     private String code;
     @Min(0)
     @Max(10000)
-    private Integer admissionYear;
+    private Short admissionYear;
 
     @Size(max=4000)
     private String targetGroup;
@@ -103,11 +103,11 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
         this.code = code;
     }
 
-    public Integer getAdmissionYear() {
+    public Short getAdmissionYear() {
         return admissionYear;
     }
 
-    public void setAdmissionYear(Integer admissionYear) {
+    public void setAdmissionYear(Short admissionYear) {
         this.admissionYear = admissionYear;
     }
 

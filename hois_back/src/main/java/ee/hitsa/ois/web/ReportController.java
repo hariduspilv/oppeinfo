@@ -83,9 +83,15 @@ public class ReportController {
         return reportService.curriculumSubjects(user.getSchoolId(), criteria, pageable);
     }
 
-    @GetMapping("/teachers/load")
-    public Page<TeacherLoadDto> teacherLoad(HoisUserDetails user, @Valid TeacherLoadCommand criteria, Pageable pageable) {
+    @GetMapping("/teachers/load/higher")
+    public Page<TeacherLoadDto> teacherLoadHigher(HoisUserDetails user, @Valid TeacherLoadCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return reportService.teacherLoad(user.getSchoolId(), criteria, pageable);
+        return reportService.teacherLoadHigher(user.getSchoolId(), criteria, pageable);
+    }
+
+    @GetMapping("/teachers/load/vocational")
+    public Page<TeacherLoadDto> teacherLoadVocational(HoisUserDetails user, @Valid TeacherLoadCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return reportService.teacherLoadVocational(user.getSchoolId(), criteria, pageable);
     }
 }

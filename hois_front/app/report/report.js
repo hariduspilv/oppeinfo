@@ -54,9 +54,26 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('ReportTeacherLoadController', ['$scope', 'DataUtils', 'QueryUtils',
+]).controller('ReportTeacherLoadHigherController', ['$scope', 'DataUtils', 'QueryUtils',
   function ($scope, DataUtils, QueryUtils) {
-    QueryUtils.createQueryForm($scope, '/reports/teachers/load', {order: 'p.lastname,p.firstname'});
+    QueryUtils.createQueryForm($scope, '/reports/teachers/load/higher', {order: 'p.lastname,p.firstname'});
+
+    $scope.formState = {studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query()};
+    $scope.formState.studyYears.$promise.then(function() {
+      if(!$scope.criteria.studyYear) {
+        var sy = DataUtils.getCurrentStudyYearOrPeriod($scope.formState.studyYears);
+        if(sy) {
+          $scope.criteria.studyYear = sy.id;
+        }
+      }
+      if($scope.criteria.studyYear) {
+        $scope.loadData();
+      }
+    });
+  }
+]).controller('ReportTeacherLoadVocationalController', ['$scope', 'DataUtils', 'QueryUtils',
+  function ($scope, DataUtils, QueryUtils) {
+    QueryUtils.createQueryForm($scope, '/reports/teachers/load/vocational', {order: 'p.lastname,p.firstname'});
 
     $scope.formState = {studyYears: QueryUtils.endpoint('/autocomplete/studyYears').query()};
     $scope.formState.studyYears.$promise.then(function() {

@@ -32,16 +32,13 @@ public class CommitteeValidationService {
     }
 
     private void validateMembers(List<CommitteeMemberDto> members) {
-        
-        Set<ConstraintViolation<CommitteeMemberDto>> errors = null;
-        
+        Set<ConstraintViolation<CommitteeMemberDto>> errors;
+
         for(CommitteeMemberDto member : members) {
-            if(Boolean.TRUE.equals(member.getIsExternal())) {
-                errors = validator.validate(member, CommitteeMemberValidator.External.class);
-            } else {
-                errors = validator.validate(member, CommitteeMemberValidator.Internal.class);
-            }
+            Class<?> group = Boolean.TRUE.equals(member.getIsExternal()) ? CommitteeMemberValidator.External.class : CommitteeMemberValidator.Internal.class;
+            errors = validator.validate(member, group);
             if(!errors.isEmpty()) {
+                // FIXME should validate all members?
                 throw new ValidationFailedException(errors);
             }
         }

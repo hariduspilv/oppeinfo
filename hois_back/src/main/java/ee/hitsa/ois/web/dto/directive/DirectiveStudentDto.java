@@ -289,6 +289,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
             break;
         case KASKKIRI_OVORM:
             dto.setOldStudyForm(EntityUtil.getNullableCode(student.getStudyForm()));
+            dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
             dto.setStudentGroup(EntityUtil.getNullableId(student.getStudentGroup()));
             break;
         default:

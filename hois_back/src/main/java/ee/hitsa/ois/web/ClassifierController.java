@@ -41,7 +41,7 @@ public class ClassifierController {
     /**
      * For creating new classifier
      */
-    @PostMapping("")
+    @PostMapping
     public ClassifierDto create(HoisUserDetails user, @Valid @RequestBody Classifier classifier) {
         AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can create classifiers");
         return get(classifierService.save(classifier));
@@ -68,7 +68,7 @@ public class ClassifierController {
     /**
      * Getting classifiers as paginated results
      */
-    @GetMapping("")
+    @GetMapping
     public Page<ClassifierSearchDto> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
         // FIXME: add security constraints
         return classifierService.search(classifierSearchCommand, pageable);

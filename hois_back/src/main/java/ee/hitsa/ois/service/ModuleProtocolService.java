@@ -91,7 +91,9 @@ public class ModuleProtocolService {
 
     public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, ModuleProtocolSearchCommand cmd,
             Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from protocol p").sort(pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from protocol p "
+                + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
+                + "inner join teacher t on t.id = pvd.teacher_id").sort(pageable);
 
         qb.filter("p.is_vocational = true");
         qb.requiredCriteria("p.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -115,9 +117,13 @@ public class ModuleProtocolService {
         qb.optionalCriteria("p.confirm_date > :from", "from", cmd.getConfirmDateFrom());
         qb.optionalCriteria("p.confirm_date < :thru", "thru", cmd.getConfirmDateThru());
 
+        if (user.isTeacher()) {
+            qb.requiredCriteria("t.person_id = :personId", "personId", user.getPersonId());
+        }
+
         Map<Long, ModuleProtocolSearchDto> dtoById = new HashMap<>();
         Page<ModuleProtocolSearchDto> result = JpaQueryUtil
-                .pagingResult(qb, "p.id, p.protocol_nr, p.status_code, p.inserted, p.confirm_date", em, pageable)
+                .pagingResult(qb, "p.id, p.protocol_nr, p.status_code, p.inserted, p.confirm_date, p.confirmer", em, pageable)
                 .map(r -> {
                     ModuleProtocolSearchDto dto = new ModuleProtocolSearchDto();
                     dto.setId(resultAsLong(r, 0));
@@ -125,6 +131,7 @@ public class ModuleProtocolService {
                     dto.setStatus(resultAsString(r, 2));
                     dto.setInserted(resultAsLocalDate(r, 3));
                     dto.setConfirmDate(resultAsLocalDate(r, 4));
+                    dto.setConfirmer(resultAsString(r, 5));
                     dtoById.put(dto.getId(), dto);
                     return dto;
                 });
@@ -364,7 +371,13 @@ public class ModuleProtocolService {
         protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
         protocol.setConfirmDate(LocalDate.now());
         protocol.setConfirmer(user.getUsername());
-        Protocol confirmedProtocol = save(protocol, moduleProtocolSaveForm);
+        Protocol confirmedProtocol = null;
+        if (moduleProtocolSaveForm != null) {
+            confirmedProtocol = save(protocol, moduleProtocolSaveForm);
+        } else {
+            confirmedProtocol = protocolRepository.save(protocol);
+        }
+
         for (ProtocolStudent protocolStudent : confirmedProtocol.getProtocolStudents()) {
             if (protocolStudent.getGrade() == null) {
                 throw new ValidationFailedException("moduleProtocol.messages.gradeNotSelectedForAllStudents");

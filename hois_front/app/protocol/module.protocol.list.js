@@ -6,7 +6,14 @@ angular.module('hitsaOis').controller('ModuleProtocolListController', function (
   $scope.criteria = {};
   var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS' });
   QueryUtils.createQueryForm($scope, '/moduleProtocols', {}, clMapper.objectmapper);
-  $q.all(clMapper.promises).then($scope.loadData);
+
+  var unbindStudyYearWatch = $scope.$watch('criteria.studyYear', function(value) {
+    if (angular.isNumber(value)) {
+      unbindStudyYearWatch();
+      $q.all(clMapper.promises).then($scope.loadData);
+    }
+  });
+
 
   $scope.$watchCollection("search.module", function(value) {
     $scope.criteria.module = angular.isArray(value) ? value.map(function(it) {return it.id;}) : value;

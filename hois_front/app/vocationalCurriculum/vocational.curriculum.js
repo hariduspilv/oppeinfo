@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('VocationalCurriculumController', function ($scope, Classifier, dialogService, ClassifierConnect, ArrayUtils,
-    message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q, config, $rootScope) {
+    message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q, config, $rootScope, Session) {
       var clMapper = Classifier.valuemapper({occupations: 'KUTSE', partOccupations: 'OSAKUTSE', specialities: 'SPETSKUTSE'});
       $scope.school = $route.current.locals.auth ? $route.current.locals.auth.school : null;
 
@@ -991,8 +991,8 @@ angular.module('hitsaOis')
     $scope.validation.jointPartnersLength = 0;
     $scope.$watchCollection('curriculum.jointPartners', function() {
       var selectedJointPartners = [];
-      if (angular.isDefined($scope.currentUser)) {
-        selectedJointPartners.push($scope.currentUser.school.ehisSchool);
+      if (angular.isDefined(Session.school)) {
+        selectedJointPartners.push(Session.school.ehisSchool);
       }
       if (angular.isArray($scope.curriculum.jointPartners)) {
         $scope.validation.jointPartnersLength = $scope.curriculum.jointPartners.length;

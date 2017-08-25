@@ -46,19 +46,17 @@ public class TeacherController {
 
     @Autowired
     private TeacherService teacherService;
-    
     @Autowired
     private TeacherOccupationService teacherOccupationService;
-    
     @Autowired
     private EhisTeacherExportService ehisTeacherExportService;
-    
+
     @GetMapping("/{id:\\d+}")
     public TeacherDto get(@WithEntity("id") Teacher teacher) {
         return TeacherDto.of(teacher);
     }
 
-    @GetMapping("")
+    @GetMapping
     public Page<TeacherSearchDto> search(TeacherSearchCommand command, Pageable pageable, HoisUserDetails user) {
         if (!user.isExternalExpert()) {
             command.setSchool(user.getSchoolId());
@@ -78,7 +76,7 @@ public class TeacherController {
         }).getContent();
     }
 
-    @PostMapping("")
+    @PostMapping
     public TeacherDto create(@Valid @RequestBody TeacherForm teacherForm, HoisUserDetails user) {
         return teacherService.create(user, teacherForm);
     }

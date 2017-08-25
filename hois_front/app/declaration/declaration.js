@@ -275,9 +275,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
     var clMapper = Classifier.valuemapper({status: 'OPINGUKAVA_STAATUS'});
     QueryUtils.createQueryForm($scope, '/declarations/previous', {order: 'dId'}, clMapper.objectmapper);
 
-    $q.all(clMapper.promises).then(function() {
-      $scope.loadData();
-    });
+    $q.all(clMapper.promises).then($scope.loadData);
 
 }]).controller('DeclarationNewController', ['$scope', 'QueryUtils', 'message', '$location', function ($scope, QueryUtils, message, $location) {
 

@@ -36,9 +36,17 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); }
       }
-    }).when('/reports/teachers/load', {
-      templateUrl: 'report/teachers.load.html',
-      controller: 'ReportTeacherLoadController',
+    }).when('/reports/teachers/load/higher', {
+      templateUrl: 'report/teachers.load.higher.html',
+      controller: 'ReportTeacherLoadHigherController',
+      controllerAs: 'controller',
+      data: authorizedRoles,
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); }
+      }
+    }).when('/reports/teachers/load/vocational', {
+      templateUrl: 'report/teachers.load.vocational.html',
+      controller: 'ReportTeacherLoadVocationalController',
       controllerAs: 'controller',
       data: authorizedRoles,
       resolve: {

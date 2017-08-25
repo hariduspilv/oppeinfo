@@ -13,6 +13,10 @@ public class EstonianIdCardAuthenticationToken extends PreAuthenticatedAuthentic
         this.setCertificate(certificate);
     }
 
+    public EstonianIdCardAuthenticationToken(String personCode) {
+        super(personCode, personCode);
+    }
+
     public X509Certificate getCertificate() {
         return certificate;
     }

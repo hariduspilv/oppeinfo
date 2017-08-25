@@ -17,6 +17,8 @@ public class HoisJwtProperties {
     private String header = "Authorization";
     @NotEmpty
     private String tokenPrefix = "Bearer";
+    @NotEmpty
+    private String claimLoginMethod = "loginMethod";
 
     public String getSecret() {
         return secret;
@@ -41,5 +43,14 @@ public class HoisJwtProperties {
     public void setTokenPrefix(String tokenPrefix) {
         this.tokenPrefix = tokenPrefix;
     }
+
+    public String getClaimLoginMethod() {
+        return claimLoginMethod;
+    }
+
+    public void setClaimLoginMethod(String claimLoginMethod) {
+        this.claimLoginMethod = claimLoginMethod;
+    }
+
 
 }

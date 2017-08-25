@@ -1,13 +1,17 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -18,36 +22,50 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.report.ModuleProtocolReport;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.AutocompleteService;
+import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.ModuleProtocolService;
+import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSearchCommand;
+import ee.hitsa.ois.web.commandobject.ModuleProtocolSignForm;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.EntitySignDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolOccupationalModuleDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolSearchDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolStudentSelectDto;
 
+
 @RestController
 @RequestMapping("/moduleProtocols")
 public class ModuleProtocolController {
 
+    private static final String BDOC_TO_SIGN = "moduleProtocolBdocContainerToSign";
+
     @Autowired
     private ModuleProtocolService moduleProtocolService;
-
     @Autowired
     private AutocompleteService autocompleteService;
-
     @Autowired
     private TeacherRepository teacherRepository;
+    @Autowired
+    private BdocService bdocService;
+    @Autowired
+    private PdfService pdfService;
 
     @GetMapping
     public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, ModuleProtocolSearchCommand command,
@@ -118,11 +136,43 @@ public class ModuleProtocolController {
         return get(moduleProtocolService.addStudents(protocol, moduleProtocolSaveForm));
     }
 
+    @PostMapping("/{id:\\d+}/signToConfirm")
+    public EntitySignDto signToConfirm(HoisUserDetails user,
+            @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+            @Valid @RequestBody ModuleProtocolSignForm moduleProtocolSignForm, HttpSession httpSession) {
+        //Administratiivne töötaja saab moodulite protokolle kinnitada ilma digiallkirjata, õpetaja peab mooduli protokollid kinnitama digiallkirjaga.
+        if (user.isTeacher()) {
+            assertIsTeacherResponsible(user, protocol);
+        }
+
+        Protocol savedProtocol = moduleProtocolService.save(protocol, moduleProtocolSignForm);
+
+        UnsignedBdocContainer unsignedBdocContainer = bdocService.createUnsignedBdocContainer("mooduli_protokoll.pdf",
+                MediaType.APPLICATION_PDF_VALUE,
+                pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME, new ModuleProtocolReport(savedProtocol)),
+                moduleProtocolSignForm.getCertificate());
+
+        httpSession.setAttribute(BDOC_TO_SIGN, unsignedBdocContainer);
+        return EntitySignDto.of(savedProtocol, unsignedBdocContainer);
+    }
+
+
+    @PostMapping("/{id:\\d+}/signToConfirmFinalize")
+    public ModuleProtocolDto signToConfirmFinalize(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
+            @Valid @RequestBody SignatureCommand signatureCommand, HttpSession httpSession) {
+        UnsignedBdocContainer unsignedBdocContainer = (UnsignedBdocContainer) httpSession.getAttribute(BDOC_TO_SIGN);
+
+        protocol.setOisFile(bdocService.getSignedBdoc(unsignedBdocContainer, signatureCommand.getSignature(), "protokoll"));
+        httpSession.removeAttribute(BDOC_TO_SIGN);
+        return get(moduleProtocolService.confirm(user, protocol, null));
+    }
+
+
     @PostMapping("/{id:\\d+}/confirm")
     public ModuleProtocolDto confirm(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        assertIsTeacherResponsible(user, protocol);
+        UserUtil.assertIsSchoolAdmin(user);
         return get(moduleProtocolService.confirm(user, protocol, moduleProtocolSaveForm));
     }
 
@@ -134,6 +184,30 @@ public class ModuleProtocolController {
         if (!user.isSchoolAdmin()) {
             UserUtil.assertIsPerson(user, teacherRepository.getOne(teacherId).getPerson());
         }
+    }
+
+    @GetMapping("/{id:\\d+}/print/protocol.pdf")
+    public void print(HoisUserDetails user, @WithEntity("id") Protocol protocol, HttpServletResponse response)
+            throws IOException {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertSameSchool(user, protocol.getSchool());
+        HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
+                pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME, new ModuleProtocolReport(protocol)));
+    }
+
+}
+
+class SignatureCommand extends VersionedCommand {
+
+    @NotEmpty
+    private String signature;
+
+    public String getSignature() {
+        return signature;
+    }
+
+    public void setSignature(String signature) {
+        this.signature = signature;
     }
 
 }

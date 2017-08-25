@@ -198,7 +198,15 @@ public class ReportService {
         return null;
     }
 
-    public Page<TeacherLoadDto> teacherLoad(Long schoolId, TeacherLoadCommand criteria, Pageable pageable) {
+    public Page<TeacherLoadDto> teacherLoadVocational(Long schoolId, TeacherLoadCommand criteria, Pageable pageable) {
+        return teacherLoad(schoolId, criteria, pageable, false);
+    }
+
+    public Page<TeacherLoadDto> teacherLoadHigher(Long schoolId, TeacherLoadCommand criteria, Pageable pageable) {
+        return teacherLoad(schoolId, criteria, pageable, true);
+    }
+
+    private Page<TeacherLoadDto> teacherLoad(Long schoolId, TeacherLoadCommand criteria, Pageable pageable, boolean higher) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from journal_teacher jt inner join journal j on j.id = jt.journal_id " +
                 "inner join study_year sy on j.study_year_id = sy.id " +
@@ -214,33 +222,72 @@ public class ReportService {
 
         qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, jt.teacher_id, jc.study_period_id");
 
-        Page<?> result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(jc.hours), 0, jt.teacher_id, jc.study_period_id", em, pageable);
+        Page<?> result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(jc.hours), jt.teacher_id, jc.study_period_id", em, pageable);
 
         // calculate used teacher id and study period id values for returned page
-        Map<Long, Map<Long, List<Object>>> subjectRecords;
+        Map<Long, Map<Long, List<Object>>> subjectRecords = new HashMap<>();
+        Map<Long, Map<Long, List<Object>>> moduleRecords = new HashMap<>();
+        Map<Long, Map<Long, Long>> actualLoadHours = new HashMap<>();
         if(!result.getContent().isEmpty()) {
             Set<Long> teachers = new HashSet<>();
             Set<Long> studyPeriods = new HashSet<>();
             for(Object record : result.getContent()) {
-                teachers.add(resultAsLong(record, 8));
-                studyPeriods.add(resultAsLong(record, 9));
+                teachers.add(resultAsLong(record, 7));
+                studyPeriods.add(resultAsLong(record, 8));
             }
 
-            // select subjects by teacher and study period id: starting from SubjectStudyPeriodTeacher table
-            qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period_teacher sspt " +
-                    "inner join subject_study_period ssp on sspt.subject_study_period_id = ssp.id "+
-                    "inner join subject s on ssp.subject_id = s.id");
+            if(higher) {
+                // higher: select subjects by teacher and study period id: starting from SubjectStudyPeriodTeacher table
+                qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period_teacher sspt " +
+                        "inner join subject_study_period ssp on sspt.subject_study_period_id = ssp.id "+
+                        "inner join subject s on ssp.subject_id = s.id");
 
-            qb.requiredCriteria("sspt.teacher_id in (:teacher)", "teacher", teachers);
-            qb.requiredCriteria("ssp.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
+                qb.requiredCriteria("sspt.teacher_id in (:teacher)", "teacher", teachers);
+                qb.requiredCriteria("ssp.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
 
-            List<?> subjects = qb.select("s.name_et, s.name_en, s.code, sspt.teacher_id, ssp.study_period_id", em).getResultList();
-            subjectRecords = subjects.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 3), Collectors.groupingBy(r -> resultAsLong(r, 4))));
-        } else {
-            subjectRecords = new HashMap<>();
+                List<?> subjects = qb.select("s.name_et, s.name_en, s.code, sspt.teacher_id, ssp.study_period_id", em).getResultList();
+                subjects.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 3), () -> subjectRecords, Collectors.groupingBy(r -> resultAsLong(r, 4))));
+            } else {
+                // vocational: select modules by teacher and study period id
+                qb = new JpaQueryUtil.NativeQueryBuilder("from journal_teacher jt " +
+                        "inner join journal j on jt.journal_id = j.id " +
+                        "inner join study_year sy on j.study_year_id = sy.id " +
+                        "inner join study_period sp on sp.study_year_id = sy.id " +
+                        "inner join journal_omodule_theme jot on j.id = jot.journal_id " +
+                        "inner join lesson_plan_module lpm on jot.lesson_plan_module_id = lpm.id "+
+                        "inner join curriculum_version_omodule_theme cvot on lpm.curriculum_version_omodule_id = cvot.id " +
+                        "inner join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "+
+                        "inner join curriculum_module cm on cvo.curriculum_module_id = cm.id " +
+                        "inner join classifier m on cm.module_code = m.code " +
+                        "inner join curriculum c on cm.curriculum_id = c.id");
+
+                qb.requiredCriteria("jt.teacher_id in (:teacher)", "teacher", teachers);
+                qb.requiredCriteria("sp.id in (:studyPeriod)", "studyPeriod", studyPeriods);
+
+                List<?> modules = qb.select("cm.name_et, cm.name_en, m.name_et as modulename_et, m.name_en as modulename_en, c.code, jt.teacher_id, sp.id", em).getResultList();
+                modules.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 5), () -> moduleRecords, Collectors.groupingBy(r -> resultAsLong(r, 6))));
+            }
+
+            // actual load
+            qb = new JpaQueryUtil.NativeQueryBuilder("from timetable_object tto " +
+                    "inner join timetable t on tto.timetable_id = t.id " +
+                    "inner join timetable_event te on te.timetable_object_id = tto.id " +
+                    "inner join timetable_event_time tet on tet.timetable_event_id = te.id " +
+                    "inner join timetable_event_teacher tete on tete.timetable_event_time_id = tet.id");
+
+            qb.requiredCriteria("tete.teacher_id in (:teacher)", "teacher", teachers);
+            qb.requiredCriteria("t.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
+
+            qb.groupBy("tete.teacher_id, t.study_period_id");
+            List<?> actualLoad = qb.select("tete.teacher_id, t.study_period_id, sum(te.lessons)", em).getResultList();
+            actualLoad.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> actualLoadHours, Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsLong(r, 2))));
         }
 
-        return result.map(r -> new TeacherLoadDto(r, subjectRecords.computeIfAbsent(resultAsLong(r, 8), key -> new HashMap<>()).get(resultAsLong(r, 9))));
+        return result.map(r -> {
+            Long teacherId = resultAsLong(r, 7);
+            Long studyPeriodId = resultAsLong(r, 8);
+            return new TeacherLoadDto(r, subjectRecords.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId), moduleRecords.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId), actualLoadHours.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId));
+        });
     }
 
     private Page<StudentStatisticsDto> loadCurriculums(Long schoolId, List<EntityConnectionCommand> curriculumIds, Pageable pageable) {

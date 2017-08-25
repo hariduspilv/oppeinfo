@@ -41,7 +41,7 @@ public class CurriculumReport {
     private final String grade;
     private final String documents;
     private final List<Structure> structure;
-    private final String specialization;
+    private final String optionalStudyDescription;
     private final String graduationRequirements;
     private final String addInfo;
 
@@ -101,7 +101,7 @@ public class CurriculumReport {
         grade = curriculum.getGrades().stream().map(r -> name(r, lang)).sorted().collect(Collectors.joining(", "));
         documents = "Diplom ja akadeemiline õiend";
         structure = curriculumVersion.getModules().stream().filter(r -> !Boolean.TRUE.equals(r.getMinorSpeciality())).map(r -> new Structure(r, lang)).sorted(Comparator.comparing(Structure::getName)).collect(Collectors.toList());
-        specialization = curriculum.getSpecialization();
+        optionalStudyDescription = curriculum.getOptionalStudyDescription();
         // XXX language-specific field
         graduationRequirements = curriculum.getGraduationRequirementsEt();
         addInfo = curriculum.getAddInfo();
@@ -191,8 +191,8 @@ public class CurriculumReport {
         return structure;
     }
 
-    public String getSpecialization() {
-        return specialization;
+    public String getOptionalStudyDescription() {
+        return optionalStudyDescription;
     }
 
     public String getGraduationRequirements() {

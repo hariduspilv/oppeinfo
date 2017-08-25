@@ -6,7 +6,7 @@ angular.module('hitsaOis')
     var authService = {};
     var roleMapper = Classifier.valuemapper({role: 'ROLL'});
 
-    var newUser = function (response) {
+    var authenticatedUser = function (response) {
       Menu.setMenu(response.data);
       if (response.data && response.data.user) {
         roleMapper.objectmapper(response.data.users);
@@ -33,7 +33,7 @@ angular.module('hitsaOis')
     authService.login = function (headers) {
       return $http.get(config.apiUrl + '/user', {headers : headers})
         .then(function (res) {
-          return newUser(res);
+          return authenticatedUser(res);
         });
     };
 
@@ -44,7 +44,7 @@ angular.module('hitsaOis')
           headers[JWT_TOKEN_HEADER] = idLoginResult.headers(JWT_TOKEN_HEADER);
           return $http.get(config.apiUrl + '/user', {headers: headers})
           .then(function (res) {
-            return newUser(res);
+            return authenticatedUser(res);
           });
         });
     };
@@ -59,7 +59,7 @@ angular.module('hitsaOis')
     authService.changeUser = function (userId) {
       return $http.post(config.apiUrl + '/changeUser', {id:userId})
         .then(function (res) {
-          return newUser(res);
+          return authenticatedUser(res);
       });
     };
 
@@ -120,7 +120,7 @@ angular.module('hitsaOis')
     return {
       resolve: function () {
         var deferred = $q.defer();
-        var unwatch = $rootScope.$watch('currentUser', function (currentUser) {
+        var unwatch = $rootScope.$watch('state.currentUser', function (currentUser) {
           if (angular.isDefined(currentUser)) {
             if (currentUser) {
               var authObject = angular.extend({}, currentUser);

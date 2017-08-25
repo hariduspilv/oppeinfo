@@ -5,7 +5,5 @@ angular.module('hitsaOis').controller('ApplicationListController', function ($sc
   var clMapper = Classifier.valuemapper({type: 'AVALDUS_LIIK', status: 'AVALDUS_STAATUS'});
   QueryUtils.createQueryForm($scope, '/applications', {order: '-inserted'}, clMapper.objectmapper);
 
-  $q.all(clMapper.promises).then(function() {
-    $scope.loadData();
-  });
+  $q.all(clMapper.promises).then($scope.loadData);
 });

@@ -10,7 +10,7 @@
 angular.module('hitsaOis')
   .directive('hoisClassifierSelect', function (Classifier, ClassifierConnect) {
     return {
-      template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }" md-on-open="queryPromise">'+
+      template: '<md-select ng-model-options="{ trackBy: !!modelValueAttr ? \'$value\' : \'$value.code\' }" >'+ // md-on-open="queryPromise" this causes some bugs
       '<md-option ng-if="!isMultiple && !isRequired && !ngRequired" md-option-empty></md-option>'+
       '<md-option ng-repeat="(code, option) in optionsByCode" ng-value="!!modelValueAttr ? option[modelValueAttr] : option" ng-hide="option.hide" ' +
       'aria-label="{{$root.currentLanguageNameField(option)}}">{{$root.currentLanguageNameField(option)}}</md-option></md-select>',
@@ -159,7 +159,7 @@ angular.module('hitsaOis')
         }
       };
 
-      var doOptionsFilering = function() {
+      var doOptionsFiltering = function() {
         if(angular.isDefined(scope.showOnlyValues)) {
           scope.$parent.$watchCollection(scope.showOnlyValues, function(changedShowOnlyValues) {
             var showOptions = [];
@@ -211,7 +211,7 @@ angular.module('hitsaOis')
         }
         deselectHiddenValue();
       };
-      doOptionsFilering();
+      doOptionsFiltering();
 
       function showAllValues() {
         for(var key in scope.optionsByCode) {

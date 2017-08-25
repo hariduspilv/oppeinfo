@@ -33,7 +33,7 @@ public class SaisApplicationController {
     @Autowired
     private SaisApplicationService saisApplicationService;
 
-    @GetMapping("")
+    @GetMapping
     public Page<SaisApplicationSearchDto> search(SaisApplicationSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return saisApplicationService.search(user, command, pageable);

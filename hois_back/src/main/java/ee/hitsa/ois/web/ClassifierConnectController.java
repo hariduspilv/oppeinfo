@@ -31,7 +31,7 @@ public class ClassifierConnectController {
     @Autowired
     private ClassifierConnectService service;
 
-    @GetMapping("")
+    @GetMapping
     public Page<ClassifierConnect> search(ClassifierConnectSearchCommand classifierConnectSearchCommand, Pageable pageable) {
         return service.search(classifierConnectSearchCommand, pageable);
     }

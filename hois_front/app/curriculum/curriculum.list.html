@@ -6,7 +6,7 @@
       <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!auth.school">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'school.label' | translate}}</label>
-              <hois-school-select ng-model="criteria.school" multiple></hois-school-select>
+              <hois-select ng-model="criteria.school" type="school" multiple></hois-select>
           </md-input-container>
           <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'curriculum.studyLevel' | translate}}</label>

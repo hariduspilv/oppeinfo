@@ -31,7 +31,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.AssertionFailedException;
-import ee.hitsa.ois.exception.BadConfigurationExcecption;
+import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.Translatable;
@@ -69,7 +69,7 @@ public class XlsService {
                 }
             }
         } catch (IOException e) {
-            throw new BadConfigurationExcecption(String.format("XLS template %s not found", templateName), e);
+            throw new BadConfigurationException(String.format("XLS template %s not found", templateName), e);
         }
     }
 

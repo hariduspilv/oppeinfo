@@ -13,7 +13,6 @@ import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.validation.StudyPeriodRange;
 import ee.hitsa.ois.web.dto.ApplicationDto;
-import ee.hitsa.ois.web.dto.ApplicationFileDto;
 import ee.hitsa.ois.web.dto.ApplicationPlannedSubjectDto;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.InsertedChangedVersionDto;
@@ -89,7 +88,7 @@ public class ApplicationForm extends InsertedChangedVersionDto {
     @ClassifierRestriction(MainClassCode.VALISKOOL_PROGRAMM)
     private String abroadProgramme;
 
-    private Set<ApplicationFileDto> files;
+    private Set<OisFileForm> files;
 
     private Set<ApplicationPlannedSubjectDto> plannedSubjects;
 
@@ -318,11 +317,11 @@ public class ApplicationForm extends InsertedChangedVersionDto {
         this.plannedSubjects = plannedSubjects;
     }
 
-    public Set<ApplicationFileDto> getFiles() {
+    public Set<OisFileForm> getFiles() {
         return files;
     }
 
-    public void setFiles(Set<ApplicationFileDto> files) {
+    public void setFiles(Set<OisFileForm> files) {
         this.files = files;
     }
 

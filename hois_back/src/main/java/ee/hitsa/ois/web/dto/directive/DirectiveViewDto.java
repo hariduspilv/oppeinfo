@@ -25,6 +25,8 @@ public class DirectiveViewDto {
     private String canceledDirectiveType;
     private LocalDateTime inserted;
     private List<DirectiveViewStudentDto> students;
+    private List<DirectiveSearchDto> cancelingDirectives;
+    private Boolean userCanCancel;
 
     public Long getId() {
         return id;
@@ -128,6 +130,22 @@ public class DirectiveViewDto {
 
     public void setStudents(List<DirectiveViewStudentDto> students) {
         this.students = students;
+    }
+
+    public List<DirectiveSearchDto> getCancelingDirectives() {
+        return cancelingDirectives;
+    }
+
+    public void setCancelingDirectives(List<DirectiveSearchDto> cancelingDirectives) {
+        this.cancelingDirectives = cancelingDirectives;
+    }
+
+    public Boolean getUserCanCancel() {
+        return userCanCancel;
+    }
+
+    public void setUserCanCancel(Boolean userCanCancel) {
+        this.userCanCancel = userCanCancel;
     }
 
     public static DirectiveViewDto of(Directive directive, Set<Long> filteredStudentId) {

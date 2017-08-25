@@ -26,6 +26,7 @@ import ee.hitsa.ois.repository.OisFileRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.SchoolForm;
 import ee.hitsa.ois.web.commandobject.SchoolSearchCommand;
 import ee.hitsa.ois.web.commandobject.SchoolUpdateStudyLevelsCommand;
@@ -51,6 +52,10 @@ public class SchoolService {
     }
 
     public School save(School school, SchoolForm schoolForm) {
+        if(Boolean.TRUE.equals(schoolForm.getGenerateUserEmail())  && (schoolForm.getEmailDomain() == null || schoolForm.getEmailDomain().isEmpty())) {
+            throw new ValidationFailedException("school.missing.emailDomain");
+        }
+
         EntityUtil.bindToEntity(schoolForm, school, classifierRepository);
         OisFile logo = school.getLogo();
         if(Boolean.TRUE.equals(schoolForm.getDeleteCurrentLogo())) {
@@ -65,6 +70,10 @@ public class SchoolService {
             EntityUtil.bindToEntity(schoolForm.getLogo(), logo);
             logo = oisFileRepository.save(logo);
             school.setLogo(logo);
+        }
+        // email domain to lowercase
+        if(school.getEmailDomain() != null) {
+            school.setEmailDomain(school.getEmailDomain().toLowerCase());
         }
         // XXX data duplication
         school.setNameEt(school.getEhisSchool().getNameEt());

@@ -29,7 +29,7 @@ public class SaisAdmissionController {
     @Autowired
     private SaisAdmissionService saisAdmissionService;
 
-    @GetMapping("")
+    @GetMapping
     public Page<SaisAdmissionSearchDto> search(SaisAdmissionSearchCommand command, Pageable pageable, HoisUserDetails user) {
         return saisAdmissionService.search(user, command, pageable);
     }

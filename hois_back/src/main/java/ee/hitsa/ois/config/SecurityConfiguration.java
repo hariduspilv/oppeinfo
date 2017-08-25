@@ -10,17 +10,18 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
 
 import ee.hitsa.ois.auth.EstonianIdCardAuthenticationProvider;
 import ee.hitsa.ois.filter.EstonianIdCardAuthenticationFilter;
 import ee.hitsa.ois.filter.JwtAuthorizationFilter;
+import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 
 @Configuration
 @EnableGlobalMethodSecurity(securedEnabled = true)
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
-@EnableRedisHttpSession
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -44,12 +45,14 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .and()
             .httpBasic()
                 .and()
-            .exceptionHandling()
-                .accessDeniedPage("/403")
-                .and()
             .addFilter(new JwtAuthorizationFilter(authenticationManager(), userDetailsService, hoisJwtProperties))
-            .csrf().disable();
-                //.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse());
+            .csrf().csrfTokenRepository(getRootCookieCsrfTokenRepository());
+    }
+
+    private static CsrfTokenRepository getRootCookieCsrfTokenRepository() {
+        CookieCsrfTokenRepository cookieCsrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        cookieCsrfTokenRepository.setCookiePath("/");
+        return cookieCsrfTokenRepository;
     }
 }
 
@@ -61,6 +64,8 @@ class IdCardLoginSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private EstonianIdCardAuthenticationProvider estonianIdCardAuthenticationProvider;
+    @Autowired
+    private BdocService bdocService;
 
     @Autowired
     public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
@@ -74,7 +79,7 @@ class IdCardLoginSecurityConfiguration extends WebSecurityConfigurerAdapter {
                 .anyRequest()
                 .permitAll()
                 .and()
-            .addFilter(new EstonianIdCardAuthenticationFilter(authenticationManager()))
+            .addFilter(new EstonianIdCardAuthenticationFilter(authenticationManager(), bdocService))
             .csrf()
                 .disable();
     }

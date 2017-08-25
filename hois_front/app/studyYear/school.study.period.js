@@ -44,12 +44,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       $scope.studyPeriods = $scope.studyYear.studyPeriods || [];
       $scope.studyPeriodEvents = $scope.studyYear.studyPeriodEvents || [];
       periodTypes.objectmapper($scope.studyPeriods);
-      $scope.studyPeriods.forEach(function (it) {
-        DataUtils.convertStringToDates(it, ['startDate', 'endDate']);
-      });
-      $scope.studyPeriodEvents.forEach(function (it) {
-        DataUtils.convertStringToDates(it, ['start', 'end']);
-      });
+      DataUtils.convertStringToDates($scope.studyPeriods, ['startDate', 'endDate']);
+      DataUtils.convertStringToDates($scope.studyPeriodEvents, ['start', 'end']);
     }
 
     if (id) {

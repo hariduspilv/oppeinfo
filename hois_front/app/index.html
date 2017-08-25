@@ -60,9 +60,9 @@
         <div ng-controller="LoginController" md-is-locked-open="$mdMedia('gt-xs')" layout="row" flex>
           <div layout-align="end" flex>
             <div layout="row" layout-align="end center" flex>
-              <span ng-show="currentUser" >{{ currentUser.fullname }}</span>
-              <md-button ng-show="!currentUser" ng-click="showLogin()">{{ 'main.logIn' | translate }}</md-button>
-              <md-button class="md-icon-button" ng-show="currentUser" ng-click="logout()" aria-label="log out">
+              <span ng-show="state.currentUser" >{{ state.currentUser.fullname }}</span>
+              <md-button ng-show="!state.currentUser" ng-click="showLogin()">{{ 'main.logIn' | translate }}</md-button>
+              <md-button class="md-icon-button" ng-show="state.currentUser" ng-click="logout()" aria-label="log out">
                 <md-tooltip>
                   {{ 'main.logOut' | translate }}
                 </md-tooltip>
@@ -70,8 +70,8 @@
               </md-button>
             </div>
             <div layout="row" layout-align="end" flex>
-              <md-select ng-show="currentUser" ng-model="userWork" ng-change="changeUser();" aria-label="change user">
-                <md-option ng-repeat="user in currentUser.users" value="{{user.id}}" style="font-size: medium;">
+              <md-select ng-show="state.currentUser" ng-model="state.userWorkplace" ng-change="changeUser();" aria-label="change user">
+                <md-option ng-repeat="user in state.currentUser.users" value="{{user.id}}" style="font-size: medium;">
                   {{currentLanguageNameField(user)}}
                 </md-option>
               </md-select>
@@ -129,7 +129,6 @@
     <script src="bower_components/moment/moment.js"></script>
     <script src="bower_components/ng-storage/ngStorage.js"></script>
     <script src="bower_components/angular-cache/dist/angular-cache.js"></script>
-    <script src="bower_components/js-polyfills/polyfill.js"></script>
     <script src="bower_components/hwcrypto/hwcrypto.js"></script>
     <script src="bower_components/hwcrypto/hwcrypto-legacy.js"></script>
     <!-- endbower -->
@@ -187,7 +186,6 @@
     <script src="components/hois.idcode.lookup.js"></script>
     <script src="components/hois.input.file.js"></script>
     <script src="components/hois.multi.text.js"></script>
-    <script src="components/hois.school.select.js"></script>
     <script src="components/hois.school.department.select.js"></script>
     <script src="components/hois.select.js"></script>
     <script src="components/hois.value.js"></script>

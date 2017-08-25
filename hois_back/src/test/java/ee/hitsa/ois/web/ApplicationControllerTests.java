@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -116,7 +118,7 @@ public class ApplicationControllerTests {
     }
 
     @Test
-    public void crud() {
+    public void crud() throws IllegalAccessException, InvocationTargetException {
         //create
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
         ApplicationForm form = new ApplicationForm();
@@ -142,7 +144,7 @@ public class ApplicationControllerTests {
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 
         //update
-        form = responseEntity.getBody();
+        BeanUtils.copyProperties(form, response.getBody());
         form.setAddInfo("additional info update");
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(applicationId.toString());
         responseEntity = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(form), ApplicationDto.class);

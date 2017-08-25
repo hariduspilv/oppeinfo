@@ -19,6 +19,7 @@ public class PersonDto {
     private LocalDate birthdate;
     private String sex;
     private Long id;
+    private String schoolEmail;
 
     public String getFirstname() {
         return firstname;
@@ -76,11 +77,6 @@ public class PersonDto {
         this.email = email;
     }
 
-    public static PersonDto of(Person person) {
-        return EntityUtil.bindToDto(person, new PersonDto());
-    }
-
-
     public String getCitizenship() {
         return citizenship;
     }
@@ -119,5 +115,17 @@ public class PersonDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getSchoolEmail() {
+        return schoolEmail;
+    }
+
+    public void setSchoolEmail(String schoolEmail) {
+        this.schoolEmail = schoolEmail;
+    }
+
+    public static PersonDto of(Person person) {
+        return EntityUtil.bindToDto(person, new PersonDto());
     }
 }

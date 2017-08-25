@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -29,6 +30,7 @@ import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.SchoolRepository;
+import ee.hitsa.ois.service.EmailGeneratorService;
 import ee.hitsa.ois.service.SchoolDepartmentService;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.StudyYearService;
@@ -40,6 +42,7 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.GenerateEmailCommand;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentForm;
 import ee.hitsa.ois.web.commandobject.SchoolDepartmentSearchCommand;
 import ee.hitsa.ois.web.commandobject.SchoolForm;
@@ -66,6 +69,8 @@ import ee.hitsa.ois.web.dto.TeacherOccupationDto;
 public class SchoolController {
 
     @Autowired
+    private EmailGeneratorService emailGeneratorService;
+    @Autowired
     private SchoolRepository schoolRepository;
     @Autowired
     private SchoolService schoolService;
@@ -76,7 +81,7 @@ public class SchoolController {
     @Autowired
     private StudyYearService studyYearService;
 
-    @GetMapping("")
+    @GetMapping
     public Page<SchoolDto> search(@Valid SchoolSearchCommand schoolSearchCommand, Pageable pageable) {
         return schoolService.search(schoolSearchCommand, pageable);
     }
@@ -86,7 +91,7 @@ public class SchoolController {
         return SchoolDto.ofWithLogo(school);
     }
 
-    @PostMapping("")
+    @PostMapping
     public SchoolDto create(@Valid @RequestBody SchoolForm schoolForm) {
         return get(schoolService.create(schoolForm));
     }
@@ -212,10 +217,6 @@ public class SchoolController {
         return getStudyYear(studyYearService.save(studyYear, request));
     }
 
-    private static StudyPeriodDto get(StudyPeriod studyPeriod) {
-        return StudyPeriodDto.of(studyPeriod);
-    }
-
     @PostMapping("/studyYears/{id:\\d+}/studyPeriods")
     public StudyPeriodDto createStudyPeriod(HoisUserDetails user, @WithEntity("id") StudyYear studyYear, @Valid @RequestBody StudyPeriodForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
@@ -235,10 +236,6 @@ public class SchoolController {
             throw new AssertionFailedException("Study year mismatch");
         }
         studyYearService.delete(studyPeriod);
-    }
-
-    private static StudyPeriodEventDto get(StudyPeriodEvent studyPeriodEvent) {
-        return StudyPeriodEventDto.of(studyPeriodEvent);
     }
 
     @PostMapping("/studyYears/{id:\\d+}/studyPeriodEvents")
@@ -262,10 +259,6 @@ public class SchoolController {
         studyYearService.delete(studyPeriodEvent);
     }
 
-    private School getSchool(HoisUserDetails user) {
-        return schoolRepository.getOne(user.getSchoolId());
-    }
-    
     @GetMapping("/studyYearScheduleLegends")
     public Map<String, ?> studyYearScheduleLegends(HoisUserDetails user) {
         School school = getSchool(user);
@@ -280,12 +273,30 @@ public class SchoolController {
         schoolService.updateLegends(school, legendsCmd);
         return studyYearScheduleLegends(user);
     }
-    
+
     @GetMapping("/studyPeriod/current")
     public Map<String, ?> getCurrentStudyPeriod(HoisUserDetails user) {
         Long studyPeriod = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
         Map<String, Object> response = new HashMap<>();
         response.put("currentStudyPeriod", studyPeriod);
         return response;
+    }
+
+    @PostMapping("/generateEmail")
+    public Map<String, ?> generateEmail(HoisUserDetails user, @Valid @RequestBody GenerateEmailCommand name) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return Collections.singletonMap("email", emailGeneratorService.generateEmail(getSchool(user), name.getFirstname(), name.getLastname()));
+    }
+
+    private School getSchool(HoisUserDetails user) {
+        return schoolRepository.getOne(user.getSchoolId());
+    }
+
+    private static StudyPeriodDto get(StudyPeriod studyPeriod) {
+        return StudyPeriodDto.of(studyPeriod);
+    }
+
+    private static StudyPeriodEventDto get(StudyPeriodEvent studyPeriodEvent) {
+        return StudyPeriodEventDto.of(studyPeriodEvent);
     }
 }

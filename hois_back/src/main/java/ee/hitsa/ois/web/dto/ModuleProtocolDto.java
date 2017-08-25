@@ -8,6 +8,7 @@ import java.util.List;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.web.commandobject.OisFileViewDto;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class ModuleProtocolDto extends VersionedCommand {
@@ -21,13 +22,16 @@ public class ModuleProtocolDto extends VersionedCommand {
     private LocalDateTime inserted;
     private List<ModuleProtocolStudentDto> protocolStudents = new ArrayList<>();
     private ProtocolVdataDto protocolVdata;
+    private OisFileViewDto oisFile;
 
     public static ModuleProtocolDto of(Protocol protocol) {
-        ModuleProtocolDto dto = EntityUtil.bindToDto(protocol, new ModuleProtocolDto(), "protocolStudents",
-                "protocolVdata");
+        ModuleProtocolDto dto = EntityUtil.bindToDto(protocol, new ModuleProtocolDto(), "protocolStudents", "protocolVdata");
         dto.setProtocolStudents(StreamUtil.toMappedList(ModuleProtocolStudentDto::of, protocol.getProtocolStudents()));
         if (protocol.getProtocolVdata() != null) {
             dto.setProtocolVdata(ProtocolVdataDto.of(protocol.getProtocolVdata()));
+        }
+        if (protocol.getOisFile() != null) {
+            dto.setOisFile(EntityUtil.bindToDto(protocol.getOisFile(), new OisFileViewDto()));
         }
         return dto;
     }
@@ -102,6 +106,14 @@ public class ModuleProtocolDto extends VersionedCommand {
 
     public void setProtocolVdata(ProtocolVdataDto protocolVdata) {
         this.protocolVdata = protocolVdata;
+    }
+
+    public OisFileViewDto getOisFile() {
+        return oisFile;
+    }
+
+    public void setOisFile(OisFileViewDto oisFile) {
+        this.oisFile = oisFile;
     }
 
 }

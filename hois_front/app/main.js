@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer) {
-
+    $rootScope.state = {};
     var self = this;
 
     function closeMenu() {
@@ -210,11 +210,11 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
 
 
     //$rootScope.currentUser = null;
-    $rootScope.userRoles = USER_ROLES;
+    $rootScope.state.userRoles = USER_ROLES;
     $rootScope.isAuthorized = AuthService.isAuthorized;
 
     $rootScope.setCurrentUser = function (user) {
-      $rootScope.currentUser = user;
+      $rootScope.state.currentUser = user;
     };
 
     //Date picker date formats

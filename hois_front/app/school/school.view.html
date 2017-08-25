@@ -39,6 +39,16 @@
       <label class="textInput">{{'school.address' | translate}}</label>
       <hois-value value="school.address"></hois-value>
     </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.generateUserEmail' | translate}}</label>
+      <hois-value value="school.generateUserEmail ? 'main.yes' : 'main.no' | translate"></hois-value>
+    </md-input-container>
+
+    <md-input-container class="md-block">
+      <label class="textInput">{{'school.emailDomain' | translate}}</label>
+      <hois-value value="school.emailDomain"></hois-value>
+    </md-input-container>
   </form>
 
   <h3 ng-if="school.logo">{{'school.logo.currentLogo' | translate}}</h3>
@@ -46,5 +56,7 @@
     <img ng-if="school.logo" ng-src="{{school.imageUrl}}">
   </div>
   <br>
+
+  <md-button ng-href="#/school/{{school.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
   <md-button ng-href="#/school" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>

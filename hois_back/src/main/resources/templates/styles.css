@@ -13,19 +13,28 @@ html {
 
 .reporttable {
     border-collapse: collapse;
-	width: 100%;
+    width: 100%;
 }
 
 .reporttable td {
-	border: solid black thin;
-	padding: 3px;
+    border: solid black thin;
+    padding: 3px;
 }
 
 .reportsubtable td {
-	border: none;
+    border: none;
 }
 
 .reporttableheader {
     font-weight: bold;
     text-align: center;
+}
+
+ul {
+    list-style-type: none;
+    padding-left: 0px;
+}
+
+li > ul{
+    padding-left: 2em;
 }

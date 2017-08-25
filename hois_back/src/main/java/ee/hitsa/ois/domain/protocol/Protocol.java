@@ -15,6 +15,7 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.school.School;
 
 @Entity
@@ -38,10 +39,14 @@ public class Protocol extends BaseEntityWithId {
     @OneToOne(mappedBy = "protocol", cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(nullable = false, updatable = false)
     private ProtocolVdata protocolVdata;
-    
+
     @OneToOne(mappedBy = "protocol", cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(nullable = false, updatable = false)
     private ProtocolHdata protocolHdata;
+
+    @ManyToOne(optional = false, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @JoinColumn(nullable = false, updatable = true, insertable = true)
+    private OisFile oisFile;
 
     public ProtocolHdata getProtocolHdata() {
         return protocolHdata;
@@ -114,4 +119,13 @@ public class Protocol extends BaseEntityWithId {
     public void setProtocolVdata(ProtocolVdata protocolVdata) {
         this.protocolVdata = protocolVdata;
     }
+
+    public OisFile getOisFile() {
+        return oisFile;
+    }
+
+    public void setOisFile(OisFile oisFile) {
+        this.oisFile = oisFile;
+    }
+
 }

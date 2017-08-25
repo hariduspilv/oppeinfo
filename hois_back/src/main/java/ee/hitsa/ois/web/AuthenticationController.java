@@ -8,6 +8,7 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.auth.EstonianIdCardAuthenticationToken;
+import ee.hitsa.ois.auth.LoginMethod;
 import ee.hitsa.ois.config.HoisJwtProperties;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
@@ -49,6 +51,8 @@ public class AuthenticationController {
     private UserService userService;
     @Autowired
     private HoisJwtProperties hoisJwtProperties;
+    @Value("${server.session.timeout}")
+    private Integer sessionTimeoutInSeconds;
 
     @RequestMapping("/user")
     @ResponseBody
@@ -56,7 +60,7 @@ public class AuthenticationController {
         if (principal != null) {
             HoisUserDetails userDetails = HoisUserDetails.fromPrincipal(principal);
             User user = userRepository.getOne(userDetails.getUserId());
-            AuthenticatedUser authenticatedUser = new AuthenticatedUser(user);
+            AuthenticatedUser authenticatedUser = new AuthenticatedUser(user, sessionTimeoutInSeconds);
             List<UserProjection> users = userService.findAllActiveUsers(user.getPerson().getId());
 
             School school = user.getSchool();
@@ -69,20 +73,29 @@ public class AuthenticationController {
             authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());
             authenticatedUser.setFullname(user.getPerson().getFullname());
             authenticatedUser.setUsers(users);
+            authenticatedUser.setLoginMethod(userDetails.getLoginMethod());
 
             return authenticatedUser;
         }
         return null;
     }
 
+
     @CrossOrigin
     @RequestMapping("/idlogin")
     @ResponseBody
     public void idlogin(Principal principal, HttpServletResponse response) {
         //one minute token
-        String token = Jwts.builder().setSubject(((EstonianIdCardAuthenticationToken)principal).getPrincipal().toString())
-                .setExpiration(new Date(System.currentTimeMillis() + 60_000)).signWith(SignatureAlgorithm.HS512, hoisJwtProperties.getSecret()).compact();
-        response.addHeader(hoisJwtProperties.getHeader(), hoisJwtProperties.getTokenPrefix() + " " + token);
+        System.out.println(hoisJwtProperties.getClaimLoginMethod());
+        if (principal != null) {
+            String token = Jwts.builder()
+                    .setSubject(((EstonianIdCardAuthenticationToken)principal).getPrincipal().toString())
+                    .claim(hoisJwtProperties.getClaimLoginMethod(), LoginMethod.ID_CARD.name())
+                    .setExpiration(new Date(System.currentTimeMillis() + 60_000))
+                    .signWith(SignatureAlgorithm.HS512, hoisJwtProperties.getSecret())
+                    .compact();
+            response.addHeader(hoisJwtProperties.getHeader(), hoisJwtProperties.getTokenPrefix() + " " + token);
+        }
     }
 
 

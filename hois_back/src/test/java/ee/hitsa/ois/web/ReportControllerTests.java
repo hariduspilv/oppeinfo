@@ -167,8 +167,19 @@ public class ReportControllerTests {
     }
 
     @Test
-    public void teacherLoad() {
-        String url = "/reports/teachers/load";
+    public void teacherLoadHigher() {
+        String url = "/reports/teachers/load/higher";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("studyYear", Long.valueOf(1));
+
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void teacherLoadVocational() {
+        String url = "/reports/teachers/load/vocational";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("studyYear", Long.valueOf(1));
 

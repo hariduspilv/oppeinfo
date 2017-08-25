@@ -3,22 +3,42 @@
 angular.module('hitsaOis')
   .controller('LoginController', function (message, $rootScope, $scope, AuthService, AUTH_EVENTS, $location, config, $mdDialog) {
 
-    function successfulAuthentication(auth) {
-      if (auth) {
+    function setLoggedInVisuals(authenticatedUser) {
+      if (angular.isObject(authenticatedUser) && angular.isObject(authenticatedUser.school)) {
+        $rootScope.state.logo = config.apiUrl + '/school/' + authenticatedUser.school.id + '/logo';
+      } else {
+        $rootScope.state.logo = '';
+      }
+      if (!angular.isObject(authenticatedUser) || !angular.isNumber(authenticatedUser.user)) {
+        $rootScope.state.userWorkplace = null;
+      } else {
+        $rootScope.state.userWorkplace = authenticatedUser.user;
+      }
+    }
+
+    function loggedOut() {
+      $rootScope.setCurrentUser(null);
+      setLoggedInVisuals(null);
+    }
+
+    function successfulAuthentication(authenticatedUser) {
+      if (authenticatedUser) {
         $rootScope.$broadcast(AUTH_EVENTS.loginSuccess);
-        $rootScope.setCurrentUser(auth);
-        setLoggedInVisuals(auth);
+        $rootScope.setCurrentUser(authenticatedUser);
+        setLoggedInVisuals(authenticatedUser);
         $scope.error = false;
         $mdDialog.hide();
       } else {
         $rootScope.setCurrentUser(null);
-        setLoggedInVisuals({});
+        setLoggedInVisuals(null);
+        $location.path("/");
       }
     }
 
     function failedAuthentication() {
       $scope.error = true;
       $rootScope.$broadcast(AUTH_EVENTS.loginFailed);
+      $location.path("/");
     }
 
     var authenticate = function(credentials) {
@@ -48,16 +68,16 @@ angular.module('hitsaOis')
 
     $scope.login = function () {
       authenticate($scope.credentials);
-      if (AuthService.isAuthenticated()) {
+/*       if (AuthService.isAuthenticated()) {
         $location.path("/");
-      }
+      } */
     };
 
     $scope.idlogin = function () {
       authenticateIdCard();
-      if (AuthService.isAuthenticated()) {
+/*       if (AuthService.isAuthenticated()) {
         $location.path("/");
-      }
+      } */
     };
 
     $scope.logout = function() {
@@ -68,14 +88,13 @@ angular.module('hitsaOis')
     };
 
     $scope.changeUser = function () {
-      AuthService.changeUser($scope.userWork).then(function (auth) {
-        if (auth) {
-          setLoggedInVisuals(auth);
-          $rootScope.setCurrentUser(auth);
+      AuthService.changeUser($rootScope.state.userWorkplace).then(function (authenticatedUser) {
+        if (angular.isObject(authenticatedUser)) {
+          setLoggedInVisuals(authenticatedUser);
+          $rootScope.setCurrentUser(authenticatedUser);
           $location.path("/");
           $rootScope.$broadcast(AUTH_EVENTS.userChanged);
         } else {
-          //console.log('login:changeUser:fail');
           loggedOut();
           $location.path("/");
         }
@@ -91,24 +110,5 @@ angular.module('hitsaOis')
         parent: angular.element(document.body),
         clickOutsideToClose: true
       });
-    };
-
-    var setLoggedInVisuals = function (auth) {
-      if (auth.school) {
-        $rootScope.logo = config.apiUrl + '/school/' + auth.school.id + '/logo';
-      } else {
-        $rootScope.logo = '';
-      }
-      if (!angular.isDefined(auth.user)) {
-        $rootScope.userWork = null;
-      } else {
-        $rootScope.userWork = auth.user;
-      }
-
-    };
-
-    var loggedOut = function () {
-      $rootScope.setCurrentUser(null);
-      setLoggedInVisuals({});
     };
   });

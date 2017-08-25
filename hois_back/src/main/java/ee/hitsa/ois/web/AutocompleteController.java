@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
@@ -99,9 +98,9 @@ public class AutocompleteController {
     }
 
     @GetMapping("/persons")
-    public ResponseEntity<PersonDto> person(@Valid PersonLookupCommand lookup) {
-        Person person = autocompleteService.person(lookup);
-        return person != null ? new ResponseEntity<>(PersonDto.of(person), HttpStatus.OK) : ResponseEntity.notFound().build();
+    public ResponseEntity<PersonDto> person(HoisUserDetails user, @Valid PersonLookupCommand lookup) {
+        PersonDto person = autocompleteService.person(user, lookup);
+        return person != null ? new ResponseEntity<>(person, HttpStatus.OK) : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/schools")

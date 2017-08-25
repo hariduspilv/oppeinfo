@@ -94,9 +94,7 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
     if(!$scope.record.midtermTasks) {
       $scope.record.midtermTasks = [];
     }
-    $scope.record.midtermTasks.forEach(function(el){
-      DataUtils.convertStringToDates(el, ["taskDate"]);
-    });
+    DataUtils.convertStringToDates($scope.record.midtermTasks, ['taskDate']);
 
     if($scope.record.canBeEdited) {
       $scope.record.midtermTasks = orderBy($scope.record.midtermTasks, ['taskDate', $rootScope.currentLanguageNameField()]);

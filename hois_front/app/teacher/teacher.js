@@ -1,16 +1,17 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$route', '$location', 'message', 'DataUtils', 'dialogService', 'QueryUtils', function ($scope, $route, $location, message, DataUtils, dialogService, QueryUtils) {
+angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
+  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
+
   var id = $route.current.params.id;
   var baseUrl = '/teachers';
   var Endpoint = QueryUtils.endpoint(baseUrl);
   var TeacherQualificationsEndpoint = QueryUtils.endpoint('/teachers/' + id + '/qualifications');
   var TeacherMobilityEndpoint = QueryUtils.endpoint('/teachers/' + id + '/mobilities');
   var TeacherPositionEhisEndpoint = QueryUtils.endpoint('/teachers/' + id + '/ehisPositions');
+  var EmailGeneratorEndpoint = QueryUtils.endpoint('/school/generateEmail', {post: {method: 'POST'}});
 
-  QueryUtils.endpoint('/school/teacheroccupations/all').query().$promise.then(function (response) {
-    $scope.occupations = response;
-  });
+  $scope.occupations = QueryUtils.endpoint('/school/teacheroccupations/all').query();
 
   function updateQualifications(teacher) {
     if (teacher.teacherQualifications) {
@@ -21,9 +22,8 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
 
   function updateMobilities(teacher) {
     if (teacher.teacherMobility) {
-      teacher.teacherMobility.forEach(function (it) {
-        DataUtils.convertStringToDates(it, ['start', 'end']);
-      });
+      DataUtils.convertStringToDates(teacher.teacherMobility, ['start', 'end']);
+
       $scope.teacherMobility = new TeacherMobilityEndpoint({mobilities: teacher.teacherMobility});
       teacher.teacherMobility = undefined;
     }
@@ -36,9 +36,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     if ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11) {
       $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
     }
-    $scope.teacher.teacherPositionEhis.forEach(function (it) {
-      DataUtils.convertStringToDates(it, ['contractStart', 'contractEnd']);
-    });
+    DataUtils.convertStringToDates($scope.teacher.teacherPositionEhis, ['contractStart', 'contractEnd']);
     $scope.isHigher = $scope.teacher.isHigher;
     DataUtils.convertStringToDates($scope.teacher.person, ['birthdate']);
     updateQualifications($scope.teacher);
@@ -46,18 +44,12 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     $scope.displaySendEhis = ($scope.teacher.teacherPositionEhis.filter(function (it) {
       return it.id > 0;
     }).length > 0);
-    $scope.formState = {
-      person: true,
-      id: true
-    };
+    $scope.formState = {person: true, id: true};
   }
 
   $scope.lookupFailure = function () {
     $scope.cleanReadOnly();
-    $scope.formState = {
-      person: false,
-      id: true
-    };
+    $scope.formState = {person: false, id: true};
     $scope.teacher.person.sex = DataUtils.sexFromIdcode($scope.teacher.person.idcode);
     $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
   };
@@ -106,16 +98,15 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
   };
 
   $scope.cleanReadOnly = function () {
-    $scope.formState = {
-      person: false,
-      id:false
-    };
+    $scope.formState = {person: false, id:false};
+
     $scope.teacher.person.citizenship = 'RIIK_EST';
     $scope.teacher.person.firstname = '';
     $scope.teacher.person.lastname = '';
     $scope.teacher.person.nativeLanguage = '';
     $scope.teacher.person.birthdate = null;
     $scope.teacher.person.sex = null;
+    $scope.teacher.email = undefined;
 
     if ($scope.oldFoundPerson && $scope.oldFoundPerson.idcode &&
           ($scope.oldFoundPerson.idcode === $scope.teacher.person.idcode)) {
@@ -131,8 +122,10 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     $scope.teacher.person.nativeLanguage = response.nativeLanguage;
     $scope.teacher.person.birthdate = response.birthdate;
     $scope.teacher.person.sex = response.sex;
+    $scope.teacher.email = response.schoolEmail || undefined;
 
     afterLoad();
+    $scope.generateEmail();
   };
 
   $scope.delete = function () {
@@ -228,6 +221,16 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       }
     });
   };
+
+  var generatedEmail;
+  $scope.generateEmail = function() {
+    if(!$scope.teacher.id && (generatedEmail === $scope.teacher.email || $scope.teacher.email === undefined) && $scope.teacher.person && $scope.teacher.person.lastname) {
+      EmailGeneratorEndpoint.post({firstname: $scope.teacher.person.firstname, lastname: $scope.teacher.person.lastname}).$promise.then(function(result) {
+        $scope.teacher.email = generatedEmail = result.email;
+      }, function() { /* ignore errors */ });
+    }
+  };
+
 }]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', 'ArrayUtils', function ($scope, $route, QueryUtils, ArrayUtils) {
   QueryUtils.createQueryForm($scope, '/teachers', {order: 'person.lastname,person.firstname'});
 
@@ -235,9 +238,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
   $scope.schoolHigher = $route.current.locals.auth.school  && $route.current.locals.auth.school.higher;
 
     //TODO: external expert has no school!
-    QueryUtils.endpoint('/teachers/teacheroccupations').query(function(result) {
-        $scope.teacherOccupations = result;
-    });
+  $scope.teacherOccupations = QueryUtils.endpoint('/teachers/teacheroccupations').query();
 
   function setContains(set, item) {
     var ids = set.map(function(el){

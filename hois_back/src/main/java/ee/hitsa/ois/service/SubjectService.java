@@ -64,12 +64,14 @@ public class SubjectService {
     private SchoolDepartmentRepository schoolDepartmentRepository;
 
     public Subject create(HoisUserDetails user, SubjectForm newSubject) {
-        newSubject.setStatus(SubjectStatus.AINESTAATUS_S.name());
-        return save(user, new Subject(), newSubject);
+        Subject subject = new Subject();
+        subject.setStatus(classifierRepository.getOne(SubjectStatus.AINESTAATUS_S.name()));
+        return save(user, subject, newSubject);
     }
 
     public Subject save(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
         EntityUtil.bindToEntity(newSubject, subject, classifierRepository, "status");
+
         subject.setSchool(schoolRepository.getOne(user.getSchoolId()));
         SchoolDepartment schoolDepartment = null;
         if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().getId() != null && newSubject.getSchoolDepartment().getId().longValue() > 0) {
@@ -138,7 +140,7 @@ public class SubjectService {
     public Page<SubjectSearchDto> search(Long schoolId, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
         return subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            
+
             if (schoolId != null) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }

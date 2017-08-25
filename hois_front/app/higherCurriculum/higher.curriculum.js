@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('HigherCurriculumController', function ($scope, Classifier, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, DataUtils, $rootScope, config) {
+  .controller('HigherCurriculumController', function ($scope, Classifier, Curriculum, dialogService, ArrayUtils, message, $route, $location, QueryUtils, oisFileService, DataUtils, $rootScope, config, Session) {
 
     $scope.auth = $route.current.locals.auth;
 
@@ -314,7 +314,7 @@ angular.module('hitsaOis')
 
     function getEhisSchoolsSelection() {
         $scope.jointPartnersEhisSchools = [];
-        $scope.myEhisSchool = $rootScope.currentUser.school ? $rootScope.currentUser.school.ehisSchool : null;
+        $scope.myEhisSchool = Session.school ? Session.school.ehisSchool : null;
         $scope.jointPartnersEhisSchools.push($scope.myEhisSchool);
         $scope.curriculum.jointPartners.forEach(function(e){
             if(e.ehisSchool) {

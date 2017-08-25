@@ -216,7 +216,8 @@
         "students": "Õppurid",
         "studentstatistics": "Õppurite statistika",
         "studentstatisticsbyperiod": "Õppurite statistika perioodis",
-        "teachersload": "Õpetaja koormus"
+        "teachersloadhigher": "Õpetaja koormus (kõrg)",
+        "teachersloadvocational": "Õpetaja koormus (kutse)"
       },
       "graduation": {
         "label": "Lõpetamine",
@@ -502,8 +503,13 @@
     "deleteconfirm": "Kas oled kindel, et soovid õppeasutust kustutada?",
     "ehisId": "EHISe ID",
     "email": "E-post",
+    "emailDomain": "Õppeasutuse e-posti domeen",
+    "generateUserEmail": "E-posti automaatne genereerimine uuele kasutajale",
     "id": "ID",
     "label": "Õppeasutus",
+    "missing": {
+      "emailDomain": "Õppeasutuse e-posti domeen puudub"
+    },
     "name": "Õppeasutuse nimetus",
     "nameEn": "Õppeasutuse nimetus inglise keeles",
     "phone": "Telefon",
@@ -577,6 +583,7 @@
     "cancel": "Tühista",
     "cancelconfirm": "Kas oled kindel, et soovid käskkirja tühistada?",
     "canceledDirective": "Tühistatav käskkiri",
+    "cancelingDirectives": "Tühistamise käskkirjad",
     "cancelType": "Käskkirja tühistamise liik",
     "confirmDate": "Kinnitamise kuupäev",
     "confirmDateFrom": "Kinnitamise kuupäev alates",
@@ -594,6 +601,7 @@
     "insertedBy": "Koostaja",
     "insertedFrom": "Koostamise kuupäev alates",
     "insertedThru": "Koostamise kuupäev kuni",
+    "missingstudents": "Käskkirjal pole õppureid",
     "nostudentsfound": "Õppureid ei leitud",
     "preamble": "Preambula",
     "sendToConfirm": "Saada kinnitamisele",
@@ -1260,7 +1268,7 @@
       "schoolOther": "Muu õppeasutus",
       "state": "Riik",
       "year": "Aasta",
-      "deleteConfirm": "Kas oled kindel, et soovid õpetaja kvalifikatisooni kustutada?"
+      "deleteConfirm": "Kas oled kindel, et soovid õpetaja kvalifikatsiooni kustutada?"
     },
     "mobility": {
       "add": "Lisa Lühiajaline eemalolek",
@@ -1827,6 +1835,7 @@
     "confirmedThru": "Kinnitatud kuni",
     "studyOutcomes": "Õpiväljundid",
     "journalCapacity":"maht {{capacity}} tundi",
+    "downloadSigned": "Lae allkirjastatud protokoll",
     "messages": {
       "studentSuccesfullyAdded": "Õppurid edukalt lisatud",
       "confirmed": "Mooduli protokoll edukalt kinnitatud",
@@ -2008,6 +2017,7 @@
     },
     "teachersload": {
       "actualhours": "Õpetaja tegelik tundide arv",
+      "module": "Moodul",
       "plannedhours": "Õpetaja planeeritud tundide arv",
       "studyPeriod": "Õppeperiood",
       "studyYear": "Õppeaasta",

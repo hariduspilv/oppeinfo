@@ -16,9 +16,7 @@ angular.module('hitsaOis').factory('MidtermTaskUtil', ['$rootScope', 'DataUtils'
       };
 
       this.getSortedMidtermTasks = function(midtermTasks) {
-        midtermTasks.forEach(function(el){
-          DataUtils.convertStringToDates(el, ["taskDate"]);
-        });
+        DataUtils.convertStringToDates(midtermTasks, ['taskDate']);
         return orderBy(midtermTasks, ['taskDate', $rootScope.currentLanguageNameField()]);
       };
 
