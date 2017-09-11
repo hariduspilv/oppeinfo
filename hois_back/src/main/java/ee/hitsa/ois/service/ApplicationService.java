@@ -13,7 +13,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -22,7 +21,6 @@ import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
-import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 import org.slf4j.Logger;
@@ -34,11 +32,14 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.OisFile;
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.application.ApplicationFile;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubject;
 import ee.hitsa.ois.domain.application.ApplicationPlannedSubjectEquivalent;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.ApplicationType;
 import ee.hitsa.ois.enums.MainClassCode;
@@ -47,16 +48,13 @@ import ee.hitsa.ois.message.ConfirmationNeededMessage;
 import ee.hitsa.ois.message.StudentApplicationRejectedMessage;
 import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumVersionRepository;
-import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.StudyPeriodRepository;
-import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApplicationUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -93,18 +91,18 @@ public class ApplicationService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private CurriculumVersionRepository curriculumVersionRepository;
-    @Autowired
     private EntityManager em;
-    @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
-    private StudyPeriodRepository studyPeriodRepository;
-    @Autowired
-    private SubjectRepository subjectRepository;
     @Autowired
     private Validator validator;
 
+    /**
+     * Search student applications
+     *
+     * @param user
+     * @param criteria
+     * @param pageable
+     * @return
+     */
     public Page<ApplicationSearchDto> search(HoisUserDetails user, ApplicationSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(APPLICATION_FROM).sort(pageable);
 
@@ -137,8 +135,16 @@ public class ApplicationService {
         });
     }
 
+    /**
+     * Create new student application
+     *
+     * @param user
+     * @param applicationForm
+     * @return
+     * @throws ValidationFailedException if user is not allowed to create application
+     */
     public Application create(HoisUserDetails user, ApplicationForm applicationForm) {
-        Student student = studentRepository.getOne(applicationForm.getStudent().getId());
+        Student student = em.getReference(Student.class, applicationForm.getStudent().getId());
         if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to create application", user.getUsername()));
         }
@@ -152,34 +158,38 @@ public class ApplicationService {
         return save(new Application(), applicationForm);
     }
 
+    /**
+     * Store student application
+     *
+     * @param application
+     * @param applicationForm
+     * @return
+     * @throws ValidationFailedException if application type specific validation fails
+     */
     public Application save(Application application, ApplicationForm applicationForm) {
         EntityUtil.bindToEntity(applicationForm, application, classifierRepository, "student", "files", "plannedSubjects",
                 "studyPeriodStart", "studyPeriodStart", "accademicApplication", "newCurriculumVersion", "oldCurriculumVersion", "submitted");
-        EntityUtil.setEntityFromRepository(applicationForm, application, studyPeriodRepository, "studyPeriodStart", "studyPeriodEnd");
-        EntityUtil.setEntityFromRepository(applicationForm, application, curriculumVersionRepository, "newCurriculumVersion", "oldCurriculumVersion");
-        EntityUtil.setEntityFromRepository(applicationForm, application, studentRepository, "student");
+
+        application.setStudyPeriodStart(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodStart(), em));
+        application.setStudyPeriodEnd(EntityUtil.getOptionalOne(StudyPeriod.class, applicationForm.getStudyPeriodEnd(), em));
+        application.setOldCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, applicationForm.getOldCurriculumVersion(), em));
+        application.setNewCurriculumVersion(EntityUtil.getOptionalOne(CurriculumVersion.class, applicationForm.getNewCurriculumVersion(), em));
+        application.setStudent(EntityUtil.getOptionalOne(Student.class, applicationForm.getStudent(), em));
 
         if (applicationForm.getAcademicApplication() != null) {
-            application.setAcademicApplication(applicationRepository.getOne(applicationForm.getAcademicApplication().getId()));
+            application.setAcademicApplication(em.getReference(Application.class, applicationForm.getAcademicApplication().getId()));
         }
         updateFiles(application, applicationForm);
         updatePlannedSubjects(application, applicationForm);
         validateEntity(application);
-        assertConstriants(application);
-        return applicationRepository.save(application);
+        return EntityUtil.save(application, em);
     }
 
     private void validateEntity(Application application) {
         ApplicationType applicationType = ApplicationType.valueOf(EntityUtil.getCode(application.getType()));
-        Set<ConstraintViolation<Application>> errors = validator.validate(application, applicationType.validationGroup());
-        if(!errors.isEmpty()) {
-            throw new ValidationFailedException(errors);
-        }
-    }
+        ValidationFailedException.throwOnError(validator.validate(application, applicationType.validationGroup()));
 
-    private void assertConstriants(Application application) {
-        ApplicationType type = ApplicationType.valueOf(EntityUtil.getCode(application.getType()));
-        switch (type) {
+        switch (applicationType) {
         case AVALDUS_LIIK_AKAD:
             ApplicationUtil.assertAkadConstraints(application, applicationRepository);
             break;
@@ -209,7 +219,7 @@ public class ApplicationService {
         EntityUtil.bindEntityCollection(plannedSubject.getEquivalents(), ApplicationPlannedSubjectEquivalent::getId, plannedSubjectDto.getEquivalents(), ApplicationPlannedSubjectEquivalentDto::getId, dto -> {
             ApplicationPlannedSubjectEquivalent plannedSubjectEquivalent = new ApplicationPlannedSubjectEquivalent();
             EntityUtil.bindToEntity(dto, plannedSubjectEquivalent, "subject");
-            EntityUtil.setEntityFromRepository(dto, plannedSubjectEquivalent, subjectRepository, "subject");
+            plannedSubjectEquivalent.setSubject(EntityUtil.getOptionalOne(Subject.class, dto.getSubject(), em));
             return plannedSubjectEquivalent;
         }, null);
     }
@@ -222,35 +232,41 @@ public class ApplicationService {
         }, null);
     }
 
+    /**
+     * Delete student application
+     *
+     * @param application
+     * @throws EntityRemoveExceptionif there are references to application
+     */
     public void delete(Application application) {
-        EntityUtil.deleteEntity(applicationRepository, application);
+        EntityUtil.deleteEntity(application, em);
     }
 
-    public List<ApplicationType> existingApplicationsTypes(Long studentId) {
+    private List<ApplicationType> existingApplicationsTypes(Long studentId) {
         List<Application> existingApplications = applicationRepository.findDistinctTypeByStudentIdAndStatusCodeIn(studentId,
-                Arrays.asList(ApplicationStatus.AVALDUS_STAATUS_KOOST.name(), ApplicationStatus.AVALDUS_STAATUS_ESIT.name(),
-                        ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name(), ApplicationStatus.AVALDUS_STAATUS_KINNITAM.name()));
+                EnumUtil.toNameList(ApplicationStatus.AVALDUS_STAATUS_KOOST, ApplicationStatus.AVALDUS_STAATUS_ESIT,
+                        ApplicationStatus.AVALDUS_STAATUS_YLEVAAT, ApplicationStatus.AVALDUS_STAATUS_KINNITAM));
         return StreamUtil.toMappedList(application -> ApplicationType.valueOf(EntityUtil.getCode(application.getType())), existingApplications);
     }
 
     public Application submit(HoisUserDetails user, Application application) {
         Student student = application.getStudent();
         if(UserUtil.isSchoolAdmin(user, student.getSchool())) {
-            application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
+            setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT);
             application.setSubmitted(LocalDateTime.now());
         } if (UserUtil.isAdultStudent(user, student) || UserUtil.isStudentRepresentative(user, student)) {
-            application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_ESIT.name()));
+            setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_ESIT);
             application.setSubmitted(LocalDateTime.now());
         } else {
             application.setNeedsRepresentativeConfirm(Boolean.TRUE);
         }
-        return applicationRepository.save(application);
+        return EntityUtil.save(application, em);
     }
 
     public Application reject(Application application, ApplicationRejectForm applicationRejectForm) {
-        application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_TAGASI.name()));
+        setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_TAGASI);
         application.setRejectReason(applicationRejectForm.getReason());
-        return applicationRepository.save(application);
+        return EntityUtil.save(application, em);
     }
 
     public ApplicationDto get(HoisUserDetails user, Application application) {
@@ -260,8 +276,8 @@ public class ApplicationService {
     private Application setSeenBySchoolAdmin(HoisUserDetails user, Application application) {
         if (UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) &&
                 ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_ESIT, application.getStatus())) {
-            application.setStatus(classifierRepository.getOne(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT.name()));
-            return applicationRepository.save(application);
+            setApplicationStatus(application, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT);
+            return EntityUtil.save(application, em);
         }
         return application;
     }
@@ -295,7 +311,7 @@ public class ApplicationService {
 
     public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
         List<ApplicationType> existingApplications = existingApplicationsTypes(EntityUtil.getId(student));
-        boolean isHigher = CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel());
+        boolean isHigher = CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum());
         Map<ApplicationType, ApplicationApplicableDto> result = new HashMap<>();
         rulesByApplicationType(student, existingApplications, isHigher, result);
         rulesByApplicationClassifier(isHigher, result);
@@ -369,10 +385,13 @@ public class ApplicationService {
         }
     }
 
-
     public void sendRejectionNotificationMessage(Application application, HoisUserDetails user) {
         log.info("rejection notification message sent to student {}", EntityUtil.getId(application.getStudent()));
         StudentApplicationRejectedMessage data = new StudentApplicationRejectedMessage(application);
         automaticMessageService.sendMessageToStudent(MessageType.TEATE_LIIK_OP_AVALDUS_TL, application.getStudent(), data, user);
+    }
+
+    private void setApplicationStatus(Application application, ApplicationStatus status) {
+        application.setStatus(em.getReference(Classifier.class, status.name()));
     }
 }

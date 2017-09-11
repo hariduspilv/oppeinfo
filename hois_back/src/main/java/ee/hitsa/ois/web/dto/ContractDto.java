@@ -32,6 +32,7 @@ public class ContractDto extends VersionedCommand {
     private AutocompleteResult contractCoordinator;
     private String practicePlan;
     private AutocompleteResult subject;
+    private Long wdId;
 
     public static ContractDto of(Contract contract) {
         if (contract == null) {
@@ -222,6 +223,14 @@ public class ContractDto extends VersionedCommand {
 
     public void setSubject(AutocompleteResult subject) {
         this.subject = subject;
+    }
+
+    public Long getWdId() {
+        return wdId;
+    }
+
+    public void setWdId(Long wdId) {
+        this.wdId = wdId;
     }
 
 }

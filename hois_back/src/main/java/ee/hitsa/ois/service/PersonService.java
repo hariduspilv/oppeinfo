@@ -26,9 +26,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
-import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -53,18 +51,10 @@ public class PersonService {
 
     @Autowired
     private EntityManager em;
-
     @Autowired
     private ClassifierRepository classifierRepository;
-
-    @Autowired
-    private PersonRepository personRepository;
-
     @Autowired
     private SchoolRepository schoolRepository;
-
-    @Autowired
-    private UserRepository userRepository;
 
     private static final String PERSON_FROM = "from person p " +
             "left outer join user_ u on p.id=u.person_id " +
@@ -113,7 +103,7 @@ public class PersonService {
         EntityUtil.bindToEntity(personForm, person, classifierRepository);
         person.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(personForm.getIdcode()));
         person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(personForm.getIdcode())));
-        return personRepository.save(person);
+        return EntityUtil.save(person, em);
     }
 
     public UserDto getUser(User user) {
@@ -122,8 +112,7 @@ public class PersonService {
 
     public User saveUser(UserForm userForm, User user) {
         EntityUtil.bindToEntity(userForm, user, classifierRepository, "school", "userRights");
-        Long schoolId = userForm.getSchool() == null ? null : userForm.getSchool().getId();
-        user.setSchool(EntityUtil.getOptionalOne(School.class, schoolId, em));
+        user.setSchool(EntityUtil.getOptionalOne(School.class, userForm.getSchool(), em));
 
         Map<String, List<UserRights>> oldRights = user.getUserRights().stream().collect(Collectors.groupingBy(it -> EntityUtil.getCode(it.getObject())));
         Set<UserRights> result = new HashSet<>();
@@ -185,7 +174,7 @@ public class PersonService {
         if (user.getUserRights().isEmpty()) {
             throw new ValidationFailedException("user.roleNoRights");
         }
-        return userRepository.save(user);
+        return EntityUtil.save(user, em);
     }
 
     public User createUser(UserForm userForm, Person person) {
@@ -195,10 +184,10 @@ public class PersonService {
     }
 
     public void deleteUser(User user) {
-        EntityUtil.deleteEntity(userRepository, user);
+        EntityUtil.deleteEntity(user, em);
     }
 
     public void delete(Person person) {
-        EntityUtil.deleteEntity(personRepository, person);
+        EntityUtil.deleteEntity(person, em);
     }
 }

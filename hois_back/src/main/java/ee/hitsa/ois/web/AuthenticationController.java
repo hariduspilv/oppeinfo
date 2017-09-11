@@ -2,7 +2,6 @@ package ee.hitsa.ois.web;
 
 import java.security.Principal;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
@@ -13,6 +12,7 @@ import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -33,10 +33,8 @@ import ee.hitsa.ois.service.security.AuthenticatedUser;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.dto.UserProjection;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
-
 
 @RestController
 public class AuthenticationController {
@@ -61,7 +59,6 @@ public class AuthenticationController {
             HoisUserDetails userDetails = HoisUserDetails.fromPrincipal(principal);
             User user = userRepository.getOne(userDetails.getUserId());
             AuthenticatedUser authenticatedUser = new AuthenticatedUser(user, sessionTimeoutInSeconds);
-            List<UserProjection> users = userService.findAllActiveUsers(user.getPerson().getId());
 
             School school = user.getSchool();
             AuthenticatedSchool authenticatedSchool = null;
@@ -72,14 +69,13 @@ public class AuthenticationController {
             authenticatedUser.setSchool(authenticatedSchool);
             authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());
             authenticatedUser.setFullname(user.getPerson().getFullname());
-            authenticatedUser.setUsers(users);
+            authenticatedUser.setUsers(userService.findAllActiveUsers(user.getPerson().getId()));
             authenticatedUser.setLoginMethod(userDetails.getLoginMethod());
 
             return authenticatedUser;
         }
         return null;
     }
-
 
     @CrossOrigin
     @RequestMapping("/idlogin")
@@ -97,7 +93,6 @@ public class AuthenticationController {
             response.addHeader(hoisJwtProperties.getHeader(), hoisJwtProperties.getTokenPrefix() + " " + token);
         }
     }
-
 
     @PostMapping("/changeUser")
     public AuthenticatedUser updateUser(Principal principal, @RequestBody Map<String, Long> json) {
@@ -122,6 +117,10 @@ public class AuthenticationController {
             return user(SecurityContextHolder.getContext().getAuthentication());
         }
         return null;
+    }
+
+    @GetMapping("/refresh")
+    public void refreshSession() {
     }
 }
 

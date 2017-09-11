@@ -60,10 +60,18 @@
               <label>{{'teacher.scheduleLoad' | translate}}</label>
               <hois-value value="teacher.scheduleLoad"></hois-value>
             </md-input-container>
-            <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-              <hois-value ng-if="teacher.isStudyPeriodScheduleLoad === true" value="'teacher.studyPeriodLoad' | translate"></hois-value>
-              <hois-value ng-if="teacher.isStudyPeriodScheduleLoad === false" value="'teacher.studyYearLoad' | translate"></hois-value>
-            </md-input-container>
+            <md-radio-group ng-model="teacher.isStudyPeriodScheduleLoad"
+                            layout="row" layout-sm="column" layout-xs="column"
+                            flex="30" flex-sm="100" flex-xs="100"
+                            flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+                            class="align-center" disabled>
+              <md-radio-button ng-value="true">
+                {{'teacher.studyPeriodLoad' | translate}}
+              </md-radio-button>
+              <md-radio-button ng-value="false">
+                {{'teacher.studyYearLoad' | translate}}
+              </md-radio-button>
+            </md-radio-group>
             <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'teacher.isActive' | translate}}</label>
               <hois-value value="teacher.isActive ? 'main.yes' : 'main.no' | translate"></hois-value>

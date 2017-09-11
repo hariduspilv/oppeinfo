@@ -121,6 +121,8 @@ public class SaisClassifierService {
                         case "ESTONIAN":
                             sc.setNameEt(name);
                             break;
+                        default:
+                            sc.setNameEt("");
                         }
                     }
                     em.persist(sc);

@@ -17,6 +17,7 @@ public class TimetableDto {
     private List<TimetableCurriculumDto> curriculums;
     private List<SubjectTeacherPairDto> pairs;
     private String status;
+    private List<String> roomCodes;
 
     public Long getId() {
         return id;
@@ -98,5 +99,12 @@ public class TimetableDto {
         this.status = status;
     }
 
-    
+    public List<String> getRoomCodes() {
+        return roomCodes;
+    }
+
+    public void setRoomCodes(List<String> roomCodes) {
+        this.roomCodes = roomCodes;
+    }
+
 }

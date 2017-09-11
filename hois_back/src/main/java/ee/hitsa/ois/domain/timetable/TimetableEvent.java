@@ -28,6 +28,8 @@ public class TimetableEvent extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier repeat;
     private Short lessonNr;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier capacityType;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
@@ -85,6 +87,30 @@ public class TimetableEvent extends BaseEntityWithId {
         this.repeat = repeat;
     }
 
+    public Short getLessonNr() {
+        return lessonNr;
+    }
+
+    public void setLessonNr(Short lessonNr) {
+        this.lessonNr = lessonNr;
+    }
+
+    public Classifier getRepeat() {
+        return repeat;
+    }
+
+    public void setRepeat(Classifier repeat) {
+        this.repeat = repeat;
+    }
+
+    public Classifier getCapacityType() {
+        return capacityType;
+    }
+
+    public void setCapacityType(Classifier capacityType) {
+        this.capacityType = capacityType;
+    }
+
     public TimetableObject getTimetableObject() {
         return timetableObject;
     }
@@ -99,14 +125,6 @@ public class TimetableEvent extends BaseEntityWithId {
 
     public void setTimetableEventTimes(List<TimetableEventTime> timetableEventTimes) {
         this.timetableEventTimes = timetableEventTimes;
-    }
-
-    public Short getLessonNr() {
-        return lessonNr;
-    }
-
-    public void setLessonNr(Short lessonNr) {
-        this.lessonNr = lessonNr;
     }
 
 }

@@ -1,20 +1,21 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 public class SubjectTeacherPairDto {
+
     private Long id;
     private String nameEt;
     private String nameEn;
     private String subjectCode;
     private String teacherName;
 
-    public SubjectTeacherPairDto(Long id, String nameEt, String nameEn, String subjectCode, String teacherFirstName, String teacherLastName) {
+    public SubjectTeacherPairDto(Long id, String nameEt, String nameEn, String subjectCode, String teacherName) {
         this.id = id;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
         this.subjectCode = subjectCode;
-        this.teacherName = teacherFirstName + " " + teacherLastName;
+        this.teacherName = teacherName;
     }
-    
+
     public Long getId() {
         return id;
     }
@@ -54,5 +55,4 @@ public class SubjectTeacherPairDto {
     public void setTeacherName(String teacherName) {
         this.teacherName = teacherName;
     }
-
 }

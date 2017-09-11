@@ -1,0 +1,27 @@
+<md-dialog aria-label="grade add dialog" flex="75" flex-xs="100">
+  <md-toolbar>
+    <div class="md-toolbar-tools">
+      <h2 flex>{{'ehis.message.' + record.wsName | translate}}</h2>
+      <span flex></span>
+      <md-button class="md-icon-button" ng-click="cancel()">
+        <md-icon md-font-set="material-icons">close</md-icon>
+      </md-button>
+    </div>
+  </md-toolbar>
+
+  <md-dialog-content>
+    <div class="md-dialog-content">
+      <div>
+        <label>{{'ehis.message.request' | translate}}</label>&nbsp;{{record.request | limitTo:requestLength }}<a ng-click="showAll(true)" ng-if="requestLength">&hellip;</a>
+      </div>
+      <hr>
+      <div>
+        <label>{{'ehis.message.response' | translate}}</label>&nbsp;{{record.response | limitTo:responseLength }}<a ng-click="showAll(false)" ng-if="responseLength">&hellip;</a>
+      </div>
+    </div>
+  </md-dialog-content>
+
+  <md-dialog-actions layout="row" layout-align="start center">
+    <md-button ng-click="cancel()" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </md-dialog-actions>
+</md-dialog>

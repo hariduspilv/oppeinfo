@@ -326,6 +326,10 @@ angular.module('hitsaOis')
         {
           name: 'main.menu.dataexchange.studentinfoExport',
           url: "/ehis/student/export?_menu"
+        },
+        {
+          name: 'main.menu.dataexchange.ehisLogs',
+          url: "/ehis/logs?_menu"
         }
       ]
     });

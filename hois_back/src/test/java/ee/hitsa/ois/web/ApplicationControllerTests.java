@@ -84,7 +84,7 @@ public class ApplicationControllerTests {
                 filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
                 filters.add(root.get("school").in(userSchools));
                 return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).stream().findFirst().get();
+            }).get(0);
 
             userSchool = student.getSchool();
         }
@@ -170,7 +170,7 @@ public class ApplicationControllerTests {
 
         Assert.assertTrue(!CollectionUtils.isEmpty(allNotStudyingStudents));
 
-        userSchool = allNotStudyingStudents.stream().findFirst().get().getSchool();
+        userSchool = allNotStudyingStudents.get(0).getSchool();
         testConfigurationService.userToRoleInSchool(Role.ROLL_A, EntityUtil.getId(userSchool), restTemplate);
         List<Student> notStudyingStudents = allNotStudyingStudents.stream()
                 .filter(s -> s.getSchool().getId() == userSchool.getId()).collect(Collectors.toList());

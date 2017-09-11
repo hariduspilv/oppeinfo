@@ -4,14 +4,14 @@
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label>{{'reception.admission.code' | translate}}</label>
-            <hois-select ng-model="criteria.code" values="saisAdmissionCodes" value-property="nameEt"></hois-select>
+            <hois-select ng-model="criteria.code" type="saisadmissioncode" value-property="nameEt"></hois-select>
           </md-input-container>
       </div>
 
       <div layout="row" layout-sm="column" layout-xs="column"  >
           <md-input-container flex="60" flex-sm="100" flex-xs="100">
             <label>{{'student.curriculum' | translate}}</label>
-            <hois-select ng-model="criteria.curriculumVersion" values="curriculumVersions"></hois-select>
+            <hois-select ng-model="criteria.curriculumVersion" type="curriculumversion" criteria="{sais: true}"></hois-select>
           </md-input-container>
       </div>
 

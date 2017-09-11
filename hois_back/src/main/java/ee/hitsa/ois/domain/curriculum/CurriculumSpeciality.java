@@ -24,39 +24,37 @@ import ee.hitsa.ois.util.Translatable;
 @Entity
 public class CurriculumSpeciality extends BaseEntityWithId implements Translatable {
 
-	private static final long serialVersionUID = 8173305313184771116L;
+    private static final long serialVersionUID = 8173305313184771116L;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private Curriculum curriculum;
-	@NotBlank
-	@Size(max=100)
-	private String nameEt;
-	@NotBlank
-	@Size(max=100)
-	private String nameEn;
-	@NotNull
-	private BigDecimal credits;
-	@Size(max=1000)
-	private String description;
-	@Size(max=255)
-	private String occupationEt;
-	@Size(max=255)
-	private String occupationEn;
+    @NotBlank
+    @Size(max=100)
+    private String nameEt;
+    @NotBlank
+    @Size(max=100)
+    private String nameEn;
+    @NotNull
+    private BigDecimal credits;
+    @Size(max=1000)
+    private String description;
+    @Size(max=255)
+    private String occupationEt;
+    @Size(max=255)
+    private String occupationEn;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier occupation;
+    @OneToMany(mappedBy = "curriculumSpeciality", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CurriculumVersionSpeciality> curriculumVersionSpecialities;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	private Classifier occupation;
-	
-	@OneToMany(mappedBy = "curriculumSpeciality", cascade = CascadeType.ALL, orphanRemoval = true)
-	private Set<CurriculumVersionSpeciality> curriculumVersionSpecialities;
-	
-	@Transient
-	private Long referenceNumber;
-	
-	@Transient
-	public boolean isAddedToVersion() {
-	    return !CollectionUtils.isEmpty(this.getCurriculumVersionSpecialities());
-	}
+    @Transient
+    private Long referenceNumber;
+
+    @Transient
+    public boolean isAddedToVersion() {
+        return !CollectionUtils.isEmpty(getCurriculumVersionSpecialities());
+    }
 
     public Set<CurriculumVersionSpeciality> getCurriculumVersionSpecialities() {
         return curriculumVersionSpecialities != null ? curriculumVersionSpecialities 
@@ -75,7 +73,7 @@ public class CurriculumSpeciality extends BaseEntityWithId implements Translatab
     public void setReferenceNumber(Long referenceNumber) {
         this.referenceNumber = referenceNumber;
     }
-        
+
     public Curriculum getCurriculum() {
         return curriculum;
     }
@@ -86,59 +84,59 @@ public class CurriculumSpeciality extends BaseEntityWithId implements Translatab
 
     @Override
     public String getNameEt() {
-		return nameEt;
-	}
+        return nameEt;
+    }
 
-	public void setNameEt(String nameEt) {
-		this.nameEt = nameEt;
-	}
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
+    }
 
-	@Override
+    @Override
     public String getNameEn() {
-		return nameEn;
-	}
+        return nameEn;
+    }
 
-	public void setNameEn(String nameEn) {
-		this.nameEn = nameEn;
-	}
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
+    }
 
-	public BigDecimal getCredits() {
-		return credits;
-	}
+    public BigDecimal getCredits() {
+        return credits;
+    }
 
-	public void setCredits(BigDecimal credits) {
-		this.credits = credits;
-	}
+    public void setCredits(BigDecimal credits) {
+        this.credits = credits;
+    }
 
-	public String getDescription() {
-		return description;
-	}
+    public String getDescription() {
+        return description;
+    }
 
-	public void setDescription(String description) {
-		this.description = description;
-	}
+    public void setDescription(String description) {
+        this.description = description;
+    }
 
-	public String getOccupationEt() {
-		return occupationEt;
-	}
+    public String getOccupationEt() {
+        return occupationEt;
+    }
 
-	public void setOccupationEt(String occupationEt) {
-		this.occupationEt = occupationEt;
-	}
+    public void setOccupationEt(String occupationEt) {
+        this.occupationEt = occupationEt;
+    }
 
-	public String getOccupationEn() {
-		return occupationEn;
-	}
+    public String getOccupationEn() {
+        return occupationEn;
+    }
 
-	public void setOccupationEn(String occupationEn) {
-		this.occupationEn = occupationEn;
-	}
+    public void setOccupationEn(String occupationEn) {
+        this.occupationEn = occupationEn;
+    }
 
-	public Classifier getOccupation() {
-		return occupation;
-	}
+    public Classifier getOccupation() {
+        return occupation;
+    }
 
-	public void setOccupation(Classifier occupation) {
-		this.occupation = occupation;
-	}
+    public void setOccupation(Classifier occupation) {
+        this.occupation = occupation;
+    }
 }

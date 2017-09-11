@@ -32,6 +32,7 @@ import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.enums.DeclarationStatus;
+import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.ProtocolType;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -281,9 +282,7 @@ public class HigherProtocolService {
         Long studyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
 
         List<SubjectStudyPeriod> ssps = subjectStudyPeriodRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("studyPeriod").get("id"), studyPeriod));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
+            return cb.equal(root.get("studyPeriod").get("id"), studyPeriod);
         });
         return subjectStudyPeriodsToAutocompleteResultList(ssps);
     }
@@ -332,7 +331,7 @@ public class HigherProtocolService {
         List<HigherProtocolStudentResultDto> calculatedResults = new ArrayList<>();
         for(Long protocolStudentId : command.getProtocolStudents()) {
             ProtocolStudent ps = protocolStudentRepository.getOne(protocolStudentId);
-            String grade = HigherProtocolGradeUtil.calculateGrade(ps);
+            HigherAssessment grade = HigherProtocolGradeUtil.calculateGrade(ps);
             calculatedResults.add(new HigherProtocolStudentResultDto(protocolStudentId, grade));
         }
         return calculatedResults;

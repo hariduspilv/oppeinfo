@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -70,6 +69,7 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.ExceptionUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -104,11 +104,11 @@ public class SaisApplicationService {
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String ESTONIAN = "ESTONIAN";
 
-    private static final List<String> REVOKED_APPLICATION_STATUSES = Arrays.asList(SaisApplicationStatus.SAIS_AVALDUSESTAATUS_AL.name(),
-            SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TL.name(), SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TYH.name());
+    private static final List<String> REVOKED_APPLICATION_STATUSES = EnumUtil.toNameList(SaisApplicationStatus.SAIS_AVALDUSESTAATUS_AL,
+            SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TL, SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TYH);
 
-    private static final List<String> CLASSIFIERS_LIST = Arrays.asList(MainClassCode.FINALLIKAS.name(), MainClassCode.RIIK.name(),
-            MainClassCode.SAIS_AVALDUSESTAATUS.name(), MainClassCode.OPPEASTE.name(), MainClassCode.OPPEKEEL.name(), MainClassCode.OPPEKOORMUS.name(), MainClassCode.OPPEVORM.name());
+    private static final List<String> CLASSIFIERS_LIST = EnumUtil.toNameList(MainClassCode.FINALLIKAS, MainClassCode.RIIK,
+            MainClassCode.SAIS_AVALDUSESTAATUS, MainClassCode.OPPEASTE, MainClassCode.OPPEKEEL, MainClassCode.OPPEKOORMUS, MainClassCode.OPPEVORM);
 
     private static final String SAIS_APPLICATION_FROM = "from (select a.id, a.application_nr, a.idcode, a.firstname, a.lastname, a.status_code,"+
             "sais_admission.code as sais_admission_code, (exists (select id from directive_student where directive_student.sais_application_id = a.id)) as added_to_directive, curriculum.school_id as school_id from sais_application a "+
@@ -137,8 +137,6 @@ public class SaisApplicationService {
     private Validator validator;
     @Autowired
     private SaisProperties sp;
-    @Autowired
-    private DirectiveService directiveService;
 
     private final SaisService saisService = new SaisService();
     private final CsvMapper csvMapper = new CsvMapper();
@@ -284,7 +282,7 @@ public class SaisApplicationService {
             return;
         }
 
-        if (existingSaisApplication != null && !directiveService.directiveStudentsWithSaisApplication(Arrays.asList(existingSaisApplication.getId())).isEmpty()) {
+        if (existingSaisApplication != null && !directiveStudentsWithSaisApplication(Arrays.asList(existingSaisApplication.getId())).isEmpty()) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, String.format("%son seotud käskkiri - seda ei uuendata.", messageForOther)));
             return;
         }
@@ -364,17 +362,17 @@ public class SaisApplicationService {
             return;
         }
 
-        List<SaisApplicationGraduatedSchool> existing = saisApplication.getGraduatedSchools().stream()
-                .filter(it -> EntityUtil.getCode(previousStudyLevel).equals(EntityUtil.getNullableCode(it.getStudyLevel()))).collect(Collectors.toList());
+        String previousStudyLevelCode = EntityUtil.getCode(previousStudyLevel);
+        SaisApplicationGraduatedSchool existing = saisApplication.getGraduatedSchools().stream()
+                .filter(it -> previousStudyLevelCode.equals(EntityUtil.getNullableCode(it.getStudyLevel()))).findFirst().orElse(null);
 
-        if(CollectionUtils.isEmpty(existing)) {
+        if(existing == null) {
             SaisApplicationGraduatedSchool sags = new SaisApplicationGraduatedSchool();
             sags.setStudyLevel(previousStudyLevel);
             saisApplication.getGraduatedSchools().add(sags);
         } else {
-            existing.get(0).setStudyLevel(previousStudyLevel);
+            existing.setStudyLevel(previousStudyLevel);
         }
-
 
 
         saisApplication.setBirthdate(EstonianIdCodeValidator.birthdateFromIdcode(row.getIdcode()));
@@ -461,11 +459,11 @@ public class SaisApplicationService {
     }
 
     public String getSampleCsvFile() {
-        // TODO use letters šŠžŽ too
-        return "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;OppekavaVersioon/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;OppuriEelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp\n"+
-               "FIL12/12;Nr123;Mari;Maasikas;49011112345;EST;EST;RE;1.01.2012;T;FIL12/12;TAIS;P;E;411;1.12.2011;1.02.2012\n"+
-               "MAT15/16;Nr456;Tõnu;Kuut;39311112312;FIN;EST;REV;3.03.2012;T;MAT15/16;OSA;P;I;411;1.01.2012;3.04.2012\n"+
-               "MAT15/16;Nr321;Tiiu;Kask;49302052312;EST;EST;RE;12.02.2012;T;MAT15/16;OSA;K;E;411;1.01.2012;3.04.2012";
+        return "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;OppekavaVersioon/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;OppuriEelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp\r\n"+
+               "FIL12/12;Nr123;Mari;Maasikas;49011112345;EST;EST;RE;1.01.2012;T;FIL12/12;TAIS;P;E;411;1.12.2011;1.02.2012\r\n"+
+               "MAT15/16;Nr456;Tõnu;Kuut;39311112312;FIN;EST;REV;3.03.2012;T;MAT15/16;OSA;P;I;411;1.01.2012;3.04.2012\r\n"+
+               "MAT15/16;Nr321;Tiiu;Kask;49302052312;EST;EST;RE;12.02.2012;T;MAT15/16;OSA;K;E;411;1.01.2012;3.04.2012\r\n"+
+               "MAT15/16;Nr321;El;Mariažši;48703083963;EST;EST;RE;22.02.2012;T;MAT15/16;OSA;K;E;411;1.01.2012;3.04.2012";
     }
 
     public String classifiersFile() {
@@ -504,7 +502,7 @@ public class SaisApplicationService {
                         .stream().collect(Collectors.toMap(SaisApplication::getApplicationNr, a -> a));
                 Map<Long, Long> prevDirectives = null;
                 if(!previousApplications.isEmpty()) {
-                    prevDirectives = directiveService.directiveStudentsWithSaisApplication(previousApplications.values().stream().map(SaisApplication::getId).collect(Collectors.toList()));
+                    prevDirectives = directiveStudentsWithSaisApplication(previousApplications.values().stream().map(SaisApplication::getId).collect(Collectors.toList()));
                 }
                 for(Application application : applicationResponse.getAppExportResponse().getApplications().getApplication()) {
                     SaisApplication prevApp = previousApplications.get(application.getApplicationNumber());
@@ -533,8 +531,8 @@ public class SaisApplicationService {
             applicationResponse.setQueryName("sais2.AllApplicationsExport.v1");
             log.error("Exception in SaisApplicationService.importFromSais: ", e);
         }
-        List<SaisApplicationImportedRowDto> result = Stream.concat(dto.getFailed().stream(), dto.getSuccessful().stream())
-                .collect(Collectors.toList());
+        List<SaisApplicationImportedRowDto> result = new ArrayList<>(dto.getFailed());
+        result.addAll(dto.getSuccessful());
         saisLogService.insertLog(applicationResponse, user, result.stream().collect(Collectors
                 .toMap(SaisApplicationImportedRowDto::getApplicationNr, SaisApplicationImportedRowDto::toString)).toString());
 
@@ -636,6 +634,14 @@ public class SaisApplicationService {
         saisAdmissionRepository.save(saisAdmission);
 
         return new SaisApplicationImportedRowDto(saisApplication, null);
+    }
+
+    private Map<Long, Long> directiveStudentsWithSaisApplication(List<Long> saisApplicationIds) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_student ds");
+        qb.requiredCriteria("ds.sais_application_id in (:saisApplicationIds)", "saisApplicationIds", saisApplicationIds);
+
+        List<?> data = qb.select("ds.sais_application_id, ds.id", em).getResultList();
+        return data.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> resultAsLong(r, 1), (o, n) -> o));
     }
 
     //if returned string is empty then there is no error, otherwise returns a string containing the error message

@@ -7,14 +7,19 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSpeciality;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.util.EntityUtil;
 
 public class CurriculumReport {
 
@@ -56,12 +61,12 @@ public class CurriculumReport {
         nameEt = curriculum.getNameEt();
         nameEn = curriculum.getNameEn();
         origStudyLevel = name(curriculum.getOrigStudyLevel(), lang);
-        studyForm = curriculum.getStudyForms().stream().map(r -> name(r.getStudyForm(), lang)).sorted().collect(Collectors.joining(", "));
+        studyForm = curriculum.getStudyForms().stream().map(r -> name(r.getStudyForm(), lang)).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.joining(", "));
         List<String> jointSchools = new ArrayList<>();
         jointSchools.add(name(curriculum.getSchool(), lang));
         if(Boolean.TRUE.equals(curriculum.getJoint())) {
             // CurriculumJointPartner.name(Et|En) contains only name of abroad school, otherwise use CurriculumJointPartner.ehisSchool.name(Et|En)
-            jointSchools.addAll(curriculum.getJointPartners().stream().map(r -> r.isAbroad() ? name(r, lang) : name(r.getEhisSchool(), lang)).sorted().collect(Collectors.toList()));
+            jointSchools.addAll(curriculum.getJointPartners().stream().map(r -> r.isAbroad() ? name(r, lang) : name(r.getEhisSchool(), lang)).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList()));
         }
         school = String.join(", ", jointSchools);
         credits = curriculum.getCredits();
@@ -86,21 +91,33 @@ public class CurriculumReport {
         }
         group = name(curriculum.getGroup(), lang);
         merCode = curriculum.getMerCode();
-        studyLang = curriculum.getStudyLanguages().stream().map(r -> name(r.getStudyLang(), lang)).sorted().collect(Collectors.joining(" "+translate("or", lang)+" "));
+        studyLang = curriculum.getStudyLanguages().stream().map(r -> name(r.getStudyLang(), lang)).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.joining(" "+translate("or", lang)+" "));
         otherLanguages = curriculum.getOtherLanguages();
         merRegDate = curriculum.getMerRegDate();
         approvalDate = curriculum.getApproval();
         // XXX language-specific field
         admissionRequirements = curriculum.getAdmissionRequirementsEt();
-        specialities = curriculumVersion.getSpecialities().stream().map(r -> String.format("%s %s", name(r.getCurriculumSpeciality(), lang), r.getCurriculumSpeciality().getCredits())).sorted().collect(Collectors.toList());
-        minorSpecialities = curriculumVersion.getModules().stream().filter(r -> Boolean.TRUE.equals(r.getMinorSpeciality())).map(r -> String.format("%s %s", name(r, lang), r.getTotalCredits())).sorted().collect(Collectors.toList());
+        specialities = curriculumVersion.getSpecialities().stream().map(r -> String.format("%s %s", name(r.getCurriculumSpeciality(), lang), r.getCurriculumSpeciality().getCredits())).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
+        minorSpecialities = curriculumVersion.getModules().stream().filter(r -> Boolean.TRUE.equals(r.getMinorSpeciality())).map(r -> String.format("%s %s", name(r, lang), r.getTotalCredits())).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
         // XXX language-specific field
         objectives = curriculum.getObjectivesEt();
         // XXX language-specific field
         outcomes = curriculum.getOutcomesEt();
-        grade = curriculum.getGrades().stream().map(r -> name(r, lang)).sorted().collect(Collectors.joining(", "));
+        grade = curriculum.getGrades().stream().map(r -> name(r, lang)).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.joining(", "));
         documents = "Diplom ja akadeemiline õiend";
-        structure = curriculumVersion.getModules().stream().filter(r -> !Boolean.TRUE.equals(r.getMinorSpeciality())).map(r -> new Structure(r, lang)).sorted(Comparator.comparing(Structure::getName)).collect(Collectors.toList());
+        List<CurriculumVersionHigherModule> modules = curriculumVersion.getModules().stream().filter(r -> !Boolean.TRUE.equals(r.getMinorSpeciality())).collect(Collectors.toList());
+        Map<Long, List<CurriculumVersionHigherModule>> moduleMap = new HashMap<>();
+        for(CurriculumVersionHigherModule m : modules) {
+            for(CurriculumVersionHigherModuleSpeciality hs : m.getSpecialities()) {
+                Long specialityId = EntityUtil.getId(hs.getSpeciality());
+                List<CurriculumVersionHigherModule> ml = moduleMap.get(specialityId);
+                if(ml == null) {
+                    moduleMap.put(specialityId, ml = new ArrayList<>());
+                }
+                ml.add(m);
+            }
+        }
+        structure = curriculumVersion.getSpecialities().stream().map(r -> new Structure(r, moduleMap.get(EntityUtil.getId(r)), lang)).sorted(Comparator.comparing(Structure::getName, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
         optionalStudyDescription = curriculum.getOptionalStudyDescription();
         // XXX language-specific field
         graduationRequirements = curriculum.getGraduationRequirementsEt();
@@ -207,9 +224,9 @@ public class CurriculumReport {
         private final String name;
         private final List<String> modules;
 
-        public Structure(CurriculumVersionHigherModule hmodule, Language lang) {
-            this.name = name(hmodule, lang);
-            this.modules = hmodule.getSpecialities().stream().map(r -> r.getModule()).map(r -> String.format("%s %s/%s", name(r, lang), r.getCompulsoryStudyCredits(), r.getOptionalStudyCredits())).sorted().collect(Collectors.toList());
+        public Structure(CurriculumVersionSpeciality speciality, List<CurriculumVersionHigherModule> modules, Language lang) {
+            this.name = name(speciality.getCurriculumSpeciality(), lang);
+            this.modules = modules.stream().map(r -> String.format("%s %s/%s", name(r, lang), r.getCompulsoryStudyCredits(), r.getOptionalStudyCredits())).sorted(String.CASE_INSENSITIVE_ORDER).collect(Collectors.toList());
         }
 
         public String getName() {

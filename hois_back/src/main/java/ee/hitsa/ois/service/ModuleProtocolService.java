@@ -26,29 +26,28 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.StudyYear;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.protocol.ProtocolVdata;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
-import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.LessonPlanModuleRepository;
-import ee.hitsa.ois.repository.ProtocolRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
-import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.StudyYearRepository;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -71,21 +70,7 @@ public class ModuleProtocolService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private ProtocolRepository protocolRepository;
-    @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
-    private TeacherRepository teacherRepository;
-    @Autowired
-    private CurriculumVersionRepository curriculumVersionRepository;
-    @Autowired
-    private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
-    @Autowired
-    private StudyYearRepository studyYearRepository;
-    @Autowired
     private ClassifierRepository classifierRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
     @Autowired
     private LessonPlanModuleRepository lessonPlanModuleRepository;
 
@@ -263,7 +248,7 @@ public class ModuleProtocolService {
         return students.stream().collect(Collectors.toMap(r -> resultAsLong(r, 0), r -> {
             ModuleProtocolStudentSelectDto dto = new ModuleProtocolStudentSelectDto();
             dto.setStudentId(resultAsLong(r, 0));
-            dto.setFullname(resultAsString(r, 1) + " " + resultAsString(r, 2));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
             dto.setIdcode(resultAsString(r, 3));
             dto.setStatus(resultAsString(r, 4));
             return dto;
@@ -275,26 +260,26 @@ public class ModuleProtocolService {
         Protocol protocol = EntityUtil.bindToEntity(form, new Protocol(), "protocolStudents", "protocolVdata");
         protocol.setIsVocational(Boolean.TRUE);
         protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
-        protocol.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        protocol.setSchool(em.getReference(School.class, user.getSchoolId()));
         protocol.setProtocolNr(ProtocolUtil.generateProtocolNumber(em));
         protocol.setProtocolStudents(form.getProtocolStudents().stream().map(dto -> {
             ProtocolStudent protocolStudent = EntityUtil.bindToEntity(dto, new ProtocolStudent());
-            protocolStudent.setStudent(studentRepository.getOne(dto.getStudentId()));
+            protocolStudent.setStudent(em.getReference(Student.class, dto.getStudentId()));
             return protocolStudent;
         }).collect(Collectors.toList()));
         ProtocolVdata protocolVdata = protocolVdataFromDto(form.getProtocolVdata());
         protocolVdata.setProtocol(protocol);
         protocol.setProtocolVdata(protocolVdata);
-        return protocolRepository.save(protocol);
+        return EntityUtil.save(protocol, em);
     }
 
     private ProtocolVdata protocolVdataFromDto(ProtocolVdataForm vdata) {
         ProtocolVdata protocolVdata = new ProtocolVdata();
-        protocolVdata.setCurriculumVersion(curriculumVersionRepository.getOne(vdata.getCurriculumVersion()));
+        protocolVdata.setCurriculumVersion(em.getReference(CurriculumVersion.class, vdata.getCurriculumVersion()));
         protocolVdata.setCurriculumVersionOccupationModule(
-                curriculumVersionOccupationModuleRepository.getOne(vdata.getCurriculumVersionOccupationModule()));
-        protocolVdata.setStudyYear(studyYearRepository.getOne(vdata.getStudyYear()));
-        protocolVdata.setTeacher(teacherRepository.getOne(vdata.getTeacher()));
+                em.getReference(CurriculumVersionOccupationModule.class, vdata.getCurriculumVersionOccupationModule()));
+        protocolVdata.setStudyYear(em.getReference(StudyYear.class, vdata.getStudyYear()));
+        protocolVdata.setTeacher(em.getReference(Teacher.class, vdata.getTeacher()));
         return protocolVdata;
     }
 
@@ -303,7 +288,7 @@ public class ModuleProtocolService {
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
                 form.getProtocolStudents(), ModuleProtocolStudentSaveForm::getId, dto -> {
                     ProtocolStudent ps = EntityUtil.bindToEntity(dto, new ProtocolStudent(), "student");
-                    ps.setStudent(studentRepository.getOne(dto.getStudentId()));
+                    ps.setStudent(em.getReference(Student.class, dto.getStudentId()));
                     return ps;
                 }, (dto, ps) -> {
                     if (dto.getGrade() != null && !dto.getGrade().equals(EntityUtil.getNullableCode(ps.getGrade()))) {
@@ -315,7 +300,7 @@ public class ModuleProtocolService {
 
         assertRemovedStudents(storedStudents, protocol.getProtocolStudents());
 
-        return protocolRepository.save(protocol);
+        return EntityUtil.save(protocol, em);
     }
 
     private static void assertRemovedStudents(List<ProtocolStudent> oldStudents, List<ProtocolStudent> newStudents) {
@@ -323,8 +308,7 @@ public class ModuleProtocolService {
         List<ProtocolStudent> removedStudents = oldStudents.stream()
                 .filter(oldStudent -> !newIds.contains(oldStudent.getId())).collect(Collectors.toList());
         for (ProtocolStudent protocolStudent : removedStudents) {
-            if (!StudentStatus.OPPURSTAATUS_K.name()
-                    .equals(EntityUtil.getCode(protocolStudent.getStudent().getStatus()))) {
+            if (!ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_K, protocolStudent.getStudent().getStatus())) {
                 throw new ValidationFailedException("moduleProtocol.messages.cantRemoveNonDismissedStudent");
             } else if (protocolStudent.getGrade() != null) {
                 throw new ValidationFailedException("moduleProtocol.messages.cantRemoveGradedStudent");
@@ -361,10 +345,10 @@ public class ModuleProtocolService {
                         protocol.getId());
             } else {
                 protocol.getProtocolStudents()
-                        .add(new ProtocolStudent(studentRepository.getOne(moduleProtocolStudentForm.getStudentId())));
+                        .add(new ProtocolStudent(em.getReference(Student.class, moduleProtocolStudentForm.getStudentId())));
             }
         }
-        return protocolRepository.save(protocol);
+        return EntityUtil.save(protocol, em);
     }
 
     public Protocol confirm(HoisUserDetails user, Protocol protocol, ModuleProtocolSaveForm moduleProtocolSaveForm) {
@@ -375,7 +359,7 @@ public class ModuleProtocolService {
         if (moduleProtocolSaveForm != null) {
             confirmedProtocol = save(protocol, moduleProtocolSaveForm);
         } else {
-            confirmedProtocol = protocolRepository.save(protocol);
+            confirmedProtocol = EntityUtil.save(protocol, em);
         }
 
         for (ProtocolStudent protocolStudent : confirmedProtocol.getProtocolStudents()) {
@@ -387,18 +371,16 @@ public class ModuleProtocolService {
     }
 
     public void delete(Protocol protocol) {
-        EntityUtil.deleteEntity(protocolRepository, protocol);
+        EntityUtil.deleteEntity(protocol, em);
     }
 
-    public boolean hasStudentPositiveGradeInModule(Student student,
-            CurriculumVersionOccupationModule module) {
-
+    public boolean hasStudentPositiveGradeInModule(Student student, CurriculumVersionOccupationModule module) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from protocol_student ps "
                 + "inner join protocol p on p.id = ps.protocol_id "
                 + "inner join protocol_vdata pvd on pvd.protocol_id = p.id ");
 
         qb.filter("p.is_vocational = true");
-        qb.requiredCriteria("p.status_code = :status", "status", ProtocolStatus.PROTOKOLL_STAATUS_K.name());
+        qb.requiredCriteria("p.status_code = :status", "status", ProtocolStatus.PROTOKOLL_STAATUS_K);
         qb.requiredCriteria("ps.student_id = :studentId", "studentId", EntityUtil.getId(student));
         qb.requiredCriteria("pvd.curriculum_version_omodule_id = :curriculumVersionOmoduleId", "curriculumVersionOmoduleId", EntityUtil.getId(module));
         qb.requiredCriteria("ps.grade_code in :positiveGrades", "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);

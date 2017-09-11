@@ -22,7 +22,7 @@ public class StudentGroupForm extends VersionedCommand {
     private String code;
     @NotNull
     @Min(1)
-    private Integer course;
+    private Short course;
     @NotNull
     private AutocompleteResult curriculum;
     private Long curriculumVersion;
@@ -49,11 +49,11 @@ public class StudentGroupForm extends VersionedCommand {
         this.code = code;
     }
 
-    public Integer getCourse() {
+    public Short getCourse() {
         return course;
     }
 
-    public void setCourse(Integer course) {
+    public void setCourse(Short course) {
         this.course = course;
     }
 

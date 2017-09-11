@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
+import ee.hitsa.ois.enums.HigherAssessment;
+
 public class HigherProtocolStudentResultDto {
 
     private Long protocolStudent;
@@ -8,9 +10,9 @@ public class HigherProtocolStudentResultDto {
     public HigherProtocolStudentResultDto() {
     }
 
-    public HigherProtocolStudentResultDto(Long protocolStudent, String grade) {
+    public HigherProtocolStudentResultDto(Long protocolStudent, HigherAssessment grade) {
         this.protocolStudent = protocolStudent;
-        this.grade = grade;
+        this.grade = grade != null ? grade.name() : null;
     }
 
     public Long getProtocolStudent() {

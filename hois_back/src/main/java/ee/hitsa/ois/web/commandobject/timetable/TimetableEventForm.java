@@ -8,6 +8,7 @@ public class TimetableEventForm {
     private String selectedDay;
     private Long timetable;
     private Long oldEventId;
+    private String capacityType;
 
     public Long getJournal() {
         return journal;
@@ -74,6 +75,14 @@ public class TimetableEventForm {
 
     public void setOldEventId(Long oldEventId) {
         this.oldEventId = oldEventId;
+    }
+
+    public String getCapacityType() {
+        return capacityType;
+    }
+
+    public void setCapacityType(String capacityType) {
+        this.capacityType = capacityType;
     }
 
 }

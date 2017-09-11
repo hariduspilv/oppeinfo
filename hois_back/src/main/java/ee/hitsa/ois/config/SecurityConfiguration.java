@@ -56,9 +56,25 @@ public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
     }
 }
 
-
 @Configuration
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 1)
+class WebServicesConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.antMatcher("/services/**")
+            .authorizeRequests()
+                .anyRequest()
+                .permitAll()
+                .and()
+            .csrf()
+                .disable();
+    }
+}
+
+
+@Configuration
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 2)
 @EnableGlobalMethodSecurity(securedEnabled = true)
 class IdCardLoginSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
@@ -86,7 +102,7 @@ class IdCardLoginSecurityConfiguration extends WebSecurityConfigurerAdapter {
 }
 
 @Configuration
-@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 2)
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 3)
 class UniqueUrlSecurityConfiguration extends WebSecurityConfigurerAdapter {
 
     @Override

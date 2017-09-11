@@ -59,9 +59,7 @@ public class MailService {
                 });
             });
         } catch (Exception e) {
-            if(log.isErrorEnabled()) {
-                log.error(String.format("sending email %s to %s failed", subject, receivers), e);
-            }
+            log.error("sending email {} to {} failed", subject, receivers, e);
         }
     }
 

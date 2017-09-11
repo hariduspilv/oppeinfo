@@ -1,7 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 
 public class CommitteeSearchDto {
     
@@ -9,7 +9,7 @@ public class CommitteeSearchDto {
     private String chairman;
     private LocalDate validFrom;
     private LocalDate validThru;
-    private Set<String> members;
+    private List<String> members;
 
     public Long getId() {
         return id;
@@ -43,11 +43,11 @@ public class CommitteeSearchDto {
         this.validThru = validThru;
     }
 
-    public Set<String> getMembers() {
+    public List<String> getMembers() {
         return members;
     }
 
-    public void setMembers(Set<String> members) {
+    public void setMembers(List<String> members) {
         this.members = members;
     }
 }

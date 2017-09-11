@@ -78,6 +78,8 @@ angular.module('hitsaOis').directive('hoisSelect', function (Curriculum, School,
             scope.options = QueryUtils.endpoint('/autocomplete/teachersList').query();
           } else if (attrs.type === 'enterprise') {
             scope.options = QueryUtils.endpoint('/autocomplete/enterprises').query();
+          } else if(attrs.type === 'saisadmissioncode') {
+            scope.options = QueryUtils.endpoint('/autocomplete/saisAdmissionCodes').query();
           } else if (attrs.type === 'subject') {
             scope.options = QueryUtils.endpoint('/autocomplete/subjectsList').query();
           } else if(attrs.type === 'studyperiod') {

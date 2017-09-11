@@ -31,7 +31,6 @@ import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.BadConfigurationException;
-import ee.hitsa.ois.repository.MessageRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DataUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -52,14 +51,12 @@ public class AutomaticMessageService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private MessageRepository messageRepository;
-    @Autowired
     private MessageTemplateService messageTemplateService;
     @Autowired
     private MailService mailService;
 
     public void sendMessageToSchoolAdmins(MessageType type, School school, Object dataBean) {
-        List<Person> persons = getSchoolRoledPersons(school, Role.ROLL_A);
+        List<Person> persons = getPersonsWithRole(school, Role.ROLL_A);
 
         Message message = sendMessageToPersons(type, school, persons, dataBean);
 
@@ -69,17 +66,8 @@ public class AutomaticMessageService {
         }
     }
 
-    private List<Person> getSchoolRoledPersons(School school, Role role) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from person p "
-                + "inner join user_ u on u.person_id = p.id");
-
-        qb.requiredCriteria("u.school_id = :schoolId", "schoolId", EntityUtil.getId(school));
-        qb.requiredCriteria("u.role_code = :roleCode", "roleCode", role.name());
-        qb.validByDateCriteria("u");
-
-        List<?> results = qb.select("p.id", em).getResultList();
-        return results.stream()
-                .map(r -> em.getReference(Person.class, resultAsLong(r, 0))).collect(Collectors.toList());
+    public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {
+        sendMessageToStudent(type, student, dataBean, null);
     }
 
     public void sendMessageToStudent(MessageType type, Student student, Object dataBean, HoisUserDetails initiator) {
@@ -88,13 +76,13 @@ public class AutomaticMessageService {
             mailService.sendMail(message, Collections.singletonList(student.getEmail()));
         }
 
-        if (!StudentUtil.isAdult(student)) {
+        if (!StudentUtil.isAdultAndDoNotNeedRepresentative(student)) {
             sendMessageToStudentRepresentatives(type, student, dataBean, message, initiator);
         }
     }
 
-    public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {
-        sendMessageToStudent(type, student, dataBean, null);
+    public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean) {
+        sendMessageToStudentRepresentatives(type, student, dataBean, null, null);
     }
 
     public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean, Message existingMessage, HoisUserDetails initiator) {
@@ -111,23 +99,6 @@ public class AutomaticMessageService {
             List<String> receivers = StreamUtil.toMappedList(Person::getEmail, persons);
             mailService.sendMail(message, receivers);
         }
-    }
-
-    private List<Person> getStudentRepresentativePersons(Student student, HoisUserDetails initiator) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from person p "
-                + "inner join student_representative sr on sr.person_id = p.id");
-
-        qb.requiredCriteria("sr.student_id = :studentId", "studentId", EntityUtil.getId(student));
-        qb.filter("sr.is_student_visible = true");
-        qb.optionalCriteria("p.id = :initiatorId", "initiatorId", initiator != null ? initiator.getPersonId() : null);
-
-        List<?> results = qb.select("p.id", em).getResultList();
-        return results.stream()
-                .map(r -> em.getReference(Person.class, resultAsLong(r, 0))).collect(Collectors.toList());
-    }
-
-    public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean) {
-        sendMessageToStudentRepresentatives(type, student, dataBean, null, null);
     }
 
     public void sendMessageToPerson(MessageType type, School school, Person person, Object data) {
@@ -147,6 +118,10 @@ public class AutomaticMessageService {
         }
     }
 
+    private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean) {
+        return sendMessageToPersons(type, school, persons, dataBean, null);
+    }
+
     private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean, Message existingMessage) {
         Classifier status = em.getReference(Classifier.class, MessageStatus.TEATESTAATUS_U.name());
         List<MessageReceiver> messageReceivers = StreamUtil.toMappedList(person -> {
@@ -160,8 +135,30 @@ public class AutomaticMessageService {
         return sendTemplateMessage(type, school, automaticSender, messageReceivers, dataBean, existingMessage);
     }
 
-    private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean) {
-        return sendMessageToPersons(type, school, persons, dataBean, null);
+    private List<Person> getStudentRepresentativePersons(Student student, HoisUserDetails initiator) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from person p "
+                + "inner join student_representative sr on sr.person_id = p.id");
+
+        qb.requiredCriteria("sr.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.filter("sr.is_student_visible = true");
+        qb.optionalCriteria("p.id = :initiatorId", "initiatorId", initiator != null ? initiator.getPersonId() : null);
+
+        List<?> results = qb.select("p.id", em).getResultList();
+        return results.stream()
+                .map(r -> em.getReference(Person.class, resultAsLong(r, 0))).collect(Collectors.toList());
+    }
+
+    private List<Person> getPersonsWithRole(School school, Role role) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from person p "
+                + "inner join user_ u on u.person_id = p.id");
+
+        qb.requiredCriteria("u.school_id = :schoolId", "schoolId", EntityUtil.getId(school));
+        qb.requiredCriteria("u.role_code = :roleCode", "roleCode", role);
+        qb.validNowCriteria("u.valid_from", "u.valid_thru");
+
+        List<?> results = qb.select("p.id", em).getResultList();
+        return results.stream()
+                .map(r -> em.getReference(Person.class, resultAsLong(r, 0))).collect(Collectors.toList());
     }
 
     private Message getMessage(MessageType type, School school, Object dataBean) {
@@ -203,11 +200,9 @@ public class AutomaticMessageService {
 
         if (message != null) {
             message.getReceivers().addAll(messageReceivers);
-            message = messageRepository.save(message);
+            message = EntityUtil.save(message, em);
         }
 
         return message;
     }
-
-
 }

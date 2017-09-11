@@ -54,7 +54,7 @@ public class ApplicationServiceTests {
                 List<Predicate> filters = new ArrayList<>();
                 filters.add(cb.like(root.get("curriculumVersion").get("curriculum").get("origStudyLevel").get("value"), "5%"));
                 return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).stream().findFirst().get();
+            }).get(0);
         }
 
         if(occupationalStudent == null) {
@@ -62,7 +62,7 @@ public class ApplicationServiceTests {
                 List<Predicate> filters = new ArrayList<>();
                 filters.add(cb.like(root.get("curriculumVersion").get("curriculum").get("origStudyLevel").get("value"), "4%"));
                 return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).stream().findFirst().get();
+            }).get(0);
         }
     }
 

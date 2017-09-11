@@ -182,7 +182,6 @@ public class LessonTimeControllerTests {
         LessonTimeDto savedLessonTime = responseEntity.getBody().getLessonTimeBuildingGroups().stream().findFirst().get().getLessonTimes().stream().findFirst().get();
 
 
-
         //create second group
         validFroms.add(LocalDate.of(2011, 1, 3));
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
@@ -204,7 +203,6 @@ public class LessonTimeControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
 
-
         //validate first group validThru
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(savedLessonTime.getId().toString());
         uri = uriBuilder.build().toUriString();
@@ -212,8 +210,13 @@ public class LessonTimeControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(validFroms.get(1).minusDays(1), responseEntity.getBody().getLessonTimeBuildingGroups().stream().findFirst().get().getValidThru());
-
     }
 
-
+    @Test
+    public void currentPeriod() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("currentPeriod");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

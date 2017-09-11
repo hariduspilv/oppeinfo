@@ -6,17 +6,24 @@ public class TimetableStudentGroupCapacityDto {
     private Long thisPlannedLessons;
     private Long journal;
     private Long lessonsLeft;
-    //default value if the value is any different you need to set it with the setter
+    // default value if the value is any different you need to set it with the
+    // setter
     private Long totalAllocatedLessons = Long.valueOf(0);
+    private String capacityType;
 
     public TimetableStudentGroupCapacityDto(Long studentGroup, Long journal, Long totalPlannedLessons,
-            Long thisPlannedLessons/*, Long totalAllocatedLessons, Long thisAllocatedLessons*/) {
+            Long thisPlannedLessons, String capacityType/*
+                                    * , Long totalAllocatedLessons, Long
+                                    * thisAllocatedLessons
+                                    */) {
         this.studentGroup = studentGroup;
         this.journal = journal;
         this.totalPlannedLessons = totalPlannedLessons;
         this.thisPlannedLessons = thisPlannedLessons;
-        //this is the default value, if the value is any different you need to set it with the setter
+        // this is the default value, if the value is any different you need to
+        // set it with the setter
         this.lessonsLeft = thisPlannedLessons;
+        this.capacityType = capacityType;
     }
 
     public Long getStudentGroup() {
@@ -65,6 +72,14 @@ public class TimetableStudentGroupCapacityDto {
 
     public void setLessonsLeft(Long lessonsLeft) {
         this.lessonsLeft = lessonsLeft;
+    }
+
+    public String getCapacityType() {
+        return capacityType;
+    }
+
+    public void setCapacityType(String capacityType) {
+        this.capacityType = capacityType;
     }
 
 }

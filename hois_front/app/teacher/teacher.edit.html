@@ -6,13 +6,31 @@
           <hois-collapsable label="('teacher.data' | translate)">
             <div layout="column" flex>
               <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="25" flex-sm="100" flex-xs="100">
+                <!--
+                  different elements are used for entering and displaying as in other case
+                  teacher's unique check will be trigered even with disabled autocomplete
+                  which can prevent form from saving.
+
+                  hois-value is not used as id did not match whole page design
+                -->
+                 <md-input-container flex="25" flex-sm="100" flex-xs="100" ng-if="!teacher.id">
                   <label>{{'teacher.person.idcode' | translate}}</label>
                   <hois-idcode-lookup ng-model="teacher.person.idcode" name="idcode" role="forteacher"
                                       after-lookup="lookupPerson(response)" after-failed-lookup="lookupFailure()"
                                       no-lookup="cleanReadOnly()"
-                                      ng-disabled="teacher.id"></hois-idcode-lookup>
+                                      validate-teacher></hois-idcode-lookup>
+                  <div ng-messages="teacherForm.idcode.$error" ng-show="teacherForm.idcode.$dirty">
+                    <div ng-message="teacherIdCode">
+                      {{'teacher.person.alreadyexist' | translate}}
+                    </div>
+                  </div>
                 </md-input-container>
+
+                 <md-input-container flex-sm="100" flex-xs="100" flex="25" ng-if="teacher.id" >
+                  <label>{{'teacher.person.idcode' | translate}}</label>
+                  <input type="text" ng-model="teacher.person.idcode" disabled>
+                </md-input-container>
+
                 <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
                   <label>{{'teacher.person.birthdate' | translate}}</label>
                   <md-datepicker ng-model="teacher.person.birthdate" md-max-date="maxDate"

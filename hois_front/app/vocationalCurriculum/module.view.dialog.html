@@ -74,9 +74,9 @@
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}} *</legend>
 			<div layout="column">
             <!--md-list flex-->
-              <div ng-repeat="item in module.outcomes | orderBy: 'outcomeEt'" class="occupation-row align-center" layout="row" flex>
-                <div flex="45">{{item.outcomeEt}}</div>
-				        <div flex="50" flex-offset="5">{{item.outcomeEn}}</div>
+              <div ng-repeat="item in module.outcomes | orderBy: 'orderNr'" class="occupation-row align-center" layout="row" flex>
+                <div flex="45"><pre>{{item.outcomeEt}}</pre></div>
+				        <div flex="50" flex-offset="5"><pre>{{item.outcomeEn}}</pre></div>
               </div>
             <!--/md-list-->
           </div>

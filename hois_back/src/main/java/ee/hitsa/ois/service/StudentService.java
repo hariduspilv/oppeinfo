@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -23,16 +24,13 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentHistory;
+import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.message.StudentAbsenceCreated;
-import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
-import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.StudentAbsenceRepository;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -71,17 +69,9 @@ public class StudentService {
     @Autowired
     private AutomaticMessageService automaticMessageService;
     @Autowired
-    private ApplicationRepository applicationRepository;
-    @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private EntityManager em;
-    @Autowired
-    private PersonRepository personRepository;
-    @Autowired
-    private StudentAbsenceRepository studentAbsenceRepository;
-    @Autowired
-    private StudentRepository studentRepository;
     @Autowired
     private ProtocolService protocolService;
     @Autowired
@@ -121,7 +111,7 @@ public class StudentService {
 
     public Student save(HoisUserDetails user, Student student, StudentForm form) {
         Person p = EntityUtil.bindToEntity(form.getPerson(), student.getPerson(), classifierRepository);
-        personRepository.save(p);
+        EntityUtil.save(p, em);
 
         if(!UserUtil.isSchoolAdmin(user, student.getSchool())) {
             return student;
@@ -145,7 +135,7 @@ public class StudentService {
         current.setValidFrom(now);
         current.setPrevStudentHistory(old);
         student.setStudentHistory(current);
-        return studentRepository.save(student);
+        return EntityUtil.save(student, em);
     }
 
     public StudentAbsenceSearchDto absences(HoisUserDetails user, Student student, Pageable pageable) {
@@ -194,21 +184,42 @@ public class StudentService {
 
     public StudentAbsence save(StudentAbsence absence, StudentAbsenceForm form) {
         EntityUtil.bindToEntity(form, absence);
-        return studentAbsenceRepository.save(absence);
+        return EntityUtil.save(absence, em);
     }
 
     public void delete(StudentAbsence absence) {
-        EntityUtil.deleteEntity(studentAbsenceRepository, absence);
+        EntityUtil.deleteEntity(absence, em);
     }
 
     public Page<StudentApplicationDto> applications(Long studentId, Pageable pageable) {
-        return applicationRepository.findAllByStudent_id(studentId, pageable).map(StudentApplicationDto::of);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from application a").sort(pageable);
+
+        qb.requiredCriteria("a.student_id = :studentId", "studentId", studentId);
+        return JpaQueryUtil.pagingResult(qb, "a.id, a.type_code, a.inserted, a.status_code, a.changed, a.submitted, a.reject_reason", em, pageable).map(r -> {
+            StudentApplicationDto dto = new StudentApplicationDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setType(resultAsString(r, 1));
+            dto.setInserted(resultAsLocalDateTime(r, 2));
+            dto.setStatus(resultAsString(r, 3));
+            if(ApplicationStatus.AVALDUS_STAATUS_KINNITATUD.name().equals(dto.getStatus())) {
+                dto.setConfirmDate(resultAsLocalDateTime(r, 4));
+            }
+            dto.setSubmitted(resultAsLocalDateTime(r, 5));
+            dto.setRejectReason(resultAsString(r, 6));
+            return dto;
+        });
     }
 
-    public Page<StudentDirectiveDto> directives(Student student, Pageable pageable) {
+    public Page<StudentDirectiveDto> directives(HoisUserDetails user, Student student, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive d").sort(pageable);
 
-        qb.requiredCriteria("d.id in (select ds.directive_id from directive_student ds where ds.student_id = :studentId)", "studentId", EntityUtil.getId(student));
+        String showCanceled = "";
+        if(!UserUtil.isSchoolAdmin(user, student.getSchool())) {
+            // don't show these directives which are cancelled for given student
+            showCanceled = " and ds.canceled = false";
+        }
+        qb.requiredCriteria(String.format("d.id in (select ds.directive_id from directive_student ds where ds.student_id = :studentId%s)", showCanceled), "studentId", EntityUtil.getId(student));
+
         qb.requiredCriteria("d.type_code <> :directiveType", "directiveType", DirectiveType.KASKKIRI_TYHIST);
         qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
 
@@ -219,7 +230,7 @@ public class StudentService {
             dto.setType(resultAsString(r, 2));
             dto.setDirectiveNr(resultAsString(r, 3));
             dto.setConfirmDate(resultAsLocalDate(r, 4));
-            dto.setInsertedBy(resultAsString(r, 5));
+            dto.setInsertedBy(PersonUtil.stripIdcodeFromFullnameAndIdcode(resultAsString(r, 5)));
             return dto;
         });
     }
@@ -264,7 +275,7 @@ public class StudentService {
         Set<Long> curriculaModuleIds = StreamUtil.toMappedSet(StudentVocationalModuleDto::getId, dto.getCurriculumModules());
         Set<Long> extraCurriculaModuleIds = StreamUtil.toMappedSet(it -> it.getModule().getId(), dto.getResults());
         extraCurriculaModuleIds.removeIf(curriculaModuleIds::contains);
-        dto.setExtraCurriculaModules(StreamUtil.toMappedList(StudentVocationalModuleDto::of, curriculumVersionOccupationModuleRepository.findAllByIdIn(extraCurriculaModuleIds)));
+        dto.setExtraCurriculaModules(StreamUtil.toMappedList(StudentVocationalModuleDto::of, curriculumVersionOccupationModuleRepository.findAll(extraCurriculaModuleIds)));
         return dto;
     }
 

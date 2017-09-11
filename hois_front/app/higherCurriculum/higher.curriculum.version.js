@@ -9,7 +9,7 @@ angular.module('hitsaOis')
       readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
       strictValidation: false
     };
-    $scope.myEhisSchool = Session.school ? Session.school.school.ehisSchool : null;
+    $scope.myEhisSchool = Session.school ? Session.school.ehisSchool : null;
     $scope.ehisSchools = $scope.curriculum.jointPartners.map(function (p) { return p.ehisSchool; });
     $scope.ehisSchools.push($scope.myEhisSchool);
     // var SpecialityEndpoint = QueryUtils.endpoint(baseUrl + '/speciality');

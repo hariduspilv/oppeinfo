@@ -1,9 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('DirectiveCoordinatorSearchController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
-  QueryUtils.createQueryForm($scope, '/directives/coordinators', {order: 'name'});
-  $scope.loadData();
-}]).controller('DirectiveCoordinatorEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'QueryUtils',
+angular.module('hitsaOis').controller('DirectiveCoordinatorEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'QueryUtils',
 
   function ($location, $route, $scope, dialogService, message, QueryUtils) {
     var id = $route.current.params.id;

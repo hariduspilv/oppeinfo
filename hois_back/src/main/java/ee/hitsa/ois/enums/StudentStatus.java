@@ -1,7 +1,8 @@
 package ee.hitsa.ois.enums;
 
-import java.util.Arrays;
 import java.util.List;
+
+import ee.hitsa.ois.util.EnumUtil;
 
 public enum StudentStatus {
 
@@ -11,5 +12,5 @@ public enum StudentStatus {
     OPPURSTAATUS_V, // Välisõppes
     OPPURSTAATUS_L; // Lõpetanud
 
-    public static final List<String> STUDENT_STATUS_ACTIVE = Arrays.asList(OPPURSTAATUS_O.name(), OPPURSTAATUS_A.name(), OPPURSTAATUS_V.name());
+    public static final List<String> STUDENT_STATUS_ACTIVE = EnumUtil.toNameList(OPPURSTAATUS_O, OPPURSTAATUS_A, OPPURSTAATUS_V);
 }

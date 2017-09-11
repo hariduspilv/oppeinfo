@@ -27,11 +27,9 @@ import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.DeclarationRepository;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.DeclarationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -48,8 +46,6 @@ public class DeclarationController {
 
     @Autowired
     private DeclarationService declarationService;
-    @Autowired
-    private StudentRepository studentRepository;
     @Autowired
     private DeclarationRepository declarationRepository;
 
@@ -70,18 +66,21 @@ public class DeclarationController {
 
     @GetMapping("/hasPrevious")
     public Map<String, ?> checkIfStudentHasPreviousDeclarations(HoisUserDetails user) {
+        UserUtil.assertIsStudent(user);
         Map<String, Object> response = new HashMap<>();
-        response.put("hasPrevious", declarationService.studentHasPreviousDeclarations(user.getStudentId()));
+        response.put("hasPrevious", Boolean.valueOf(declarationService.studentHasPreviousDeclarations(user.getStudentId())));
         return response;
     }
 
     @GetMapping("/previous")
     public Page<DeclarationDto> searchStudentsPreviousDeclarations(HoisUserDetails user, Pageable pageable) {
+        UserUtil.assertIsStudent(user);
         return declarationService.searchStudentsPreviousDeclarations(user.getStudentId(), pageable);
     }
 
     @GetMapping("/current")
     public DeclarationDto getStudentsCurrentDeclaration(HoisUserDetails user) {
+        UserUtil.assertIsStudent(user);
         Declaration currentDeclaration = declarationService.getCurrent(user.getSchoolId(), user.getStudentId());
         if(currentDeclaration == null) {
             return null;
@@ -110,38 +109,19 @@ public class DeclarationController {
      */
     @GetMapping("/canCreate")
     public Map<String, ?> canCreate(HoisUserDetails user) {
-        boolean canCreate = false;
-        if(user.isStudent()) {
-            Student student = studentRepository.getOne(user.getStudentId());
-            canCreate = StudentUtil.isStudying(student) && !declarationAlreadyExists(user.getSchoolId(), student);
-        }
-        return Collections.singletonMap("canCreate", Boolean.valueOf(canCreate));
+        return Collections.singletonMap("canCreate", Boolean.valueOf(user.isStudent() ? declarationService.canCreate(user, user.getStudentId()) : false));
     }
 
     @PostMapping("/create")
     public DeclarationDto createForStudent(HoisUserDetails user) {
-        Student student = studentRepository.getOne(user.getStudentId()); 
-        AssertionFailedException.throwIf(!canCreateDeclaration(user, student),
-                "You cannot create declaration!");
-        return get(user, declarationService.create(user.getSchoolId(), student));
+        UserUtil.assertIsStudent(user);
+        return get(user, declarationService.create(user, user.getStudentId()));
     }
 
     @PostMapping("/create/{id:\\d+}")
     public DeclarationDto createForSchoolAdmin(HoisUserDetails user, @WithEntity("id") Student student) {
-        UserUtil.assertSameSchool(user, student.getSchool());
-        AssertionFailedException.throwIf(!canCreateDeclaration(user, student),
-                "You cannot create declaration!");
-        return get(user, declarationService.create(user.getSchoolId(), student));
-    }
-
-    /**
-     *  Method is only used for unit testing 
-     */
-    @DeleteMapping("/{id:\\d+}")   
-    private void delete(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
-        AssertionFailedException.throwIf(!user.getSchoolId().equals(Long.valueOf(1L)),
-                "Deletion is only used for unit testing");
-        declarationService.delete(declaration);
+        UserUtil.assertIsSchoolAdmin(user, student.getSchool());
+        return get(user, declarationService.create(user, student.getId()));
     }
 
     @PutMapping("/confirm/{id:\\d+}")
@@ -171,7 +151,7 @@ public class DeclarationController {
         return get(user, declarationService.removeConfirmation(declaration));
     }
 
-    @PostMapping("/subject")   
+    @PostMapping("/subject")
     public DeclarationSubjectDto addSubject(HoisUserDetails user, @Valid @RequestBody DeclarationSubjectForm form) {
 
         Declaration d = declarationRepository.getOne(form.getDeclaration());
@@ -185,7 +165,7 @@ public class DeclarationController {
         return dto;
     }
 
-    @DeleteMapping("/subject/{id:\\d+}")   
+    @DeleteMapping("/subject/{id:\\d+}")
     private void deleteSubject(HoisUserDetails user, @WithEntity("id") DeclarationSubject subject) {
         UserUtil.assertSameSchool(user, subject.getDeclaration().getStudent().getSchool());
         AssertionFailedException.throwIf(!canChangeDeclaration(user, subject.getDeclaration()),
@@ -209,6 +189,7 @@ public class DeclarationController {
                 (user.isSchoolAdmin() || (UserUtil.isStudent(user, declaration.getStudent())
                 && StudentUtil.isStudying(declaration.getStudent())));
     }
+
     /**
      * For now even confirmed declarations can be changed by school admin
      */
@@ -224,22 +205,5 @@ public class DeclarationController {
         }
         return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_K, declaration.getStatus()) &&
                 LocalDate.now().isBefore(declaration.getStudyPeriod().getEndDate());
-    }
-
-    public boolean canCreateDeclaration(HoisUserDetails user, Student student) {
-        if(declarationAlreadyExists(user.getSchoolId(), student)) {
-            return false;
-        }
-        if(user.isSchoolAdmin()) {
-            return true;
-        }
-        if(user.isStudent() && student != null) {
-            return StudentUtil.isStudying(student);
-        }
-        return false;
-    }
-    
-    public boolean declarationAlreadyExists(Long schoolId, Student student) {
-        return declarationService.getCurrent(schoolId, EntityUtil.getId(student)) != null;
     }
 }

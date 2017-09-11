@@ -20,6 +20,12 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         }
     );
 
+    $scope.$watch('criteria.studentObject', function() {
+      if($scope.criteria) {
+        $scope.criteria.student = $scope.criteria.studentObject ? $scope.criteria.studentObject.id : null;
+      }
+    });
+
     $scope.showTeachers = function(row, bool) {
         var name = "";
         if( row.teachers) {

@@ -70,7 +70,7 @@ public class StateCurriculumControllerTests {
             filters.add(cb.equal(root.get("person").get("idcode"), TestConfiguration.USER_ID));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }).stream().map(User::getSchool).collect(Collectors.toList());
-        testConfigurationService.userToRoleInSchool(role, EntityUtil.getId(userSchools.stream().findFirst().get()), restTemplate);
+        testConfigurationService.userToRoleInSchool(role, EntityUtil.getId(userSchools.get(0)), restTemplate);
     }
 
 

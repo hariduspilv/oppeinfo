@@ -66,7 +66,7 @@ public class ApplicationDto extends InsertedChangedVersionDto {
             application.getDirectiveStudents().stream().max(Comparator.comparingLong(DirectiveStudent::getId))
                     .ifPresent(it -> dto.setDirectiveStudent(DirectiveStudentDto.of(it)));
         }
-        dto.setIsAdult(Boolean.valueOf(StudentUtil.isAdult(application.getStudent())));
+        dto.setIsAdult(Boolean.valueOf(StudentUtil.isAdultAndDoNotNeedRepresentative(application.getStudent())));
         return dto;
     }
 

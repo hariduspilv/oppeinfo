@@ -107,7 +107,7 @@ public class XlsService {
                 }
 
             }
-        } catch (@SuppressWarnings("unused") Exception e) {
+        } catch (@SuppressWarnings("unused") Throwable e) {
             //XXX: On exception initial excel is returned
         }
 

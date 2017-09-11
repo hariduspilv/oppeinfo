@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.dto.student;
 import java.util.List;
 
 public class StudentVocationalResultDto {
+
     private List<StudentVocationalResultModuleThemeDto> results;
     private List<StudentVocationalModuleDto> curriculumModules;
     private List<StudentVocationalModuleDto> extraCurriculaModules;
@@ -30,5 +31,4 @@ public class StudentVocationalResultDto {
     public void setExtraCurriculaModules(List<StudentVocationalModuleDto> extraCurriculaModules) {
         this.extraCurriculaModules = extraCurriculaModules;
     }
-
 }

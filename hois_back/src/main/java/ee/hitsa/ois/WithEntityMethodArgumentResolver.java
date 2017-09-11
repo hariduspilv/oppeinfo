@@ -2,10 +2,10 @@ package ee.hitsa.ois;
 
 import java.util.Map;
 
+import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 
 import org.springframework.core.MethodParameter;
-import org.springframework.core.convert.ConversionService;
 import org.springframework.util.StringUtils;
 import org.springframework.web.bind.support.WebDataBinderFactory;
 import org.springframework.web.context.request.NativeWebRequest;
@@ -14,15 +14,17 @@ import org.springframework.web.method.support.HandlerMethodArgumentResolver;
 import org.springframework.web.method.support.ModelAndViewContainer;
 import org.springframework.web.servlet.HandlerMapping;
 
+import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 
 public class WithEntityMethodArgumentResolver implements HandlerMethodArgumentResolver {
 
-    private final ConversionService conversionService;
+    private final EntityManager em;
 
-    public WithEntityMethodArgumentResolver(ConversionService conversionService) {
-        this.conversionService = conversionService;
+    public WithEntityMethodArgumentResolver(EntityManager em) {
+        this.em = em;
     }
 
     @Override
@@ -52,7 +54,14 @@ public class WithEntityMethodArgumentResolver implements HandlerMethodArgumentRe
     }
 
     protected Object loadEntity(Class<?> entityClass, String id) {
-        Object entity = StringUtils.hasText(id) ? conversionService.convert(id, entityClass) : null;
+        Object entity = null;
+        if(StringUtils.hasText(id)) {
+            if(BaseEntityWithId.class.isAssignableFrom(entityClass)) {
+                entity = em.find(entityClass, Long.valueOf(id));
+            } else if(Classifier.class.isAssignableFrom(entityClass)) {
+                entity = em.find(entityClass, id);
+            }
+        }
         if (entity == null) {
             throw new EntityNotFoundException();
         }

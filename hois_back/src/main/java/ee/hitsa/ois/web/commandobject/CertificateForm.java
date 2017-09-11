@@ -9,12 +9,13 @@ import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.CertificateValidator.*;
 
 public class CertificateForm extends VersionedCommand {
     @NotBlank
     @Size(max=1000)
     private String headline;
-    @NotBlank
+    @NotNull(groups = {OtherType.class})
     private String content;
     @Size(max=1000)
     private String whom;
@@ -27,17 +28,17 @@ public class CertificateForm extends VersionedCommand {
     @Size(max=20)
     private String signatoryIdcode;
     @Size(max=100)
+    @NotNull(groups = {StudentIsNotSet.class})
     private String otherName;
     @Size(max=20)
+    @NotNull(groups = {StudentIsNotSet.class})
     private String otherIdcode;
     private String wdUrl;
     private BigInteger wdId;
     @NotNull
     @ClassifierRestriction(MainClassCode.TOEND_LIIK)
     private String type;
-    @NotNull
-    @ClassifierRestriction(MainClassCode.TOEND_STAATUS)
-    private String status;
+    @NotNull(groups = {StudentIsSet.class})
     private Long student;
     
     public String getOtherName() {
@@ -105,12 +106,6 @@ public class CertificateForm extends VersionedCommand {
     }
     public void setType(String type) {
         this.type = type;
-    }
-    public String getStatus() {
-        return status;
-    }
-    public void setStatus(String status) {
-        this.status = status;
     }
     public Long getStudent() {
         return student;

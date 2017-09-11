@@ -4,7 +4,7 @@
       <div layout="column" flex>
         <md-input-container flex>
           <label>{{'school.label' | translate}}</label>
-          <hois-select ng-hide="!showSchool" ng-model="criteria.school" type="school"></hois-select>
+          <hois-select ng-hide="!auth.isMainAdmin()" ng-model="criteria.school" type="school"></hois-select>
         </md-input-container>
         <md-input-container flex>
           <label>{{'person.name' | translate}}</label>
@@ -35,7 +35,7 @@
         <tr md-row>
           <th md-column md-order-by="p.lastname,p.firstname">{{'person.name' | translate}}</th>
           <th md-column md-order-by="p.idcode">{{'person.idcode' | translate}}</th>
-          <th md-column ng-if="showSchool">{{'school.label' | translate}}</th>
+          <th md-column ng-if="auth.isMainAdmin()">{{'school.label' | translate}}</th>
           <th md-column>{{'user.role' | translate}}</th>
           <th md-column></th>
         </tr>
@@ -44,7 +44,7 @@
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell><a href="#/persons/{{::row.id}}">{{::row.name}}</a></td>
           <td md-cell>{{::row.idcode}}</td>
-          <td md-cell ng-if="showSchool">{{currentLanguageNameField(row.school)}}</td>
+          <td md-cell ng-if="auth.isMainAdmin()">{{currentLanguageNameField(row.school)}}</td>
           <td md-cell>{{currentLanguageNameField(row.role)}}</td>
           <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/persons/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
         </tr>

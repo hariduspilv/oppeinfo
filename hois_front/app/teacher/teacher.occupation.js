@@ -39,8 +39,4 @@ angular.module('hitsaOis').controller('TeacherOccupationEditController', ['$loca
         });
       });
     };
-}]).controller('TeacherOccupationListController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
-  QueryUtils.createQueryForm($scope, '/school/teacheroccupations', {order: 'occupationEt'});
-
-  $scope.loadData();
 }]);

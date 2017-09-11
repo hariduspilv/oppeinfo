@@ -3,6 +3,7 @@ package ee.hitsa.ois.report;
 import static ee.hitsa.ois.util.TranslateUtil.name;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -15,18 +16,18 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 
 public class HigherProtocolReport {
-    
+
     public static final String TEMPLATE_NAME = "higher.protocol.xhtml";
-    
+
     private final String protocolNr;
     private final LocalDate inserted;
     private final String status;
     private final String type;
     private final String subject;
     private final String studyPeriod;
-    private final  String confirmer;
+    private final String confirmer;
     private final LocalDate confirmDate;
-    private final Set<String> teachers;
+    private final List<String> teachers;
     private final Set<HigherProtocolStudentReport> protocolStudents;
 
     public HigherProtocolReport(Protocol protocol) {
@@ -45,8 +46,8 @@ public class HigherProtocolReport {
         studyPeriod = name(ssp.getStudyPeriod(), lang);
         confirmer = protocol.getConfirmer();
         confirmDate = protocol.getConfirmDate();
-        teachers = StreamUtil.toMappedSet(t -> PersonUtil.fullname(t.getTeacher().getPerson()), 
-                ssp.getTeachers());
+        teachers = PersonUtil.sorted(ssp.getTeachers().stream().map(t -> t.getTeacher().getPerson()));
+        // TODO change type to List and sort students using name
         protocolStudents = StreamUtil.toMappedSet(ps -> new HigherProtocolStudentReport(ps), 
                 protocol.getProtocolStudents());
     }
@@ -55,7 +56,7 @@ public class HigherProtocolReport {
         return protocolStudents;
     }
 
-    public Set<String> getTeachers() {
+    public List<String> getTeachers() {
         return teachers;
     }
 

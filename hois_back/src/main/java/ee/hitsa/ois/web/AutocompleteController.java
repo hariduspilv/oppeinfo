@@ -22,6 +22,7 @@ import ee.hitsa.ois.web.commandobject.ClassifierAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
+import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
@@ -31,7 +32,7 @@ import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
-import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
@@ -50,7 +51,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/rooms")
-    public Page<AutocompleteResult> rooms(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+    public Page<AutocompleteResult> rooms(HoisUserDetails user, @Valid RoomsAutocompleteCommand lookup) {
         return asPage(autocompleteService.rooms(user.getSchoolId(), lookup));
     }
 
@@ -148,7 +149,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/studyPeriods")
-    public List<StudyPeriodDto> studyPeriods(HoisUserDetails user) {
+    public List<StudyPeriodWithYearDto> studyPeriods(HoisUserDetails user) {
         return autocompleteService.studyPeriods(user.getSchoolId());
     }
 

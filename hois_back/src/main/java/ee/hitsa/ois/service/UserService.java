@@ -39,7 +39,7 @@ public class UserService {
         user.setPerson(person);
         user.setRole(em.getReference(Classifier.class, role.name()));
         user.setSchool(school);
-        return userRepository.save(user);
+        return EntityUtil.save(user, em);
     }
 
     public List<User> findAllValidSchoolUsersByRole(School school, Role role) {
@@ -57,15 +57,17 @@ public class UserService {
 
     private static String ACTIVE_FROM = "from user_ u " +
             "left outer join school s on u.school_id = s.id " +
-            "inner join user_rights r on u.id = r.user_id ";
+            "inner join classifier c on u.role_code = c.code";
 
     public List<UserProjection> findAllActiveUsers(Long personId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(ACTIVE_FROM);
+        // TODO c.name_et depends on parameter
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(ACTIVE_FROM).sort("c.name_et", "s.code");
 
         qb.requiredCriteria("u.person_id = :personId", "personId", personId);
-        qb.validByDateCriteria("u");
+        qb.filter("exists(select 1 from user_rights r where u.id = r.user_id)");
+        qb.validNowCriteria("u.valid_from", "u.valid_thru");
 
-        List<?> resultList = qb.select("distinct u.id, s.code, u.role_code", em).getResultList();
+        List<?> resultList = qb.select("u.id, s.code, u.role_code", em).getResultList();
         return StreamUtil.toMappedList(r -> new UserProjection(
                 resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)
         ), resultList);

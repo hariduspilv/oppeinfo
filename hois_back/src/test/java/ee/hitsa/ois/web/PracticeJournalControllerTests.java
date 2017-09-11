@@ -87,7 +87,7 @@ public class PracticeJournalControllerTests {
                 filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
                 filters.add(root.get("school").in(userSchools));
                 return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).stream().findFirst().get();
+            }).get(0);
 
             userSchool = student.getSchool();
         }

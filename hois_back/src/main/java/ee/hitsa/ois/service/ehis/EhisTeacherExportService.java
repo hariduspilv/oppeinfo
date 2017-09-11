@@ -1,18 +1,19 @@
 package ee.hitsa.ois.service.ehis;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
-import java.sql.Timestamp;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -33,13 +34,11 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherMobility;
 import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.StudyYearService;
-import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.web.commandobject.EhisTeacherExportForm;
+import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
 import ee.hitsa.ois.web.dto.EhisTeacherExportResultDto;
 import ee.hois.xroad.ehis.generated.Oppeaine;
 import ee.hois.xroad.ehis.generated.Oppejoud;
@@ -58,7 +57,7 @@ public class EhisTeacherExportService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String LAE_OPPEJOUD_SERIVCE_CODE = "laeOppejoud";
-    private static final String LAE_OPPEJOUD_SERVICE = "ehis." + LAE_OPPEJOUD_SERIVCE_CODE + ".v1";
+    public static final String LAE_OPPEJOUD_SERVICE = "ehis." + LAE_OPPEJOUD_SERIVCE_CODE + ".v1";
 
     private static final String EHIS_TOOSUHE_MUU = "EHIS_TOOSUHE_MUU";
     private static final String EHIS_KVALIFIKATSIOON_NIMI_MUU = "EHIS_KVALIFIKATSIOON_NIMI_MUU";
@@ -66,8 +65,6 @@ public class EhisTeacherExportService {
 
     @Autowired
     private EntityManager em;
-    @Autowired
-    private TeacherRepository teacherRepository;
     @Autowired
     private EhisXroadService ehisXroadService;
     @Autowired
@@ -97,17 +94,16 @@ public class EhisTeacherExportService {
     @Value("${ehis.service.subsystemCode}")
     private String serviceSubsystemCode;
 
-    public List<EhisTeacherExportResultDto> exportToEhis(EhisTeacherExportForm form, HoisUserDetails userDetails) {
+    public List<EhisTeacherExportResultDto> exportToEhis(Long schoolId, EhisTeacherExportForm form) {
         List<EhisTeacherExportResultDto> resultList = new ArrayList<>();
-        List<RequestObject> requestList = getRequest(form, userDetails);
+        List<RequestObject> requestList = getRequest(schoolId, form);
 
         XRoadHeaderV4 xRoadHeaderV4 = getXroadHeader();
 
         for (RequestObject requestObject : requestList) {
             EhisLaeOppejoudResponse ehisLaeOppejoudResponse;
             if(requestObject.getError() == null) {
-                ehisLaeOppejoudResponse = ehisXroadService.laeOppejoud(xRoadHeaderV4,
-                        requestObject.getOppejoudList());
+                ehisLaeOppejoudResponse = ehisXroadService.laeOppejoud(xRoadHeaderV4, requestObject.getOppejoudList());
             } else {
                 ehisLaeOppejoudResponse = new EhisLaeOppejoudResponse();
                 ehisLaeOppejoudResponse.setHasOtherErrors(Boolean.TRUE);
@@ -135,42 +131,39 @@ public class EhisTeacherExportService {
         return resultList;
     }
 
-    private List<RequestObject> getRequest(EhisTeacherExportForm form, HoisUserDetails userDetails) {
+    private List<RequestObject> getRequest(Long schoolId, EhisTeacherExportForm form) {
         List<RequestObject> result = new ArrayList<>();
-        List<Long> schoolTeachers = getTeachers(userDetails.getSchoolId(), form);
-        List<Long> periods = new ArrayList<>();
-        periods.add(studyYearService.getCurrentStudyPeriod(userDetails.getSchoolId()));
-        periods.add(studyYearService.getPreviousStudyPeriod(userDetails.getSchoolId()));
-        List<TeacherWithSubject> subjectStudyPeriodTeacher;
-        if (form.isSubjectData()) {
-            subjectStudyPeriodTeacher = getSubjectStudyPeriods(schoolTeachers, periods);
-        } else {
-            subjectStudyPeriodTeacher = new ArrayList<>();
+        Set<Long> schoolTeachers = getTeacherIds(schoolId, form);
+        if(schoolTeachers.isEmpty()) {
+            return result;
         }
-        Map<Long, Teacher> teacherMap = StreamUtil.toMap(t -> EntityUtil.getId(t), t -> t,
-                teacherRepository.findAll((root, query, cb) -> {
-                    List<Predicate> filters = new ArrayList<>();
-                    filters.add(root.get("id").in(schoolTeachers));
-                    return cb.and(filters.toArray(new Predicate[filters.size()]));
-                }));
 
-        for (Teacher teacher : teacherMap.values()) {
+        List<Long> periods = new ArrayList<>();
+        Long periodId = studyYearService.getCurrentStudyPeriod(schoolId);
+        if(periodId != null) {
+            periods.add(periodId);
+        }
+        periodId = studyYearService.getPreviousStudyPeriod(schoolId);
+        if(periodId != null) {
+            periods.add(periodId);
+        }
+
+        List<TeacherWithSubject> subjects = form.isSubjectData() && !periods.isEmpty() ? getSubjectStudyPeriods(schoolTeachers, periods) : Collections.emptyList();
+        Map<Long, List<TeacherWithSubject>> subjectByTeacher = subjects.stream().collect(Collectors.groupingBy(TeacherWithSubject::getTeacherId));
+
+        List<Teacher> teachers = em.createQuery("select t from Teacher t where t.id in ?1", Teacher.class)
+                .setParameter(1,  schoolTeachers).getResultList();
+        for (Teacher teacher : teachers) {
             try {
-                // for every teacher we make a seperate request
-                Oppejoud oppejoud = getOppejoud(teacher,
-                        subjectStudyPeriodTeacher.stream()
-                                .filter(tws -> tws.getTeacherId().equals(EntityUtil.getId(teacher)))
-                                .collect(Collectors.toList()));
+                // for every teacher we make a separate request
+                Oppejoud oppejoud = getOppejoud(teacher, subjectByTeacher.getOrDefault(EntityUtil.getId(teacher), Collections.emptyList()));
                 OppejoudList oppejoudList = new OppejoudList();
                 oppejoudList.getItem().add(oppejoud);
                 String error = validateOppejoud(oppejoud);
-                if(error != null) {
-                    result.add(new RequestObject(teacher, error));
-                } else {
-                    result.add(new RequestObject(teacher, oppejoudList));
-                }
+
+                result.add(error != null ? new RequestObject(teacher, error) : new RequestObject(teacher, oppejoudList));
             } catch (Exception e) {
-                log.error(String.format("Generating request object on teacher with id %s failed :", EntityUtil.getId(teacher)), e);
+                log.error("Generating request object on teacher with id {} failed :", EntityUtil.getId(teacher), e);
                 result.add(new RequestObject(teacher, "Antud õpetaja päringu genereerimine ebaõnnestus"));
             }
         }
@@ -182,7 +175,8 @@ public class EhisTeacherExportService {
         Oppejoud oppejoud = new Oppejoud();
         Person person = teacher.getPerson();
 
-        oppejoud.setKoolId(new BigInteger(teacher.getSchool().getEhisSchool().getValue()));
+        // FIXME strings are allowed values too
+        oppejoud.setKoolId(new BigInteger(ehisValue(teacher.getSchool().getEhisSchool())));
         oppejoud.setIsikukood(person.getIdcode());
         oppejoud.setTelefon(teacher.getPhone());
         oppejoud.setEmail(teacher.getEmail());
@@ -192,57 +186,65 @@ public class EhisTeacherExportService {
         isikuandmed.setPerenimi(person.getLastname());
         isikuandmed.setSynniKp(getXMLGregorianCalendarDate(person.getBirthdate(),
                 String.format("birthdate for teacher with id %s", EntityUtil.getId(teacher))));
-        isikuandmed.setKlSugu(person.getSex() != null ? person.getSex().getEhisValue() : null);
+        isikuandmed.setKlSugu(ehisValue(person.getSex()));
         isikuandmed.setKlKodakondsus(person.getCitizenship() != null ? person.getCitizenship().getValue() : null);
 
         oppejoud.setIsikuandmed(isikuandmed);
-        addPostionEhis(oppejoud.getAmetikoht(), teacher, subjectStudyPeriodTeacher);
+        addPositionEhis(oppejoud.getAmetikoht(), teacher, subjectStudyPeriodTeacher);
         addQualifications(oppejoud.getKvalifikatsioon(), teacher);
         addMobilities(oppejoud.getLyhiajalineMobiilsus(), teacher);
         return oppejoud;
     }
 
-    private void addPostionEhis(List<OppejoudAmetikoht> resultList, Teacher teacher,
+    private void addPositionEhis(List<OppejoudAmetikoht> resultList, Teacher teacher,
             List<TeacherWithSubject> subjectStudyPeriodTeacher) throws DatatypeConfigurationException {
         for (TeacherPositionEhis positionEhis : teacher.getTeacherPositionEhis()) {
-            if (!positionEhis.getIsVocational().booleanValue()) {
-                OppejoudAmetikoht ametikoht = new OppejoudAmetikoht();
+            if (Boolean.TRUE.equals(positionEhis.getIsVocational())) {
+                continue;
+            }
 
-                ametikoht.setOnOppejoud(positionEhis.getIsTeacher().booleanValue() ? "jah" : "ei");
-                ametikoht.setKlAmetikoht(positionEhis.getPosition().getEhisValue());
-                if (getCode(positionEhis.getPosition()) != null
-                        && EHIS_AMETIKOHT_MUU.equals(getCode(positionEhis.getPosition()))) {
-                    ametikoht.setAmetikohtMuu(positionEhis.getPositionSpecificationEt());
-                }
-                ametikoht.setKlToosuhe(getCode(positionEhis.getEmploymentType()));
-                ametikoht.setToosuheMuu(positionEhis.getEmploymentTypeSpecification() != null && positionEhis.getEmploymentTypeSpecification().equals(EHIS_TOOSUHE_MUU)
-                        ? EHIS_TOOSUHE_MUU : null);
-                ametikoht.setKlLepinguLiik(getCode(positionEhis.getContractType()));
-                ametikoht.setLepingAlgKp(getXMLGregorianCalendarDate(positionEhis.getContractStart(), String.format(
-                        "contract start for teacher_position_ehis with id %s", EntityUtil.getId(positionEhis))));
-                ametikoht.setLepingLoppKp(getXMLGregorianCalendarDate(positionEhis.getContractStart(), String
-                        .format("contract end for teacher_position_ehis with id %s", EntityUtil.getId(positionEhis))));
-                ametikoht.setKoormus(positionEhis.getLoad().doubleValue());
-                ametikoht.setLepingOnLopetatud(positionEhis.getIsContractEnded().booleanValue() ? "jah" : "ei");
-                if(positionEhis.getSchoolDepartment() != null) {
-                    ametikoht.setStruktNimi(positionEhis.getSchoolDepartment().getNameEt());
-                    ametikoht.setStruktKood(positionEhis.getSchoolDepartment().getCode());
-                }
-                ametikoht.setToosuheKood(positionEhis.getEmploymentCode());
-                ametikoht.setAmetikohtTapsustusEn(positionEhis.getPositionSpecificationEn());
-                resultList.add(ametikoht);
+            OppejoudAmetikoht ametikoht = new OppejoudAmetikoht();
+            ametikoht.setOnOppejoud(Boolean.TRUE.equals(positionEhis.getIsTeacher()) ? "jah" : "ei");
+            ametikoht.setKlAmetikoht(ehisValue(positionEhis.getPosition()));
+            if (EHIS_AMETIKOHT_MUU.equals(code(positionEhis.getPosition()))) {
+                ametikoht.setAmetikohtMuu(positionEhis.getPositionSpecificationEt());
+            }
+            ametikoht.setKlToosuhe(ehisValue(positionEhis.getEmploymentType()));
+            if(EHIS_TOOSUHE_MUU.equals(code(positionEhis.getEmploymentType()))) {
+                ametikoht.setToosuheMuu(positionEhis.getEmploymentTypeSpecification());
+            }
+            ametikoht.setKlLepinguLiik(ehisValue(positionEhis.getContractType()));
+            ametikoht.setLepingAlgKp(getXMLGregorianCalendarDate(positionEhis.getContractStart(), String.format(
+                    "contract start for teacher_position_ehis with id %s", EntityUtil.getId(positionEhis))));
+            ametikoht.setLepingLoppKp(getXMLGregorianCalendarDate(positionEhis.getContractEnd(), String
+                    .format("contract end for teacher_position_ehis with id %s", EntityUtil.getId(positionEhis))));
+            ametikoht.setKoormus(positionEhis.getLoad().doubleValue());
+            ametikoht.setLepingOnLopetatud(Boolean.TRUE.equals(positionEhis.getIsContractEnded()) ? "jah" : "ei");
+            if(positionEhis.getSchoolDepartment() != null) {
+                ametikoht.setStruktNimi(positionEhis.getSchoolDepartment().getNameEt());
+                ametikoht.setStruktKood(positionEhis.getSchoolDepartment().getCode());
+            }
+            ametikoht.setToosuheKood(positionEhis.getEmploymentCode());
+            ametikoht.setAmetikohtTapsustusEn(positionEhis.getPositionSpecificationEn());
+            resultList.add(ametikoht);
 
-                for (TeacherWithSubject tws : subjectStudyPeriodTeacher) {
-                    Subject subject = em.getReference(Subject.class, tws.getSubjectId());
-                    Oppeaine oppeaine = new Oppeaine();
-                    oppeaine.setNimetus(subject.getNameEt());
-                    oppeaine.setKlOppekeel(!subject.getSubjectLanguages().isEmpty() ? getCode(subject.getSubjectLanguages().iterator().next().getLanguage()) : null);
-                    oppeaine.setAineKood(subject.getCode());
-                    Curriculum curriculum = em.getReference(Curriculum.class, tws.getCurriculumId());
+            // group curriculums by subject id
+            Map<Long, List<Long>> subjects = subjectStudyPeriodTeacher.stream().collect(
+                    Collectors.groupingBy(TeacherWithSubject::getSubjectId, Collectors.mapping(TeacherWithSubject::getCurriculumId, Collectors.toList())));
+
+            for (Map.Entry<Long, List<Long>> tws : subjects.entrySet()) {
+                Oppeaine oppeaine = new Oppeaine();
+                Subject subject = em.getReference(Subject.class, tws.getKey());
+                oppeaine.setNimetus(subject.getNameEt());
+                oppeaine.setKlOppekeel(!subject.getSubjectLanguages().isEmpty() ? subject.getSubjectLanguages().iterator().next().getLanguage().getExtraval2() : null);
+                oppeaine.setAineKood(subject.getCode());
+                for(Long curriculumId : tws.getValue()) {
+                    Curriculum curriculum = em.getReference(Curriculum.class, curriculumId);
+                    // FIXME strings are allowed values too
                     oppeaine.getOkKood().add(curriculum.getMerCode() != null && !curriculum.getMerCode().isEmpty() ? new BigInteger(curriculum.getMerCode()) : null);
-                    oppeaine.setMaht(subject.getCredits().toString());
-                    ametikoht.getOppeained().add(oppeaine);
                 }
+                oppeaine.setMaht(subject.getCredits().toString());
+                ametikoht.getOppeained().add(oppeaine);
             }
         }
     }
@@ -250,16 +252,15 @@ public class EhisTeacherExportService {
     private static void addQualifications(List<OppejoudKvalifikatsioon> resultList, Teacher teacher) {
         for (TeacherQualification hoisQualification : teacher.getTeacherQualification()) {
             OppejoudKvalifikatsioon oKvalifikatsioon = new OppejoudKvalifikatsioon();
-            oKvalifikatsioon.setKlKvalifikatsioon(getCode(hoisQualification.getQualification()));
-            oKvalifikatsioon.setKlKvalifikatsioonNimetus(getCode(hoisQualification.getQualification()));
-            if (getCode(hoisQualification.getQualificationName()) != null
-                    && EHIS_KVALIFIKATSIOON_NIMI_MUU.equals(getCode(hoisQualification.getQualificationName()))) {
+            oKvalifikatsioon.setKlKvalifikatsioon(ehisValue(hoisQualification.getQualification()));
+            oKvalifikatsioon.setKlKvalifikatsioonNimetus(ehisValue(hoisQualification.getQualification()));
+            if (EHIS_KVALIFIKATSIOON_NIMI_MUU.equals(code(hoisQualification.getQualificationName()))) {
                 oKvalifikatsioon.setKvalifikatsioonNimetusMuu(hoisQualification.getQualificationOther());
             }
-            oKvalifikatsioon.setKlRiik(getCode(hoisQualification.getState()));
-            oKvalifikatsioon.setAasta(new BigInteger(hoisQualification.getYear().toString()));
-            oKvalifikatsioon.setKlEestiOppeasutus(getCode(hoisQualification.getSchool()));
-            oKvalifikatsioon.setKlEestiOppeasutusEndine(getCode(hoisQualification.getExSchool()));
+            oKvalifikatsioon.setKlRiik(value2(hoisQualification.getState()));
+            oKvalifikatsioon.setAasta(BigInteger.valueOf(hoisQualification.getYear().longValue()));
+            oKvalifikatsioon.setKlEestiOppeasutus(ehisValue(hoisQualification.getSchool()));
+            oKvalifikatsioon.setKlEestiOppeasutusEndine(ehisValue(hoisQualification.getExSchool()));
             oKvalifikatsioon.setOppeasutusMuu(hoisQualification.getSchoolOther());
             resultList.add(oKvalifikatsioon);
         }
@@ -273,9 +274,9 @@ public class EhisTeacherExportService {
                     String.format("mobiilsus start for teacher_mobility with id %s", EntityUtil.getId(mob))));
             mobiilsus.setPerioodiLopp(getXMLGregorianCalendarDate(mob.getEnd(),
                     String.format("mobiilsus end for teacher_mobility with id %s", EntityUtil.getId(mob))));
-            mobiilsus.setKlEesmark(getCode(mob.getTarget()));
+            mobiilsus.setKlEesmark(ehisValue(mob.getTarget()));
             mobiilsus.setSihtoppeasutus(mob.getSchool());
-            mobiilsus.setKlSihtriik(mob.getState().getValue2());
+            mobiilsus.setKlSihtriik(value2(mob.getState()));
             resultList.add(mobiilsus);
         }
     }
@@ -285,18 +286,24 @@ public class EhisTeacherExportService {
         try {
             return DatatypeFactory.newInstance().newXMLGregorianCalendar(date.toString());
         } catch (DatatypeConfigurationException e) {
-            if (log.isErrorEnabled()) {
-                log.error(String.format("Converting date failed on %s :", errorCode), e);
-            }
+            log.error("Converting date failed on {} :", errorCode, e);
             throw e;
         }
     }
 
-    private static String getCode(Classifier classifier) {
+    private static String code(Classifier classifier) {
         return EntityUtil.getNullableCode(classifier);
     }
 
-    private List<Long> getTeachers(Long school, EhisTeacherExportForm form) {
+    private static String ehisValue(Classifier classifier) {
+        return classifier != null ? classifier.getEhisValue() : null;
+    }
+
+    private static String value2(Classifier classifier) {
+        return classifier != null ? classifier.getValue2() : null;
+    }
+
+    private Set<Long> getTeacherIds(Long schoolId, EhisTeacherExportForm form) {
         JpaQueryUtil.NativeQueryBuilder qb;
         if (form.isAllDates()) {
             qb = new JpaQueryUtil.NativeQueryBuilder("from teacher t");
@@ -307,21 +314,21 @@ public class EhisTeacherExportService {
                             + " left join teacher_qualification tq on tq.teacher_id = t.id");
         }
 
-        qb.requiredCriteria("t.school_id = :school", "school", school);
+        qb.requiredCriteria("t.school_id = :school", "school", schoolId);
         qb.filter("t.is_active = true");
         if (!form.isAllDates()) {
-            qb.parameter("dateTo", Timestamp.valueOf(form.getChangeDateTo().atStartOfDay()));
-            qb.parameter("dateFrom", Timestamp.valueOf(form.getChangeDateFrom().atStartOfDay()));
+            qb.parameter("dateTo", parameterAsTimestamp(form.getChangeDateTo().atStartOfDay()));
+            qb.parameter("dateFrom", parameterAsTimestamp(form.getChangeDateFrom().atStartOfDay()));
             String filter = "(t.changed between :dateFrom and :dateTo or tm.changed between :dateFrom and :dateTo "
                     + "or tpe.changed between :dateFrom and :dateTo or tq.changed between :dateFrom and :dateTo)";
             qb.filter(filter);
         }
 
         List<?> result = qb.select("t.id", em).getResultList();
-        return StreamUtil.toMappedList(r -> resultAsLong(r, 0), result);
+        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
     }
 
-    private List<TeacherWithSubject> getSubjectStudyPeriods(List<Long> teachers, List<Long> periods) {
+    private List<TeacherWithSubject> getSubjectStudyPeriods(Set<Long> teachers, List<Long> periods) {
         String from = "from subject_study_period_teacher sspt inner join subject_study_period ssp on ssp.id = sspt.subject_study_period_id "
                 + "inner join curriculum_version_hmodule_subject cvhs on cvhs.subject_id = ssp.subject_id "
                 + "inner join curriculum_version_hmodule cvh on cvh.id = cvhs.curriculum_version_hmodule_id "

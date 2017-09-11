@@ -69,7 +69,6 @@ public class ApplicationController {
         return get(user, applicationService.save(application, applicationForm));
     }
 
-
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Application application, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         Student student = application.getStudent();

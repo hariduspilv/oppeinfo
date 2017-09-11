@@ -5,13 +5,14 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   $routeProvider
     .when('/persons', {
       templateUrl: 'persons/persons.search.html',
-      controller: 'UsersSearchController',
+      controller: 'SimpleListController',
       controllerAs: 'controller',
       resolve: {
-        translationLoaded: function ($translate) {
-          return $translate.onReady();
-        },
-        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+        translationLoaded: function ($translate) { return $translate.onReady(); },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        clMapping: function() { return {role: 'ROLL'}; },
+        params: function() { return {order: 'p.lastname,p.firstname'}; },
+        url: function () { return '/users'; }
       },
       data: authorizedRoles
     })

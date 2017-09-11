@@ -92,17 +92,20 @@ public class SchoolController {
     }
 
     @PostMapping
-    public SchoolDto create(@Valid @RequestBody SchoolForm schoolForm) {
+    public SchoolDto create(HoisUserDetails user, @Valid @RequestBody SchoolForm schoolForm) {
+        UserUtil.assertIsMainAdmin(user);
         return get(schoolService.create(schoolForm));
     }
 
     @PutMapping("/{id:\\d+}")
-    public SchoolDto update(@WithVersionedEntity(value = "id", versionRequestBody = true) School school, @Valid @RequestBody SchoolForm schoolForm) {
+    public SchoolDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) School school, @Valid @RequestBody SchoolForm schoolForm) {
+        UserUtil.assertIsMainAdmin(user);
         return get(schoolService.save(school, schoolForm));
     }
 
     @DeleteMapping("/{id:\\d+}")
-    public void delete(@WithVersionedEntity(value = "id", versionRequestParam = "version") School school, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") School school, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+        UserUtil.assertIsMainAdmin(user);
         schoolService.delete(school);
     }
 
@@ -129,6 +132,7 @@ public class SchoolController {
 
     @PutMapping("/studyLevels")
     public Map<String, ?> updateStudyLevels(HoisUserDetails user, @Valid @RequestBody SchoolUpdateStudyLevelsCommand studyLevelsCmd) {
+        UserUtil.assertIsSchoolAdmin(user);
         School school = getSchool(user);
         EntityUtil.assertEntityVersion(school, studyLevelsCmd.getVersion());
         schoolService.updateStudyLevels(school, studyLevelsCmd);
@@ -148,18 +152,19 @@ public class SchoolController {
 
     @PostMapping("/departments")
     public HttpUtil.CreatedResponse createSchoolDepartment(HoisUserDetails user, @Valid @RequestBody SchoolDepartmentForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
         return HttpUtil.created(schoolDepartmentService.create(user, form));
     }
 
     @PutMapping("/departments/{id:\\d+}")
     public SchoolDepartmentDto updateSchoolDepartment(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) SchoolDepartment schoolDepartment, @Valid @RequestBody SchoolDepartmentForm form) {
-        UserUtil.assertSameSchool(user, schoolDepartment.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, schoolDepartment.getSchool());
         return getSchoolDepartment(user, schoolDepartmentService.save(schoolDepartment, form));
     }
 
     @DeleteMapping("/departments/{id:\\d+}")
     public void deleteSchoolDepartment(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") SchoolDepartment schoolDepartment, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertSameSchool(user, schoolDepartment.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, schoolDepartment.getSchool());
         schoolDepartmentService.delete(schoolDepartment);
     }
 
@@ -181,18 +186,19 @@ public class SchoolController {
 
     @PostMapping("/teacheroccupations")
     public HttpUtil.CreatedResponse createTeacherOccupation(HoisUserDetails user, @Valid @RequestBody TeacherOccupationForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
         return HttpUtil.created(teacherOccupationService.create(user, form));
     }
 
     @PutMapping("/teacheroccupations/{id:\\d+}")
     public TeacherOccupationDto updateTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) TeacherOccupation teacherOccupation, @Valid @RequestBody TeacherOccupationForm form) {
-        UserUtil.assertSameSchool(user, teacherOccupation.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, teacherOccupation.getSchool());
         return getTeacherOccupation(user, teacherOccupationService.save(teacherOccupation, form));
     }
 
     @DeleteMapping("/teacheroccupations/{id:\\d+}")
     public void deleteTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") TeacherOccupation teacherOccupation, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertSameSchool(user, teacherOccupation.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, teacherOccupation.getSchool());
         teacherOccupationService.delete(teacherOccupation);
     }
 
@@ -208,30 +214,34 @@ public class SchoolController {
 
     @PostMapping("/studyYears")
     public StudyYearDto createStudyYear(HoisUserDetails user, @Valid @RequestBody StudyYearForm studyYearForm) {
+        UserUtil.assertIsSchoolAdmin(user);
         return getStudyYear(studyYearService.create(user, studyYearForm));
     }
 
     @PutMapping("/studyYears/{id:\\d+}")
     public StudyYearDto updateStudyYear(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyYear studyYear, @Valid @RequestBody StudyYearForm request) {
-        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
         return getStudyYear(studyYearService.save(studyYear, request));
     }
 
     @PostMapping("/studyYears/{id:\\d+}/studyPeriods")
-    public StudyPeriodDto createStudyPeriod(HoisUserDetails user, @WithEntity("id") StudyYear studyYear, @Valid @RequestBody StudyPeriodForm request) {
-        UserUtil.assertSameSchool(user, studyYear.getSchool());
+    public StudyPeriodDto createStudyPeriod(HoisUserDetails user, @WithEntity("id") StudyYear studyYear, 
+            @Valid @RequestBody StudyPeriodForm request) {
+        UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
         return get(studyYearService.createStudyPeriod(studyYear, request));
     }
 
     @PutMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
-    public StudyPeriodDto updateStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyPeriod studyPeriod, @Valid @RequestBody StudyPeriodForm request) {
-        UserUtil.assertSameSchool(user, studyYear.getSchool());
+    public StudyPeriodDto updateStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, 
+            @WithVersionedEntity(value = "id", versionRequestBody = true) StudyPeriod studyPeriod, 
+            @Valid @RequestBody StudyPeriodForm request) {
+        UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
         return get(studyYearService.saveStudyPeriod(studyYear, studyPeriod, request));
     }
 
     @DeleteMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
     public void deleteStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithEntity("id") StudyPeriod studyPeriod) {
-        UserUtil.assertSameSchool(user, studyYear.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
         if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriod.getStudyYear()))) {
             throw new AssertionFailedException("Study year mismatch");
         }
@@ -269,6 +279,7 @@ public class SchoolController {
 
     @PutMapping("/studyYearScheduleLegends")
     public Map<String, ?> updateStudyYearScheduleLegends(HoisUserDetails user, @Valid @RequestBody SchoolUpdateStudyYearScheduleLegendsCommand legendsCmd) {
+        UserUtil.assertIsSchoolAdmin(user);
         School school = getSchool(user);
         schoolService.updateLegends(school, legendsCmd);
         return studyYearScheduleLegends(user);

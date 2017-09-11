@@ -214,6 +214,13 @@ public class SchoolControllerTests {
         Assert.assertEquals(initialDtos + 1, responseDtos.size());
         item = responseDtos.get(0);
         Assert.assertTrue(item.getCode().equals(CODE_3));
+        
+        // remove all
+        request.setLegends(new ArrayList<>());
+        responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
+                new HttpEntity<>(request), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test

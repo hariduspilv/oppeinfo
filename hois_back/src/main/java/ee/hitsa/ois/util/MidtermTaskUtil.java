@@ -4,7 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import org.springframework.util.CollectionUtils;
 
@@ -34,14 +33,13 @@ public abstract class MidtermTaskUtil {
                !ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_L, declaration.getStudent().getStatus()) && 
                !studentHasConfirmedProtocol(declarationSubject);
     }
-    
+
     private static boolean studentHasConfirmedProtocol(DeclarationSubject declarationSubject) {
-        return !CollectionUtils.isEmpty(declarationSubject.getSubjectStudyPeriod().getProtocols()
-                .stream().filter(p -> HigherProtocolUtil
-                        .isConfirmed(p.getProtocol()) && 
-                        protocolIncludesStudent(p, declarationSubject)).collect(Collectors.toSet()));
+        return declarationSubject.getSubjectStudyPeriod().getProtocols()
+                .stream().anyMatch(p -> HigherProtocolUtil.isConfirmed(p.getProtocol()) &&
+                        protocolIncludesStudent(p, declarationSubject));
     }
-    
+
     private static boolean protocolIncludesStudent(ProtocolHdata p, DeclarationSubject declarationSubject) {
         Set<Long> protocolStudents = 
                 StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getStudent()), 
@@ -68,8 +66,8 @@ public abstract class MidtermTaskUtil {
     }
 
     public static boolean midtermTaskCanBeEdited(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
-        return !LocalDate.now().isAfter(subjectStudyPeriod.getStudyPeriod().getEndDate()) && (
-                user.isSchoolAdmin() || user.isTeacher());
+        return !LocalDate.now().isAfter(subjectStudyPeriod.getStudyPeriod().getEndDate()) &&
+                (user.isSchoolAdmin() || user.isTeacher());
     }
 
     public static Boolean midtermTaskCanBeDeleted(MidtermTask midtermTask) {
@@ -88,11 +86,11 @@ public abstract class MidtermTaskUtil {
         }
         return studentResults;
     }
-    
+
     public static boolean resultIsText(MidtermTask task) {
         return BigDecimal.ZERO.compareTo(task.getMaxPoints()) == 0;
     }
-    
+
     public static void assertNotPractice(SubjectStudyPeriod ssp){
         if(Boolean.TRUE.equals(ssp.getSubject().getIsPractice())) {
             throw new ValidationFailedException("midtermTask.error.isPractice");

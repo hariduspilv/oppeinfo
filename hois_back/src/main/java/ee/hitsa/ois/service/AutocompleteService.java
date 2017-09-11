@@ -44,6 +44,7 @@ import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
+import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
@@ -53,7 +54,6 @@ import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
-import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
@@ -95,11 +95,12 @@ public class AutocompleteService {
         }, data);
     }
 
-    public List<AutocompleteResult> rooms(Long schoolId, AutocompleteCommand lookup) {
+    public List<AutocompleteResult> rooms(Long schoolId, RoomsAutocompleteCommand lookup) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from room r inner join building b on b.id = r.building_id");
 
         qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains("r.code",  "code", lookup.getName());
+        qb.optionalCriteria("b.id in (:buildingIds)", "buildingIds", lookup.getBuildingIds());
 
         List<?> data = qb.select("r.id, r.code", em).getResultList();
         return StreamUtil.toMappedList(r -> {
@@ -344,7 +345,7 @@ public class AutocompleteService {
     public List<AutocompleteResult> subjects(Long schoolId, SubjectAutocompleteCommand lookup) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject s");
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        qb.requiredCriteria("s.status_code = :statusCode", "statusCode", SubjectStatus.AINESTAATUS_K.name());
+        qb.requiredCriteria("s.status_code = :statusCode", "statusCode", SubjectStatus.AINESTAATUS_K);
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "name", lookup.getName());
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "code", lookup.getCode());
         qb.optionalCriteria("is_practice = :isPractice", "isPractice", lookup.getPractice());
@@ -372,19 +373,11 @@ public class AutocompleteService {
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
         }, data);
     }
-    /**
-     * startDate and endDate required to get current studyPeriod in front end
-     */
-    public List<StudyPeriodDto> studyPeriods(Long schoolId) {
-        return StreamUtil.toMappedList(StudyPeriodDto::of, studyPeriodRepository.findAll((root, query, cb) -> {
-            return cb.equal(root.get("studyYear").get("school").get("id"), schoolId);
-        }));
-    }
 
     /**
      * startDate and endDate required to get current studyPeriod in front end
      */
-    public List<StudyPeriodWithYearDto> studyPeriodsWithYear(Long schoolId) {
+    public List<StudyPeriodWithYearDto> studyPeriods(Long schoolId) {
         return StreamUtil.toMappedList(StudyPeriodWithYearDto::of, studyPeriodRepository.findAll((root, query, cb) -> {
             return cb.equal(root.get("studyYear").get("school").get("id"), schoolId);
         }));

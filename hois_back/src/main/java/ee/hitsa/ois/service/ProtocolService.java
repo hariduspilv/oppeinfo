@@ -12,7 +12,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -27,6 +26,7 @@ import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
 
@@ -75,7 +75,8 @@ public class ProtocolService {
         List<StudentVocationalResultModuleThemeDto> result = new ArrayList<>();
         result.addAll(vocationalResultsThemeResults(student));
         result.addAll(vocationalResultsModuleResults(student));
-        return result.stream().sorted(Comparator.comparing(StudentVocationalResultModuleThemeDto::getDate).reversed()).collect(Collectors.toList());
+        result.sort(Comparator.comparing(StudentVocationalResultModuleThemeDto::getDate).reversed());
+        return result;
     }
 
     private Collection<StudentVocationalResultModuleThemeDto> vocationalResultsModuleResults(Student student) {
@@ -115,7 +116,7 @@ public class ProtocolService {
             dto.setCredits(resultAsDecimal(r, 6));
             dto.setGrade(resultAsString(r, 7));
             dto.setDate(resultAsLocalDate(r, 8));
-            String teacherName = resultAsString(r, 10) + " " + resultAsString(r, 11);
+            String teacherName = PersonUtil.fullname(resultAsString(r, 10), resultAsString(r, 11));
             dto.getTeachers().add(new AutocompleteResult(resultAsLong(r, 9), teacherName, teacherName));
             dto.setStudyYear(resultAsString(r, 12));
             dto.setStudyYearStartDate(resultAsLocalDate(r, 13));
@@ -161,11 +162,12 @@ public class ProtocolService {
         Map<Long, StudentVocationalResultModuleThemeDto> result = new HashMap<>();
         for (Object r : rows) {
             Long themeId = resultAsLong(r, 6);
-            if (result.containsKey(themeId)) {
-                String teacherName = resultAsString(r, 12) + " " + resultAsString(r, 13);
-                result.get(themeId).getTeachers().add(new AutocompleteResult(resultAsLong(r, 11), teacherName, teacherName));
+            StudentVocationalResultModuleThemeDto dto = result.get(themeId);
+            if (dto != null) {
+                String teacherName = PersonUtil.fullname(resultAsString(r, 12), resultAsString(r, 13));
+                dto.getTeachers().add(new AutocompleteResult(resultAsLong(r, 11), teacherName, teacherName));
             } else {
-                StudentVocationalResultModuleThemeDto dto = new StudentVocationalResultModuleThemeDto();
+                dto = new StudentVocationalResultModuleThemeDto();
                 dto.setModule(new AutocompleteResult(resultAsLong(r, 0),
                         CurriculumUtil.moduleName(resultAsString(r, 2), resultAsString(r, 3), resultAsString(r, 1)),
                         CurriculumUtil.moduleName(resultAsString(r, 4), resultAsString(r, 5), resultAsString(r, 1))));
@@ -174,15 +176,13 @@ public class ProtocolService {
                 dto.setCredits(resultAsDecimal(r, 8));
                 dto.setGrade(resultAsString(r, 9));
                 dto.setDate(resultAsLocalDate(r, 10));
-                String teacherName = resultAsString(r, 12) + " " + resultAsString(r, 13);
+                String teacherName = PersonUtil.fullname(resultAsString(r, 12), resultAsString(r, 13));
                 dto.getTeachers().add(new AutocompleteResult(resultAsLong(r, 11), teacherName, teacherName));
                 dto.setStudyYear(resultAsString(r, 14));
                 dto.setStudyYearStartDate(resultAsLocalDate(r, 15));
-                result.put(dto.getTheme().getId(), dto);
+                result.put(themeId, dto);
             }
-
         }
         return result.values();
     }
-
 }

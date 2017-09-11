@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
@@ -39,7 +40,6 @@ import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
-import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodPlanRepository;
 import ee.hitsa.ois.util.EntityUtil;
@@ -61,19 +61,12 @@ public class SubjectStudyPeriodPlanService {
 
     @Autowired
     private SubjectStudyPeriodPlanRepository subjectStudyPeriodPlanRepository;
-    
     @Autowired
     private SubjectRepository subjectRepository;
-    
-    @Autowired
-    private StudyPeriodRepository studyPeriodRepository;
-    
     @Autowired
     private CurriculumRepository curriculumRepository;
-    
     @Autowired
     private ClassifierRepository classifierRepository;
-    
     @Autowired
     private EntityManager em;
 
@@ -129,12 +122,12 @@ public class SubjectStudyPeriodPlanService {
     public SubjectStudyPeriodPlan create(Long schoolId, SubjectStudyPeriodPlanDto form) {
         SubjectStudyPeriodPlan plan = new SubjectStudyPeriodPlan();
 
-        Subject subject = subjectRepository.getOne(form.getSubject());
+        Subject subject = em.getReference(Subject.class, form.getSubject());
         AssertionFailedException.throwIf(!EntityUtil.getId(subject.getSchool()).equals(schoolId),
                 "User and subject have different schools!");
         plan.setSubject(subject);
 
-        StudyPeriod studyPeriod = studyPeriodRepository.getOne(form.getStudyPeriod());
+        StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, form.getStudyPeriod());
         AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(schoolId),
                 "User and studyPeriod have different schools!");
         plan.setStudyPeriod(studyPeriod);
@@ -143,7 +136,7 @@ public class SubjectStudyPeriodPlanService {
     }
 
     public SubjectStudyPeriodPlan save(Long schoolId, SubjectStudyPeriodPlan plan, SubjectStudyPeriodPlanDto form) {
-        StudyPeriod studyPeriod = studyPeriodRepository.getOne(form.getStudyPeriod());
+        StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, form.getStudyPeriod());
         AssertionFailedException.throwIf(studyPeriod.getEndDate().isBefore(LocalDate.now()) ,
                 "Past subjectStudyPeriods cannot be updated or created");
 
@@ -151,7 +144,7 @@ public class SubjectStudyPeriodPlanService {
         updateCurriculums(plan, form.getCurriculums(),schoolId);
         updateStudyForms(plan, form.getStudyForms());
         updateCapacities(plan, form.getCapacities());
-        return subjectStudyPeriodPlanRepository.save(plan);
+        return EntityUtil.save(plan, em);
     }
     
     private void deleteDuplicates(SubjectStudyPeriodPlanDto form) {
@@ -166,7 +159,7 @@ public class SubjectStudyPeriodPlanService {
         newCurriculums, c -> {
             SubjectStudyPeriodPlanCurriculum newCurriculum = new SubjectStudyPeriodPlanCurriculum();
             
-            Curriculum curriculum = curriculumRepository.getOne(c);
+            Curriculum curriculum = em.getReference(Curriculum.class, c);
             AssertionFailedException.throwIf(!EntityUtil.getId(curriculum.getSchool()).equals(schoolId),
                     "User and Curriculum have different schools!");
             newCurriculum.setCurriculum(curriculum);
@@ -179,7 +172,7 @@ public class SubjectStudyPeriodPlanService {
         EntityUtil.bindEntityCollection(plan.getStudyForms(), sf -> EntityUtil.getCode(sf.getStudyForm()), 
         newStudyForms, sf -> {
             SubjectStudyPeriodPlanStudyForm newStudyForm = new SubjectStudyPeriodPlanStudyForm();
-            newStudyForm.setStudyForm(EntityUtil.validateClassifier(classifierRepository.getOne(sf), MainClassCode.OPPEVORM));
+            newStudyForm.setStudyForm(EntityUtil.validateClassifier(em.getReference(Classifier.class, sf), MainClassCode.OPPEVORM));
             newStudyForm.setPlan(plan);
             return newStudyForm;
         });
@@ -207,7 +200,7 @@ public class SubjectStudyPeriodPlanService {
         AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(schoolId),
                 "User and SubjectStudyPeriodsPlan's schools does not match");
 
-        EntityUtil.deleteEntity(subjectStudyPeriodPlanRepository, plan);         
+        EntityUtil.deleteEntity(plan, em);
     }
 
     public Boolean exists(SubjectStudyPeriodPlanUniqueCommand form) {

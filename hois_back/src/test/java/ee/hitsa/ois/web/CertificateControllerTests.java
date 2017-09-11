@@ -20,6 +20,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.CertificateForm;
 import ee.hitsa.ois.web.dto.CertificateDto;
@@ -32,8 +33,7 @@ public class CertificateControllerTests {
     private static final String BASE_URL = "/certificate";
     private static final String TEXT = "CertificateControllerTest";
     private static final String ID_CODE = "37810017107";
-    private static final String TYPE = "TOEND_LIIK_OPI";
-    private static final String STATUS = "TOEND_STAATUS_V";
+    private static final String TYPE = CertificateType.TOEND_LIIK_MUU.name();
     private static final Long STUDENT_ID = Long.valueOf(2);
 
     @Autowired
@@ -181,7 +181,6 @@ public class CertificateControllerTests {
         form.setSignatoryName(TEXT);
         form.setWdUrl(TEXT);
         form.setType(TYPE);
-        form.setStatus(STATUS);
         form.setStudent(STUDENT_ID);
         return form;
     }

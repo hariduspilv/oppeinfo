@@ -73,6 +73,11 @@ angular.module('hitsaOis').factory('DataUtils',
       return new Date().withoutTime() > period.endDate;
     }
 
+    function periodsOverlap(period1, period2) {
+      return (period1.startDate <= period2.startDate) && (period1.endDate >= period2.startDate) ||
+             (period1.startDate >= period2.startDate) && (period1.startDate <= period2.endDate);
+    }
+
     return {
       assign: function (path, obj, value) {
         return path.split('.').reduce(function (prev, curr, currentIndex, array) {
@@ -91,6 +96,7 @@ angular.module('hitsaOis').factory('DataUtils',
       getStudyYearOrPeriodAt: getStudyYearOrPeriodAt,
       sortStudyYearsOrPeriods: sortStudyYearsOrPeriods,
       isPastStudyYearOrPeriod: isPastStudyYearOrPeriod,
+      periodsOverlap: periodsOverlap,
 
       sexFromIdcode: function (idcode) {
         if (idcode.length !== 11 || isNaN(idcode)) {

@@ -41,8 +41,7 @@ public class HoisUserDetailsService implements UserDetailsService {
                 .findFirst()
                 .orElseThrow(() -> new UsernameNotFoundException("Person had no rights : " + idcode));
 
-        User user = userRepository.getOne(selectedUser.getId());
-        return getHoisUserDetails(user);
+        return getHoisUserDetails(selectedUser.getId());
     }
 
     public HoisUserDetails getHoisUserDetails(Long userId) {

@@ -5,10 +5,6 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationListController', 
   QueryUtils.createQueryForm($scope, '/saisApplications', { order: 'applicationNr' }, clMapper.objectmapper);
   $scope.loadData();
 
-  QueryUtils.endpoint('/autocomplete/saisAdmissionCodes').query(function (result) {
-    $scope.saisAdmissionCodes = result;
-  });
-
   function showImportResultDialog(file) {
     dialogService.showDialog('reception/reception.saisApplication.import.result.dialog.html', function (dialogScope) {
       QueryUtils.endpoint('/saisApplications/importCsv').save({ file: file }, function (result) {

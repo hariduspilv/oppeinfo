@@ -4,11 +4,14 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   $routeProvider
     .when('/reception/saisAdmission/search', {
         templateUrl: 'reception/reception.saisAdmission.list.html',
-        controller: 'ReceptionSaisAdmissionListController',
+        controller: 'SimpleListController',
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          clMapping: function() { return {studyForm: 'OPPEVORM', language: 'OPPEKEEL'}; },
+          params: function() { return {order: 'code'}; },
+          url: function() { return '/saisAdmissions'; }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

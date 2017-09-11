@@ -2,16 +2,17 @@
 
 angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService',
   function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService) {
-  $scope.journalColors = ['#CD6155', '#FADBD8', '#C39BD3', '#E8DAEF', '#85C1E9', '#D1F2EB', '#ABEBC6', '#F9E79F', '#FAD7A0', '#EDBB99', '#D5DBDB', '#D5D8DC'];
+  $scope.journalColors = ['#ffff00', '#9fff80', '#ff99cc', '#E8DAEF', '#85C1E9', '#D1F2EB', '#ABEBC6', '#F9E79F', '#FAD7A0', '#EDBB99', '#D5DBDB', '#D5D8DC'];
   $scope.plan = {};
   $scope.timetableId = $route.current.params.id;
   $scope.weekday = ["daySun", "dayMon", "dayTue", "dayWed", "dayThu", "dayFri", "daySat"];
+  $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'});
   var baseUrl = '/timetables';
   $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
   QueryUtils.endpoint(baseUrl + '/:id/createPlan').search({id: $scope.timetableId}).$promise.then(function(result) {
     initializeData(result);
   });
-  
+
   function initializeData(result) {
     $scope.plan = result;
     $scope.plan.selectAll = true;
@@ -55,7 +56,7 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
     $scope.lessonsInDay.sort(function(a, b) {
       return $scope.weekday.indexOf(a) - $scope.weekday.indexOf(b);
     });
-    
+
     $scope.firstDay = $scope.weekday[new Date($scope.plan.startDate).getDay()];
     $scope.dayOrder = $scope.weekday.slice();
     while($scope.dayOrder[0] !== $scope.firstDay) {
@@ -63,12 +64,12 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
     }
     $scope.currentLessonTimes = [];
     for(var k = 0; $scope.dayOrder.length > k; k++) {
-      var currentDay = $scope.lessonsInDay[$scope.dayOrder[k]].slice();
-      while(angular.isDefined(currentDay) && currentDay.length > 0) {
-        $scope.currentLessonTimes.push(currentDay.shift());
+      var currDay = $scope.lessonsInDay[$scope.dayOrder[k]].slice();
+      while(angular.isDefined(currDay) && currDay.length > 0) {
+        $scope.currentLessonTimes.push(currDay.shift());
       }
     }
-    
+
     //creating object for each group to hold all planed lessons
     var plannedLessonsByGroup = {};
     for(var s = 0; $scope.plan.plannedLessons.length > s; s++) {
@@ -82,7 +83,7 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
     }
     $scope.plan.plannedLessonsByGroup = plannedLessonsByGroup;
   }
-  
+
   $scope.$watch('plan.selectedGroup', function () {
     if(angular.isDefined($scope.plan.selectedGroup)) {
       $scope.plan.currentCapacities = $scope.plan.studentGroupCapacities.filter(function (t) { return t.studentGroup === $scope.plan.selectedGroup; });
@@ -92,6 +93,7 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
       var currentCapacities = $scope.plan.currentCapacities.map(function (obj) {
         return obj.journal;
       });
+      $scope.plan.currentCapacitiesGrouped = groupBy($scope.plan.currentCapacities, "journal");
       if(angular.isDefined($scope.plan.journals)) {
         $scope.plan.journals.forEach(function(item, index) {
           item.color = $scope.journalColors[index];
@@ -102,26 +104,40 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
       }
     }
   });
-  
+
   $scope.getByJournal = function(journal, param) {
     var capacity = $scope.plan.currentCapacities.find(function (it) {
       return it.journal === journal.id;
     });
     return capacity[param];
   };
-  
+
   $scope.getByCapacity = function(capacity, param) {
     var journal = $scope.plan.currentJournals.find(function (it) {
       return it.id === capacity.journal;
     });
     return journal[param];
   };
-  
+
+  $scope.getCapacityTypeValue = function(code) {
+    var result = $scope.capacityTypes.find(function(it) {
+      return it.code === code;
+    });
+    return result !== null ? result.value.toUpperCase() : "";
+  };
+
+  $scope.getCapacityTypeName = function(code) {
+    var result = $scope.capacityTypes.find(function(it) {
+      return it.code === code;
+    });
+    return result !== null ? result.nameEt.toUpperCase() : "";
+  };
+
   $scope.getCountForCapacity = function(capacity) {
     capacity.thisAllocatedLessons = 0;
     return capacity.thisPlannedLessons - capacity.thisAllocatedLessons;
   };
-  
+
   $scope.getEventForLesson = function(index, lesson, group) {
     var selectedDay, daysSoFar = 0;
     for(var k = 0; $scope.dayOrder.length > k; k++) {
@@ -131,7 +147,7 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
         break;
       }
     }
-    
+
     if(angular.isDefined($scope.plan.plannedLessonsByGroup[group.id])) {
       var groupLesson = $scope.plan.plannedLessonsByGroup[group.id].lessons.filter(function(t) {
         return $scope.weekday[new Date(t.start).getDay()] === selectedDay && lesson.lessonNr === t.lessonNr;
@@ -161,15 +177,34 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
     }
     return null;
   };
-  
+
   $scope.changeEvent = function(currentEvent) {
-    
+
     dialogService.showDialog('timetable/timetable.event.change.dialog.html', function(dialogScope) {
       dialogScope.lesson = currentEvent;
+      dialogScope.lessonCapacityName = $scope.getCapacityTypeName(currentEvent.capacityType);
+      dialogScope.lesson.startTime = new Date(currentEvent.start);
+      dialogScope.lesson.endTime = new Date(currentEvent.end);
+      dialogScope.deleteEvent = function(toDelete) {
+        QueryUtils.endpoint(baseUrl + '/deleteEvent').save({timetableEventId : toDelete}).$promise.then(function(result) {
+          initializeData(result);
+          dialogScope.cancel();
+        });
+      };
+    }, function (submittedDialogScope) {
+      var query = {
+          startTime: submittedDialogScope.lesson.endTime,
+          endTime: submittedDialogScope.lesson.startTime,
+          rooms: submittedDialogScope.lesson.eventRooms,
+          timetableEventId: submittedDialogScope.lesson.id
+      };
+      QueryUtils.endpoint(baseUrl + '/saveEventRoomsAndTimes').save(query).$promise.then(function(result) {
+        initializeData(result);
+      });
     });
   };
-  
-  
+
+
   $scope.saveEvent = function(params) {
     var selectedDay, daysSoFar = 0;
     for(var k = 0; $scope.dayOrder.length > k; k++) {
@@ -180,23 +215,24 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
       }
     }
     var journalId = params.journalId;
-    var query = { 
+    var query = {
         journal: journalId,
         timetable: $scope.timetableId,
         lessonTime: this.lessonTime.id,
         selectedDay: selectedDay,
-        oldEventId: params.oldEventId
+        oldEventId: params.oldEventId,
+        capacityType: params.capacityType
     };
     QueryUtils.endpoint(baseUrl + '/saveEvent').save(query).$promise.then(function(result) {
       initializeData(result);
     });
   };
-  
+
   $scope.range = function(count){
-    var array = []; 
-    for (var i = 0; i < count; i++) { 
+    var array = [];
+    for (var i = 0; i < count; i++) {
       array.push(i);
-    } 
+    }
     return array;
   };
 
@@ -206,6 +242,20 @@ angular.module('hitsaOis').controller('TimetablePlanController', ['$scope', 'mes
       return selectedCodes.indexOf(t.code) !== -1;
     });
   };
-  
+
+  function groupBy(collection, property) {
+    var value, index, values = [], result = [];
+    for (var i = 0; i < collection.length; i++) {
+      value = collection[i][property];
+      index = values.indexOf(value);
+      if (index > -1) {
+        result[index].push(collection[i]);
+      } else {
+        values.push(value);
+        result.push([collection[i]]);
+      }
+    }
+    return result;
+  }
 }
 ]);

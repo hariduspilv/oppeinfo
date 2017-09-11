@@ -1,12 +1,12 @@
 package ee.hitsa.ois.service;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Enterprise;
-import ee.hitsa.ois.repository.EnterpriseRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.EnterpriseForm;
 import ee.hitsa.ois.web.dto.EnterpriseDto;
@@ -16,7 +16,7 @@ import ee.hitsa.ois.web.dto.EnterpriseDto;
 public class EnterpriseService {
 
     @Autowired
-    EnterpriseRepository enterpriseRepository;
+    private EntityManager em;
 
     public EnterpriseDto get(Enterprise enterprise) {
         return EnterpriseDto.of(enterprise);
@@ -24,11 +24,10 @@ public class EnterpriseService {
 
     public Enterprise create(EnterpriseForm enterpriseForm) {
         Enterprise enterprise = EntityUtil.bindToEntity(enterpriseForm, new Enterprise());
-        return enterpriseRepository.save(enterprise);
+        return EntityUtil.save(enterprise, em);
     }
 
     public void delete(Enterprise enterprise) {
-        enterpriseRepository.delete(enterprise);
+        EntityUtil.deleteEntity(enterprise, em);
     }
-
 }

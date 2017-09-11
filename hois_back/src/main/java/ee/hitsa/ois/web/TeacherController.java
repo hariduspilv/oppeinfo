@@ -29,8 +29,9 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.TeacherUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.EhisTeacherExportForm;
+import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
+import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityFormWrapper;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFromWrapper;
@@ -80,6 +81,11 @@ public class TeacherController {
     public TeacherDto create(@Valid @RequestBody TeacherForm teacherForm, HoisUserDetails user) {
         return teacherService.create(user, teacherForm);
     }
+    
+    @GetMapping("/unique")
+    public boolean isUnique(HoisUserDetails user, UniqueCommand command) {
+        return teacherService.isUnique(user.getSchoolId(), command);
+    }
 
     @PutMapping("/{id:\\d+}")
     public TeacherDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Teacher teacher, @Valid @RequestBody TeacherForm teacherForm) {
@@ -125,9 +131,10 @@ public class TeacherController {
         TeacherUtil.assertEhisPositionBelongsToTeacher(teacherPositionEhis, teacher);
         teacherService.delete(teacherPositionEhis);
     }
-    
+
     @PostMapping("/ehisTeacherExport")
     public List<EhisTeacherExportResultDto> ehisTeacherExport(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
-        return ehisTeacherExportService.exportToEhis(form, user);
+        UserUtil.assertIsSchoolAdmin(user);
+        return ehisTeacherExportService.exportToEhis(user.getSchoolId(), form);
     }
 }

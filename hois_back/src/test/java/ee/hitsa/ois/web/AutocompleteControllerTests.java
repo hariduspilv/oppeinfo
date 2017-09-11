@@ -187,6 +187,12 @@ public class AutocompleteControllerTests {
         uriBuilder.queryParam("role", "student");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));
+
+        uriBuilder = UriComponentsBuilder.fromUriString(uri);
+        uriBuilder.queryParam("idcode", TestConfiguration.USER_ID);
+        uriBuilder.queryParam("role", "student");
+        responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));
     }
 
     @Test
@@ -197,11 +203,21 @@ public class AutocompleteControllerTests {
         uriBuilder.queryParam("role", "forteacher");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));
+
+        uriBuilder = UriComponentsBuilder.fromUriString(uri);
+        uriBuilder.queryParam("idcode", TestConfiguration.USER_ID);
+        uriBuilder.queryParam("role", "forteacher");
+        responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertTrue(HttpStatus.NOT_FOUND.equals(responseEntity.getStatusCode()) || HttpStatus.OK.equals(responseEntity.getStatusCode()));
     }
 
     @Test
     public void rooms() {
-        ResponseEntity<Object> response = restTemplate.getForEntity("/autocomplete/rooms", Object.class);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/autocomplete/rooms");
+        uriBuilder.queryParam("buildingIds", "6&buildingIds=26");
+        uriBuilder.queryParam("name", "aq");
+        ResponseEntity<Object> response = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }

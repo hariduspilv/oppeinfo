@@ -22,7 +22,7 @@ import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
-import javax.validation.ConstraintViolation;
+import javax.transaction.Transactional;
 import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,6 +38,7 @@ import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.domain.timetable.JournalEntryCapacityType;
@@ -49,10 +50,7 @@ import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.JournalEntryRepository;
-import ee.hitsa.ois.repository.JournalEntryStudentRepository;
 import ee.hitsa.ois.repository.JournalRepository;
-import ee.hitsa.ois.repository.JournalStudentRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -78,17 +76,12 @@ import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 import ee.hitsa.ois.web.dto.timetable.JournalXlsDto;
 
+@Transactional
 @Service
 public class JournalService {
 
     @Autowired
     private JournalRepository journalRepository;
-    @Autowired
-    private JournalStudentRepository journalStudentRepository;
-    @Autowired
-    private JournalEntryRepository journalEntryRepository;
-    @Autowired
-    private JournalEntryStudentRepository journalEntryStudentRepository;
     @Autowired
     private StudentRepository studentRepository;
     @Autowired
@@ -279,23 +272,23 @@ public class JournalService {
         if (command.getEndDate() != null) {
             journal.setEndDate(command.getEndDate());
         }
-        return journalRepository.save(journal);
+        return EntityUtil.save(journal, em);
     }
 
     public Journal addStudentsToJournal(Journal journal, JournalStudentsCommand command) {
-        List<Long> existingStudents = journal.getJournalStudents().stream().map(js -> EntityUtil.getId(js.getStudent()))
-                .collect(Collectors.toList());
+        Set<Long> existingStudents = journal.getJournalStudents().stream().map(js -> EntityUtil.getId(js.getStudent()))
+                .collect(Collectors.toSet());
         for (Long student : command.getStudents()) {
             if (!existingStudents.contains(student)) {
-                journal.getJournalStudents().add(JournalStudent.of(studentRepository.getOne(student)));
+                journal.getJournalStudents().add(JournalStudent.of(em.getReference(Student.class, student)));
             }
         }
-        return journalRepository.save(journal);
+        return EntityUtil.save(journal, em);
     }
 
     public Journal removeStudentsFromJournal(Journal journal, JournalStudentsCommand command) {
         journal.getJournalStudents().removeIf(js -> command.getStudents().contains(EntityUtil.getId(js.getStudent())));
-        return journalRepository.save(journal);
+        return EntityUtil.save(journal, em);
     }
 
     public Journal saveJournalEntry(HoisUserDetails user, Journal journal, JournalEntryForm journalEntryForm) {
@@ -304,33 +297,25 @@ public class JournalService {
                 "journalEntryStudents", "journalEntryCapacityTypes");
         journal.getJournalEntries().add(journalEntry);
         saveJournalEntryStudents(user, journalEntryForm, journalEntry);
-        return journalRepository.save(journal);
+        return EntityUtil.save(journal, em);
     }
 
     public void updateJournalEntry(HoisUserDetails user, JournalEntryForm journalEntryForm, Long journalEntrylId) {
         validateJournalEntry(journalEntryForm);
-        JournalEntry journalEntry = journalEntryRepository.getOne(journalEntrylId);
+        JournalEntry journalEntry = em.getReference(JournalEntry.class, journalEntrylId);
         EntityUtil.bindToEntity(journalEntryForm, journalEntry, classifierRepository, "journalEntryStudents",
                 "journalEntryCapacityTypes");
         saveJournalEntryStudents(user, journalEntryForm, journalEntry);
-        journalEntryRepository.save(journalEntry);
+        EntityUtil.save(journalEntry, em);
     }
 
     private void validateJournalEntry(JournalEntryForm journalEntryForm) {
         if (StringUtils.hasText(journalEntryForm.getHomework())) {
-            Set<ConstraintViolation<JournalEntryForm>> errors = validator.validate(journalEntryForm,
-                    JournalEntryValidation.Homework.class);
-            if (!errors.isEmpty()) {
-                throw new ValidationFailedException(errors);
-            }
+            ValidationFailedException.throwOnError(validator.validate(journalEntryForm, JournalEntryValidation.Homework.class));
         }
 
         if (JournalEntryType.SISSEKANNE_T.name().equals(journalEntryForm.getEntryType())) {
-            Set<ConstraintViolation<JournalEntryForm>> errors = validator.validate(journalEntryForm,
-                    JournalEntryValidation.Lesson.class);
-            if (!errors.isEmpty()) {
-                throw new ValidationFailedException(errors);
-            }
+            ValidationFailedException.throwOnError(validator.validate(journalEntryForm, JournalEntryValidation.Lesson.class));
         }
     }
 
@@ -353,7 +338,7 @@ public class JournalService {
     }
 
     private void updateJournalStudentEntry(HoisUserDetails user, JournalEntryStudentForm journalEntryStudentForm) {
-        JournalEntryStudent journalEntryStudent = journalEntryStudentRepository.getOne(journalEntryStudentForm.getId());
+        JournalEntryStudent journalEntryStudent = em.getReference(JournalEntryStudent.class, journalEntryStudentForm.getId());
         assertJournalEntryStudentRules(user, journalEntryStudent.getJournalStudent(), journalEntryStudent,
                 journalEntryStudentForm);
 
@@ -402,7 +387,7 @@ public class JournalService {
 
     private void saveJournalStudentEntry(HoisUserDetails user, JournalEntry journalEntry,
             JournalEntryStudentForm journalEntryStudentForm) {
-        JournalStudent journalStudent = journalStudentRepository.getOne(journalEntryStudentForm.getJournalStudent());
+        JournalStudent journalStudent = em.getReference(JournalStudent.class, journalEntryStudentForm.getJournalStudent());
         assertJournalEntryStudentRules(user, journalStudent, null, journalEntryStudentForm);
 
         JournalEntryStudent journalEntryStudent = EntityUtil.bindToEntity(journalEntryStudentForm,
@@ -412,13 +397,12 @@ public class JournalService {
         if (journalEntryStudentForm.getGrade() != null) {
             journalEntryStudent.setGradeInserted(LocalDateTime.now());
         }
-        List<Long> existingJournalStudentEntries = journalEntry.getJournalEntryStudents().stream()
-                .map(it -> EntityUtil.getId(it.getJournalStudent())).collect(Collectors.toList());
-        if (!existingJournalStudentEntries.contains(EntityUtil.getId(journalStudent))) {
-            journalEntry.getJournalEntryStudents().add(journalEntryStudent);
-        } else {
+        // TODO remove check, use database unique constraint
+        Long id = EntityUtil.getId(journalStudent);
+        if(journalEntry.getJournalEntryStudents().stream().anyMatch(it -> id.equals(EntityUtil.getId(it.getJournalStudent())))) {
             throw new ValidationFailedException("journal.messages.dublicateJournalStudentInJournalEntry");
         }
+        journalEntry.getJournalEntryStudents().add(journalEntryStudent);
     }
 
     public JournalEntryLessonInfoDto journalEntryLessonInfo(Journal journal) {
@@ -457,7 +441,7 @@ public class JournalService {
     }
 
     public JournalEntryDto journalEntry(Long journalId, Long journalEntrylId) {
-        JournalEntry journalEntry = journalEntryRepository.getOne(journalEntrylId);
+        JournalEntry journalEntry = em.getReference(JournalEntry.class, journalEntrylId);
         if (EntityUtil.getId(journalEntry.getJournal()).equals(journalId)) {
             return JournalEntryDto.of(journalEntry);
         }

@@ -8,6 +8,8 @@ angular.module('hitsaOis')
     $scope.initializing = true;
     var capacitiesData = [];
 
+    var HOURS_PER_EKAP = 26;
+
     $scope.VERSION_STATUS = Curriculum.VERSION_STATUS;
 
     $scope.formState = {
@@ -204,8 +206,14 @@ angular.module('hitsaOis')
           dialogScope.outcomes = curriculumModule.outcomes;
           dialogScope.setDefaultHours = function() {
             if (angular.isNumber(dialogScope.occupationModuleTheme.credits)) {
-              dialogScope.occupationModuleTheme.hours = 26 * dialogScope.occupationModuleTheme.credits;
+              dialogScope.occupationModuleTheme.hours = HOURS_PER_EKAP * dialogScope.occupationModuleTheme.credits;
+              dialogScope.dialogForm.hours.$setDirty();
             }
+          };
+
+          dialogScope.setDefaultCredits = function() {
+            dialogScope.occupationModuleTheme.credits = dialogScope.occupationModuleTheme.hours / HOURS_PER_EKAP;
+            dialogScope.dialogForm.credits.$setDirty();
           };
 
           function capacitiesDtoToModel() {
@@ -216,14 +224,45 @@ angular.module('hitsaOis')
             });
           }
           capacitiesDtoToModel();
-        },
-        function(submittedDialogScope) {
-          submittedDialogScope.occupationModuleTheme.capacities = capacitiesToDto(submittedDialogScope.capacities);
 
-          if (!angular.isDefined(occupationModuleTheme)) {
-            occupationModule.themes.push(submittedDialogScope.occupationModuleTheme);
+          dialogScope.saveTheme = function() {
+            var submittedDialogScope = dialogScope;
+            if(!validateTheme(submittedDialogScope)) {
+              return;
+            }
+            submittedDialogScope.occupationModuleTheme.capacities = capacitiesToDto(submittedDialogScope.capacities);
+
+            if (!angular.isDefined(occupationModuleTheme)) {
+              occupationModule.themes.push(submittedDialogScope.occupationModuleTheme);
+            }
+            $scope.openAddModuleDataDialog(curriculumModule, occupationModule);
+          };
+
+          function validateTheme(submittedDialogScope) {
+            if(submittedDialogScope.occupationModuleTheme.hours !==
+              HOURS_PER_EKAP * submittedDialogScope.occupationModuleTheme.credits) {
+              message.error('curriculum.error.themeCreditsAndHoursMismatch');
+              return false;
+            }
+            if(!proportionsMatch()) {
+              message.error('curriculum.error.themeCapacitiesAndHoursMismatch');
+              return false;
+            }
+            return true;
           }
-          $scope.openAddModuleDataDialog(curriculumModule, occupationModule);
+
+          function proportionsMatch() {
+            return dialogScope.occupationModuleTheme.hours === dialogScope.capacities.reduce(function(sum, value) {
+              if(angular.isDefined(value.inputData.hours)) {
+                return sum += value.inputData.hours;
+              } else {
+                return sum;
+              }
+            }, 0);
+          }
+
+        }, function(){
+
         });
       };
     };

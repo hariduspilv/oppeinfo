@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
 import org.junit.After;
@@ -18,8 +19,10 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.service.DeclarationService;
 import ee.hitsa.ois.web.dto.DeclarationDto;
 
 @Transactional
@@ -30,6 +33,10 @@ public class DeclarationControllerSchoolAdminTests {
     private static final String ENDPOINT = "/declarations";
     private static final Long STUDENT_ID = Long.valueOf(107L); 
 
+    @Autowired
+    private DeclarationService declarationService;
+    @Autowired
+    private EntityManager em;
     @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
@@ -62,23 +69,23 @@ public class DeclarationControllerSchoolAdminTests {
         ResponseEntity<DeclarationDto> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), DeclarationDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     private void basicTest(String url) {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void canCreate() {
         basicTest(ENDPOINT + "/canCreate");
     }
-    
+
     @Test
     public void getStudentsWithoutDeclaration() {
         basicTest(ENDPOINT + "/students");
     }
-    
+
     @Test
     public void getCurrentStudyPeriod() {
         basicTest(ENDPOINT + "/currentStudyPeriod");
@@ -126,8 +133,6 @@ public class DeclarationControllerSchoolAdminTests {
         basicTest(ENDPOINT + "/subjects/extracurriculum/" + id);
 
         // delete
-        uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(id.toString());
-        uri = uriBuilder.build().toUriString();
-        restTemplate.delete(uri);
+        declarationService.delete(em.getReference(Declaration.class, id));
     }
 }

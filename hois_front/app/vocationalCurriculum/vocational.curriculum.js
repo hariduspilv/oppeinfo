@@ -700,6 +700,11 @@ angular.module('hitsaOis')
             dialogScope.filteredModuleValues = ['KUTSEMOODUL_P', 'KUTSEMOODUL_Y'];
           }
 
+          dialogScope.swap = function(index1, index2) {
+            var temp = dialogScope.module.outcomes[index1];
+            dialogScope.module.outcomes[index1] = dialogScope.module.outcomes[index2];
+            dialogScope.module.outcomes[index2] = temp;
+          };
 
           if (angular.isDefined(curriculumModule)) {
             angular.extend(dialogScope.module, curriculumModule);
@@ -718,6 +723,15 @@ angular.module('hitsaOis')
             if($scope.curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK' && ArrayUtils.includes(dialogScope.filteredModuleValues, curriculumModule.module.code)) {
                 ArrayUtils.remove(dialogScope.filteredModuleValues, curriculumModule.module.code);
             }
+
+            dialogScope.module.outcomes.forEach(function(outcome){
+              if(!angular.isDefined(outcome.orderNr)) {
+                outcome.orderNr = dialogScope.module.outcomes.indexOf(outcome);
+              }
+            });
+            dialogScope.module.outcomes.sort(function(el1, el2){
+              return el1.orderNr - el2.orderNr;
+            });
           }
           if ($scope.formState.notEditableBasicData){
             dialogScope.formState.typePreselected = true;
@@ -725,10 +739,31 @@ angular.module('hitsaOis')
           if($scope.formState.notEditableBasicData && !angular.isDefined(curriculumModule)) {
               dialogScope.filteredModuleValues = ['KUTSEMOODUL_L', 'KUTSEMOODUL_P', 'KUTSEMOODUL_Y'];
           }
+          dialogScope.isEditingOutcome = false;
+          dialogScope.editedOutcome = null;
 
           dialogScope.addOutcome = function() {
             if (angular.isString(dialogScope.outcomeEt) && dialogScope.outcomeEt !== '') {
-                dialogScope.module.outcomes.push({outcomeEt: dialogScope.outcomeEt, outcomeEn: dialogScope.outcomeEn});
+                dialogScope.module.outcomes.push({outcomeEt: dialogScope.outcomeEt, outcomeEn: dialogScope.outcomeEn, order: dialogScope.module.outcomes.length});
+                dialogScope.outcomeEt = undefined;
+                dialogScope.outcomeEn = undefined;
+              }
+          };
+
+          dialogScope.editOutcome = function(outcome) {
+            dialogScope.isEditingOutcome = true;
+            dialogScope.editedOutcome = outcome;
+            dialogScope.outcomeEt = outcome.outcomeEt;
+            dialogScope.outcomeEn = outcome.outcomeEn;
+          };
+
+          dialogScope.saveOutcome = function() {
+            if (angular.isString(dialogScope.outcomeEt) && dialogScope.outcomeEt !== '') {
+                dialogScope.isEditingOutcome = false;
+
+                dialogScope.editedOutcome.outcomeEt = dialogScope.outcomeEt;
+                dialogScope.editedOutcome.outcomeEn = dialogScope.outcomeEn;
+
                 dialogScope.outcomeEt = undefined;
                 dialogScope.outcomeEn = undefined;
               }
@@ -837,6 +872,10 @@ angular.module('hitsaOis')
           submittedDialogScope.module.practice = false;
         }
         mapOccupationsToModule(submittedDialogScope, submittedDialogScope.module);
+
+        submittedDialogScope.module.outcomes.forEach(function(outcome){
+          outcome.orderNr = submittedDialogScope.module.outcomes.indexOf(outcome);
+        });
 
         if($scope.curriculum.id) {
           var CurriculumModuleEndpoint = QueryUtils.endpoint('/curriculum/' + $scope.curriculum.id + '/module');

@@ -19,7 +19,6 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.service.CommitteeService;
-import ee.hitsa.ois.service.CommitteeValidationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -35,40 +34,36 @@ public class CommitteeController {
 
     @Autowired
     private CommitteeService committeeService;
-    @Autowired
-    private CommitteeValidationService committeeValidationService;
-    
+
     @GetMapping
     public Page<CommitteeSearchDto> search(HoisUserDetails user,
             @NotNull CommitteeSearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return committeeService.search(user.getSchoolId(), criteria, pageable);
     }
-    
+
     @GetMapping("/{id:\\d+}")
     public CommitteeDto get(HoisUserDetails user, @WithEntity("id") Committee committee) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         UserUtil.assertSameSchool(user, committee.getSchool());
-        return CommitteeDto.of(committee);
+        return committeeService.get(committee);
     }
-    
+
     @PostMapping
     public CommitteeDto create(HoisUserDetails user, @NotNull @Valid @RequestBody CommitteeDto dto) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        committeeValidationService.validate(dto);
-        return get(user, committeeService.create(user.getSchoolId(), dto));
+        return committeeService.create(user.getSchoolId(), dto);
     }
-    
+
     @PutMapping("/{id:\\d+}")
     public CommitteeDto save(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Committee committee,
             @NotNull @Valid @RequestBody CommitteeDto dto) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         UserUtil.assertSameSchool(user, committee.getSchool());
-        committeeValidationService.validate(dto);
-        return get(user, committeeService.save(committee, dto));
+        return committeeService.save(committee, dto);
     }
-    
+
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, 
             @WithVersionedEntity(value = "id", versionRequestParam = "version") Committee committee, 

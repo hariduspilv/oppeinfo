@@ -28,7 +28,7 @@ public class StudentUtil {
         return nominalStudyEnd != null && LocalDate.now().isBefore(student.getNominalStudyEnd());
     }
 
-    public static boolean isAdult(Student student) {
+    public static boolean isAdultAndDoNotNeedRepresentative(Student student) {
         return PersonUtil.isAdult(student.getPerson()) && Boolean.FALSE.equals(student.getIsRepresentativeMandatory());
     }
 

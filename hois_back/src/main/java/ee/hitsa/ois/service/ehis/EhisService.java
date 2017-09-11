@@ -29,7 +29,7 @@ import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
 import java.time.LocalDate;
 
-abstract class EhisService {
+public abstract class EhisService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
@@ -64,7 +64,7 @@ abstract class EhisService {
     protected String serviceSubsystemCode;
 
     static final String LAE_KORGHARIDUS_SERVICE_CODE = "laeKorgharidus";
-    private static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE + ".v1";
+    public static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE + ".v1";
     private static final String birthDateEntered = "SS";
 
     static final String YES = "jah";
@@ -160,9 +160,8 @@ abstract class EhisService {
         try {
             return DatatypeFactory.newInstance().newXMLGregorianCalendar(date.toString());
         } catch (DatatypeConfigurationException e) {
-            if (log.isErrorEnabled()) {
-                log.error(String.format("Converting date failed on object %s of %s:", baseEntity.getId(), baseEntity.getClass()), e);
-            }
+            log.error("Converting date failed on object {} of {}:", EntityUtil.getId(baseEntity), baseEntity.getClass(), e);
+
             throw e;
         }
     }

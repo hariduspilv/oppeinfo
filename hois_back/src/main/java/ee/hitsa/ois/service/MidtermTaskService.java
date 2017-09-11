@@ -29,6 +29,7 @@ import ee.hitsa.ois.repository.MidtermTaskStudentResultRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.MidtermTaskUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.MidtermTaskUpdateForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodMidtermTaskForm;
@@ -126,7 +127,7 @@ public class MidtermTaskService {
             SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
             dto.setId(EntityUtil.getId(r));
             dto.setSubject(AutocompleteResult.of(r.getSubject()));
-            dto.setTeachers(StreamUtil.toMappedSet(t -> t.getTeacher().getPerson().getFullname(), r.getTeachers()));
+            dto.setTeachers(PersonUtil.sorted(r.getTeachers().stream().map(t -> t.getTeacher().getPerson())));
             dto.setMidtermTasks(StreamUtil.toMappedSet(AutocompleteResult::of, r.getMidtermTasks()));
             return dto;
         });

@@ -12,9 +12,8 @@ import ee.hitsa.ois.domain.Room;
 public class TimetableEventRoom extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, insertable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private Room room;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private TimetableEventTime timetableEventTime;
@@ -34,5 +33,4 @@ public class TimetableEventRoom extends BaseEntityWithId {
     public void setTimetableEventTime(TimetableEventTime timetableEventTime) {
         this.timetableEventTime = timetableEventTime;
     }
-
 }

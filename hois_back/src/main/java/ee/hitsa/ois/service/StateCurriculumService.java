@@ -32,7 +32,6 @@ import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.StateCurriculumModuleRepository;
 import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -48,15 +47,13 @@ import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
 @Service
 public class StateCurriculumService {
 
-	@Autowired
-	private StateCurriculumRepository stateCurriculumRepository;
     @Autowired
-    private StateCurriculumModuleRepository stateCurriculumModuleRepository;
+    private StateCurriculumRepository stateCurriculumRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private EntityManager em;
-    
+
     private static final String FROM = "from state_curriculum as sc "
             + "inner join classifier status on status.code = sc.status_code";  // only for sorting by classifier's name
     private static final String SELECT = " sc.id, sc.name_et, sc.name_en, sc.valid_from, sc.valid_thru, sc.credits, "
@@ -69,6 +66,7 @@ public class StateCurriculumService {
                     + "from state_curriculum_occupation as sco "
                     + "where sc.id = sco.state_curriculum_id order by sco.id limit 1) ) as ekr_level, "
             + "status.name_et as statusNameEt, status.name_en as statusNameEn";
+
     /**
      * With this solution StateCurriculumSpecification will not be required anymore.
      * StateCurriculumSearchDto can also be simplified: iscedClass and large constructor can be removed
@@ -146,9 +144,9 @@ public class StateCurriculumService {
         }) == 0;
     }
 
-	public void delete(StateCurriculum curriculum) {
-		EntityUtil.deleteEntity(stateCurriculumRepository, curriculum);
-	}
+    public void delete(StateCurriculum curriculum) {
+        EntityUtil.deleteEntity(curriculum, em);
+    }
 
     public List<StateCurriculum> searchAll(StateCurriculumSearchCommand command, Sort sort) {
         return stateCurriculumRepository.findAll((root, query, cb) -> {
@@ -181,7 +179,7 @@ public class StateCurriculumService {
         EntityUtil.bindToEntity(stateCurriculumForm, stateCurriculum, classifierRepository, "occupations", "modules");
         updateStateCurriculumOccupations(stateCurriculum, stateCurriculumForm.getOccupations());
         updateStateCurriculumModules(stateCurriculum, stateCurriculumForm);
-        return stateCurriculumRepository.save(stateCurriculum);
+        return EntityUtil.save(stateCurriculum, em);
     }
 
     private void updateModule(StateCurriculumModuleDto dto, StateCurriculumModule module) {
@@ -197,7 +195,7 @@ public class StateCurriculumService {
             return new StateCurriculumModuleOccupation(c);
         });
     }
-    
+
     public void updateStateCurriculumOccupations(StateCurriculum stateCurriculum, Set<String> occupations) {
         EntityUtil.bindEntityCollection(stateCurriculum.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), occupations, occupation -> {
             return new StateCurriculumOccupation(EntityUtil.validateClassifier(classifierRepository.getOne(occupation), MainClassCode.KUTSE));
@@ -208,7 +206,7 @@ public class StateCurriculumService {
         EntityUtil.bindEntityCollection(stateCurriculum.getModules(), StateCurriculumModule::getId, form.getModules(), 
                 StateCurriculumModuleDto::getId, dto -> createModule(dto, stateCurriculum), this::updateModule);
     }
-    
+
     public StateCurriculumModule createModule(StateCurriculumModuleDto dto, StateCurriculum stateCurriculum) {
         StateCurriculumModule module = new StateCurriculumModule();
         module.setStateCurriculum(stateCurriculum);
@@ -221,29 +219,29 @@ public class StateCurriculumService {
         updateStateCurriculumOccupations(stateCurriculum, form.getStateCurriculumOccupations());
         StateCurriculumModule module = createModule(form, stateCurriculum);
         stateCurriculum.getModules().add(module);
-        stateCurriculumRepository.save(stateCurriculum);
-        return stateCurriculumModuleRepository.save(module);
+        EntityUtil.save(stateCurriculum, em);
+        return EntityUtil.save(module, em);
     }
 
     public void deleteModule(StateCurriculumModule stateCurriculumModule) {
         StateCurriculum stateCurriculum = stateCurriculumModule.getStateCurriculum();
         stateCurriculum.getModules().remove(stateCurriculumModule);
-        EntityUtil.deleteEntity(stateCurriculumModuleRepository, stateCurriculumModule);
+        EntityUtil.deleteEntity(stateCurriculumModule, em);
     }
 
     public StateCurriculumModule updateModule(StateCurriculumModule module, StateCurriculumModuleForm form) {
         StateCurriculum stateCurriculum = module.getStateCurriculum();
         updateStateCurriculumOccupations(stateCurriculum, form.getStateCurriculumOccupations());
         updateModule(form, module);
-        stateCurriculumRepository.save(stateCurriculum);
-        return stateCurriculumModuleRepository.save(module);
+        EntityUtil.save(stateCurriculum, em);
+        return EntityUtil.save(module, em);
     }
-    
+
     public StateCurriculum setStatus(StateCurriculum stateCurriculum, CurriculumStatus status) {
         stateCurriculum.setStatus(classifierRepository.getOne(status.name()));
-        return stateCurriculumRepository.save(stateCurriculum);
+        return EntityUtil.save(stateCurriculum, em);
     }
-    
+
     public StateCurriculum setStatusAndSave(StateCurriculum stateCurriculum, StateCurriculumForm form, CurriculumStatus status) {
         stateCurriculum.setStatus(classifierRepository.getOne(status.name()));
         return save(stateCurriculum, form);

@@ -22,15 +22,15 @@ import java.util.function.Function;
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -364,28 +364,6 @@ public abstract class EntityUtil {
         throw new AssertionFailedException("Wrong classifier main class code: " + mainClassCode);
     }
 
-    public static void setEntityFromRepository(Object command, Object entity,
-            JpaRepository<?, Long> repository, String... properties) {
-        PropertyAccessor source = PropertyAccessorFactory.forBeanPropertyAccess(command);
-        PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);
-        for(String property : properties) {
-            //usually Long is used in DTO classes to have references to other objects, but
-            //sometimes ee.hitsa.ois.web.dto.AutocompleteResult is also used.
-            Long id = getIdFromValue(source.getPropertyValue(property));
-            destination.setPropertyValue(property, id != null ? repository.getOne(id) : null);
-        }
-    }
-
-    private static Long getIdFromValue(Object value) {
-        if(value instanceof Long || value == null) {
-            return (Long)value;
-        }
-        if(value instanceof EntityConnectionCommand) {
-            return ((EntityConnectionCommand)value).getId();
-        }
-        throw new FatalBeanException("Unknown value type: " + value.getClass().getName());
-    }
-
     /**
      * Apply supplied function to loaded entity.
      *
@@ -420,26 +398,52 @@ public abstract class EntityUtil {
     }
 
     /**
+     * Save entity helper function.
+     *
+     * @param entity
+     * @param em
+     * @return
+     */
+    public static <E extends BaseEntityWithId> E save(E entity, EntityManager em) {
+        if(entity.getId() != null) {
+            return em.merge(entity);
+        }
+        em.persist(entity);
+        return entity;
+    }
+
+    /**
      * try to delete entity, catching data integrity violation exception.
      * As there is no easy way to know from exception which of delete or update operation was tried,
      * we are using simple helper for delete to map data integrity violation to another exception.
      * Usually we get exception only when data is flushed to database, so here we flush it manually.
      *
-     * @param remover
      * @param entity
-     * @param errorCode
+     * @param em
+     * @throws EntityRemoveException if there was constraint violation
      */
-    public static <E> void deleteEntity(JpaRepository<E, ?> repository, E entity, String errorCode) {
-        try {
-            repository.delete(entity);
-            repository.flush();
-        } catch(DataIntegrityViolationException e) {
-            throw new EntityRemoveException(errorCode, e.getCause());
-        }
+    public static <E> void deleteEntity(E entity, EntityManager em) {
+        deleteEntity(entity, em, null);
     }
 
-    public static <E> void deleteEntity(JpaRepository<E, ?> repository, E entity) {
-        deleteEntity(repository, entity, null);
+    /**
+     * try to delete entity, catching data integrity violation exception. With customizable error code.
+     * @param entity
+     * @param em
+     * @param errorCode
+     * @throws EntityRemoveException if there was constraint violation
+     */
+    public static <E> void deleteEntity(E entity, EntityManager em, String errorCode) {
+        try {
+            em.remove(em.contains(entity) ? entity : em.merge(entity));
+            em.flush();
+        } catch(PersistenceException e) {
+            Throwable cause = e.getCause();
+            if(cause instanceof ConstraintViolationException) {
+                throw new EntityRemoveException(errorCode, cause);
+            }
+            throw e;
+        }
     }
 
     /**
@@ -498,6 +502,10 @@ public abstract class EntityUtil {
             }
         }
         return entity.getCode();
+    }
+
+    public static <T extends BaseEntityWithId> T getOptionalOne(Class<T> entityClass, EntityConnectionCommand id, EntityManager em) {
+        return id != null ? getOptionalOne(entityClass, id.getId(), em) : null;
     }
 
     /**

@@ -90,7 +90,7 @@ public class ClassifierService {
     }
 
     public void delete(String code) {
-        EntityUtil.deleteEntity(classifierRepository, classifierRepository.getOne(code));
+        EntityUtil.deleteEntity(em.getReference(Classifier.class, code), em);
     }
 
     public List<Classifier> getParents(String code) {

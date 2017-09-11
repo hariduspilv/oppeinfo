@@ -12,6 +12,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -25,6 +26,7 @@ import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
@@ -34,8 +36,6 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.SchoolDepartmentRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -52,30 +52,25 @@ import ee.hitsa.ois.web.dto.SubjectSearchDto;
 public class SubjectService {
 
     @Autowired
-    private SchoolRepository schoolRepository;
-
+    private EntityManager em;
     @Autowired
     private SubjectRepository subjectRepository;
-
     @Autowired
     private ClassifierRepository classifierRepository;
 
-    @Autowired
-    private SchoolDepartmentRepository schoolDepartmentRepository;
-
     public Subject create(HoisUserDetails user, SubjectForm newSubject) {
         Subject subject = new Subject();
-        subject.setStatus(classifierRepository.getOne(SubjectStatus.AINESTAATUS_S.name()));
+        subject.setStatus(em.getReference(Classifier.class, SubjectStatus.AINESTAATUS_S.name()));
         return save(user, subject, newSubject);
     }
 
     public Subject save(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
         EntityUtil.bindToEntity(newSubject, subject, classifierRepository, "status");
 
-        subject.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        subject.setSchool(em.getReference(School.class, user.getSchoolId()));
         SchoolDepartment schoolDepartment = null;
         if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().getId() != null && newSubject.getSchoolDepartment().getId().longValue() > 0) {
-            schoolDepartment = schoolDepartmentRepository.getOne(newSubject.getSchoolDepartment().getId());
+            schoolDepartment = em.getReference(SchoolDepartment.class, newSubject.getSchoolDepartment().getId());
         }
         subject.setSchoolDepartment(schoolDepartment);
         EntityUtil.bindEntityCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {
@@ -85,7 +80,7 @@ public class SubjectService {
             return subjectLanguage;
         });
         bindConnections(subject, newSubject);
-        return subjectRepository.save(subject);
+        return EntityUtil.save(subject, em);
     }
 
     private void bindConnections(Subject target, SubjectForm source) {
@@ -199,7 +194,7 @@ public class SubjectService {
     }
 
     public void delete(Subject subject) {
-        EntityUtil.deleteEntity(subjectRepository, subject);
+        EntityUtil.deleteEntity(subject, em);
     }
 
     public boolean isCodeUnique(Long schoolId, UniqueCommand command) {

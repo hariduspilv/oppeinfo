@@ -28,18 +28,18 @@ import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.PracticeJournalEntry;
 import ee.hitsa.ois.domain.PracticeJournalFile;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.ContractRepository;
-import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
-import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleThemeRepository;
 import ee.hitsa.ois.repository.PracticeJournalRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
-import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.SubjectRepository;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -75,14 +75,6 @@ public class PracticeJournalService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
-    @Autowired
-    private CurriculumVersionOccupationModuleThemeRepository curriculumVersionOccupationModuleThemeRepository;
-    @Autowired
-    private TeacherRepository teacherRepository;
-    @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
     private SchoolRepository schoolRepository;
     @Autowired
     private StudyYearService studyYearService;
@@ -90,8 +82,6 @@ public class PracticeJournalService {
     private ModuleProtocolService moduleProtocolService;
     @Autowired
     private ContractRepository contractRepository;
-    @Autowired
-    private SubjectRepository subjectRepository;
     @Autowired
     private Validator validator;
 
@@ -120,7 +110,7 @@ public class PracticeJournalService {
             + "cvo.id as cvo_id, cv.code as cv_code, cm.name_et as cm_name_et, mcl.name_et as mcl_name_et, cm.name_en as cm_name_en, mcl.name_en as mcl_name_en, "
             + "cvot.id as cvot_id, cvot.name_et as cvot_name_et, length(trim(coalesce(pj.supervisor_opinion, ''))) > 0 as has_supervisor_opinion, "
             + "exists(select true from protocol_student ps inner join protocol p on p.id = ps.protocol_id inner join protocol_vdata pvd on pvd.protocol_id = p.id "
-                + "where ps.grade_code in (" + String.join(",", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE.stream().map(StringUtils::quote).collect(Collectors.toList())) + ") and pvd.curriculum_version_omodule_id = cvo.id "
+                + "where ps.grade_code in (" + OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE.stream().map(StringUtils::quote).collect(Collectors.joining(",")) + ") and pvd.curriculum_version_omodule_id = cvo.id "
                 + "and ps.student_id = student_id) as has_positive_module_grade, "
             + "subject.id as subject_id, subject.name_et as subject_name_et, subject.name_en as subject_name_en";
 
@@ -210,13 +200,11 @@ public class PracticeJournalService {
         assertValidationRules(practiceJournalForm);
         PracticeJournal changedPracticeJournal = EntityUtil.bindToEntity(practiceJournalForm, practiceJournal,
                 "student", "module", "theme", "teacher", "subject");
-        EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal, studentRepository, "student");
-        EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal,
-                curriculumVersionOccupationModuleRepository, "module");
-        EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal,
-                curriculumVersionOccupationModuleThemeRepository, "theme");
-        EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal, teacherRepository, "teacher");
-        EntityUtil.setEntityFromRepository(practiceJournalForm, changedPracticeJournal, subjectRepository, "subject");
+        changedPracticeJournal.setStudent(EntityUtil.getOptionalOne(Student.class, practiceJournalForm.getStudent(), em));
+        changedPracticeJournal.setModule(EntityUtil.getOptionalOne(CurriculumVersionOccupationModule.class, practiceJournalForm.getModule(), em));
+        changedPracticeJournal.setTheme(EntityUtil.getOptionalOne(CurriculumVersionOccupationModuleTheme.class, practiceJournalForm.getTheme(), em));
+        changedPracticeJournal.setTeacher(EntityUtil.getOptionalOne(Teacher.class, practiceJournalForm.getTeacher(), em));
+        changedPracticeJournal.setSubject(EntityUtil.getOptionalOne(Subject.class, practiceJournalForm.getSubject(), em));
         return practiceJournalRepository.save(changedPracticeJournal);
     }
 

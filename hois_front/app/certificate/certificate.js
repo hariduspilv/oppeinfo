@@ -50,6 +50,15 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
       }
     });
 
+    QueryUtils.endpoint(baseUrl + "/content").search(
+      {type: $scope.record.type}
+    ).$promise.then(function(response) {
+      var el = document.getElementById('content');
+      if(el) {
+        el.innerHTML = response.content;
+      }
+    });
+
     $scope.save = function() {
       $scope.certificateEditForm.$setSubmitted();
       if(!$scope.certificateEditForm.$valid && !$scope.record.signatoryIdcode) {
@@ -91,7 +100,7 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
     if(id) {
       $scope.record = Endpoint.get({id: id}, afterLoad);
     } else {
-      $scope.record = new Endpoint({status: 'TOEND_STAATUS_T', content: 'sisu...'});
+      $scope.record = new Endpoint();
       afterLoad();
     }
 
@@ -109,6 +118,24 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
     QueryUtils.endpoint("/directives/coordinators").search().$promise.then(function(response) {
       $scope.signatories = response.content.filter(function(it) { return it.isCertificate;});
     });
+
+    $scope.$watch('record.type', loadContent);
+    $scope.$watch('record.student', loadContent);
+
+    function loadContent() {
+      if($scope.record.type && !$scope.isOtherCertificate()) {
+        QueryUtils.endpoint(baseUrl + "/content").search(
+          {student: $scope.record.student, type: $scope.record.type}
+        ).$promise.then(function(response) {
+          var el = document.getElementById('content');
+          el.innerHTML = response.content;
+        });
+      }
+    }
+
+    $scope.isOtherCertificate = function(){
+      return $scope.record && $scope.record.type === 'TOEND_LIIK_MUU';
+    };
 
     $scope.querySearch = function (text) {
       if(text.length >= 3) {
@@ -223,6 +250,22 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
         });
       }
       $scope.otherFound = true;
+      loadContent();
+    }
+
+    $scope.isOtherCertificate = function(){
+      return $scope.record && $scope.record.type === 'TOEND_LIIK_MUU';
+    };
+
+    function loadContent() {
+      if(!$scope.isOtherCertificate()) {
+        QueryUtils.endpoint(baseUrl + "/content").get(
+          $scope.record
+        ).$promise.then(function(response) {
+          var el = document.getElementById('content');
+          el.innerHTML = response.content;
+        });
+      }
     }
 
     function getStudent() {

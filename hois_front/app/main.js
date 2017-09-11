@@ -1,7 +1,8 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia, $mdUtil,$rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer) {
+  .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia,
+    $mdUtil, $rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer, Session, $mdDialog) {
     $rootScope.state = {};
     var self = this;
 
@@ -321,6 +322,76 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
 
     $rootScope.excel = function(url, params) {
       return config.apiUrl + '/'+ url + (params ? ('?' + $httpParamSerializer(params)) : '');
+    };
+
+    function showSessionIsTimingOutDialog() {
+      $mdDialog.show({
+        controller: function($scope, $http) {
+          $scope.refresh = function() {
+            $http.get(config.apiUrl + '/refresh');
+            $mdDialog.hide();
+          };
+        },
+        templateUrl: 'login/session.timing.out.dialog.html',
+        parent: angular.element(document.body),
+        clickOutsideToClose: false
+      });
+    }
+
+    function showSessionHasTimedOutDialog() {
+      $mdDialog.show({
+        controller: function($scope, $location) {
+          $scope.ok = function() {
+            $rootScope.loggedOut();
+            AuthService.postLogout();
+            $location.path("/");
+            $mdDialog.hide();
+          };
+        },
+        templateUrl: 'login/session.timed.out.dialog.html',
+        parent: angular.element(document.body),
+        clickOutsideToClose: false
+      });
+    }
+
+    function cancelOldTimeouts() {
+      if (angular.isObject(Session.timeoutDialog)) {
+        $timeout.cancel(Session.timeoutDialog);
+      }
+      if (angular.isObject(Session.timeout)) {
+        $timeout.cancel(Session.timeout);
+      }
+    }
+
+    function optionalShowSessionIsTimingOutDialog(start, millisecondsToTimeout) {
+      return function() {
+        if(Date.now() - start < millisecondsToTimeout) {
+          showSessionIsTimingOutDialog();
+        }
+      };
+    }
+
+    $rootScope.restartTimeoutDialogCounter = function() {
+      cancelOldTimeouts();
+
+      if (AuthService.isAuthenticated()) {
+        var millisecondsToTimeout = Session.timeoutInSeconds * 1000;
+        var millisecondsToTimeoutDialog = millisecondsToTimeout - config.timeoutDialogBeforeTimeoutInSeconds * 1000;
+
+        if (millisecondsToTimeoutDialog > 0) {
+          var start = Date.now();
+
+          Session.timeoutDialog = $timeout(function() {
+            //session is timing out dialog is not shown when session has timed out in background (browser minimized or tab inactive)
+            $window.requestAnimationFrame(optionalShowSessionIsTimingOutDialog(start, millisecondsToTimeout));
+          }, millisecondsToTimeoutDialog);
+
+          Session.timeout = $timeout(function() {
+            $mdDialog.hide();
+            showSessionHasTimedOutDialog();
+          }, millisecondsToTimeout);
+        }
+      }
     };
   })
   .filter('nospace', function () {

@@ -34,12 +34,17 @@
           <label>{{'certificate.signatory' | translate}}</label>
           <hois-value value="record.signatoryName"></hois-value>
       </md-input-container>
-      <md-input-container>
+      <md-input-container ng-if="isOtherCertificate()">
           <label>{{'certificate.content' | translate}}</label>
           <hois-value value="record.content"></hois-value>
       </md-input-container>
+      <div ng-if="!isOtherCertificate()">
+        <label class="common-label">{{'certificate.content' | translate}}</label>
+        <div id="content" class="md-body-1"></div>
+      </div>
   </div>
   <div layout="row">
+      <md-button class="md-raised md-primary" ng-href="/#/certificate/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-href="/#/certificate">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

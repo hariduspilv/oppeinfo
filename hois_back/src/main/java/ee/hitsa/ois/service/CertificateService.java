@@ -20,7 +20,8 @@ import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.repository.CertificateRepository;
+import ee.hitsa.ois.enums.CertificateStatus;
+import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.StudentRepository;
@@ -36,9 +37,7 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 @Transactional
 @Service
 public class CertificateService {
-    
-    @Autowired
-    private CertificateRepository certificateRepository;
+
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
@@ -47,6 +46,8 @@ public class CertificateService {
     private StudentRepository studentRepository;
     @Autowired
     private PersonRepository personRepository;
+    @Autowired
+    private CertificateContentService certificateContentService;
     
     private static final String CERTIFICATE_FROM = "from certificate c "
             + "left outer join student s on s.id = c.student_id "
@@ -90,20 +91,21 @@ public class CertificateService {
     public Certificate create(HoisUserDetails user, CertificateForm form) {
         Certificate certificate = new Certificate();
         certificate.setSchool(em.getReference(School.class, user.getSchoolId()));
-        if(user.isStudent()) {
-            form.setStudent(user.getStudentId());
-        }
+        certificate.setStatus(classifierRepository.getOne(CertificateStatus.TOEND_STAATUS_T.name()));
         return save(certificate, form);
     }
 
     public Certificate save(Certificate certificate, CertificateForm form) {
-        EntityUtil.bindToEntity(form, certificate, classifierRepository, "student");
+        EntityUtil.bindToEntity(form, certificate, classifierRepository, "student", "status");
         certificate.setStudent(EntityUtil.getOptionalOne(Student.class, form.getStudent(), em));
-        return certificateRepository.save(certificate);
+        if(!CertificateType.isOther(EntityUtil.getCode(certificate.getType()))) {
+            certificate.setContent(certificateContentService.generateFor(certificate));
+        }
+        return EntityUtil.save(certificate, em);
     }
 
     public void delete(Certificate certificate) {
-        EntityUtil.deleteEntity(certificateRepository, certificate);        
+        EntityUtil.deleteEntity(certificate, em);
     }
 
     public StudentSearchDto getOtherPerson(Long schoolId, String idcode) {
@@ -112,6 +114,7 @@ public class CertificateService {
             return null;
         }
 
+        // TODO refactor as only first result is used
         List<Student> students = studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 

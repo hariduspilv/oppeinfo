@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
@@ -24,7 +25,10 @@ import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
+import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.dto.directive.DirectiveCoordinatorDto;
+import ee.hitsa.ois.web.dto.directive.DirectiveDto;
+import ee.hitsa.ois.web.dto.directive.DirectiveViewDto;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -60,6 +64,7 @@ public class DirectiveControllerTests {
             }
             DirectiveDataCommand cmd = new DirectiveDataCommand();
             cmd.setType(type.name());
+            cmd.setStudents(Arrays.asList(Long.valueOf(1)));
             responseEntity = restTemplate.postForEntity(url, cmd, Object.class);
             Assert.assertNotNull(responseEntity);
             Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
@@ -162,9 +167,60 @@ public class DirectiveControllerTests {
     }
 
     @Test
-    public void crudCoordinator() {
+    public void crud() {
+        String baseUrl = "/directives";
         // create
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/directives/coordinators");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(baseUrl);
+        DirectiveForm form = new DirectiveForm();
+        form.setType(DirectiveType.KASKKIRI_AKADK.name());
+        form.setHeadline("Akad katkestamise käskkiri");
+        ResponseEntity<DirectiveDto> responseEntity = restTemplate.postForEntity(uriBuilder.build().toUriString(), form, DirectiveDto.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
+        Assert.assertNotNull(responseEntity.getBody());
+        Long id = responseEntity.getBody().getId();
+        Assert.assertNotNull(id);
+
+        // read
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        ResponseEntity<DirectiveDto> response = restTemplate.getForEntity(uriBuilder.build().toUriString(), DirectiveDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        // read for view
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString()).pathSegment("view");
+        ResponseEntity<DirectiveViewDto> viewResponse = restTemplate.getForEntity(uriBuilder.build().toUriString(), DirectiveViewDto.class);
+        Assert.assertNotNull(viewResponse);
+        Assert.assertEquals(HttpStatus.OK, viewResponse.getStatusCode());
+
+        // update
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        form = response.getBody();
+        Assert.assertNotNull(form);
+        form.setHeadline("Akad katkestamise käskkiri (muudetud)");
+        responseEntity = restTemplate.exchange(uriBuilder.build().toUriString(), HttpMethod.PUT, new HttpEntity<>(form), DirectiveDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        // read
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), DirectiveDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+        Long version = responseEntity.getBody().getVersion();
+        Assert.assertNotNull(version);
+
+        // delete
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        uriBuilder.queryParam("version", version);
+        restTemplate.delete(uriBuilder.build().toUriString());
+    }
+
+    @Test
+    public void crudCoordinator() {
+        String baseUrl = "/directives/coordinators";
+        // create
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(baseUrl);
         String uri = uriBuilder.build().toUriString();
         DirectiveCoordinatorForm form = new DirectiveCoordinatorForm();
         form.setName("Käskkirjade kooskõlastaja");
@@ -177,7 +233,7 @@ public class DirectiveControllerTests {
         Assert.assertNotNull(id);
 
         // read
-        uriBuilder = UriComponentsBuilder.fromUriString("/directives/coordinators").pathSegment(id.toString());
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
         uri = uriBuilder.build().toUriString();
         ResponseEntity<DirectiveCoordinatorDto> response = restTemplate.getForEntity(uri, DirectiveCoordinatorDto.class);
         Assert.assertNotNull(response);
@@ -205,13 +261,13 @@ public class DirectiveControllerTests {
         Assert.assertEquals(HttpStatus.CONFLICT, responseEntity.getStatusCode());
 
         // search existing departments
-        UriComponentsBuilder searchUriBuilder = UriComponentsBuilder.fromUriString("/directives/coordinators");
+        UriComponentsBuilder searchUriBuilder = UriComponentsBuilder.fromUriString(baseUrl);
         ResponseEntity<Object> searchResponseEntity = restTemplate.getForEntity(searchUriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(searchResponseEntity);
         Assert.assertEquals(HttpStatus.OK, searchResponseEntity.getStatusCode());
 
         // delete
-        uriBuilder = UriComponentsBuilder.fromUriString("/directives/coordinators").pathSegment(id.toString());
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
         uriBuilder.queryParam("version", version);
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);

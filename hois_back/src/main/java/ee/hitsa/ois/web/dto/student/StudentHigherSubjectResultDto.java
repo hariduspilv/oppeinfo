@@ -18,6 +18,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
 
 public class StudentHigherSubjectResultDto {
+
     private SubjectSearchDto subject;
     private List<StudentHigherSubjectResultGradeDto> grades = new ArrayList<>();
     private StudentHigherSubjectResultGradeDto lastGrade;
@@ -26,7 +27,7 @@ public class StudentHigherSubjectResultDto {
     private Boolean isOptional;
     private Boolean isExtraCurriculum;
     private Boolean isOk;
-    
+
     public static StudentHigherSubjectResultDto ofFromProtocolStudent(ProtocolStudent protocolStudent) {
         StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
         dto.setSubject(getSubjectDto(protocolStudent.getProtocol().getProtocolHdata().getSubjectStudyPeriod().getSubject()));
@@ -36,7 +37,7 @@ public class StudentHigherSubjectResultDto {
         dto.getGrades().add(StudentHigherSubjectResultGradeDto.of(protocolStudent));
         return dto;
     }
-    
+
     public static StudentHigherSubjectResultDto ofFromHigherModuleSubject(CurriculumVersionHigherModuleSubject higherModuleSubject) {
         StudentHigherSubjectResultDto dto = new StudentHigherSubjectResultDto();
         dto.setSubject(getSubjectDto(higherModuleSubject.getSubject()));
@@ -58,21 +59,17 @@ public class StudentHigherSubjectResultDto {
         subjectDto.setAssessment(EntityUtil.getCode(subject.getAssessment()));
         return subjectDto;
     }
-    
-    private Comparator<StudentHigherSubjectResultGradeDto> byDate =
-            (StudentHigherSubjectResultGradeDto lhs, StudentHigherSubjectResultGradeDto rhs)
-            -> lhs.getGradeDate().compareTo(rhs.getGradeDate());
-    
+
     public void calculateIsOk() {
         if(!CollectionUtils.isEmpty(grades)) {
-            Collections.sort(grades, byDate);
+            Collections.sort(grades, Comparator.comparing(StudentHigherSubjectResultGradeDto::getGradeDate));
             lastGrade = calculateLastGrade();
             isOk = Boolean.valueOf(lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade()));
         } else {
             isOk = Boolean.FALSE;
         }
     }
-    
+
     private StudentHigherSubjectResultGradeDto calculateLastGrade() {
         for(int i = grades.size() - 1; i >= 0; i--) {
             StudentHigherSubjectResultGradeDto grade = grades.get(i);
@@ -83,15 +80,15 @@ public class StudentHigherSubjectResultDto {
         }
         return null;
     }
-    
+
     public boolean isDistinctiveAssessment() {
         return !SubjectAssessment.HINDAMISVIIS_A.name().equals(this.getSubject().getAssessment());
     }
-    
+
     public boolean hasResult() {
         return this.getLastGrade() != null;
     }
-    
+
     private static AutocompleteResult getHigherModuleDto(CurriculumVersionHigherModule module) {
         return new AutocompleteResult(EntityUtil.getId(module), module.getNameEt(), module.getNameEn());
     }
@@ -107,42 +104,55 @@ public class StudentHigherSubjectResultDto {
     public List<StudentHigherSubjectResultGradeDto> getGrades() {
         return grades;
     }
+
     public void setGrades(List<StudentHigherSubjectResultGradeDto> grades) {
         this.grades = grades;
     }
+
     public Boolean getIsOk() {
         return isOk;
     }
+
     public void setIsOk(Boolean isOk) {
         this.isOk = isOk;
     }
+
     public SubjectSearchDto getSubject() {
         return subject;
     }
+
     public void setSubject(SubjectSearchDto subject) {
         this.subject = subject;
     }
+
     public Long getElectiveModule() {
         return electiveModule;
     }
+
     public void setElectiveModule(Long electiveModule) {
         this.electiveModule = electiveModule;
     }
+
     public Boolean getIsOptional() {
         return isOptional;
     }
+
     public void setIsOptional(Boolean isOptional) {
         this.isOptional = isOptional;
     }
+
     public Boolean getIsExtraCurriculum() {
         return isExtraCurriculum;
     }
+
     public void setIsExtraCurriculum(Boolean isExtraCurriculum) {
         this.isExtraCurriculum = isExtraCurriculum;
     }
+
     public StudentHigherSubjectResultGradeDto getLastGrade() {
         return lastGrade;
     }
+
     public void setLastGrade(StudentHigherSubjectResultGradeDto lastGrade) {
         this.lastGrade = lastGrade;
     }

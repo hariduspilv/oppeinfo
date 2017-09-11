@@ -714,6 +714,7 @@ public class CurriculumControllerTests {
     private static CurriculumModuleOutcomeDto getCurriculumModuleOutcomeDto() {
         CurriculumModuleOutcomeDto dto = new CurriculumModuleOutcomeDto();
         dto.setOutcomeEt(NAME);
+        dto.setOrderNr(Long.valueOf(1));
         return dto;
     }
 

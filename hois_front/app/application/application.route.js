@@ -4,11 +4,14 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   $routeProvider
     .when('/applications', {
         templateUrl: 'application/application.list.html',
-        controller: 'ApplicationListController',
+        controller: 'SimpleListController',
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          clMapping: function() { return {type: 'AVALDUS_LIIK', status: 'AVALDUS_STAATUS'}; },
+          params: function() { return {order: '-inserted'}; },
+          url: function() { return '/applications'; }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

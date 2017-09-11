@@ -157,7 +157,7 @@ public class ReportService {
             qb.optionalCriteria("d.confirm_date >= :validFrom", "validFrom", criteria.getFrom());
             qb.optionalCriteria("d.confirm_date <= :validThru", "validThru", criteria.getThru());
             // check for directive cancellation for given student
-            qb.filter("not exists(select 1 from directive cd inner join directive_student cds on cd.id = cds.directive_id and cd.canceled_directive_id = d.id and cds.student_id=ds.student_id and cd.status_code = :directiveStatus)");
+            qb.filter("ds.canceled = false");
 
             List<?> data = qb.select(String.format("cv.curriculum_id, %s, count(*)", groupingField), em).getResultList();
             loadStatisticCounts(cs, data, false);

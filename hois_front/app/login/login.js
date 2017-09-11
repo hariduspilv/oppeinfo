@@ -16,10 +16,10 @@ angular.module('hitsaOis')
       }
     }
 
-    function loggedOut() {
+    $rootScope.loggedOut = function() {
       $rootScope.setCurrentUser(null);
       setLoggedInVisuals(null);
-    }
+    };
 
     function successfulAuthentication(authenticatedUser) {
       if (authenticatedUser) {
@@ -68,21 +68,15 @@ angular.module('hitsaOis')
 
     $scope.login = function () {
       authenticate($scope.credentials);
-/*       if (AuthService.isAuthenticated()) {
-        $location.path("/");
-      } */
     };
 
     $scope.idlogin = function () {
       authenticateIdCard();
-/*       if (AuthService.isAuthenticated()) {
-        $location.path("/");
-      } */
     };
 
     $scope.logout = function() {
       AuthService.logout().finally(function() {
-        loggedOut();
+        $rootScope.loggedOut();
         $location.path("/");
       });
     };
@@ -95,7 +89,7 @@ angular.module('hitsaOis')
           $location.path("/");
           $rootScope.$broadcast(AUTH_EVENTS.userChanged);
         } else {
-          loggedOut();
+          $rootScope.loggedOut();
           $location.path("/");
         }
       });

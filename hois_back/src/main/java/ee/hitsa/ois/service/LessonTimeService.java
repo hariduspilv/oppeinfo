@@ -18,19 +18,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import ee.hitsa.ois.domain.Building;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.timetable.LessonTime;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuildingGroup;
 import ee.hitsa.ois.enums.Day;
-import ee.hitsa.ois.repository.BuildingRepository;
 import ee.hitsa.ois.repository.LessonTimeBuildingGroupRepository;
 import ee.hitsa.ois.repository.LessonTimeBuildingRepository;
 import ee.hitsa.ois.repository.LessonTimeRepository;
@@ -71,8 +70,6 @@ public class LessonTimeService {
     @Autowired
     private LessonTimeBuildingGroupRepository lessonTimeBuildingGroupRepository;
     @Autowired
-    private BuildingRepository buildingRepository;
-    @Autowired
     private EntityManager em;
 
     public Page<LessonTimeSearchDto> search(Long schoolId, LessonTimeSearchCommand criteria, Pageable pageable) {
@@ -102,22 +99,17 @@ public class LessonTimeService {
     }
 
     public LocalDate currentPeriodStartDate(Long schoolId) {
-        Pageable pageable = new PageRequest(0, 1, new Sort(Direction.DESC, "valid_from"));
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from lesson_time_building_group ltbg "
-                + "inner join lesson_time lt on lt.lesson_time_building_group_id = ltbg.id").sort(pageable);
+                + "inner join lesson_time lt on lt.lesson_time_building_group_id = ltbg.id").sort(new Sort(Direction.DESC, "valid_from"));
 
         qb.requiredCriteria("valid_from <= :validFrom", "validFrom", LocalDate.now());
         qb.requiredCriteria("school_id <= :schoolId", "schoolId", schoolId);
 
-        Page<LocalDate> page = JpaQueryUtil.pagingResult(qb, "valid_from",  em, pageable).map(r -> {
-            return JpaQueryUtil.resultAsLocalDate(r, 1);
-        });
-
-        if (page != null && !CollectionUtils.isEmpty(page.getContent())) {
-            return page.getContent().get(0);
+        List<?> data = qb.select("valid_from", em).setMaxResults(1).getResultList();
+        if(data.isEmpty()) {
+            return null;
         }
-        return null;
-
+        return JpaQueryUtil.resultAsLocalDate(data.get(0), 0);
     }
 
     public LessonTime create(HoisUserDetails user, LessonTimeGroupsDto newLessonTimeGroupsDto) {
@@ -175,7 +167,7 @@ public class LessonTimeService {
      */
     public LocalDate minValidFrom(Set<Long> buildings, Long lessonTimeId) {
         if (lessonTimeId != null) {
-            LessonTime lessonTime = lessonTimeRepository.getOne(lessonTimeId);
+            LessonTime lessonTime = em.getReference(LessonTime.class, lessonTimeId);
             Set<LessonTimeBuildingGroup> groups = getLessonTimeBuildingGroups(lessonTime.getLessonTimeBuildingGroup().getValidFrom(),
                     EntityUtil.getId(lessonTime.getSchool()));
 
@@ -207,7 +199,7 @@ public class LessonTimeService {
         LessonTimeBuildingGroup previousGroup = getPreviousGroup(savedGroup.getBuildings(), savedGroup.getValidFrom(), schoolId);
         if (previousGroup != null) {
             previousGroup.setValidThru(savedGroup.getValidFrom().minusDays(1));
-            lessonTimeBuildingGroupRepository.save(previousGroup);
+            EntityUtil.save(previousGroup, em);
             log.info("lesson time building group {} valid thru updated, new value is {}", previousGroup.getId(), previousGroup.getValidThru().toString());
         }
     }
@@ -233,7 +225,7 @@ public class LessonTimeService {
 
         List<?> data = qb.select("from_query.id",  em).setMaxResults(1).getResultList();
         if (!data.isEmpty()) {
-            return lessonTimeBuildingGroupRepository.getOne(Long.valueOf(((Number)data.get(0)).longValue()));
+            return em.getReference(LessonTimeBuildingGroup.class, Long.valueOf(((Number)data.get(0)).longValue()));
         }
         return null;
     }
@@ -248,11 +240,11 @@ public class LessonTimeService {
     }
 
     private LessonTimeBuildingGroup updateGroup(LessonTimeBuildingGroupDto groupDto, Long schoolId, LocalDate validFrom) {
-        LessonTimeBuildingGroup group = lessonTimeBuildingGroupRepository.getOne(groupDto.getId());
+        LessonTimeBuildingGroup group = em.getReference(LessonTimeBuildingGroup.class, groupDto.getId());
         group.setValidFrom(validFrom);
         updateLessonTimes(groupDto, schoolId, group);
         updateBuildings(groupDto, group);
-        return lessonTimeBuildingGroupRepository.save(group);
+        return EntityUtil.save(group, em);
     }
 
     private LessonTimeBuildingGroup createGroup(LessonTimeBuildingGroupDto groupDto, Long schoolId, LocalDate validFrom) {
@@ -260,7 +252,7 @@ public class LessonTimeService {
         group.setValidFrom(validFrom);
         updateLessonTimes(groupDto, schoolId, group);
         updateBuildings(groupDto, group);
-        return lessonTimeBuildingGroupRepository.save(group);
+        return EntityUtil.save(group, em);
     }
 
     private void updateBuildings(LessonTimeBuildingGroupDto groupDto, LessonTimeBuildingGroup group) {
@@ -270,7 +262,7 @@ public class LessonTimeService {
                 },
                 building -> {
                     LessonTimeBuilding lessonTimeBuilding = new LessonTimeBuilding();
-                    lessonTimeBuilding.setBuilding(buildingRepository.getOne(building.getId()));
+                    lessonTimeBuilding.setBuilding(em.getReference(Building.class, building.getId()));
                     lessonTimeBuilding.setLessonTimeBuildingGroup(group);
                     return lessonTimeBuilding;
                 }, null);

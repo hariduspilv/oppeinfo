@@ -10,11 +10,15 @@
         <input ng-model="criteria.teachersFullname" type="text">
       </md-input-container>
     </div>
-    <div layout="row">
+    <div layout="row" layout-sm="column" layout-xs="column">
       <md-input-container flex="45" flex-sm="100" flex-xs="100">
         <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
         <hois-select ng-model="criteria.studyPeriods" values="studyPeriods" required></hois-select>
       </md-input-container>
+      <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <hois-autocomplete ng-model="criteria.studentObject" method="students" name="student"
+          label="student.label"></hois-autocomplete>
+      </div>
     </div>
     <div layout="row">
       <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>

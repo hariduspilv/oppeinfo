@@ -12,7 +12,7 @@ public class StudentHigherResultDto {
     private Boolean isCurriculumFulfilled;
     private BigDecimal creditsSubmitted;
     private BigDecimal creditsSubmittedConsidered;
-    
+
     public List<StudentHigherStudyPeriodResultDto> getStudyPeriodResults() {
         return studyPeriodResults;
     }

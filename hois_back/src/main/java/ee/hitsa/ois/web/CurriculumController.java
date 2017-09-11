@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
-import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
@@ -100,12 +99,6 @@ public class CurriculumController {
     public Page<CurriculumSearchDto> search(HoisUserDetails user, CurriculumSearchCommand curriculumSearchCommand,
             Pageable pageable) {
         return curriculumService.search(user.getSchoolId(), curriculumSearchCommand, pageable);
-    }
-
-    // TODO: use dto or AutocompleteResult
-    @GetMapping("/departments")
-    public List<CurriculumDepartment> getAllDepartments() {
-        return curriculumService.findAllDepartments();
     }
 
     @PostMapping
@@ -283,6 +276,7 @@ public class CurriculumController {
         UserUtil.assertIsSchoolAdmin(user);
         UserUtil.assertSameSchool(user, curriculum.getSchool());
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
+        curriculumValidationService.assertOutcomesBoundWithThemesNotDeleted(module, form);
         return CurriculumModuleForm.of(curriculumService.updateCurriculumModule(module, form));
     }
 
@@ -293,7 +287,7 @@ public class CurriculumController {
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
         curriculumService.deleteModule(module);
     }
-
+    @Deprecated
     @PutMapping("/module/{id:\\d+}")
     public CurriculumDto updateCurriculumModule(HoisUserDetails user, @NotNull @RequestBody CurriculumDto form,
             @WithEntity("id") Curriculum curriculum) {

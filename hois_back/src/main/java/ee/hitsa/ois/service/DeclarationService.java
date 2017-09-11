@@ -1,5 +1,6 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
@@ -9,12 +10,13 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
+import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,25 +25,22 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
-import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumVersionHigherModuleRepository;
-import ee.hitsa.ois.repository.DeclarationRepository;
-import ee.hitsa.ois.repository.DeclarationSubjectRepository;
-import ee.hitsa.ois.repository.StudyPeriodRepository;
-import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
 import ee.hitsa.ois.web.commandobject.DeclarationSubjectForm;
@@ -57,19 +56,7 @@ import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 public class DeclarationService {
 
     @Autowired
-    private DeclarationSubjectRepository declarationSubjectRepository;
-    @Autowired
-    private DeclarationRepository declarationRepository;
-    @Autowired
     private StudyYearService studyYearService;
-    @Autowired
-    private StudyPeriodRepository studyPeriodRepository;
-    @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
-    private SubjectStudyPeriodRepository subjectStudyPeriodRepository;
-    @Autowired
-    private CurriculumVersionHigherModuleRepository curriculumVersionHigherModuleRepository;
     @Autowired
     private EntityManager em;
 
@@ -159,7 +146,7 @@ public class DeclarationService {
     public Page<DeclarationDto> searchStudentsPreviousDeclarations(Long studentId, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(DECLARATION_FROM).sort(pageable);
 
-        qb.filter("d.study_period_id in (select id from study_period where end_date < current_date) ");
+        qb.requiredCriteria("d.study_period_id in (select id from study_period where end_date < :now)", "now", LocalDate.now());
         qb.requiredCriteria("d.student_id = :studentId", "studentId", studentId);
 
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, DECLARATION_SELECT, em, pageable);
@@ -175,12 +162,32 @@ public class DeclarationService {
         });
     }
 
-    public Boolean studentHasPreviousDeclarations(Long studentId) {
-        return declarationRepository.studentHasPreviousDeclarations(studentId);
+    public boolean canCreate(HoisUserDetails user, Long studentId) {
+        if(!user.isStudent() && !user.isSchoolAdmin()) {
+            return false;
+        }
+
+        if(getCurrent(user.getSchoolId(), studentId) != null) {
+            // declaration already exists
+            return false;
+        }
+
+        Student student = em.getReference(Student.class, studentId);
+        if(user.isStudent()) {
+            return UserUtil.isSame(user, student) && StudentUtil.isStudying(student);
+        }
+        return UserUtil.isSchoolAdmin(user, student.getSchool());
+    }
+
+    public boolean studentHasPreviousDeclarations(Long studentId) {
+        Query q = em.createNativeQuery("select id from declaration where student_id = ?1 and study_period_id in (select id from study_period where end_date < ?2)");
+        q.setParameter(1,  studentId);
+        q.setParameter(2, parameterAsTimestamp(LocalDate.now()));
+        return !q.setMaxResults(1).getResultList().isEmpty();
     }
 
     public void deleteSubject(DeclarationSubject subject) {
-        EntityUtil.deleteEntity(declarationSubjectRepository, subject);
+        EntityUtil.deleteEntity(subject, em);
     }
 
     /*
@@ -190,8 +197,8 @@ public class DeclarationService {
      */
     public DeclarationSubject addSubject(HoisUserDetails user, DeclarationSubjectForm form) {
         DeclarationSubject declarationSubject = new DeclarationSubject();
-        Declaration declaration = declarationRepository.getOne(form.getDeclaration());
-        SubjectStudyPeriod ssp = subjectStudyPeriodRepository.getOne(form.getSubjectStudyPeriod());
+        Declaration declaration = em.getReference(Declaration.class, form.getDeclaration());
+        SubjectStudyPeriod ssp = em.getReference(SubjectStudyPeriod.class, form.getSubjectStudyPeriod());
 
         AssertionFailedException.throwIf(!EntityUtil.getId(declaration.getStudyPeriod()).equals(EntityUtil.getId(ssp.getStudyPeriod())),
                 "Declaration's and study period's ids does not match");
@@ -201,65 +208,73 @@ public class DeclarationService {
         declarationSubject.setSubjectStudyPeriod(ssp);
         Long higherModule = form.getCurriculumVersionHigherModule();
         if(higherModule != null) {
-            declarationSubject.setModule(curriculumVersionHigherModuleRepository
-                    .getOne(higherModule));
+            declarationSubject.setModule(em.getReference(CurriculumVersionHigherModule.class, higherModule));
         }
         declarationSubject.setIsOptional(form.getIsOptional());
-        return declarationSubjectRepository.save(declarationSubject);
+        return EntityUtil.save(declarationSubject, em);
     }
 
-    public Declaration create(Long schoolId, Student student) {
-        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
-        StudyPeriod studyPeriod = studyPeriodRepository.getOne(studyPeriodId);
+    public Declaration create(HoisUserDetails user, Long studentId) {
+        AssertionFailedException.throwIf(!canCreate(user, studentId), "You cannot create declaration!");
 
-        AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(schoolId),
+        Student student = em.getReference(Student.class, studentId);
+        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
+        StudyPeriod studyPeriod = em.getReference(StudyPeriod.class, studyPeriodId);
+
+        AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(user.getSchoolId()),
                 "User's and studyPeriod's schools does not match!");
 
         Declaration declaration = new Declaration();
         declaration.setStudent(student);
         declaration.setStudyPeriod(studyPeriod);
-        declaration.setStatus(classifierRepository.getOne(DeclarationStatus.OPINGUKAVA_STAATUS_S.name()));
-        return declarationRepository.save(declaration);
+        setDeclarationStatus(declaration, DeclarationStatus.OPINGUKAVA_STAATUS_S);
+        return EntityUtil.save(declaration, em);
     }
 
     public Declaration getCurrent(Long schoolId, Long studentId) {
-        Long studyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
-        if (studyPeriod == null) {
+        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
+        if (studyPeriodId == null) {
             return null;
         }
-        return declarationRepository.findByStudentIdAndStudyPeriodId(studentId, studyPeriod);
+
+        TypedQuery<Declaration> q = em.createQuery("select d from Declaration d where d.student.id = ?1 and d.studyPeriod.id = ?2", Declaration.class);
+        q.setParameter(1, studentId);
+        q.setParameter(2, studyPeriodId);
+        List<Declaration> result = q.setMaxResults(1).getResultList();
+        return result.isEmpty() ? null : result.get(0);
     }
 
     public Declaration confirm(String confirmer, Declaration declaration) {
-        declaration.setStatus(classifierRepository.getOne(DeclarationStatus.OPINGUKAVA_STAATUS_K.name()));
+        setDeclarationStatus(declaration, DeclarationStatus.OPINGUKAVA_STAATUS_K);
         declaration.setConfirmer(confirmer);
         declaration.setConfirmDate(LocalDate.now());
-        return declarationRepository.save(declaration);
+        return EntityUtil.save(declaration, em);
     }
 
     public Integer confirmAll(HoisUserDetails user) {
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
-        List<Declaration> declarations = declarationRepository.findAll((root, query, cb) -> {
-            return cb.equal(root.get("studyPeriod").get("id"), studyPeriodId);
-        });
+        TypedQuery<Declaration> q = em.createQuery("select d from Declaration where d.studyPeriod.id = ?1", Declaration.class);
+        q.setParameter(1, studyPeriodId);
+        List<Declaration> declarations = q.getResultList();
         int count = 0;
+        Classifier confirmedStatus = em.getReference(Classifier.class, DeclarationStatus.OPINGUKAVA_STAATUS_K.name());
         for (Declaration declaration : declarations) {
             if (declaration.getConfirmDate() == null) {
-                declaration.setStatus(classifierRepository.getOne(DeclarationStatus.OPINGUKAVA_STAATUS_K.name()));
+                declaration.setStatus(confirmedStatus);
                 declaration.setConfirmer(user.getUsername());
                 declaration.setConfirmDate(LocalDate.now());
+                EntityUtil.save(declaration, em);
                 count++;
             }
         }
-        declarationRepository.save(declarations);
         return Integer.valueOf(count);
     }
 
     public Declaration removeConfirmation(Declaration declaration) {
-        declaration.setStatus(classifierRepository.getOne(DeclarationStatus.OPINGUKAVA_STAATUS_S.name()));
+        setDeclarationStatus(declaration, DeclarationStatus.OPINGUKAVA_STAATUS_S);
         declaration.setConfirmer(null);
         declaration.setConfirmDate(null);
-        return declarationRepository.save(declaration);
+        return EntityUtil.save(declaration, em);
     }
 
     public List<AutocompleteResult> getModules(Declaration declaration) {
@@ -329,7 +344,7 @@ public class DeclarationService {
 
             dto.setModule(new AutocompleteResult(resultAsLong(r, 7), null, null));
             dto.setIsOptional(resultAsBoolean(r, 8));
-            dto.setTeachers(new HashSet<>(Arrays.asList(resultAsString(r, 9).split(", "))));
+            dto.setTeachers(Arrays.asList(resultAsString(r, 9).split(", ")));
 
             return dto;
         }, result);
@@ -360,8 +375,8 @@ public class DeclarationService {
     }
 
     public AutocompleteResult getCurrentStudyPeriod(Long schoolId) {
-        Long studyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
-        return AutocompleteResult.of(studyPeriodRepository.getOne(studyPeriod));
+        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
+        return AutocompleteResult.of(em.getReference(StudyPeriod.class, studyPeriodId));
     }
 
     public void setAreSubjectsDeclaredRepeatedy(Set<DeclarationSubjectDto> subjects, Long declarationId) {
@@ -390,6 +405,10 @@ public class DeclarationService {
     }
 
     public void delete(Declaration declaration) {
-        EntityUtil.deleteEntity(declarationRepository, declaration);
+        EntityUtil.deleteEntity(declaration, em);
+    }
+
+    private void setDeclarationStatus(Declaration declaration, DeclarationStatus status) {
+        declaration.setStatus(em.getReference(Classifier.class, status.name()));
     }
 }

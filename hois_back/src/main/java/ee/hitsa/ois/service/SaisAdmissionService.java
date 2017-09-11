@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 import javax.xml.datatype.DatatypeConfigurationException;
@@ -27,16 +28,16 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.config.SaisProperties;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.sais.SaisAdmission;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.FinSource;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudyLoad;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
-import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.ExceptionUtil;
@@ -62,11 +63,11 @@ public class SaisAdmissionService {
     private static final String DEFAULT_OPPEVORM = "M";
 
     @Autowired
+    private EntityManager em;
+    @Autowired
     private SaisAdmissionRepository saisAdmissionRepository;
     @Autowired
     private SaisProperties sp;
-    @Autowired
-    private PersonRepository personRepository;
     private SaisService saisService = new SaisService();
     @Autowired
     private SaisLogService saisLogService;
@@ -74,8 +75,6 @@ public class SaisAdmissionService {
     private CurriculumVersionRepository curriculumVersionRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
-    @Autowired
-    SchoolRepository schoolRepository;
 
     public Page<SaisAdmissionSearchDto> search(HoisUserDetails user, SaisAdmissionSearchCommand criteria,
             Pageable pageable) {
@@ -105,7 +104,7 @@ public class SaisAdmissionService {
     }
 
     public void delete(SaisAdmission saisAdmission) {
-        EntityUtil.deleteEntity(saisAdmissionRepository, saisAdmission);
+        EntityUtil.deleteEntity(saisAdmission, em);
     }
 
     public Page<SaisAdmissionSearchDto> saisImport(SaisAdmissionImportForm form, HoisUserDetails user) {
@@ -233,7 +232,7 @@ public class SaisAdmissionService {
         xRoadHeader.setConsumer(sp.getConsumer());
         xRoadHeader.setEndpoint(sp.getEndpoint());
         xRoadHeader.setProducer(sp.getProducer());
-        xRoadHeader.setUserId(sp.getUseridprefix() + personRepository.getOne(user.getPersonId()).getIdcode());
+        xRoadHeader.setUserId(sp.getUseridprefix() + em.getReference(Person.class, user.getPersonId()).getIdcode());
         xRoadHeader.setId(UUID.randomUUID().toString());
         // TODO configurable
         xRoadHeader.setService("sais2.AllAdmissionsExport.v1");
@@ -249,7 +248,7 @@ public class SaisAdmissionService {
         gcal = GregorianCalendar.from(form.getCreateDateTo().atStartOfDay(ZoneId.systemDefault()));
         request.setCreateDateTo(DatatypeFactory.newInstance().newXMLGregorianCalendar(gcal));
         request.setModifyDateTo(DatatypeFactory.newInstance().newXMLGregorianCalendar(gcal));
-        Classifier ehisSchool = schoolRepository.getOne(user.getSchoolId()).getEhisSchool();
+        Classifier ehisSchool = em.getReference(School.class, user.getSchoolId()).getEhisSchool();
         Integer koolRegNr = null;
         if(ehisSchool.getValue2() != null) {
             koolRegNr = Integer.valueOf(ehisSchool.getValue2());

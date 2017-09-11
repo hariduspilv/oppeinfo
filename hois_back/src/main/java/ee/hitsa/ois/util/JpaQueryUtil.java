@@ -199,19 +199,19 @@ public abstract class JpaQueryUtil {
 
         public void optionalCriteria(String criteria, String name, LocalDate value) {
             if(value != null) {
-                filter(criteria, name, Timestamp.valueOf(LocalDateTime.of(value, LocalTime.MIN)));
+                filter(criteria, name, parameterAsTimestamp(value));
             }
         }
 
         public void optionalCriteria(String criteria, String name, LocalDate value, Function<LocalDate, LocalDateTime> adjuster) {
             if(value != null) {
-                filter(criteria, name, Timestamp.valueOf(adjuster.apply(value)));
+                filter(criteria, name, parameterAsTimestamp(adjuster.apply(value)));
             }
         }
 
         public void optionalCriteria(String criteria, String name, LocalDateTime value) {
             if(value != null) {
-                filter(criteria, name, Timestamp.valueOf(value));
+                filter(criteria, name, parameterAsTimestamp(value));
             }
         }
 
@@ -245,29 +245,23 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, Collection<?> value) {
-            AssertionFailedException.throwIf(value == null || value.isEmpty(), "Required criteria is missing");
-
-            filter(criteria, name, value);
+            filter(criteria, name, value != null && !value.isEmpty() ? value : null);
         }
 
         public void requiredCriteria(String criteria, String name, EntityConnectionCommand value) {
-            AssertionFailedException.throwIf(value == null || value.getId() == null, "Required criteria is missing");
-
-            filter(criteria, name, value.getId());
+            filter(criteria, name, value != null ? value.getId() : null);
         }
 
         public void requiredCriteria(String criteria, String name, Enum<?> value) {
-            AssertionFailedException.throwIf(value == null, "Required criteria is missing");
-
-            filter(criteria, name, value.name());
+            filter(criteria, name, value != null ? value.name() : null);
         }
 
         public void requiredCriteria(String criteria, String name, LocalDate value) {
-            filter(criteria, name, Timestamp.valueOf(LocalDateTime.of(value, LocalTime.MIN)));
+            filter(criteria, name, value != null ? parameterAsTimestamp(value) : null);
         }
 
         public void requiredCriteria(String criteria, String name, LocalDateTime value) {
-            filter(criteria, name, Timestamp.valueOf(value));
+            filter(criteria, name, value != null ? parameterAsTimestamp(value) : null);
         }
 
         public void requiredCriteria(String criteria, String name, Long value) {
@@ -275,13 +269,14 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, String value) {
-            AssertionFailedException.throwIf(!StringUtils.hasText(value), "Required criteria is missing");
-
-            filter(criteria, name, value);
+            filter(criteria, name, StringUtils.hasText(value) ? value : null);
         }
 
         public void parameter(String name, Object value) {
-            parameters.put(Objects.requireNonNull(name), Objects.requireNonNull(value));
+            if(value == null) {
+                throw new AssertionFailedException("Parameter value is missing");
+            }
+            parameters.put(Objects.requireNonNull(name, "Parameter name is missing"), value);
         }
 
         public void filter(String filter) {
@@ -292,8 +287,8 @@ public abstract class JpaQueryUtil {
         }
 
         private void filter(String filter, String name, Object value) {
-            filter(filter);
             parameter(name, value);
+            filter(filter);
         }
 
         public Query select(String projection, EntityManager em) {
@@ -313,6 +308,21 @@ public abstract class JpaQueryUtil {
         }
 
         private Query buildQuery(String projection, EntityManager em, boolean ordered, Map<String, Object> additionalParameters) {
+            Query q = em.createNativeQuery(querySql(projection, ordered));
+
+            for(Map.Entry<String, Object> me : parameters.entrySet()) {
+                q.setParameter(me.getKey(), me.getValue());
+            }
+            if(additionalParameters != null) {
+                for(Map.Entry<String, Object> me : additionalParameters.entrySet()) {
+                    q.setParameter(me.getKey(), me.getValue());
+                }
+            }
+
+            return q;
+        }
+
+        public String querySql(String projection, boolean ordered) {
             StringBuilder sql = new StringBuilder("select ");
             sql.append(Objects.requireNonNull(projection));
             sql.append(' ');
@@ -347,19 +357,11 @@ public abstract class JpaQueryUtil {
                     sql.append(orderBy);
                 }
             }
+            return sql.toString();
+        }
 
-            Query q = em.createNativeQuery(sql.toString());
-
-            for(Map.Entry<String, Object> me : parameters.entrySet()) {
-                q.setParameter(me.getKey(), me.getValue());
-            }
-            if(additionalParameters != null) {
-                for(Map.Entry<String, Object> me : additionalParameters.entrySet()) {
-                    q.setParameter(me.getKey(), me.getValue());
-                }
-            }
-
-            return q;
+        public Map<String, Object> queryParameters() {
+            return Collections.unmodifiableMap(parameters);
         }
 
         private static String camelCaseToUnderScore(String value) {
@@ -376,12 +378,19 @@ public abstract class JpaQueryUtil {
             return sb.toString();
         }
 
-        public void validByDateCriteria(String prefix) {
+        public void validNowCriteria(String fromField, String thruField) {
             LocalDate now = LocalDate.now();
-            requiredCriteria(prefix + ".valid_from <= :now", "now", now);
-            requiredCriteria("coalesce(" + prefix + ".valid_thru, :now) >= :now", "now", now);
+            requiredCriteria(fromField + " <= :now", "now", now);
+            filter("(" + thruField + " is null or " + thruField + " >= :now)");
         }
+    }
 
+    public static Timestamp parameterAsTimestamp(LocalDate value) {
+        return Timestamp.valueOf(LocalDateTime.of(value, LocalTime.MIN));
+    }
+
+    public static Timestamp parameterAsTimestamp(LocalDateTime value) {
+        return Timestamp.valueOf(value);
     }
 
     public static Boolean resultAsBoolean(Object row, int index) {

@@ -22,25 +22,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
+import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.PracticeJournal;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
+import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.subject.Subject;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.message.PracticeJournalUniqueUrlMessage;
-import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.ContractRepository;
-import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
-import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleThemeRepository;
-import ee.hitsa.ois.repository.DirectiveCoordinatorRepository;
-import ee.hitsa.ois.repository.EnterpriseRepository;
-import ee.hitsa.ois.repository.PracticeJournalRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
-import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.SubjectRepository;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -65,31 +63,11 @@ public class ContractService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private ContractRepository contractRepository;
-    @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
-    private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
-    @Autowired
-    private CurriculumVersionOccupationModuleThemeRepository curriculumVersionOccupationModuleThemeRepository;
-    @Autowired
-    private EnterpriseRepository enterpriseRepository;
-    @Autowired
-    private TeacherRepository teacherRepository;
-    @Autowired
-    private DirectiveCoordinatorRepository directiveCoordinatorRepository;
-    @Autowired
-    private PracticeJournalRepository practiceJournalRepository;
-    @Autowired
     private SchoolRepository schoolRepository;
     @Autowired
     private StudyYearService studyYearService;
     @Autowired
     private AutomaticMessageService automaticMessageService;
-    @Autowired
-    private SubjectRepository subjectRepository;
     @Autowired
     private Validator validator;
 
@@ -252,7 +230,7 @@ public class ContractService {
 
     public Contract create(ContractForm contractForm) {
         Contract contract = new Contract();
-        contract.setStatus(classifierRepository.getOne(ContractStatus.LEPING_STAATUS_S.name()));
+        setContractStatus(contract, ContractStatus.LEPING_STAATUS_S);
         contract.setSupervisorUrl(generateUniqueUrl());
         return save(contract, contractForm);
     }
@@ -266,14 +244,14 @@ public class ContractService {
 
         Contract changedContract = EntityUtil.bindToEntity(contractForm, contract,
                 "student", "module", "theme", "enterprise", "teacher", "contractCoordinator", "subject");
-        EntityUtil.setEntityFromRepository(contractForm, changedContract, studentRepository, "student");
-        EntityUtil.setEntityFromRepository(contractForm, changedContract, curriculumVersionOccupationModuleRepository, "module");
-        EntityUtil.setEntityFromRepository(contractForm, changedContract, curriculumVersionOccupationModuleThemeRepository, "theme");
-        EntityUtil.setEntityFromRepository(contractForm, changedContract, enterpriseRepository, "enterprise");
-        EntityUtil.setEntityFromRepository(contractForm, changedContract, teacherRepository, "teacher");
-        EntityUtil.setEntityFromRepository(contractForm, changedContract, directiveCoordinatorRepository, "contractCoordinator");
-        EntityUtil.setEntityFromRepository(contractForm, changedContract, subjectRepository, "subject");
-        return contractRepository.save(changedContract);
+        changedContract.setStudent(EntityUtil.getOptionalOne(Student.class, contractForm.getStudent(), em));
+        changedContract.setModule(EntityUtil.getOptionalOne(CurriculumVersionOccupationModule.class, contractForm.getModule(), em));
+        changedContract.setTheme(EntityUtil.getOptionalOne(CurriculumVersionOccupationModuleTheme.class, contractForm.getTheme(), em));
+        changedContract.setEnterprise(EntityUtil.getOptionalOne(Enterprise.class, contractForm.getEnterprise(), em));
+        changedContract.setTeacher(EntityUtil.getOptionalOne(Teacher.class, contractForm.getTeacher(), em));
+        changedContract.setContractCoordinator(EntityUtil.getOptionalOne(DirectiveCoordinator.class, contractForm.getContractCoordinator(), em));
+        changedContract.setSubject(EntityUtil.getOptionalOne(Subject.class, contractForm.getSubject(), em));
+        return EntityUtil.save(changedContract, em);
     }
 
     private void assertValidationRules(ContractForm contractForm) {
@@ -287,13 +265,13 @@ public class ContractService {
     }
 
     public void delete(Contract contract) {
-        contractRepository.delete(contract);
+        EntityUtil.deleteEntity(contract, em);
     }
 
     public Contract sendToEkis(HoisUserDetails user, Contract contract) {
-        contract.setStatus(classifierRepository.getOne(ContractStatus.LEPING_STAATUS_Y.name()));
-        practiceJournalRepository.save(createPracticeJournal(contract, schoolRepository.getOne(user.getSchoolId())));
-        return contractRepository.save(contract);
+        setContractStatus(contract, ContractStatus.LEPING_STAATUS_Y);
+        EntityUtil.save(createPracticeJournal(contract, schoolRepository.getOne(user.getSchoolId())), em);
+        return EntityUtil.save(contract, em);
     }
 
     private PracticeJournal createPracticeJournal(Contract contract, School school) {
@@ -301,7 +279,7 @@ public class ContractService {
         practiceJournal.setContract(contract);
         practiceJournal.setSchool(school);
         practiceJournal.setStudyYear(studyYearService.getCurrentStudyYear(school));
-        practiceJournal.setStatus(classifierRepository.getOne(JournalStatus.PAEVIK_STAATUS_T.name()));
+        practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
         return practiceJournal;
     }
 
@@ -315,4 +293,7 @@ public class ContractService {
         return frontendBaseUrl + "practiceJournals/supervisor/" + contract.getSupervisorUrl();
     }
 
+    private void setContractStatus(Contract contract, ContractStatus status) {
+        contract.setStatus(em.getReference(Classifier.class, status.name()));
+    }
 }

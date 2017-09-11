@@ -1,14 +1,13 @@
 package ee.hitsa.ois.web.commandobject.report;
 
 import java.time.LocalDate;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.validation.constraints.AssertTrue;
 
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 public class StudentStatisticsCommand {
@@ -46,6 +45,6 @@ public class StudentStatisticsCommand {
         return result == null || VALID_RESULT_VALUES.contains(result);
     }
 
-    private static final Set<String> VALID_RESULT_VALUES = new HashSet<>(
-            Arrays.asList(MainClassCode.FINALLIKAS.name(), MainClassCode.OPPEVORM.name(), MainClassCode.OPPURSTAATUS.name()));
+    private static final Set<String> VALID_RESULT_VALUES = EnumUtil.toNameSet(
+            MainClassCode.FINALLIKAS, MainClassCode.OPPEVORM, MainClassCode.OPPURSTAATUS);
 }

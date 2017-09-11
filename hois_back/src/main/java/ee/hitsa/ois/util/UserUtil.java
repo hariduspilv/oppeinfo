@@ -44,6 +44,11 @@ public abstract class UserUtil {
             && isSchoolAdmin(user, directive.getSchool());
     }
 
+    public static boolean canEditDirective(HoisUserDetails user, Directive directive) {
+        return ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus())
+            && isSchoolAdmin(user, directive.getSchool());
+    }
+
     public static boolean canViewStudent(HoisUserDetails user, Student student) {
         return isSchoolAdmin(user, student.getSchool()) || isSame(user, student) || isStudentRepresentative(user, student) || isTeacher(user, student.getSchool());
     }
@@ -84,8 +89,8 @@ public abstract class UserUtil {
         if(isSchoolAdmin(user, student.getSchool()) || isAdultStudent(user, student)) {
             return true;
         }
-        // representative can edit it's own record if student's data is visible to him/her
-        return user.isRepresentative() && EntityUtil.getId(representative.getPerson()).equals(user.getPersonId()) && Boolean.TRUE.equals(representative.getIsStudentVisible());
+        // representative can edit it's own record even if student's data is not visible to him/her
+        return user.isRepresentative() && EntityUtil.getId(representative.getPerson()).equals(user.getPersonId());
     }
 
     /**
@@ -100,7 +105,7 @@ public abstract class UserUtil {
     }
 
     public static boolean isAdultStudent(HoisUserDetails user, Student student) {
-        return isStudent(user, student) && StudentUtil.isAdult(student);
+        return isStudent(user, student) && StudentUtil.isAdultAndDoNotNeedRepresentative(student);
     }
 
     public static boolean isSame(HoisUserDetails user, Student student) {

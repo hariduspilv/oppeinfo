@@ -1,19 +1,12 @@
 'use strict';
 
-angular.module('hitsaOis').controller('DirectiveSearchController', ['$location', '$q', '$scope', 'Classifier', 'QueryUtils',
-  function ($location, $q, $scope, Classifier, QueryUtils) {
-    var clMapper = Classifier.valuemapper({type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'});
-    QueryUtils.createQueryForm($scope, '/directives', {order: '-inserted'}, clMapper.objectmapper);
-
-    $q.all(clMapper.promises).then($scope.loadData);
-  }
-]).controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Curriculum', 'DataUtils', 'QueryUtils', 'Session',
+angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Curriculum', 'DataUtils', 'QueryUtils', 'Session',
   function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Curriculum, DataUtils, QueryUtils, Session) {
     var id = $route.current.params.id;
     var canceledDirective = $route.current.params.canceledDirective;
     var baseUrl = '/directives';
 
-    $scope.formState = {state: (id || canceledDirective ? 'EDIT' : 'CHOOSETYPE'), students: undefined,
+    $scope.formState = {state: (id || canceledDirective ? 'EDIT' : 'CHOOSETYPE'), students: undefined, changedStudents: [],
                         selectedStudents: [], excludedTypes: ['KASKKIRI_KYLALIS'], school: Session.school || {}};
     if(!canceledDirective) {
       $scope.formState.excludedTypes.push('KASKKIRI_TYHIST');
@@ -47,6 +40,8 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
         delete result.changedStudents;
         delete result.canceledStudents;
         delete result.selectedStudents;
+
+        $scope.cancelTypeChanged();
       } else {
         setTemplateUrl();
         $scope.record.students = studentConverter($scope.record.students);
@@ -155,7 +150,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       }else{
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
         });
       }
     };
@@ -164,7 +159,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       dialogService.confirmDialog({prompt: 'directive.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.url(baseUrl);
+          $location.url(baseUrl + '?_noback');
         });
       });
     };
@@ -289,7 +284,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
         var selected = [];
         $scope.record.students.forEach(function(it) {
           it.selectable = false;
-          selected.push(it.student);
+          selected.push(it);
         });
         $scope.formState.selectedStudents = selected;
       } else if($scope.record.cancelType === 'KASKKIRI_TYHISTAMISE_VIIS_O') {
@@ -332,7 +327,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
 
     $scope.cancelDirective = function() {
       dialogService.confirmDialog({prompt: 'directive.cancelconfirm'}, function() {
-        $location.url('/directives/new?canceledDirective=' + $scope.record.id);
+        $location.url('/directives/new?canceledDirective=' + $scope.record.id + '&_noback');
       });
     };
 

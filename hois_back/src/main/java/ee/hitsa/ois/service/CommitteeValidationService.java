@@ -1,9 +1,7 @@
 package ee.hitsa.ois.service;
 
 import java.util.List;
-import java.util.Set;
 
-import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,15 +30,10 @@ public class CommitteeValidationService {
     }
 
     private void validateMembers(List<CommitteeMemberDto> members) {
-        Set<ConstraintViolation<CommitteeMemberDto>> errors;
-
         for(CommitteeMemberDto member : members) {
             Class<?> group = Boolean.TRUE.equals(member.getIsExternal()) ? CommitteeMemberValidator.External.class : CommitteeMemberValidator.Internal.class;
-            errors = validator.validate(member, group);
-            if(!errors.isEmpty()) {
-                // FIXME should validate all members?
-                throw new ValidationFailedException(errors);
-            }
+            // FIXME should validate all members before throwing exception?
+            ValidationFailedException.throwOnError(validator.validate(member, group));
         }
     }
 }

@@ -1,7 +1,7 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $sce) {
+  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $sce, $rootScope) {
     var JWT_TOKEN_HEADER = 'Authorization';
     var authService = {};
     var roleMapper = Classifier.valuemapper({role: 'ROLL'});
@@ -22,7 +22,7 @@ angular.module('hitsaOis')
             }
           }
         });
-        Session.create(response.data.user, response.data.authorizedRoles, response.data.school, response.data.roleCode);
+        Session.create(response.data.user, response.data.authorizedRoles, response.data.school, response.data.roleCode, response.data.sessionTimeoutInSeconds);
         return response.data;
       } else {
         Session.destroy();
@@ -42,17 +42,19 @@ angular.module('hitsaOis')
         .then(function (idLoginResult) {
           var headers = {headers: {}};
           headers[JWT_TOKEN_HEADER] = idLoginResult.headers(JWT_TOKEN_HEADER);
-          return $http.get(config.apiUrl + '/user', {headers: headers})
-          .then(function (res) {
-            return authenticatedUser(res);
-          });
+          return authService.login(headers);
         });
+    };
+
+    authService.postLogout = function() {
+      Session.destroy();
+      Menu.setMenu({});
+      $rootScope.restartTimeoutDialogCounter();
     };
 
     authService.logout = function () {
       return $http.post(config.apiUrl + '/logout', {}).finally(function() {
-        Session.destroy();
-        Menu.setMenu({});
+        authService.postLogout();
       });
     };
 
@@ -171,17 +173,19 @@ angular.module('hitsaOis')
     reAuthenticate: 'auth-re'
   })
   .service('Session', function () {
-    this.create = function (userId, authorizedRoles, school, roleCode) {
+    this.create = function (userId, authorizedRoles, school, roleCode, timeoutInSeconds) {
       this.userId = userId;
       this.authorizedRoles = authorizedRoles;
       this.school = school;
       this.roleCode = roleCode;
+      this.timeoutInSeconds = timeoutInSeconds;
     };
     this.destroy = function () {
       this.userId = null;
       this.authorizedRoles = [];
       this.school = {};
       this.roleCode = null;
+      this.timeoutInSeconds = null;
     };
   })
   .constant('USER_ROLES', {

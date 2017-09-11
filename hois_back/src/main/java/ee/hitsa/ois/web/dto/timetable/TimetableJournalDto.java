@@ -1,10 +1,14 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class TimetableJournalDto {
     private Long id;
     private String name;
     private Long room;
-    
+    private List<String> teacherNames = new ArrayList<>();
+
     public TimetableJournalDto(Long id, String name) {
         this.id = id;
         this.name = name;
@@ -32,6 +36,14 @@ public class TimetableJournalDto {
 
     public void setRoom(Long room) {
         this.room = room;
+    }
+
+    public List<String> getTeacherNames() {
+        return teacherNames;
+    }
+
+    public void setTeacherNames(List<String> teacherNames) {
+        this.teacherNames = teacherNames;
     }
 
 }

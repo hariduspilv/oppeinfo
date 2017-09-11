@@ -56,6 +56,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleThemeCapa
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleYearCapacity;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionSpeciality;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.enums.CurriculumConsecution;
@@ -63,22 +64,14 @@ import ee.hitsa.ois.enums.CurriculumDraft;
 import ee.hitsa.ois.enums.CurriculumEhisStatus;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumDepartmentRepository;
-import ee.hitsa.ois.repository.CurriculumFileRepository;
-import ee.hitsa.ois.repository.CurriculumGradeRepository;
-import ee.hitsa.ois.repository.CurriculumModuleOutcomeRepository;
-import ee.hitsa.ois.repository.CurriculumModuleRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
-import ee.hitsa.ois.repository.CurriculumSpecialityRepository;
-import ee.hitsa.ois.repository.CurriculumVersionHigherModuleRepository;
-import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.CurriculumVersionSpecialityRepository;
-import ee.hitsa.ois.repository.SchoolDepartmentRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -118,32 +111,14 @@ public class CurriculumService {
 
     @Autowired
     private EntityManager em;
-	@Autowired
+    @Autowired
     private CurriculumRepository curriculumRepository;
-	@Autowired
-	private ClassifierRepository classifierRepository;
-	@Autowired
-    private SchoolDepartmentRepository schoolDepartmentRepository;
-	@Autowired
-    private CurriculumDepartmentRepository curriculumDepartmentRepository;
-	@Autowired
-	private CurriculumVersionRepository curriculumVersionRepository;
-	@Autowired
-	private SubjectRepository subjectRepository;
     @Autowired
-    private CurriculumModuleRepository curriculumModuleRepository;
+    private ClassifierRepository classifierRepository;
     @Autowired
-    private CurriculumModuleOutcomeRepository curriculumVersionOccupationModuleOutcomeRepository;
+    private CurriculumVersionRepository curriculumVersionRepository;
     @Autowired
-    private CurriculumFileRepository curriculumFileRepository;
-    @Autowired
-    private CurriculumSpecialityRepository curriculumSpecialityRepository;
-    @Autowired
-    private CurriculumGradeRepository curriculumGradeRepository;
-    @Autowired
-    private CurriculumVersionHigherModuleRepository curriculumVersionHigherModuleRepository;
-    @Autowired
-    private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
+    private SubjectRepository subjectRepository;
     @Autowired
     private CurriculumVersionSpecialityRepository curriculumVersionSpecialityRepository;
 
@@ -261,12 +236,8 @@ public class CurriculumService {
         }, pageable, em);
     }
 
-    public List<CurriculumDepartment> findAllDepartments() {
-        return curriculumDepartmentRepository.findAll();
-    }
-
     public void delete(Curriculum curriculum) {
-        EntityUtil.deleteEntity(curriculumRepository, curriculum);
+        EntityUtil.deleteEntity(curriculum, em);
     }
 
 	public List<Classifier> getAreasOfStudyByGroupOfStudy(String code) {
@@ -289,8 +260,8 @@ public class CurriculumService {
                     curriculumForm.getStateCurriculum(), em));
             updateModules(curriculum, curriculumForm.getModules());
         }
-        curriculum.setStatus(classifierRepository.getOne(CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
-        curriculum.setHigher(curriculumForm.getHigher());        
+        setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_S);
+        curriculum.setHigher(curriculumForm.getHigher());
         return save(curriculum, curriculumForm);
     }
 
@@ -324,7 +295,7 @@ public class CurriculumService {
 
     private void updateSchoolDepartment(CurriculumVersion version, CurriculumVersionDto dto) {
         if (dto.getSchoolDepartment() != null) {
-            version.setSchoolDepartment(schoolDepartmentRepository.getOne(dto.getSchoolDepartment()));
+            version.setSchoolDepartment(em.getReference(SchoolDepartment.class, dto.getSchoolDepartment()));
         }
     }
 
@@ -343,7 +314,7 @@ public class CurriculumService {
       EntityUtil.bindEntityCollection(version.getSpecialities(), cs -> EntityUtil.getId(cs.getCurriculumSpeciality()), specRefNums, s -> {
           CurriculumVersionSpeciality cvs = new CurriculumVersionSpeciality();
           cvs.setCurriculumVersion(version);
-          cvs.setCurriculumSpeciality(curriculumSpecialityRepository.getOne(s));
+          cvs.setCurriculumSpeciality(em.getReference(CurriculumSpeciality.class, s));
           return cvs;
       });
     }
@@ -459,7 +430,7 @@ public class CurriculumService {
         theme.setCapacities(newOccupationModuleThemeCapacities);
         EntityUtil.bindEntityCollection(theme.getOutcomes(), o -> EntityUtil.getId(o.getOutcome()), dto.getOutcomes(), d -> {
             CurriculumVersionOccupationModuleOutcome outcome = new CurriculumVersionOccupationModuleOutcome();
-            outcome.setOutcome(curriculumVersionOccupationModuleOutcomeRepository.getOne(d));
+            outcome.setOutcome(em.getReference(CurriculumModuleOutcome.class, d));
             return outcome;
         });
 
@@ -622,7 +593,7 @@ public class CurriculumService {
         EntityUtil.bindEntityCollection(curriculum.getDepartments(), c -> EntityUtil.getId(c.getSchoolDepartment()), newDepartments, d -> {
             CurriculumDepartment cd = new CurriculumDepartment();
             cd.setCurriculum(curriculum);
-            cd.setSchoolDepartment(schoolDepartmentRepository.getOne(d));
+            cd.setSchoolDepartment(em.getReference(SchoolDepartment.class, d));
             return cd;
         });
     }
@@ -668,7 +639,7 @@ public class CurriculumService {
     public CurriculumVersionDto createVersion(Curriculum curriculum, CurriculumVersionDto dto) {
         CurriculumVersion curriculumVersion = new CurriculumVersion();
         curriculumVersion.setCurriculum(curriculum);
-        curriculumVersion.setStatus(classifierRepository.getOne(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S.name()));
+        setCurriculumVersionStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_S);
         CurriculumVersion updatedCurriculumVersion = updateVersion(curriculumVersion.getCurriculum(), curriculumVersion, dto);
         return CurriculumVersionDto.of(curriculumVersionRepository.save(updatedCurriculumVersion));
     }
@@ -698,13 +669,13 @@ public class CurriculumService {
     }
 
     public void deleteVersion(CurriculumVersion curriculumVersion) {
-        EntityUtil.deleteEntity(curriculumVersionRepository, curriculumVersion);
+        EntityUtil.deleteEntity(curriculumVersion, em);
     }
 
     public Curriculum updateCurriculumSpecialities(Curriculum curriculum,
             CurriculumDto form) {
         updateCurriculumSpecialities(curriculum, form.getSpecialities());
-        return curriculumRepository.save(curriculum);
+        return EntityUtil.save(curriculum, em);
     }
 
     public List<ClassifierSelection> getCurriculumVersionHmoduleTypes(Long schoolId) {
@@ -713,7 +684,7 @@ public class CurriculumService {
                 + "join curriculum c on c.id = cv.curriculum_id";
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM);
 
-        qb.filter("cvm.type_code = 'KORGMOODUL_M'");
+        qb.requiredCriteria("cvm.type_code = :typeCode", "typeCode", HigherModuleType.KORGMOODUL_M);
         qb.filter("cvm.type_name_et is not null");
 
         // school is optional as external expert can view the form
@@ -729,41 +700,41 @@ public class CurriculumService {
         curriculum.setOccupation(form.getOccupation());
         updateOccupations(curriculum, form.getOccupations());
         updateModules(curriculum, form.getModules());
-        return curriculumRepository.save(curriculum);
+        return EntityUtil.save(curriculum, em);
     }
 
     public void deleteModule(CurriculumModule module) {
-        EntityUtil.deleteEntity(curriculumModuleRepository, module);
+        EntityUtil.deleteEntity(module, em);
         module.getCurriculum().getModules().remove(module);
     }
 
     public Curriculum updateCurriculumGrades(Curriculum curriculum, CurriculumDto form) {
         updateGrades(curriculum, form.getGrades());
-        return curriculumRepository.save(curriculum);
+        return EntityUtil.save(curriculum, em);
     }
 
     public Curriculum closeCurriculum(Curriculum curriculum) {
-        curriculum.setStatus(classifierRepository.findOne(CurriculumStatus.OPPEKAVA_STAATUS_C.name()));
-        if(!CollectionUtils.isEmpty(curriculum.getVersions())){
+        setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_C);
+        if(!CollectionUtils.isEmpty(curriculum.getVersions())) {
             Classifier statusClosed = classifierRepository.findOne(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
             for(CurriculumVersion version : curriculum.getVersions()) {
                 version.setStatus(statusClosed);
             }
         }
-        return curriculumRepository.save(curriculum);
+        return EntityUtil.save(curriculum, em);
     }
     
     public Curriculum sendToEhis(Curriculum curriculum) {
         curriculum.setEhisStatus(classifierRepository.findOne(CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_A.name()));
         curriculum.setEhisChanged(LocalDate.now());
-        return curriculumRepository.save(curriculum);
+        return EntityUtil.save(curriculum, em);
     }
 
     public Curriculum updateFromEhis(Curriculum curriculum) {
-        curriculum.setStatus(classifierRepository.findOne(CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
+        setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_K);
         curriculum.setEhisStatus(classifierRepository.findOne(CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_R.name()));
         curriculum.setEhisChanged(LocalDate.now());
-        return curriculumRepository.save(curriculum);
+        return EntityUtil.save(curriculum, em);
     }
 
     public CurriculumFile createCurriculumFile(Curriculum curriculum, CurriculumFileForm curriculumFileForm) {
@@ -771,11 +742,11 @@ public class CurriculumService {
         EntityUtil.bindToEntity(curriculumFileForm, curriculumFile, classifierRepository, "oisFile");
         curriculumFile.setCurriculum(curriculum);
         curriculumFile.setOisFile(EntityUtil.bindToEntity(curriculumFileForm.getOisFile(), new OisFile()));
-        return curriculumFileRepository.save(curriculumFile);
+        return EntityUtil.save(curriculumFile, em);
     }
 
     public void deleteCurriculumFile(CurriculumFile curriculumFile) {
-        EntityUtil.deleteEntity(curriculumFileRepository, curriculumFile);
+        EntityUtil.deleteEntity(curriculumFile, em);
     }
 
     public boolean isVersionUnique(Long schoolId, UniqueCommand command) {
@@ -811,50 +782,48 @@ public class CurriculumService {
     }
     
     public CurriculumGrade createCurriculumGrade(Curriculum curriculum, CurriculumGradeDto dto){
-        CurriculumGrade grade = curriculumGradeRepository.save(createGrade(curriculum, dto));
+        CurriculumGrade grade = EntityUtil.save(createGrade(curriculum, dto), em);
         curriculum.getGrades().add(grade);
         return grade;
     }
     
     public CurriculumGrade updateCurriculumGrade(CurriculumGradeDto dto, CurriculumGrade grade){
-        return curriculumGradeRepository.save(updateGrade(dto, grade));
+        return EntityUtil.save(updateGrade(dto, grade), em);
     }
 
     public void deleteCurriculumGrade(CurriculumGrade grade) {
-        EntityUtil.deleteEntity(curriculumGradeRepository, grade);
+        EntityUtil.deleteEntity(grade, em);
         grade.getCurriculum().getGrades().remove(grade);
     }
     
     public CurriculumSpeciality createCurriculumSpeciality(Curriculum curriculum, CurriculumSpecialityDto dto) {
-        CurriculumSpeciality speciality = curriculumSpecialityRepository.save(createSpeciality(curriculum, dto));
+        CurriculumSpeciality speciality = EntityUtil.save(createSpeciality(curriculum, dto), em);
         curriculum.getSpecialities().add(speciality);
         return speciality;
     }
     
     public CurriculumSpeciality updateCurriculumSpeciality(CurriculumSpeciality speciality,
             CurriculumSpecialityDto dto) {
-        return curriculumSpecialityRepository.save(updateSpeciality(dto, speciality));
+        return EntityUtil.save(updateSpeciality(dto, speciality), em);
     }
 
     public void deleteCurriculumSpeciality(CurriculumSpeciality speciality) {
         if(speciality.isAddedToVersion()) {
             throw new ValidationFailedException("curriculum.error.specAddedToVersion");
         }
-        EntityUtil.deleteEntity(curriculumSpecialityRepository, speciality);
-        speciality.getCurriculum().getSpecialities().remove(speciality);        
+        EntityUtil.deleteEntity(speciality, em);
+        speciality.getCurriculum().getSpecialities().remove(speciality);
     }
 
     public void deleteHigherCurriculumVersionModule(CurriculumVersionHigherModule module) {
-        EntityUtil.deleteEntity(curriculumVersionHigherModuleRepository, module);
+        EntityUtil.deleteEntity(module, em);
         module.getCurriculumVersion().getModules().remove(module);
     }
 
     public void saveCurriculumVersionSpecialities(CurriculumVersion curriculumVersion,
             CurriculumVersionHigherModuleForm form) {
-        updateCurriculumVersionSpecialities(curriculumVersion, 
-                form.getCurriculumVersionSpecialities());
-        curriculumVersionSpecialityRepository
-        .save(curriculumVersion.getSpecialities()).stream().collect(Collectors.toSet());
+        updateCurriculumVersionSpecialities(curriculumVersion, form.getCurriculumVersionSpecialities());
+        curriculumVersionSpecialityRepository.save(curriculumVersion.getSpecialities());
     }
 
     public CurriculumVersionHigherModule createHigherCurriculumVersionModule(CurriculumVersion curriculumVersion,
@@ -863,7 +832,7 @@ public class CurriculumService {
             saveCurriculumVersionSpecialities(curriculumVersion, form);
         }
         CurriculumVersionHigherModule module = createCurriculumVersionHigherModule(curriculumVersion, form);
-        return curriculumVersionHigherModuleRepository.save(module);
+        return EntityUtil.save(module, em);
     }
 
     public CurriculumVersionHigherModule updateHigherCurriculumVersionModule(CurriculumVersionHigherModule module, 
@@ -873,56 +842,64 @@ public class CurriculumService {
             saveCurriculumVersionSpecialities(curriculumVersion, form);
         }
         updateCurriculumVersionHigherModule(form, module);
-        return curriculumVersionHigherModuleRepository.save(module);
+        return EntityUtil.save(module, em);
     }
-    
+
     public CurriculumVersion updateHigherCurriculumVersionModules(CurriculumVersion curriculumVersion,
             CurriculumVersionDto form) {
         updateCurriculumVersionSpecialities(curriculumVersion, 
                 form.getSpecialitiesReferenceNumbers());
         updateCurriculumVersionModules(curriculumVersion, form.getModules());
-        return curriculumVersionRepository.save(curriculumVersion);
+        return EntityUtil.save(curriculumVersion, em);
     }
 
     public CurriculumModule createCurriculumModule(Curriculum curriculum, CurriculumModuleForm form) {
         updateOccupations(curriculum, form.getCurriculumOccupations());
         curriculumRepository.save(curriculum);
         CurriculumModule module = createCurriculumModule(curriculum, form.getCurriculumModule());
-        return curriculumModuleRepository.save(module);
+        return EntityUtil.save(module, em);
     }
 
     public CurriculumModule updateCurriculumModule(CurriculumModule module, CurriculumModuleForm form) {
         updateOccupations(module.getCurriculum(), form.getCurriculumOccupations());
         curriculumRepository.save(module.getCurriculum());
         updateCurriculumModule(form.getCurriculumModule(), module);
-        return curriculumModuleRepository.save(module);
+        return EntityUtil.save(module, em);
     }
 
     public CurriculumVersionOccupationModule createImplementationPlanModule(CurriculumVersion curriculumVersion,
             CurriculumVersionOccupationModuleDto dto) {
         CurriculumVersionOccupationModule occupationModule = createOccupationModule(curriculumVersion, dto);
         curriculumVersion.getOccupationModules().add(occupationModule);
-        return curriculumVersionOccupationModuleRepository.save(occupationModule);
+        return EntityUtil.save(occupationModule, em);
     }
 
     public CurriculumVersionOccupationModule updateImplementationPlanModule(
             CurriculumVersionOccupationModule occupationModule, CurriculumVersionOccupationModuleDto dto) {
-        return curriculumVersionOccupationModuleRepository.save(updateOccupationModule(dto, occupationModule));
+        return EntityUtil.save(updateOccupationModule(dto, occupationModule), em);
     }
     
     public CurriculumVersion setStatus(CurriculumVersion curriculumVersion, CurriculumVersionStatus status) {
-        curriculumVersion.setStatus(classifierRepository.getOne(status.name()));
-        return curriculumVersionRepository.save(curriculumVersion);
+        setCurriculumVersionStatus(curriculumVersion, status);
+        return EntityUtil.save(curriculumVersion, em);
     }
 
     public Curriculum saveAndProceedCurriculum(Curriculum curriculum, CurriculumForm curriculumForm) {
-        curriculum.setStatus(classifierRepository.getOne(CurriculumStatus.OPPEKAVA_STAATUS_M.name()));
+        setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_M);
         return save(curriculum, curriculumForm);
     }
 
     public CurriculumVersionDto saveAndConfirmVersion(CurriculumVersion curriculumVersion,
             CurriculumVersionDto curriculumVersionDto) {
-        curriculumVersion.setStatus(classifierRepository.getOne(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K.name()));
+        setCurriculumVersionStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K);
         return saveVersion(curriculumVersion, curriculumVersionDto);
+    }
+
+    private void setCurriculumStatus(Curriculum curriculum, CurriculumStatus status) {
+        curriculum.setStatus(classifierRepository.getOne(status.name()));
+    }
+
+    private void setCurriculumVersionStatus(CurriculumVersion curriculumVersion, CurriculumVersionStatus status) {
+        curriculumVersion.setStatus(classifierRepository.getOne(status.name()));
     }
 }

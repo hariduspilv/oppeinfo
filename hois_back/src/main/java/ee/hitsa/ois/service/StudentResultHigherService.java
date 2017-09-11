@@ -196,11 +196,11 @@ public class StudentResultHigherService {
     }
 
     private static boolean optionalCreditsDebt(StudentHigherModuleResultDto module) {
-        return BigDecimal.ZERO.compareTo(module.getOptionalDifference()) == 1;
+        return BigDecimal.ZERO.compareTo(module.getOptionalDifference()) > 0;
     }
 
     private static boolean mandatoryCreditsDebt(StudentHigherModuleResultDto module) {
-        return BigDecimal.ZERO.compareTo(module.getMandatoryDifference()) == 1;
+        return BigDecimal.ZERO.compareTo(module.getMandatoryDifference()) > 0;
     }
 
     private static void calculateAverageGrade(StudentHigherResultDto dto) {
@@ -245,9 +245,7 @@ public class StudentResultHigherService {
                 r.getLastGrade().getGradeValue() != null)
                 .collect(Collectors.toSet()));
         if(!CollectionUtils.isEmpty(studyPeriodIds)) {
-            List<StudyPeriod> studyPeriods = studyPeriodRepository.findAll((root, query, cb) -> {
-                return root.get("id").in(studyPeriodIds);
-            });
+            List<StudyPeriod> studyPeriods = studyPeriodRepository.findAll(studyPeriodIds);
             List<StudentHigherStudyPeriodResultDto> results = StreamUtil.toMappedList(StudentHigherStudyPeriodResultDto::of, studyPeriods);
             for(StudentHigherStudyPeriodResultDto result : results) {
                 List<StudentHigherSubjectResultDto> subjects = filterSubjectsByStudyPeriod(result, dto.getSubjectResults());

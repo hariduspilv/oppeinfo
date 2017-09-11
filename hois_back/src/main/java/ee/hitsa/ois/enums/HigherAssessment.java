@@ -1,12 +1,7 @@
 package ee.hitsa.ois.enums;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
 public enum HigherAssessment {
-    
-    
+
     KORGHINDAMINE_0(Boolean.TRUE, Boolean.FALSE),
     KORGHINDAMINE_1(Boolean.TRUE, Boolean.TRUE),
     KORGHINDAMINE_2(Boolean.TRUE, Boolean.TRUE),
@@ -16,7 +11,7 @@ public enum HigherAssessment {
     KORGHINDAMINE_A(Boolean.FALSE, Boolean.TRUE),
     KORGHINDAMINE_M(Boolean.FALSE, Boolean.FALSE),
     KORGHINDAMINE_MI(null, Boolean.FALSE);
-    
+
     private final Boolean isDistinctive;
     private final Boolean isPositive;
  
@@ -34,9 +29,11 @@ public enum HigherAssessment {
     }
 
     public static boolean isPositive(String grade) {
-        List<String> postiveGrades = Arrays.asList(HigherAssessment.values())
-                .stream().filter(HigherAssessment::getIsPositive)
-                .map(HigherAssessment::name).collect(Collectors.toList());
-        return postiveGrades.contains(grade);
+        for(HigherAssessment ha : values()) {
+            if(Boolean.TRUE.equals(ha.getIsPositive()) && ha.name().equals(grade)) {
+                return true;
+            }
+        }
+        return false;
     }
 }

@@ -66,10 +66,15 @@
                  </md-option>
                 </md-select>
             </md-input-container>
-            <md-input-container>
+            <md-input-container ng-if="isOtherCertificate()">
                 <label>{{'certificate.content' | translate}}</label>
-                <textarea ng-model="record.content" required md-maxlength="2000" max-rows="2" ng-readonly="record.type !== 'TOEND_LIIK_MUU'"></textarea>
+                <textarea ng-model="record.content" required md-maxlength="2000" max-rows="2"></textarea>
             </md-input-container>
+            <br>
+            <div ng-if="!isOtherCertificate()">
+              <label class="common-label">{{'certificate.content' | translate}}</label>
+              <div id="content" class="md-body-1"></div>
+            </div>
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>

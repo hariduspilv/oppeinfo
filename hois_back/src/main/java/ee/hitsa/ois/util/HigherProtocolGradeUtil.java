@@ -16,8 +16,7 @@ import ee.hitsa.ois.enums.SubjectAssessment;
 
 public abstract class HigherProtocolGradeUtil {
 
-    public static String calculateGrade(ProtocolStudent ps) {
-
+    public static HigherAssessment calculateGrade(ProtocolStudent ps) {
         boolean isDistinctiveAssessment = isDistinctive(ps.getProtocol());
 
         List<MidtermTaskStudentResult> results = getStudentResults(ps);
@@ -25,7 +24,7 @@ public abstract class HigherProtocolGradeUtil {
             return getNegativeScore(isDistinctiveAssessment);
         }
         if(noTaskWithPoints(ps)) {
-            return isDistinctiveAssessment ? null : HigherAssessment.KORGHINDAMINE_A.name();
+            return isDistinctiveAssessment ? null : HigherAssessment.KORGHINDAMINE_A;
         }
         BigDecimal finalScore = BigDecimal.ZERO;
         for (MidtermTaskStudentResult result : results) {
@@ -44,8 +43,7 @@ public abstract class HigherProtocolGradeUtil {
     private static boolean noTaskWithPoints(ProtocolStudent ps) {
         return ps.getProtocol().getProtocolHdata().getSubjectStudyPeriod()
                 .getMidtermTasks().stream()
-                .filter(t -> !MidtermTaskUtil.resultIsText(t))
-                .collect(Collectors.toList()).isEmpty();
+                .noneMatch(t -> !MidtermTaskUtil.resultIsText(t));
     }
 
     public static boolean isDistinctive(Protocol protocol) {
@@ -63,9 +61,10 @@ public abstract class HigherProtocolGradeUtil {
 
     private static List<MidtermTaskStudentResult> filterThisStudentsResults(List<MidtermTaskStudentResult> results,
             ProtocolStudent ps) {
+        Long studentId = EntityUtil.getId(ps.getStudent());
         return results.stream().filter(
                 sr -> EntityUtil.getId(sr.getDeclarationSubject().getDeclaration().getStudent())
-                .equals(EntityUtil.getId(ps.getStudent()))).collect(Collectors.toList());
+                .equals(studentId)).collect(Collectors.toList());
     }
 
     private static List<MidtermTaskStudentResult> getAllStudentResults(List<MidtermTask> tasks) {
@@ -81,9 +80,8 @@ public abstract class HigherProtocolGradeUtil {
         return results.size() != tasks.size();
     }
 
-    private static String getNegativeScore(boolean isDistinctiveAssessment) {
-        return isDistinctiveAssessment ? HigherAssessment.KORGHINDAMINE_0.name()
-                : HigherAssessment.KORGHINDAMINE_M.name();
+    private static HigherAssessment getNegativeScore(boolean isDistinctiveAssessment) {
+        return isDistinctiveAssessment ? HigherAssessment.KORGHINDAMINE_0 : HigherAssessment.KORGHINDAMINE_M;
     }
 
     private static boolean hasThreshold(MidtermTask task) {
@@ -94,7 +92,7 @@ public abstract class HigherProtocolGradeUtil {
         BigDecimal maxPoints = result.getMidtermTask().getMaxPoints();
         BigDecimal threshold = BigDecimal.valueOf(result.getMidtermTask().getThresholdPercentage().longValue());
         BigDecimal points = result.getPoints();
-        return points.compareTo(maxPoints.multiply(threshold).divide(BigDecimal.valueOf(100))) != -1;
+        return points.compareTo(maxPoints.multiply(threshold).divide(BigDecimal.valueOf(100))) >= 0;
     }
 
     private static BigDecimal getTaskScore(MidtermTaskStudentResult result) {
@@ -104,34 +102,33 @@ public abstract class HigherProtocolGradeUtil {
         return points.divide(maxPoints).multiply(percenage);
     }
 
-    private static String getFinalGrade(int finalScore, boolean isDistinctiveAssessment) {
+    private static HigherAssessment getFinalGrade(int finalScore, boolean isDistinctiveAssessment) {
+        // TODO meaningful names for magic constants
         if (isDistinctiveAssessment) {
             if (finalScore < 51) {
-                return HigherAssessment.KORGHINDAMINE_0.name();
+                return HigherAssessment.KORGHINDAMINE_0;
             } else if (isBetween(finalScore, 51, 60)) {
-                return HigherAssessment.KORGHINDAMINE_1.name();
+                return HigherAssessment.KORGHINDAMINE_1;
             } else if (isBetween(finalScore, 61, 70)) {
-                return HigherAssessment.KORGHINDAMINE_2.name();
+                return HigherAssessment.KORGHINDAMINE_2;
             } else if (isBetween(finalScore, 71, 80)) {
-                return HigherAssessment.KORGHINDAMINE_3.name();
+                return HigherAssessment.KORGHINDAMINE_3;
             } else if (isBetween(finalScore, 81, 90)) {
-                return HigherAssessment.KORGHINDAMINE_4.name();
-            } else {
-                return HigherAssessment.KORGHINDAMINE_5.name();
+                return HigherAssessment.KORGHINDAMINE_4;
             }
+            return HigherAssessment.KORGHINDAMINE_5;
         }
-        return finalScore > 50 ? HigherAssessment.KORGHINDAMINE_A.name()
-                : HigherAssessment.KORGHINDAMINE_M.name();
+        return finalScore > 50 ? HigherAssessment.KORGHINDAMINE_A : HigherAssessment.KORGHINDAMINE_M;
     }
 
     private static boolean isBetween(int x, int lower, int upper) {
         return lower <= x && x <= upper;
     }
-    
-    public static List<String> getPossibleGrades(Protocol protocol) {   
-        boolean isDistinctive = HigherProtocolGradeUtil.isDistinctive(protocol);
-        return Arrays.asList(HigherAssessment.values()).stream()
+
+    public static List<String> getPossibleGrades(Protocol protocol) {
+        Boolean isDistinctive = Boolean.valueOf(HigherProtocolGradeUtil.isDistinctive(protocol));
+        return Arrays.stream(HigherAssessment.values())
                 .filter(val -> val.getIsDistinctive() == null || val.getIsDistinctive()
-                .equals(Boolean.valueOf(isDistinctive))).map(val -> val.name()).collect(Collectors.toList());        
+                .equals(isDistinctive)).map(Enum::name).collect(Collectors.toList());
     }
 }

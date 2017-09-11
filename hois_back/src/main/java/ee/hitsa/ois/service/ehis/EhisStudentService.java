@@ -5,6 +5,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 import javax.xml.datatype.DatatypeConfigurationException;
 
@@ -15,26 +17,22 @@ import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.repository.DirectiveRepository;
-import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.web.commandobject.EhisStudentForm;
+import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppekavaTaitmine;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
 
-import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_LOPET;
-
 @Transactional
 @Service
-public class EhisStudentService  extends EhisService {
+public class EhisStudentService extends EhisService {
 
     @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
-    private DirectiveRepository directiveRepository;
+    private EntityManager em;
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
 
@@ -64,58 +62,67 @@ public class EhisStudentService  extends EhisService {
         return laeKorgharidused(xRoadHeaderV4, khlOppeasutusList, wsEhisStudentLog);
     }
 
-    public EhisStudentReport exportStudents(EhisStudentForm ehisStudentForm) {
+    public EhisStudentReport exportStudents(Long schoolId, EhisStudentForm ehisStudentForm) {
         EhisStudentReport ehisStudentReport = new EhisStudentReport();
         switch (ehisStudentForm.getDataType()) {
-            case CURRICULA_FULFILMENT:
-
-                List<Student> students = studentRepository.findAllBySchool_IdAndAndStatus_Code(
-                        ehisStudentForm.getSchoolID(),
-                        StudentStatus.OPPURSTAATUS_O.name()
-                );
-                List<EhisStudentReport.CurriculaFulfilment> fulfilment = new ArrayList<>(students.size());
-                for (Student student : students) {
+        case CURRICULA_FULFILMENT:
+            List<Student> students = findStudents(schoolId);
+            List<EhisStudentReport.CurriculaFulfilment> fulfilment = new ArrayList<>(students.size());
+            for (Student student : students) {
+                WsEhisStudentLog log;
+                try {
+                    log = curriculumFulfillment(student);
+                } catch (Exception e) {
+                    log = bindingException(student, e);
+                }
+                fulfilment.add(EhisStudentReport.CurriculaFulfilment.of(student, log));
+            }
+            ehisStudentReport.setFulfilments(fulfilment);
+            break;
+        case FOREIGN_STUDY:
+            throw new UnsupportedOperationException();
+        case GRADUATION:
+            List<EhisStudentReport.Graduation> graduations = new ArrayList<>();
+            List<Directive> directives = findDirectives(schoolId, ehisStudentForm);
+            for (Directive directive : directives) {
+                for (DirectiveStudent directiveStudent : directive.getStudents()) {
+                    // TODO check for printed status
+                    WsEhisStudentLog log;
                     try {
-                        fulfilment.add(
-                                EhisStudentReport.CurriculaFulfilment.of(student, curriculumFulfillment(student)));
+                        log = ehisDirectiveStudentService.graduation(directiveStudent, directive);
                     } catch (Exception e) {
-                        fulfilment.add(EhisStudentReport.CurriculaFulfilment.of(student, bindingException(student, e)));
+                        log = bindingException(directive, e);
                     }
+                    graduations.add(EhisStudentReport.Graduation.of(directiveStudent, log));
                 }
-                ehisStudentReport.setFulfilments(fulfilment);
-                break;
-            case FOREIGN_STUDY:
-                throw new UnsupportedOperationException();
-            case GRADUATION:
-                List<EhisStudentReport.Graduation> graduations = new ArrayList<>();
-                List<Directive> directives = directiveRepository.findDistinctBySchool_IdAndConfirmDateGreaterThanEqualAndConfirmDateLessThanEqualAndType_CodeEqualsAndConfirmDateIsNotNull(
-                        ehisStudentForm.getSchoolID(),
-                        ehisStudentForm.getFrom(),
-                        ehisStudentForm.getThru(),
-                        KASKKIRI_LOPET.name()
-                );
-
-                for (Directive directive : directives) {
-                    for (DirectiveStudent directiveStudent : directive.getStudents()) {
-                        // TODO check for printed status
-                        try {
-                            graduations.add(
-                                    EhisStudentReport.Graduation.of(directiveStudent,
-                                            ehisDirectiveStudentService.graduation(directiveStudent, directive)));
-                        } catch (Exception e) {
-                            graduations.add(
-                                    EhisStudentReport.Graduation.of(directiveStudent, bindingException(directive, e)));
-                        }
-                    }
-                }
-                ehisStudentReport.setGraduations(graduations);
-                break;
-            case VOTA:
-                throw new UnsupportedOperationException();
-            default:
-                break;
+            }
+            ehisStudentReport.setGraduations(graduations);
+            break;
+        case VOTA:
+            throw new UnsupportedOperationException();
+        default:
+            break;
         }
         return ehisStudentReport;
+    }
+
+    private List<Student> findStudents(Long schoolId) {
+        TypedQuery<Student> q = em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code = ?2", Student.class);
+        q.setParameter(1, schoolId);
+        q.setParameter(2, StudentStatus.OPPURSTAATUS_O.name());
+
+        return q.getResultList();
+    }
+
+    private List<Directive> findDirectives(Long schoolId, EhisStudentForm criteria) {
+        TypedQuery<Directive> q = em.createQuery("select d from Directive d where d.school.id = ?1 and d.type.code = ?2 and d.status.code = ?3 and d.confirmDate >= ?4 and d.confirmDate <= ?5", Directive.class);
+        q.setParameter(1, schoolId);
+        q.setParameter(2, DirectiveType.KASKKIRI_LOPET.name());
+        q.setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        q.setParameter(4, criteria.getFrom());
+        q.setParameter(5, criteria.getThru());
+
+        return q.getResultList();
     }
 
     @Override

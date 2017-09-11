@@ -39,6 +39,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       var RepresentativeEndpoint = QueryUtils.endpoint('/studentrepresentatives/' + studentId);
       $mdDialog.show({
         controller: function ($scope) {
+          $scope.isParent = $route.current.locals.auth.isParent();
           $scope.formState = {};
 
           if (representativeId) {
@@ -314,12 +315,13 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       $scope.applications.$promise = QueryUtils.endpoint('/students/:studentId/applications').search(query, $scope.afterApplicationsLoad);
     };
 
-    var StudentApplicableApplicationsEndpoint = QueryUtils.endpoint('/applications/student/' + $scope.studentId + '/applicable');
-    StudentApplicableApplicationsEndpoint.search(function (result) {
-      $scope.applicationTypesApplicable = result;
-      $scope.applicationTypes = Classifier.queryForDropdown({ mainClassCode: 'AVALDUS_LIIK' });
-    });
-
+    if(!$scope.auth.isTeacher() && !$scope.auth.isParent()) {
+      var StudentApplicableApplicationsEndpoint = QueryUtils.endpoint('/applications/student/' + $scope.studentId + '/applicable');
+      StudentApplicableApplicationsEndpoint.search(function (result) {
+        $scope.applicationTypesApplicable = result;
+        $scope.applicationTypes = Classifier.queryForDropdown({ mainClassCode: 'AVALDUS_LIIK' });
+      });
+    }
 
     $scope.directivesCriteria = { order: 'headline', studentId: $scope.studentId };
     $scope.directives = {};

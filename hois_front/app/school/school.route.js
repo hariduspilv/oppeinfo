@@ -4,9 +4,13 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   $routeProvider
     .when('/school', {
       templateUrl: 'school/school.list.html',
-      controller: 'SchoolListController',
+      controller: 'SimpleListController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        params: function($translate) { return {order: $translate.use() === 'en' ? 'nameEn' : 'nameEt'}; },
+        url: function() { return '/school'; }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
       }
@@ -67,9 +71,13 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     })
     .when('/school/teacheroccupations', {
       templateUrl: 'teacher/teacher.occupation.list.html',
-      controller: 'TeacherOccupationListController',
+      controller: 'SimpleListController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        params: function() { return {order: 'occupationEt'}; },
+        url: function() { return '/school/teacheroccupations'; }
+      },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }

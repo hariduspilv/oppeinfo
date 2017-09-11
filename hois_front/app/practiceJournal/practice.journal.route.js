@@ -85,11 +85,12 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       })
       .when('/practiceJournals/student', {
         templateUrl: 'practiceJournal/practice.journal.student.list.html',
-        controller: 'PracticeJournalStudentListController',
+        controller: 'SimpleListController',
         controllerAs: 'PracticeJournalStudentListController',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+          url: function() { return '/practiceJournals'; }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

@@ -2,6 +2,7 @@ package ee.hitsa.ois.util;
 
 import java.io.ByteArrayInputStream;
 import java.math.BigInteger;
+import java.nio.charset.StandardCharsets;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
@@ -26,7 +27,7 @@ public class CertificateUtil {
         X509Certificate certificate = null;
         try {
             CertificateFactory certFactory = CertificateFactory.getInstance(CERTIFICATE_TYPE);
-            certificate = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(cert.getBytes()));
+            certificate = (X509Certificate) certFactory.generateCertificate(new ByteArrayInputStream(cert.getBytes(StandardCharsets.UTF_8)));
         } catch (CertificateException e) {
             e.printStackTrace();
         }

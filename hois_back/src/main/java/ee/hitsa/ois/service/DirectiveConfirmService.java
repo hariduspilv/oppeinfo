@@ -4,6 +4,7 @@ import static ee.hitsa.ois.enums.DirectiveType.*;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
+import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.AbstractMap;
@@ -16,17 +17,24 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
+import javax.persistence.Query;
 import javax.transaction.Transactional;
 import javax.validation.ConstraintViolation;
 import javax.validation.Validator;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.UserRights;
@@ -35,23 +43,24 @@ import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveCancelType;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
-import ee.hitsa.ois.repository.ApplicationRepository;
-import ee.hitsa.ois.repository.DirectiveRepository;
-import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 
@@ -59,12 +68,10 @@ import ee.hitsa.ois.validation.ValidationFailedException;
 @Service
 public class DirectiveConfirmService {
 
-    @Autowired
-    private ApplicationRepository applicationRepository;
+    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+
     @Autowired
     private AutomaticMessageService automaticMessageService;
-    @Autowired
-    private DirectiveRepository directiveRepository;
     @Autowired
     private DirectiveService directiveService;
     @Autowired
@@ -133,17 +140,56 @@ public class DirectiveConfirmService {
         }
 
         // TODO send to sais, if service returns no errors then update wdId with service return value and set status to kinnitamisel
-        directive.setStatus(em.getReference(Classifier.class, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name()));
-        directiveRepository.save(directive);
+        setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL);
+        EntityUtil.save(directive, em);
     }
 
-    public Directive confirm(HoisUserDetails user, Directive directive, LocalDate confirmDate) {
+    public Directive rejectByEkis(long directiveId, String rejectComment, String preamble, long wdId) {
+        //TODO veahaldus
+        // • ÕISi käskkiri ei leitud – ÕISist ei leita vastava OIS_ID ja WD_ID-ga käskkirja
+        // • Vale staatus – tagasi lükata saab ainult „kinnitamisel“ staatusega käskkirja. „Koostamisel“ ja „Kinnitatud“ käskkirju tagasi lükata ei saa.
+        // • Üldine veateade – üldine viga salvestamisel, nt liiga lühike andmeväli, vale andmetüüp vms.
+        Directive directive = findDirective(directiveId);
+        log.info("directive {} rejected by ekis with reason {}", EntityUtil.getId(directive), rejectComment);
+        setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL);
+        directive.setPreamble(preamble);
+        directive.setAddInfo(directive.getAddInfo() + " " + rejectComment);
+        directive.setWdId(Long.valueOf(wdId));
+        return EntityUtil.save(directive, em);
+    }
+
+    public Directive confirmedByEkis(long directiveId, String directiveNr, LocalDate confirmDate, String preamble, long wdId,
+            String signerIdCode, String signerName) {
+        //TODO veahaldus
+        //• ÕISi käskkiri ei leitud – ÕISist ei leita vastava vastava OIS_ID ja WD_ID-ga käskkirja
+        //• Vale staatus – kinnitada saab ainult „kinnitamisel“ staatusega käskkirja. „Koostamisel“ ja „Kinnitatud“ käskkirju kinnitada ei saa.
+        //• Üldine veateade – üldine viga salvestamisel, nt liiga lühike andmeväli, vale andmetüüp vms
+        Directive directive = findDirective(directiveId);
+        directive.setDirectiveNr(directiveNr);
+        directive.setPreamble(preamble);
+        directive.setWdId(Long.valueOf(wdId));
+        return confirm(PersonUtil.fullnameAndIdcode(signerName, signerIdCode), directive, confirmDate);
+    }
+
+    private Directive findDirective(long directiveId) {
+        try {
+            Directive directive = em.getReference(Directive.class, Long.valueOf(directiveId));
+            if(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus())) {
+                throw new HoisException("Käskkiri vale staatusega");
+            }
+            return directive;
+        } catch(@SuppressWarnings("unused") EntityNotFoundException e) {
+            throw new HoisException("Käskkirja ei leitud");
+        }
+    }
+
+    public Directive confirm(String confirmer, Directive directive, LocalDate confirmDate) {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus()), "Invalid directive status");
 
         // update directive fields
-        directive.setStatus(em.getReference(Classifier.class, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name()));
+        setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
         directive.setConfirmDate(confirmDate);
-        directive.setConfirmer(user.getUsername());
+        directive.setConfirmer(confirmer);
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         if(KASKKIRI_TYHIST.equals(directiveType)) {
@@ -160,7 +206,40 @@ public class DirectiveConfirmService {
                 updateStudentData(directiveType, ds, studentStatus, student != null ? academicLeaves.get(student.getId()) : null);
             }
         }
-        return directiveRepository.save(directive);
+        return EntityUtil.save(directive, em);
+    }
+
+    public void updateStudentStatus(Job job) {
+        JobType type = JobType.valueOf(EntityUtil.getCode(job.getType()));
+        StudentStatus newStatus = null;
+        switch(type) {
+        case JOB_AKAD_MINEK:
+            newStatus = StudentStatus.OPPURSTAATUS_A;
+            break;
+        case JOB_AKAD_TULEK:
+        case JOB_AKAD_KATK:
+        case JOB_VALIS_TULEK:
+            newStatus = StudentStatus.OPPURSTAATUS_O;
+            break;
+        case JOB_VALIS_MINEK:
+            newStatus = StudentStatus.OPPURSTAATUS_V;
+            break;
+        default:
+            // do nothing
+        }
+        if(newStatus != null) {
+            // check that directive is not already canceled for given student
+            Long studentId = EntityUtil.getId(job.getStudent());
+            Query q = em.createNativeQuery("select 1 from directive_student ds where ds.student_id = ?1 and ds.directive_id = ?2 and ds.canceled = true");
+            q.setParameter(1, studentId);
+            q.setParameter(2, EntityUtil.getId(job.getDirective()));
+            if(q.setMaxResults(1).getResultList().isEmpty()) {
+                // no canceled, update status
+                Student student = em.getReference(Student.class, studentId);
+                student.setStatus(em.getReference(Classifier.class, newStatus.name()));
+                studentService.saveWithHistory(student);
+            }
+        }
     }
 
     private void updateStudentData(DirectiveType directiveType, DirectiveStudent directiveStudent, Classifier studentStatus, DirectiveStudent academicLeave) {
@@ -170,14 +249,13 @@ public class DirectiveConfirmService {
         }
 
         // copy entered data from directive
-        copyDirectiveProperties(directiveType, directiveStudent, student, false);
+        copyDirectiveProperties(directiveType, directiveStudent, student);
 
         // directive type specific calculated data and additional actions
         LocalDate confirmDate = directiveStudent.getDirective().getConfirmDate();
         User user;
         long duration;
 
-        // TODO put changes which should occur in future, into task queue
         switch(directiveType) {
         case KASKKIRI_AKAD:
             duration = ChronoUnit.DAYS.between(DateUtils.periodStart(directiveStudent), DateUtils.periodEnd(directiveStudent).plusDays(1));
@@ -236,6 +314,7 @@ public class DirectiveConfirmService {
         if(KASKKIRI_IMMAT.equals(directiveType) || KASKKIRI_IMMATV.equals(directiveType)) {
             // store reference to created student also into directive_student
             directiveStudent.setStudent(student);
+            directiveStudent.setStudentHistory(student.getStudentHistory());
         }
 
         // inform student about new directive
@@ -245,12 +324,13 @@ public class DirectiveConfirmService {
 
     private void cancelDirective(Directive directive) {
         // cancellation may include only some students
-        Set<Long> includedStudentIds = StreamUtil.toMappedSet(ds -> EntityUtil.getId(ds.getStudent()), directive.getStudents());
+        Map<Long, DirectiveStudent> includedStudents = StreamUtil.toMap(ds -> EntityUtil.getId(ds.getStudent()), ds -> ds, directive.getStudents());
         Directive canceledDirective = directive.getCanceledDirective();
         DirectiveType canceledDirectiveType = DirectiveType.valueOf(EntityUtil.getCode(canceledDirective.getType()));
         for(DirectiveStudent ds : canceledDirective.getStudents()) {
             Student student = ds.getStudent();
-            if(includedStudentIds.contains(student.getId())) {
+            DirectiveStudent cancelds = includedStudents.get(student.getId());
+            if(cancelds != null) {
                 if(KASKKIRI_IMMAT.equals(canceledDirectiveType) || KASKKIRI_IMMATV.equals(canceledDirectiveType)) {
                     // undo create student. Logic similar to EKSMAT
                     LocalDate confirmDate = directive.getConfirmDate();
@@ -261,25 +341,40 @@ public class DirectiveConfirmService {
                         user.setValidThru(confirmDate);
                     }
                 } else {
-                    copyDirectiveProperties(canceledDirectiveType, ds.getStudentHistory(), student, true);
-                    if(KASKKIRI_AKAD.equals(canceledDirectiveType) || KASKKIRI_AKADK.equals(canceledDirectiveType)) {
-                        student.setNominalStudyEnd(ds.getStudentHistory().getNominalStudyEnd());
-                    } else if(KASKKIRI_EKSMAT.equals(canceledDirectiveType)) {
+                    StudentHistory original = ds.getStudentHistory();
+                    copyDirectiveProperties(canceledDirectiveType, original, student);
+                    switch(canceledDirectiveType) {
+                    case KASKKIRI_AKAD:
+                    case KASKKIRI_AKADK:
+                        student.setNominalStudyEnd(original.getNominalStudyEnd());
+                        student.setStatus(original.getStatus());
+                        break;
+                    case KASKKIRI_EKSMAT:
                         student.setStudyEnd(null);
-                        student.setStatus(ds.getStudentHistory().getStatus());
+                        student.setStatus(original.getStatus());
                         User user = userForStudent(student);
                         if(user != null) {
                             user.setValidThru(null);
                         }
+                        break;
+                    case KASKKIRI_VALIS:
+                        student.setStatus(original.getStatus());
+                        break;
+                    default:
+                        if(canceledDirectiveType.studentStatus() != null) {
+                            student.setStatus(original.getStatus());
+                        }
+                        break;
                     }
                 }
-                // TODO cancel task from task queue, if there is one for given student and directive
+                cancelds.setCanceled(Boolean.TRUE);
+                cancelds.setStudentHistory(student.getStudentHistory());
                 studentService.saveWithHistory(student);
             }
         }
         // FIXME what happens when student is changed between send-to-confirm and confirm
         if(ClassifierUtil.equals(DirectiveCancelType.KASKKIRI_TYHISTAMISE_VIIS_T, directive.getCancelType())) {
-            directive.getCanceledDirective().setStatus(em.getReference(Classifier.class, DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD.name()));
+            setDirectiveStatus(directive.getCanceledDirective(), DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD);
         }
     }
 
@@ -287,7 +382,7 @@ public class DirectiveConfirmService {
         Application application = directive.getApplication();
         if(application != null) {
             application.setStatus(applicationStatus);
-            applicationRepository.save(application);
+            EntityUtil.save(application, em);
         }
     }
 
@@ -297,13 +392,14 @@ public class DirectiveConfirmService {
         }
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_student ds "+
-                "inner join student_history dsh on ds.student_history_id = dsh.prev_student_history_id and ds.student_id = dsh.student_id "+
+                "inner join directive d on ds.directive_id = d.id and ds.canceled = false "+
                 "left outer join study_period sps on ds.study_period_start_id = sps.id "+
-                "left outer join study_period spe on ds.study_period_end_id = spe.id");
+                "left outer join study_period spe on ds.study_period_end_id = spe.id").sort(new Sort(Direction.DESC, "d.id"));
 
         List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
-        qb.requiredCriteria("dsh.id in "+
-                "(select max(sh.id) from student_history sh where sh.student_id in (:studentIds) and sh.status_code = 'OPPURSTAATUS_A' group by sh.student_id)", "studentIds", studentIds);
+        qb.requiredCriteria("ds.student_id in (:studentIds)", "studentIds", studentIds);
+        qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
+        qb.requiredCriteria("d.type_code = :directiveType", "directiveType", DirectiveType.KASKKIRI_AKAD);
 
         List<?> data = qb.select("ds.student_id, case when ds.is_period then sps.start_date else ds.start_date end, "+
                   "case when ds.is_period then spe.end_date else ds.end_date end", em).getResultList();
@@ -315,7 +411,11 @@ public class DirectiveConfirmService {
             ds.setStartDate(resultAsLocalDate(r, 1));
             ds.setEndDate(resultAsLocalDate(r, 2));
             return ds;
-        }).collect(Collectors.toMap(ds -> EntityUtil.getId(ds.getStudent()), ds -> ds));
+        }).collect(Collectors.toMap(ds -> EntityUtil.getId(ds.getStudent()), ds -> ds, (o, n) -> o));
+    }
+
+    private void setDirectiveStatus(Directive directive, DirectiveStatus status) {
+        directive.setStatus(em.getReference(Classifier.class, status.name()));
     }
 
     private static User userForStudent(Student student) {
@@ -368,7 +468,7 @@ public class DirectiveConfirmService {
         return user;
     }
 
-    private static void copyDirectiveProperties(DirectiveType directiveType, Object source, Student student, boolean cancellation) {
+    private static void copyDirectiveProperties(DirectiveType directiveType, Object source, Student student) {
         String[] copiedProperties = directiveType.updatedFields();
         if(copiedProperties.length > 0) {
             PropertyAccessor reader = PropertyAccessorFactory.forBeanPropertyAccess(source);
@@ -378,10 +478,6 @@ public class DirectiveConfirmService {
                     Object value = reader.getPropertyValue(propertyName);
                     writer.setPropertyValue(propertyName, value);
                 }
-            }
-            if(cancellation && directiveType.studentStatus() != null) {
-                Object status = reader.getPropertyValue("status");
-                writer.setPropertyValue("status", status);
             }
         }
     }

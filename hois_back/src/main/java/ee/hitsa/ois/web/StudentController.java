@@ -34,7 +34,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.EhisStudentForm;
+import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
@@ -119,7 +119,7 @@ public class StudentController {
         result.put("applications", applications(user, student, new PageRequest(0, pagesize, null, "inserted")));
         result.put("directives", directives(user, student, new PageRequest(0, pagesize, null, "headline")));
         // TODO more data
-        result.put("student", Collections.singletonMap("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel()))));
+        result.put("student", Collections.singletonMap("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum()))));
         return result;
     }
 
@@ -132,7 +132,7 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/directives")
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
         assertCanView(user, student);
-        return studentService.directives(student, pageable);
+        return studentService.directives(user, student, pageable);
     }
 
     @GetMapping("/{id:\\d+}/subjects")
@@ -144,8 +144,7 @@ public class StudentController {
     @PostMapping("/ehisStudentExport")
     public EhisStudentReport ehisExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
         assertIsSchoolAdmin(user);
-        ehisStudentForm.setSchoolID(user.getSchoolId());
-        return ehisStudentService.exportStudents(ehisStudentForm);
+        return ehisStudentService.exportStudents(user.getSchoolId(), ehisStudentForm);
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {

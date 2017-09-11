@@ -133,6 +133,8 @@
 
       <div layout="row">
         <md-button class="md-raised md-default" ng-click="back('#/contracts/')">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="wdId && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_K')"
+          class="md-raised md-default" ng-href="{{getEkisContractUrl(contract.wdId)}}">{{'contract.button.viewContractFromEkis' | translate}}</md-button>
       </div>
     </div>
   </div>

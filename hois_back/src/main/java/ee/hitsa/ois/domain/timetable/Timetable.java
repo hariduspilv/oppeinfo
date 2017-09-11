@@ -31,9 +31,7 @@ public class Timetable extends BaseEntityWithId {
     private LocalDate startDate;
     private LocalDate endDate;
     private Boolean isHigher;
-
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "timetable_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "timetable", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TimetableObject> timetableObjects = new ArrayList<>();
 
     public School getSchool() {

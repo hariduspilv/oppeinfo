@@ -1,14 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$route','Classifier', 'QueryUtils', function ($scope, $route, Classifier, QueryUtils) {
-  var clMapper = Classifier.valuemapper({role: 'ROLL'});
-  QueryUtils.createQueryForm($scope, '/users', {order: 'p.lastname,p.firstname'}, clMapper.objectmapper);
-
-  $scope.showSchool = $route.current.locals.auth.isMainAdmin();
-
-  $scope.loadData();
-}])
-  .controller('PersonsEditController', ['$location', '$route', '$scope', '$rootScope', 'dialogService', 'DataUtils', 'message', 'PersonService', 'QueryUtils', function ($location, $route, $scope, $rootScope, dialogService, DataUtils, message, PersonService, QueryUtils) {
+angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$route', '$scope', '$rootScope', 'dialogService', 'DataUtils', 'message', 'PersonService', 'QueryUtils',
+  function ($location, $route, $scope, $rootScope, dialogService, DataUtils, message, PersonService, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/persons';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -95,8 +88,8 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
     };
 
     $scope.delete = PersonService.deletePerson;
-  }])
-  .controller('PersonsViewController', ['$scope', '$route', 'PersonService','QueryUtils', function ($scope, $route, PersonService, QueryUtils) {
+  }
+]).controller('PersonsViewController', ['$scope', '$route', 'PersonService','QueryUtils', function ($scope, $route, PersonService, QueryUtils) {
     var id = $route.current.params.id;
     var Endpoint = QueryUtils.endpoint('/persons');
     $scope.showSchool = $route.current.locals.auth.isMainAdmin();
@@ -149,4 +142,5 @@ angular.module('hitsaOis').controller('UsersSearchController', ['$scope', '$rout
     };
 
     return {usersAfterLoad: usersAfterLoad, deletePerson: deletePerson};
-  }]);
+  }
+]);

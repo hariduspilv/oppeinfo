@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.DeclarationSubject;
@@ -8,7 +9,7 @@ import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class DeclarationSubjectDto extends VersionedCommand {
@@ -16,7 +17,7 @@ public class DeclarationSubjectDto extends VersionedCommand {
     private Long id;
     private Long subjectStudyPeriod;
     private Long declaration;
-    private Set<String> teachers;
+    private List<String> teachers;
     private SubjectSearchDto subject;
     private AutocompleteResult module;
     private Boolean isOptional;
@@ -35,8 +36,7 @@ public class DeclarationSubjectDto extends VersionedCommand {
         if(declarationSubject.getModule() != null) {
             dto.setModule(AutocompleteResult.of(declarationSubject.getModule()));
         }
-        dto.setTeachers(StreamUtil.toMappedSet(t -> t.getTeacher().getPerson().getFullname(), 
-                declarationSubject.getSubjectStudyPeriod().getTeachers()));
+        dto.setTeachers(PersonUtil.sorted(declarationSubject.getSubjectStudyPeriod().getTeachers().stream().map(t -> t.getTeacher().getPerson())));
         SubjectSearchDto subjectDto = new SubjectSearchDto();
         Subject subject = declarationSubject.getSubjectStudyPeriod().getSubject();
         subjectDto.setId(EntityUtil.getId(subject));
@@ -129,11 +129,11 @@ public class DeclarationSubjectDto extends VersionedCommand {
         this.declaration = declaration;
     }
 
-    public Set<String> getTeachers() {
+    public List<String> getTeachers() {
         return teachers;
     }
 
-    public void setTeachers(Set<String> teachers) {
+    public void setTeachers(List<String> teachers) {
         this.teachers = teachers;
     }
 

@@ -61,7 +61,7 @@ public class StudentControllerTests {
 
             Assert.assertFalse(userSchools.isEmpty());
 
-            student = studentRepository.findAll((root, query, cb) -> root.get("school").in(userSchools)).stream().findFirst().get();
+            student = studentRepository.findAll((root, query, cb) -> root.get("school").in(userSchools)).get(0);
         }
 
         testConfigurationService.userToRoleInSchool(role, EntityUtil.getId(student.getSchool()), restTemplate);

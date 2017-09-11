@@ -13,9 +13,13 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       })
       .when('/saisClassifier/:code', {
         templateUrl: 'saisClassifier/saisClassifier.content.list.html',
-        controller: 'SaisClassifierContentListController',
+        controller: 'SimpleListController',
         controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          params: function() { return {order: 'value'}; },
+          url: function($route) { return '/saisClassifier/' + $route.current.params.code; }
+        },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
         }

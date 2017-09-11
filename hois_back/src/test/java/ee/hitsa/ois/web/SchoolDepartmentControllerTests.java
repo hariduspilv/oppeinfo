@@ -34,7 +34,7 @@ public class SchoolDepartmentControllerTests {
 
     @Before
     public void setUp() {
-        testConfigurationService.userToRole(Role.ROLL_P, restTemplate);
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
     }
 
     @After

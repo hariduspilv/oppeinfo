@@ -1118,15 +1118,46 @@ td.bordered[md-cell] {
 }
 
 .timetable-drag {
-    width: 70px;
-    height: 40px;
-    border: 1px solid #000;
-    display: inline-block;
+    width: 55px;
+    height: 30px;
+    border: 1px solid #CCC;
+    text-align: center;
+    vertical-align: middle;
 }
 
 .timetable-drop {
-    width: 70px;
-    height: 40px;
-    border: 1px solid #000;
+    width: 55px;
+    height: 30px;
+    border: 1px solid #CCC;
     display: block;
+}
+
+#timetableCreation {
+    font-size: 13px;
+}
+
+#timetable-planned td div:not(:first-child){
+    display: block;
+}
+
+#timetable-planned-column > div:not(:first-child){
+    margin-left: 5px;
+    display: block;
+}
+
+#timetable-planned-capacity {
+    float: left;
+}
+
+#timetable-planned-capacity div:not(:first-child){
+    margin-top: -20px;
+    display: block;
+}
+
+#timetable-planned td{
+    vertical-align: top!important;
+}
+ pre {
+  font-size: 13px;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
 }

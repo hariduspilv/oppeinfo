@@ -47,6 +47,7 @@
       "csvSampleFile": "CSV Faili näidis",
       "calculate": "Arvuta",
       "addNewRow": "Lisa uus rida",
+      "refresh": "Värskenda",
       "status": {
         "approving": "Menetle",
         "close": "Sulge ÕK",
@@ -57,6 +58,8 @@
     "messages": {
       "confirm": "Kas oled kindel?",
       "confirmFormDataNotSaved": "Vormil olevad andmed on salvestamata, kas oled kindel?",
+      "sessionIsTimingOut": "Teie sessioon hakkab aeguma. Värskenda sessiooni?",
+      "sessionHasTimedOut": "Teie sessioon on aegunud.",
       "update": {
         "success": "Salvestamine õnnestus"
       },
@@ -281,10 +284,11 @@
       },
       "dataexchange": {
         "label": "Andmevahetus",
+        "ehisLogs": "EHISe andmevahetuse logi",
+        "studentinfoExport": "Õpilaste andmed",
         "teacherinfo": {
           "export": "Õppejõudude andmed"
-        },
-        "studentinfoExport": "Õpilaste andmed"
+        }
       },
       "declaration": {
         "current": "Õpingukava koostamine",
@@ -311,6 +315,7 @@
     "contact": "Kontaktandmed",
     "course": "Kursus/õppeaasta",
     "curriculum": "Õppekava",
+    "curriculumVersion": "Õppekava versioon",
     "curriculumSpeciality": "Peaeriala",
     "documents": "Dokumendid",
     "email": "E-posti aadress",
@@ -319,6 +324,7 @@
     "firstname": "Eesnimi",
     "foreignStudy": "Välisõppes viibimine",
     "idcode": "Isikukood",
+    "implementationPlan": "Rakenduskava",
     "isRepresentativeMandatory": "Õppuril peab olema esindaja",
     "isSpecialNeed": "Õppuril on erivajadus",
     "language": "Suhtluskeel",
@@ -1011,7 +1017,7 @@
     "sentToEhis": "Õppekava on EHISesse saadetud",
     "statuses": "Õppekava kehtivus ja staatused",
     "versionStatus": "Õppekava versiooni kehtivus ja staatus",
-    "yearCapacitiesTable": "Moodulite mahtude jaotus õppeaastate lõikes",
+    "yearCapacitiesTable": "Moodulite mahtude jaotus õppeaastate lõikes (EKAP)",
     "implementationPlanStatus": "Rakenduskava kehtivus ja staatus",
     "consecution": {
       "primary": "Esmaõppe õppekava",
@@ -1105,7 +1111,9 @@
       "nameNotUnique": "Nimetus pole unikaalne",
       "implementationPlanNotAllModules": "Igal õppekava moodulil peab olema rakenduskava moodul",
       "cannotBeDeleted": "Ei saa olla kustutatud",
-      "cannotBeEdited": "Ei saa olla muudetud"
+      "cannotBeEdited": "Ei saa olla muudetud",
+      "themeCreditsAndHoursMismatch": "Teema EKAP-de arv ei vasta tundide arvule",
+      "themeCapacitiesAndHoursMismatch": "Teema mahu jaotus ei vasta teema mahule (tundides)"
     },
     "prompt": {
       "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
@@ -1355,7 +1363,7 @@
     "optionalModulesNumber": "Valikmoodulite arv õppekava täitmiseks",
     "dataInsertion": "Mooduli andmete sisestamine",
     "capacityDistribution": "Mooduli mahu jaotus",
-    "capacity": "Maht",
+    "capacity": "Maht (tund)",
     "contactStudy": "Kontaktõpe",
     "requirements": "Nõuded mooduli alustamiseks",
     "assessments": "Mooduli hindamiskriteeriumid",
@@ -1431,7 +1439,11 @@
       "type": "Õppeperioodi tüüp",
       "name": "Nimetus",
       "startDate": "Alguskuupäev",
-      "endDate": "Lõppkuupäev"
+      "endDate": "Lõppkuupäev",
+      "error": {
+        "notInsideStudyYear": "Õppeaastasse sisestatud õppeperiood peab olema õppeaasta sees",
+        "overlapWithOtherStudyPeriod": "Õppeaastasse sisestatud õppeperioodi kuupäevad ei tohi kattuda teiste õppeperioodidega"
+      }
     },
     "studyPeriodEvent": {
       "deleteconfirm": "Kas oled kindel, et soovid kalendri-sündmust kustutada?",
@@ -1547,7 +1559,8 @@
     "addStudents": "Lisa õppurid",
     "code": "Tähis",
     "course": "Õppeaasta (kursus)",
-    "curriculum": "Õppekava *",
+    "curriculum": "Õppekava",
+    "curriculumRequired": "Õppekava *",
     "curriculumVersion": "Õppekava versioon",
     "curriculumVersionBoth": "Õppekava versioon / Rakenduskava",
     "curriculumVersionHigher": "Õppekava versioon",
@@ -1886,16 +1899,22 @@
   },
   "ehis": {
     "fileType": "Ehise faili liik",
-    "teacher": {
-      "radioData": "Andmete valik",
-      "allData": "Kõik andmed",
-      "changedData": "Muutused",
-      "importRange": "Muutuste kuupäevade vahemik",
-      "subjectData": "Õppeainete info edastamine",
-      "sendToEhis": "Saada andmed EHISesse",
-      "name": "Nimi",
-      "message": "Teade",
-      "response": "Tulemus:"
+    "message": {
+      "directive": "Käskkiri",
+      "error": "Viga",
+      "insertedBy": "Kasutaja",
+      "laeKorgharidus": "Õppurite andmed",
+      "laeOppejoud": "Õppejõudude andmed",
+      "message": "Selgitav tekst",
+      "name": "Sõnumi nimetus",
+      "onlyErrors": "Ainult sõnumid, mille saatmisel tekkis viga",
+      "request": "Sisend",
+      "response": "Väljund",
+      "sentDatesRange": "Saatmise kuupäevade vahemik",
+      "time": "Saatmise aeg"
+    },
+    "messages": {
+      "exportFinished": "Eksportimine lõpetatud"
     },
     "student": {
       "dataType": "Saadetavad andmed",
@@ -1915,8 +1934,16 @@
       "cumLaude": "cum laude",
       "academicNr": "Akadeemilise õiendi nr"
     },
-    "messages": {
-      "exportFinished": "Eksportimine lõpetatud"
+    "teacher": {
+      "radioData": "Andmete valik",
+      "allData": "Kõik andmed",
+      "changedData": "Muutused",
+      "importRange": "Muutuste kuupäevade vahemik",
+      "subjectData": "Õppeainete info edastamine",
+      "sendToEhis": "Saada andmed EHISesse",
+      "name": "Nimi",
+      "message": "Teade",
+      "response": "Tulemus:"
     }
   },
   "declaration": {
@@ -2058,7 +2085,8 @@
     "vocationalOrHigherContract": "Palun valige, kas soovite lisada kutseõppe või kõrgõppe lepingut?",
     "button": {
       "vocational": "Kutseõpe",
-      "higher": "Kõrgõpe"
+      "higher": "Kõrgõpe",
+      "viewContractFromEkis": "Vaata lepingut siit (EKIS)"
     },
     "messages": {
       "sendToEkis" : {

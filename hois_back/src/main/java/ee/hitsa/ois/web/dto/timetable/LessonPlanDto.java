@@ -36,7 +36,7 @@ public class LessonPlanDto extends LessonPlanForm {
         LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
         dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList()));
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());
-        dto.setModules(lessonPlan.getLessonPlanModules().stream().map(r -> LessonPlanModuleDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
+        dto.setModules(lessonPlan.getLessonPlanModules().stream().map(r -> LessonPlanModuleDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
         dto.setWeekNrs(dto.getStudyPeriods().stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList()));
 
         Map<Long, String> colors = StreamUtil.toMap(StudyYearScheduleLegend::getId, StudyYearScheduleLegend::getColor, lessonPlan.getSchool().getStudyYearScheduleLegends());
@@ -89,7 +89,7 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setNameEt(cm.getNameEt());
             dto.setNameEn(cm.getNameEn());
             dto.setTeacher(lessonPlanModule.getTeacher() != null ? AutocompleteResult.of(lessonPlanModule.getTeacher()) : null);
-            dto.setJournals(lessonPlanModule.getJournalOccupationModuleThemes().stream().map(r -> r.getJournal()).distinct().map(r -> LessonPlanModuleJournalDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
+            dto.setJournals(lessonPlanModule.getJournalOccupationModuleThemes().stream().map(r -> r.getJournal()).distinct().map(r -> LessonPlanModuleJournalDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
             dto.setTotalHours(Integer.valueOf(lessonPlanModule.getCurriculumVersionOccupationModule().getCapacities().stream().mapToInt(CurriculumVersionOccupationModuleCapacity::getHours).sum()));
             return dto;
         }
@@ -131,8 +131,8 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setId(journal.getId());
             dto.setNameEt(journal.getNameEt());
             dto.setGroupProportion(EntityUtil.getNullableCode(journal.getGroupProportion()));
-            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
-            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt().toLowerCase())).collect(Collectors.toList()));
+            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
 
             // all hours mapped by capacity type and week nr
             dto.setHours(capacityMapper.mapOutput(journal));
@@ -182,11 +182,12 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setId(journal.getId());
             dto.setNameEt(journal.getNameEt());
             dto.setGroupProportion(EntityUtil.getNullableCode(journal.getGroupProportion()));
-            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
-            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt().toLowerCase())).collect(Collectors.toList()));
-            List<JournalTeacher> currentTeacher = StreamUtil.nullSafeList(journal.getJournalTeachers().stream().filter(t -> EntityUtil.getId(t.getTeacher()) == EntityUtil.getId(teacher)).collect(Collectors.toList()));
-            dto.setIsConfirmer(currentTeacher.get(0).getIsConfirmer());
-            dto.setIsFiller(currentTeacher.get(0).getIsFiller());
+            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+            Long teacherId = EntityUtil.getId(teacher);
+            JournalTeacher currentTeacher = journal.getJournalTeachers().stream().filter(t -> EntityUtil.getId(t.getTeacher()).equals(teacherId)).findFirst().get();
+            dto.setIsConfirmer(currentTeacher.getIsConfirmer());
+            dto.setIsFiller(currentTeacher.getIsFiller());
             // all hours mapped by capacity type and week nr
             dto.setHours(capacityMapper.mapOutput(journal));
             return dto;

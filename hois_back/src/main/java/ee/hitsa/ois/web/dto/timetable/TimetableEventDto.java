@@ -10,13 +10,15 @@ public class TimetableEventDto {
     private Long room;
     private Long journal;
     private Long studentGroup;
+    private String capacityType;
 
-    public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, Long room, Long journal,
-            Long studentGroup) {
+    public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, String capacityType,
+            Long room, Long journal, Long studentGroup) {
         this.id = id;
         this.start = start;
         this.end = end;
         this.lessonNr = lessonNr;
+        this.capacityType = capacityType;
         this.room = room;
         this.journal = journal;
         this.studentGroup = studentGroup;
@@ -76,6 +78,14 @@ public class TimetableEventDto {
 
     public void setStudentGroup(Long studentGroup) {
         this.studentGroup = studentGroup;
+    }
+
+    public String getCapacityType() {
+        return capacityType;
+    }
+
+    public void setCapacityType(String capacityType) {
+        this.capacityType = capacityType;
     }
 
 }

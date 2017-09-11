@@ -22,6 +22,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.web.commandobject.TimetableRoomAndTimeForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
@@ -85,8 +86,21 @@ public class TimetableController {
     @PostMapping("/saveEvent")
     public TimetablePlanDto saveEvent(HoisUserDetails user, @Valid @RequestBody TimetableEventForm form) {
         UserUtil.assertIsSchoolAdmin(user);
-        Timetable timetable = timetableService.saveEvent(form, user);
+        Timetable timetable = timetableService.saveEvent(form);
+        //TODO: create a different smaller query for getting updated subjects after saving a subject
         return createPlan(user, timetable);
+    }
+    
+    @PostMapping("/deleteEvent")
+    public TimetablePlanDto deleteEvent(HoisUserDetails user, @Valid @RequestBody TimetableRoomAndTimeForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return createPlan(user, timetableService.deleteEvent(form));
+    }
+    
+    @PostMapping("/saveEventRoomsAndTimes")
+    public TimetablePlanDto saveEventRoomsAndTimes(HoisUserDetails user, @Valid @RequestBody TimetableRoomAndTimeForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return createPlan(user, timetableService.saveEventRoomsAndTimes(form));
     }
 
     @PutMapping("/{id:\\d+}")

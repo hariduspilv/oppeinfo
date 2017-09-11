@@ -48,7 +48,7 @@
 
       <div layout="row" ng-if="formState.state === 'CHOOSETYPE'">
         <md-button class="md-raised" ng-click="addDirective()" ng-if="formState.state === 'CHOOSETYPE' && formState.students">{{'directive.addToDirective' | translate}}</md-button>
-        <md-button ng-href="#/directives" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-click="back('#/directives')" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
 
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
@@ -90,7 +90,7 @@
 
         <md-input-container class="md-block" ng-if="record.type === 'KASKKIRI_TYHIST'">
           <label class="textInput">{{'directive.cancelType' | translate}}</label>
-          <hois-classifier-select ng-model="record.cancelType" ng-change="cancelTypeChanged()" filter-values="[formState.changedStudents ? 'KASKKIRI_TYHISTAMISE_VIIS_T' : undefined]" ng-required="record.type === 'KASKKIRI_TYHIST'" main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
+          <hois-classifier-select ng-model="record.cancelType" ng-change="cancelTypeChanged()" filter-values="[formState.changedStudents.length > 0 ? 'KASKKIRI_TYHISTAMISE_VIIS_T' : undefined]" ng-required="record.type === 'KASKKIRI_TYHIST'" main-classifier-code="KASKKIRI_TYHISTAMISE_VIIS" model-value-attr="code"></hois-classifier-select>
         </md-input-container>
 
         <div>&nbsp;</div>
@@ -106,7 +106,7 @@
           <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm()">{{'directive.sendToConfirm' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-          <md-button ng-href="#/directives" class="md-raised">{{'main.button.back' | translate}}</md-button>
+          <md-button ng-click="back('#/directives')" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>
       </div>
     </form>

@@ -3,10 +3,12 @@ package ee.hitsa.ois.service;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -17,16 +19,16 @@ import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.StudyPeriodEventRepository;
-import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.repository.StudyYearRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.StudyPeriodValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.StudyPeriodEventForm;
 import ee.hitsa.ois.web.commandobject.StudyPeriodForm;
@@ -42,34 +44,40 @@ public class StudyYearService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
     private StudyYearRepository studyYearRepository;
-    @Autowired
-    private StudyPeriodRepository studyPeriodRepository;
     @Autowired
     private StudyPeriodEventRepository studyPeriodEventRepository;
 
     // TODO use enum for classifier
-    private static final String[] STUDY_PERIOD_EVENTS = {"SYNDMUS_AVES", "SYNDMUS_DEKP", "SYNDMUS_VOTA"};
+    private static final Set<String> STUDY_PERIOD_EVENTS = new HashSet<>(Arrays.asList("SYNDMUS_AVES", "SYNDMUS_DEKP", "SYNDMUS_VOTA"));
 
     public List<StudyYearSearchDto> getStudyYears(Long schoolId) {
-        return StreamUtil.toMappedList(StudyYearSearchDto::new, studyYearRepository.findStudyYearsBySchool(schoolId));
+        Query q = em.createNativeQuery("select c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, sy.count " +
+                "from classifier c left outer join " +
+                "(select y.id, y.start_date, y.end_date, y.year_code, count(p.study_year_id) " +
+                "from study_year y left outer join study_period p on y.id = p.study_year_id " +
+                "where y.school_id = ?1 group by y.id) sy on c.code = sy.year_code " +
+                "where c.main_class_code = ?2 order by c.code desc");
+        q.setParameter(1, schoolId);
+        q.setParameter(2, MainClassCode.OPPEAASTA.name());
+        List<?> data = q.getResultList();
+
+        return StreamUtil.toMappedList(r -> new StudyYearSearchDto((Object[])r), data);
     }
 
     public StudyYear create(HoisUserDetails user, StudyYearForm studyYearForm) {
         StudyYear studyYear = new StudyYear();
-        studyYear.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        studyYear.setSchool(em.getReference(School.class, user.getSchoolId()));
         return save(studyYear, studyYearForm);
     }
 
     public StudyYear save(StudyYear studyYear, StudyYearForm studyYearForm) {
         EntityUtil.bindToEntity(studyYearForm, studyYear, classifierRepository);
-        return studyYearRepository.save(studyYear);
+        return EntityUtil.save(studyYear, em);
     }
 
     public void delete(StudyPeriod studyPeriod) {
-        EntityUtil.deleteEntity(studyPeriodRepository, studyPeriod);
+        EntityUtil.deleteEntity(studyPeriod, em);
     }
 
     public StudyPeriod createStudyPeriod(StudyYear studyYear, StudyPeriodForm request) {
@@ -77,6 +85,8 @@ public class StudyYearService {
     }
 
     public StudyPeriod saveStudyPeriod(StudyYear studyYear, StudyPeriod studyPeriod, StudyPeriodForm request) {
+        StudyPeriodValidation.validate(studyYear, studyPeriod, request);
+
         EntityUtil.bindToEntity(request, studyPeriod, classifierRepository);
         if (studyPeriod.getId() != null) {
             if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriod.getStudyYear()))) {
@@ -85,7 +95,7 @@ public class StudyYearService {
         } else {
             studyPeriod.setStudyYear(studyYear);
         }
-        return studyPeriodRepository.save(studyPeriod);
+        return EntityUtil.save(studyPeriod, em);
     }
 
     public StudyPeriodEvent create(StudyYear studyYear, StudyPeriodEventForm request) {
@@ -94,10 +104,10 @@ public class StudyYearService {
 
     public StudyPeriodEvent save(StudyYear studyYear, StudyPeriodEvent studyPeriodEvent, StudyPeriodEventForm request) {
         EntityUtil.bindToEntity(request, studyPeriodEvent, classifierRepository, "studyPeriod");
-        EntityUtil.setEntityFromRepository(request, studyPeriodEvent, studyPeriodRepository, "studyPeriod");
-        String eventType = EntityUtil.getCode(studyPeriodEvent.getEventType());
+        studyPeriodEvent.setStudyPeriod(EntityUtil.getOptionalOne(StudyPeriod.class, request.getStudyPeriod(), em));
 
-        if (Arrays.asList(STUDY_PERIOD_EVENTS).contains(eventType)) {
+        String eventType = EntityUtil.getCode(studyPeriodEvent.getEventType());
+        if (STUDY_PERIOD_EVENTS.contains(eventType)) {
             Set<StudyPeriodEvent> events = studyPeriodEventRepository.findAllByStudyYearAndStudyPeriodAndEventType(studyYear, studyPeriodEvent.getStudyPeriod(), studyPeriodEvent.getEventType());
             if (events.stream().anyMatch(it -> !it.getId().equals(studyPeriodEvent.getId()))) {
                 throw new ValidationFailedException("eventType", "duplicate-found");
@@ -112,11 +122,11 @@ public class StudyYearService {
         } else {
             studyPeriodEvent.setStudyYear(studyYear);
         }
-        return studyPeriodEventRepository.save(studyPeriodEvent);
+        return EntityUtil.save(studyPeriodEvent, em);
     }
 
     public void delete(StudyPeriodEvent studyPeriodEvent) {
-        EntityUtil.deleteEntity(studyPeriodEventRepository, studyPeriodEvent);
+        EntityUtil.deleteEntity(studyPeriodEvent, em);
     }
 
     public Long getPreviousStudyPeriod(Long school) {

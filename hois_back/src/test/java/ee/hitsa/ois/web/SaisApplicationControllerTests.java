@@ -148,7 +148,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
-        Assert.assertEquals(1, responseEntity.getBody().getSuccessful().stream().findFirst().get().getRowNr());
+        Assert.assertEquals(1, responseEntity.getBody().getSuccessful().get(0).getRowNr());
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
         uriBuilder.queryParam("code", ADMISSION_CODE);
@@ -176,14 +176,14 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
-        Assert.assertEquals(1, responseEntity.getBody().getSuccessful().stream().findFirst().get().getRowNr());
+        Assert.assertEquals(1, responseEntity.getBody().getSuccessful().get(0).getRowNr());
 
         cmd = csvCmdForRows(ADMISSION_CODE + ";Nr123456789;Mari;Maasikas;37810012580;EST;EST;RE;1.01.2012;T;first;TAIS;P;E;411;1.12.2011;1.02.2012");
         responseEntity = restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Avaldusega nr Nr123456789 on süsteemis juba seotud teise isikuga (47810010009).", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Avaldusega nr Nr123456789 on süsteemis juba seotud teise isikuga (47810010009).", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -195,7 +195,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Puudub avalduse number", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Puudub avalduse number", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -207,7 +207,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Puudub avalduse number", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Puudub avalduse number", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -223,7 +223,7 @@ public class SaisApplicationControllerTests {
         Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
 
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Failis on rohkem kui üks avalduse numbriga Nr123456789 vastuvõtu avaldust.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Failis on rohkem kui üks avalduse numbriga Nr123456789 vastuvõtu avaldust.", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -235,7 +235,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Avaldusel nr Nr123456789 puudub kandideerija eesnimi.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Avaldusel nr Nr123456789 puudub kandideerija eesnimi.", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -247,7 +247,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Avaldusega nr Nr123456789 seotud muutmise kuupäev on puudu või on vigane.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Avaldusega nr Nr123456789 seotud muutmise kuupäev on puudu või on vigane.", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -259,7 +259,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Avaldusega nr Nr123456789 seotud muutmise kuupäev on puudu või on vigane.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Avaldusega nr Nr123456789 seotud muutmise kuupäev on puudu või on vigane.", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -271,7 +271,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Avaldusega nr Nr123456789 seotud konkursil puudub konkursi kood.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Avaldusega nr Nr123456789 seotud konkursil puudub konkursi kood.", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -283,7 +283,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Avaldusel nr Nr123456789 puudub kodakondsus.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Avaldusel nr Nr123456789 puudub kodakondsus.", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -295,7 +295,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Avaldusel nr Nr123456789 puudub kodakondsus.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Avaldusel nr Nr123456789 puudub kodakondsus.", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -307,7 +307,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Avaldusel nr Nr123456789 puudub kodakondsus.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Avaldusel nr Nr123456789 puudub kodakondsus.", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
@@ -383,6 +383,7 @@ public class SaisApplicationControllerTests {
         txTemplate.setPropagationBehavior(TransactionDefinition.PROPAGATION_REQUIRES_NEW);
         directive = txTemplate.execute((TransactionStatus status) -> {
             DirectiveStudent directiveStudent = new DirectiveStudent();
+            directiveStudent.setCanceled(Boolean.FALSE);
             directiveStudent.setSaisApplication(saisApplicationRepository.findOne(saisApplicationId));
 
             Directive newDirective = new Directive();
@@ -408,7 +409,7 @@ public class SaisApplicationControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(1, responseEntity.getBody().getFailed().size());
-        Assert.assertEquals("Avaldusega nr Nr123456789 on seotud käskkiri - seda ei uuendata.", responseEntity.getBody().getFailed().stream().findFirst().get().getMessage());
+        Assert.assertEquals("Avaldusega nr Nr123456789 on seotud käskkiri - seda ei uuendata.", responseEntity.getBody().getFailed().get(0).getMessage());
     }
 
     @Test
