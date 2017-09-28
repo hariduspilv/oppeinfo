@@ -34,7 +34,9 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{::row.code}}</td>
+            <td md-cell>
+              <a md-no-ink class="md-primary" ng-href="#/school/{{::row.id}}/view">{{::row.code}}</a>
+            </td>
             <td md-cell>{{currentLanguageNameField(row)}}</td>
             <td md-cell>{{::row.email}}</td>
             <td md-cell>

@@ -7,7 +7,6 @@ public class DeclarationSubjectForm {
     private Long subjectStudyPeriod;
     @NotNull
     private Long declaration;
-    @NotNull
     private Long curriculumVersionHigherModule;
     @NotNull
     private Boolean isOptional;

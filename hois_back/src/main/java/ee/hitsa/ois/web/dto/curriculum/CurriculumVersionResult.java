@@ -50,6 +50,6 @@ public class CurriculumVersionResult extends AutocompleteResult {
         return new CurriculumVersionResult(curriculumVersion.getId(), CurriculumUtil.versionName(code, curriculum.getNameEt()),
                 CurriculumUtil.versionName(code, curriculum.getNameEn()), curriculum.getId(),
                 EntityUtil.getId(curriculumVersion.getSchoolDepartment()), EntityUtil.getNullableCode(studyForm),
-                Boolean.valueOf(CurriculumUtil.isVocational(curriculum.getOrigStudyLevel())));
+                Boolean.valueOf(CurriculumUtil.isVocational(curriculum)));
     }
 }

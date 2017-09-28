@@ -8,6 +8,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -21,29 +22,27 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.teacher.TeacherContinuingEducation;
 import ee.hitsa.ois.domain.teacher.TeacherMobility;
 import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.SchoolDepartmentRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
-import ee.hitsa.ois.repository.TeacherMobilityRepository;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
-import ee.hitsa.ois.repository.TeacherPositionEhisRepository;
-import ee.hitsa.ois.repository.TeacherQualificationRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherContinuingEducationForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityForm;
-import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFrom;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
@@ -55,21 +54,15 @@ public class TeacherService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
+    private EntityManager em;
+    @Autowired
     private PersonRepository personRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
-    private SchoolDepartmentRepository schoolDepartmentRepository;
-    @Autowired
-    private TeacherMobilityRepository teacherMobilityRepository;
     @Autowired
     private TeacherOccupationRepository teacherOccupationRepository;
     @Autowired
-    private TeacherPositionEhisRepository teacherPositionEhisRepository;
-    @Autowired
-    private TeacherQualificationRepository teacherQualificationRepository;
-    @Autowired
     private TeacherRepository teacherRepository;
+    @Autowired
+    private UserService userService;
 
     public TeacherDto create(HoisUserDetails user, TeacherForm teacherForm) {
         return save(user, new Teacher(), teacherForm);
@@ -79,8 +72,8 @@ public class TeacherService {
         if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
             throw new ValidationFailedException("teacher-vocational-higher");
         }
-        EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification");
-        teacher.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification", "teacherContinuingEducation");
+        teacher.setSchool(em.getReference(School.class, user.getSchoolId()));
         teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation().getId(), user.getSchoolId()));
         // TODO: this logic is wrong?
         Person person = null;
@@ -91,18 +84,26 @@ public class TeacherService {
         }
         if (person == null) {
             teacher.setPerson(EntityUtil.bindToEntity(teacherForm.getPerson(), new Person(), classifierRepository));
-            personRepository.save(teacher.getPerson());
+            EntityUtil.save(teacher.getPerson(), em);
         } else {
             bindOldPerson(teacherForm, person);
-            teacher.setPerson(personRepository.save(person));
+            teacher.setPerson(EntityUtil.save(person, em));
         }
         bindTeacherPositionEhisForm(teacher, teacherForm);
         if (!Boolean.TRUE.equals(teacher.getIsHigher())) {
+            // remove possible leftovers of higher teacher
+            bindTeacherContinuingEducationForm(teacher, Collections.emptyList());
             bindTeacherMobilityForm(teacher, Collections.emptySet());
             bindTeacherQualificationForm(teacher, Collections.emptySet());
         }
 
-        return TeacherDto.of(teacherRepository.save(teacher));
+        teacher = EntityUtil.save(teacher, em);
+        if(Boolean.TRUE.equals(teacher.getIsActive())) {
+            userService.enableUser(teacher, LocalDate.now());
+        } else {
+            userService.disableUser(teacher, LocalDate.now());
+        }
+        return TeacherDto.of(teacher);
     }
 
     private void bindOldPerson(TeacherForm teacherForm, Person person) {
@@ -144,19 +145,33 @@ public class TeacherService {
         teacherMobility.setTeacher(teacher);
         return teacherMobility;
     }
-
-    private void bindTeacherQualificationForm(Teacher teacher, Set<TeacherQualificationFrom> qualificationFroms) {
-        Set<TeacherQualification> teacherQualifications = teacher.getTeacherQualification();
-        if (Boolean.TRUE.equals(teacher.getIsHigher())) {
-            EntityUtil.bindEntityCollection(teacherQualifications, TeacherQualification::getId, qualificationFroms, TeacherQualificationFrom::getId,
-                    teacherQualificationFrom -> createTeacherQualification(teacher, teacherQualificationFrom, new TeacherQualification()),
-                    (teacherQualificationFrom, teacherQualification) -> createTeacherQualification(teacher, teacherQualificationFrom, teacherQualification));
-        } else if(!teacherQualifications.isEmpty()) {
-            teacherQualifications.clear();
+    
+    private void bindTeacherContinuingEducationForm(Teacher teacher, List<TeacherContinuingEducationForm> continuingEducationForms) {
+        List<TeacherContinuingEducation> teacherContinuingEducations = teacher.getTeacherContinuingEducation();
+        if (Boolean.TRUE.equals(teacher.getIsVocational())) {
+            EntityUtil.bindEntityCollection(teacherContinuingEducations, TeacherContinuingEducation::getId, continuingEducationForms, TeacherContinuingEducationForm::getId,
+                    teacherContinuingEducationForm -> createTeacherContinuingEducation(teacher, teacherContinuingEducationForm, new TeacherContinuingEducation()),
+                    (teacherContinuingEducationForm, teacherContinuingEducation) -> createTeacherContinuingEducation(teacher, teacherContinuingEducationForm, teacherContinuingEducation));
+        } else if(!teacherContinuingEducations.isEmpty()) {
+            teacherContinuingEducations.clear();
         }
     }
 
-    private TeacherQualification createTeacherQualification(Teacher teacher, TeacherQualificationFrom teacherQualificationForm, TeacherQualification teacherQualification) {
+    private TeacherContinuingEducation createTeacherContinuingEducation(Teacher teacher, TeacherContinuingEducationForm teacherContinuingEducationForm, TeacherContinuingEducation teacherContinuingEducation) {
+        EntityUtil.bindToEntity(teacherContinuingEducationForm, teacherContinuingEducation, classifierRepository);
+        teacherContinuingEducation.setTeacher(teacher);
+        
+        return teacherContinuingEducation;
+    }
+
+    private void bindTeacherQualificationForm(Teacher teacher, Set<TeacherQualificationForm> qualificationFroms) {
+        Set<TeacherQualification> teacherQualifications = teacher.getTeacherQualification();
+        EntityUtil.bindEntityCollection(teacherQualifications, TeacherQualification::getId, qualificationFroms, TeacherQualificationForm::getId,
+                 teacherQualificationFrom -> createTeacherQualification(teacher, teacherQualificationFrom, new TeacherQualification()),
+                 (teacherQualificationFrom, teacherQualification) -> createTeacherQualification(teacher, teacherQualificationFrom, teacherQualification));
+    }
+
+    private TeacherQualification createTeacherQualification(Teacher teacher, TeacherQualificationForm teacherQualificationForm, TeacherQualification teacherQualification) {
         EntityUtil.bindToEntity(teacherQualificationForm, teacherQualification, classifierRepository);
         teacherQualification.setTeacher(teacher);
         if (ClassifierUtil.isEstonia(teacherQualification.getState())) {
@@ -180,7 +195,7 @@ public class TeacherService {
         oldPositionEhis.setTeacher(teacher);
         SchoolDepartment schoolDepartment = null;
         if (positionEhis.getSchoolDepartment() != null && positionEhis.getSchoolDepartment().longValue() > 0) {
-            schoolDepartment = schoolDepartmentRepository.getOne(positionEhis.getSchoolDepartment());
+            schoolDepartment = em.getReference(SchoolDepartment.class, positionEhis.getSchoolDepartment());
         }
         oldPositionEhis.setSchoolDepartment(schoolDepartment);
         return oldPositionEhis;
@@ -250,28 +265,37 @@ public class TeacherService {
     }
 
     public void delete(Teacher teacher) {
-        EntityUtil.deleteEntity(teacherRepository, teacher);
+        EntityUtil.deleteEntity(teacher, em);
     }
 
     public TeacherDto saveMobilities(Teacher teacher, Set<TeacherMobilityForm> mobilityForms) {
         bindTeacherMobilityForm(teacher, mobilityForms);
-        return TeacherDto.of(teacherRepository.save(teacher));
+        return TeacherDto.of(EntityUtil.save(teacher, em));
+    }
+    
+    public TeacherDto saveContinuingEducations(Teacher teacher, List<TeacherContinuingEducationForm> teacherContinuingEducationForms) {
+        bindTeacherContinuingEducationForm(teacher, teacherContinuingEducationForms);
+        return TeacherDto.of(EntityUtil.save(teacher, em));
     }
 
-    public TeacherDto saveQualifications(Teacher teacher, Set<TeacherQualificationFrom> teacherQualificationFroms) {
+    public void delete(TeacherContinuingEducation continuingEducation) {
+        EntityUtil.deleteEntity(continuingEducation, em);
+    }
+
+    public TeacherDto saveQualifications(Teacher teacher, Set<TeacherQualificationForm> teacherQualificationFroms) {
         bindTeacherQualificationForm(teacher, teacherQualificationFroms);
-        return TeacherDto.of(teacherRepository.save(teacher));
+        return TeacherDto.of(EntityUtil.save(teacher, em));
     }
 
     public void delete(TeacherQualification qualification) {
-        EntityUtil.deleteEntity(teacherQualificationRepository, qualification);
+        EntityUtil.deleteEntity(qualification, em);
     }
 
     public void delete(TeacherMobility teacherMobility) {
-        EntityUtil.deleteEntity(teacherMobilityRepository, teacherMobility);
+        EntityUtil.deleteEntity(teacherMobility, em);
     }
 
     public void delete(TeacherPositionEhis teacherPositionEhis) {
-        EntityUtil.deleteEntity(teacherPositionEhisRepository, teacherPositionEhis);
+        EntityUtil.deleteEntity(teacherPositionEhis, em);
     }
 }

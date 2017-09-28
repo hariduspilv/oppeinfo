@@ -59,7 +59,8 @@
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell>
-              <a md-no-ink class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
+              <a ng-if="auth.isAdmin() || auth.isTeacher()" md-no-ink class="md-primary" ng-href="#/students/{{::row.id}}/main">{{::row.fullname}}</a>
+              <span ng-if="auth.isStudent()">{{::row.fullname}}</span>
             </td>
             <td md-cell>{{::row.idcode}}</td>
             <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>

@@ -6,7 +6,7 @@
       <div layout="row" layout-sm="column" layout-xs="column"  ng-if="!auth.school">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'school.label' | translate}}</label>
-              <hois-school-select ng-model="criteria.school" multiple></hois-school-select>
+              <hois-select ng-model="criteria.school" type="school" multiple></hois-select>
           </md-input-container>
           <md-input-container flex="50" flex-sm="100"  flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'curriculum.studyLevel' | translate}}</label>
@@ -42,7 +42,7 @@
       <div layout="row" layout-sm="column" layout-xs="column" ng-if="school.higher && school.vocational">
             <md-input-container flex="20" flex-sm="100" flex-xs="100">
                 <label>{{'curriculum.curriculumGroup' | translate}}</label>
-                <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP"  ng-disabled="criteria.iscedClassCode"></hois-classifier-select>
+                <hois-classifier-select ng-model="criteria.curriculumGroup" model-value-attr="code" main-classifier-code="OPPEKAVAGRUPP"  ng-disabled="criteria.iscedClassCode && criteria.iscedClassCode.length > 0"></hois-classifier-select>
             </md-input-container>
 
             <md-input-container  flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -159,6 +159,8 @@
       <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="auth.school.vocational && auth.isAdmin()" ng-href="#/vocationalCurriculum/new">{{'main.button.insertVocationalCurriculum' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="auth.school.higher && auth.isAdmin()" ng-href="#/higherCurriculum/new">{{'main.button.insertHigherCurriculum' | translate}}</md-button>
       </div>
 	  </fieldset>
   </form>
@@ -189,7 +191,7 @@
         <td md-cell>{{row.validThru | hoisDate}}</td>
         <td md-cell>{{currentLanguageNameField(row.status)}}</td>
         <td md-cell>
-            <md-button md-no-ink class="md-primary change-button" ng-click="edit(row)" ng-if="canBeEdited(row)">{{'main.button.change' | translate}}</md-button>
+            <md-button md-no-ink class="md-primary change-button" ng-if="auth.isAdmin() && canBeEdited(row)" ng-click="edit(row)">{{'main.button.change' | translate}}</md-button>
         </td>
     </tr>
     </tbody>

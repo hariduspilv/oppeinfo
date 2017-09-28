@@ -1,11 +1,7 @@
 <div layout="column" layout-padding>
   <div>
-        <form name="classifierForm">
-
-          <!--div class="indentForToast"></div-->
-          <!--h3 ng-bind="mainClass.nameEt"></h3-->
+    <form name="classifierForm">
 		  <h3>{{currentLanguageNameField(mainClass)}}</h3>
-
           <md-input-container  class="md-block" ng-if="classifier.code">
             <label>{{'classifier.code' | translate}}</label>
             <input ng-model="classifier.code" type="text" disabled required>
@@ -116,6 +112,6 @@
                    {{'main.button.save' | translate}}</md-button>
         <md-button ng-click="delete()"
                ng-if="classifier.code" class="md-raised">{{'main.button.delete' | translate}}</md-button>
-        <md-button ng-href="#/classifier/{{mainClassCode}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-click="back('#/classifier/' + mainClassCode, classifierForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

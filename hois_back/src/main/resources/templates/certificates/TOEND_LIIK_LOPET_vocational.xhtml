@@ -1,0 +1,17 @@
+<p>
+
+{{ content.school }} tõendab, et 
+<b>{{ content.student.firstname }} {{ content.student.lastname }} 
+(ik {{ content.student.idcode }})</b> 
+
+õppis ajavahemikul {{ content.student.studyStart != null ? content.student.studyStart : "määramata"}} 
+- {{ content.student.studyEnd != null ? content.student.studyEnd : "määramata"}} 
+ õppekaval {{ content.student.curriculum.name }}
+ (kood {{ content.student.curriculum.code }}) 
+ ja tema õppevorm oli {{ content.student.studyForm != null ? content.student.studyForm : "määramata"}}.
+ <br> 
+Õpilane lõpetas kooli (lõputunnistuse nr: <b>TODO: tunnistus_nr</b>). 
+Talle on omistatud kutse: <b>TODO</b>.
+
+
+</p>

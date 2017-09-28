@@ -2,29 +2,37 @@
   "name": "hitsa-ois",
   "version": "0.0.1",
   "dependencies": {
-    "angular": "1.6.4",
-    "angular-animate": "1.6.4",
-    "angular-aria": "1.6.4",
-    "angular-messages": "1.6.4",
-    "angular-resource": "1.6.4",
-    "angular-route": "1.6.4",
-    "angular-sanitize": "1.6.4",
-    "angular-material": "1.1.4",
-    "angular-translate": "2.15.1",
-    "angular-translate-loader-static-files": "2.15.1",
+    "angular": "1.6.6",
+    "angular-animate": "1.6.6",
+    "angular-aria": "1.6.6",
+    "angular-messages": "1.6.6",
+    "angular-resource": "1.6.6",
+    "angular-route": "1.6.6",
+    "angular-sanitize": "1.6.6",
+    "angular-material": "1.1.5",
+    "angular-translate": "2.15.2",
+    "angular-translate-loader-static-files": "2.15.2",
     "angular-material-data-table": "0.10.10",
     "lf-ng-md-file-input": "1.5.2",
     "moment": "2.18.1",
     "ng-storage": "0.4.2",
-    "angular-cache": "^4.6.0"
+    "angular-cache": "^4.6.0",
+    "hwcrypto": "0.0.11"
+  },
+  "overrides": {
+    "hwcrypto":  {
+      "dependencies": {
+        "native-promise-only": "~0.7.6-a"
+      }
+    }
   },
   "devDependencies": {
-    "angular-mocks": "1.6.4"
+    "angular-mocks": "1.6.6"
   },
   "appPath": "app",
   "moduleName": "hitsaOis",
   "resolutions": {
-    "angular": "^1.6.4",
-    "angular-translate": "2.15.1"
+    "angular": "^1.6.6",
+    "angular-translate": "2.15.2"
   }
 }

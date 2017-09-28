@@ -25,9 +25,8 @@ import org.springframework.util.StringUtils;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.enums.Language;
-import ee.hitsa.ois.repository.SchoolDepartmentRepository;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -41,8 +40,6 @@ public class SchoolDepartmentService {
 
     @Autowired
     private EntityManager em;
-    @Autowired
-    private SchoolDepartmentRepository schoolDepartmentRepository;
 
     public Page<SchoolDepartmentDto> findAll(Long schoolId, SchoolDepartmentSearchCommand criteria, Pageable pageable) {
         // load full structure for given school, already sorted
@@ -113,7 +110,7 @@ public class SchoolDepartmentService {
                         // new parent is child if us, move us below it
                         // adjust both school departments
                         psd.setParentSchoolDepartment(schoolDepartment.getParentSchoolDepartment());
-                        schoolDepartmentRepository.save(psd);
+                        EntityUtil.save(psd, em);
                         break;
                     }
                 }
@@ -121,11 +118,11 @@ public class SchoolDepartmentService {
         }
         schoolDepartment.setParentSchoolDepartment(parentSchoolDepartment);
 
-        return schoolDepartmentRepository.save(schoolDepartment);
+        return EntityUtil.save(schoolDepartment, em);
     }
 
     public void delete(SchoolDepartment schoolDepartment) {
-        EntityUtil.deleteEntity(schoolDepartmentRepository, schoolDepartment);
+        EntityUtil.deleteEntity(schoolDepartment, em);
     }
 
     private List<SchoolDepartmentDto> findForTree(Long schoolId, Pageable pageable) {

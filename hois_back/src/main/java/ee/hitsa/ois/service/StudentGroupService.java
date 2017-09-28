@@ -13,8 +13,7 @@ import java.util.Map;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
+import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,14 +29,13 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.StudentGroupRepository;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
@@ -64,10 +62,6 @@ public class StudentGroupService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private StudentGroupRepository studentGroupRepository;
-    @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
     private StudentService studentService;
 
     public Page<StudentGroupSearchDto> search(Long schoolId, StudentGroupSearchCommand criteria, Pageable pageable) {
@@ -82,7 +76,6 @@ public class StudentGroupService {
         qb.optionalCriteria("sg.study_form_code in (:studyForm)", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("sg.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
         qb.optionalCriteria("sg.teacher_id in (:teacherIds)", "teacherIds", criteria.getTeachers());
-        qb.optionalCriteria("sg.teacher_id in (select t.id from teacher t where t.person_id = :teacherPerson and t.school_id = :schoolId)", "teacherPerson", criteria.getTeacherPerson());
         qb.optionalCriteria("sg.valid_thru >= :validFrom", "validFrom", criteria.getValidFrom());
         qb.optionalCriteria("sg.valid_from <= :validThru", "validThru", criteria.getValidThru());
 
@@ -109,9 +102,6 @@ public class StudentGroupService {
 
         // curriculum is required and must be from same school
         Long curriculumId = form.getCurriculum().getId();
-        if(curriculumId == null) {
-            throw new IllegalArgumentException();
-        }
         Curriculum curriculum = em.getReference(Curriculum.class, curriculumId);
         UserUtil.assertSameSchool(user, curriculum.getSchool());
         studentGroup.setCurriculum(curriculum);
@@ -124,14 +114,14 @@ public class StudentGroupService {
         studentGroup.setCurriculumVersion(curriculumVersion);
 
         // teacher is optional but must be from same school
-        Long teacherId = form.getTeacher() != null ? form.getTeacher().getId() : null;
-        Teacher teacher = EntityUtil.getOptionalOne(Teacher.class, teacherId, em);
+        Teacher teacher = EntityUtil.getOptionalOne(Teacher.class, form.getTeacher(), em);
         if(teacher != null) {
             UserUtil.assertSameSchool(user, teacher.getSchool());
         }
         studentGroup.setTeacher(teacher);
 
-        studentGroup = studentGroupRepository.save(studentGroup);
+        studentGroup = EntityUtil.save(studentGroup, em);
+
         // update student list in group
         Set<Long> studentIds = new HashSet<>(form.getStudents() != null ? form.getStudents() : Collections.emptyList());
         List<Student> added = new ArrayList<>();
@@ -163,45 +153,48 @@ public class StudentGroupService {
     }
 
     public void delete(StudentGroup studentGroup) {
-        EntityUtil.deleteEntity(studentGroupRepository, studentGroup);
+        EntityUtil.deleteEntity(studentGroup, em);
     }
 
     public List<StudentGroupStudentDto> searchStudents(Long schoolId, StudentGroupSearchStudentsCommand criteria) {
-        return StreamUtil.toMappedList(StudentGroupStudentDto::of, studentRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student s join curriculum_version cv on s.curriculum_version_id = cv.id join curriculum c on cv.curriculum_id = c.id join person p on s.person_id = p.id").sort("p.lastname", "p.firstname");
 
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("cv.curriculum_id = :curriculum", "curriculum", criteria.getCurriculum());
+        qb.optionalCriteria("s.curriculum_version_id = :curriculumVersion", "curriculumVersion", criteria.getCurriculumVersion());
+        qb.optionalCriteria("(s.student_group_id is null or s.student_group_id != :studentGroup)", "studentGroup", criteria.getId());
+        qb.optionalCriteria("s.language_code = :language", "language", criteria.getLanguage());
+        qb.optionalCriteria("s.study_form_code = :studyForm", "studyForm", criteria.getStudyForm());
 
-            Long studentGroupId = criteria.getId();
-            if(studentGroupId != null) {
-                // existing group, fetch only these students which are not in this group
-                Path<?> studentGroup = root.get("studentGroup").get("id");
-                filters.add(cb.or(cb.notEqual(studentGroup, studentGroupId), cb.isNull(studentGroup)));
-            }
-            filters.add(cb.equal(root.get("curriculumVersion").get("curriculum").get("id"), criteria.getCurriculum().getId()));
-            if(criteria.getCurriculumVersion() != null) {
-                filters.add(cb.equal(root.get("curriculumVersion").get("id"), criteria.getCurriculumVersion()));
-            }
-            filters.add(cb.equal(root.get("language").get("code"), criteria.getLanguage()));
-            filters.add(cb.equal(root.get("studyForm").get("code"), criteria.getStudyForm()));
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }));
+        List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code, c.name_et, c.name_en", em).getResultList();
+        return StreamUtil.toMappedList(r -> {
+            StudentGroupStudentDto dto = new StudentGroupStudentDto();
+            dto.setId(resultAsLong(r, 0));
+            dto.setFullname(PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)));
+            dto.setIdcode(resultAsString(r, 3));
+            String cvCode = resultAsString(r, 5);
+            dto.setCurriculumVersion(new AutocompleteResult(resultAsLong(r, 4),
+                    CurriculumUtil.versionName(cvCode, resultAsString(r, 6)), CurriculumUtil.versionName(cvCode, resultAsString(r, 7))));
+            return dto;
+        }, data);
     }
 
     public Map<String, ?> curriculumData(Curriculum curriculum) {
         Map<String, Object> data = new HashMap<>();
         data.put("languages", StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getStudyLang()), curriculum.getStudyLanguages()));
         List<String> studyForms;
-        if(CurriculumUtil.isHigher(curriculum.getOrigStudyLevel())) {
-            studyForms = classifierRepository.findAllCodesByMainClassCode(MainClassCode.OPPEVORM.name());
+        if(CurriculumUtil.isHigher(curriculum)) {
+            // only study forms with higher flag set
+            TypedQuery<String> q = em.createQuery("select code from Classifier where main_class_code = ?1 and higher = true", String.class);
+            q.setParameter(1, MainClassCode.OPPEVORM.name());
+            studyForms = q.getResultList();
         } else {
             studyForms = StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getStudyForm()), curriculum.getStudyForms());
         }
         data.put("studyForms", studyForms);
         data.put("origStudyLevel", EntityUtil.getCode(curriculum.getOrigStudyLevel()));
         data.put("specialities", findSpecialities(curriculum));
-        data.put("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(curriculum.getOrigStudyLevel())));
+        data.put("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(curriculum)));
         return data;
     }
 

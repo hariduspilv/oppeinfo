@@ -36,7 +36,7 @@
           <div layout="row" layout-sm="column" layout-xs="column"  >
             <md-input-container flex="60" flex-sm="100" flex-xs="100">
               <label class="textInput">{{'reception.admission.code' | translate}}</label>
-              <hois-select ng-model="criteria.admissionCode" values="saisAdmissionCodes" value-property="nameEt" ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)"></hois-select>
+              <hois-select ng-model="criteria.admissionCode" type="saisadmissioncode" value-property="nameEt" ng-required="!((criteria.applicationDateFrom && criteria.applicationDateTo)|| criteria.idCode.length || criteria.admissionCode.length)"></hois-select>
             </md-input-container>
           </div>
           <div layout="row">

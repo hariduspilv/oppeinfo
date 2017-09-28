@@ -32,7 +32,7 @@
           <input ng-model="record.person.email" name="email" type="text" required md-maxlength="255">
         </md-input-container>
 
-        <md-checkbox ng-model="record.isStudentVisible" name="isStudentVisible">
+        <md-checkbox ng-model="record.isStudentVisible" name="isStudentVisible" ng-disabled="isParent">
           {{'student.representative.studentVisible' | translate}}
         </md-checkbox>
       </div>

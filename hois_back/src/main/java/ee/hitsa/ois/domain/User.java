@@ -1,8 +1,8 @@
 package ee.hitsa.ois.domain;
 
 import java.time.LocalDate;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Entity;
@@ -14,6 +14,7 @@ import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.domain.teacher.Teacher;
 
 @Entity
 @Table(name = "user_")
@@ -23,7 +24,7 @@ public class User extends BaseEntityWithId {
     private Classifier role;
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval=true)
-    private Set<UserRights> userRights;
+    private List<UserRights> userRights;
 
     @ManyToOne(optional = false)
     @JoinColumn(nullable = false, updatable = false)
@@ -34,6 +35,8 @@ public class User extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
     private Student student;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Teacher teacher;
 
     private LocalDate validFrom;
     private LocalDate validThru;
@@ -46,11 +49,11 @@ public class User extends BaseEntityWithId {
         this.role = role;
     }
 
-    public Set<UserRights> getUserRights() {
-        return userRights == null ? (userRights = new HashSet<>()) : userRights;
+    public List<UserRights> getUserRights() {
+        return userRights == null ? (userRights = new ArrayList<>()) : userRights;
     }
 
-    public void setUserRights(Set<UserRights> userRights) {
+    public void setUserRights(List<UserRights> userRights) {
         this.userRights = userRights;
     }
 
@@ -76,6 +79,14 @@ public class User extends BaseEntityWithId {
 
     public void setStudent(Student student) {
         this.student = student;
+    }
+
+    public Teacher getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(Teacher teacher) {
+        this.teacher = teacher;
     }
 
     public LocalDate getValidThru() {

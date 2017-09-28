@@ -82,6 +82,12 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
       });
     };
 
+    function filterStudentGroups(existing) {
+      return function(it) {
+        return existing.indexOf(it.id) === -1;
+      };
+    }
+
     QueryUtils.endpoint(baseUrl+'/searchFormData').search().$promise.then(function(result) {
       var studyYears = result.studyYears;
       $scope.formState.studyYears = studyYears;
@@ -100,7 +106,7 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
       for(var i = 0, cnt = studyYears.length; i < cnt; i++) {
         var syid = studyYears[i].id;
         var existing = existingplans[syid] || [];
-        studentgroups[syid] = allstudentgroups.filter(function(it) { return existing.indexOf(it.id) === -1; });
+        studentgroups[syid] = allstudentgroups.filter(filterStudentGroups(existing));
       }
       $scope.formState.studentGroups = allstudentgroups;
       $scope.formState.studentGroupMap = studentgroups;
@@ -174,6 +180,7 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
 
     QueryUtils.endpoint(baseUrl).get({id: id}).$promise.then(function(result) {
       $scope.formState.studyPeriods = result.studyPeriods;
+      //console.log($scope.formState.studyPeriods);
       $scope.formState.weekNrs = result.weekNrs;
       $scope.formState.legends = result.legends.reduce(function(acc, item) { acc[item.weekNr] = item.color; return acc; }, {});
       delete result.studyPeriods;
@@ -287,6 +294,7 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
       $scope.formState.journalTotals = {};
       $scope.formState.grandTotals = {_: {_: createTotalsRow($scope)}};
       // initialize totals
+
       $scope.formState.capacityTypes.$promise.then(function() {
         result.journals.forEach(function(journal) {
           $scope.formState.journalTotals[journal.id] = {_: createTotalsRow($scope)};
@@ -305,19 +313,23 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
             updateJournalTotals($scope, journal, i);
           }
         });
+
+        function calculateHours(i, capacityType) {
+          return result.journals.reduce(function(sum, journal){
+            var hours = journal.hours[capacityType];
+            if(hours !== undefined) {
+              sum += hours[i];
+            }
+            return sum;
+          }, 0);
+        }
+
         $scope.formState.capacityTypes.forEach(function(c) {
           var capacityType = c.code;
           var grandTotals = $scope.formState.grandTotals;
           if(grandTotals[capacityType] !== undefined) {
             for(var i = 0, wnCnt = $scope.formState.weekNrs.length; i < wnCnt; i++) {
-              var sum = result.journals.reduce(function(sum, journal) {
-                var hours = journal.hours[capacityType];
-                if(hours !== undefined) {
-                  sum += hours[i];
-                }
-                return sum;
-              }, 0);
-              grandTotals[capacityType][i] = sum;
+              grandTotals[capacityType][i] = calculateHours(i, capacityType);
               updateTotals($scope, grandTotals, capacityType, i);
             }
           }

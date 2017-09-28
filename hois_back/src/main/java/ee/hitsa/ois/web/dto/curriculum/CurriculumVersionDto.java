@@ -8,9 +8,13 @@ import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.Size;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.hibernate.validator.constraints.NotBlank;
 
+import ee.hitsa.ois.LocalDateXmlAdapter;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
@@ -27,7 +31,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     private String code;
     @Min(0)
     @Max(10000)
-    private Integer admissionYear;
+    private Short admissionYear;
 
     @Size(max=4000)
     private String targetGroup;
@@ -73,7 +77,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
         }
         return dto;
     }
-    
+
     public Set<Long> getSpecialitiesReferenceNumbers() {
         return specialitiesReferenceNumbers != null ? specialitiesReferenceNumbers : (specialitiesReferenceNumbers = new HashSet<>());
     }
@@ -98,11 +102,11 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
         this.code = code;
     }
 
-    public Integer getAdmissionYear() {
+    public Short getAdmissionYear() {
         return admissionYear;
     }
 
-    public void setAdmissionYear(Integer admissionYear) {
+    public void setAdmissionYear(Short admissionYear) {
         this.admissionYear = admissionYear;
     }
 

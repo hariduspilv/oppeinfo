@@ -9,13 +9,11 @@ import javax.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Message;
@@ -26,7 +24,6 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
-import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.MessageForm;
 import ee.hitsa.ois.web.commandobject.MessageSearchCommand;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
@@ -81,12 +78,6 @@ public class MessageController {
         messageService.setRead(user.getPersonId(), message);
     }
 
-    @DeleteMapping("/{id:\\d+}")
-    //TODO: permission checks
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Message message, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        messageService.delete(message);
-    }
-
     @GetMapping("/parents")
     public List<MessageReceiverDto> getParents(StudentSearchCommand criteria) {
         return messageService.getStudentRepresentatives(criteria);
@@ -99,12 +90,12 @@ public class MessageController {
     public List<MessageReceiverDto> searchPersons(HoisUserDetails user, UsersSearchCommand command) {
         return messageService.searchPersons(user, command);
     }
-    
+
     @GetMapping("/students")
     public List<MessageReceiverDto> getStudents(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
         return messageService.getStudents(user.getSchoolId(), criteria, pageable);
     }
-    
+
     @GetMapping("/{studentId:\\d+}/parents")
     public List<MessageReceiverDto> getStudentsParents(HoisUserDetails user, @WithEntity("studentId") Student student) {
         UserUtil.assertSameSchool(user, student.getSchool());
@@ -118,6 +109,6 @@ public class MessageController {
             dto.setRole(Arrays.asList(Role.ROLL_L.name()));
             return dto;
         }, student.getRepresentatives().stream()
-                .filter(sr -> sr.getIsStudentVisible().equals(Boolean.TRUE)).collect(Collectors.toList()));
+                .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible())).collect(Collectors.toList()));
     }
 }

@@ -48,14 +48,14 @@ public class EhisXroadService {
             } else {
                 response = new EhisLaeKorgharidusedResponse();
             }
-            response.setError(e.toString());
-            if (response.getxRoadErrors() != Boolean.TRUE) {
+            response.setLogTxt(e.toString());
+            if (!Boolean.TRUE.equals(response.getxRoadErrors())) {
                 response.setHasOtherErrors(Boolean.TRUE);
             }
         }
         return response;
     }
-    
+
     public EhisLaeOppejoudResponse laeOppejoud(XRoadHeaderV4 header, OppejoudList oppejoudList) {
         EhisLaeOppejoudResponse response;
         EhisPortType port = service.getEhisPort();
@@ -82,8 +82,8 @@ public class EhisXroadService {
             } else {
                 response = new EhisLaeOppejoudResponse();
             }
-            response.setError(e.toString());
-            if (response.getxRoadErrors() != Boolean.TRUE) {
+            response.setLogTxt(e.toString());
+            if (!Boolean.TRUE.equals(response.getxRoadErrors())) {
                 response.setHasOtherErrors(Boolean.TRUE);
             }
         }

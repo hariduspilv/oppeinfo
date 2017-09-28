@@ -12,9 +12,15 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.CurriculumValidator.Confirmed;
+import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedHigher;
+import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedVocational;
+import ee.hitsa.ois.validation.CurriculumValidator.Joint;
+import ee.hitsa.ois.validation.CurriculumValidator.Vocational;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
@@ -46,18 +52,24 @@ public class CurriculumForm extends VersionedCommand {
     @Size(max = 50)
     private String approvalDokNr;
     @Size(max = 20000)
+    @NotNull(groups = {Confirmed.class})
     private String outcomesEt;
     @Size(max = 20000)
+    @NotNull(groups = {ConfirmedHigher.class})
     private String outcomesEn;
-    @Size(max = 4000)
+    @Size(max = 20000)
     private String structure;
     @Size(max = 20000)
+    @NotNull(groups = {Confirmed.class})
     private String admissionRequirementsEt;
     @Size(max = 20000)
+    @NotNull(groups = {ConfirmedHigher.class})
     private String admissionRequirementsEn;
     @Size(max = 20000)
+    @NotNull(groups = {Confirmed.class})
     private String graduationRequirementsEt;
     @Size(max = 20000)
+    @NotNull(groups = {ConfirmedHigher.class})
     private String graduationRequirementsEn;
     @Min(0)
     @Max(999)
@@ -86,8 +98,10 @@ public class CurriculumForm extends VersionedCommand {
     @Size(max = 1000)
     private String otherLanguages;
     @Size(max = 20000)
+    @NotNull(groups = {ConfirmedHigher.class})
     private String objectivesEt;
     @Size(max = 20000)
+    @NotNull(groups = {ConfirmedHigher.class})
     private String objectivesEn;
     @Size(max = 20000)
     private String addInfo;
@@ -108,6 +122,7 @@ public class CurriculumForm extends VersionedCommand {
     @Min(0)
     @Max(999)
     private BigDecimal optionalStudyCredits;
+    @NotNull(groups = {Confirmed.class})
     private LocalDate validFrom;
     private LocalDate validThru;
 
@@ -124,17 +139,17 @@ public class CurriculumForm extends VersionedCommand {
     @NotNull
     @ClassifierRestriction({MainClassCode.EKR, MainClassCode.OPPEASTE})
     private String origStudyLevel;
+    @NotNull(groups = {Vocational.class})
     @ClassifierRestriction({MainClassCode.ISCED_RYHM, MainClassCode.ISCED_VALD, MainClassCode.ISCED_SUUN})
     private String iscedClass;
     @NotNull
-    @ClassifierRestriction(MainClassCode.OPPEKAVA_STAATUS)
-    private String status;
-    @NotNull
     @ClassifierRestriction(MainClassCode.OPPEKAVA_LOOMISE_VIIS)
     private String draft;
-
+    @NotEmpty
     private Set<String> studyLanguages;
+    @NotEmpty(groups = {ConfirmedVocational.class})
     private Set<String> studyForms;
+    @NotEmpty(groups = {Confirmed.class})
     private Set<Long> schoolDepartments;
     @Valid
     private Set<CurriculumFileDto> newFiles;
@@ -142,9 +157,12 @@ public class CurriculumForm extends VersionedCommand {
     @Valid
     private Set<CurriculumGradeDto> grades;
     @Valid
+    @NotEmpty(groups = {Joint.class})
     private Set<CurriculumJointPartnerDto> jointPartners;
     @Valid
+    @NotEmpty(groups = {ConfirmedHigher.class})
     private Set<CurriculumSpecialityDto> specialities;
+    @NotEmpty(groups = {ConfirmedVocational.class})
     @Valid
     private Set<CurriculumModuleDto> modules;
     @Valid
@@ -626,14 +644,6 @@ public class CurriculumForm extends VersionedCommand {
 
     public void setIscedClass(String iscedClass) {
         this.iscedClass = iscedClass;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public String getDraft() {

@@ -24,9 +24,8 @@ angular.module('hitsaOis').controller('ReceptionSaisAdmissionImportController', 
         }
         message.info('reception.admission.importFinished');
         $mdDialog.hide();
-      }).catch(function() {
-        $mdDialog.hide();
-      });
+      }).catch($mdDialog.hide);
+
       var parentEl = angular.element(document.body);
       $mdDialog.show({
         parent: parentEl,

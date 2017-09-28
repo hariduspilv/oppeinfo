@@ -1,27 +1,29 @@
 'use strict';
 
 angular.module('hitsaOis')
-  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier) {
+  .factory('AuthService', function ($http, $q, Session, Menu, config, Classifier, $sce, $rootScope) {
+    var JWT_TOKEN_HEADER = 'Authorization';
     var authService = {};
     var roleMapper = Classifier.valuemapper({role: 'ROLL'});
 
-    var newUser = function (response) {
+    var authenticatedUser = function (response) {
       Menu.setMenu(response.data);
       if (response.data && response.data.user) {
-        roleMapper.objectmapper(response.data.users);
         $q.all(roleMapper.promises).then(function () {
+          roleMapper.objectmapper(response.data.users);
           for (var i = 0; i < response.data.users.length; i++) {
-            response.data.users[i].nameEn = response.data.users[i].role.nameEn;
-            response.data.users[i].nameEt = response.data.users[i].role.nameEt;
-            response.data.users[i].nameRu = response.data.users[i].role.nameRu;
             if (response.data.users[i].schoolCode) {
-              response.data.users[i].nameEn = response.data.users[i].nameEn + ' ' + response.data.users[i].schoolCode;
-              response.data.users[i].nameEt = response.data.users[i].nameEt + ' ' + response.data.users[i].schoolCode;
-              response.data.users[i].nameRu = response.data.users[i].nameRu + ' ' + response.data.users[i].schoolCode;
+              response.data.users[i].nameEn = response.data.users[i].role.nameEn + ' ' + response.data.users[i].schoolCode;
+              response.data.users[i].nameEt = response.data.users[i].role.nameEt + ' ' + response.data.users[i].schoolCode;
+              response.data.users[i].nameRu = response.data.users[i].role.nameRu + ' ' + response.data.users[i].schoolCode;
+            } else {
+              response.data.users[i].nameEn = response.data.users[i].role.nameEn;
+              response.data.users[i].nameEt = response.data.users[i].role.nameEt;
+              response.data.users[i].nameRu = response.data.users[i].role.nameRu;
             }
           }
         });
-        Session.create(response.data.user, response.data.authorizedRoles, response.data.school, response.data.roleCode);
+        Session.create(response.data);
         return response.data;
       } else {
         Session.destroy();
@@ -32,21 +34,35 @@ angular.module('hitsaOis')
     authService.login = function (headers) {
       return $http.get(config.apiUrl + '/user', {headers : headers})
         .then(function (res) {
-          return newUser(res);
+          return authenticatedUser(res);
         });
+    };
+
+    authService.loginIdCard = function () {
+      return $http.get($sce.trustAsUrl(config.idCardLoginUrl))
+        .then(function (idLoginResult) {
+          var headers = {headers: {}};
+          headers[JWT_TOKEN_HEADER] = idLoginResult.headers(JWT_TOKEN_HEADER);
+          return authService.login(headers);
+        });
+    };
+
+    authService.postLogout = function() {
+      Session.destroy();
+      Menu.setMenu({});
+      $rootScope.restartTimeoutDialogCounter();
     };
 
     authService.logout = function () {
       return $http.post(config.apiUrl + '/logout', {}).finally(function() {
-        Session.destroy();
-        Menu.setMenu({});
+        authService.postLogout();
       });
     };
 
     authService.changeUser = function (userId) {
       return $http.post(config.apiUrl + '/changeUser', {id:userId})
         .then(function (res) {
-          return newUser(res);
+          return authenticatedUser(res);
       });
     };
 
@@ -107,7 +123,7 @@ angular.module('hitsaOis')
     return {
       resolve: function () {
         var deferred = $q.defer();
-        var unwatch = $rootScope.$watch('currentUser', function (currentUser) {
+        var unwatch = $rootScope.$watch('state.currentUser', function (currentUser) {
           if (angular.isDefined(currentUser)) {
             if (currentUser) {
               var authObject = angular.extend({}, currentUser);
@@ -158,21 +174,81 @@ angular.module('hitsaOis')
     reAuthenticate: 'auth-re'
   })
   .service('Session', function () {
-    this.create = function (userId, authorizedRoles, school, roleCode) {
-      this.userId = userId;
-      this.authorizedRoles = authorizedRoles;
-      this.school = school;
-      this.roleCode = roleCode;
+    this.create = function (user) {
+      this.userId = user.user;
+      this.studentId = user.student;
+      this.teacherId = user.teacher;
+      this.authorizedRoles = user.authorizedRoles;
+      this.school = user.school;
+      this.roleCode = user.roleCode;
+      this.vocational = user.vocational;
+      this.higher = user.higher;
+      this.timeoutInSeconds = user.sessionTimeoutInSeconds;
     };
     this.destroy = function () {
       this.userId = null;
+      this.studentId = null;
+      this.teacherId = null;
       this.authorizedRoles = [];
       this.school = {};
       this.roleCode = null;
+      this.vocational = undefined;
+      this.higher = undefined;
+      this.timeoutInSeconds = null;
     };
   })
   .constant('USER_ROLES', {
     ROLE_OIGUS_V_TEEMAOIGUS_A: 'ROLE_OIGUS_V_TEEMAOIGUS_A',
-    ROLE_OIGUS_V_TEEMAOIGUS_P: 'ROLE_OIGUS_V_TEEMAOIGUS_P'
+    ROLE_OIGUS_V_TEEMAOIGUS_P: 'ROLE_OIGUS_V_TEEMAOIGUS_P',
+
+    ROLE_OIGUS_V_TEEMAOIGUS_AINE: 'ROLE_OIGUS_V_TEEMAOIGUS_AINE',	//Õppeained
+    ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA: 'ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA',	//Aine-õpetaja paarid
+    ROLE_OIGUS_V_TEEMAOIGUS_AKADKALENDER: 'ROLE_OIGUS_V_TEEMAOIGUS_AKADKALENDER',	//Akadeemiline kalender
+    ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_EHIS: 'ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_EHIS',	//EHIS andmevahetus
+    ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_SAIS: 'ROLE_OIGUS_V_TEEMAOIGUS_ANDMEVAHETUS_SAIS',	//SAIS andmevahetus
+    ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE: 'ROLE_OIGUS_V_TEEMAOIGUS_AUTOTEADE',	//Automaatsete teadete mallid
+    ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS: 'ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS',	//Avaldused
+    ROLE_OIGUS_V_TEEMAOIGUS_DIPLOM: 'ROLE_OIGUS_V_TEEMAOIGUS_DIPLOM',	//Diplomid/lõputunnistused
+    ROLE_OIGUS_V_TEEMAOIGUS_DOKALLKIRI: 'ROLE_OIGUS_V_TEEMAOIGUS_DOKALLKIRI',	//Dokumentide kooskõlastajad
+    ROLE_OIGUS_V_TEEMAOIGUS_EKSAM: 'ROLE_OIGUS_V_TEEMAOIGUS_EKSAM',	//Eksamid
+    ROLE_OIGUS_V_TEEMAOIGUS_ESINDAVALDUS: 'ROLE_OIGUS_V_TEEMAOIGUS_ESINDAVALDUS',	//Esindajate avaldused
+    ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT: 'ROLE_OIGUS_V_TEEMAOIGUS_HINNETELEHT',	//Akad. õiendid/hinnetelehed
+    ROLE_OIGUS_V_TEEMAOIGUS_HOONERUUM: 'ROLE_OIGUS_V_TEEMAOIGUS_HOONERUUM',	//Hooned/ruumid
+    ROLE_OIGUS_V_TEEMAOIGUS_KASKKIRI: 'ROLE_OIGUS_V_TEEMAOIGUS_KASKKIRI',	//Käskkirjad
+    ROLE_OIGUS_V_TEEMAOIGUS_KASUTAJA: 'ROLE_OIGUS_V_TEEMAOIGUS_KASUTAJA',	//Kasutajad
+    ROLE_OIGUS_V_TEEMAOIGUS_KLASSIFIKAATOR: 'ROLE_OIGUS_V_TEEMAOIGUS_KLASSIFIKAATOR',	//Klassifikaatorid
+    ROLE_OIGUS_V_TEEMAOIGUS_KOMISJON: 'ROLE_OIGUS_V_TEEMAOIGUS_KOMISJON',	//Komisjonid
+    ROLE_OIGUS_V_TEEMAOIGUS_LEPING: 'ROLE_OIGUS_V_TEEMAOIGUS_LEPING',	//Lepingud
+    ROLE_OIGUS_V_TEEMAOIGUS_LOPBLANKETT: 'ROLE_OIGUS_V_TEEMAOIGUS_LOPBLANKETT',	//Blanketid
+    ROLE_OIGUS_V_TEEMAOIGUS_LOPMOODULPROTOKOLL: 'ROLE_OIGUS_V_TEEMAOIGUS_LOPMOODULPROTOKOLL',	//Lõputöö moodulite protokollid
+    ROLE_OIGUS_V_TEEMAOIGUS_LOPPROTOKOLL: 'ROLE_OIGUS_V_TEEMAOIGUS_LOPPROTOKOLL',	//Lõputöö protokollid
+    ROLE_OIGUS_V_TEEMAOIGUS_LOPTEEMA: 'ROLE_OIGUS_V_TEEMAOIGUS_LOPTEEMA',	//Lõputöö teemad
+    ROLE_OIGUS_V_TEEMAOIGUS_MOODULPROTOKOLL: 'ROLE_OIGUS_V_TEEMAOIGUS_MOODULPROTOKOLL',	//Moodulite protokollid
+    ROLE_OIGUS_V_TEEMAOIGUS_OPETAJA: 'ROLE_OIGUS_V_TEEMAOIGUS_OPETAJA',	//Õpetaja
+    ROLE_OIGUS_V_TEEMAOIGUS_OPETAJAAMET: 'ROLE_OIGUS_V_TEEMAOIGUS_OPETAJAAMET',	//Õpetaja ametikohad
+    ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA: 'ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA',	//Õpingukavad
+    ROLE_OIGUS_V_TEEMAOIGUS_OPPEASUTUS: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPEASUTUS',	//Õppeasutused
+    ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPEKAVA',	//Õppekavad
+    ROLE_OIGUS_V_TEEMAOIGUS_OPPEPERIOOD: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPEPERIOOD',	//Õppeperioodid
+    ROLE_OIGUS_V_TEEMAOIGUS_OPPERYHM: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPERYHM',	//Õpperühmad
+    ROLE_OIGUS_V_TEEMAOIGUS_OPPETASE: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPETASE',	//Õppetasemed
+    ROLE_OIGUS_V_TEEMAOIGUS_OPPETOOGRAAFIK: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPETOOGRAAFIK',	//Õppetöögraafik
+    ROLE_OIGUS_V_TEEMAOIGUS_OPPETULEMUS: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPETULEMUS',	//Õppetulemused
+    ROLE_OIGUS_V_TEEMAOIGUS_OPPUR: 'ROLE_OIGUS_V_TEEMAOIGUS_OPPUR',	//Õppurid
+    ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK: 'ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK',	//Päevikud
+    ROLE_OIGUS_V_TEEMAOIGUS_PARING: 'ROLE_OIGUS_V_TEEMAOIGUS_PARING',	//Päringud
+    ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAPAEVIK: 'ROLE_OIGUS_V_TEEMAOIGUS_PRAKTIKAPAEVIK',	//Praktika päevikud
+    ROLE_OIGUS_V_TEEMAOIGUS_PROTOKOLL: 'ROLE_OIGUS_V_TEEMAOIGUS_PROTOKOLL',	//Protokollid
+    ROLE_OIGUS_V_TEEMAOIGUS_PUUDUMINE: 'ROLE_OIGUS_V_TEEMAOIGUS_PUUDUMINE',	//Puudumistõendid
+    ROLE_OIGUS_V_TEEMAOIGUS_RIIKLIKOPPEKAVA: 'ROLE_OIGUS_V_TEEMAOIGUS_RIIKLIKOPPEKAVA',	//Riiklikud õppekavad
+    ROLE_OIGUS_V_TEEMAOIGUS_STRUKTUUR: 'ROLE_OIGUS_V_TEEMAOIGUS_STRUKTUUR',	//Struktuuriüksused
+    ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS: 'ROLE_OIGUS_V_TEEMAOIGUS_SYNDMUS',	//Sündmused
+    ROLE_OIGUS_V_TEEMAOIGUS_T: 'ROLE_OIGUS_V_TEEMAOIGUS_T',	//Õppuri üldine õigus
+    ROLE_OIGUS_V_TEEMAOIGUS_TOEND: 'ROLE_OIGUS_V_TEEMAOIGUS_TOEND',	//Tõendid
+    ROLE_OIGUS_V_TEEMAOIGUS_TUNDAEG: 'ROLE_OIGUS_V_TEEMAOIGUS_TUNDAEG',	//Tundide ajad
+    ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN: 'ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN',	//Tunnijaotusplaan
+    ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN: 'ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN',	//Tunniplaan
+    ROLE_OIGUS_V_TEEMAOIGUS_VASTUVOTT: 'ROLE_OIGUS_V_TEEMAOIGUS_VASTUVOTT',	//Vastuvõtt
+    ROLE_OIGUS_V_TEEMAOIGUS_YLDTEADE: 'ROLE_OIGUS_V_TEEMAOIGUS_YLDTEADE'	//Üldteated
   })
 ;

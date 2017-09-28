@@ -31,9 +31,11 @@
       "save": "Salvesta",
       "search": "Otsi",
       "sendToEhis": "Saada EHISesse",
+      "sendToEkis": "Saada EKISesse",
       "send": "Saada",
       "update": "Uuenda",
       "uploadFile": "Lae fail",
+      "selectFile": "Vali fail",
       "updateFromEhis": "Uuenda staatust EHISest",
       "submit": "Esita",
       "allowSubmit": "Luba esitada",
@@ -44,16 +46,22 @@
       "classifiersFile": "Klassifikaatorite fail",
       "csvSampleFile": "CSV Faili näidis",
       "calculate": "Arvuta",
+      "addNewRow": "Lisa uus rida",
+      "refresh": "Värskenda",
       "status": {
         "approving": "Menetle",
         "close": "Sulge ÕK",
         "confirm": "Kinnita",
         "edit": "Sisesta õk"
-      }
+      },
+      "insertHigherCurriculum": "Kõrghariduse õppekava lisamine",
+      "insertVocationalCurriculum": "Kutseõppe õppekava lisamine"
     },
     "messages": {
       "confirm": "Kas oled kindel?",
       "confirmFormDataNotSaved": "Vormil olevad andmed on salvestamata, kas oled kindel?",
+      "sessionIsTimingOut": "Teie sessioon hakkab aeguma. Värskenda sessiooni?",
+      "sessionHasTimedOut": "Teie sessioon on aegunud.",
       "update": {
         "success": "Salvestamine õnnestus"
       },
@@ -75,10 +83,15 @@
         "atLeastOneMustBeSelected": "Vähemalt üks peab olema valitud",
         "unique": "Kirje pole unikaalne",
         "fileAlreadyExists": "Sama fail juba eksisteerib",
-        "integer": "Peab olema täisarv!"
+        "integer": "Peab olema täisarv!",
+        "estonianIdcode": "Isikukood ei vasta standardile",
+        "configuration": {
+          "missingAutomaticMessageTempalate": "Süsteemis on puudu automaatse teate mall {{template}} koolile {{school}}"
+        }
       },
       "form-has-errors": "Vormil on vigu",
       "record": {
+        "modified": "Kirjet on muudetud",
         "referenced": "Kirjega on seotud teisi kirjeid"
       },
       "system": {
@@ -157,31 +170,65 @@
           "new": "Avalduse koostamine"
         }
       },
+      "academicCalendar": {
+        "label": "Akadeemiline kalender"
+      },
+      "viewTimetable": {
+        "label": "Tunniplaani vaatamine"
+      },
+      "curriculums": {
+        "label": "Õppekavad"
+      },
+      "subjects": {
+        "label": "Õppeained"
+      },
       "certificates": {
         "label": "Tõendid",
         "search": "Tõendite otsing"
       },
       "curriculum": {
-        "label": "Õppekavad"
+        "label": "Õppekavad",
+        "schoolCurriculums": "Kooli õppekavad",
+        "stateCurriculums": "Riiklikud õppekavad",
+        "subjects": "Õppeained"
       },
       "directives": {
         "label": "Käskkirjad",
         "search": "Käskkirjade otsing"
       },
-      "fixData": {
-        "label": "Püsiandmed",
+      "settings": {
+        "label": "Seaded",
         "buildings": "Hooned ja ruumid",
         "schools": "Õppeasutused",
         "departments": "Struktuuriüksused",
         "teacheroccupations": "Õpetaja ametikohad",
-        "directivecoordinators": "Käskkirjade kooskõlastajad",
-        "generalmessages": "Üldteadete haldamine",
+        "documentcoordinators": "Dokumentide kooskõlastajad",
+        "generalmessages": "Üldteated",
         "messageTemplates": "Automaatsete teadete mallid",
-        "studyLevels": "Õppeasutuse õppetasemed",
-        "studyYears": "Õppeasutuse õppeperioodid",
+        "studyLevels": "Õppetasemed",
+        "studyYears": "Õppeperioodid",
         "classifiers": "Klassifikaatorid",
         "users": "Kasutajad",
         "saisClassifiers": "Klassifikaatorid SAISist"
+      },
+      "mainData": {
+        "label": "Püsiandmed",
+        "schools": "Õppeasutused",
+        "classifiers": "Klassifikaatorid",
+        "saisClassifiers": "Klassifikaatorid SAISist",
+        "users": "Kasutajad"
+      },
+      "timetableLink": {
+        "label": "Tunniplaan"
+      },
+      "studentRepresentative": {
+        "label": "Esindatav õppur"
+      },
+      "studentStudyInformation": {
+        "label": "Õppuri õppeinfo",
+        "journal": "Päevik",
+        "practiceJournal": "Praktikapäevik",
+        "results" :"Õppetulemused"
       },
       "lessonplan": {
         "label": "Tunniplaanid",
@@ -196,10 +243,12 @@
         "label": "Vastuvõtt",
         "import": "Avalduste import CSV",
         "saisAdmission": {
+          "label": "Konkursid",
           "search": "Konkursi otsing",
           "importSais": "Konkursid SAISist"
         },
         "saisApplication": {
+          "label": "Vastuvõtu avaldused",
           "search": "Vastuvõtu avalduste otsing",
           "importSais": "Avaldused SAISist"
         }
@@ -210,11 +259,24 @@
         "students": "Õppurid",
         "studentstatistics": "Õppurite statistika",
         "studentstatisticsbyperiod": "Õppurite statistika perioodis",
-        "teachersload": "Õpetaja koormus"
+        "teachersloadhigher": "Õpetaja koormus (kõrg)",
+        "teachersloadvocational": "Õpetaja koormus (kutse)"
+      },
+      "graduation": {
+        "label": "Lõpetamine",
+        "committees": "Kaitsmiskomisjonid",
+        "thesisTopics": "Lõputöö teemad",
+        "thesisProtocols": "Lõp. protokollid",
+        "forms": "Blanketid",
+        "documentsPreparation": "Dokumentide ettevalmistamine",
+        "documentsPrint": "Dokumentide trükk"
       },
       "student": {
         "label": "Õppurid",
-        "search": "Õppurite otsing"
+        "search": "Õppurite otsing",
+        "studentInfo": "Õppurite andmed",
+        "studentGroups": "Õpperühmad",
+        "absences": "Puudumistõendid"
       },
       "studentGroup": {
         "label": "Õpperühmad",
@@ -222,25 +284,58 @@
       },
       "study": {
         "label": "Õppetöö",
-        "subjectTeacher": "Aine-õppejõu paarid",
         "declaration": "Deklareerimine",
         "notifications": "Teated",
         "journal": {
-          "search": "Päevikute otsing"
+          "label": "Päevikud",
+          "search": "Päevikute otsing",
+          "journalsHigher": "Päevikud (kõrg)",
+          "journalsVocational": "Päevikud (kutse)"
         },
         "moduleProtocol": {
+          "label": "Moodulite protokollid",
           "search": "Mooduli protokolli otsing"
+        },
+        "protocol": {
+          "search": "Protokollid"
+        },
+        "contract": {
+          "search": "Praktikalepingute otsing"
+        },
+        "practiceJournal" : {
+          "label": "Praktikapäevikud",
+          "search": "Praktika päevikute otsing",
+          "student": {
+            "list": "Minu praktika päevikud"
+          }
+        },
+        "examTimes": "Eksamite ajad",
+        "exams": "Eksamid",
+        "absences": "Puudumistõendid",
+        "loads": "Planeeritud koormused",
+        "students": "Õppurid",
+        "declarations": "Õpingukavad"
+      },
+      "studyPreparation": {
+        "label": "Õppetöö ettevalmistus",
+        "subjectTeacher": "Aine-õppejõu paarid",
+        "studyYearSchedule": {
+          "legend": "Õppetöögraafiku legendid",
+          "edit": "Õppetöögraafik"
+        },
+        "lessonTime": "Tundide ajad",
+        "subjectStudyPeriods": {
+          "label": "Koormuste planeerimine",
+          "search": "Aine-õpetaja paarid",
+          "plans": "Õppeainete koormused",
+          "studentGroups": "Õpperühmade koormused"
+        },
+        "timetableManagement": {
+          "label": "Tunniplaani haldamine"
+        },
+        "events": {
+          "label": "Sündmused"
         }
-      },
-      "studyYearSchedule": {
-        "legend": "Õppetöögraafiku legend",
-        "edit": "Õppetöögraafik"
-      },
-      "subjectStudyPeriods": {
-        "label": "Koormuste planeerimine",
-        "search": "Aine-õpetaja paarid",
-        "plans": "Õppeainete koormused",
-        "studentGroups": "Õpperühmade koormused"
       },
       "teachers": {
         "label": "Õpetajad",
@@ -251,28 +346,85 @@
         "lessonTime": {
           "search": "Tundide aegade otsing",
           "insert": "Tundide aegade sisestamine"
+        },
+        "myTimetable": {
+          "label": "Minu tunniplaan"
+        },
+        "generalTimetable": {
+          "label": "Üldine tunniplaan"
+        },
+        "timetableManagement": {
+          "label": "Tunniplaani haldamine"
         }
       },
       "dataexchange": {
         "label": "Andmevahetus",
-        "teacherinfo": {
-          "export": "Õppejõudude andmed"
-         }
+        "ehisLogs": "EHISe andmevahetuse logi",
+        "studentinfoExport": "Õppurid",
+        "teacherinfoExportHigher": "Õppejõud",
+        "teacherinfoExportVocational": "Pedagoogid"
       },
       "declaration": {
         "current": "Õpingukava koostamine",
         "search": "Õpingukavad"
+      },
+      "documents": {
+        "label": "Dokumendid",
+        "applications": "Avaldused",
+        "directives": "Käskkirjad",
+        "certificates": "Tõendid",
+        "practiceContracts": "Praktikalepingud",
+        "representativeApplications": "Esindajate avaldused"
+      },
+      "myData": {
+        "label": "Minu andmed"
+      },
+      "myStudyInformation": {
+        "label": "Minu õppeinfo",
+        "journal": "Päevik",
+        "practiceJournal": "Praktikapäevik",
+        "results": "Õppetulemused",
+        "declaration": "Õpingukava",
+        "examRegistration": "Eksamile registreerimine",
+        "thesisTopicInput": "Lõputöö teema sisestamine",
+        "otherStudents": "Õppurid"
+      },
+      "timetableAndEvents": {
+        "label": "Tunniplaan ja sündmused",
+        "timetable": "Tunniplaan",
+        "events": "Sündmused"
+      },
+      "practiceAndGraduation": {
+        "label": "Praktika ja lõpetamine",
+        "practiceJournal": "Praktikapäevik",
+        "committees": "Kaitsmiskomisjonid",
+        "thesisProtocols": "Lõp. protokollid",
+        "thesisTopics": "Lõputöö teema"
       }
     }
   },
   "home": {
     "generalmessages": "Üldteated",
     "greeting": "Tere tulemast ÕISi",
-    "joinedSchools": "ÕISi liitunud õppeasutused:"
+    "joinedSchools": "ÕISi liitunud õppeasutused:",
+    "represantiveApplication": "Esita avaldus õppuri andmete nägemiseks"
+  },
+  "academicCalendar": {
+    "studyYear": "Õppeaasta",
+    "date": "Kuupäev",
+    "description": "Kirjeldus",
+    "beginning": "Algus",
+    "end": "Lõpp",
+    "notFound": "Akadeemilise kalendri sündmusi ei leitud"
+  },
+  "generalTimetable": {
+    "curriculum": "Õppekava",
+    "studentGroups": "Õpperühm(ad)"
   },
   "student": {
     "label": "Õppur",
     "absences": "Puudumistõendid",
+    "results": "Õpitulemused",
     "address": "Postiaadress",
     "bankaccount": "Arveldusarve",
     "boardingSchool": "Õpilaskodu koht",
@@ -280,6 +432,7 @@
     "contact": "Kontaktandmed",
     "course": "Kursus/õppeaasta",
     "curriculum": "Õppekava",
+    "curriculumVersion": "Õppekava versioon",
     "curriculumSpeciality": "Peaeriala",
     "documents": "Dokumendid",
     "email": "E-posti aadress",
@@ -288,6 +441,7 @@
     "firstname": "Eesnimi",
     "foreignStudy": "Välisõppes viibimine",
     "idcode": "Isikukood",
+    "implementationPlan": "Rakenduskava",
     "isRepresentativeMandatory": "Õppuril peab olema esindaja",
     "isSpecialNeed": "Õppuril on erivajadus",
     "language": "Suhtluskeel",
@@ -365,6 +519,52 @@
         "status": "Staatus",
         "title": "Avalduse kinnitamine"
       }
+    },
+    "result": {
+      "curriculumCredits": "Õppekava maht",
+      "totalCredits": "Kokku EKAP",
+      "kkh": "KKH",
+      "curriculumFulfilled": "Õppekava täidetud",
+      "notFulfilled": "ei ole täidetud",
+      "fulfilled": "täidetud",
+      "curriculumFulfillment": "Õppekava täitmine",
+      "inOrderOfStudyYear": "Õppeaastate kaupa",
+      "inOrderOfStudyPeriod": "Õppeperioodide kaupa",
+      "inOrderOfPassing": "Sooritamise järjekorras",
+      "moduleTheme": "Moodul/teema",
+      "theme": "Teema",
+      "ekap": "EKAP",
+      "grade": "Hinne",
+      "date": "Kuupäev",
+      "teacher": "Õpetaja",
+      "studyLoad": "Õppekoormus",
+      "isOk": "Korras",
+      "totalRequired": "Kokku vaja",
+      "totalSubmitted": "Kogutud",
+      "difference": "Hälve",
+      "moduleNotGraded": "Moodul hindamata",
+      "otherModuleResults": "Õppekava välised sooritused",
+      "missing": "Tulemused puuduvad",
+      "higher": {
+        "curriculumVersion": "Õppekava versioon",
+        "totalCredits": "",
+        "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP",
+        "mandatorySubjects": "Kohustuslikud ained",
+        "optionalSubjects": "Valikained",
+        "subject": "Õppeaine",
+        "subjectCode": "Ainekood",
+        "credits": "EAP",
+        "overallCredits": "KOKKU EAP",
+        "grade": "Hinne",
+        "date": "Kuupäev",
+        "teacher": "Õpetaja",
+        "module": "Moodul",
+        "electiveModules": "Valikmoodulid",
+        "electiveModulesRequired": "Kohustuslik täitmiseks",
+        "required": "Kohustuslik",
+        "electiveModulesCompleted": "Täidetud"
+
+      }
     }
   },
   "subject": {
@@ -394,6 +594,7 @@
     "evaluationEn": "Hindamiskriteeriumid inglise keeles",
     "independentStudyEt": "Iseseisev töö eesti keeles",
     "independentStudyEn": "Iseseisev töö inglise keeles",
+    "isPractice": "Praktika aine",
     "language": "Õppetöö keel",
     "linkDepartment": "Seos struktuuriüksusega",
     "nameEn": "Õppeaine nimetus inglise keeles",
@@ -407,8 +608,16 @@
     "mandatoryPrerequisiteSubjects": "Kohustuslikud eeldusained",
     "recommendedPrerequisiteSubjects": "Soovituslikud eeldusained",
     "substituteSubjects": "Asendusained",
-    "alreadyexist": "Õppeaine kood peab olema unikaalne õppeasutuse lõikes",
-    "alreadyConnected": "Õppeaine {{subject}} on juba seotud"
+    "alreadyexist": "Õppeaine kood peab olema unikaalne õppeasutuse raames",
+    "alreadyConnected": "Õppeaine {{subject}} on juba seotud",
+    "prompt": {
+      "saveAndConfirm": "Kas soovid salvestada ja muuta õppeaine staatuse kehtivaks?",
+      "saveAndUnconfirm": "Kas soovid salvestada ja muuta õppeaine staatuse passiivseks?"
+    },
+    "message": {
+      "savedAndConfirmed": "Salvestamine õnnestus. Õppeaine staatus on \"kehtiv\"",
+      "savedAndUnconfirmed": "Salvestamine õnnestus. Õppeaine staatus on \"passiivne\""
+    }
   },
   "school": {
     "address": "Aadress",
@@ -417,8 +626,13 @@
     "deleteconfirm": "Kas oled kindel, et soovid õppeasutust kustutada?",
     "ehisId": "EHISe ID",
     "email": "E-post",
+    "emailDomain": "Õppeasutuse e-posti domeen",
+    "generateUserEmail": "E-posti automaatne genereerimine uuele kasutajale",
     "id": "ID",
     "label": "Õppeasutus",
+    "missing": {
+      "emailDomain": "Õppeasutuse e-posti domeen puudub"
+    },
     "name": "Õppeasutuse nimetus",
     "nameEn": "Õppeasutuse nimetus inglise keeles",
     "phone": "Telefon",
@@ -470,7 +684,10 @@
     "isVocational": "Kutseõpe",
     "isHigher": "Kõrgharidusõpe",
     "studyLevels": "Õppetasemed",
-    "deleteconfirm": "Kas oled kindel, et soovid klassifikaatori kustutada?"
+    "deleteconfirm": "Kas oled kindel, et soovid klassifikaatori kustutada?",
+    "prompt": {
+      "deleteParent": "Kas oled kindel, et soovid seost kustutada?"
+    }
   },
   "saisClassifier": {
     "name": "Nimetus",
@@ -489,10 +706,11 @@
     "cancel": "Tühista",
     "cancelconfirm": "Kas oled kindel, et soovid käskkirja tühistada?",
     "canceledDirective": "Tühistatav käskkiri",
+    "cancelingDirectives": "Tühistamise käskkirjad",
     "cancelType": "Käskkirja tühistamise liik",
     "confirmDate": "Kinnitamise kuupäev",
-    "confirmDateFrom": "Kinnitamise kuupäev alates",
-    "confirmDateThru": "Kinnitamise kuupäev kuni",
+    "confirmDateFrom": "Kinnitamise kp alates",
+    "confirmDateThru": "Kinnitamise kp kuni",
     "confirmDuringTest": "Kinnita käskkiri",
     "confirmconfirm": "Kas kinnitada käskkiri?",
     "confirmed": "Käskkiri kinnitatud",
@@ -504,8 +722,9 @@
     "headline": "Pealkiri",
     "inserted": "Koostamise kuupäev",
     "insertedBy": "Koostaja",
-    "insertedFrom": "Koostamise kuupäev alates",
-    "insertedThru": "Koostamise kuupäev kuni",
+    "insertedFrom": "Koostamise kp alates",
+    "insertedThru": "Koostamise kp kuni",
+    "missingstudents": "Käskkirjal pole õppureid",
     "nostudentsfound": "Õppureid ei leitud",
     "preamble": "Preambula",
     "sendToConfirm": "Saada kinnitamisele",
@@ -579,11 +798,12 @@
     "deleteconfirm": "Kas oled kindel, et soovid üldteate kustutada?",
     "targets": "Sihtgrupp",
     "title": "Pealkiri",
-    "validFrom": "Kuvamise alguskuupäev",
-    "validThru": "Kuvamise lõppkuupäev"
+    "validFrom": "Kuvamise algus kp",
+    "validThru": "Kuvamise lõpp kp"
   },
   "lessonplan": {
     "addjournal": "Lisa uus päevik",
+    "addPlanDialog": "Uus tunnijaotusplaan",
     "credits": "EKAP",
     "curriculumVersion": "Õppekava",
     "grandTotal": "KÕIK KOKKU",
@@ -696,7 +916,14 @@
     "invalidIdcode": "Vale isikukood!",
     "otherName": "Õppuri nimi",
     "otherIdcode": "Õppuri isikukood",
-    "signatoriesMissing": "Tõendi allkirjastajad puuduvad, palun pöördu õppespetsialisti poole"
+    "signatoriesMissing": "Tõendi allkirjastajad puuduvad, palun pöördu õppespetsialisti poole",
+    "saveAndOrder": "Salvesta ja telli tõend",
+    "status": "Tõendi staatus",
+    "viewFromEkis": "Vaata tõendit siit (EKIS)",
+    "error": {
+      "studentNotFinished": "Õppur ei ole lõpetanud õppekava",
+      "studentNotActive": "Õppur ei ole aktiivne"
+    }
   },
   "stateCurriculum": {
     "curricula": "Seotud kutseõppe õppekavad",
@@ -708,7 +935,6 @@
     },
     "prompt": {
       "viewForm": {
-        "verify": "Kas oled kindel, et soovid riikliku õppekava kinnitada?",
         "close": "Kas oled kindel, et soovid riikliku õppekava sulgeda?"
       },
       "editForm": {
@@ -721,7 +947,6 @@
       "closed": "Õppekava on suletud",
       "fail": {
         "verify": "Andmete salvestamine ja kinnitamine ebaõnnestus. Kohustuslikud väljad on täitmata",
-        "verifyReadOnly": "Andmete kinnitamine ebaõnnestus",
         "close": "Andmete salvestamine ja sulgemine ebaõnnestus. Kohustuslikud väljad on täitmata",
         "closeReadOnly": "Andmete sulgemine ebaõnnestus"
       }
@@ -730,6 +955,7 @@
     "confirmconfirm": "Kas oled kindel, et soovid riikliku õppekava salvestada ja kinnitada?",
     "closeconfirm": "Kas oled kindel, et soovid riikliku õppekava salvestada ja sulgeda?",
     "occupationdeleteconfirm": "Kas oled kindel, et soovid kutse kustutada?",
+    "occupationWithModuleDeleteConfirm": "Kas oled kindel, et soovid kutse kustutada? Selle kutsega seotud moodulid kustutatakse",
     "name": "Riiklik õppekava",
     "EKR": "EKR tase",
     "credits": "Õppekava maht",
@@ -843,7 +1069,7 @@
     "studyForm": "Õppevorm",
     "ehisRokClassifier": "EHISe RÕK klassifikaator",
     "approving": "Õppekava kinnitamine",
-    "approvalDate": "Kinnitamise kuupäev",
+    "approvalDate": "Kinnitamise kp",
     "approvalDocumentNr": "Kinnitamise dokumendi number",
     "curriculumGroup": "Õppekavagrupp",
     "areaOfStudy": "Õppevaldkond",
@@ -897,9 +1123,9 @@
     "moduleImplementationPlans": "Õppekava moodulite rakenduskavad",
     "informativeSection": "Informatiivne sektsioon",
     "selectSchoolCurriculum": "Vali kooli õppekava",
-    "htmRegisterDate": "Õppekava registreerimine HTMis",
-    "accreditationDate": "Akrediteerimise kuupäev",
-    "accreditationValidityDate": "Akrediteerimise kehtivuskuupäev",
+    "htmRegisterDate": "Registr. HTMis kp",
+    "accreditationDate": "Akredit. kp",
+    "accreditationValidityDate": "Akredit. kehtivuskp",
     "accreditationDesision": "Akrediteerimise otsus",
     "accreditationDesisionNumber": "Akrediteerimise otsuse number",
     "versions": "Õppekava versioonid",
@@ -911,12 +1137,13 @@
     "deleteconfirmHigher": "Kas oled kindel, et soovid kõrgharidusõppe õppekava kustutada?",
     "itemDeleteConfirm": "Kas soovid kustutada?",
     "moduleDeleteConfirm": "Kas oled kindel, et soovid mooduli kustutada?",
+    "minorSpecialtyDeleteConfirm": "Kas oled kindel, et soovid kõrvaleriala kustutada?",
     "additionalInfo": "Muu info",
     "approvalInfo": "Õppeasutuse kinnitamise info",
     "sentToEhis": "Õppekava on EHISesse saadetud",
     "statuses": "Õppekava kehtivus ja staatused",
     "versionStatus": "Õppekava versiooni kehtivus ja staatus",
-    "yearCapacitiesTable": "Moodulite mahtude jaotus õppeaastate lõikes",
+    "yearCapacitiesTable": "Moodulite mahtude jaotus õppeaastate lõikes (EKAP)",
     "implementationPlanStatus": "Rakenduskava kehtivus ja staatus",
     "consecution": {
       "primary": "Esmaõppe õppekava",
@@ -986,6 +1213,7 @@
     "error": {
       "numberOfElectiveModules": "Ei tohi olla suurem kui valikmoodulite arv",
       "specAddedToVersion": "Peaeriala on lisatud õppekava versioonisse ja ei saa olla kustutatud",
+      "specAddedToModule": "Mooduliga seotud peaeriala ei saa kustutada",
       "max999": "Peab olema kuni 3-kohaline number!",
       "monthsMax11": "Peab olema kuni 11!",
       "max": "Peab olema kuni {{max}}!",
@@ -1006,7 +1234,12 @@
       "modulesCredits": "Moodulite maht ei ole vastavuses õppekava kogumahuga!",
       "occupationsCredits": "Kutse/osakutse moodulite maht ei ole vastavuses õppekava kogu mahuga!",
       "spetsOccupationsCredits": "Spetsialiseerumise moodulite maht (koos kutse- ja valikmoodulite mahuga) ei ole vastavuses õppekava kogu mahuga!",
-      "nameNotUnique": "Nimetus pole unikaalne"
+      "nameNotUnique": "Nimetus pole unikaalne",
+      "implementationPlanNotAllModules": "Igal õppekava moodulil peab olema rakenduskava moodul",
+      "cannotBeDeleted": "Ei saa olla kustutatud",
+      "cannotBeEdited": "Ei saa olla muudetud",
+      "themeCreditsAndHoursMismatch": "Teema EKAP-de arv ei vasta tundide arvule",
+      "themeCapacitiesAndHoursMismatch": "Teema mahu jaotus ei vasta teema mahule (tundides)"
     },
     "prompt": {
       "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
@@ -1039,7 +1272,7 @@
         },
         "prompt": {
           "verify": "Kas oled kindel, et soovid õppekava versiooni salvestada ja kinnitada?",
-          "close": "Kas oled kindel, et soovid õppekava versiooni salvestada ja sulgeda?",
+          "close": "Sulgemisel andmeid ei salvestata. Kas oled kindel, et soovid õppekava versiooni sulgeda?",
           "editAccepted": "Õppekava versioon on kinnitatud. Kas soovid jätkata?"
         },
         "success": {
@@ -1054,7 +1287,7 @@
         },
         "prompt": {
           "verify": "Kas oled kindel, et soovid rakenduskava salvestada ja kinnitada?",
-          "close": "Kas oled kindel, et soovid rakenduskava salvestada ja sulgeda?",
+          "close": "Sulgemisel andmeid ei salvestata. Kas oled kindel, et soovid rakenduskava sulgeda?",
           "editAccepted": "Rakenduskava on kinnitatud. Kas soovid jätkata?"
         },
         "success": {
@@ -1101,8 +1334,8 @@
     "deleteConfirm": "Kas oled kindel, et soovid õpetaja kustutada?",
     "email": "E-posti aadress",
     "phone": "Kontakttelefon",
-    "studyPeriodLoad": "Õppeaasta koormus",
-    "studyYearLoad": "Õppeperioodi koormus",
+    "studyPeriodLoad": "Õppeperioodi koormus",
+    "studyYearLoad": "Õppeaasta koormus",
     "person": {
       "alreadyexist": "Sisestatud õpetaja on juba süsteemis olemas",
       "name": "Õpetaja nimi",
@@ -1156,7 +1389,8 @@
       "positionSpecificationEn": "Ametikoha täpsustus (inglise keeles)",
       "positionSpecificationEt": "Täpsustus",
       "error": "Vähemalt üks EHISe ametikoht peab olema lisatud",
-      "deleteConfirm": "Kas oled kindel, et soovid õpetaja EHISe ametikohta kustutada?"
+      "deleteConfirm": "Kas oled kindel, et soovid õpetaja EHISe ametikohta kustutada?",
+      "schoolDepartment": "Struktuuriüksus"
     },
     "qualification": {
       "add": "lisa Kvalifikatsioon",
@@ -1168,7 +1402,13 @@
       "schoolOther": "Muu õppeasutus",
       "state": "Riik",
       "year": "Aasta",
-      "deleteConfirm": "Kas oled kindel, et soovid õpetaja kvalifikatisooni kustutada?"
+      "diplomaNr": "Dokumendi number",
+      "studyLevel": "Haridustase",
+      "endDate": "Lõpetamise kuupäev",
+      "specialty": "Eriala/õppekava",
+      "language": "Keel",
+      "addInfo": "Kommentaar",
+      "deleteConfirm": "Kas oled kindel, et soovid õpetaja kvalifikatsiooni kustutada?"
     },
     "mobility": {
       "add": "Lisa Lühiajaline eemalolek",
@@ -1179,12 +1419,29 @@
       "state": "Sihtriik",
       "target": "Eesmärk",
       "deleteConfirm": "Kas oled kindel, et soovid õpetaja lühiajalist eemalolekut kustutada?"
+    },
+    "continuingEducation": {
+      "label": "Täiendkoolitused",
+      "add": "Lisa täiendkoolitus",
+      "continuingEducation": "Täiendkoolitus",
+      "school": "Õppeasutus",
+      "otherSchool": "Muu õppeasutus",
+      "field": "Koolituse valdkond",
+      "name": "Täiendkoolituse nimetus",
+      "capacity": "Maht",
+      "diplomaCode": "Täiendkoolitusel saadud dokument",
+      "diplomaDate": "Koolitust tõendava dokumendi väljastamise kuupäev",
+      "diplomaNr": "Koolitust tõendava dokumendi number",
+      "isAbroad": "Täiendkoolitus toimus välisriigis",
+      "abroadDescription": "Välisriigi koolituse sisu",
+      "delete": "Kustuta täiendkoolitus",
+      "deleteConfirm": "Kas oled kindel, et soovid õpetaja kvalifikatsiooni kustutada?"
     }
   },
   "user": {
     "role": "Kasutajaroll",
-    "validFrom": "Kasutajarolli kehtivuse alguskuupäev",
-    "validThru": "Kasutajarolli kehtivuse lõppkuupäev",
+    "validFrom": "Kehtib alates",
+    "validThru": "Kehtib kuni",
     "deleteconfirm": "Kas oled kindel, et soovid kasutajarolli kustutada?",
     "roleNoRights": "Kasutajarollil puudub õigus",
     "rights": {
@@ -1255,7 +1512,7 @@
     "optionalModulesNumber": "Valikmoodulite arv õppekava täitmiseks",
     "dataInsertion": "Mooduli andmete sisestamine",
     "capacityDistribution": "Mooduli mahu jaotus",
-    "capacity": "Maht",
+    "capacity": "Maht (tund)",
     "contactStudy": "Kontaktõpe",
     "requirements": "Nõuded mooduli alustamiseks",
     "assessments": "Mooduli hindamiskriteeriumid",
@@ -1315,6 +1572,7 @@
     "nameEn": "Õpiväljund inglise keeles"
   },
   "studyYear": {
+    "label": "Õppeaasta",
     "year": "Õppeaasta",
     "startDate": "Alguskuupäev",
     "endDate": "Lõppkuupäev",
@@ -1330,7 +1588,12 @@
       "type": "Õppeperioodi tüüp",
       "name": "Nimetus",
       "startDate": "Alguskuupäev",
-      "endDate": "Lõppkuupäev"
+      "endDate": "Lõppkuupäev",
+      "error": {
+        "notInsideStudyYear": "Õppeaastasse sisestatud õppeperiood peab olema õppeaasta sees",
+        "overlapWithOtherStudyPeriod": "Õppeaastasse sisestatud õppeperioodi kuupäevad ei tohi kattuda teiste õppeperioodidega",
+        "startDateLaterThanEndDate": "Lõppkuupäev ja kellaaeg peab olema hilisem kui alguskuupäev ja kellaaeg"
+      }
     },
     "studyPeriodEvent": {
       "deleteconfirm": "Kas oled kindel, et soovid kalendri-sündmust kustutada?",
@@ -1392,6 +1655,9 @@
       "teacherNotAdded": "Õpetaja pole lisatud!",
       "subjectLoad": "{{subject}} koormused ei klapi planeeritud koormustega. Kas soovid salvestada?",
       "noDataForSaving": "Andmed salvestamiseks puuduvad!"
+    },
+    "prompt": {
+      "addedAutomaticallyToDeclarations": "Aine-õppejõu paar lisatakse automaatselt sobivate õppurite deklaratsioonidele. Kas soovid jätkata?"
     }
   },
   "subjectStudyPeriodTeacher": {
@@ -1442,10 +1708,12 @@
     "seats": "Kohtade arv"
   },
   "studentGroup": {
+    "label": "Õpperühm",
     "addStudents": "Lisa õppurid",
     "code": "Tähis",
     "course": "Õppeaasta (kursus)",
-    "curriculum": "Õppekava *",
+    "curriculum": "Õppekava",
+    "curriculumRequired": "Õppekava *",
     "curriculumVersion": "Õppekava versioon",
     "curriculumVersionBoth": "Õppekava versioon / Rakenduskava",
     "curriculumVersionHigher": "Õppekava versioon",
@@ -1609,7 +1877,6 @@
     "nameEt": "Nimetus eesti keeles",
     "nameEn": "Nimetus inglise keeeles",
     "color": "Värv",
-    "add": "Lisa uus rida",
     "error": {
       "codeRequired": "Kood on kohustuslik!",
       "codeLength": "Koodi maksimaalne pikkus on 2 sümbolit",
@@ -1622,12 +1889,47 @@
     "weekdays": "Nädalapäevad",
     "buildings": "Hooned",
     "academicHours": "Akadeemiliste tundide arv",
+    "studentGroups": "Õpperühmad",
+    "teachers": "Õpetajad",
+    "rooms": "Ruumid",
     "lessonTime": {
       "validFrom": "Kehtivuse algus",
-      "addNewRow": "Lisa uus rida",
       "addNewBlock": "Lisa uus tundide aegade plokk",
-      "deleteBlock": "Kustuta tundide aegade plokk"
-    }
+      "deleteBlock": "Kustuta tundide aegade plokk",
+      "oneRowRequired": "Igal blokil peab olema defineeritud vähemalt üks tunni aeg"
+    },
+    "management": {
+      "period": "Periood",
+      "status": "Staatus",
+      "studyYear": "Õppeaasta",
+      "studyPeriod": "Õppeperiood",
+      "type": "Tunniplaani liik"
+    },
+    "view": {
+      "publicize": "Avalikusta"
+    },
+    "timetablePlan": {
+      "createTimetable": "Tunniplaani koostamine",
+      "lessonAmount": "Järjestike tundide arv",
+      "plannedLessons":"Planeeritavad tunnid",
+      "repetition": "Kordus",
+      "byLesson": "Tundide kaupa",
+      "byTime": "Kellaaja järgi",
+      "timetablePeriod": "Tunniplaani periood",
+      "showGroups" : "Kuva rühmad",
+      "planGroupLessons": "Planeeri rühma tunniplaan",
+      "group": "rühm",
+      "selectAll": "Vali kõik",
+      "dayMon": "Esmaspäev",
+      "dayTue": "Teisipäev",
+      "dayWed": "Kolmapäev",
+      "dayThu": "Neljapäev",
+      "dayFri": "Reede",
+      "daySat": "Laupäev",
+      "daySun": "Pühapäev",
+      "week": "Tunniplaani nädal"
+    },
+    "subjectTeacherPairs": "Aine-õpetaja paarid"
   },
   "journal": {
     "label": "Päevik",
@@ -1708,6 +2010,7 @@
     "confirmedThru": "Kinnitatud kuni",
     "studyOutcomes": "Õpiväljundid",
     "journalCapacity":"maht {{capacity}} tundi",
+    "downloadSigned": "Lae allkirjastatud protokoll",
     "messages": {
       "studentSuccesfullyAdded": "Õppurid edukalt lisatud",
       "confirmed": "Mooduli protokoll edukalt kinnitatud",
@@ -1716,8 +2019,84 @@
       "cantRemoveGradedStudent": "Hinnatud õppuri eemaldamine ei ole lubatud"
     }
   },
+  "higherProtocol": {
+    "add": "Protokolli lisamine",
+    "calculate": "Arvuta",
+    "comment": "Märkus",
+    "confirm": "Kinnita",
+    "confirmedDate": "Kinnitamise kp",
+    "confirmer": "Kinnitaja",
+    "curriculumCode": "Õppekava kood",
+    "create": "Loo protokoll",
+    "error": {
+      "addInfoRequired": "Kinnitatud protokolli hinde muutmisel on märkuse sisestamine kohustuslik",
+      "duplicatesInPracticeResults": "Õppuril on mitu tulemust ühe praktika aine eest",
+      "noRightsToChange": "Õigused salvestamiseks puuduvad",
+      "noRightsToConfirm": "Õigused kinnitamiseks puuduvad",
+      "noStudents": "Protokoll peab sisaldama õppureid",
+      "protocolStudentsAddedOrRemoved": "Protokollis ei saa muuta õppurite nimekirja"
+    },
+    "finalGrade": "Lõpphinne",
+    "insertedDate": "Loomise kp",
+    "message": {
+      "confirmed": "Protokoll on kinnitatud",
+      "savedAndConfirmed": "Protokoll on salvestatud ja kinnitatud",
+      "calculated": "Lõpphinne on arvutatud"
+    },
+    "number": "Protokolli number",
+    "practiceResult": "Praktika tulemus",
+    "prompt": {
+      "saveConfirmedProtocol": "Kas oled kindel, et soovid kinnitatud protokolli muuta?"
+    },
+    "protocolCreatedDate": "Protokolli loomise kp",
+    "protocolConfirmedDate": "Protokolli kinnitamise kp",
+    "protocolStatus": "Protokolli staatus",
+    "status": "Staatus",
+    "student": "Õppur",
+    "studentGroup": "Õpperühm",
+    "studyPeriod": "Õppeperiood",
+    "subject": "Õppeaine",
+    "teacher": "Õpetaja",
+    "type": "Protokolli liik"
+  },
   "ehis": {
     "fileType": "Ehise faili liik",
+    "message": {
+      "directive": "Käskkiri",
+      "error": "Viga",
+      "insertedBy": "Kasutaja",
+      "laeKorgharidus": "Õppurite andmed",
+      "laeOppejoud": "Õppejõudude andmed",
+      "laePedagoogid": "Pedagoogide andmed",
+      "message": "Selgitav tekst",
+      "name": "Sõnumi nimetus",
+      "onlyErrors": "Ainult sõnumid, mille saatmisel tekkis viga",
+      "request": "Sisend",
+      "response": "Väljund",
+      "sentDatesRange": "Saatmise kuupäevade vahemik",
+      "time": "Saatmise aeg"
+    },
+    "messages": {
+      "exportFinished": "Eksportimine lõpetatud"
+    },
+    "student": {
+      "dataType": "Saadetavad andmed",
+      "sendToEhis": "Saada EHISesse",
+      "sentDatesRange": "Andmete saatmise kuupäevade vahemik",
+      "CURRICULA_FULFILMENT": "Õppekava täitmine",
+      "GRADUATION": "Õppeasutuse lõpetamine",
+      "result": "Õppurid, kelle andmed saadeti EHISesse",
+      "name": "Õppuri nimi",
+      "idcode": "Isikukood",
+      "curriculum": "Õppekava",
+      "percentage": "Täituvus",
+      "points": "Ainepunktid",
+      "error": "Sõnumi saatmine õnnestus",
+      "message": "Teade",
+      "docNr": "Lõpudokumendi number",
+      "cumLaude": "cum laude",
+      "academicNr": "Akadeemilise õiendi nr"
+    },
     "teacher": {
       "radioData": "Andmete valik",
       "allData": "Kõik andmed",
@@ -1728,9 +2107,6 @@
       "name": "Nimi",
       "message": "Teade",
       "response": "Tulemus:"
-    },
-    "messages": {
-      "exportFinished": "Eksportimine lõpetatud"
     }
   },
   "declaration": {
@@ -1754,7 +2130,7 @@
     "module_isRequired": "Moodul/Kohustuslik",
     "prerequisites": "Eeldused",
     "confirm": "Kinnita",
-    "removeConfirmation": "Võta kinnituse maha",
+    "removeConfirmation": "Võta kinnitus maha",
     "addingCurriculumSubject": "Õppekava aine lisamine",
     "addingExtraCurriculumSubject": "Õppekava välise aine lisamine",
     "eap": "EAP",
@@ -1762,7 +2138,7 @@
     "isRequired": "Kohustuslik",
     "addSubject": "Lisa aine õpingukavasse",
     "noCurrentDeclaration": "Käesoleva õppeperioodi õpingukava pole veel lisatud",
-    "repeatingDeclaration": "Koorduvkuulamine",
+    "repeatingDeclaration": "Korduvkuulamine",
     "confirmAll": "Kinnita kõik jooksval perioodil koostatud õpingukavad",
     "showUncomposed": "Näita kõik jooksval perioodil koostamata õpingukavad",
     "seePrerequisites": "vt eeldused",
@@ -1773,7 +2149,10 @@
       "subjectRemoved": "Õppeaine on õpingukavast kustutatud",
       "confirmed": "Õpingukava on kinnitatud",
       "confirmationRemoved": "Õpingukava kinnitamine on võetud maha",
-      "allConfirmed": "{{numberOfNewlyConfirmedDeclarations}} õpingukava oli uuendatud"
+      "allConfirmed": "Kinnitati {{numberOfNewlyConfirmedDeclarations}} õpingukava"
+    },
+    "error": {
+      "subjectDelete": "Ainet ei saa õpingukavast kustutada, kuna see on juba hinnatud"
     },
     "prompt": {
       "confirm": "Kas oled kindel, et soovid õpingukava kinnitada?",
@@ -1831,6 +2210,7 @@
     },
     "teachersload": {
       "actualhours": "Õpetaja tegelik tundide arv",
+      "module": "Moodul",
       "plannedhours": "Õpetaja planeeritud tundide arv",
       "studyPeriod": "Õppeperiood",
       "studyYear": "Õppeaasta",
@@ -1838,5 +2218,155 @@
       "subject": "Õppeaine",
       "teacher": "Õpetaja nimi"
     }
+  },
+  "contract": {
+    "startFrom": "Alguskuupäev alates",
+    "startThru": "Alguskuupäev kuni",
+    "endFrom": "Lõpukuupäev alates",
+    "endThru": "Lõpukuupäev kuni",
+    "validity": "Lepingu kehtivus",
+    "schoolSupervisor": "Õppeasutuse juhendaja",
+    "contractDate": "Sõlmimise kp",
+    "contractNumber": "Lepingu nr",
+    "curriculumVersion":"Õppekava",
+    "status": "Lepingu staatus",
+    "theme": "Teema",
+    "subject": "Õppeaine",
+    "credits": "Maht EKAP",
+    "hours": "Maht tundides",
+    "start": "Lepingu kehtivuse algus",
+    "end": "Lepingu kehtivuse lõpp",
+    "practicePlace": "Praktika koht",
+    "contactPersonName": "Kontaktisiku nimi",
+    "contactPersonPhone": "Kontaktisiku telefon",
+    "contactPersonEmail": "Kontaktisiku e-mail",
+    "supervisorName": "Juhendaja nimi",
+    "supervisorPhone": "Juhendaja telefon",
+    "supervisorEmail": "Juhendaja e-mail",
+    "contractCoordinator": "Lepingu menetleja EKISes",
+    "practicePlan": "Praktika kava",
+    "otherSupervisor": "Teised juhendajad",
+    "deleteconfirm":"Kas oled kindel, et soovid lepingu kustutada?",
+    "vocationalOrHigherSelect": "Kas kutseõpe või kõrgõpe?",
+    "vocationalOrHigherContract": "Palun valige, kas soovite lisada kutseõppe või kõrgõppe lepingut?",
+    "button": {
+      "vocational": "Kutseõpe",
+      "higher": "Kõrgõpe",
+      "viewContractFromEkis": "Vaata lepingut siit (EKIS)"
+    },
+    "messages": {
+      "sendToEkis" : {
+        "success": "Leping Ekis'esse saadetud"
+      }
+    }
+  },
+  "enterprise": {
+    "label": "Ettevõte",
+    "supervisor": "Ettevõtte juhendaja",
+    "create": "Lisa ettevõte",
+    "name": "Ettevõtte nimi",
+    "regCode": "Registrikood",
+    "contactPersonName": "Kontaktisiku nimi",
+    "contactPersonPhone": "Kontaktisiku telefon",
+    "contactPersonEmail": "Kontaktisiku e-mail"
+  },
+  "midtermTask": {
+    "add": "Lisa/muuda vahesooritused",
+    "assessment": "Hindamisviis",
+    "copy": "Kopeeri teisest päevikust",
+    "descriptionEn": "Vahesoorituse kirjeldus inglise keeles",
+    "descriptionEt": "Vahesoorituse kirjeldus eesti keeles",
+    "error": {
+      "midtermTaskCantBeDeleted": "Vahesooritus on seotud õppurite tulemustega ja ei saa olla kustutatud",
+      "nopermission": "Vajalikud õigused puuduvad",
+      "isPractice": "Praktika ainetel puuduvad vahesooritused",
+      "studentResultCannotBeChanded": "Õppuri vahetulemused ei saa olla muudetud"
+    },
+    "finalGrade": "Lõpphinne",
+    "maxPoints": "Max punktid",
+    "message": {
+      "copied": "Kopeerimine õnnestus"
+    },
+    "midtermTasks": "Vahesooritused",
+    "nameEn": "Vahesoorituse nimetus inglise keeles",
+    "nameEt": "Vahesoorituse nimetus eesti keeles",
+    "notes": "Märkused",
+    "nr": "Nr",
+    "percentage": "Vahesoorituse osakaal lõpphindes",
+    "percentageSum": "Osakaalude summa",
+    "points": "Vahesoorituse tulemus (number)",
+    "pointsTxt": "Vahesoorituse tulemus (text)",
+    "protocols": "Protokollid",
+    "studyPeriod" : "Õppeperiood",
+    "subject" : "Õppeaine",
+    "student" : "Õppur",
+    "taskDate": "Vahesoorituse kuupäev",
+    "teacher": "Õpetaja",
+    "threshold": "Lävend",
+    "thresholdPercentage": "Lävendi %"
+  },
+  "practiceJournal": {
+    "moduleAndTheme": "Moodul ja teema",
+    "subject": "Õppeaine",
+    "practiceStartAndEnd": "Praktika algus ja lõpp",
+    "practicePlace": "Praktika koht",
+    "schoolSupervisor": "Õppeasutuse juhendaja",
+    "studentLastEntryDate": "Õppuri viimase sissekande kp",
+    "module": "Praktika moodul",
+    "theme": "Teema",
+    "creditsEKAP": "Maht EKAP",
+    "creditsEAP": "Maht EAP",
+    "hours": "Maht tundides",
+    "startDate": "Praktika algus",
+    "endDate": "Praktika lõpp",
+    "myPracticeReport": "Minu praktika aruanne",
+    "practicePlan": "Praktika kava",
+    "teacherOpinion": "Õppeasutuse juhendaja arvamus (tekst)",
+    "teacherOpinionFile": "Õppeasutuse juhendaja arvamus (fail)",
+    "supervisorOpinion": "Juhendaja arvamus (tekst)",
+    "supervisorOpinionFile": "Juhendaja arvamus (fail)",
+    "teacherComment": "Õppeasutuse juhendaja kommentaar",
+    "supervisorComment": "Juhendaja kommentaar",
+    "grade": "Hinne",
+    "deleteconfirm":"Kas oled kindel, et soovid praktika päeviku kustutada?",
+    "vocationalOrHigherSelect": "Kas kutseõpe või kõrgõpe?",
+    "vocationalOrHigherPracticeJournal": "Palun valige, kas soovite lisada kutseõppe või kõrgõppe praktika päevikut?",
+    "button": {
+      "createWithoutContract": "Lisa uus päevik ilma lepinguta",
+      "fill": "Täida",
+      "vocational": "Kutseõpe",
+      "higher": "Kõrgõpe"
+    },
+    "practiceJournalEntry": {
+      "practiceDate": "Praktika kp",
+      "description": "Sisu",
+      "hours": "Maht",
+      "supervisorComment": "Juhendaja kommmentaar",
+      "teacherComment": "Õppeasutuse juhendaja kommentaar"
+    }
+  },
+  "committee": {
+    "addInfo": "Märkused",
+    "addMember": "Lisa uus",
+    "chairman": "Kaitsmiskomisjoni esimees",
+    "error": {
+      "chairman": "Kaitsmiskomisjonis peab olema üks esimees"
+    },
+    "external": "Väline",
+    "isChairman": "Esimees",
+    "member": "Kaitsmiskomisjoni liige",
+    "memberIs": "Kaitsmiskomisjoni liige on:",
+    "members": "Kaitsmiskomisjoni liikmed",
+    "message": {
+      "deleted": "Kaitsmiskomisjon on kustutatud"
+    },
+    "name": "Nimi",
+    "prompt": {
+      "deleteconfirm": "Kas oled kindel, et soovid kaitsmiskomisjoni kustutada?"
+    },
+    "showInvalid": "Kuva mittekehtivad kaitsmiskomisjonid",
+    "validDate": "Kaitsmiskomisjoni kehtivuse kuupäev",
+    "validFromDate": "Kehtivuse kuupäev alates",
+    "validThruDate": "Kehtivuse kuupäev kuni"
   }
 }

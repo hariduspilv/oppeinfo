@@ -12,11 +12,11 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 public class TimetableObjectStudentGroup extends BaseEntityWithId {
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private StudentGroup studentGroup;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private TimetableObject timetableObject;
 
     public StudentGroup getStudentGroup() {

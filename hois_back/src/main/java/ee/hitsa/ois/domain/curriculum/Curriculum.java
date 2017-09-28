@@ -12,12 +12,19 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import javax.validation.constraints.NotNull;
+
+import org.hibernate.validator.constraints.NotEmpty;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.util.Translatable;
+import ee.hitsa.ois.validation.CurriculumValidator.Confirmed;
+import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedHigher;
+import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedVocational;
+import ee.hitsa.ois.validation.CurriculumValidator.Joint;
 
 @Entity
 public class Curriculum extends BaseEntityWithId implements Translatable {
@@ -32,12 +39,18 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     private String merCode; // XXX for EHIS this should be number (see EhisStudentService)
     private LocalDate approval;
     private String approvalDokNr;
+    @NotNull(groups = {Confirmed.class})
     private String outcomesEt;
+    @NotNull(groups = {ConfirmedHigher.class})
     private String outcomesEn;
     private String structure;
+    @NotNull(groups = {Confirmed.class})
     private String admissionRequirementsEt;
+    @NotNull(groups = {ConfirmedHigher.class})
     private String admissionRequirementsEn;
+    @NotNull(groups = {Confirmed.class})
     private String graduationRequirementsEt;
+    @NotNull(groups = {ConfirmedHigher.class})
     private String graduationRequirementsEn;
     private BigDecimal credits;
     private String draftText;
@@ -52,7 +65,9 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     private String nameGenitiveEn;
     private String languageDescription;
     private String otherLanguages;
+    @NotNull(groups = {ConfirmedHigher.class})
     private String objectivesEt;
+    @NotNull(groups = {ConfirmedHigher.class})
     private String objectivesEn;
     private String addInfo;
     private LocalDate merRegDate;
@@ -70,6 +85,7 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     @Column(name = "is_joint")
     private Boolean joint;
     private BigDecimal optionalStudyCredits;
+    @NotNull(groups = {Confirmed.class})
     private LocalDate validFrom;
     private LocalDate validThru;
 
@@ -107,6 +123,7 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumStudyLanguage> studyLanguages = new HashSet<>();
 
+    @NotEmpty(groups = {Confirmed.class})
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumDepartment> departments = new HashSet<>();
@@ -114,21 +131,24 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumFile> files = new HashSet<>();
 
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumGrade> grades = new HashSet<>();
 
+    @NotEmpty(groups = {Joint.class})
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumJointPartner> jointPartners = new HashSet<>();
 
+    @NotEmpty(groups = {ConfirmedHigher.class})
     @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumSpeciality> specialities = new HashSet<>();
     
+    @NotEmpty(groups = {ConfirmedVocational.class})
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumStudyForm> studyForms = new HashSet<>();
 
+    @NotEmpty(groups = {ConfirmedVocational.class})
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
     private Set<CurriculumModule> modules = new HashSet<>();
@@ -612,7 +632,6 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     public void setStudyForms(Set<CurriculumStudyForm> studyForms) {
             getStudyForms().clear();
             getStudyForms().addAll(studyForms);
-//            this.getStudyForms().forEach(sf -> sf.setCurriculum(this));
     }
 
     public Set<CurriculumModule> getModules() {
@@ -626,12 +645,6 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     public void setVersions(Set<CurriculumVersion> versions) {
         getVersions().clear();
         getVersions().addAll(versions);
-        getVersions().forEach(v -> {
-            v.setCurriculum(this);
-//                if(v.getCurriculumStudyForm() != null) {
-//                    v.getCurriculumStudyForm().setCurriculum(this);
-//                }
-        });
     }
 
     public void setModules(Set<CurriculumModule> modules) {

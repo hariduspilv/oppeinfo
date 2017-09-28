@@ -29,11 +29,10 @@ public class MailService {
     @Autowired
     private JavaMailSender mailSender;
 
-    private ThreadLocal<ExecutorService> executorLocal = ThreadLocal.withInitial(
-            () -> Executors.newSingleThreadExecutor());
+    private ThreadLocal<ExecutorService> executorLocal = ThreadLocal.withInitial(Executors::newSingleThreadExecutor);
 
     // IKE - emails are always sent together with system messages but we do not have to guarantee their arrival
-    private void sendMail(String from, String to, String subject, String message) {
+    public void sendMail(String from, String to, String subject, String message) {
         if(Boolean.TRUE.equals(disable)) {
             return;
         }
@@ -60,13 +59,12 @@ public class MailService {
                 });
             });
         } catch (Exception e) {
-            if(log.isErrorEnabled()) {
-                log.error(String.format("sending email %s to %s failed", subject, receivers), e);
-            }
+            log.error("sending email {} to {} failed", subject, receivers, e);
         }
     }
 
     public void sendMail(ee.hitsa.ois.domain.Message message, List<String> receivers) {
         sendMail(message.getSender().getEmail(), String.join(",", receivers), message.getSubject(), message.getContent());
     }
+
 }

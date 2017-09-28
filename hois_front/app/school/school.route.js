@@ -4,11 +4,15 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   $routeProvider
     .when('/school', {
       templateUrl: 'school/school.list.html',
-      controller: 'SchoolListController',
+      controller: 'SimpleListController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        params: function($translate) { return {order: $translate.use() === 'en' ? 'nameEn' : 'nameEt'}; },
+        url: function() { return '/school'; }
+      },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEASUTUS]
       }
     })
     .when('/school/new', {
@@ -29,13 +33,22 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
       }
     })
+    .when('/school/:id/view', {
+      templateUrl: 'school/school.view.html',
+      controller: 'SchoolViewController',
+      controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
+      }
+    })
     .when('/school/departments', {
       templateUrl: 'school/school.department.list.html',
       controller: 'SchoolDepartmentListController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_STRUKTUUR]
       }
     })
     .when('/school/departments/new', {
@@ -58,11 +71,15 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     })
     .when('/school/teacheroccupations', {
       templateUrl: 'teacher/teacher.occupation.list.html',
-      controller: 'TeacherOccupationListController',
+      controller: 'SimpleListController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        params: function() { return {order: 'occupationEt'}; },
+        url: function() { return '/school/teacheroccupations'; }
+      },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPETAJAAMET]
       }
     })
     .when('/school/teacheroccupations/new', {
@@ -89,7 +106,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPETASE]
       }
     });
 }]);

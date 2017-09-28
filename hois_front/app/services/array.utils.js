@@ -1,5 +1,7 @@
 'use strict';
 
+/*jshint bitwise: false*/
+
 /**
  * @ngdoc service
  * @name hitsaOis.ArrayUtils

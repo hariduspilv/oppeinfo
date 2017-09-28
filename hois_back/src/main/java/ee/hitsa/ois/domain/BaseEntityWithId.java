@@ -40,6 +40,6 @@ public abstract class BaseEntityWithId extends BaseEntity {
             return false;
         }
 
-        return id.equals(EntityUtil.getId((BaseEntityWithId) obj));
+        return obj instanceof BaseEntityWithId && id.equals(EntityUtil.getId((BaseEntityWithId) obj));
     }
 }

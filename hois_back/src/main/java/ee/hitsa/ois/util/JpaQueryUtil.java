@@ -37,6 +37,7 @@ import org.springframework.data.domain.Sort.NullHandling;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 public abstract class JpaQueryUtil {
@@ -83,7 +84,7 @@ public abstract class JpaQueryUtil {
         long total;
         if((fetched > 0 || pageable.getPageNumber() == 0) && fetched < pageable.getPageSize()) {
             // on last page, can just calculate total
-            total = pageable.getOffset() + fetched;
+            total = (long) pageable.getOffset() + fetched;
         } else {
             // should query total
             total = countSupplier.get().longValue();
@@ -196,21 +197,27 @@ public abstract class JpaQueryUtil {
             }
         }
 
+        public void optionalCriteria(String criteria, String name, Enum<?> value) {
+            if(value != null) {
+                filter(criteria, name, value.name());
+            }
+        }
+
         public void optionalCriteria(String criteria, String name, LocalDate value) {
             if(value != null) {
-                filter(criteria, name, Timestamp.valueOf(LocalDateTime.of(value, LocalTime.MIN)));
+                filter(criteria, name, parameterAsTimestamp(value));
             }
         }
 
         public void optionalCriteria(String criteria, String name, LocalDate value, Function<LocalDate, LocalDateTime> adjuster) {
             if(value != null) {
-                filter(criteria, name, Timestamp.valueOf(adjuster.apply(value)));
+                filter(criteria, name, parameterAsTimestamp(adjuster.apply(value)));
             }
         }
 
         public void optionalCriteria(String criteria, String name, LocalDateTime value) {
             if(value != null) {
-                filter(criteria, name, Timestamp.valueOf(value));
+                filter(criteria, name, parameterAsTimestamp(value));
             }
         }
 
@@ -244,29 +251,23 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, Collection<?> value) {
-            AssertionFailedException.throwIf(value == null || value.isEmpty(), "Required criteria is missing");
-
-            filter(criteria, name, value);
+            filter(criteria, name, value != null && !value.isEmpty() ? value : null);
         }
 
         public void requiredCriteria(String criteria, String name, EntityConnectionCommand value) {
-            AssertionFailedException.throwIf(value == null || value.getId() == null, "Required criteria is missing");
-
-            filter(criteria, name, value.getId());
+            filter(criteria, name, value != null ? value.getId() : null);
         }
 
         public void requiredCriteria(String criteria, String name, Enum<?> value) {
-            AssertionFailedException.throwIf(value == null, "Required criteria is missing");
-
-            filter(criteria, name, value.name());
+            filter(criteria, name, value != null ? value.name() : null);
         }
 
         public void requiredCriteria(String criteria, String name, LocalDate value) {
-            filter(criteria, name, Timestamp.valueOf(LocalDateTime.of(value, LocalTime.MIN)));
+            filter(criteria, name, value != null ? parameterAsTimestamp(value) : null);
         }
 
         public void requiredCriteria(String criteria, String name, LocalDateTime value) {
-            filter(criteria, name, Timestamp.valueOf(value));
+            filter(criteria, name, value != null ? parameterAsTimestamp(value) : null);
         }
 
         public void requiredCriteria(String criteria, String name, Long value) {
@@ -274,13 +275,14 @@ public abstract class JpaQueryUtil {
         }
 
         public void requiredCriteria(String criteria, String name, String value) {
-            AssertionFailedException.throwIf(!StringUtils.hasText(value), "Required criteria is missing");
-
-            filter(criteria, name, value);
+            filter(criteria, name, StringUtils.hasText(value) ? value : null);
         }
 
         public void parameter(String name, Object value) {
-            parameters.put(Objects.requireNonNull(name), Objects.requireNonNull(value));
+            if(value == null) {
+                throw new AssertionFailedException("Parameter value is missing");
+            }
+            parameters.put(Objects.requireNonNull(name, "Parameter name is missing"), value);
         }
 
         public void filter(String filter) {
@@ -291,8 +293,8 @@ public abstract class JpaQueryUtil {
         }
 
         private void filter(String filter, String name, Object value) {
-            filter(filter);
             parameter(name, value);
+            filter(filter);
         }
 
         public Query select(String projection, EntityManager em) {
@@ -312,6 +314,21 @@ public abstract class JpaQueryUtil {
         }
 
         private Query buildQuery(String projection, EntityManager em, boolean ordered, Map<String, Object> additionalParameters) {
+            Query q = em.createNativeQuery(querySql(projection, ordered));
+
+            for(Map.Entry<String, Object> me : parameters.entrySet()) {
+                q.setParameter(me.getKey(), me.getValue());
+            }
+            if(additionalParameters != null) {
+                for(Map.Entry<String, Object> me : additionalParameters.entrySet()) {
+                    q.setParameter(me.getKey(), me.getValue());
+                }
+            }
+
+            return q;
+        }
+
+        public String querySql(String projection, boolean ordered) {
             StringBuilder sql = new StringBuilder("select ");
             sql.append(Objects.requireNonNull(projection));
             sql.append(' ');
@@ -346,19 +363,11 @@ public abstract class JpaQueryUtil {
                     sql.append(orderBy);
                 }
             }
+            return sql.toString();
+        }
 
-            Query q = em.createNativeQuery(sql.toString());
-
-            for(Map.Entry<String, Object> me : parameters.entrySet()) {
-                q.setParameter(me.getKey(), me.getValue());
-            }
-            if(additionalParameters != null) {
-                for(Map.Entry<String, Object> me : additionalParameters.entrySet()) {
-                    q.setParameter(me.getKey(), me.getValue());
-                }
-            }
-
-            return q;
+        public Map<String, Object> queryParameters() {
+            return Collections.unmodifiableMap(parameters);
         }
 
         private static String camelCaseToUnderScore(String value) {
@@ -375,6 +384,19 @@ public abstract class JpaQueryUtil {
             return sb.toString();
         }
 
+        public void validNowCriteria(String fromField, String thruField) {
+            LocalDate now = LocalDate.now();
+            requiredCriteria(fromField + " <= :now", "now", now);
+            filter("(" + thruField + " is null or " + thruField + " >= :now)");
+        }
+    }
+
+    public static Timestamp parameterAsTimestamp(LocalDate value) {
+        return Timestamp.valueOf(LocalDateTime.of(value, LocalTime.MIN));
+    }
+
+    public static Timestamp parameterAsTimestamp(LocalDateTime value) {
+        return Timestamp.valueOf(value);
     }
 
     public static Boolean resultAsBoolean(Object row, int index) {
@@ -392,6 +414,11 @@ public abstract class JpaQueryUtil {
         return value != null ? Integer.valueOf(((Number)value).intValue()) : null;
     }
 
+    public static Short resultAsShort(Object row, int index) {
+        Object value = getValue(row, index);
+        return value != null ? Short.valueOf(((Number)value).shortValue()) : null;
+    }
+
     public static LocalDate resultAsLocalDate(Object row, int index) {
         Object value = getValue(row, index);
         if(value instanceof java.sql.Date) {
@@ -403,6 +430,11 @@ public abstract class JpaQueryUtil {
     public static LocalDateTime resultAsLocalDateTime(Object row, int index) {
         Object value = getValue(row, index);
         return value != null ? ((java.sql.Timestamp)value).toLocalDateTime() : null;
+    }
+
+    public static LocalTime resultAsLocalTime(Object row, int index) {
+        Object value = getValue(row, index);
+        return value != null ? ((java.sql.Time)value).toLocalTime() : null;
     }
 
     public static Long resultAsLong(Object row, int index) {

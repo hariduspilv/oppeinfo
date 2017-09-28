@@ -3,11 +3,11 @@
         <div layout="column">
             <md-input-container>
                 <label>{{'certificate.type' | translate}}</label>
-                <hois-classifier-select ng-model="record.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" required></hois-classifier-select>
+                <hois-classifier-select ng-model="record.type" model-value-attr="code" main-classifier-code="TOEND_LIIK" required
+                ng-disabled="record.id" filter-values="forbiddenTypes"></hois-classifier-select>
             </md-input-container>
 
-            <!--<hois-autocomplete ng-show="record.type !== 'TOEND_LIIK_MUU'" label="certificate.student" ng-model="student" method="students" md-selected-item-change="studentChanged()" required></hois-autocomplete>-->
-            <div ng-show="record.type !== 'TOEND_LIIK_MUU'">
+            <div ng-show="!isOtherCertificate()">
                 <md-autocomplete
                     md-input-minlength="2"
                     name="student"
@@ -20,7 +20,8 @@
                     md-no-cache
                     class="small-margin"
                     md-selected-item-change="studentChanged()"
-                    ng-required="record.type !== 'TOEND_LIIK_MUU'"
+                    ng-required="!isOtherCertificate()"
+                    ng-disabled="record.id"
                     >
 
                     <md-item-template>
@@ -34,10 +35,10 @@
                 </md-autocomplete>
             </div>
 
-            <div ng-if="record.type === 'TOEND_LIIK_MUU'">
+            <div ng-if="isOtherCertificate()">
                 <md-input-container class="md-block">
                     <label>{{'certificate.otherIdcode' | translate}}</label>
-                    <input type="text" ng-model="record.otherIdcode" name="idcode" required ng-pattern="idcodePattern" md-maxlength="11">
+                    <input type="text" ng-model="record.otherIdcode" name="idcode" required ng-pattern="idcodePattern" md-maxlength="11" ng-disabled="record.id">
                     <div ng-messages="certificateEditForm.idcode.$error" ng-show="certificateEditForm.idcode.$dirty">
                         <div ng-message="pattern">
                             {{'certificate.invalidIdcode' | translate}}
@@ -46,7 +47,7 @@
                 </md-input-container>
                 <md-input-container class="md-block">
                     <label>{{'certificate.otherName' | translate}}</label>
-                    <input type="text" ng-model="record.otherName" required md-maxlength="255">
+                    <input type="text" ng-model="record.otherName" required md-maxlength="255" ng-disabled="record.id">
                 </md-input-container>
             </div>
             <md-input-container>
@@ -55,7 +56,7 @@
             </md-input-container>
             <md-input-container>
                 <label>{{'certificate.whom' | translate}}</label>
-                <input type="text" ng-model="record.whom" md-maxlength="255">
+                <input type="text" ng-model="record.whom" md-maxlength="255" ng-disabled="record.id">
             </md-input-container>
             <md-input-container>
                 <label>{{'certificate.signatory' | translate}}</label>
@@ -66,13 +67,19 @@
                  </md-option>
                 </md-select>
             </md-input-container>
-            <md-input-container>
+            <md-input-container ng-if="contentEditable()">
                 <label>{{'certificate.content' | translate}}</label>
-                <textarea ng-model="record.content" required md-maxlength="2000" max-rows="2" ng-readonly="record.type !== 'TOEND_LIIK_MUU'"></textarea>
+                <textarea ng-model="record.content" required md-maxlength="2000" max-rows="2"></textarea>
             </md-input-container>
+            <br>
+            <div ng-if="!contentEditable()">
+              <label class="common-label" ng-show="record.content">{{'certificate.content' | translate}}</label>
+              <div id="content" class="md-body-1"></div>
+            </div>
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-click="saveAndOrder()">{{'certificate.saveAndOrder' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-href="/#/certificate">{{'main.button.back' | translate}}</md-button>
             <md-button class="md-raised md-default" ng-click="delete()" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
         </div>

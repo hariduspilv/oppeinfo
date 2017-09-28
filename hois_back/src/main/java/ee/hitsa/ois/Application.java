@@ -8,11 +8,10 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.util.List;
-import java.util.concurrent.Executor;
 
 import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
 
-import ee.hois.xroad.ehis.service.EhisXroadService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -25,13 +24,14 @@ import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.ConverterRegistry;
-import org.springframework.core.task.SimpleAsyncTaskExecutor;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.data.jpa.convert.threeten.Jsr310JpaConverters;
 import org.springframework.data.jpa.repository.config.EnableJpaAuditing;
 import org.springframework.data.repository.support.DomainClassConverter;
 import org.springframework.format.support.FormattingConversionService;
-import org.springframework.scheduling.annotation.EnableAsync;
+import org.springframework.scheduling.TaskScheduler;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.method.HandlerMethod;
@@ -52,11 +52,12 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalTimeDeserializer;
 
 import ee.hitsa.ois.domain.BaseEntity;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 @EntityScan(basePackageClasses = { BaseEntity.class, Jsr310JpaConverters.class })
-@EnableAsync
+@EnableScheduling
 @EnableCaching
 @EnableJpaAuditing
 @SpringBootApplication
@@ -84,6 +85,11 @@ public class Application {
             if (authentication == null || !authentication.isAuthenticated()) {
               return null;
             }
+
+            //for anonymous user
+            if (authentication.getPrincipal() instanceof String) {
+                return (String) authentication.getPrincipal();
+            }
             return HoisUserDetails.fromPrincipal(authentication).getUsername();
         };
     }
@@ -98,13 +104,8 @@ public class Application {
     }
 
     @Bean
-    public EhisXroadService ehisXroadService() {
-        return new EhisXroadService();
-    }
-
-    @Bean
-    public Executor taskExecutor() {
-        return new SimpleAsyncTaskExecutor();
+    public TaskScheduler taskScheduler() {
+        return new ConcurrentTaskScheduler(); //single threaded by default
     }
 
     @Bean
@@ -162,7 +163,8 @@ public class Application {
         };
     }
 
-    @Bean @Autowired
+    @Bean
+    @Autowired
     public DomainClassConverter<FormattingConversionService> domainClassConverter(FormattingConversionService conversionService) {
         return new DomainClassConverter<>(conversionService);
     }
@@ -171,11 +173,13 @@ public class Application {
         @Autowired
         private ConversionService conversionService;
         @Autowired
+        private EntityManager em;
+        @Autowired
         private ObjectMapper objectMapper;
 
         @Override
         public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
-            argumentResolvers.add(new WithEntityMethodArgumentResolver(conversionService));
+            argumentResolvers.add(new WithEntityMethodArgumentResolver(em));
             argumentResolvers.add(new HoisUserDetailsArgumentResolver());
 
             // ISO string to LocalDate
@@ -192,7 +196,7 @@ public class Application {
                 try {
                     return objectMapper.readValue(s, EntityConnectionCommand.class);
                 } catch (IOException e) {
-                    throw new RuntimeException(e);
+                    throw new HoisException(e);
                 }
             });
         }

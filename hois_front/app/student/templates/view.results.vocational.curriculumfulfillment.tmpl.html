@@ -1,0 +1,16 @@
+<div ng-repeat="module in ::vocationalResultsCurriculum.vocationalResultsModules">
+  <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>
+</div>
+
+<div ng-if="vocationalResultsCurriculum.extraCurriculaVocationalResultsModules && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.length!=0">
+  <h3>{{'student.result.otherModuleResults' | translate}}</h3>
+
+  <div ng-repeat="module in ::vocationalResultsCurriculum.extraCurriculaVocationalResultsModules">
+    <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.list.tmpl.html'"></div>
+  </div>
+</div>
+
+<div ng-if="vocationalResultsCurriculum.vocationalResultsModules && vocationalResultsCurriculum.vocationalResultsModules.length==0 && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules && vocationalResultsCurriculum.extraCurriculaVocationalResultsModules.length==0">
+  <span>{{'student.result.missing' | translate}}</span>
+</div>
+

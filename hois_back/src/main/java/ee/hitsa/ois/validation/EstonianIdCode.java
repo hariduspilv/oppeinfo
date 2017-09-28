@@ -9,7 +9,7 @@ import javax.validation.Constraint;
 import javax.validation.Payload;
 
 @Constraint(validatedBy = {EstonianIdCodeValidator.class, EstonianIdCodeValidator.PersonValidator.class})
-@Target({ElementType.FIELD, ElementType.PARAMETER, ElementType.TYPE})
+@Target({ElementType.FIELD, ElementType.PARAMETER})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface EstonianIdCode {
     String message() default "InvalidEstonianIdCode";

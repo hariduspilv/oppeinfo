@@ -1,0 +1,112 @@
+<div layout-padding>
+  <div flex>
+    <form ng-submit="exportStudents()" layout="column" name="studentExportForm">
+      <div flex>
+        <div layout="row">
+          <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
+            <label>{{'ehis.student.dataType' | translate}}</label>
+            <md-select ng-model="criteria.dataType" required>
+              <md-option ng-repeat="val in dataTypes" ng-value="val">
+                {{ 'ehis.student.' + val | translate}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+        <div layout="row">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" ng-if="displayDates.indexOf(criteria.dataType) !== -1">
+            <label>{{'ehis.student.sentDatesRange' | translate}}</label>
+            <input type="hidden">
+          </md-input-container>
+          <div flex="33">
+            <md-input-container flex>
+              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru" ng-if="displayDates.indexOf(criteria.dataType) !== -1"
+                             md-placeholder="{{'main.from' | translate}}" required></md-datepicker>
+            </md-input-container>
+            <md-input-container flex>
+              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from" ng-if="displayDates.indexOf(criteria.dataType) !== -1"
+                             md-placeholder="{{'main.thru' | translate}}" required></md-datepicker>
+            </md-input-container>
+          </div>
+        </div>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'ehis.student.sendToEhis' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div ng-if="result.graduations.length > 0">
+  <div layout-padding>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'ehis.student.result' | translate}}</legend>
+      <div flex>
+        <md-table-container>
+          <table md-table>
+            <thead md-head>
+              <tr md-row>
+                <th md-column >{{'ehis.student.name' | translate}}</th>
+                <th md-column >{{'ehis.student.idcode' | translate}}</th>
+                <th md-column >{{'ehis.student.curriculum' | translate}}</th>
+                <th md-column >{{'ehis.student.docNr' | translate}}</th>
+                <th md-column >{{'ehis.student.cumLaude' | translate}}</th>
+                <th md-column >{{'ehis.student.academicNr' | translate}}</th>
+                <th md-column >{{'ehis.student.error' | translate}}</th>
+                <th md-column >{{'ehis.student.message' | translate}}</th>
+              </tr>
+            </thead>
+            <tbody md-body>
+              <tr md-row ng-repeat="row in result.graduations" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.name}}</a></td>
+                <td md-cell>{{::row.idcode}}</td>
+                <td md-cell>{{::row.curriculum}}</td>
+                <td md-cell>{{::row.docNr}}</td>
+                <td md-cell>{{row.cumLaude ? 'main.yes' : 'main.no' | translate}}</td>
+                <td md-cell>{{::row.academicNr}}</td>
+                <td md-cell>{{row.error ? 'main.no' : 'main.yes' | translate}}</td>
+                <td md-cell>{{::row.message}}</td>
+              </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </fieldset>
+  </div>
+</div>
+
+<div ng-if="result.fulfilments.length > 0">
+  <div layout-padding>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'ehis.student.result' | translate}}</legend>
+      <div flex>
+        <md-table-container>
+          <table md-table md-progress="result">
+            <thead md-head>
+            <tr md-row>
+              <th md-column >{{'ehis.student.name' | translate}}</th>
+              <th md-column >{{'ehis.student.idcode' | translate}}</th>
+              <th md-column >{{'ehis.student.curriculum' | translate}}</th>
+              <th md-column >{{'ehis.student.percentage' | translate}}</th>
+              <th md-column >{{'ehis.student.points' | translate}}</th>
+              <th md-column >{{'ehis.student.error' | translate}}</th>
+              <th md-column >{{'ehis.student.message' | translate}}</th>
+            </tr>
+            </thead>
+            <tbody md-body>
+            <tr md-row ng-repeat="row in result.fulfilments" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.name}}</a></td>
+              <td md-cell>{{::row.idcode}}</td>
+              <td md-cell>{{::row.curriculum}}</td>
+              <td md-cell>{{::row.percentage}}</td>
+              <td md-cell>{{::row.points}}</td>
+              <td md-cell>{{row.error ? 'main.no' : 'main.yes' | translate}}</td>
+              <td md-cell>{{::row.message}}</td>
+            </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </fieldset>
+  </div>
+</div>

@@ -29,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
@@ -36,10 +37,13 @@ import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
+import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.SubjectStatus;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.StudentGroupRepository;
@@ -47,12 +51,12 @@ import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodPlanRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodTeacherForm;
@@ -88,8 +92,9 @@ public class SubjectStudyPeriodService {
     private StudentGroupRepository studentGroupRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
-
-    // SubjectStudyPeriods
+    @Autowired
+    private SubjectStudyPeriodDeclarationService subjectStudyPeriodDeclarationService;
+    
 
     public Page<SubjectStudyPeriodSearchDto> search(Long schoolId, SubjectStudyPeriodSearchCommand criteria,
             Pageable pageable) {
@@ -103,7 +108,8 @@ public class SubjectStudyPeriodService {
                 + "(select string_agg(p2.firstname || ' ' || p2.lastname, ';') " + "from subject_study_period ssp2 "
                 + "left join subject_study_period_teacher sspt2 on sspt2.subject_study_period_id = ssp2.id "
                 + "left join teacher t2 on t2.id = sspt2.teacher_id " + "left join person p2 on p2.id = t2.person_id "
-                + "where ssp2.id = ssp.id ) as names";
+                + "where ssp2.id = ssp.id ) as names, "
+                + "(select count(*) from declaration_subject ds where ds.subject_study_period_id = ssp.id) as declared_students";
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM).sort(pageable);
         if (StringUtils.hasText(criteria.getTeachersFullname())) {
@@ -119,6 +125,14 @@ public class SubjectStudyPeriodService {
                 "s.name_en || '/' || s.code"), "subjectNameAndCode", criteria.getSubjectNameAndCode());
         qb.optionalCriteria("sp.id in (:studyPeriods)", "studyPeriods", criteria.getStudyPeriods());
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        
+        qb.optionalCriteria("exists("
+                + "select * "
+                + "from subject_study_period ssp3 "
+                + "left join declaration_subject ds on ds.subject_study_period_id = ssp3.id "
+                + "left join declaration d on d.id = ds.declaration_id "
+                + "where d.student_id = :studentId "
+                + "and ssp3.id = ssp.id)", "studentId", criteria.getStudent());
 
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, SELECT, em, pageable);
         return results.map(r -> {
@@ -133,16 +147,17 @@ public class SubjectStudyPeriodService {
             dto.setStudyPeriod(studyPeriod);
             String s = resultAsString(r, 7);
             if (s != null) {
-                dto.setTeachers(Arrays.asList(s.split(";")).stream().collect(Collectors.toSet()));
+                dto.setTeachers(Arrays.asList(s.split(";")));
             }
             dto.setSubject(subject);
+            dto.setStudentsNumber(resultAsLong(r, 8));
             return dto;
         });
     }
 
     public SubjectStudyPeriod create(SubjectStudyPeriodForm form) {
         SubjectStudyPeriod subjectStudyPeriod = new SubjectStudyPeriod();
-        subjectStudyPeriod.setSubject(subjectRepository.getOne(form.getSubject()));
+        subjectStudyPeriod.setSubject(em.getReference(Subject.class, form.getSubject()));
         subjectStudyPeriod.setStudyPeriod(em.getReference(StudyPeriod.class, form.getStudyPeriod()));
         return update(subjectStudyPeriod, form);
     }
@@ -152,7 +167,10 @@ public class SubjectStudyPeriodService {
                 "studentGroups");
         updateSubjectStudyPeriodTeachers(subjectStudyPeriod, form);
         updateStudentGroups(subjectStudyPeriod, form.getStudentGroups());
-        return subjectStudyPeriodRepository.save(subjectStudyPeriod);
+        
+        subjectStudyPeriod = EntityUtil.save(subjectStudyPeriod, em);
+        subjectStudyPeriodDeclarationService.addToDeclarations(subjectStudyPeriod);
+        return subjectStudyPeriod;
     }
 
     public void updateSubjectStudyPeriodTeachers(SubjectStudyPeriod subjectStudyPeriod, SubjectStudyPeriodForm form) {
@@ -164,7 +182,7 @@ public class SubjectStudyPeriodService {
             if (teacher == null) {
                 teacher = new SubjectStudyPeriodTeacher();
                 teacher.setSubjectStudyPeriod(subjectStudyPeriod);
-                teacher.setTeacher(teacherRepository.getOne(t.getTeacherId()));
+                teacher.setTeacher(em.getReference(Teacher.class, t.getTeacherId()));
             }
             teacher.setIsSignatory(t.getIsSignatory());
             newTeachers.add(teacher);
@@ -177,13 +195,17 @@ public class SubjectStudyPeriodService {
                 s -> EntityUtil.getId(s.getStudentGroup()), newStudentGroups, newStudentGroupId -> {
                     SubjectStudyPeriodStudentGroup sg = new SubjectStudyPeriodStudentGroup();
                     sg.setSubjectStudyPeriod(subjectStudyPeriod);
-                    sg.setStudentGroup(studentGroupRepository.getOne(newStudentGroupId));
+                    sg.setStudentGroup(em.getReference(StudentGroup.class, newStudentGroupId));
                     return sg;
                 });
     }
 
     public void delete(SubjectStudyPeriod subjectStudyPeriod) {
-        EntityUtil.deleteEntity(subjectStudyPeriodRepository, subjectStudyPeriod);
+        // See SubjectStudyPeriod.java for explanation
+        if(!CollectionUtils.isEmpty(subjectStudyPeriod.getMidtermTasks())) {
+            throw new ValidationFailedException("main.messages.record.referenced");
+        }
+        EntityUtil.deleteEntity(subjectStudyPeriod, em);
     }
 
     // StudentGroups
@@ -236,7 +258,7 @@ public class SubjectStudyPeriodService {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(EntityUtil.getId(sg));
             dto.setCode(sg.getCode());
-            dto.setCurriculum(AutocompleteResult.of(sg.getCurriculum()));            
+            dto.setCurriculum(AutocompleteResult.of(sg.getCurriculum()));
             List<SubjectStudyPeriod> ssps = filterSsps
                     (StreamUtil.toMappedList(sspSg -> sspSg.getSubjectStudyPeriod(), sg.getSubjectStudyPeriods()), 
                             criteria.getStudyPeriod());
@@ -282,8 +304,7 @@ public class SubjectStudyPeriodService {
     }
 
     public void setSubjectStudyPeriodPlansToStudentGroupContainer(SubjectStudyPeriodDtoContainer container) {
-
-        StudentGroup sg = studentGroupRepository.getOne(container.getStudentGroup());
+        StudentGroup sg = em.getReference(StudentGroup.class, container.getStudentGroup());
 
         List<SubjectStudyPeriodPlan> plans = subjectStudyPeriodPlanRepository.findAll((root, query, cb) -> {
 
@@ -344,7 +365,7 @@ public class SubjectStudyPeriodService {
         List<SubjectStudyPeriod> ssps = new ArrayList<>();
 
         for (SubjectStudyPeriodDto dto : container.getSubjectStudyPeriodDtos()) {
-            SubjectStudyPeriod ssp = subjectStudyPeriodRepository.getOne(dto.getId());
+            SubjectStudyPeriod ssp = em.getReference(SubjectStudyPeriod.class, dto.getId());
 
             AssertionFailedException.throwIf(!EntityUtil.getId(ssp.getSubject().getSchool()).equals(schoolId),
                     "User and subject have different schools!");
@@ -367,13 +388,11 @@ public class SubjectStudyPeriodService {
     }
 
     public List<StudentGroupSearchDto> getStudentGroupsList(Long schoolId, Long studyPeriodId) {
-        final String FROM = "from student_group sg join curriculum c on c.id = sg.curriculum_id";
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student_group sg join curriculum c on c.id = sg.curriculum_id");
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
         qb.filter("c.is_higher = true");
-        // TODO use enum constant
-        qb.filter("c.status_code = 'OPPEKAVA_STAATUS_K'");
+        qb.requiredCriteria("c.status_code = :curriculumStatus", "curriculumStatus", CurriculumStatus.OPPEKAVA_STAATUS_K);
         qb.filter("(sg.valid_from is null or sg.valid_from <= current_date)");
         qb.filter("(sg.valid_thru is null or sg.valid_thru >= current_date)");
 
@@ -400,8 +419,7 @@ public class SubjectStudyPeriodService {
         List<Curriculum> curriculums = curriculumRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            // TODO use enum constant
-            filters.add(cb.equal(root.get("status").get("code"), "OPPEKAVA_STAATUS_K"));
+            filters.add(cb.equal(root.get("status").get("code"), CurriculumStatus.OPPEKAVA_STAATUS_K.name()));
             filters.add(cb.equal(root.get("higher"), Boolean.TRUE));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
@@ -446,7 +464,7 @@ public class SubjectStudyPeriodService {
         }, pageable).map(t -> {
             TeacherSearchDto dto = new TeacherSearchDto();
             dto.setId(EntityUtil.getId(t));
-            dto.setName(t.getPerson().getFullname());            
+            dto.setName(t.getPerson().getFullname());
             List<SubjectStudyPeriod> ssps = filterSsps
                     (StreamUtil.toMappedList(sspt -> sspt.getSubjectStudyPeriod(), t.getSubjectStudyPeriods()), 
                             criteria.getStudyPeriod());
@@ -505,8 +523,7 @@ public class SubjectStudyPeriodService {
     }
 
     public List<AutocompleteResult> getTeachersList(Long schoolId, Long studyPeriodId) {
-        final String FROM = "from teacher t join person p on p.id = t.person_id";
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from teacher t join person p on p.id = t.person_id");
 
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", schoolId);
         qb.filter("t.is_higher = true");
@@ -562,15 +579,13 @@ public class SubjectStudyPeriodService {
         }, pageable).map(s -> {
             SubjectStudyPeriodSearchDto dto = new SubjectStudyPeriodSearchDto();
             dto.setSubject(AutocompleteResult.of(s));
-            Set<String> teachers = new HashSet<>();
-            
+
+            Set<Person> teachers = new HashSet<>();
             List<SubjectStudyPeriod> ssps = filterSsps(s.getSubjectStudyPeriods(), criteria.getStudyPeriod());
-            
             for (SubjectStudyPeriod ssp : ssps) {
-                teachers.addAll(
-                        StreamUtil.toMappedList(t -> t.getTeacher().getPerson().getFullname(), ssp.getTeachers()));
+                teachers.addAll(StreamUtil.toMappedList(t -> t.getTeacher().getPerson(), ssp.getTeachers()));
             }
-            dto.setTeachers(teachers);
+            dto.setTeachers(PersonUtil.sorted(teachers.stream()));
             dto.setHours(getHours(ssps));
             return dto;
         });
@@ -629,5 +644,15 @@ public class SubjectStudyPeriodService {
             String nameEn = SubjectUtil.subjectName(code, resultAsString(r, 3), credits);
             return new AutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
         }, data);
+    }
+    
+    public List<Long> getSubjectStudyPeriodsForSchoolAndPeriod(Long schoolId, Long studyPeriodId) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period ssp inner join subject s on ssp.subject_id = s.id");
+
+        qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
+        
+        List<?> data = qb.select("ssp.id", em).getResultList();
+        return StreamUtil.toMappedList(r -> (resultAsLong(r, 0)), data);
     }
 }

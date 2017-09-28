@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.List;
 
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -17,14 +18,16 @@ public class TeacherLoadDto {
     private final Long plannedHours;
     private final Long actualHours;
     private final List<TeacherLoadSubjectDto> subjects;
+    private final List<TeacherLoadModuleDto> modules;
 
-    public TeacherLoadDto(Object record, List<Object> subjectRecords) {
+    public TeacherLoadDto(Object record, List<Object> subjectRecords, List<Object> moduleRecords, Long actualLoad) {
         studyYear = new AutocompleteResult(null, resultAsString(record, 0), resultAsString(record, 1));
         studyPeriod = new AutocompleteResult(null, resultAsString(record, 2), resultAsString(record, 3));
         teacher = PersonUtil.fullname(resultAsString(record, 4), resultAsString(record, 5));
         plannedHours = resultAsLong(record, 6);
-        actualHours = resultAsLong(record, 7);
+        actualHours = actualLoad;
         subjects = StreamUtil.toMappedList(TeacherLoadSubjectDto::new, subjectRecords);
+        modules = StreamUtil.toMappedList(TeacherLoadModuleDto::new, moduleRecords);
     }
 
     public AutocompleteResult getStudyYear() {
@@ -51,6 +54,10 @@ public class TeacherLoadDto {
         return subjects;
     }
 
+    public List<TeacherLoadModuleDto> getModules() {
+        return modules;
+    }
+
     public static class TeacherLoadSubjectDto {
         private final AutocompleteResult subject;
         private final String code;
@@ -66,6 +73,20 @@ public class TeacherLoadDto {
 
         public String getCode() {
             return code;
+        }
+    }
+
+    public static class TeacherLoadModuleDto {
+        private final AutocompleteResult module;
+
+        public TeacherLoadModuleDto(Object record) {
+            String curriculumCode = resultAsString(record, 4);
+            module = new AutocompleteResult(null, CurriculumUtil.moduleName(resultAsString(record, 0), resultAsString(record, 2), curriculumCode),
+                    CurriculumUtil.moduleName(resultAsString(record, 1), resultAsString(record, 3), curriculumCode));
+        }
+
+        public AutocompleteResult getModule() {
+            return module;
         }
     }
 }

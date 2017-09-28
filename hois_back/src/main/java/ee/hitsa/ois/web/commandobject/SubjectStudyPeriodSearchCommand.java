@@ -8,12 +8,19 @@ public class SubjectStudyPeriodSearchCommand extends SearchCommand {
     private String teachersFullname;
     private List<Long> studyPeriods;
     private Long studentGroup;
+    private Long student;
     private Long studyPeriod;
     private Long curriculum;
     private Long department;
     private Long teacher;
     private Long subject;
 
+    public Long getStudent() {
+        return student;
+    }
+    public void setStudent(Long student) {
+        this.student = student;
+    }
     public Long getSubject() {
         return subject;
     }

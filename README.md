@@ -1,4 +1,8 @@
+<<<<<<< HEAD
 VERSIOON: 0.3.1/20170619
+=======
+VERSIOON: 0.4.0/20170928
+>>>>>>> develop
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -46,9 +50,10 @@ DOK3 - HOIS_analyys_opilased_liikumised.docx
 		3.3	Õppuri esindaja / lapsevanema avalduse läbivaatamine
 
 DOK4 - HOIS_analyys_opetajad_materjalid.docx
-		2.1	Õpetaja andmete sisestamine süsteemi (va täiendkoolitused, tasemekoolitused, ametijärk)
+		2.1	Õpetaja andmete sisestamine süsteemi
 		2.2	Õpetajate otsing 
 		2.3 Õpetaja andmete vaatamine
+		2.4	Õppuri puudumistõendi aktsepteerimine
 
 DOK5 - HOIS_analyys_avaldused_kaskkirjad.docx
 	    2.1	Avalduste otsing
@@ -84,7 +89,8 @@ DOK5 - HOIS_analyys_avaldused_kaskkirjad.docx
 		3.18 Käskkirja andmete muutmine
 		3.19 Immatrikuleerimise (vastuvõtt) käskkirja koostamine
 		4.1	Tõendite otsing
-		4.3	Tõendi tellimine (admin. töötaja töökohal, ilma reaalse sisuta)
+		4.2	Õppuri tõendite nimekirja vaatamine
+		4.3	Tõendi tellimine
 
 DOK6 - HOIS_analyys_vastuvott.docx
 		2.1	Klassifikaatorite importimine SAISist
@@ -110,20 +116,29 @@ DOK8 - HOIS_analyys_teated.docx
 		3.3	Teate vaatamine ja teatele vastamine
 
 DOK9 - HOIS_analyys_andmevahetus.docx
+		Andmevahetuse EKISega
+		-------------------------------------------
+		2.1	Õppekäskkirjad
+		2.2	Tõendid
+		2.3	Lepingud
+		
 		Andmevahetus EHISega
 		-------------------------------------------
+		3.2	Pedagoogide andmed
 		3.3	Õppejõudude andmed
 		3.4.1.1	Õppekoormuse muutmine
 		3.4.1.2	Õppekava vahetamine
 		3.4.1.3	Finantseerimisallika muutmine
 		3.4.1.4	Õppevormi vahetamine
-		3.4.2	Eksmatrikuleerimine
-		3.4.3	Ennistamine 
-		3.4.4	Akadeemilisele puhkusele lubamine
-		3.4.5	Akadeemilise puhkuse katkestamine
-		3.4.6	Immatrikuleerimine
-		3.4.13	Õppeasutuse lõpetamine
-		3.4.14	Õppekava täitmine
+		3.4.1.5	Eksmatrikuleerimine
+		3.4.1.6	Ennistamine 
+		3.4.1.7	Akadeemilisele puhkusele lubamine
+		3.4.1.8	Akadeemilise puhkuse katkestamine
+		3.4.1.9	Akadeemilise puhkuse lõppemine
+		3.4.1.10	Immatrikuleerimine 
+		3.4.2.2	Õppekava täitmine
+		3.4.2.3	Õppeasutuse lõpetamine
+		3.5	EHISe andmevahetuse logi
 		
 		Andmevahetus SAIS-iga
 		-------------------------------------------
@@ -136,10 +151,31 @@ DOK10 - HOIS_analyys_opitulemused_paevikud.docx
 		-----------------------------------
 		2.1	Päevikute otsing
 		2.2	Päevikusse õppurite lisamine
+		2.3	Päeviku kinnitamine
 		2.4	Päeviku täitmine
 		2.6	Mooduli protokollid ja mooduli tulemuse sisestamine
+		2.7.1	Praktika lepingute otsing
+		2.7.2	Praktika lepingu sõlmimine
+		2.7.3	Praktika päeviku koostamine ilma lepingu sõlmimiseta
+		2.7.4	Praktika päevikute otsing administratiivse töötaja, õpetaja või õppuri töökohal
+		2.7.5	Praktika päeviku täitmine - õppur
+		2.7.6	Praktika päeviku täitmine – ettevõtte juhendaja
+		2.7.7	Praktika päeviku täitmine – administratiivne töötaja, õpetaja
 		3.1	Õpingukava koostamine
 		3.2	Õpingukava otsing ja massiline kinnitamine
+		4	Päevikud ja protokollid kõrgharidusõppes
+		4.1	Päeviku ehk kuulajaskonna vaatamine ja tulemuste sisestamine
+		4.2	Päeviku vahesoorituste sisestamine
+		4.3	Protokolli sisestamine
+		4.4	Protokollide otsing
+		4.6	Praktika päevikud
+		5	Õppetulemused ja õppekava täitmine
+		5.1	Õppekava täitmise vaatamine kutseõppes
+		5.2	Õppekava täitmise vaatamine kõrgharidusõppes
+		5.3	Õppetulemuste vaatamine õppeaastate kaupa kutseõppes
+		5.4	Õppetulemuste vaatamine õppeperioodide kaupa kõrgharidusõppes
+		5.5	Õppetulemuste vaatamine sooritamise järjekorras kutseõppes
+		5.6	Õppetulemuste vaatamine sooritamise järjekorras kõrgharidusõppes
 
 DOK11 - HOIS_analyys_tunniplaan.docx	
 		2.1	Tundide aegade sisestamine
@@ -153,7 +189,9 @@ DOK11 - HOIS_analyys_tunniplaan.docx
 		4.6	Koormuste sisestamine õpetajate kaupa kõrgharidusõppes
 		4.7	Koormuste sisestamine õppeainete kaupa kõrgharidusõppes
 		4.8	Aine-õpetaja paari  otsing
+		5.3	Tunniplaani koostamine
 		5.4	Sündmuste otsing
+		5.7.1	Üldise tunniplaani vaatamine
 
 DOK12 - HOIS_analyys_paringud.docx
 		2.1	Õppurid
@@ -162,6 +200,7 @@ DOK12 - HOIS_analyys_paringud.docx
 		2.4	Õppekava täitmine
 		2.7	Õpetaja koormus (kõrg)
 
+MUU:	ID-kaardiga sisselogimine
 	   
 Testisikute kasutajanimed, kellena saab ÕISi sisse logida ja süsteemi testida (kasutajanimi - isiku nimi, rollid):
 37101010003 - Test1 Kasutaja1, peaadministraator, administratiivne töötaja Tallinna Polütehnikumis, Tallinna Tervishoiu Kõrgkoolis ja EBS-s
@@ -183,7 +222,7 @@ Tallinna Tervishoiu Kõrgkoolis on olemas üks kõrgharidusõppe õppekava
 NB! Automaatteadete saatmiseks ÕISi on tekitatud kasutaja Hõis Automaatteade, palume seda mitte kustutada
 	   
 
-EELDUS: ver. 0.3.0/20170601
+EELDUS: ver. 0.3.1/20170619
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x
@@ -212,9 +251,12 @@ EELDUS: ver. 0.3.0/20170601
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
-KIRJELDUS: lisatakse andmebaasi "hois" vajalikud tabelid ja klassifikaatorid. Andmebaasi skriptid asuvad "db" kaustas.
+KIRJELDUS: olemasolev andmebaas "hois" kustutatakse ja lisatakse uuesti andmebaas "hois", vajalikud tabelid ja klassifikaatorid. Andmebaasi skriptid asuvad "db" kaustas.
 
-EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku, versioon 0.3.0/20170601 on paigaldatud.
+EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi peakasutaja salasõna, oskab kasutada "psql" käsku. Nginx serveris on seadistatud SSL
+
+OLULINE MUUDATUS: frontendi html failid peaks kopeerima nginx'ist sõltumata asukohta, nt teha kaust /opt/hois/html (proxy_backend.conf failis on vastav näide olemas), sest serveri tarkvara uuendamisel võidakse vajalikud kaustad üle kirjutada/kustutada
+
 
 
 Andmebaasi installeerimiseks:
@@ -228,7 +270,7 @@ Andmebaasi installeerimiseks:
    -f install.sql - install faili nimi, install.sql ja db_data.sql peavad asuma samas kaustas, install.sql fail kasutab db_data.sql faili
    log.txt - andmebaasi installeerimise logi fail
    
-   Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja luuakse vajalikud tabelid ning andmed
+   Installeerimise käigus küsitakse andmebaasi peakasutaja salasõna ja luuakse andmebaas, vajalikud tabelid ning andmed
 
 
 RAKENDUSE INSTALLEERIMINE:
@@ -244,30 +286,58 @@ EELDUS:
 		nodejs
 		nginx
 		nginx on confitud teatud urlil otse l2bi saatma (proxy) pärinugid backendi suunas
+	
+	SSL tugi
+	ID-kaardi tugi (vt www.id.ee)
+	
+	Võimalik konfigureerimise näide: 
+	1) proxy_backend.conf on kirjeldatud 3 serverit: 1 pordiga 80 ja 2 pordiga 443 (ssl). 
+	2) Üks ssl server on mõeldud ID-kaardiga autentimiseks (näites idlogin.devhois), serveri kirjeldusse on lisatud ID-kaardiga autentimiseks vajalik juursertifikaat ja selle asukoht
+		ssl_client_certificate /opt/hois/certs/id.crt;
+	3) Pordiga 80 server on mõeldud EKISe veebiteenuste jaoks. Kuna HÕISi ja EKISe andmevahetus käib otse, siis meil on võimalik kirjeldada kust IP-lt täpsemalt saab pöörduda EKIS HÕISi poole, et nt edastada info käskkirjade kinnitamise kohta
+	  (vt proxy_backend.conf'is järgmised read
+	      location /hois_back/services/ekis {
+				allow all;
+				deny all;
+				proxy_pass http://backend/hois_back/services/ekis;
+			}
+	  ), allow all peak olema allow EKIS_SERVER_IP, kus EKIS_SERVER_IP on EKISe serveri IP aadress või host
+
 		
-		lisaks proxy_backend.conf faili võib lisada järgmised read (NB! võrreldes versiooniga 0.2.1/20170331 lisandus uus rida location = /hois_back/classifierConnect/all...):
 		
-		1) proxy_cache_path /tmp keys_zone=classifier_cache:32k max_size=10m inactive=10m use_temp_path=off;
-		2) location = /hois_back/autocomplete/classifiers {	
-			add_header X-Cache-Status $upstream_cache_status;
-			proxy_ignore_headers Cache-Control;
-			proxy_ignore_headers Expires;
-			proxy_cache classifier_cache;
-			proxy_cache_lock on;
-			proxy_cache_use_stale updating;
-			proxy_cache_valid 10m;
-			proxy_pass http://backend/hois_back/autocomplete/classifiers;    
-        }
-		(backend on upstream)
-		
-		proxy_backend.conf faili näide:
-		-----------------------------------------------------
+	proxy_backend.conf faili näide:
+	------------------------------------------------------------
 		
 		proxy_cache_path /tmp keys_zone=classifier_cache:32k max_size=10m inactive=10m use_temp_path=off;
 
 		server {
-			listen 80;
-			listen [::]:80;
+			listen       80;
+			listen       [::]:80;
+			server_name  devhois;
+			location /hois_back/services/ekis {
+				allow all;
+				deny all;
+				proxy_pass http://backend/hois_back/services/ekis;
+			}
+			location / {
+				return 301 https://$host$request_uri;
+			} 
+		}
+
+		server {
+			listen 443;
+			listen [::]:443;
+				root /opt/hois/html;
+				server_name devhois;
+				ssl on;
+				ssl_certificate /opt/hois/certs/nginx.crt;
+				ssl_certificate_key /opt/hois/certs/nginx.key;
+				ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+				ssl_ciphers "ECDHE-RSA-AES256-GCM-SHA384";
+				ssl_prefer_server_ciphers on;
+				ssl_session_cache shared:SSL:10m;
+
+
 			location /hois_back/ {
 				proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
 				proxy_set_header Host $http_host;
@@ -275,10 +345,11 @@ EELDUS:
 				proxy_connect_timeout      240;
 				proxy_send_timeout         240;
 				proxy_read_timeout         240;
+					client_max_body_size 100M;
 				proxy_pass http://backend/hois_back/;
 			}
 
-			location = /hois_back/autocomplete/classifiers {	
+			location = /hois_back/autocomplete/classifiers {
 				add_header X-Cache-Status $upstream_cache_status;
 				proxy_ignore_headers Cache-Control;
 				proxy_ignore_headers Expires;
@@ -287,7 +358,8 @@ EELDUS:
 				proxy_cache_use_stale updating;
 				proxy_cache_valid 10m;
 				proxy_pass http://backend/hois_back/autocomplete/classifiers;
-				}
+			}
+
 			location = /hois_back/autocomplete/schools {
 				add_header X-Cache-Status $upstream_cache_status;
 				proxy_ignore_headers Cache-Control;
@@ -323,26 +395,58 @@ EELDUS:
 
 
 
-
 			gzip on;
-				gzip_disable "msie6";
+			gzip_disable "msie6";
 
-				gzip_vary on;
-				gzip_proxied any;
-				gzip_comp_level 6;
-				gzip_buffers 16 8k;
-				gzip_http_version 1.1;
+			gzip_vary on;
+			gzip_proxied any;
+			gzip_comp_level 6;
+			gzip_buffers 16 8k;
+			gzip_http_version 1.1;
 
-				gzip_types application/json;
+			gzip_types application/json;
+			
+			client_max_body_size 100M;
 
+		}
+
+		server {
+			listen 443;
+			listen [::]:443;
+			server_name idlogin.devhois;
+			ssl on;
+			ssl_certificate /opt/hois/certs/nginx.crt;
+			ssl_certificate_key /opt/hois/certs/nginx.key;
+			ssl_client_certificate /opt/hois/certs/id.crt;
+			ssl_protocols TLSv1 TLSv1.1 TLSv1.2;
+			ssl_verify_client on;
+			ssl_session_cache off;
+			ssl_verify_depth 2;
+			#Enabled ciphers
+			ssl_ciphers "ECDHE-RSA-AES256-GCM-SHA384";
+			ssl_prefer_server_ciphers on;
+
+
+			location / {
+				expires -1;
+				proxy_pass http://backend/hois_back/idlogin;
+				proxy_set_header Host $http_host;
+				proxy_set_header X-Real-IP $remote_addr;
+				proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+				proxy_set_header SSL_CLIENT_VERIFY $ssl_client_verify;
+				proxy_set_header SSL_CLIENT_CERT $ssl_client_cert;
+				add_header 'Access-Control-Allow-Headers' 'Authorization';
+				add_header 'Access-Control-Expose-Headers' 'Authorization';
+				add_header 'Access-Control-Max-Age' 1;
+			}
 		}
 
 		upstream backend {
-			server 141.192.105.96:8080 fail_timeout=0;
+			server devhois:8080 fail_timeout=0;
 		}
 
 		
-		-------------------------------------------------------------------------------------------
+	------------------------------------------------------------------------------------------------
 				
 		
 
@@ -361,19 +465,26 @@ NB! XXX - frontendi server, nt devhoisfront
 		4. spring.redis.host - redise asukoht, vaikimisi localhost
 		5. spring.redis.port - redise port, vaikimisi 6379
 		6. spring.mail.host - e-maili saatmise host, vaikimisi mail.neti.ee
-		7. sais.endpoint - SAIS-i veebiteenuste pöördumise url kujul (SAISi veebiteenused hetkel realiseeritud vastu x-tee v5) http://TURVASERVER5/cgi-bin/consumer_proxy, nt 
-		8. sais.consumer - SAIS-i veebiteenuste kliendi reg. kood, nt 90005872
-		9. ehis.client.xRoadInstance - HITSA x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test
-		10. ehis.client.memberClass - HITSA nn memberClass vastavas keskkonaas (arenduses COM ja testis NGO), vaikimisi NGO
-		11. ehis.client.memberCode - HITSA reg. kood, vaikimisi 90005872
-		12. ehis.client.subsystemCode - HITSA allsüsteemi kood, vaikimisi generic-consumer
-		13. ehis.service.xRoadInstance - EHISe x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test, peab olema sama mis ehis.client.xRoadInstance
-		14. ehis.service.memberClass - EHISe nn memberClass vastavas keskkonnas, testis vaikimisi GOV
-		15. ehis.service.memberCode - EHISe reg. kood, vaikimisi 70000740
-		16. ehis.service.subsystemCode - EHISe allsüsteemi kood, vaikimisis ehis
-		18. ehis.user - päringu käivitaja kujul EE+ISIKUKOOD, nt EE38002240211
-		19. ehis.endpoint - EHISe veebiteenuste pöördumise url kujul (EHISe veebiteenused hetkel realiseeritud vastu x-tee v6) http://TURVASERVER6/cgi-bin/consumer_proxy
-    4. Tekitada hois kausta frontend.config.js ja muuta backendi url: http://XXX/hois_back, kus XXX asemel kirjutada frontendi server
+		7. hois.mail.receivers  - e-maili saatja, vaikimisi hois@hois.ee
+		8. hois.frontend.baseUrl - HÕISi frontend url, nt https://devhois/#/
+		9. sais.endpoint - SAIS-i veebiteenuste pöördumise url kujul (SAISi veebiteenused hetkel realiseeritud vastu x-tee v5) http://TURVASERVER5/cgi-bin/consumer_proxy, nt 
+		10. sais.consumer - SAIS-i veebiteenuste kliendi reg. kood, nt 90005872
+		11. ehis.client.xRoadInstance - HITSA x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test
+		12. ehis.client.memberClass - HITSA nn memberClass vastavas keskkonaas (arenduses COM ja testis NGO), vaikimisi NGO
+		13. ehis.client.memberCode - HITSA reg. kood, vaikimisi 90005872
+		14. ehis.client.subsystemCode - HITSA allsüsteemi kood, vaikimisi generic-consumer
+		15. ehis.service.xRoadInstance - EHISe x-tee keskkond (arendus e. ee-dev, test e. ee-test või live e. EE), vaikimisi ee-test, peab olema sama mis ehis.client.xRoadInstance
+		16. ehis.service.memberClass - EHISe nn memberClass vastavas keskkonnas, testis vaikimisi GOV
+		17. ehis.service.memberCode - EHISe reg. kood, vaikimisi 70000740
+		18. ehis.service.subsystemCode - EHISe allsüsteemi kood, vaikimisis ehis
+		19. ehis.user - päringu käivitaja kujul EE+ISIKUKOOD, nt EE38002240211
+		20. ehis.endpoint - EHISe veebiteenuste pöördumise url kujul (EHISe veebiteenused hetkel realiseeritud vastu x-tee v6) http://TURVASERVER6/cgi-bin/consumer_proxy
+		21. ekis.endpoint - EKISe veebiteenuste pöördumise koht
+		22. hois.digidoc4j.testMode - digiallkirjastamine viis, vaikimisi true (testimine)
+    4. Tekitada hois kausta frontend.config.js ja muuta järgmised parameetrid:
+		apiUrl - frontendi server, nt https://localhost/hois_back
+		idCardLoginUrl - ID-kaardiga sisselogimiseks seadistatud server (vt proxy_backend.conf, host peab olema avaliku kasutaja jaoks nime järgi kättesaadav, soovitatav kasutada kehtivat sertifikaati, self-signed sertifikaadiga serveris võivad tekkida mõningad probleemid ID-kaardiga autentimisel), nt https://idlogin.devhois
+		ekisUrl - EKISe lepingute, käskkirjade, tõendite asukoht, testimiseks kasutatakse https://kis-test.hm.ee/?wdsturi=3Dpage%3=Dview_dynobj%26pid%3D
 	5. Backendi ehitamiseka paigaldamiseks
 		1. Teisendada kaasa pandud hois_back.jar /opt/hois kausta
 		2. veenduda, et /opt/hois kaustas on olemas muudetud application.properties fail ja käivitada käsk "java -jar hois_back.jar", rakendus läheb käima.
@@ -383,5 +494,5 @@ NB! XXX - frontendi server, nt devhoisfront
 		2. Käivitada käsk "npm install"
 		3. Käivitada käsk "bower install"
 		4. Käivitada käsk "grunt build"
-		5. Käivitada käsk "rm -Rf /usr/share/nginx/html/*" (nginxist vana seisu tühjendamiseks)
-		6. Käivitada käsk "cp -r dist/. /usr/share/nginx/html/" (kopeeritakse fontendi uus seis nginx/html kausta)
+		5. Käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)
+		6. Käivitada käsk "cp -r dist/. /opt/hois/html/" (kopeeritakse frontendi uus seis /opt/hois/html kausta)

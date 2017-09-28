@@ -21,25 +21,19 @@ public class TeacherForm extends VersionedCommand {
     @Valid
     @NotNull
     private TeacherPersonForm person;
-
+    @Valid
     private Set<TeacherPositionEhisForm> teacherPositionEhis;
-
     private Boolean isVocational = Boolean.FALSE;
     private Boolean isHigher = Boolean.FALSE;
     private Boolean isActive = Boolean.TRUE;
-
     private AutocompleteResult teacherOccupation;
-
     private Boolean isStudyPeriodScheduleLoad = Boolean.FALSE;
-
     @NotEmpty
     @Size(max = 100)
     private String email;
-
     @NotEmpty
     @Size(max = 100)
     private String phone;
-
     @NotNull
     private Short scheduleLoad;
 
@@ -59,16 +53,11 @@ public class TeacherForm extends VersionedCommand {
         this.isActive = isActive;
     }
 
-
-
-    @EstonianIdCode
     public static class TeacherPersonForm {
 
         private Long id;
-
         @EstonianIdCode
         private String idcode;
-
         @NotEmpty
         @Size(max = 100)
         private String firstname;
@@ -80,7 +69,6 @@ public class TeacherForm extends VersionedCommand {
         private String citizenship;
         @Size(max = 100)
         private String nativeLanguage;
-
         private LocalDate birthdate;
         @NotEmpty
         @ClassifierRestriction(MainClassCode.SUGU)
@@ -179,7 +167,9 @@ public class TeacherForm extends VersionedCommand {
         @NotEmpty
         @ClassifierRestriction(MainClassCode.EHIS_AMETIKOHT)
         private String position;
+        @Size(max = 255)
         private String positionSpecificationEt;
+        @Size(max = 255)
         private String positionSpecificationEn;
         @NotEmpty
         @ClassifierRestriction(MainClassCode.EHIS_LEPING)
@@ -199,8 +189,9 @@ public class TeacherForm extends VersionedCommand {
         // TODO: VALIDATION(this or opetaja keel req)
         @ClassifierRestriction(MainClassCode.EHIS_TOOSUHE)
         private String employmentType;
+        @Size(max = 255)
         private String employmentTypeSpecification;
-
+        @Size(max = 100)
         private String employmentCode;
 
         // TODO: VALIDATION(this or toosuhe req)

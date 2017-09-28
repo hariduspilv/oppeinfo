@@ -1,7 +1,8 @@
 package ee.hitsa.ois.enums;
 
-import java.util.Arrays;
 import java.util.List;
+
+import ee.hitsa.ois.util.EnumUtil;
 
 public enum OccupationalGrade {
 
@@ -14,7 +15,13 @@ public enum OccupationalGrade {
     KUTSEHINDAMINE_X;
 
 
-    public static final List<String> OCCUPATIONAL_GRADE_POSITIVE = Arrays.asList(KUTSEHINDAMINE_5.name(), KUTSEHINDAMINE_4.name(),
-            KUTSEHINDAMINE_4.name(), KUTSEHINDAMINE_A.name());
+    public static final List<String> OCCUPATIONAL_GRADE_POSITIVE = EnumUtil.toNameList(KUTSEHINDAMINE_5, KUTSEHINDAMINE_4,
+            KUTSEHINDAMINE_3, KUTSEHINDAMINE_A);
 
+    public static final List<String> OCCUPATIONAL_VALUE_GRADE_POSITIVE = EnumUtil.toNameList(KUTSEHINDAMINE_5, KUTSEHINDAMINE_4,
+            KUTSEHINDAMINE_3);
+    
+    public static boolean isPositive(String gradeCode) {
+        return OCCUPATIONAL_GRADE_POSITIVE.contains(gradeCode);
+    }
 }

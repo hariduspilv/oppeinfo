@@ -6,11 +6,7 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController'
   $q.all([$scope.statusList.$promise, $scope.statusList.$promise]).then(function() {
     Classifier.setSelectedCodes($scope.statusList, ["SAIS_AVALDUSESTAATUS_T"]);
   });
-  
-  QueryUtils.endpoint('/autocomplete/saisAdmissionCodes').query(function(result) {
-    $scope.saisAdmissionCodes = result;
-  });
-  
+
   var clMapper = Classifier.valuemapper({applicationStatus: 'SAIS_AVALDUSESTAATUS'});
   $scope.importApplications = function() {
     if($scope.applicationImportForm.$valid) {
@@ -25,9 +21,8 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController'
         $scope.result = true;
         message.info('reception.application.importFinished');
         $mdDialog.hide();
-      }).catch(function() {
-        $mdDialog.hide();
-      });
+      }).catch($mdDialog.hide);
+
       var parentEl = angular.element(document.body);
       $mdDialog.show({
         parent: parentEl,

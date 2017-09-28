@@ -1,0 +1,125 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+  <div flex>
+    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'higherProtocol.studyPeriod' | translate}}</label>
+          <hois-select ng-model="criteria.studyPeriod" type="studyperiod" required autofocus></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'higherProtocol.subject' | translate}}</label>
+          <input type="text" ng-model="criteria.subject">
+          <!-- <hois-select ng-model="criteria.subject" type="subject" criteria="{higher: true}"></hois-select> -->
+
+        </md-input-container>
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5" ng-show="auth.isAdmin()">
+          <label class="textInput">{{'higherProtocol.teacher' | translate}}</label>
+          <hois-select ng-model="criteria.teacher" type="teacher" criteria="{higher: true}"></hois-select>
+        </md-input-container>
+
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="50" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'higherProtocol.protocolStatus' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.status" criteria="{higher: true}" model-value-attr="code" main-classifier-code="PROTOKOLL_STAATUS"></hois-classifier-select>
+        </md-input-container>
+        <md-input-container flex="45" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+          <label class="textInput">{{'higherProtocol.number' | translate}}</label>
+          <input type="text" ng-model="criteria.protocolNr">
+        </md-input-container>
+      </div>
+
+
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="50" flex-sm="100" flex-xs="100">
+          <div layout="column" flex>
+            <label class="common-label">{{'higherProtocol.protocolCreatedDate' | translate}}</label>
+            <div layout="row" flex>
+              <md-input-container>
+                <label>{{'main.from' | translate}}</label>
+                <md-datepicker ng-model="criteria.insertedFrom"></md-datepicker>
+              </md-input-container>
+              <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'main.thru' | translate}}</label>
+                <md-datepicker ng-model="criteria.insertedThru" md-min-date="criteria.insertedFrom"></md-datepicker>
+              </md-input-container>
+             </div>
+          </div>
+        </div>
+
+        <div flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <div layout="column" flex>
+            <label class="common-label">{{'higherProtocol.protocolConfirmedDate' | translate}}</label>
+            <div layout="row" flex>
+              <md-input-container>
+                <label>{{'main.from' | translate}}</label>
+                <md-datepicker ng-model="criteria.confirmDateFrom"></md-datepicker>
+              </md-input-container>
+              <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'main.thru' | translate}}</label>
+                <md-datepicker ng-model="criteria.confirmDateThru" md-min-date="criteria.confirmDateFrom"></md-datepicker>
+              </md-input-container>
+             </div>
+          </div>
+        </div>
+      </div>
+      <br><br><br>
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="openCreateProtocolDialog()">{{'main.button.create' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column md-order-by="protocolNr">{{'higherProtocol.number' | translate}}</th>
+            <th md-column md-order-by="protocolHdata.type.{{currentLanguageNameField()}}">{{'higherProtocol.type' | translate}}</th>
+            <th md-column md-order-by="protocolHdata.subjectStudyPeriod.subject.{{currentLanguageNameField()}}">{{'higherProtocol.subject' | translate}}</th>
+            <th md-column>{{'higherProtocol.teacher' | translate}}</th>
+            <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'main.status' | translate}}</th>
+            <th md-column md-order-by="inserted">{{'higherProtocol.insertedDate' | translate}}</th>
+            <th md-column md-order-by="confirmDate">{{'higherProtocol.confirmedDate' | translate}}</th>
+            <th md-column md-order-by="confirmer">{{'higherProtocol.confirmer' | translate}}</th>
+            <th md-column></th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell><a ng-href="#/higherProtocols/{{::row.id}}/view">{{::row.protocolNr}}</a></td>
+            <td md-cell>{{currentLanguageNameField(row.protocolType)}}</td>
+            <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
+            <td md-cell>
+              <table>
+                <tr ng-repeat="teacher in row.teachers | orderBy">
+                  <td>{{teacher}}</td>
+                </tr>
+              </table>
+            </td>
+            <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+            <td md-cell>{{row.inserted | hoisDate}}</td>
+            <td md-cell>{{row.confirmDate | hoisDate}}</td>
+            <td md-cell>{{::row.confirmer}}</td>
+            <td md-cell>
+              <md-button md-no-ink class="md-primary change-button"
+              ng-href="#/higherProtocols/{{::row.id}}/edit" ng-show="row.canChange">{{'main.button.change' | translate}}</md-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]" md-page="criteria.page" md-total="{{tabledata.totalElements}}"
+      md-on-paginate="loadData" md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}"
+      md-page-select></md-table-pagination>
+  </div>
+</div>

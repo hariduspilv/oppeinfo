@@ -4,334 +4,696 @@ angular.module('hitsaOis')
   .factory('Menu', function(config, $location, $rootScope, USER_ROLES, $route) {
 
     var sections = [];
-    sections.push({
-      name: 'main.menu.curriculum.label', // todo curricula-vs-curriculums
-      type: 'toggle',
-      pages: [
-        {
-          name: 'main.menu.curriculum.label',
-          url: "/curriculum?_menu"
-        },
-        //{name: 'Õppejõud'},
-        {
-          name: 'Õppeained',
-          url: "/subject?_menu",
-          studyLevel: {
+
+    function getAdminSections() {
+      sections.push({
+        name: 'main.menu.academicCalendar.label',
+        type: 'link',
+        url: "/academicCalendar"
+      });
+
+      sections.push({
+        name: 'main.menu.viewTimetable.label',
+        type: 'link',
+        url: "/timetable/generalTimetableByGroup"
+      });
+
+      sections.push({
+        name: 'main.menu.curriculum.label', // todo curricula-vs-curriculums
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.curriculum.schoolCurriculums',
+            url: "/curriculum?_menu"
+          },
+          {
+            name: 'main.menu.curriculum.subjects',
+            url: "/subject?_menu",
+            studyLevel: {
               higher: true
-          }
-        },
-        //{name: 'Tunniplaan', access: ['']},
-        //{name: 'Vilistlased'},
-        {
-          name: 'Riiklikud õppekavad',
-          url: "/stateCurriculum?_menu"
-        },
-        //{name: 'Riikliku õppekava lisamine', url: "/stateCurriculum/new"},
-        //{name: 'Õppekavade otsing', url: "/curriculum"},
-        {
-          name: 'Kutseõppe õk sisestamine',
-          url: "/vocationalCurriculum/new",
-          studyLevel: {
+            }
+          },
+          {
+            name: 'main.menu.curriculum.stateCurriculums',
+            url: "/stateCurriculum?_menu",
+            studyLevel: {
               vocational: true
-          }
-        },
-        {
-          name: 'Kõrgharidusõppe õk sisestamine',
-          url: "/higherCurriculum/new",
-          studyLevel: {
-              higher: true
-          }
-        }
-      ]
-    });
-
-    sections.push({
-        name: 'main.menu.directives.label',
-        type: 'toggle',
-        pages: [
-          {
-            name: 'main.menu.directives.search',
-            url: "/directives?_menu"
-          }
+            }
+          },
         ]
       });
 
-    sections.push({
-        name: 'main.menu.studentGroup.label',
-        type: 'toggle',
-        pages: [
-          {
-            name: 'main.menu.studentGroup.search',
-            url: "/studentgroups?_menu"
-          }
-        ]
-      });
-
-    sections.push({
+      sections.push({
         name: 'main.menu.student.label',
         type: 'toggle',
         pages: [
           {
-            name: 'main.menu.student.search',
-            url: "/students?_menu"
+            name: 'main.menu.student.studentInfo',
+            url: '/students?_menu'
           },
           {
-            name: 'Esindajate avaldused',
-            url: "/studentrepresentatives/applications?_menu",
-            studyLevel: {
-                vocational: true
-            }
+            name: 'main.menu.student.studentGroups',
+            url: 'studentgroups?_menu'
           },
           {
-            name: 'Esindajaks saamise avaldus',
-            url: "/studentrepresentatives/applications/new?_menu",
+            name: 'main.menu.student.absences',
+            url: '/absences',
             studyLevel: {
-                vocational: true
+              vocational: true
             }
           }
         ]
       });
 
-    sections.push({
-      name: 'main.menu.teachers.label',
-      type: 'toggle',
-      pages: [
-        {
-          name: 'main.menu.teachers.search',
-          url: "/teachers?_menu"
-        },
-        {
-          name: 'main.menu.subjectStudyPeriods.search',
-          url: "/subjectStudyPeriods?_menu"
-        }]
-    });
+      sections.push({
+        name: 'main.menu.teachers.label',
+        type: 'link',
+        url: "/teachers?_menu"
+      });
 
-    sections.push({
-      name: 'main.menu.fixData.label', // todo rename fixData
-      type: 'toggle',
-      pages: [
-        {
-          name: 'main.menu.fixData.schools',
-          id: 'schools',
-          url: "/school?_menu"
-        },
-        {
-          name: 'main.menu.fixData.buildings',
-          url: "/rooms/search?_menu"
-        },
-        {
-          name: 'main.menu.fixData.departments',
-          url: "/school/departments?_menu"
-        },
-        {
-          name: 'main.menu.fixData.teacheroccupations',
-          url: "/school/teacheroccupations?_menu"
-        },
-        {
-          name: 'main.menu.fixData.directivecoordinators',
-          url: "/directives/coordinators?_menu"
-        },
-        {
-          name: 'main.menu.fixData.generalmessages',
-          url: "/generalmessages?_menu"
-        },
-        {
-          name: 'main.menu.fixData.messageTemplates',
-          url: "/messageTemplate?_menu"
-        },
-        {
-          name: 'main.menu.fixData.studyLevels',
-          url: "/school/studyLevels"
-        },
-        {
-          name: 'main.menu.fixData.studyYears',
-          url: "/school/studyYears"
-        },
-        {
-          name: 'main.menu.fixData.classifiers',
-          id: 'classifiers',
-          url: "/classifier?_menu"
-        },
-        {
-          name: 'main.menu.fixData.saisClassifiers',
-          id: 'saisClassifier',
-          url: "/saisClassifier?_menu"
-        },
-        {
-          name: 'main.menu.fixData.users',
-          id: 'users',
-          url: "/persons?_menu"
-        }
-      ]
-    });
-
-    sections.push({
-      name: 'main.menu.applications.label',
-      type: 'toggle',
-      pages: [
-        {
-          name: 'main.menu.applications.search',
-          id: 'applications',
-          url: "/applications?_menu"
-        },
-        {
-          name: 'main.menu.applications.student.list',
-          id: 'studentApplicationsList',
-          url: "/applications/student?_menu"
-        }
-      ]
-    });
-
-    sections.push({
-      name: 'main.menu.study.label',
-      type: 'toggle',
-      pages: [
-        {
-          name: 'main.menu.study.journal.search',
-          url: "/journals?_menu"
-        },
-        {
-          name: 'main.menu.certificates.label',
-          url: "/certificate?_menu"
-        },
-        {
-          name: 'main.menu.study.notifications',
-          url: "/messages/received?_menu"
-        },
-        {
-          name: 'main.menu.studyYearSchedule.edit',
-          url: "/studyYearSchedule"
-        },
-        {
-          name: 'main.menu.studyYearSchedule.legend',
-          url: "/studyYearScheduleLegend"
-        },
-        {
-          name: 'main.menu.study.moduleProtocol.search',
-          url: "/moduleProtocols?_menu"
-        },
-        {
-          name: 'main.menu.declaration.current',
-          url: "/declaration/current/view",
-          studyLevel: {
-              higher: true
+      sections.push({
+        name: 'main.menu.documents.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.documents.applications',
+            url: "/applications?_menu",
+          },
+          {
+            name: 'main.menu.documents.directives',
+            url: "/directives?_menu"
+          },
+          {
+            name: 'main.menu.documents.certificates',
+            url: '/certificate?_menu'
+          },
+          {
+            name: 'main.menu.documents.practiceContracts',
+            url: "/contracts?_menu"
+          },
+          {
+            name: 'main.menu.documents.representativeApplications',
+            url: "/studentrepresentatives/applications?_menu",
           }
-        },
-        {
-          name: 'main.menu.declaration.search',
-          url: "/declarations?_menu",
-          studyLevel: {
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.study.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.study.declarations',
+            url: "/declarations?_menu",
+            studyLevel: {
               higher: true
-          }
-        }
-      ]
-    });
-
-
-    sections.push({
-      name: 'main.menu.reception.label',
-      type: 'toggle',
-      pages: [
-        {
-          name: 'main.menu.reception.saisAdmission.search',
-          id: 'receptionSaisAdmissionSearch',
-          url: "/reception/saisAdmission/search?_menu"
-        },
-        {
-          name: 'main.menu.reception.saisAdmission.importSais',
-          id: 'receptionSaisAdmissionImport',
-          url: "/reception/saisAdmission/import?_menu"
-        },
-        {
-          name: 'main.menu.reception.saisApplication.search',
-          id: 'receptionSaisApplicationSearch',
-          url: "/reception/saisApplication/search?_menu"
-        },
-        {
-          name: 'main.menu.reception.saisApplication.importSais',
-          id: 'receptionSaisApplicationImport',
-          url: "/reception/saisApplication/import?_menu"
-        },
-      ]
-    });
-
-    sections.push({
-      name: 'main.menu.timetable.label',
-      type: 'toggle',
-      pages: [
-        {
-          name: 'main.menu.timetable.lessonTime.search',
-          id: 'timetableLessonTimeSearch',
-          url: "/timetable/lessonTime/search?_menu"
-        },
-        {
-          name: 'main.menu.lessonplan.label',
-          id: 'timetableLessonPlanSearch',
-          url: "/lessonplans/vocational?_menu"
-        },
-        {
-          name: 'main.menu.subjectStudyPeriods.plans',
-          url: "/subjectStudyPeriodPlans?_menu",
-          studyLevel: {
+            }
+          },
+          {
+            name: 'main.menu.study.journal.journalsVocational',
+            url: "/journals?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.study.journal.journalsHigher',
+            url: "/journals?_menu",
+            studyLevel: {
               higher: true
+            }
+          },
+          {
+            name: 'main.menu.study.practiceJournal.label',
+            url: "/practiceJournals?_menu"
+          },
+          {
+            name: 'main.menu.study.examTimes',
+            url: '/examTimes',
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.study.moduleProtocol.label',
+            url: "/moduleProtocols?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.study.protocol.search',
+            url: "/higherProtocols?_menu",
+            studyLevel: {
+              higher: true
+            }
           }
-        },
-        {
-          name: 'main.menu.subjectStudyPeriods.label',
-          url: "/subjectStudyPeriods/studentGroups?_menu"
-        },
-        {
-          name: 'main.menu.lessonplan.event.label',
-          url: "/lessonplans/events?_menu"
-        }
-      ]
-    });
+        ]
+      });
 
-    sections.push({
-      name: 'main.menu.dataexchange.label',
-      type: 'toggle',
-      pages: [
-        {
-          name: 'main.menu.dataexchange.teacherinfo.export',
-          id: 'teacherinfoExport',
-          url: "/ehis/teacher/export?_menu"
-        }
-      ]
-    });
+      sections.push({
+        name: 'main.menu.studyPreparation.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.studyPreparation.subjectTeacher',
+            url: '/subjectStudyPeriods?_menu',
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.studyPreparation.studyYearSchedule.legend',
+            url: "/studyYearScheduleLegend",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.studyPreparation.studyYearSchedule.edit',
+            url: "/studyYearSchedule",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.studyPreparation.lessonTime',
+            id: 'timetableLessonTimeSearch',
+            url: "/timetable/lessonTime/search?_menu"
+          },
+          {
+            name: 'Kutseõp. tunnijaotusplaan (peidame)',
+            id: 'timetableLessonTimeSearch',
+            url: "/lessonplans/vocational?_menu"
+          },
+          {
+            name: 'main.menu.studyPreparation.subjectStudyPeriods.plans',
+            url: "/subjectStudyPeriodPlans?_menu",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.studyPreparation.subjectStudyPeriods.label',
+            url: "/subjectStudyPeriods/studentGroups?_menu"
+          },
+          {
+            name: 'main.menu.studyPreparation.timetableManagement.label',
+            url: "/timetable/timetableManagement?_menu"
+          },
+          {
+            name: 'main.menu.studyPreparation.events.label',
+            url: "/lessonplans/events?_menu"
+          }
+        ]
+      });
 
-    sections.push({
-      name: 'main.menu.reports.label',
-      type: 'toggle',
-      pages: [
-        {
-          name: 'main.menu.reports.students',
-          url: "/reports/students/students?_menu"
-        },
-        {
-          name: 'main.menu.reports.studentstatistics',
-          url: "/reports/students/statistics?_menu"
-        },
-        {
-          name: 'main.menu.reports.studentstatisticsbyperiod',
-          url: "/reports/students/statistics/byperiod?_menu"
-        },
-        {
-          name: 'main.menu.reports.curriculumscompletion',
-          url: "/reports/curriculums/completion?_menu"
-        },
-        {
-          name: 'main.menu.reports.teachersload',
-          url: "/reports/teachers/load?_menu"
-        }
-      ]
-    });
+      sections.push({
+        name: 'main.menu.reports.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.reports.students',
+            url: "/reports/students/students?_menu"
+          },
+          {
+            name: 'main.menu.reports.studentstatistics',
+            url: "/reports/students/statistics?_menu"
+          },
+          {
+            name: 'main.menu.reports.studentstatisticsbyperiod',
+            url: "/reports/students/statistics/byperiod?_menu"
+          },
+          {
+            name: 'main.menu.reports.curriculumscompletion',
+            url: "/reports/curriculums/completion?_menu"
+          },
+          {
+            name: 'main.menu.reports.teachersloadvocational',
+            url: "/reports/teachers/load/vocational?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.reports.teachersloadhigher',
+            url: "/reports/teachers/load/higher?_menu",
+            studyLevel: {
+              higher: true
+            }
+          }
+        ]
+      });
 
-    sections.push({
-      name: 'main.menu.more.label',
-      type: 'toggle',
-      pages: [
-      ]
-    });
+      sections.push({
+        name: 'main.menu.graduation.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.graduation.committees',
+            url: "/committees?_menu"
+          },
+          {
+            name: 'main.menu.graduation.thesisTopics',
+            url: "/thesisTopics",
+          },
+          {
+            name: 'main.menu.graduation.thesisProtocols',
+            url: "/thesisProtocols",
+          },
+          {
+            name: 'main.menu.graduation.forms',
+            url: "/forms",
+          },
+          {
+            name: 'main.menu.graduation.documentsPreparation',
+            url: "/documentsPreparation"
+          },
+          {
+            name: 'main.menu.graduation.documentsPrint',
+            url: "/documentsPrint"
+          }
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.dataexchange.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.dataexchange.teacherinfoExportHigher',
+            id: 'teacherinfoExport',
+            url: "/ehis/teacher/export/higher?_menu",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.dataexchange.teacherinfoExportVocational',
+            id: 'teacherinfoExport',
+            url: "/ehis/teacher/export/vocational?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.dataexchange.studentinfoExport',
+            url: "/ehis/student/export?_menu"
+          },
+          {
+            name: 'main.menu.dataexchange.ehisLogs',
+            url: "/ehis/logs?_menu"
+          }
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.reception.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.reception.saisAdmission.label',
+            id: 'receptionSaisAdmissionSearch',
+            url: "/reception/saisAdmission/search?_menu"
+          },
+          {
+            name: 'main.menu.reception.saisApplication.label',
+            id: 'receptionSaisApplicationSearch',
+            url: "/reception/saisApplication/search?_menu"
+          },
+          {
+            name: 'main.menu.reception.saisAdmission.importSais',
+            id: 'receptionSaisAdmissionImport',
+            url: "/reception/saisAdmission/import?_menu"
+          },
+          {
+            name: 'main.menu.reception.saisApplication.importSais',
+            id: 'receptionSaisApplicationImport',
+            url: "/reception/saisApplication/import?_menu"
+          },
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.settings.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.settings.studyYears',
+            url: "/school/studyYears"
+          },
+          {
+            name: 'main.menu.settings.studyLevels',
+            url: "/school/studyLevels"
+          },
+          {
+            name: 'main.menu.settings.generalmessages',
+            url: "/generalmessages?_menu"
+          },
+          {
+            name: 'main.menu.settings.messageTemplates',
+            url: "/messageTemplate?_menu"
+          },
+          {
+            name: 'main.menu.settings.documentcoordinators',
+            url: "/directives/coordinators?_menu"
+          },
+          {
+            name: 'main.menu.settings.teacheroccupations',
+            url: "/school/teacheroccupations?_menu"
+          },
+          {
+            name: 'main.menu.settings.buildings',
+            url: "/rooms/search?_menu"
+          },
+          {
+            name: 'main.menu.settings.departments',
+            url: "/school/departments?_menu"
+          },
+          {
+            name: 'main.menu.settings.users',
+            id: 'users',
+            url: "/persons?_menu"
+          }
+        ]
+      });
+    }
+
+    function getTeacherSections() {
+      sections.push({
+        name: 'main.menu.curriculums.label',
+        url: "/curriculum?_menu",
+        type: 'link',
+      });
+
+      sections.push({
+        name: 'main.menu.subjects.label',
+        url: "/subject?_menu",
+        type: 'link',
+        studyLevel: {
+          higher: true
+        }
+      });
+
+      sections.push({
+        name: 'main.menu.timetableAndEvents.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.timetableAndEvents.timetable',
+            url: "/timetable/generalTimetableByGroup"
+          },
+          {
+            name: 'main.menu.timetableAndEvents.events',
+            url: "/lessonplans/events?_menu"
+          }
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.myData.label',
+        url: "/teachers/myData",
+        type: 'link'
+      });
+
+      sections.push({
+        name: 'main.menu.academicCalendar.label',
+        type: 'link',
+        url: "/academicCalendar"
+      });
+
+      sections.push({
+        name: 'main.menu.study.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.study.exams',
+            url: "/examTimes",
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.study.absences',
+            url: "/absences"
+          },
+          {
+            name: 'main.menu.study.journal.label',
+            url: "/journals?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.study.loads',
+            url: "/lessonplans/vocational"
+          },
+          {
+            name: 'main.menu.study.students',
+            url: "/students?_menu"
+          },
+          {
+            name: 'main.menu.study.moduleProtocol.label',
+            url: "/moduleProtocols?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.study.protocol.search',
+            url: "/higherProtocols?_menu",
+            studyLevel: {
+              higher: true
+            }
+          }
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.practiceAndGraduation.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.practiceAndGraduation.practiceJournal',
+            url: '/practiceJournals?_menu'
+          },
+          {
+            name: 'main.menu.practiceAndGraduation.committees',
+            url: '/committees?_menu'
+          },
+          {
+            name: 'main.menu.practiceAndGraduation.thesisProtocols',
+            url: '/thesisProtocols'
+          },
+          {
+            name: 'main.menu.practiceAndGraduation.thesisTopics',
+            url: '/thesisTopics'
+          },
+        ]
+      });
+    }
+
+    function getMainAdminSections() {
+      sections.push({
+        name: 'main.menu.curriculum.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.curriculum.stateCurriculums',
+            url: "/stateCurriculum?_menu"
+          },
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.mainData.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.mainData.schools',
+            url: "/school?_menu"
+          },
+          {
+            name: 'main.menu.mainData.classifiers',
+            url: "/classifier?_menu"
+          },
+          {
+            name: 'main.menu.mainData.saisClassifiers',
+            url: "/saisClassifier?_menu"
+          },
+          {
+            name: 'main.menu.mainData.users',
+            url: "/persons?_menu"
+          },
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.timetableLink.label',
+        type: 'link',
+        url: '/timetable/generalTimetableByGroup?_menu'
+      });
+    }
+
+    function getStudentSections() {
+      sections.push({
+        name: 'main.menu.curriculums.label',
+        url: "/curriculum?_menu",
+        type: 'link'
+      });
+
+      sections.push({
+        name: 'main.menu.subjects.label',
+        url: "/subject?_menu",
+        type: 'link'
+      });
+
+      sections.push({
+        name: 'main.menu.timetableLink.label',
+        type: 'link',
+        url: '/timetable/generalTimetableByGroup?_menu'
+      });
+
+      sections.push({
+        name: 'main.menu.myData.label',
+        url: "/students/myData",
+        type: 'link'
+      });
+
+      sections.push({
+        name: 'main.menu.academicCalendar.label',
+        type: 'link',
+        url: "/academicCalendar"
+      });
+
+      sections.push({
+        name: 'main.menu.myStudyInformation.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.myStudyInformation.journal',
+            url: '/fakeJournal'
+          },
+          {
+            name: 'main.menu.myStudyInformation.practiceJournal',
+            url: '/practiceJournals?_menu'
+          },
+          {
+            name: 'main.menu.myStudyInformation.results',
+            url: '/students/myResults'
+          },
+          {
+            name: 'main.menu.myStudyInformation.declaration',
+            url: '/declaration/current/view',
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.myStudyInformation.examRegistration',
+            url: '/examRegistration',
+            studyLevel: {
+              higher: true
+            }
+          },
+          {
+            name: 'main.menu.myStudyInformation.thesisTopicInput',
+            url: '/thesisTopicInput'
+          },
+          {
+            name: 'main.menu.myStudyInformation.otherStudents',
+            url: '/students?_menu'
+          }
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.documents.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.documents.applications',
+            url: "/applications/student?_menu",
+          },
+          {
+            name: 'main.menu.documents.certificates',
+            url: '/certificate?_menu'
+          },
+          {
+            name: 'main.menu.documents.practiceContracts',
+            url: "/contracts?_menu"
+          }
+        ]
+      });
+    }
+
+    function getExternalExpertSections() {}
+
+    function getParentSections() {
+      sections.push({
+        name: 'main.menu.curriculums.label',
+        url: "/curriculum?_menu",
+        type: 'link',
+      });
+
+      sections.push({
+        name: 'main.menu.subjects.label',
+        url: "/subject?_menu",
+        type: 'link',
+        studyLevel: {
+          higher: true
+        }
+      });
+
+      sections.push({
+        name: 'main.menu.timetableLink.label',
+        type: 'link',
+        url: '/timetable/generalTimetableByGroup?_menu'
+      });
+
+      sections.push({
+        name: 'main.menu.studentRepresentative.label',
+        type: 'link',
+        url: '/studentRepresentative'
+      });
+
+      sections.push({
+        name: 'main.menu.studentStudyInformation.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.studentStudyInformation.journal',
+            url: "/journal?_menu",
+            studyLevel: {
+              vocational: true
+            }
+          },
+          {
+            name: 'main.menu.studentStudyInformation.practiceJournal',
+            url: "/practiceJournals?_menu"
+          },
+          {
+            name: 'main.menu.studentStudyInformation.results',
+            url: '/results'
+          }
+        ]
+      });
+
+      sections.push({
+        name: 'main.menu.documents.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.documents.applications',
+            url: "/applications?_menu",
+          },
+          {
+            name: 'main.menu.documents.certificates',
+            url: '/certificate?_menu'
+          }
+        ]
+      });
+    }
 
     var self;
     var menu = [];
@@ -388,8 +750,8 @@ angular.module('hitsaOis')
     self = {
       sections: {},
 
-      setMenu: function (auth) {
-        buildMenu(auth);
+      setMenu: function (authenticatedUser) {
+        buildMenu(authenticatedUser);
       },
       selectSection: function(section) {
         self.openedSection = section;
@@ -444,20 +806,49 @@ angular.module('hitsaOis')
     }
 
 
-    function studyLevelMatch(section, school) {
-        if(angular.isDefined(section.studyLevel) && angular.isDefined(school) && school !== null) {
-            return school.higher && section.studyLevel.higher ||
-                   school.vocational && section.studyLevel.vocational;
+    function studyLevelMatch(section, authenticatedUser) {
+        if(angular.isDefined(section.studyLevel) && angular.isDefined(authenticatedUser.school) && authenticatedUser.school !== null) {
+            return authenticatedUser.higher && section.studyLevel.higher ||
+            authenticatedUser.vocational && section.studyLevel.vocational;
         }
         return true;
     }
 
+    function addToggleItem(pages, section, roles, authenticatedUser) {
+      if (section.pages.length > 0) {
+        for (var j = 0; j < section.pages.length; j++) {
+          addSubmenuItem(pages, section.pages[j], roles, authenticatedUser);
+        }
+      }
+      if (pages.length > 0) {
+        menu.push({
+          name: section.name,
+          type: 'toggle',
+          pages: pages
+        });
+      }
+    }
 
-    function addSubmenuItem(pages, section, roles, school) {
+    function addLinkItem(section, roles, authenticatedUser) {
       if (!_canAccess(section, roles) || !section.url) {
         return;
       }
-      if (!studyLevelMatch(section, school)) {
+      if (!studyLevelMatch(section, authenticatedUser)) {
+          return;
+      }
+
+      menu.push({
+        name: section.name,
+        type: section.type,
+        url: section.url
+      });
+    }
+
+    function addSubmenuItem(pages, section, roles, authenticatedUser) {
+      if (!_canAccess(section, roles) || !section.url) {
+        return;
+      }
+      if (!studyLevelMatch(section, authenticatedUser)) {
           return;
       }
 
@@ -468,23 +859,45 @@ angular.module('hitsaOis')
       });
     }
 
+    function getUserSections(authenticatedUser) {
+      sections = [];
+
+      switch(authenticatedUser.roleCode) {
+        case "ROLL_A":
+          getAdminSections();
+          break;
+        case "ROLL_P":
+          getMainAdminSections();
+          break;
+        case "ROLL_O":
+          getTeacherSections();
+          break;
+        case "ROLL_T":
+          getStudentSections();
+          break;
+        case "ROLL_L":
+          getParentSections();
+          break;
+        case "ROLL_V":
+          getExternalExpertSections();
+          break;
+      }
+    }
+
     // todo: generalize
-    function buildMenu(auth) {
-      var roles = auth.authorizedRoles || [''];
+    function buildMenu(authenticatedUser) {
+      var roles = authenticatedUser.authorizedRoles || [''];
       menu = [];
+
+      getUserSections(authenticatedUser);
+
       for (var i = 0; i < sections.length; i++) {
         var pages = [];
-        if (sections[i].pages.length > 0) {
-          for (var j = 0; j < sections[i].pages.length; j++) {
-            addSubmenuItem(pages, sections[i].pages[j], roles, auth.school);
-          }
-        }
-        if (pages.length > 0) {
-          menu.push({
-            name: sections[i].name,
-            type: 'toggle',
-            pages: pages
-          });
+
+        if (sections[i].type === 'toggle') {
+          addToggleItem(pages, sections[i], roles, authenticatedUser);
+        } else if (sections[i].type === 'link') {
+          addLinkItem(sections[i], roles, authenticatedUser);
         }
       }
       self.sections = menu;

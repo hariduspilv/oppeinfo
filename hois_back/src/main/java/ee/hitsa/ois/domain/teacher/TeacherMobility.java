@@ -1,5 +1,7 @@
 package ee.hitsa.ois.domain.teacher;
 
+import java.time.LocalDate;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -9,8 +11,6 @@ import javax.persistence.ManyToOne;
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 
-import java.time.LocalDate;
-
 @Entity
 public class TeacherMobility extends BaseEntityWithId {
 
@@ -18,6 +18,7 @@ public class TeacherMobility extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private Teacher teacher;
     private LocalDate start;
+    //FIXME: rename in database
     @Column(name = "\"end\"")
     private LocalDate end;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)

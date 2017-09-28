@@ -20,9 +20,9 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.ClassifierDto;
@@ -41,9 +41,9 @@ public class ClassifierController {
     /**
      * For creating new classifier
      */
-    @PostMapping("")
+    @PostMapping
     public ClassifierDto create(HoisUserDetails user, @Valid @RequestBody Classifier classifier) {
-        AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can create classifiers");
+        UserUtil.assertIsMainAdmin(user);
         return get(classifierService.save(classifier));
     }
 
@@ -52,7 +52,7 @@ public class ClassifierController {
      */
     @PutMapping("/{code}")
     public ClassifierDto update(HoisUserDetails user, @WithEntity("code") Classifier classifier, @Valid @RequestBody Classifier newClassifier) {
-        AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can update classifiers");
+        UserUtil.assertIsMainAdmin(user);
         EntityUtil.bindToEntity(newClassifier, classifier);
         return get(classifierService.save(classifier));
     }
@@ -68,7 +68,7 @@ public class ClassifierController {
     /**
      * Getting classifiers as paginated results
      */
-    @GetMapping("")
+    @GetMapping
     public Page<ClassifierSearchDto> search(ClassifierSearchCommand classifierSearchCommand, Pageable pageable) {
         // FIXME: add security constraints
         return classifierService.search(classifierSearchCommand, pageable);
@@ -90,7 +90,7 @@ public class ClassifierController {
      */
     @DeleteMapping("/{code}")
     public boolean delete(HoisUserDetails user, @PathVariable("code") String code) {
-        AssertionFailedException.throwIf(!user.isMainAdmin(), "Only main administrator can delete classifiers");
+        UserUtil.assertIsMainAdmin(user);
         classifierService.delete(code);
         return true;
     }

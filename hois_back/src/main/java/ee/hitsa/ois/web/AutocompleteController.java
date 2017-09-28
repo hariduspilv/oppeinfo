@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
@@ -23,14 +22,17 @@ import ee.hitsa.ois.web.commandobject.ClassifierAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
+import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
+import ee.hitsa.ois.web.dto.EnterpriseResult;
 import ee.hitsa.ois.web.dto.PersonDto;
 import ee.hitsa.ois.web.dto.SchoolDepartmentResult;
 import ee.hitsa.ois.web.dto.SchoolWithoutLogo;
-import ee.hitsa.ois.web.dto.StudyPeriodDto;
+import ee.hitsa.ois.web.dto.StudyPeriodWithYearDto;
 import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
@@ -49,7 +51,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/rooms")
-    public Page<AutocompleteResult> rooms(HoisUserDetails user, @Valid AutocompleteCommand lookup) {
+    public Page<AutocompleteResult> rooms(HoisUserDetails user, @Valid RoomsAutocompleteCommand lookup) {
         return asPage(autocompleteService.rooms(user.getSchoolId(), lookup));
     }
 
@@ -97,9 +99,9 @@ public class AutocompleteController {
     }
 
     @GetMapping("/persons")
-    public ResponseEntity<PersonDto> person(@Valid PersonLookupCommand lookup) {
-        Person person = autocompleteService.person(lookup);
-        return person != null ? new ResponseEntity<>(PersonDto.of(person), HttpStatus.OK) : ResponseEntity.notFound().build();
+    public ResponseEntity<PersonDto> person(HoisUserDetails user, @Valid PersonLookupCommand lookup) {
+        PersonDto person = autocompleteService.person(user, lookup);
+        return person != null ? new ResponseEntity<>(person, HttpStatus.OK) : ResponseEntity.notFound().build();
     }
 
     @GetMapping("/schools")
@@ -118,13 +120,23 @@ public class AutocompleteController {
     }
 
     @GetMapping("/subjects")
-    public Page<AutocompleteResult> subjects(HoisUserDetails user, AutocompleteCommand command) {
-        return autocompleteService.subjects(user.getSchoolId(), command).map(AutocompleteResult::of);
+    public Page<AutocompleteResult> subjects(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
+        return asPage(autocompleteService.subjects(user.getSchoolId(), lookup));
+    }
+
+    @GetMapping("/subjectsList")
+    public List<AutocompleteResult> subjectsList(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
+        return autocompleteService.subjects(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/teachers")
     public Page<AutocompleteResult> teachers(HoisUserDetails user, @Valid TeacherAutocompleteCommand lookup) {
         return asPage(autocompleteService.teachers(user.getSchoolId(), lookup));
+    }
+
+    @GetMapping("/teachersList")
+    public List<AutocompleteResult> teachersList(HoisUserDetails user, @Valid TeacherAutocompleteCommand lookup) {
+        return autocompleteService.teachers(user.getSchoolId(), lookup);
     }
 
     @GetMapping("/students")
@@ -137,7 +149,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/studyPeriods")
-    public List<StudyPeriodDto> studyPeriods(HoisUserDetails user) {
+    public List<StudyPeriodWithYearDto> studyPeriods(HoisUserDetails user) {
         return autocompleteService.studyPeriods(user.getSchoolId());
     }
 
@@ -162,8 +174,13 @@ public class AutocompleteController {
     }
 
     @GetMapping("/journals")
-    public List<AutocompleteResult> journals(HoisUserDetails user) {
-        return autocompleteService.journals(user);
+    public List<AutocompleteResult> journals(HoisUserDetails user, @RequestParam(name = "studyYear", required = false) Long studyYear) {
+        return autocompleteService.journals(user, studyYear);
+    }
+
+    @GetMapping("/enterprises")
+    public List<EnterpriseResult> enterprises() {
+        return autocompleteService.enterprises();
     }
 
     private static <R> Page<R> asPage(List<R> data) {

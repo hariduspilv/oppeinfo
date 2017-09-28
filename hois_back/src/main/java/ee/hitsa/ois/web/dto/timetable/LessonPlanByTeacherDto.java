@@ -18,7 +18,7 @@ import ee.hitsa.ois.web.dto.timetable.LessonPlanDto.StudyPeriodDto;
 public class LessonPlanByTeacherDto {
 
     private final List<StudyPeriodDto> studyPeriods;
-    private final List<Integer> weekNrs;
+    private final List<Short> weekNrs;
     private final List<LessonPlanModuleJournalDto> journals;
     private final List<LessonPlanByTeacherSubjectDto> subjects;
 
@@ -27,7 +27,7 @@ public class LessonPlanByTeacherDto {
         weekNrs = studyPeriods.stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList());
 
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(studyYear);
-        this.journals = journals.stream().map(r -> LessonPlanModuleJournalForTeacherDto.of(r, capacityMapper, teacher)).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList());
+        this.journals = journals.stream().map(r -> LessonPlanModuleJournalForTeacherDto.of(r, capacityMapper, teacher)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
         this.subjects = subjects;
     }
 
@@ -35,7 +35,7 @@ public class LessonPlanByTeacherDto {
         return studyPeriods;
     }
 
-    public List<Integer> getWeekNrs() {
+    public List<Short> getWeekNrs() {
         return weekNrs;
     }
 

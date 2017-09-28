@@ -9,12 +9,13 @@ import ee.hitsa.ois.web.commandobject.CurriculumFileUpdateDto;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 
 public class CurriculumDto extends CurriculumForm {
-
-    private Long id; 
+    private Long id;
     private LocalDateTime inserted;
     private String insertedBy;
     private LocalDateTime changed;
     private String changedBy;
+    private String status;
+    private String stateCurrClass;
 
     public static CurriculumDto of(Curriculum curriculum) {
         CurriculumDto dto = EntityUtil.bindToDto
@@ -32,8 +33,23 @@ public class CurriculumDto extends CurriculumForm {
         dto.setOccupations(StreamUtil.toMappedSet(CurriculumOccupationDto::of, curriculum.getOccupations()));
         dto.setGrades(StreamUtil.toMappedSet(CurriculumGradeDto::of, curriculum.getGrades()));
         dto.setFiles(StreamUtil.toMappedSet(CurriculumFileUpdateDto::of, curriculum.getFiles()));
-
+        dto.setStateCurrClass(getStateCurrClass(curriculum));
         return dto;
+    }
+    
+    private static String getStateCurrClass(Curriculum curriculum) {
+        if(curriculum.getStateCurriculum() == null) {
+            return null;
+        }
+        return EntityUtil.getCode(curriculum.getStateCurriculum().getStateCurrClass());
+    }
+    
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 
     public Long getId() {
@@ -74,5 +90,13 @@ public class CurriculumDto extends CurriculumForm {
 
     public void setChangedBy(String changedBy) {
         this.changedBy = changedBy;
+    }
+
+    public String getStateCurrClass() {
+        return stateCurrClass;
+    }
+
+    public void setStateCurrClass(String stateCurrClass) {
+        this.stateCurrClass = stateCurrClass;
     }
 }

@@ -12,7 +12,7 @@ import ee.hitsa.ois.domain.Classifier;
 public class SubjectStudyPeriodPlanCapacity extends BaseEntityWithId {
 
     private Boolean isContact;
-    private Long hours;
+    private Short hours;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name="subject_study_period_plan_id", updatable = false, nullable = false)
@@ -28,10 +28,10 @@ public class SubjectStudyPeriodPlanCapacity extends BaseEntityWithId {
     public void setIsContact(Boolean isContact) {
         this.isContact = isContact;
     }
-    public Long getHours() {
+    public Short getHours() {
         return hours;
     }
-    public void setHours(Long hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
     public SubjectStudyPeriodPlan getPlan() {

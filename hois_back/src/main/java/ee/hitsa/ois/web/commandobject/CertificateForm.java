@@ -1,43 +1,42 @@
 package ee.hitsa.ois.web.commandobject;
 
-import java.math.BigInteger;
-
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotBlank;
 
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.CertificateValidator.ContentIsEditable;
+import ee.hitsa.ois.validation.CertificateValidator.StudentIsNotSet;
+import ee.hitsa.ois.validation.CertificateValidator.StudentIsSet;
+import ee.hitsa.ois.validation.CertificateValidator.ValidateLater;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
 public class CertificateForm extends VersionedCommand {
     @NotBlank
     @Size(max=1000)
     private String headline;
-    @NotBlank
+    @NotNull(groups = {ContentIsEditable.class})
     private String content;
     @Size(max=1000)
     private String whom;
-    @Size(max=20)
-    private String certificateNr;
-    @NotBlank
     @Size(max=100)
+    @NotNull(groups = {ValidateLater.class})
     private String signatoryName;
-    @NotBlank
     @Size(max=20)
+    @NotNull(groups = {ValidateLater.class})
     private String signatoryIdcode;
     @Size(max=100)
+    @NotNull(groups = {StudentIsNotSet.class})
     private String otherName;
     @Size(max=20)
+    @NotNull(groups = {StudentIsNotSet.class})
     private String otherIdcode;
-    private String wdUrl;
-    private BigInteger wdId;
+
     @NotNull
     @ClassifierRestriction(MainClassCode.TOEND_LIIK)
     private String type;
-    @NotNull
-    @ClassifierRestriction(MainClassCode.TOEND_STAATUS)
-    private String status;
+    @NotNull(groups = {StudentIsSet.class})
     private Long student;
     
     public String getOtherName() {
@@ -70,12 +69,6 @@ public class CertificateForm extends VersionedCommand {
     public void setWhom(String whom) {
         this.whom = whom;
     }
-    public String getCertificateNr() {
-        return certificateNr;
-    }
-    public void setCertificateNr(String certificateNr) {
-        this.certificateNr = certificateNr;
-    }
     public String getSignatoryName() {
         return signatoryName;
     }
@@ -88,29 +81,11 @@ public class CertificateForm extends VersionedCommand {
     public void setSignatoryIdcode(String signatoryIdcode) {
         this.signatoryIdcode = signatoryIdcode;
     }
-    public String getWdUrl() {
-        return wdUrl;
-    }
-    public void setWdUrl(String wdUrl) {
-        this.wdUrl = wdUrl;
-    }
-    public BigInteger getWdId() {
-        return wdId;
-    }
-    public void setWdId(BigInteger wdId) {
-        this.wdId = wdId;
-    }
     public String getType() {
         return type;
     }
     public void setType(String type) {
         this.type = type;
-    }
-    public String getStatus() {
-        return status;
-    }
-    public void setStatus(String status) {
-        this.status = status;
     }
     public Long getStudent() {
         return student;

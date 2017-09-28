@@ -1,8 +1,11 @@
 package ee.hitsa.ois.service;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+
 import java.lang.invoke.MethodHandles;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -14,25 +17,28 @@ import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.Message;
 import ee.hitsa.ois.domain.MessageReceiver;
 import ee.hitsa.ois.domain.MessageTemplate;
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
-import ee.hitsa.ois.repository.MessageRepository;
+import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.DataUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 
 @Transactional
 @Service
@@ -45,17 +51,12 @@ public class AutomaticMessageService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private MessageRepository messageRepository;
-    @Autowired
     private MessageTemplateService messageTemplateService;
-    @Autowired
-    private UserService userService;
     @Autowired
     private MailService mailService;
 
     public void sendMessageToSchoolAdmins(MessageType type, School school, Object dataBean) {
-        // XXX bad code: users are fetched but person is used
-        List<Person> persons = StreamUtil.toMappedList(User::getPerson, userService.findAllValidSchoolUsersByRole(school, Role.ROLL_A));
+        List<Person> persons = getPersonsWithRole(school, Role.ROLL_A);
 
         Message message = sendMessageToPersons(type, school, persons, dataBean);
 
@@ -65,30 +66,32 @@ public class AutomaticMessageService {
         }
     }
 
+    public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {
+        sendMessageToStudent(type, student, dataBean, null);
+    }
+
     public void sendMessageToStudent(MessageType type, Student student, Object dataBean, HoisUserDetails initiator) {
         Message message = sendMessageToPersons(type, student.getSchool(), Collections.singletonList(student.getPerson()), dataBean);
         if (message != null) {
             mailService.sendMail(message, Collections.singletonList(student.getEmail()));
         }
 
-        if (!StudentUtil.isAdult(student)) {
+        if (!StudentUtil.isAdultAndDoNotNeedRepresentative(student)) {
             sendMessageToStudentRepresentatives(type, student, dataBean, message, initiator);
         }
     }
 
-    public void sendMessageToStudent(MessageType type, Student student, Object dataBean) {
-        sendMessageToStudent(type, student, dataBean, null);
+    public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean) {
+        sendMessageToStudentRepresentatives(type, student, dataBean, null, null);
     }
 
     public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean, Message existingMessage, HoisUserDetails initiator) {
-        List<StudentRepresentative> representatives = student.getRepresentatives();
-        if(representatives == null || representatives.isEmpty()) {
+        if(StudentUtil.hasRepresentatives(student)) {
+            log.error("no representatives found to send message to");
             return;
         }
-        // XXX bad code: representatives are fetched but person is used
-        List<Person> persons = StreamUtil.toMappedList(StudentRepresentative::getPerson, representatives.stream()
-                .filter(sr -> Boolean.TRUE.equals(sr.getIsStudentVisible()))
-                .filter(sr -> initiator == null || !EntityUtil.getId(sr.getPerson()).equals(initiator.getPersonId())));
+
+        List<Person> persons = getStudentRepresentativePersons(student, initiator);
 
         Message message = sendMessageToPersons(type, student.getSchool(), persons, dataBean, existingMessage);
 
@@ -98,16 +101,25 @@ public class AutomaticMessageService {
         }
     }
 
-    public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean) {
-        sendMessageToStudentRepresentatives(type, student, dataBean, null, null);
-    }
-
     public void sendMessageToPerson(MessageType type, School school, Person person, Object data) {
         Message message = sendMessageToPersons(type, school, Collections.singletonList(person), data);
 
         if (message != null) {
             mailService.sendMail(message, Collections.singletonList(person.getEmail()));
         }
+    }
+
+    public void sendMessageToEnterprise(Enterprise enterprise, School school, MessageType type, Object dataBean) {
+        Message message = getMessage(type, school, dataBean);
+        Person automaticSender = em.getReference(Person.class, PersonUtil.AUTOMATIC_SENDER_ID);
+
+        if (message != null && StringUtils.hasText(enterprise.getContactPersonEmail())) {
+            mailService.sendMail(automaticSender.getEmail(), enterprise.getContactPersonEmail(), message.getSubject(), message.getContent());
+        }
+    }
+
+    private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean) {
+        return sendMessageToPersons(type, school, persons, dataBean, null);
     }
 
     private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean, Message existingMessage) {
@@ -123,21 +135,41 @@ public class AutomaticMessageService {
         return sendTemplateMessage(type, school, automaticSender, messageReceivers, dataBean, existingMessage);
     }
 
-    private Message sendMessageToPersons(MessageType type, School school, List<Person> persons, Object dataBean) {
-        return sendMessageToPersons(type, school, persons, dataBean, null);
+    private List<Person> getStudentRepresentativePersons(Student student, HoisUserDetails initiator) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from person p "
+                + "inner join student_representative sr on sr.person_id = p.id");
+
+        qb.requiredCriteria("sr.student_id = :studentId", "studentId", EntityUtil.getId(student));
+        qb.filter("sr.is_student_visible = true");
+        qb.optionalCriteria("p.id = :initiatorId", "initiatorId", initiator != null ? initiator.getPersonId() : null);
+
+        List<?> results = qb.select("p.id", em).getResultList();
+        return results.stream()
+                .map(r -> em.getReference(Person.class, resultAsLong(r, 0))).collect(Collectors.toList());
+    }
+
+    private List<Person> getPersonsWithRole(School school, Role role) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from person p "
+                + "inner join user_ u on u.person_id = p.id");
+
+        qb.requiredCriteria("u.school_id = :schoolId", "schoolId", EntityUtil.getId(school));
+        qb.requiredCriteria("u.role_code = :roleCode", "roleCode", role);
+        qb.validNowCriteria("u.valid_from", "u.valid_thru");
+
+        List<?> results = qb.select("p.id", em).getResultList();
+        return results.stream()
+                .map(r -> em.getReference(Person.class, resultAsLong(r, 0))).collect(Collectors.toList());
     }
 
     private Message getMessage(MessageType type, School school, Object dataBean) {
         if (!type.validBean(dataBean)) {
-            // TODO meaningful exception class
-            throw new RuntimeException(String.format("invalid data bean for template %s", type.name()));
+            throw new ValidationFailedException(String.format("invalid data bean for template %s", type.name()));
         }
 
         Long schoolId = EntityUtil.getId(school);
         MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
         if (template == null) {
-            // TODO meaningful exception class
-            throw new RuntimeException(String.format("no message template %s found for school %d", type.name(), schoolId));
+            throw new BadConfigurationException("main.messages.error.configuration.missingAutomaticMessageTempalate", DataUtil.asMap("template", type.name(), "school", schoolId));
         }
 
         try {
@@ -147,17 +179,14 @@ public class AutomaticMessageService {
             message.setContent(content);
             return message;
         } catch (Exception e) {
-            if(log.isErrorEnabled()) {
-                log.error(String.format("message %s could not be sent for school %d", type.name(), schoolId), e);
-            }
+            log.error("message {} could not be sent for school {}", type.name(), schoolId, e);
         }
         return null;
     }
 
     private Message sendTemplateMessage(MessageType type, School school, Person sender, List<MessageReceiver> messageReceivers, Object dataBean, Message existingMessage) {
         if (!type.validBean(dataBean)) {
-            // TODO meaningful exception class
-            throw new RuntimeException(String.format("invalid data bean for template %s", type.name()));
+            throw new ValidationFailedException(String.format("invalid data bean for template %s", type.name()));
         }
 
         Message message = existingMessage;
@@ -171,7 +200,7 @@ public class AutomaticMessageService {
 
         if (message != null) {
             message.getReceivers().addAll(messageReceivers);
-            message = messageRepository.save(message);
+            message = EntityUtil.save(message, em);
         }
 
         return message;

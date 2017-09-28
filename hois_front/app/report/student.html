@@ -12,6 +12,7 @@
           <input ng-model="criteria.idcode" name="idcode" type="text" md-minlength="11" md-maxlength="11">
         </md-input-container>
       </div>
+
       <div layout="row" layout-sm="column" layout-xs="column">
         <div layout="row" flex="45">
          <md-input-container>
@@ -23,6 +24,7 @@
             <md-datepicker ng-model="criteria.birthdateThru" md-min-date="criteria.birthdateFrom"></md-datepicker>
           </md-input-container>
         </div>
+
         <div layout="row"  flex="50" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
           <md-input-container>
             <label>{{'report.student.studyStart_from' | translate}}</label>
@@ -34,6 +36,7 @@
           </md-input-container>
         </div>
       </div>
+
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45" flex-sm="100" flex-xs="100">
           <label>{{'report.student.studyLevel' | translate}}</label>
@@ -43,6 +46,7 @@
           <hois-autocomplete ng-model="criteria.curriculumVersion" method="curriculumversions" label="report.student.curriculum"></hois-autocomplete>
         </div>
       </div>
+
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45">
           <label class="textInput">{{'report.student.studentGroup' | translate}}</label>
@@ -53,6 +57,7 @@
           <hois-classifier-select ng-model="criteria.studyLoad" model-value-attr="code" main-classifier-code="OPPEKOORMUS"></hois-classifier-select>
         </md-input-container>
       </div>
+
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45">
           <label class="textInput">{{'report.student.studyForm' | translate}}</label>
@@ -63,6 +68,7 @@
           <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="OPPURSTAATUS"></hois-classifier-select>
         </md-input-container>
       </div>
+
       <div layout="row" layout-sm="column" layout-xs="column">
         <md-input-container flex="45">
           <label class="textInput">{{'report.student.fin' | translate}}</label>
@@ -73,6 +79,7 @@
           <hois-classifier-select ng-model="criteria.language" model-value-attr="code" main-classifier-code="OPPEKEEL"></hois-classifier-select>
         </md-input-container>
       </div>
+
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>

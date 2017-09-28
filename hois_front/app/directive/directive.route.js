@@ -5,19 +5,28 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   // TODO: fix this ordering for some reason it used the lower one
     .when('/directives/coordinators', {
       templateUrl: 'directive/coordinator.search.html',
-      controller: 'DirectiveCoordinatorSearchController',
+      controller: 'SimpleListController',
       controllerAs: 'controller',
-      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        params: function() { return {order: 'name'}; },
+        url: function() { return '/directives/coordinators'; }
+      },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_DOKALLKIRI]
       }
     })
     .when('/directives', {
       templateUrl: 'directive/list.html',
-      controller: 'DirectiveSearchController',
+      controller: 'SimpleListController',
       controllerAs: 'controller',
+      resolve: {
+        clMapping: function() { return {type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'}; },
+        params: function() { return {order: '-inserted'}; },
+        url: function() { return '/directives'; }
+      },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASKKIRI]
       }
     })
     .when('/directives/new', {

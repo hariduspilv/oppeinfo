@@ -40,13 +40,11 @@ import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.enums.GroupProportion;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.LessonPlanModuleRepository;
-import ee.hitsa.ois.repository.LessonPlanRepository;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
@@ -83,10 +81,6 @@ public class LessonPlanService {
     @Autowired
     private JournalRepository journalRepository;
     @Autowired
-    private LessonPlanRepository lessonPlanRepository;
-    @Autowired
-    private TeacherRepository teacherRepository;
-    @Autowired
     private LessonPlanModuleRepository lessonPlanModuleRepository;
 
     public LessonPlanDto get(LessonPlan lessonPlan) {
@@ -119,7 +113,7 @@ public class LessonPlanService {
             }
             lessonPlan.setLessonPlanModules(modules);
         }
-        return lessonPlanRepository.save(lessonPlan);
+        return EntityUtil.save(lessonPlan, em);
     }
 
     public LessonPlan save(LessonPlan lessonPlan, LessonPlanForm form) {
@@ -132,9 +126,11 @@ public class LessonPlanService {
 
             for(LessonPlanModuleForm formModule : formModules) {
                 LessonPlanModule lpm = modules.remove(formModule.getId());
-                AssertionFailedException.throwIf(lpm == null, "Unknown lessonplan module");
+                if(lpm == null) {
+                    throw new AssertionFailedException("Unknown lessonplan module");
+                }
                 EntityUtil.bindToEntity(formModule, lpm);
-                EntityUtil.setEntityFromRepository(formModule, lpm, teacherRepository, "teacher");
+                lpm.setTeacher(EntityUtil.getOptionalOne(Teacher.class, formModule.getTeacher(), em));
                 // store journal capacities
                 List<? extends LessonPlanModuleJournalForm> formJournals = formModule.getJournals();
                 if(formJournals != null) {
@@ -143,13 +139,13 @@ public class LessonPlanService {
                         // TODO better checks - is journal related to this module
                         assertSameSchool(journal, lessonPlan.getSchool());
                         capacityMapper.mapInput(journal, formJournal.getHours());
-                        journalRepository.save(journal);
+                        EntityUtil.save(journal, em);
                     }
                 }
             }
         }
         AssertionFailedException.throwIf(!modules.isEmpty(), "Unhandled lessonplan module");
-        return lessonPlanRepository.save(lessonPlan);
+        return EntityUtil.save(lessonPlan, em);
     }
 
     public Page<LessonPlanSearchDto> search(Long schoolId, LessonPlanSearchCommand criteria, Pageable pageable) {
@@ -179,7 +175,7 @@ public class LessonPlanService {
         if(user.isTeacher()) {
             // TODO is_usable from lesson_plan
             // qb.filter("lp.is_usable = true");
-            qb.requiredCriteria("t.person_id = :personId", "personId", user.getPersonId());
+            qb.requiredCriteria("jt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         } else {
             qb.optionalCriteria("jt.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
         }
@@ -244,7 +240,7 @@ public class LessonPlanService {
             subjectStudentGroups.computeIfAbsent(subjectId, k -> new ArrayList<>()).add(studentGroupId);
         }
         // TODO hours by subject, student groups and capacity type
-        return new LessonPlanByTeacherDto(studyYear, journals, subjects.values().stream().sorted(Comparator.comparing(LessonPlanByTeacherSubjectDto::getNameEt)).collect(Collectors.toList()), teacher);
+        return new LessonPlanByTeacherDto(studyYear, journals, subjects.values().stream().sorted(Comparator.comparing(LessonPlanByTeacherSubjectDto::getNameEt, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()), teacher);
     }
 
     public Map<String, ?> searchFormData(Long schoolId) {
@@ -321,7 +317,7 @@ public class LessonPlanService {
         EntityUtil.bindEntityCollection(teachers, EntityUtil::getId, form.getJournalTeachers(), jt -> jt.getId(), jtf -> {
             JournalTeacher jt = EntityUtil.bindToEntity(jtf, new JournalTeacher());
             jt.setJournal(journal);
-            EntityUtil.setEntityFromRepository(jtf, jt, teacherRepository, "teacher");
+            jt.setTeacher(EntityUtil.getOptionalOne(Teacher.class, jtf.getTeacher(), em));
             assertSameSchool(journal, jt.getTeacher().getSchool());
             return jt;
         }, (jtf, jt) -> {
@@ -337,7 +333,7 @@ public class LessonPlanService {
         List<JournalOccupationModuleThemeHolder> fromForm = form.getJournalOccupationModuleThemes()
                 .stream()
                 .map(id -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModule, id)).collect(Collectors.toList());
-        
+
         if(form.getGroups() != null && !form.getGroups().isEmpty()) {
             Map<Long, Long> lessonPlanIds = findLessonPlanByStudyYearAndStudentGroup(journal.getStudyYear(), StreamUtil.toMappedList(LessonPlanGroupForm::getStudentGroup, form.getGroups()));
             List<LessonPlanModule> lessonPlanModules = lessonPlanModuleRepository.findAll((root, query, cb) -> {
@@ -364,7 +360,7 @@ public class LessonPlanService {
                     CurriculumVersionOccupationModule module = em.getReference(CurriculumVersionOccupationModule.class, lpg.getCurriculumVersionOccupationModule());
                     lpm.setCurriculumVersionOccupationModule(module);
                     lp.getLessonPlanModules().add(lpm);
-                    lessonPlanModuleRepository.save(lpm);
+                    EntityUtil.save(lpm, em);
                 }
                 final LessonPlanModule lessonPlanModuleForSave = lpm;
                 fromForm.addAll(lpg.getCurriculumVersionOccupationModuleThemes()
@@ -372,7 +368,7 @@ public class LessonPlanService {
                         .map(cvomt -> new JournalOccupationModuleThemeHolder(journal, lessonPlanModuleForSave, cvomt)).collect(Collectors.toList()));
             }
         }
-        
+
         EntityUtil.bindEntityCollection(oldThemes, jm -> EntityUtil.getId(jm.getCurriculumVersionOccupationModuleTheme()), fromForm, JournalOccupationModuleThemeHolder::getCvomt, jm -> {
             JournalOccupationModuleTheme jmt = new JournalOccupationModuleTheme();
             jmt.setJournal(jm.getJournal());
@@ -380,20 +376,19 @@ public class LessonPlanService {
             jmt.setCurriculumVersionOccupationModuleTheme(em.getReference(CurriculumVersionOccupationModuleTheme.class, jm.getCvomt()));
             return jmt;
         });
-        return journalRepository.save(journal);
+        return EntityUtil.save(journal, em);
     }
-    
+
     private static LessonPlanModule getLessonPlanModule(List<LessonPlanModule> lessonPlanModules, Long lessonPlan, Long cvom) {
-        List <LessonPlanModule> result = StreamUtil.nullSafeList(lessonPlanModules.stream().filter(p -> 
+        return lessonPlanModules.stream().filter(p ->
             EntityUtil.getId(p.getLessonPlan()).equals(lessonPlan) &&
-            EntityUtil.getId(p.getCurriculumVersionOccupationModule()).equals(cvom)).collect(Collectors.toList()));
-        return result.isEmpty() ? null : result.get(0);
+            EntityUtil.getId(p.getCurriculumVersionOccupationModule()).equals(cvom)).findFirst().orElse(null);
     }
-    
+
     public void deleteJournal(Journal journal) {
-        EntityUtil.deleteEntity(journalRepository, journal);
+        EntityUtil.deleteEntity(journal, em);
     }
-    
+
     private Map<Long, Long> findLessonPlanByStudyYearAndStudentGroup(StudyYear studyYear, List<Long> studentGroup) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from lesson_plan lp");
 
@@ -434,7 +429,7 @@ public class LessonPlanService {
             throw new AssertionFailedException("School mismatch");
         }
     }
-    
+
     private static class JournalOccupationModuleThemeHolder {
         private Journal journal;
         private LessonPlanModule lessonPlanModule;

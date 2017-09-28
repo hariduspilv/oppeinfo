@@ -8,10 +8,26 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       templateUrl: 'student/view.main.html',
       controller: 'StudentViewMainController',
       controllerAs: 'controller',
-      data: authorizedRoles,
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR
+        ]
+      },
       resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
+    }).when('/students/:id/results', {
+      templateUrl: 'student/view.results.html',
+      controller: 'StudentViewResultsController',
+      controllerAs: 'controller',
+      data: authorizedRoles,
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); },
+        student: function(QueryUtils, $route) {
+          return QueryUtils.endpoint('/students').get({id: $route.current.params.id}).$promise;
+        }
       }
     }).when('/students/:id/documents', {
       templateUrl: 'student/view.documents.html',
@@ -36,6 +52,46 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controller: 'StudentAbsencesController',
       controllerAs: 'controller',
       data: authorizedRoles,
+      resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
+    }).when('/students', {
+      templateUrl: 'student/list.html',
+      controller: 'SimpleListController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR]
+      },
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
+        clMapping: function() { return {studyForm: 'OPPEVORM', status: 'OPPURSTAATUS'}; },
+        params: function() { return {order: 'person.lastname,person.firstname'}; },
+        url: function() { return '/students'; },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      }
+    }).when('/students/myData', {
+      templateUrl: 'student/view.main.html',
+      controller: 'StudentViewMainController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR
+        ]
+      },
+      resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
+    }).when('/students/myResults', {
+      templateUrl: 'student/view.results.html',
+      controller: 'StudentViewResultsController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR
+        ]
+      },
       resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
           auth: function (AuthResolver) { return AuthResolver.resolve(); },

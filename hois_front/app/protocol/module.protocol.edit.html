@@ -30,7 +30,7 @@
                     {{journalResultsView(journal.id, row)}}
                   </td>
                   <td md-cell>
-                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code" aria-label="grade"></hois-select>
+                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code" aria-label="grade" ng-change="gradeChanged()"></hois-select>
                   </td>
                   <td md-cell>
                     <a ng-if="row.status==='OPPURSTAATUS_K' && !row.grade" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
@@ -45,9 +45,12 @@
       <div>
         <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised" ng-click="addProtocolStudents()">{{'moduleProtocol.addStudents' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <md-button ng-show="formState.canConfirm===true" class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
         <!--TODO: <md-button class="md-raised" ng-click="calculate()">{{'main.button.calculate' | translate}}</md-button>-->
         <md-button class="md-raised" ng-href="#/moduleProtocols">{{'main.button.back' | translate}}</md-button>
+
+        <a ng-show="formState.protocolPdfUrl" ng-href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>
+        <a ng-show="protocol.oisFile" ng-href="{{getUrl(protocol.oisFile)}}" target="_blank" class="md-button md-raised">{{'moduleProtocol.downloadSigned' | translate}}</a>
       </div>
     </form>
   </div>

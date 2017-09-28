@@ -37,35 +37,35 @@
             <th md-column class="center" ng-repeat="capacityType in capacityTypes">
                 {{capacityType.value.toUpperCase()}}
             </th>
-            <th></th>
+            <th md-column></th>
           </tr>
         </thead>
         <tbody md-body ng-repeat="row in tabledata.content">
             <tr md-row ng-class-odd="'odd'" ng-class-even="'even'">
-                <td>{{currentLanguageNameField(row.subject)}}</td>
-                <td colspan="{{capacityTypes.length + 1}}"></td>
-                <td>
+                <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
+                <td md-cell colspan="{{capacityTypes.length + 1}}"></td>
+                <td md-cell>
                     <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriodPlans/{{::row.subject.id}}/{{criteria.studyPeriod}}/new" ng-disabled="pastStudyPeriodSelected">{{'subjectStudyPeriodPlan.add' | translate}}
                     </md-button>
                 </td>
             </tr>
-            <tr ng-repeat="plan in row.plans | orderBy: 'id'">
-                <td class="cell">
+            <tr md-row ng-repeat="plan in row.plans | orderBy: 'id'">
+                <td md-cell class="cell">
                     <span ng-repeat="curriculum in plan.curriculums | orderBy: 'id'">
                         <span ng-if="$index > 0">, </span>
                         {{currentLanguageNameField(curriculum)}}
                     </span>
                 </td>
-                <td class="cell">
+                <td md-cell class="cell">
                     <span ng-repeat="studyForm in plan.studyForms | orderBy: currentLanguageNameField()">
                         <span ng-if="$index > 0">, </span>
                         {{currentLanguageNameField(studyForm)}}
                     </span>
                 </td>
-                <td class="cell center" md-cell ng-repeat="capacityType in capacityTypes">
+                <td md-cell class="cell center" ng-repeat="capacityType in capacityTypes">
                     {{getCapacitiesHours(capacityType.code, plan)}}
                 </td>
-                <td class="cell">
+                <td md-cell class="cell">
                     <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriodPlans/{{::plan.id}}/edit" ng-disabled="pastStudyPeriodSelected">{{'main.button.change' | translate}}
                     </md-button>
                 </td>

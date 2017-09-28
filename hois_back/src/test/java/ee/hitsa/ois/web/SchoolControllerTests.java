@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +9,7 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -28,10 +28,12 @@ import org.springframework.web.util.UriComponentsBuilder;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 import ee.hitsa.ois.TestConfiguration;
+import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolStudyLevel;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
@@ -45,6 +47,9 @@ import ee.hitsa.ois.web.dto.StudyYearScheduleLegendDto;
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 @Transactional
 public class SchoolControllerTests {
+
+    //TODO use pattern UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(...)
+    private static final String ENDPOINT = "/school";
 
     private static final Long MISSING_SCHOOL_ID = Long.valueOf(0);
 
@@ -62,15 +67,27 @@ public class SchoolControllerTests {
     @Autowired
     private TestRestTemplate restTemplate;
 
+    @Autowired
+    private TestConfigurationService testConfigurationService;
+
+
     @Before
     public void setUp() {
         if(school == null) {
             school = schoolRepository.getOne(hoisUserDetailsService.loadUserByUsername(TestConfiguration.USER_ID).getSchoolId());
         }
+        testConfigurationService.userToRoleInSchool(Role.ROLL_A, school.getId(), restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
     }
 
     @Test
     public void get() {
+        testConfigurationService.userToRoleInSchool(Role.ROLL_P, null, restTemplate);
+
         ResponseEntity<Object> responseEntity = restTemplate
                 .getForEntity(String.format("/school/%d", MISSING_SCHOOL_ID), Object.class);
         Assert.assertNotNull(responseEntity);
@@ -84,6 +101,8 @@ public class SchoolControllerTests {
 
     @Test
     public void search() {
+        testConfigurationService.userToRoleInSchool(Role.ROLL_P, null, restTemplate);
+
         String uri = UriComponentsBuilder.fromUriString("/school").queryParam("lang", "ET").build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
@@ -149,48 +168,63 @@ public class SchoolControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
-    /**
-     * This test deletes all StudyYearScheduleLegends of school with id = 1
-     */
     @Test
     public void updateStudyYearScheduleLegends() {
+
+        String uri = UriComponentsBuilder.fromUriString("/school/studyYearScheduleLegends").build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        List<StudyYearScheduleLegendDto> legends = getUpdateLegendsResult(responseEntity.getBody());
+        int initialDtos = legends.size();
+
         final String URL = "/school/studyYearScheduleLegends";
         final String CODE_1 = "A";
         final String CODE_2 = "B";
         final String CODE_3 = "C";
         SchoolUpdateStudyYearScheduleLegendsCommand request = new SchoolUpdateStudyYearScheduleLegendsCommand();
-        request.setLegends(Arrays.asList(getlegendDto(CODE_1), getlegendDto(CODE_2)));
-        
-        ResponseEntity<Object> responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
+        legends.add(getlegendDto(CODE_1));
+        legends.add(getlegendDto(CODE_2));
+        request.setLegends(legends);
+
+        responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
                 new HttpEntity<>(request), Object.class);
         Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());   
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         List<StudyYearScheduleLegendDto> responseDtos = getUpdateLegendsResult(responseEntity.getBody());
-        Assert.assertEquals(2, responseDtos.size());
-        
+        Assert.assertEquals(initialDtos + 2, responseDtos.size());
+
         //remove one
-        responseDtos = responseDtos.stream().filter(l -> l.getCode().equals(CODE_2)).collect(Collectors.toList());
+        responseDtos = responseDtos.stream().filter(l -> !l.getCode().equals(CODE_1)).collect(Collectors.toList());
         request.setLegends(responseDtos);
         responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
                 new HttpEntity<>(request), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         responseDtos = getUpdateLegendsResult(responseEntity.getBody());
-        Assert.assertEquals(1, responseDtos.size());
+        Assert.assertEquals(initialDtos + 1, responseDtos.size());
 
         // update one
-        StudyYearScheduleLegendDto item = responseDtos.get(0);
+        StudyYearScheduleLegendDto item = responseDtos.stream().
+                filter(l -> l.getCode().equals(CODE_2)).findFirst().get();
         item.setCode(CODE_3);
-        request.setLegends(Arrays.asList(item));
+        request.setLegends(responseDtos);
         responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
                 new HttpEntity<>(request), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         responseDtos = getUpdateLegendsResult(responseEntity.getBody());
-        
-        Assert.assertEquals(1, responseDtos.size());
+
+        Assert.assertEquals(initialDtos + 1, responseDtos.size());
         item = responseDtos.get(0);
-        Assert.assertTrue(item.getCode().equals(CODE_3));  
+        Assert.assertTrue(item.getCode().equals(CODE_3));
+        
+        // remove all
+        request.setLegends(new ArrayList<>());
+        responseEntity = restTemplate.exchange(URL, HttpMethod.PUT,
+                new HttpEntity<>(request), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
@@ -205,6 +239,14 @@ public class SchoolControllerTests {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/teacheroccupations/all", Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void generateEmail() {
+        UriComponentsBuilder uri = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("generateEmail");
+        ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri.toUriString(), Collections.singletonMap("lastname", "PEREKONNANIMI"), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertTrue(HttpStatus.OK.equals(responseEntity.getStatusCode()) || HttpStatus.BAD_REQUEST.equals(responseEntity.getStatusCode()));
     }
 
     @SuppressWarnings("unchecked")

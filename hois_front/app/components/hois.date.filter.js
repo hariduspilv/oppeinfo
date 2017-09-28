@@ -20,4 +20,17 @@ angular.module('hitsaOis').filter('hoisDate', function ($filter) {
   return function (input) {
     return $filter('date')(input, 'dd.MM');
   };
+}).filter('hoisTimestamp', function ($filter) {
+  return function (input) {
+    var formatter = $filter('date');
+    var value = formatter(input, 'dd.MM.yyyy HH:mm');
+    if (value.lastIndexOf('00:00') === -1) {
+      return value;
+    }
+    return formatter(input, 'dd.MM.yyyy');
+  };
+}).filter('hoisTimeMin', function ($filter) {
+  return function (input) {
+    return $filter('date')(input, 'HH:mm');
+  };
 });

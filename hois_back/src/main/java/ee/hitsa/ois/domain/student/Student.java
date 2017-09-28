@@ -12,6 +12,7 @@ import javax.persistence.OneToOne;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.timetable.JournalStudent;
 
 @Entity
 public class Student extends StudentBase {
@@ -25,6 +26,8 @@ public class Student extends StudentBase {
     private StudentHistory studentHistory;
     @OneToMany(mappedBy = "student")
     private List<StudentRepresentative> representatives;
+    @OneToMany(mappedBy = "student")
+    private List<JournalStudent> journalStudents;
 
     public Person getPerson() {
         return person;
@@ -58,4 +61,11 @@ public class Student extends StudentBase {
         this.representatives = representatives;
     }
 
+    public List<JournalStudent> getJournalStudents() {
+        return journalStudents;
+    }
+
+    public void setJournalStudents(List<JournalStudent> journalStudents) {
+        this.journalStudents = journalStudents;
+    }
 }

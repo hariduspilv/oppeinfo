@@ -13,12 +13,12 @@ public class SubjectStudyPeriodCapacityDto {
     private Long id;
 
     @Min(0)
-    @Max(32767)
-    private Long hours;
+    @Max(Short.MAX_VALUE)
+    private Short hours;
 
     @ClassifierRestriction(MainClassCode.MAHT)
     private String capacityType;
-    
+
     public static SubjectStudyPeriodCapacityDto of(SubjectStudyPeriodCapacity c) {
         SubjectStudyPeriodCapacityDto dto = new SubjectStudyPeriodCapacityDto();
         dto.setId(EntityUtil.getId(c));
@@ -35,11 +35,11 @@ public class SubjectStudyPeriodCapacityDto {
         this.id = id;
     }
 
-    public Long getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Long hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 

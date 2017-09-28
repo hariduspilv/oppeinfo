@@ -1,0 +1,56 @@
+<div class="ois-form-layout-padding form-readonly" ng-cloak>
+  <div layout="row" layout-sm="column" layout-xs="column">
+    <md-input-container flex>
+      <label>{{'committee.addInfo' | translate}}</label>
+      <hois-value value="record.addInfo"></hois-value>
+    </md-input-container>
+  </div>
+  <div layout="row">
+    <div layout="column" flex="45">
+      <label class="common-label">{{'committee.validDate' | translate}}</label>
+      <br>
+      <div layout="row" layout-sm="column" layout-xs="column" >
+        <md-input-container flex flex-sm="100" flex-xs="100">
+          <label>{{'main.from' | translate}}</label>
+          <hois-value value="record.validFrom | hoisDate"></hois-value>
+        </md-input-container>
+        <md-input-container flex flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+          <label>{{'main.thru' | translate}}</label>
+          <hois-value value="record.validThru | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+    </div>
+  </div>
+
+  <label class="md-subhead">{{'committee.memberIs' | translate}}</label>
+
+  <md-table-container>
+    <table md-table>
+      <thead md-head>
+        <tr md-row>
+          <th md-column>{{'committee.isChairman' | translate}}</th>
+          <th md-column>{{'committee.external' | translate}}</th>
+          <th md-column>{{'committee.name' | translate}}</th>
+        </tr>
+      </thead>
+      <tbody md-body>
+        <tr md-row ng-repeat="member in record.members" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <i class="material-icons" ng-if="member.isChairman">done</i>
+            </td>
+            <td md-cell>
+              <i class="material-icons" ng-if="member.isExternal">done</i>
+            </td>
+            <td md-cell>
+              <hois-value value="member.memberName"></hois-value>
+            </td>
+        </tr>
+      </tbody>
+    </table>
+  </md-table-container>
+  <br>
+  <div>
+    <md-button class="md-raised md-primary" ng-href="#/committees/{{record.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
+    <md-button class="md-raised" ng-href="#/committees">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

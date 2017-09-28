@@ -84,7 +84,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setCode(String code) {
         this.code = code;
     }
-
+    
     public Long getId() {
         return id;
     }
@@ -100,7 +100,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public void setOptional(Boolean optional) {
         this.optional = optional;
     }
-
+    
     public Long getSubjectId() {
         return subjectId;
     }
@@ -128,7 +128,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     public BigDecimal getCredits() {
         return credits;
     }
-
+    
     public void setCredits(BigDecimal credits) {
         this.credits = credits;
     }

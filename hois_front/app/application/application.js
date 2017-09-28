@@ -314,9 +314,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     });
   };
 
-  $scope.getUrl = function (oisFile) {
-    return oisFileService.getFileUrl(oisFile);
-  };
+  $scope.getUrl = oisFileService.getUrl;
 
   $scope.isStudentRepresentative = function () {
     return angular.isObject($scope.auth) && angular.isObject($scope.application.student) &&
@@ -345,7 +343,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       var application = new ApplicationsEndpoint($scope.application);
       if (angular.isDefined($scope.application.id)) {
         application.$update().then(function () {
-          message.info('main.messages.create.success');
+          message.info('main.messages.update.success');
           entityToForm(application);
           $scope.applicationForm.$setPristine();
         });
@@ -355,8 +353,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
           $location.path('/applications/' + application.id + '/edit');
         });
       }
-    } else {
-      console.log($scope.applicationForm.$error);
     }
   };
 

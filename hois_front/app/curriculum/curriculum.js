@@ -9,7 +9,7 @@
  */
 angular.module('hitsaOis')
   .factory('Curriculum', function ($resource, config, QueryUtils) {
-
+    
     function Curriculum() {
     }
 

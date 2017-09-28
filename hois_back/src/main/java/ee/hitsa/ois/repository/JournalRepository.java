@@ -6,5 +6,4 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import ee.hitsa.ois.domain.timetable.Journal;
 
 public interface JournalRepository extends JpaRepository<Journal, Long>, JpaSpecificationExecutor<Journal> {
-
 }

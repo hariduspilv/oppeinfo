@@ -8,7 +8,9 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-public class StudentStatisticsDto {
+import ee.hitsa.ois.util.Translatable;
+
+public class StudentStatisticsDto implements Translatable {
 
     private final Long id;
     private final String nameEt;
@@ -28,10 +30,12 @@ public class StudentStatisticsDto {
         return id;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

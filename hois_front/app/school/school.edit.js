@@ -7,7 +7,7 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
 
     function afterLoad() {
       if($scope.school.logo) {
-        $scope.school.imageUrl = 'data:' + $scope.school.logo.ftype + ';base64,' + $scope.school.logo.fdata;
+        $scope.school.imageUrl = oisFileService.getUrl($scope.school.logo);
       } else {
         $scope.school.imageUrl = '?' + new Date().getTime();
       }
@@ -76,18 +76,11 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
     };
 
     $scope.setEhisSchool = function() {
-      var ehisSchool = $scope.school._ehisSchool;
-      if(ehisSchool) {
-        $scope.school.ehisSchool = ehisSchool.code;
-        $scope.school.nameEt = ehisSchool.nameEt;
-        $scope.school.ehisId = ehisSchool.value;
-        $scope.school.regNr = ehisSchool.value2;
-      } else {
-        $scope.school.ehisSchool = undefined;
-        $scope.school.nameEt = undefined;
-        $scope.school.ehisId = undefined;
-        $scope.school.regNr = undefined;
-      }
+      var ehisSchool = $scope.school._ehisSchool || {};
+      $scope.school.ehisSchool = ehisSchool.code;
+      $scope.school.nameEt = ehisSchool.nameEt;
+      $scope.school.ehisId = ehisSchool.value;
+      $scope.school.regNr = ehisSchool.value2;
     };
   }
 ]);

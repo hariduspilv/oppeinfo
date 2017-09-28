@@ -40,7 +40,7 @@ public class ApplicationUtil {
 
     public static void assertStartAfterToday(Application application) {
         LocalDate start = getStartDate(application);
-        if (start.isBefore(LocalDate.now())) {
+        if (LocalDate.now().isAfter(start)) {
             throw new ValidationFailedException("application.messages.startIsEarlierThanToday");
         }
     }
@@ -127,7 +127,7 @@ public class ApplicationUtil {
             assertPeriod(application, 3, 0);
         } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_O.name().equals(reason)) {
             // TODO: algusega mitte varem kui esimese õppeaasta teisest semestrist
-            if (!CurriculumUtil.isHigher(application.getStudent().getCurriculumVersion().getCurriculum().getOrigStudyLevel())) {
+            if (!CurriculumUtil.isHigher(application.getStudent().getCurriculumVersion().getCurriculum())) {
                 throw new ValidationFailedException("application.messages.studentIsNotHigher");
             }
 
@@ -149,7 +149,9 @@ public class ApplicationUtil {
         LocalDate academicLeaveStart = getStartDate(application.getAcademicApplication());
         LocalDate revocationStart = getStartDate(application);
 
-        if (revocationStart.isBefore(academicLeaveStart)) {
+        if (revocationStart == null) {
+            throw new ValidationFailedException("application.messages.revocationStart.isNull");
+        } else if (revocationStart.isBefore(academicLeaveStart)) {
             throw new ValidationFailedException("application.messages.revocationStartDateBeforeAcademicLeaveStartDate");
         }
 

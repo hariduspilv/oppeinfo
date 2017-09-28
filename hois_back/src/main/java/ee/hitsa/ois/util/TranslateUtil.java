@@ -12,6 +12,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 import ee.hitsa.ois.enums.Language;
+import ee.hitsa.ois.exception.BadConfigurationException;
 
 public class TranslateUtil {
 
@@ -68,7 +69,7 @@ public class TranslateUtil {
             }
             return new PropertyResourceBundle(new InputStreamReader(is, StandardCharsets.UTF_8));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new BadConfigurationException(String.format("Bundle \"%s\" not found", bundleName), e);
         }
     }
 

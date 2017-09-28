@@ -13,7 +13,7 @@
       <span flex></span>
       <div class="ois-form-layout md-dialog-content" layout="column" flex ng-cloak>
         <div layout="column" flex>
-        <div layout="row" flex layout-align="center center"> 
+        <div layout="row" flex layout-align="center center">
           <md-input-container flex="45"  class="readonly">
             <label class="label">{{'studyYear.studyPeriod.year' | translate}}</label>
             <hois-classifier-value ng-model="studyPeriod.year" model-value-attr="code" main-classifier-code="OPPEAASTA"></hois-classifier-value>
@@ -28,19 +28,15 @@
             <label>{{'studyYear.studyPeriod.nameEt' | translate}}</label>
             <input ng-model="studyPeriod.nameEt" type="text" md-maxlength="100" required>
           </md-input-container>
-          <!--<md-input-container flex>
-            <label>{{'studyYear.studyPeriod.nameEn' | translate}}</label>
-            <input ng-model="studyPeriod.nameEn" type="text" md-maxlength="100">
-          </md-input-container>-->
         </div>
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="20" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'studyYear.studyPeriod.startDate' | translate}}</label>
-            <md-datepicker ng-model="studyPeriod.startDate" md-max-date="studyPeriod.endDate" required md-open-on-focus></md-datepicker>
+            <md-datepicker ng-model="studyPeriod.startDate" name="startDate" md-max-date="studyPeriod.endDate" md-min-date="studyYear.startDate" required md-open-on-focus></md-datepicker>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'studyYear.studyPeriod.endDate' | translate}}</label>
-            <md-datepicker ng-model="studyPeriod.endDate" md-min-date="studyPeriod.startDate" required md-open-on-focus></md-datepicker>
+            <md-datepicker ng-model="studyPeriod.endDate" name="endDate" md-min-date="studyPeriod.startDate" md-max-date="studyYear.endDate" required md-open-on-focus></md-datepicker>
           </md-input-container>
         </div>
       </div>

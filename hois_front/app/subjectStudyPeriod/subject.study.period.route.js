@@ -10,11 +10,21 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA]
         }
       }).when('/subjectStudyPeriod/:id/edit', {
         templateUrl: 'subjectStudyPeriod/subject.study.period.edit.html',
         controller: 'SubjectStudyPeriodEditController',
+        controllerAs: 'controller',
+        resolve: {
+            translationLoaded: function($translate) { return $translate.onReady(); }
+        },
+        data: {
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        }
+      }).when('/subjectStudyPeriod/:id/view', {
+        templateUrl: 'subjectStudyPeriod/subject.study.period.view.html',
+        controller: 'SubjectStudyPeriodViewController',
         controllerAs: 'controller',
         resolve: {
             translationLoaded: function($translate) { return $translate.onReady(); }
@@ -40,9 +50,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
         }
-      }).when('/subjectStudyPeriods/studentGroups/:studyPeriodId/new', {
+      }).when('/subjectStudyPeriods/studentGroups/new', {
         templateUrl: 'subjectStudyPeriod/subject.study.period.student.group.edit.html',
         controller: 'SubjectStudyPeriodStudentGroupEditController',
         controllerAs: 'controller',
@@ -82,7 +92,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
-      }).when('/subjectStudyPeriods/teachers/:studyPeriodId/new', {
+      }).when('/subjectStudyPeriods/teachers/new', {
         templateUrl: 'subjectStudyPeriod/subject.study.period.teacher.edit.html',
         controller: 'SubjectStudyPeriodTeacherEditController',
         controllerAs: 'controller',
@@ -124,7 +134,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
-      }).when('/subjectStudyPeriods/subjects/:studyPeriodId/new', {
+      }).when('/subjectStudyPeriods/subjects/new', {
         templateUrl: 'subjectStudyPeriod/subject.study.period.subject.edit.html',
         controller: 'SubjectStudyPeriodSubjectEditController',
         controllerAs: 'controller',

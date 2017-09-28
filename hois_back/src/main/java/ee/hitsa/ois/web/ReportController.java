@@ -1,5 +1,8 @@
 package ee.hitsa.ois.web;
 
+import java.io.IOException;
+
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,10 +41,10 @@ public class ReportController {
         return reportService.students(user.getSchoolId(), criteria, pageable);
     }
 
-    @GetMapping(value = "/students/students.xls", produces = HttpUtil.APPLICATION_XLS)
-    public byte[] studentsAsExcel(HoisUserDetails user, @Valid StudentSearchCommand criteria) {
+    @GetMapping("/students/students.xls")
+    public void studentsAsExcel(HoisUserDetails user, @Valid StudentSearchCommand criteria, HttpServletResponse response) throws IOException {
         UserUtil.assertIsSchoolAdmin(user);
-        return reportService.studentsAsExcel(user.getSchoolId(), criteria);
+        HttpUtil.xls(response, "students.xls", reportService.studentsAsExcel(user.getSchoolId(), criteria));
     }
 
     @GetMapping("/students/statistics")
@@ -50,10 +53,22 @@ public class ReportController {
         return reportService.studentStatistics(user.getSchoolId(), criteria, pageable);
     }
 
+    @GetMapping("/students/statistics/studentstatistics.xls")
+    public void studentStatisticsAsExcel(HoisUserDetails user, @Valid StudentStatisticsCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "studentstatistics.xls", reportService.studentStatisticsAsExcel(user.getSchoolId(), criteria));
+    }
+
     @GetMapping("/students/statistics/byperiod")
     public Page<StudentStatisticsDto> studentStatisticsByPeriod(HoisUserDetails user, @Valid StudentStatisticsByPeriodCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
         return reportService.studentStatisticsByPeriod(user.getSchoolId(), criteria, pageable);
+    }
+
+    @GetMapping("/students/statistics/studentstatisticsbyperiod.xls")
+    public void studentStatisticsByPeriodAsExcel(HoisUserDetails user, @Valid StudentStatisticsByPeriodCommand criteria, HttpServletResponse response) throws IOException {
+        UserUtil.assertIsSchoolAdmin(user);
+        HttpUtil.xls(response, "studentstatisticsbyperiod.xls", reportService.studentStatisticsByPeriodAsExcel(user.getSchoolId(), criteria));
     }
 
     @GetMapping("/curriculums/completion")
@@ -68,9 +83,15 @@ public class ReportController {
         return reportService.curriculumSubjects(user.getSchoolId(), criteria, pageable);
     }
 
-    @GetMapping("/teachers/load")
-    public Page<TeacherLoadDto> teacherLoad(HoisUserDetails user, @Valid TeacherLoadCommand criteria, Pageable pageable) {
+    @GetMapping("/teachers/load/higher")
+    public Page<TeacherLoadDto> teacherLoadHigher(HoisUserDetails user, @Valid TeacherLoadCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return reportService.teacherLoad(user.getSchoolId(), criteria, pageable);
+        return reportService.teacherLoadHigher(user.getSchoolId(), criteria, pageable);
+    }
+
+    @GetMapping("/teachers/load/vocational")
+    public Page<TeacherLoadDto> teacherLoadVocational(HoisUserDetails user, @Valid TeacherLoadCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return reportService.teacherLoadVocational(user.getSchoolId(), criteria, pageable);
     }
 }

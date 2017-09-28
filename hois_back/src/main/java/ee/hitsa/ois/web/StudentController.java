@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
+
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -22,27 +24,29 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
+import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.service.StudentResultHigherService;
 import ee.hitsa.ois.service.StudentService;
 import ee.hitsa.ois.service.ehis.EhisStudentService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.EhisStudentForm;
+import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
 import ee.hitsa.ois.web.commandobject.student.StudentForm;
 import ee.hitsa.ois.web.commandobject.student.StudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 import ee.hitsa.ois.web.dto.student.StudentApplicationDto;
 import ee.hitsa.ois.web.dto.student.StudentDirectiveDto;
+import ee.hitsa.ois.web.dto.student.StudentHigherResultDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 import ee.hitsa.ois.web.dto.student.StudentViewDto;
-
-import static ee.hitsa.ois.util.UserUtil.assertIsSchoolAdmin;
+import ee.hitsa.ois.web.dto.student.StudentVocationalResultDto;
 
 @RestController
 @RequestMapping("/students")
@@ -54,6 +58,9 @@ public class StudentController {
     @Autowired
     private EhisStudentService ehisStudentService;
 
+    @Autowired
+    private StudentResultHigherService studentResultHigherService;
+
     @GetMapping
     public Page<StudentSearchDto> search(HoisUserDetails user, @Valid StudentSearchCommand criteria, Pageable pageable) {
         return studentService.search(user.getSchoolId(), criteria, pageable);
@@ -62,16 +69,7 @@ public class StudentController {
     @GetMapping("/{id:\\d+}")
     public StudentViewDto get(HoisUserDetails user, @WithEntity("id") Student student) {
         assertCanView(user, student);
-        StudentViewDto dto = StudentViewDto.of(student);
-        // rights for editing student data, adding representative and displaying sensitive fields
-        dto.setUserCanEditStudent(Boolean.valueOf(UserUtil.canEditStudent(user, student)));
-        dto.setUserCanAddRepresentative(Boolean.valueOf(UserUtil.canAddStudentRepresentative(user, student)));
-        dto.setUserIsSchoolAdmin(Boolean.valueOf(UserUtil.isSchoolAdmin(user, student.getSchool())));
-        if(!(Boolean.TRUE.equals(dto.getUserIsSchoolAdmin()) || UserUtil.isSame(user, student) || UserUtil.isStudentRepresentative(user, student))) {
-            dto.setSpecialNeed(null);
-            dto.setIsRepresentativeMandatory(null);
-        }
-        return dto;
+        return studentService.getStudentView(user, student);
     }
 
     @PutMapping("/{id:\\d+}")
@@ -85,7 +83,7 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/absences")
     public Page<StudentAbsenceDto> absences(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
         assertCanView(user, student);
-        return studentService.absences(EntityUtil.getId(student), pageable);
+        return studentService.absences(user, student, pageable);
     }
 
     @PostMapping("/{studentId:\\d+}/absences")
@@ -121,7 +119,7 @@ public class StudentController {
         result.put("applications", applications(user, student, new PageRequest(0, pagesize, null, "inserted")));
         result.put("directives", directives(user, student, new PageRequest(0, pagesize, null, "headline")));
         // TODO more data
-        result.put("student", Collections.singletonMap("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum().getOrigStudyLevel()))));
+        result.put("student", Collections.singletonMap("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum()))));
         return result;
     }
 
@@ -134,7 +132,7 @@ public class StudentController {
     @GetMapping("/{id:\\d+}/directives")
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, @WithEntity("id") Student student, Pageable pageable) {
         assertCanView(user, student);
-        return studentService.directives(student, pageable);
+        return studentService.directives(user, student, pageable);
     }
 
     @GetMapping("/{id:\\d+}/subjects")
@@ -144,10 +142,9 @@ public class StudentController {
     }
 
     @PostMapping("/ehisStudentExport")
-    public void ehisExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
+    public EhisStudentReport ehisStudentExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
         assertIsSchoolAdmin(user);
-        ehisStudentForm.setSchoolID(user.getSchoolId());
-        ehisStudentService.exportStudents(ehisStudentForm);
+        return ehisStudentService.exportStudents(user.getSchoolId(), ehisStudentForm);
     }
 
     private static void assertCanView(HoisUserDetails user, Student student) {
@@ -161,4 +158,17 @@ public class StudentController {
     private static void assertCanEditAbsence(HoisUserDetails user, StudentAbsence absence) {
         AssertionFailedException.throwIf(!UserUtil.canEditStudentAbsence(user, absence), "User cannot edit student absence");
     }
+
+    @GetMapping("/{id:\\d+}/vocationalResults")
+    public StudentVocationalResultDto vocationalResults(HoisUserDetails user, @WithEntity("id") Student student) {
+        assertCanView(user, student);
+        return studentService.vocationalResults(student);
+    }
+
+    @GetMapping("/{id:\\d+}/higherResults")
+    public StudentHigherResultDto higherResults(HoisUserDetails user, @WithEntity("id") Student student) {
+        assertCanView(user, student);
+        return studentResultHigherService.higherResults(student);
+    }
+
 }

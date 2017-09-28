@@ -22,8 +22,8 @@
                 $scope.criteria.studyLevel = selectedStudyLevels;
                 $scope.studyLevelOptions = response.studyLevels;
                 $scope.school = {
-                    higher: $scope.studyLevelOptions.filter(function(s){return s.indexOf('OPPEASTE_5') !== -1;}).length > 0,
-                    vocational: $scope.studyLevelOptions.filter(function(s){return s.indexOf('OPPEASTE_4') !== -1;}).length > 0
+                    higher: $scope.auth.school.higher,
+                    vocational: $scope.auth.school.vocational
                 };
             });
         }
@@ -74,5 +74,5 @@
         $scope.criteria.curriculumGroup = undefined;
       }
     });
-
+    
 }]);

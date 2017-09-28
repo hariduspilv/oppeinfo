@@ -45,7 +45,7 @@ public class LessonTimeController {
         return lessonTimeService.getLessonTimeBuildingGroupsDto(lessonTime.getLessonTimeBuildingGroup().getValidFrom(), user.getSchoolId());
     }
 
-    @PostMapping("")
+    @PostMapping
     public LessonTimeGroupsDto create(@Valid @RequestBody LessonTimeGroupsDto lessonTimeGroupsDto, HoisUserDetails user) {
         LessonTime lessonTime = lessonTimeService.create(user, lessonTimeGroupsDto);
         if (lessonTime != null) {
@@ -54,7 +54,7 @@ public class LessonTimeController {
         return null;
     }
 
-    @PutMapping("")
+    @PutMapping
     public LessonTimeGroupsDto save(@Valid @RequestBody LessonTimeGroupsDto lessonTimeGroupsDto, HoisUserDetails user) {
         LessonTime lessonTime = lessonTimeService.save(user, lessonTimeGroupsDto);
         if (lessonTime != null) {

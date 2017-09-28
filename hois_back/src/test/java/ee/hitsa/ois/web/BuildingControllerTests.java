@@ -1,6 +1,10 @@
 package ee.hitsa.ois.web;
 
+import javax.persistence.EntityManager;
+
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +18,11 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.Building;
+import ee.hitsa.ois.domain.Room;
+import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.service.BuildingService;
 import ee.hitsa.ois.web.commandobject.BuildingForm;
 import ee.hitsa.ois.web.commandobject.RoomForm;
 import ee.hitsa.ois.web.dto.BuildingDto;
@@ -24,7 +33,33 @@ import ee.hitsa.ois.web.dto.RoomDto;
 public class BuildingControllerTests {
 
     @Autowired
+    private BuildingService buildingService;
+    @Autowired
+    private EntityManager em;
+    @Autowired
     private TestRestTemplate restTemplate;
+    @Autowired
+    private TestConfigurationService testConfigurationService;
+    private Long buildingId;
+    private Long roomId;
+
+    @Before
+    public void setUp() {
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
+        if(roomId != null) {
+            buildingService.delete(em.getReference(Room.class, roomId));
+            roomId = null;
+        }
+        if(buildingId != null) {
+            buildingService.delete(em.getReference(Building.class, buildingId));
+            buildingId = null;
+        }
+    }
 
     @Test
     public void allBuildings() {
@@ -60,7 +95,7 @@ public class BuildingControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
-        Long buildingId = responseEntity.getBody().getId();
+        buildingId = responseEntity.getBody().getId();
         Assert.assertNotNull(buildingId);
 
         // read
@@ -100,7 +135,7 @@ public class BuildingControllerTests {
         Assert.assertNotNull(roomResponse);
         Assert.assertEquals(HttpStatus.CREATED, roomResponse.getStatusCode());
         Assert.assertNotNull(roomResponse.getBody());
-        Long roomId = roomResponse.getBody().getId();
+        roomId = roomResponse.getBody().getId();
         Assert.assertNotNull(roomId);
 
         // read
@@ -122,11 +157,13 @@ public class BuildingControllerTests {
         uriBuilder.queryParam("version", roomResponse.getBody().getVersion());
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);
+        roomId = null;
 
         // delete
         uriBuilder = UriComponentsBuilder.fromUriString("/buildings").pathSegment(buildingId.toString());
         uriBuilder.queryParam("version", version);
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);
+        buildingId = null;
     }
 }

@@ -69,6 +69,11 @@ public class Classifier extends BaseEntity implements Translatable {
     @OneToMany(fetch = FetchType.LAZY)
     @JoinColumn(name = "classifier_code", nullable = false, updatable = false, insertable = false)
     private Set<ClassifierConnect> classifierConnects;
+    
+    @JsonIgnore
+    @OneToMany(fetch = FetchType.LAZY)
+    @JoinColumn(name = "connect_classifier_code", nullable = false, updatable = false, insertable = false)
+    private Set<ClassifierConnect> childConnects;
 
     @Override
     public int hashCode() {
@@ -84,7 +89,7 @@ public class Classifier extends BaseEntity implements Translatable {
             return false;
         }
 
-        return code.equals(EntityUtil.getCode((Classifier) obj));
+        return obj instanceof Classifier && code.equals(EntityUtil.getCode((Classifier) obj));
     }
 
     public boolean isValid() {
@@ -225,4 +230,10 @@ public class Classifier extends BaseEntity implements Translatable {
     public Set<ClassifierConnect> getClassifierConnects() {
         return classifierConnects != null ? classifierConnects : (classifierConnects = new HashSet<>());
     }
+
+    public Set<ClassifierConnect> getChildConnects() {
+        return childConnects != null ? childConnects : (childConnects = new HashSet<>());
+    }
+    
+    
 }

@@ -11,43 +11,60 @@ import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
-import org.hibernate.validator.constraints.NotBlank;
+import org.hibernate.validator.constraints.NotEmpty;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.StateCurriculumValidator.Confirmed;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
 
 public class StateCurriculumForm extends VersionedCommand {
-    @NotBlank
+    @NotEmpty
     @Size(max=255)
     private String nameEt;
     @Size(max=255)
     private String nameEn;
+    @NotEmpty(groups = {Confirmed.class})
+    @Size(max=20000)
     private String objectivesEt;
+    @Size(max=20000)
     private String objectivesEn;
+    @NotEmpty(groups = {Confirmed.class})
+    @Size(max=20000)
     private String outcomesEt;
+    @Size(max=20000)
     private String outcomesEn;
+    @NotEmpty(groups = {Confirmed.class})
+    @Size(max=20000)
     private String admissionRequirementsEt;
+    @Size(max=20000)
     private String admissionRequirementsEn;
+    @NotEmpty(groups = {Confirmed.class})
+    @Size(max=20000)
     private String graduationRequirementsEt;
+    @Size(max=20000)
     private String graduationRequirementsEn;
     @NotNull
     @Min(0)
     @Max(999)
     private Long credits;
+    @Size(max=20000)
     private String practiceDescription;
+    @NotNull(groups = {Confirmed.class})
     @Min(0)
     @Max(999)
     private BigDecimal optionalStudyCredits;
+    @NotNull(groups = {Confirmed.class})
     private LocalDate validFrom;
     private LocalDate validThru;
+    @Size(max=20000)
     private String description;
     @Size(max=4000)
     private String riigiteatajaUrl;
+    @Size(max=20000)
     private String finalExamDescription;
-    
-    @ClassifierRestriction(MainClassCode.OPPEKAVA_STAATUS)
-    private String status;
+
+    @NotNull
     @ClassifierRestriction(MainClassCode.ISCED_RYHM)
     private String iscedClass;
     @NotNull
@@ -55,8 +72,11 @@ public class StateCurriculumForm extends VersionedCommand {
     private String stateCurrClass;
     
     @Valid
+    @NotEmpty(groups = {Confirmed.class})
     private Set<StateCurriculumModuleDto> modules = new HashSet<>();
     
+    @ClassifierRestriction(MainClassCode.KUTSE)
+    @NotEmpty(groups = {Confirmed.class})
     private Set<String> occupations = new HashSet<>();
 
     public String getNameEt() {
@@ -201,14 +221,6 @@ public class StateCurriculumForm extends VersionedCommand {
 
     public void setFinalExamDescription(String finalExamDescription) {
         this.finalExamDescription = finalExamDescription;
-    }
-
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
     }
 
     public String getIscedClass() {

@@ -1,7 +1,10 @@
 package ee.hitsa.ois.web.commandobject;
 
+import javax.validation.constraints.Size;
+
 public class ApplicationRejectForm {
 
+    @Size(max = 4000)
     private String reason;
 
     public String getReason() {
@@ -11,5 +14,4 @@ public class ApplicationRejectForm {
     public void setReason(String reason) {
         this.reason = reason;
     }
-
 }

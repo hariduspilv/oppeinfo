@@ -1,35 +1,36 @@
 package ee.hitsa.ois.web.dto;
 
-import java.time.LocalDateTime;
-
-import ee.hitsa.ois.domain.Certificate;
-import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.util.EntityUtil;
+import java.time.LocalDate;
 
 public class CertificateSearchDto {
     
     private Long id;
     private String type;
+    private String status;
     private String certificateNr;
     private String headline;
     private String whom;
-    private LocalDateTime inserted;
+    private LocalDate inserted;
     private String studentFullname;
     private Long studentId;
+    private boolean canBeChanged;
 
-    public static CertificateSearchDto of(Certificate certificate) {
-        CertificateSearchDto dto = EntityUtil.bindToDto(certificate, new CertificateSearchDto(), "student");
-        Student student = certificate.getStudent();
-        if(student != null) {
-            dto.setStudentFullname(student.getPerson().getFullname());
-            dto.setStudentId(student.getId());
-        } else {
-            dto.setStudentFullname(certificate.getOtherName());
-        }
-        return dto;
+    public boolean isCanBeChanged() {
+        return canBeChanged;
     }
-    
-   
+
+    public void setCanBeChanged(boolean canBeChanged) {
+        this.canBeChanged = canBeChanged;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
     public String getStudentFullname() {
         return studentFullname;
     }
@@ -86,11 +87,11 @@ public class CertificateSearchDto {
         this.whom = whom;
     }
 
-    public LocalDateTime getInserted() {
+    public LocalDate getInserted() {
         return inserted;
     }
 
-    public void setInserted(LocalDateTime inserted) {
+    public void setInserted(LocalDate inserted) {
         this.inserted = inserted;
     }
 }

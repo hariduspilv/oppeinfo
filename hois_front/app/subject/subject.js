@@ -10,16 +10,28 @@ angular.module('hitsaOis')
         backUrl: backUrl ? '#/' + backUrl : '#/subject'
       };
 
+      $scope.subjectCodeUniqueQuery = {
+        id: id,
+        url: '/subject/unique/code'
+      };
+
       // $resource.search() caused an error
       $resource(config.apiUrl + '/subject/initEditFormData').get().$promise.then(function (result) {
         angular.extend($scope, result.toJSON());
       });
 
       var Endpoint = QueryUtils.endpoint('/subject');
+      var ConfirmEndpoint = QueryUtils.endpoint('/subject/saveAndConfirm');
+      var UnconfirmEndpoint = QueryUtils.endpoint('/subject/saveAndUnconfirm');
+
       if (id) {
         $scope.subject = Endpoint.get({id: id});
       } else {
         $scope.subject = new Endpoint({status: 'AINESTAATUS_S'});
+      }
+
+      function afterTranslate(translated) {
+        message.error(translated);
       }
 
       var checkConnections = function (ids, array) {
@@ -27,9 +39,7 @@ angular.module('hitsaOis')
         for (var i = 0; i < array.length; i++) {
           if (ids.indexOf(array[i].id) > -1) {
             $translate('subject.alreadyConnected', {subject: $rootScope.currentLanguageNameField(array[i])})
-              .then(function (translated) {
-                message.error(translated);
-              });
+              .then(afterTranslate);
             inValid = true;
           }
           ids.push(array[i].id);
@@ -37,14 +47,22 @@ angular.module('hitsaOis')
         return inValid;
       };
 
-      $scope.update = function () {
+      function formIsValid() {
         $scope.subjectForm.$setSubmitted();
         var ids = [];
         var inValid = checkConnections(ids, $scope.subject.mandatoryPrerequisiteSubjects) ||
             checkConnections(ids, $scope.subject.recommendedPrerequisiteSubjects) ||
             checkConnections(ids, $scope.subject.substituteSubjects)
         ;
-        if ($scope.subjectForm.$valid && !inValid) {
+        if($scope.subjectForm.$valid && !inValid) {
+          return true;
+        }
+        message.error("main.messages.form-has-errors");
+        return false;
+      }
+
+      $scope.update = function () {
+        if (formIsValid()) {
           if ($scope.subject.id) {
             $scope.subject.$update().then(message.updateSuccess);
           } else {
@@ -54,6 +72,33 @@ angular.module('hitsaOis')
             });
           }
         }
+      };
+
+      function changeStatus(StatusChangeEndpoint, messages) {
+        if (formIsValid()) {
+          dialogService.confirmDialog({prompt: messages.prompt}, function () {
+            new StatusChangeEndpoint($scope.subject).$update().then(function(response){
+              $scope.subject = response;
+              message.info(messages.success);
+            });
+          });
+        }
+      }
+
+      $scope.saveAndConfirm = function () {
+        var messages = {
+          prompt: 'subject.prompt.saveAndConfirm',
+          success: 'subject.message.savedAndConfirmed'
+        };
+        changeStatus(ConfirmEndpoint, messages);
+      };
+
+      $scope.saveAndUnconfirm = function () {
+        var messages = {
+          prompt: 'subject.prompt.saveAndUnconfirm',
+          success: 'subject.message.savedAndUnconfirmed'
+        };
+        changeStatus(UnconfirmEndpoint, messages);
       };
 
       $scope.delete = function () {
@@ -67,6 +112,8 @@ angular.module('hitsaOis')
     })
   .controller('SubjectViewController',
     function ($scope, $route, $q, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
+
       var id = $route.current.params.id;
 
       var backUrl = $route.current.params.backUrl;
@@ -78,8 +125,9 @@ angular.module('hitsaOis')
 
       $scope.subject = Endpoint.get({id: id});
   })
-  .controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils',
-    function ($q, $scope, Classifier, QueryUtils) {
+  .controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils','$route',
+    function ($q, $scope, Classifier, QueryUtils, $route) {
+      $scope.auth = $route.current.locals.auth;
       var clMapper = Classifier.valuemapper({status: 'AINESTAATUS', assessment: 'HINDAMISVIIS', languages: 'OPPEKEEL'});
       QueryUtils.createQueryForm($scope, '/subject', {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'}, clMapper.objectmapper);
 

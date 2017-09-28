@@ -1,0 +1,44 @@
+<md-dialog aria-label="add enterprise dialog" flex="50">
+  <form name="dialogForm" ng-submit="dialogForm.$valid && submit()" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2 flex>{{"enterprise.create" | translate}}</h2>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <div class="md-dialog-content">
+        <div layout="column" flex>
+          <md-input-container flex>
+            <label class="textInput">{{'enterprise.name' | translate}}</label>
+            <input type="text" ng-model="enterprise.name" required>
+          </md-input-container>
+          <md-input-container flex>
+            <label class="textInput">{{'enterprise.regCode' | translate}}</label>
+            <input type="text" ng-model="enterprise.regCode" required>
+          </md-input-container>
+
+          <md-input-container flex>
+            <label class="textInput">{{'enterprise.contactPersonName' | translate}}</label>
+            <input type="text" ng-model="enterprise.contactPersonName">
+          </md-input-container>
+          <md-input-container flex>
+            <label class="textInput">{{'enterprise.contactPersonPhone' | translate}}</label>
+            <input type="number" ng-model="enterprise.contactPersonPhone">
+          </md-input-container>
+          <md-input-container flex>
+            <label class="textInput">{{'enterprise.contactPersonEmail' | translate}}</label>
+            <input type="email" ng-model="enterprise.contactPersonEmail">
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start start">
+      <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

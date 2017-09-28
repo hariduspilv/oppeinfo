@@ -7,9 +7,8 @@ angular.module('hitsaOis').controller('SaisClassifierListController', ['$scope',
       QueryUtils.endpoint('/saisClassifier/saisImport').save().$promise.then(function() {
         message.info('saisClassifier.importFinished');
         $mdDialog.hide();
-      }).catch(function() {
-        $mdDialog.hide();
-      });
+      }).catch($mdDialog.hide);
+
       var parentEl = angular.element(document.body);
       $mdDialog.show({
         parent: parentEl,

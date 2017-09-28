@@ -15,6 +15,7 @@ public class TimetableEventSearchCommand {
     private LocalDate thru;
     private String otherTeacher;
     private String otherRoom;
+    private Long timetable;
 
     public String getName() {
         return name;
@@ -94,6 +95,14 @@ public class TimetableEventSearchCommand {
 
     public void setOtherRoom(String otherRoom) {
         this.otherRoom = otherRoom;
+    }
+
+    public Long getTimetable() {
+        return timetable;
+    }
+
+    public void setTimetable(Long timetable) {
+        this.timetable = timetable;
     }
 
 }

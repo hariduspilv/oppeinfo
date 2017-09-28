@@ -109,7 +109,7 @@
           <td md-cell>{{subjectLanguages(row.languages)}}</td>
           <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           <td md-cell>{{currentLanguageNameField(row.schoolDepartment)}}</td>
-          <td md-cell><md-button md-no-ink class="md-primary change-button" ng-href="#/subject/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
+          <td md-cell><md-button ng-if="!auth.isStudent()" md-no-ink class="md-primary change-button" ng-href="#/subject/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button></td>
         </tr>
         </tbody>
       </table>

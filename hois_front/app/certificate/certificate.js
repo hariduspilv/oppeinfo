@@ -1,16 +1,25 @@
 'use strict';
 
-angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$route',
-  function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, $route) {
+angular.module('hitsaOis')
+.controller('CertificateSearchController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', '$route', 'CertificateType', 'CertificateUtil',
+  function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, $route, CertificateType, CertificateUtil) {
     $scope.auth = $route.current.locals.auth;
-    var clMapper = Classifier.valuemapper({type: 'TOEND_LIIK'});
+    var clMapper = Classifier.valuemapper({type: 'TOEND_LIIK', status: 'TOEND_STAATUS'});
     QueryUtils.createQueryForm($scope, '/certificate', {order: 'type.' + $scope.currentLanguageNameField()}, clMapper.objectmapper);
     DataUtils.convertStringToDates($scope.criteria, ['insertedFrom', 'insertedThru']);
     $q.all(clMapper.promises).then($scope.loadData);
 
     if($scope.auth.isStudent()) {
       Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK'}, function(result) {
-        $scope.types = result.filter(function(t) {return t.code !== 'TOEND_LIIK_MUU';});
+        $scope.types = result.filter(function(t) {return t.code !== CertificateType.TOEND_LIIK_MUU;});
+
+        QueryUtils.endpoint('/students').get({id: $scope.auth.student}).$promise.then(function(response) {
+          var status = response.status;
+          var forbiddenTypes = CertificateUtil.getForbiddenTypes(status);
+          $scope.types = $scope.types.filter(function(el){
+            return forbiddenTypes.indexOf(el.code) === -1;
+          });
+        });
       });
     }
   }
@@ -19,35 +28,11 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
 
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
-    var id = $route.current.params.id;
 
-    if(id) {
-      $scope.record = Endpoint.get({id: id});
-    } else {
-      $scope.record = new Endpoint({status: 'TOEND_STAATUS_T', content: 'sisu...', type: $route.current.params.typeCode});
+    $scope.record = new Endpoint({type: $route.current.params.typeCode});
 
-      Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK'}, function(result) {
-        var c = result.filter(function(t) {return t.code === $scope.record.type;});
-        if(c.length > 0) {
-          $scope.record.headline = c[0].nameEt;
-        }
-      });
-
-      QueryUtils.endpoint('/directives/coordinators').get().$promise.then(function(response) {
-        var signatories = response.content.filter(function(s) {return s.isCertificateDefault;});
-        if(signatories.length > 0) {
-          $scope.record.signatoryIdcode = signatories[0].idcode;
-          $scope.record.signatoryName = signatories[0].name;
-        } else {
-          message.error('certificate.signatoriesMissing');
-        }
-      });
-    }
-
-    QueryUtils.endpoint('/autocomplete/students').get().$promise.then(function(response) {
-      if(response.content && response.content.length > 0) {
-        $scope.student = response.content[0];
-      }
+    Classifier.get($scope.record.type).$promise.then(function(response){
+      $scope.record.headline = response.nameEt;
     });
 
     $scope.save = function() {
@@ -56,27 +41,33 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
         message.error('main.messages.form-has-errors');
         return;
       }
-      if($scope.record.id) {
-        $scope.record.$update().then(message.updateSuccess);
-      }else{
-        $scope.record.$save().then(function() {
-          message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.record.type + '/' + $scope.record.id + '/edit');
-        });
-      }
+      $scope.record.$save().then(function() {
+        message.info('main.messages.create.success');
+        $location.path(baseUrl +'/' + $scope.record.id + '/view');
+      });
     };
   }
-]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', '$q',
-  function ($scope, QueryUtils, $route, $location, dialogService, message, $resource, config, $q) {
+]).controller('CertificateEditController', ['$scope', 'QueryUtils', '$route', '$location', 'dialogService', 'message', '$resource', 'config', '$q', 'CertificateUtil',
+  function ($scope, QueryUtils, $route, $location, dialogService, message, $resource, config, $q, CertificateUtil) {
 
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
+    var OrderEndpoint = QueryUtils.endpoint(baseUrl + '/order');
     var id = $route.current.params.id;
     var changedByOtherIdCodeChange = false;
+    $scope.forbiddenTypes = [];
 
     function getFullname(person) {
       return person.firstname + ' ' + person.lastname;
     }
+
+    $scope.contentEditable = function() {
+      return CertificateUtil.contentEditable($scope.record);
+    };
+
+    $scope.isOtherCertificate = function(){
+      return CertificateUtil.isOtherCertificate($scope.record);
+    };
 
     function afterLoad() {
       if($scope.record.student) {
@@ -85,13 +76,23 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
           $scope.student = {id: response.id, nameEt: name, nameEn: name};
         });
       }
+      if(!$scope.contentEditable()) {
+        setReadonlyContent($scope.record.content);
+      }
       $scope.otherFound = true;
+    }
+
+    function setReadonlyContent(content) {
+      var el = document.getElementById('content');
+      if(el) {
+        el.innerHTML = content;
+      }
     }
 
     if(id) {
       $scope.record = Endpoint.get({id: id}, afterLoad);
     } else {
-      $scope.record = new Endpoint({status: 'TOEND_STAATUS_T', content: 'sisu...'});
+      $scope.record = new Endpoint();
       afterLoad();
     }
 
@@ -101,23 +102,57 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
          $scope.record.otherName = name;
          $scope.record.otherIdcode = response.person.idcode;
          $scope.otherFound = true;
+
+         $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(response.status);
+
          return response;
       });
     }
 
-    $scope.signatories = [];
-    QueryUtils.endpoint("/directives/coordinators").search().$promise.then(function(response) {
-      $scope.signatories = response.content.filter(function(it) { return it.isCertificate;});
+    QueryUtils.endpoint(baseUrl + "/signatories").query().$promise.then(function(response) {
+      $scope.signatories = response;
+    });
+
+    function loadContent() {
+      if($scope.record.id) {
+        return;
+      }
+      $scope.record.content = null;
+      if($scope.record.student && $scope.record.type && !$scope.isOtherCertificate()) {
+        QueryUtils.endpoint(baseUrl + "/content").search(
+          {student: $scope.record.student, type: $scope.record.type}
+        ).$promise.then(function(response) {
+          $scope.record.content = response.content;
+          if(!$scope.contentEditable()) {
+            setReadonlyContent($scope.record.content);
+          }
+        });
+      }
+    }
+
+    $scope.$watch('record.type', loadContent);
+    $scope.$watch('record.student', function(){
+      if(!$scope.record.student) {
+        $scope.forbiddenTypes = [];
+      }
+      loadContent();
     });
 
     $scope.querySearch = function (text) {
       if(text.length >= 3) {
         var deferred = $q.defer();
         var lookup = QueryUtils.endpoint('/autocomplete/students');
-        lookup.search({name: text}, function (data) {
+        lookup.search(
+          {
+           name: text,
+           active: CertificateUtil.onlyActiveStudents($scope.record.type),
+           finished: CertificateUtil.onlyFinishedStudents($scope.record.type)
+          }, function (data) {
           deferred.resolve(data.content);
         });
         return deferred.promise;
+      } else {
+        return {};
       }
     };
 
@@ -136,24 +171,46 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
       }
     };
 
-    $scope.save = function() {
+    function validationPassed() {
       $scope.certificateEditForm.$setSubmitted();
       if(!$scope.certificateEditForm.$valid) {
         message.error('main.messages.form-has-errors');
+        return false;
+      }
+      return true;
+    }
+
+    function afterCreation(respose) {
+      message.info('main.messages.create.success');
+      $location.path(baseUrl + '/' + respose.id + '/edit');
+    }
+
+    function setSignatoryName() {
+      $scope.record.signatoryName = $scope.signatories.filter(function(e){return e.idcode === $scope.record.signatoryIdcode;})[0].name;
+    }
+
+    $scope.save = function() {
+      if(!validationPassed()) {
         return;
       }
-      $scope.record.signatoryName = $scope.signatories.filter(function(e){return e.idcode === $scope.record.signatoryIdcode;})[0].name;
-      if($scope.record.student) {
-        $scope.record.otherName = null;
-        $scope.record.otherIdcode = null;
-      }
+      setSignatoryName();
       if($scope.record.id) {
         $scope.record.$update(afterLoad).then(message.updateSuccess);
       } else {
-        $scope.record.$save().then(function() {
-          message.info('main.messages.create.success');
-          $location.path(baseUrl + '/' + $scope.record.id + '/edit');
-        });
+        $scope.record.$save().then(afterCreation);
+      }
+    };
+
+    $scope.saveAndOrder = function() {
+      if(!validationPassed()) {
+        return;
+      }
+      setSignatoryName();
+      var record = new OrderEndpoint($scope.record);
+      if($scope.record.id) {
+        record.$update(afterLoad).then(message.updateSuccess);
+      } else {
+        record.$save().then(afterCreation);
       }
     };
 
@@ -170,8 +227,13 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
 
     $scope.otherFound = false;
 
-    $scope.clearOther = function() {
+    function clearStudent() {
       $scope.student = null;
+      $scope.forbiddenTypes = [];
+    }
+
+    $scope.clearOther = function() {
+      clearStudent();
       $scope.otherFound = false;
       $scope.record.otherName = null;
       $scope.record.otherIdcode = null;
@@ -191,25 +253,29 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
             $scope.record.student = result.id;
             $scope.record.otherName = result.fullname;
             $scope.otherFound = true;
-            $scope.student = {id: result.id, nameEt: result.fullname, nameEn: result.fullname};
+            $scope.student = {id: result.id, nameEt: result.fullname, nameEn: result.fullname, status: result.status};
+            $scope.forbiddenTypes = CertificateUtil.getForbiddenTypes(result.status);
           } else if(result.fullname) {
-            $scope.student = null;
+            clearStudent();
             $scope.record.otherName = result.fullname;
             $scope.otherFound = true;
             changedByOtherIdCodeChange = true;
           } else {
             changedByOtherIdCodeChange = true;
-            $scope.student = null;
+            clearStudent();
             $scope.otherFound = false;
           }
       });
     };
   }
-]).controller('CertificateViewController', ['$scope', 'QueryUtils', '$route',
-  function ($scope, QueryUtils, $route) {
+]).controller('CertificateViewController', ['$scope', 'QueryUtils', '$route', 'ekisService', 'CertificateUtil',
+  function ($scope, QueryUtils, $route, ekisService, CertificateUtil) {
     var baseUrl = '/certificate';
     var Endpoint = QueryUtils.endpoint(baseUrl);
     var id = $route.current.params.id;
+    $scope.auth = $route.current.locals.auth;
+
+    $scope.getCertificateUrl = ekisService.getCertificateUrl;
 
     function getFullname(person) {
       return person.firstname + ' ' + person.lastname;
@@ -222,7 +288,10 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
           $scope.student = {id: response.id, nameEt: name, nameEn: name};
         });
       }
-      $scope.otherFound = true;
+      var el = document.getElementById('content');
+      if(el) {
+        el.innerHTML = $scope.record.content;
+      }
     }
 
     function getStudent() {
@@ -230,11 +299,51 @@ angular.module('hitsaOis').controller('CertificateSearchController', ['$scope', 
          var name = getFullname(response.person);
          $scope.record.otherName = name;
          $scope.record.otherIdcode = response.person.idcode;
-         $scope.otherFound = true;
          return response;
       });
     }
 
+    $scope.contentEditable = function() {
+      return CertificateUtil.contentEditable($scope.record);
+    };
+
     $scope.record = Endpoint.get({id: id}, afterLoad);
   }
-]);
+]).constant('CertificateType', {
+  'TOEND_LIIK_SOOR': 'TOEND_LIIK_SOOR',
+  'TOEND_LIIK_OPI' : 'TOEND_LIIK_OPI',
+  'TOEND_LIIK_SESS': 'TOEND_LIIK_SESS',
+  'TOEND_LIIK_KONTAKT': 'TOEND_LIIK_KONTAKT',
+  'TOEND_LIIK_LOPET': 'TOEND_LIIK_LOPET',
+  'TOEND_LIIK_MUU': 'TOEND_LIIK_MUU'
+
+}).factory('CertificateUtil', function (CertificateType, StudentUtil) {
+
+  return {
+    isOtherCertificate: function(record) {
+      return record && record.type === CertificateType.TOEND_LIIK_MUU;
+    },
+    contentEditable: function(record) {
+      return record && (
+      record.type === CertificateType.TOEND_LIIK_MUU ||
+      record.type === CertificateType.TOEND_LIIK_KONTAKT ||
+      record.type === CertificateType.TOEND_LIIK_SESS);
+    },
+    onlyActiveStudents: function(certificateTypeCode) {
+      return CertificateType.TOEND_LIIK_KONTAKT === certificateTypeCode ||
+             CertificateType.TOEND_LIIK_OPI === certificateTypeCode;
+    },
+    onlyFinishedStudents: function(certificateTypeCode) {
+      return CertificateType.TOEND_LIIK_LOPET === certificateTypeCode;
+    },
+    getForbiddenTypes: function(studentStatus) {
+      if(StudentUtil.isActive(studentStatus)) {
+        return [CertificateType.TOEND_LIIK_LOPET];
+      } else if(StudentUtil.hasFinished(studentStatus)) {
+        return [CertificateType.TOEND_LIIK_OPI, CertificateType.TOEND_LIIK_KONTAKT];
+      } else {
+        return [CertificateType.TOEND_LIIK_OPI, CertificateType.TOEND_LIIK_KONTAKT, CertificateType.TOEND_LIIK_LOPET];
+      }
+    }
+  };
+});

@@ -46,7 +46,7 @@
           <hois-classifier-select ng-model="row.language" model-value-attr="code" main-classifier-code="OPPEKEEL" aria-label="{{'directive.student.language' | translate}}"></hois-classifier-select>
         </td>
         <td md-cell>
-          <hois-select ng-model="row.studentGroup" values="formState.studentGroups" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
+          <hois-select ng-model="row.studentGroup" values="formState.studentGroupMap[row.curriculumVersion]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.previousStudyLevel" model-value-attr="code" main-classifier-code="OPPEASTE" aria-label="{{'directive.student.previousStudyLevel' | translate}}"></hois-classifier-select>

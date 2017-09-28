@@ -87,7 +87,7 @@ angular.module('hitsaOis')
       new Endpoint($scope.classifier).$save().then(function(result) {
           ClassifierConnect.sendListOfParents(result, $scope.parents);
           message.info('main.messages.create.success');
-          $location.path( '/classifier/' + $scope.mainClassCode + '/' + result.code + '/edit');
+          $location.url( '/classifier/' + $scope.mainClassCode + '/' + result.code + '/edit?_noback');
         });
     }
 
@@ -98,6 +98,7 @@ angular.module('hitsaOis')
     $scope.addParent = function(item) {
       if(item && parentNotAlreadyAdded(item)) {
         $scope.parents.push(item);
+        $scope.classifierForm.$setDirty();
       }
     };
 
@@ -106,6 +107,9 @@ angular.module('hitsaOis')
     }
 
     $scope.removeParent = function(parent) {
-      $scope.parents.splice($scope.parents.indexOf(parent), 1);
+      dialogService.confirmDialog({prompt: 'classifier.prompt.deleteParent'}, function() {
+        $scope.parents.splice($scope.parents.indexOf(parent), 1);
+        $scope.classifierForm.$setDirty();
+      });
     };
   });

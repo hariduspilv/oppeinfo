@@ -3,12 +3,17 @@ package ee.hitsa.ois.util;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.application.Application;
+import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ApplicationStatus;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class UserUtil {
@@ -33,6 +38,17 @@ public abstract class UserUtil {
         return false;
     }
 
+    public static boolean canCancelDirective(HoisUserDetails user, Directive directive) {
+        return !ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())
+            && ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD, directive.getStatus())
+            && isSchoolAdmin(user, directive.getSchool());
+    }
+
+    public static boolean canEditDirective(HoisUserDetails user, Directive directive) {
+        return ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus())
+            && isSchoolAdmin(user, directive.getSchool());
+    }
+
     public static boolean canViewStudent(HoisUserDetails user, Student student) {
         return isSchoolAdmin(user, student.getSchool()) || isSame(user, student) || isStudentRepresentative(user, student) || isTeacher(user, student.getSchool());
     }
@@ -42,13 +58,12 @@ public abstract class UserUtil {
     }
 
     public static boolean canAddStudentAbsence(HoisUserDetails user, Student student) {
-        return isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student);
+        return isAdultStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentTeacher(user, student) || isStudentRepresentative(user, student);
     }
 
     public static boolean canEditStudentAbsence(HoisUserDetails user, StudentAbsence absence) {
         Student student = absence.getStudent();
-        // TODO representative can only edit absence created by him/her
-        return isSchoolAdmin(user, student.getSchool()) || isStudentRepresentative(user, student);
+        return isAdultStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentTeacher(user, student) || isStudentRepresentative(user, student);
     }
 
     /**
@@ -74,8 +89,8 @@ public abstract class UserUtil {
         if(isSchoolAdmin(user, student.getSchool()) || isAdultStudent(user, student)) {
             return true;
         }
-        // representative can edit it's own record if student's data is visible to him/her
-        return EntityUtil.getId(representative.getPerson()).equals(user.getPersonId()) && Boolean.TRUE.equals(representative.getIsStudentVisible());
+        // representative can edit it's own record even if student's data is not visible to him/her
+        return user.isRepresentative() && EntityUtil.getId(representative.getPerson()).equals(user.getPersonId());
     }
 
     /**
@@ -88,17 +103,33 @@ public abstract class UserUtil {
     public static boolean isSchoolAdmin(HoisUserDetails user, School school) {
         return user.isSchoolAdmin() && EntityUtil.getId(school).equals(user.getSchoolId());
     }
+    
+    public static boolean isStudent(HoisUserDetails user, School school) {
+        return user.isStudent() && EntityUtil.getId(school).equals(user.getSchoolId());
+    }
 
     public static boolean isAdultStudent(HoisUserDetails user, Student student) {
-        return isSame(user, student) && StudentUtil.isAdult(student);
+        return isStudent(user, student) && StudentUtil.isAdultAndDoNotNeedRepresentative(student);
     }
 
     public static boolean isSame(HoisUserDetails user, Student student) {
         return user.getPersonId().equals(EntityUtil.getId(student.getPerson()));
     }
 
+    public static boolean isStudent(HoisUserDetails user, Student student) {
+        return user.isStudent() && user.getStudentId().equals(EntityUtil.getId(student));
+    }
+
     public static boolean isStudentRepresentative(HoisUserDetails user, Student student) {
-        return student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
+        return user.isRepresentative() && student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
+    }
+
+    public static boolean isStudentTeacher(HoisUserDetails user, Student student) {
+        if(isTeacher(user, student.getSchool()) && student.getStudentGroup() != null) {
+            Teacher teacher = student.getStudentGroup().getTeacher();
+            return user.getTeacherId().equals(EntityUtil.getId(teacher));
+        }
+        return false;
     }
 
     /**
@@ -110,10 +141,18 @@ public abstract class UserUtil {
     public static boolean isTeacher(HoisUserDetails user, School school) {
         return user.isTeacher() && EntityUtil.getId(school).equals(user.getSchoolId());
     }
+    
+    public static boolean isSchoolAdminOrStudent(HoisUserDetails user, School school) {
+        return isSchoolAdmin(user, school) || isStudent(user, school);
+    }
 
     public static void assertSameSchool(HoisUserDetails user, School school) {
         Long schoolId = user.getSchoolId();
         AssertionFailedException.throwIf(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school)), "School mismatch");
+    }
+
+    public static void assertIsMainAdminOrSchoolAdmin(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isMainAdmin() && !user.isSchoolAdmin(), "User is not admin");
     }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user) {
@@ -143,4 +182,27 @@ public abstract class UserUtil {
     public static void assertIsPerson(HoisUserDetails user, Person person) {
         AssertionFailedException.throwIf(!user.getPersonId().equals(EntityUtil.getNullableId(person)), "Person and user don't match");
     }
+
+    public static void assertIsStudent(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isStudent(), "User is not school student");
+    }
+
+    public static void assertIsSchoolAdminOrStudent(HoisUserDetails user, School school) {
+        AssertionFailedException.throwIf(!isSchoolAdminOrStudent(user, school), "User is not school admin or student in given school");        
+    }
+
+    public static void assertIsSchoolAdminOrStudent(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isStudent(), "User is not school admin or student");        
+    }
+
+    public static void assertIsSchoolAdminOrStudentOrRepresentative(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isStudent() && !user.isRepresentative(), 
+                "User is not school admin, student, or student representative");                
+    }
+    
+    public static void assertCanViewStudent(HoisUserDetails user, Student student) {
+        AssertionFailedException.throwIf(!canViewStudent(user, student), 
+                "User is not allowed to see student's information");    
+    }
+
 }

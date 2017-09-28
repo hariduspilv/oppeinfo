@@ -37,23 +37,14 @@ public class CurriculumSpecialityDto extends VersionedCommand {
     private String occupationEn;
     @ClassifierRestriction(MainClassCode.KUTSE)
     private String occupation;
-    private Long curriculum;
-    
+    private boolean addedToVersion;
 
     public static CurriculumSpecialityDto of(CurriculumSpeciality speciality) {
         CurriculumSpecialityDto dto = EntityUtil.bindToDto(speciality, new CurriculumSpecialityDto(), "referenceNumber", "curriculum");
-        dto.setCurriculum(EntityUtil.getId(speciality.getCurriculum()));
+        dto.setAddedToVersion(speciality.isAddedToVersion());
         return dto;
     }
     
-    public Long getCurriculum() {
-        return curriculum;
-    }
-    
-    public void setCurriculum(Long curriculum) {
-        this.curriculum = curriculum;
-    }
-
     public Long getReferenceNumber() {
         return referenceNumber;
     }
@@ -61,7 +52,13 @@ public class CurriculumSpecialityDto extends VersionedCommand {
     public void setReferenceNumber(Long referenceNumber) {
         this.referenceNumber = referenceNumber;
     }
-
+    
+    public boolean isAddedToVersion() {
+        return addedToVersion;
+    }
+    public void setAddedToVersion(boolean addedToVersion) {
+        this.addedToVersion = addedToVersion;
+    }
     public Long getId() {
         return id;
     }

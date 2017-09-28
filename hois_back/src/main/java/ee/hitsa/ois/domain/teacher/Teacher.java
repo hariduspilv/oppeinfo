@@ -1,5 +1,6 @@
 package ee.hitsa.ois.domain.teacher;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -43,6 +44,9 @@ public class Teacher extends BaseEntityWithId {
 
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TeacherMobility> teacherMobility;
+    
+    @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<TeacherContinuingEducation> teacherContinuingEducation;
 
     @OneToMany(mappedBy = "teacher", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<TeacherQualification> teacherQualification;
@@ -138,7 +142,15 @@ public class Teacher extends BaseEntityWithId {
     public void setTeacherMobility(Set<TeacherMobility> teacherMobility) {
         this.teacherMobility = teacherMobility;
     }
+    
+    public List<TeacherContinuingEducation> getTeacherContinuingEducation() {
+        return teacherContinuingEducation != null ? teacherContinuingEducation : (teacherContinuingEducation = new ArrayList<>());
+    }
 
+    public void setTeacherContinuingEducation(List<TeacherContinuingEducation> teacherContinuingEducation) {
+        this.teacherContinuingEducation = teacherContinuingEducation;
+    }
+    
     public Set<TeacherQualification> getTeacherQualification() {
         return teacherQualification != null ? teacherQualification : (teacherQualification = new HashSet<>());
     }

@@ -16,7 +16,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'RoomSearchController',
         controllerAs: 'controller',
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_HOONERUUM]
         }
       })
       .when('/rooms/:id/edit', {

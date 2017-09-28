@@ -25,6 +25,10 @@ md-checkbox.md-checked .md-icon {
 {
 	margin-bottom: 0px;
 }
+.hois-collapse-header {
+  color: rgb(13,71,161);
+  font-weight: 500;
+}
 
 md-table-container .md-button
 {
@@ -398,6 +402,30 @@ md-input-container:not(.md-input-invalid) .md-select-value > span:not(.md-select
 	padding-left:3px;
 }
 
+#groupSelection md-grid-list md-grid-tile figure
+{
+  -webkit-justify-content: left!important;
+}
+
+#vTimetable div {
+  /*border: 1px solid #ccc;*/
+  border-collapse: collapse;
+  padding: 3px;
+  font-size:12px;
+}
+
+.timetableDayBg
+{
+  padding: 2.25em 1.6875em;
+  background-image: -webkit-repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+  background-image: -moz-repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+  background-image: -o-repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+  background-image: repeating-linear-gradient(135deg, rgba(0,0,0,.3), rgba(0,0,0,.3) 1px, transparent 2px, transparent 2px, rgba(0,0,0,.3) 3px);
+  -webkit-background-size: 4px 4px;
+  -moz-background-size: 4px 4px;
+  background-size: 4px 4px;
+}
+
 .odd {
 background-color: #fcfcfc;
 }
@@ -749,6 +777,14 @@ body[dir=rtl] .menu-heading {
   transform: rotate(0deg);
 }
 
+menu-link {
+    color: rgb(13, 71, 161);
+}
+
+.md-title .hois-classifier-value {
+    display: inline-block;
+}
+
 .md-button.md-icon-button {
     margin: 0;
 }
@@ -1080,14 +1116,14 @@ td.bordered[md-cell] {
 
 .lessonplan
 {
-	font-size: 13px;
+	font-size: 12px;
 	border-collapse: collapse;
 	width: 100%;
 }
 
 .lessonplan  td
 {
-	border: 1px solid #81D4FA;
+	border: 1px solid #ccc;
 	padding: 3px;
 }
 
@@ -1111,4 +1147,126 @@ td.bordered[md-cell] {
     font-size: 13px!important;
     line-height: 32px!important;
     height: 32px!important;
+}
+
+.timetable-drag {
+    width: 55px;
+    height: 30px;
+    border: 1px solid #CCC;
+    text-align: center;
+    vertical-align: middle;
+}
+
+.timetable-higher-drag {
+  width: 99%;
+  height: 30px;
+  border: 1px solid #CCC;
+  text-align: center;
+  vertical-align: middle;
+}
+
+.timetable-drop {
+    width: 55px;
+    height: 30px;
+    border: 1px solid #CCC;
+    display: block;
+}
+
+.timetable-higher-drop {
+  width: 100%;
+  height: 30px;
+  border-left: 1px dotted #CCC;
+  border-right: 1px dotted #CCC;
+  display: block;
+}
+
+.timetable-higher-drop-column {
+  width: 20px;
+  text-align: center;
+}
+
+.timetable-higher-drop-odd {
+  width: 30px;
+  height: 30px;
+  border-left: 1px dotted #CCC;
+  border-right: 1px dotted #CCC;
+  display: block;
+}
+
+#timetableCreation {
+    font-size: 13px;
+}
+
+#timetable-planned td div:not(:first-child){
+    display: block;
+}
+
+#timetable-planned-column > div:not(:first-child){
+    margin-left: 5px;
+    display: block;
+}
+
+#timetable-planned-capacity {
+    float: left;
+}
+
+.timetable-planned-capacity {
+  float: left;
+}
+
+#timetable-planned-capacity div:not(:first-child){
+    margin-top: -20px;
+    display: block;
+}
+
+.timetable-planned-capacity div:not(:first-child){
+  margin-top: -20px;
+  display: block;
+}
+
+#timetable-planned td{
+    vertical-align: top!important;
+}
+ pre {
+  font-size: 13px;
+  font-family: Roboto, "Helvetica Neue", sans-serif;
+}
+
+#lang-button button{
+	min-height: inherit;
+	line-height:inherit;
+  min-width:inherit;
+  margin:0;
+  padding-left: 2px;
+  padding-right: 2px;
+}
+
+#lang-button{
+  margin-right:24px;
+  margin-left:24px;
+}
+
+md-grid-tile {
+  overflow: hidden;
+  font-size: 12px;
+}
+
+.timetableEvent div
+{
+  padding:0px!important;
+}
+
+.timetableEvent > div:nth-child(1) > span:nth-child(1)
+{
+  font-size:10px!important;
+  font-weight:bold;
+}
+
+.timetableEvent > div:nth-child(1) > span:nth-child(2)
+{
+  font-size:12px!important;
+}
+.timetableEvent > div:not(:nth-child(1))
+{
+  font-size:10px!important;
 }

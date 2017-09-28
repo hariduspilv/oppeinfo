@@ -1,7 +1,9 @@
 package ee.hois.xroad.handler;
 
-import ee.hois.xroad.helpers.XRoadHeaderV4;
-import ee.hois.xroad.helpers.XRoadResponse;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.util.Set;
+import java.util.UUID;
 
 import javax.xml.namespace.QName;
 import javax.xml.soap.SOAPBody;
@@ -14,10 +16,9 @@ import javax.xml.soap.SOAPMessage;
 import javax.xml.ws.handler.MessageContext;
 import javax.xml.ws.handler.soap.SOAPHandler;
 import javax.xml.ws.handler.soap.SOAPMessageContext;
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.util.Set;
-import java.util.UUID;
+
+import ee.hois.xroad.helpers.XRoadHeaderV4;
+import ee.hois.xroad.helpers.XRoadResponse;
 
 public class XRoadV4HeaderHandler implements SOAPHandler<SOAPMessageContext> {
 
@@ -44,7 +45,7 @@ public class XRoadV4HeaderHandler implements SOAPHandler<SOAPMessageContext> {
 
         SOAPMessage message = context.getMessage();
 
-        if (isRequest) {
+        if (Boolean.TRUE.equals(isRequest)) {
             try {
                 SOAPEnvelope envelope = message.getSOAPPart().getEnvelope();
                 SOAPHeader soapHeader = envelope.getHeader();
@@ -107,7 +108,7 @@ public class XRoadV4HeaderHandler implements SOAPHandler<SOAPMessageContext> {
                 response.setXmlQuery(new String(out.toByteArray()));
 
             } catch (SOAPException | IOException e) {
-                response.setxRoadErrors(true);
+                response.setxRoadErrors(Boolean.TRUE);
                 response.setError(e.toString());
 
             }
@@ -130,7 +131,7 @@ public class XRoadV4HeaderHandler implements SOAPHandler<SOAPMessageContext> {
             context.put("xRoadResponse", response);
         }
         setResponse(context, response);
-        response.setxRoadErrors(true);
+        response.setxRoadErrors(Boolean.TRUE);
         return false;
     }
 
@@ -145,12 +146,13 @@ public class XRoadV4HeaderHandler implements SOAPHandler<SOAPMessageContext> {
             SOAPBody soapBody = soapMsg.getSOAPBody();
             if (soapBody.hasFault()) {
                 response.setError(soapBody.getFault().getFaultString());
-                response.setxRoadErrors(true);
+                response.setxRoadErrors(Boolean.TRUE);
             }
             ByteArrayOutputStream out = new ByteArrayOutputStream();
             soapMsg.writeTo(out);
             response.setXmlResponse(new String(out.toByteArray()));
         } catch (Exception e) {
+            //TODO: use logger
             e.printStackTrace();
         }
     }

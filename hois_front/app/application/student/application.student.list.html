@@ -41,7 +41,7 @@
         </tr>
         </thead>
         <tbody md-body>
-        <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'">
+        <tr md-row ng-repeat="row in applicationTypes" ng-class-odd="'odd'" ng-class-even="'even'" ng-if="applicationTypesApplicable[row.code]">
           <td md-cell>{{currentLanguageNameField(row)}}</td>
           <td md-cell>
             <div ng-if="applicationTypesApplicable[row.code].isAllowed === true && auth.isStudent()" layout="row" layout-align="end end">

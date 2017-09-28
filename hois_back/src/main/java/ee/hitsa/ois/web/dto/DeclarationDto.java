@@ -12,10 +12,10 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 public class DeclarationDto {
-    
+
     private Long id;
     private AutocompleteResult studyPeriod;
-    private Integer course;
+    private Short course;
     private StudentSearchDto student;
     private String status;
     private LocalDateTime inserted;
@@ -25,7 +25,7 @@ public class DeclarationDto {
     private Boolean canBeChanged;
     private Boolean canBeSetUnconfirmed;
     private Boolean canBeSetConfirmed;
-    
+
     public static DeclarationDto of(Declaration declaration) {
         DeclarationDto dto = new DeclarationDto();
         EntityUtil.bindToDto(declaration, dto, "studyPeriod", "student", "subjects");
@@ -35,17 +35,17 @@ public class DeclarationDto {
         student.setId(EntityUtil.getId(declaration.getStudent()));
         student.setFullname(declaration.getStudent().getPerson().getFullname());
         student.setIdcode(declaration.getStudent().getPerson().getIdcode());
-        student.setStatus(EntityUtil.getCode(declaration.getStudent().getStatus()));
+        student.setStatus(EntityUtil.getNullableCode(declaration.getStudent().getStatus()));
+        
+        CurriculumVersion cv = declaration.getStudent().getCurriculumVersion();
+        student.setCurriculumVersion(new AutocompleteResult(cv.getId(), cv.getCode(), cv.getCode()));
+        
         StudentGroup sg = declaration.getStudent().getStudentGroup();
         if(sg != null) {
             dto.setCourse(sg.getCourse());
             student.setStudentGroup(AutocompleteResult.of(sg));
-            CurriculumVersion cv = sg.getCurriculumVersion();
-            if(cv != null) {
-                student.setCurriculumVersion(AutocompleteResult.of(cv));
-            }
         }
-        dto.setStudent(student); 
+        dto.setStudent(student);
         return dto;
     }
     public Boolean getCanBeSetConfirmed() {
@@ -66,10 +66,10 @@ public class DeclarationDto {
     public void setCanBeSetUnconfirmed(Boolean canBeSetUnconfirmed) {
         this.canBeSetUnconfirmed = canBeSetUnconfirmed;
     }
-    public Integer getCourse() {
+    public Short getCourse() {
         return course;
     }
-    public void setCourse(Integer course) {
+    public void setCourse(Short course) {
         this.course = course;
     }
     public Long getId() {

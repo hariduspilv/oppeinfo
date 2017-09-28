@@ -5,6 +5,7 @@ import java.time.LocalDateTime;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
@@ -13,7 +14,8 @@ import ee.hitsa.ois.domain.school.School;
 @Entity
 public class WsSaisLog extends BaseEntityWithId {
 
-    @ManyToOne(optional = true, fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
     private School school;
     private String wsName;
     private LocalDate queryDateFrom;
@@ -25,10 +27,9 @@ public class WsSaisLog extends BaseEntityWithId {
     private Boolean hasXteeErrors;
     private Boolean hasOtherErrors;
     private Long recordCount;
-    
     @ManyToOne
     private WsSaisLog firstWsSaisLog;
-    
+
     public WsSaisLog() {
         this.hasOtherErrors = Boolean.FALSE;
         this.hasXteeErrors = Boolean.FALSE;
@@ -129,5 +130,4 @@ public class WsSaisLog extends BaseEntityWithId {
     public void setFirstWsSaisLog(WsSaisLog firstWsSaisLog) {
         this.firstWsSaisLog = firstWsSaisLog;
     }
-
 }

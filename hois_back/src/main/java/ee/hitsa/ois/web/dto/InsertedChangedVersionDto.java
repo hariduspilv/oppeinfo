@@ -2,6 +2,9 @@ package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDateTime;
 
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
+
+import ee.hitsa.ois.LocalDateTimeXmlAdapter;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class InsertedChangedVersionDto extends VersionedCommand {
@@ -14,7 +17,7 @@ public class InsertedChangedVersionDto extends VersionedCommand {
     public LocalDateTime getInserted() {
         return inserted;
     }
-
+    @XmlJavaTypeAdapter(type=LocalDateTime.class, value = LocalDateTimeXmlAdapter.class)
     public void setInserted(LocalDateTime inserted) {
         this.inserted = inserted;
     }
@@ -26,7 +29,7 @@ public class InsertedChangedVersionDto extends VersionedCommand {
     public void setInsertedBy(String insertedBy) {
         this.insertedBy = insertedBy;
     }
-
+    @XmlJavaTypeAdapter(type=LocalDateTime.class, value = LocalDateTimeXmlAdapter.class)
     public LocalDateTime getChanged() {
         return changed;
     }

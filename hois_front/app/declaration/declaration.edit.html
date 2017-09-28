@@ -64,7 +64,7 @@
         </tr>
       </thead>
       <tbody md-body>
-        <tr md-row ng-repeat="subject in declaration.subjects | orderBy: 'subject.' + currentLanguageNameField()" ng-class-odd="'odd'" ng-class-even="'even'">
+        <tr md-row ng-repeat="subject in declaration.subjects | orderBy: 'subject.' + currentLanguageNameField()" ng-class="{listItem: subject.newlyAdded}" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell>
             {{currentLanguageNameField(subject.subject)}} ({{subject.subject.code}})
             <span ng-show="subject.isDeclaredRepeatedly">&nbsp;*</span>
@@ -77,14 +77,16 @@
             </table>
           </td>
           <td md-cell>{{subject.subject.credits}} / {{subject.subject.assessment}}</td>
-          <td md-cell>{{currentLanguageNameField(subject.module)}} / {{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
+          <td md-cell>{{subject.module != null ? currentLanguageNameField(subject.module) : ' - '}} / {{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
           <td md-cell>
             <span ng-show="!hasPrerequisites(subject)"> - </span>
             <span ng-show="hasPrerequisites(subject)"><a href="" ng-click="seePrerequisites(subject)">
               {{'declaration.seePrerequisites' | translate}}</a>
             </span>
           </td>
-          <td md-cell><a class="remove nomargin" ng-click="removeSubject(subject)">&times;</a></td>
+          <td md-cell>
+            <a ng-if="!subject.isAssessed" class="remove nomargin" ng-click="removeSubject(subject)">&times;</a>
+          </td>
         </tr>
       </tbody>
     </table>
@@ -96,3 +98,13 @@
     <md-button class="md-raised md-default" ng-click="back('#/declarations')">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>
+
+<style>
+
+.listItem.ng-enter {
+    transition: all 2.5s ease;
+}
+.listItem.ng-enter-active {
+    background-color: #84ff8e;
+}
+</style>

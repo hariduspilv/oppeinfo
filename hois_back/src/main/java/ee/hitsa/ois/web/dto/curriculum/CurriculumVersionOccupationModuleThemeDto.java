@@ -33,7 +33,7 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
     @NotNull
     @Min(0)
     @Max(10000)
-    private Integer hours;
+    private Short hours;
 
     @Min(0)
     @Max(999)
@@ -41,7 +41,7 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
     private String subthemes;
     @Min(0)
     @Max(10000)
-    private Integer studyYearNumber;
+    private Short studyYearNumber;
 
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMISVIIS)
     private String assessment;
@@ -94,11 +94,11 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         this.credits = credits;
     }
 
-    public Integer getHours() {
+    public Short getHours() {
         return hours;
     }
 
-    public void setHours(Integer hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 
@@ -118,11 +118,11 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
         this.subthemes = subthemes;
     }
 
-    public Integer getStudyYearNumber() {
+    public Short getStudyYearNumber() {
         return studyYearNumber;
     }
 
-    public void setStudyYearNumber(Integer studyYearNumber) {
+    public void setStudyYearNumber(Short studyYearNumber) {
         this.studyYearNumber = studyYearNumber;
     }
 

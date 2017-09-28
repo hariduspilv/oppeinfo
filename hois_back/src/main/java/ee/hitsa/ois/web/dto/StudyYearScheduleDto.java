@@ -15,8 +15,8 @@ public class StudyYearScheduleDto {
     @NotNull
     private Long studyPeriod;
     @NotNull
-    private Long weekNr;
-    
+    private Short weekNr;
+
 
     public static StudyYearScheduleDto of(StudyYearSchedule studyYearSchedule) {
         StudyYearScheduleDto dto = new StudyYearScheduleDto();
@@ -27,15 +27,15 @@ public class StudyYearScheduleDto {
         dto.setWeekNr(studyYearSchedule.getWeekNr());
         return dto;
     }
-    
-    public StudyYearScheduleDto(Long studentGroupId, Long studyYearScheduleLegendId, Long studyPeriodId, Long weekNr) {
+
+    public StudyYearScheduleDto(Long studentGroupId, Long studyYearScheduleLegendId, Long studyPeriodId, Short weekNr) {
         this.studentGroup = studentGroupId;
         this.studyYearScheduleLegend = studyYearScheduleLegendId;
         this.studyPeriod = studyPeriodId;
         this.weekNr = weekNr;
     }
-    
-    
+
+
     public StudyYearScheduleDto() {
         // TODO Auto-generated constructor stub
     }
@@ -105,10 +105,10 @@ public class StudyYearScheduleDto {
     public void setStudyPeriod(Long studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
-    public Long getWeekNr() {
+    public Short getWeekNr() {
         return weekNr;
     }
-    public void setWeekNr(Long weekNr) {
+    public void setWeekNr(Short weekNr) {
         this.weekNr = weekNr;
     }
 }

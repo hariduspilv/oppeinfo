@@ -9,8 +9,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     var school = Session.school || {};
     var onlyhigher = school.higher && !school.vocational;
     $scope.formState = {allCurriculumVersions: Curriculum.queryVersions(), curriculumVersions: [],
-                        allStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM'}), studyForms: [],
-                        curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyhigher: onlyhigher};
+                        allStudyForms: Classifier.queryForDropdown({mainClassCode: 'OPPEVORM', higher: school.higher || undefined, vocational: school.vocational || undefined}),
+                        studyForms: [], curriculumVersionLabel: 'studentGroup.curriculumVersionBoth', onlyhigher: onlyhigher};
 
     if(onlyhigher) {
       $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionHigher';
@@ -64,8 +64,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
 
     $q.all(clMapper.promises).then($scope.loadData);
   }
-]).controller('StudentGroupEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'Curriculum', 'QueryUtils', 'Session', 'DataUtils',
-  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Classifier, Curriculum, QueryUtils, Session, DataUtils) {
+]).controller('StudentGroupEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'Curriculum', 'QueryUtils', 'Session',
+  function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Classifier, Curriculum, QueryUtils, Session) {
     var id = $route.current.params.id;
     var baseUrl = '/studentgroups';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -130,8 +130,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     function afterLoad() {
       $scope.formState.students = clMapper.objectmapper($scope.record.members);
       $scope.formState.selectedStudents = angular.copy($scope.formState.students);
+      $scope.formState.readonly = $scope.record.id && $scope.formState.students && $scope.formState.students.length > 0;
       $scope.curriculumChanged();
-      DataUtils.convertStringToDates($scope.record, ["validFrom", "validThru"]);
     }
 
     if(id) {
@@ -139,6 +139,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     } else {
       // new student group
       $scope.record = new Endpoint();
+      $scope.formState.readonly = false;
     }
 
     $scope.update = function() {
@@ -228,5 +229,36 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         $scope.formState.selectedStudents = $scope.formState.selectedStudents.filter(filter);
       });
     };
+  }
+]).controller('StudentGroupViewController', ['$route', '$scope', 'Curriculum', 'QueryUtils', 'Session',
+  function ($route, $scope, Curriculum, QueryUtils, Session) {
+    var id = $route.current.params.id;
+    var baseUrl = '/studentgroups';
+
+    var school = Session.school || {};
+    var onlyvocational = !school.higher && school.vocational;
+    $scope.formState = {curriculumVersionLabel: 'studentGroup.curriculumVersionBoth',
+                        onlyvocational: onlyvocational, isVocational: school.vocational};
+
+    if(onlyvocational) {
+      $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionVocational';
+    } else if(school.higher && !school.vocational) {
+      $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionHigher';
+    }
+
+    $scope.record = QueryUtils.endpoint(baseUrl).get({id: id}, function(result) {
+      if(result && result.curriculum && result.curriculum.id) {
+        QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: result.curriculum.id}, function(result) {
+          $scope.formState.origStudyLevel = result.origStudyLevel;
+          $scope.formState.isVocational = result.isVocational;
+        });
+      }
+      if(result.curriculumVersion) {
+        Curriculum.queryVersions().$promise.then(function(versions) {
+          var current = versions.filter(function(it) { return it.id === result.curriculumVersion; });
+          $scope.formState.curriculumVersion = current.length > 0 ? current[0] : undefined;
+        });
+      }
+    });
   }
 ]);

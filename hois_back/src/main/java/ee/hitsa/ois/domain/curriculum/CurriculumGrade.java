@@ -2,6 +2,7 @@ package ee.hitsa.ois.domain.curriculum;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.validation.constraints.Size;
 
@@ -26,7 +27,20 @@ public class CurriculumGrade extends BaseEntityWithId implements Translatable {
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	private Classifier ehisGrade;
 
-	@Override
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
+	private Curriculum curriculum;
+	
+
+	public Curriculum getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(Curriculum curriculum) {
+        this.curriculum = curriculum;
+    }
+
+    @Override
 	public String getNameEt() {
 		return nameEt;
 	}

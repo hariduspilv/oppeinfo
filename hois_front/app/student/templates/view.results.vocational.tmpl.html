@@ -1,0 +1,80 @@
+
+
+<div layout-padding ng-cloak class="form-readonly">
+  <div flex>
+    <div layout="row" layout-xs="column" flex>
+      <div flex="90">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex>
+            <label>{{'student.label' | translate}}</label>
+            <hois-value value="student.person.firstname + ' ' + student.person.lastname"></hois-value>
+          </md-input-container>
+          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.idcode' | translate}}</label>
+            <hois-value value="student.person.idcode"></hois-value>
+          </md-input-container>
+          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.studyForm' | translate}}</label>
+            <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
+          </md-input-container>
+        </div>
+      </div>
+    </div>
+
+    <div layout="row" layout-xs="column" flex>
+      <div flex="90">
+        <div layout="row" layout-sm="column" layout-xs="column">
+          <md-input-container flex>
+            <label>{{'student.curriculum' | translate}}</label>
+            <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
+          </md-input-container>
+          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.curriculumCredits' | translate}}</label>
+            <hois-value value="student.curriculumCredits != null ? student.curriculumCredits + ' EKAP' : ''"></hois-value>
+          </md-input-container>
+          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.totalCredits' | translate}}</label>
+            <hois-value value="student.credits != null ? student.credits + ' EKAP' : ''"></hois-value>
+          </md-input-container>
+          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.kkh' | translate}}</label>
+            <hois-value value="student.kkh"></hois-value>
+          </md-input-container>
+          <md-input-container flex flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <label>{{'student.result.curriculumFulfilled' | translate}}</label>
+            <hois-value value="isStudentCurriculumFulfilled(student) ? ('student.result.fulfilled' | translate) : ('student.result.notFulfilled' | translate)"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+    </div>
+
+    <div ng-controller="StudentViewResultsVocationalController as controller" flex="90" ng-cloak>
+      <md-content>
+        <md-nav-bar md-selected-nav-item="resultsCurrentNavItem" nav-bar-aria-label="results selection">
+          <md-nav-item md-nav-click="loadCurriculumFulfillment()" name="student.curriculumFulfillment">
+            {{'student.result.curriculumFulfillment' | translate}}
+          </md-nav-item>
+          <md-nav-item md-nav-click="loadStudyYearResults()" name="student.inOrderOfStudyYear">
+            {{'student.result.inOrderOfStudyYear' | translate}}
+          </md-nav-item>
+          <md-nav-item md-nav-click="loadModuleThemeResults()" name="student.inOrderOfPassing">
+            {{'student.result.inOrderOfPassing' | translate}}
+          </md-nav-item>
+        </md-nav-bar>
+        <div layout-margin>
+          <div ng-show="resultsCurrentNavItem === 'student.curriculumFulfillment'">
+            <div ng-include="'student/templates/view.results.vocational.curriculumfulfillment.tmpl.html'"></div>
+          </div>
+          <div ng-show="resultsCurrentNavItem === 'student.inOrderOfStudyYear'">
+            <div ng-include="'student/templates/view.results.vocational.orderofstudyyear.tmpl.html'"></div>
+          </div>
+          <div ng-show="resultsCurrentNavItem === 'student.inOrderOfPassing'">
+            <div ng-include="'student/templates/view.results.vocational.orderofpassing.tmpl.html'"></div>
+          </div>
+        </div>
+      </md-content>
+    </div>
+
+
+  </div>
+</div>

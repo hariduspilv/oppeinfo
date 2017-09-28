@@ -29,23 +29,25 @@ import ee.hitsa.ois.web.dto.MessageTemplateDto;
 @RestController
 @RequestMapping("/messageTemplate")
 public class MessageTemplateController {
-    
+
     @Autowired
     private MessageTemplateService messageTemplateService;
 
     @GetMapping
     public Page<MessageTemplateDto> search(HoisUserDetails user, @Valid MessageTemplateSearchCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
         return messageTemplateService.search(user.getSchoolId(), criteria, pageable);
     }
-    
+
     @GetMapping("/{id:\\d+}")
     public MessageTemplateDto get(HoisUserDetails user, @WithEntity("id") MessageTemplate messageTemplate) {
-        UserUtil.assertSameSchool(user, messageTemplate.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, messageTemplate.getSchool());
         return MessageTemplateDto.of(messageTemplate);
     }
-    
+
     @PostMapping
     public MessageTemplateDto create(HoisUserDetails user, @Valid @RequestBody MessageTemplateForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
         return get(user, messageTemplateService.create(user, form));
     }
 
@@ -53,16 +55,16 @@ public class MessageTemplateController {
     public MessageTemplateDto update(HoisUserDetails user, 
             @WithVersionedEntity(value = "id", versionRequestBody = true) MessageTemplate messageTemplate, 
             @Valid @RequestBody MessageTemplateForm form) {
-        UserUtil.assertSameSchool(user, messageTemplate.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, messageTemplate.getSchool());
         return get(user, messageTemplateService.save(messageTemplate, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") MessageTemplate messageTemplate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertSameSchool(user, messageTemplate.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, messageTemplate.getSchool());
         messageTemplateService.delete(messageTemplate);
     }
-    
+
     @GetMapping("/usedTypeCodes")
     public Set<String> getUsedTypeCodes(HoisUserDetails user, String code) {
         return messageTemplateService.getUsedTypeCodes(user.getSchoolId(), code);

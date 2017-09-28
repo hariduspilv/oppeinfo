@@ -22,21 +22,23 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
 
     public static LessonPlanJournalDto of(Journal journal, LessonPlanModule lessonPlanModule) {
         LessonPlanJournalDto dto = EntityUtil.bindToDto(journal, new LessonPlanJournalDto());
-        dto.setLessonPlanModuleId(lessonPlanModule.getId());
+        Long lessonPlanModuleId = EntityUtil.getId(lessonPlanModule);
+        dto.setLessonPlanModuleId(lessonPlanModuleId);
         dto.setJournalCapacityTypes(StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getCapacityType()), journal.getJournalCapacityTypes()));
         
         if(journal.getJournalOccupationModuleThemes() != null) {
             //journalOccupationModuleThemes is only for the themes of the journal and not for the groups which are stored in the same table
-            // TODO bad equals
-            dto.setJournalOccupationModuleThemes(StreamUtil.toMappedList(r -> EntityUtil.getId(r.getCurriculumVersionOccupationModuleTheme()), journal.getJournalOccupationModuleThemes().stream().filter(module -> module.getLessonPlanModule() == lessonPlanModule)));
+            dto.setJournalOccupationModuleThemes(
+                    StreamUtil.toMappedList(r -> EntityUtil.getId(r.getCurriculumVersionOccupationModuleTheme()), 
+                            journal.getJournalOccupationModuleThemes().stream().filter(module -> EntityUtil.getId(module.getLessonPlanModule()).equals(EntityUtil.getId(lessonPlanModule)))));
             //all other themes will be used for groups
-            List<JournalOccupationModuleTheme> journalModuleThemes = journal.getJournalOccupationModuleThemes().stream().filter(module -> module.getLessonPlanModule() != lessonPlanModule).collect(Collectors.toList());
+            List<JournalOccupationModuleTheme> journalModuleThemes = journal.getJournalOccupationModuleThemes().stream().filter(it -> !lessonPlanModuleId.equals(EntityUtil.getId(it.getLessonPlanModule()))).collect(Collectors.toList());
             Map<StudentGroup, List<JournalOccupationModuleTheme>> studentGroupMap = journalModuleThemes.stream().collect(Collectors.groupingBy(module -> module.getLessonPlanModule().getLessonPlan().getStudentGroup()));
             dto.setGroups(StreamUtil.toMappedList(LessonPlanJournalForm.LessonPlanGroupForm::of, studentGroupMap.entrySet()));
         }
-        dto.setJournalTeachers(StreamUtil.nullSafeList(journal.getJournalTeachers()).stream().map(LessonPlanJournalForm.LessonPlanJournalTeacherForm::of).sorted(Comparator.comparing(r -> ((AutocompleteResult)r.getTeacher()).getNameEt().toLowerCase())).collect(Collectors.toList()));
+        dto.setJournalTeachers(StreamUtil.nullSafeList(journal.getJournalTeachers()).stream().map(LessonPlanJournalForm.LessonPlanJournalTeacherForm::of).sorted(Comparator.comparing(r -> ((AutocompleteResult)r.getTeacher()).getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
         dto.setLessonPlan(EntityUtil.getId(lessonPlanModule.getLessonPlan()));
-        dto.setThemes(lessonPlanModule.getCurriculumVersionOccupationModule().getThemes().stream().map(AutocompleteResult::of).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
+        dto.setThemes(lessonPlanModule.getCurriculumVersionOccupationModule().getThemes().stream().map(AutocompleteResult::of).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
         return dto;
     }
 

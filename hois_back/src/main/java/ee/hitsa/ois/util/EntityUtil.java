@@ -16,21 +16,20 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.FatalBeanException;
 import org.springframework.beans.PropertyAccessor;
 import org.springframework.beans.PropertyAccessorFactory;
-import org.springframework.dao.DataIntegrityViolationException;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.util.ClassUtils;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
@@ -39,11 +38,17 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.exception.EntityRemoveException;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
+/**
+ * Utility functions for working with JPA entities
+ */
 public abstract class EntityUtil {
 
     private static final Set<String> IGNORED_ENTITY_PROPERTIES = new HashSet<>(Arrays.asList("version", "inserted", "insertedBy", "changed", "changedBy", "id", "class"));
@@ -128,6 +133,7 @@ public abstract class EntityUtil {
                                 classifierProperties.put(propertyName, restriction);
                             }
                         }
+                      //TODO: add comment why catching throwable (error) instead of exception. (sonarqube warning)
                     } catch (Throwable e) {
                         throw new FatalBeanException("Could not copy property '" + propertyName + "' from command to entity", e);
                     }
@@ -193,6 +199,7 @@ public abstract class EntityUtil {
                                 }
                             }
                         }
+                        //TODO: add comment why catching throwable (error) instead of exception. (sonarqube warning)
                      } catch (Throwable e) {
                         throw new FatalBeanException("Could not copy property '" + propertyName + "' from command to entity", e);
                     }
@@ -204,7 +211,8 @@ public abstract class EntityUtil {
     }
 
     /**
-     * child collection binding when only id is required to set (typically classifier reference).
+     * Child collection binding with create and delete operations.
+     * Used when only id is required to set (for example classifier reference).
      *
      * @param storedValues
      * @param idExtractor
@@ -225,9 +233,10 @@ public abstract class EntityUtil {
         // remove possible leftovers
         storedValues.removeIf(t -> storedIds.contains(idExtractor.apply(t)));
     }
-    
+
     /**
-     * child collection binding when you need to extract id from object and also have other parameters to set (typically holder object with multiple parameters).
+     * Child collection binding with create and delete operations.
+     * Used when you need to extract id from object and also have other property to set (typically holder object with multiple properties).
      *
      * @param storedValues
      * @param idExtractor
@@ -308,7 +317,7 @@ public abstract class EntityUtil {
                 } else {
                     if (r.useClassifierValue()) {
                         if (t.length != 1) {
-                            throw new RuntimeException("only one mainClassCode is allowed, when useClassifierValue=true.");
+                            throw new HoisException("only one mainClassCode is allowed, when useClassifierValue=true.");
                         }
                         c = loader.findByValueAndMainClassCode(classCodeOrValue, t[0].name());
                     } else {
@@ -356,28 +365,6 @@ public abstract class EntityUtil {
         throw new AssertionFailedException("Wrong classifier main class code: " + mainClassCode);
     }
 
-    public static void setEntityFromRepository(Object command, Object entity,
-            JpaRepository<?, Long> repository, String... properties) {
-        PropertyAccessor source = PropertyAccessorFactory.forBeanPropertyAccess(command);
-        PropertyAccessor destination = PropertyAccessorFactory.forBeanPropertyAccess(entity);
-        for(String property : properties) {
-            //usually Long is used in DTO classes to have references to other objects, but
-            //sometimes ee.hitsa.ois.web.dto.AutocompleteResult is also used.
-            Long id = getIdFromValue(source.getPropertyValue(property));
-            destination.setPropertyValue(property, id != null ? repository.getOne(id) : null);
-        }
-    }
-
-    private static Long getIdFromValue(Object value) {
-        if(value instanceof Long || value == null) {
-            return (Long)value;
-        }
-        if(value instanceof EntityConnectionCommand) {
-            return ((EntityConnectionCommand)value).getId();
-        }
-        throw new FatalBeanException("Unknown value type: " + value.getClass().getName());
-    }
-
     /**
      * Apply supplied function to loaded entity.
      *
@@ -396,19 +383,18 @@ public abstract class EntityUtil {
     }
 
     /**
-     * Apply supplied consumer to loaded entity.
+     * Save entity helper function.
      *
-     * @param id entity id
-     * @param loader entity loader
-     * @param consumer
-     * @throws EntityNotFoundException if entity is not found
+     * @param entity
+     * @param em
+     * @return
      */
-    public static <E, ID> void withEntity(ID id, Function<ID, E> loader, Consumer<E> consumer) {
-        E entity = loader.apply(id);
-        if(entity == null) {
-            throw new EntityNotFoundException();
+    public static <E extends BaseEntityWithId> E save(E entity, EntityManager em) {
+        if(entity.getId() != null) {
+            return em.merge(entity);
         }
-        consumer.accept(entity);
+        em.persist(entity);
+        return entity;
     }
 
     /**
@@ -417,21 +403,32 @@ public abstract class EntityUtil {
      * we are using simple helper for delete to map data integrity violation to another exception.
      * Usually we get exception only when data is flushed to database, so here we flush it manually.
      *
-     * @param remover
      * @param entity
-     * @param errorCode
+     * @param em
+     * @throws EntityRemoveException if there was constraint violation
      */
-    public static <E> void deleteEntity(JpaRepository<E, ?> repository, E entity, String errorCode) {
-        try {
-            repository.delete(entity);
-            repository.flush();
-        } catch(DataIntegrityViolationException e) {
-            throw new EntityRemoveException(errorCode, e.getCause());
-        }
+    public static <E> void deleteEntity(E entity, EntityManager em) {
+        deleteEntity(entity, em, null);
     }
 
-    public static <E> void deleteEntity(JpaRepository<E, ?> repository, E entity) {
-        deleteEntity(repository, entity, null);
+    /**
+     * try to delete entity, catching data integrity violation exception. With customizable error code.
+     * @param entity
+     * @param em
+     * @param errorCode
+     * @throws EntityRemoveException if there was constraint violation
+     */
+    public static <E> void deleteEntity(E entity, EntityManager em, String errorCode) {
+        try {
+            em.remove(em.contains(entity) ? entity : em.merge(entity));
+            em.flush();
+        } catch(PersistenceException e) {
+            Throwable cause = e.getCause();
+            if(cause instanceof ConstraintViolationException) {
+                throw new EntityRemoveException(errorCode, cause);
+            }
+            throw e;
+        }
     }
 
     /**
@@ -492,6 +489,10 @@ public abstract class EntityUtil {
         return entity.getCode();
     }
 
+    public static <T extends BaseEntityWithId> T getOptionalOne(Class<T> entityClass, EntityConnectionCommand id, EntityManager em) {
+        return id != null ? getOptionalOne(entityClass, id.getId(), em) : null;
+    }
+
     /**
      * Return reference to entity of given class or null
      * @param entityClass
@@ -530,5 +531,5 @@ public abstract class EntityUtil {
     }
 
     private static final ConcurrentMap<String, ConcurrentMap<Language, String>> PROPERTY_NAME_CACHE = new ConcurrentHashMap<>();
-
+    
 }

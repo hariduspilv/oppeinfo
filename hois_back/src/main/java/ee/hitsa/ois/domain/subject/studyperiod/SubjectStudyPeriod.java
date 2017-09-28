@@ -12,14 +12,16 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.DeclarationSubject;
+import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodCapacity;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 
 @Entity
 public class SubjectStudyPeriod extends BaseEntityWithId {
-    //TODO: set of students who declared a subject
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
@@ -45,6 +47,44 @@ public class SubjectStudyPeriod extends BaseEntityWithId {
 
     @OneToMany(mappedBy = "subjectStudyPeriod", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<SubjectStudyPeriodCapacity> capacities;
+    
+    /*
+     * This mapping is required for saving midtermTasks using EntityUtil.bindEntityCollection.
+     * However, SubjectStudyPeriod cannot be removed via its controller if it has any midtermTask
+     * Exception is thrown in SubjectStudyPeriodService.delete() in that case.
+     */
+    @OneToMany(mappedBy = "subjectStudyPeriod", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<MidtermTask> midtermTasks;
+
+    @OneToMany(mappedBy = "subjectStudyPeriod", fetch = FetchType.LAZY)
+    private List<DeclarationSubject> declarationSubjects;
+    
+    @OneToMany(mappedBy = "subjectStudyPeriod", fetch = FetchType.LAZY)
+    private List<ProtocolHdata> protocols;
+
+    public List<ProtocolHdata> getProtocols() {
+        return protocols != null ? protocols : (protocols = new ArrayList<>());
+    }
+
+    public void setProtocols(List<ProtocolHdata> protocols) {
+        this.protocols = protocols;
+    }
+
+    public List<DeclarationSubject> getDeclarationSubjects() {
+        return declarationSubjects != null ? declarationSubjects : (declarationSubjects = new ArrayList<>());
+    }
+
+    public void setDeclarationSubjects(List<DeclarationSubject> declarationSubjects) {
+        this.declarationSubjects = declarationSubjects;
+    }
+
+    public List<MidtermTask> getMidtermTasks() {
+        return midtermTasks != null ? midtermTasks : (midtermTasks = new ArrayList<>());
+    }
+
+    public void setMidtermTasks(List<MidtermTask> midtermTasks) {
+        this.midtermTasks = midtermTasks;
+    }
 
     public List<SubjectStudyPeriodCapacity> getCapacities() {
         return capacities != null ? capacities : (capacities = new ArrayList<>());

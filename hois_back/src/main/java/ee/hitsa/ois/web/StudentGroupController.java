@@ -19,13 +19,14 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.StudentGroupService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupForm;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchCommand;
 import ee.hitsa.ois.web.commandobject.student.StudentGroupSearchStudentsCommand;
@@ -46,7 +47,7 @@ public class StudentGroupController {
         if(user.isTeacher()) {
             // TODO change frontend, make message compose form to use endpoint /autocomplete/studentgroups
             // message receivers
-            criteria.setTeacherPerson(user.getPersonId());
+            criteria.setTeacher(new EntityConnectionCommand(user.getTeacherId()));
         } else if(!user.isSchoolAdmin()) {
             throw new AssertionFailedException("User cannot search student groups");
         }

@@ -7,7 +7,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controller: 'StudentGroupSearchController',
       controllerAs: 'controller',
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPERYHM]
       }
     })
     .when('/studentgroups/new', {
@@ -21,6 +21,14 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     .when('/studentgroups/:id/edit', {
       templateUrl: 'studentGroup/student.group.edit.html',
       controller: 'StudentGroupEditController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/studentgroups/:id/view', {
+      templateUrl: 'studentGroup/student.group.view.html',
+      controller: 'StudentGroupViewController',
       controllerAs: 'controller',
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

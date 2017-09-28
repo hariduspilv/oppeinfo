@@ -1,0 +1,77 @@
+<md-dialog aria-label="{{'midtermTask.copy' | translate}}" flex="50" flex-sm="70" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{'midtermTask.copy' | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="column">
+          <!-- hois-value and disabled attribute have weird behaviour in IE browser -->
+          <md-input-container ng-show="formState.auth.isTeacher()">
+            <label>{{'midtermTask.teacher' | translate}}</label>
+            <input type="text" ng-model="formState.auth.fullname" readonly>
+          </md-input-container>
+          <md-input-container>
+              <label>{{'midtermTask.studyPeriod' | translate}}</label>
+              <hois-select ng-model="criteria.studyPeriod" values="studyPeriods"></hois-select>
+          </md-input-container>
+          <hois-autocomplete ng-model="criteria.teacherObject" method="teachers" name="teacher"
+              label="midtermTask.teacher" ng-show="formState.auth.isAdmin()"></hois-autocomplete>
+          <hois-autocomplete ng-model="criteria.subjectObject" method="subjects" name="subject"
+              label="midtermTask.subject"></hois-autocomplete>
+        </div>
+      </div>
+      <div layout="row">
+          <md-button type="submit" ng-click="loadData()" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+      </div>
+
+
+      <md-table-container flex>
+          <table md-table md-row-select="true" md-progress="tabledata.$promise" ng-model="subjectStudyPeriodSelected">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+              <th md-column md-order-by="subject.{{currentLanguageNameField()}}">{{'midtermTask.subject' | translate}}</th>
+              <th md-column ng-show="formState.auth.isAdmin()">{{'midtermTask.teacher' | translate}}</th>
+              <th md-column>{{'midtermTask.midtermTasks' | translate}}</th>
+          </tr>
+          </thead>
+          <tbody md-body>
+          <tr md-row md-select="row" md-select-id="row.id" ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell>{{currentLanguageNameField(row.subject)}}</td>
+              <td md-cell ng-show="formState.auth.isAdmin()">
+                  <table>
+                      <tr ng-repeat="teacher in row.teachers | orderBy">
+                          <td>{{teacher}}</td>
+                      </tr>
+                  </table>
+              </td>
+              <td md-cell>
+                  <table>
+                      <tr ng-repeat="midtermTask in row.midtermTasks | orderBy: currentLanguageNameField()">
+                          <td>{{currentLanguageNameField(midtermTask)}}</td>
+                      </tr>
+                  </table>
+              </td>
+          </tr>
+          </tbody>
+          </table>
+      </md-table-container>
+      <md-table-pagination  md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                              md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                              md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }"  md-page-select></md-table-pagination>
+
+    </md-dialog-content>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()" ng-disabled="subjectStudyPeriodSelected.length !== 1">{{"main.button.add" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

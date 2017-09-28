@@ -1,9 +1,13 @@
 package ee.hitsa.ois.domain;
 
+import java.util.HashSet;
+import java.util.Set;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
@@ -22,9 +26,18 @@ public class DeclarationSubject extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "curriculum_version_hmodule_id")
     private CurriculumVersionHigherModule module;
-
+    
     private Boolean isOptional;
+    
+    @OneToMany(mappedBy = "declarationSubject", fetch = FetchType.LAZY)
+    private Set<MidtermTaskStudentResult> midtermTaskStudentResults;
 
+    public Set<MidtermTaskStudentResult> getMidtermTaskStudentResults() {
+        return midtermTaskStudentResults != null ? midtermTaskStudentResults : (midtermTaskStudentResults = new HashSet<>());
+    }
+    public void setMidtermTaskStudentResults(Set<MidtermTaskStudentResult> midtermTaskStudentResults) {
+        this.midtermTaskStudentResults = midtermTaskStudentResults;
+    }
     public Declaration getDeclaration() {
         return declaration;
     }

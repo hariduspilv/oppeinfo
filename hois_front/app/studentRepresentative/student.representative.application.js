@@ -15,9 +15,7 @@ angular.module('hitsaOis').controller('StudentRepresentativeApplicationSearchCon
 
     $scope.accept = function(row) {
       dialogService.confirmDialog({prompt: 'student.representative.application.confirm'}, function() {
-        QueryUtils.endpoint('/studentrepresentatives/applications/accept').update({id: row.id, version: row.version}).$promise.then(function() {
-          refreshApplications();
-        });
+        QueryUtils.endpoint('/studentrepresentatives/applications/accept').update({id: row.id, version: row.version}).$promise.then(refreshApplications);
       });
     };
 

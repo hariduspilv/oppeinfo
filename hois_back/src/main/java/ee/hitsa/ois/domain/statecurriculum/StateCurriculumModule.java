@@ -38,7 +38,19 @@ public class StateCurriculumModule extends BaseEntityWithId {
 	@OneToOne(mappedBy = "module", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY, orphanRemoval=true)
 	private StateCurriculumModuleOutcome outcome;
 
-	public StateCurriculumModule() {
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
+	private StateCurriculum stateCurriculum;
+
+	public StateCurriculum getStateCurriculum() {
+        return stateCurriculum;
+    }
+
+    public void setStateCurriculum(StateCurriculum stateCurriculum) {
+        this.stateCurriculum = stateCurriculum;
+    }
+
+    public StateCurriculumModule() {
 	}
 
 	public Set<StateCurriculumModuleOccupation> getModuleOccupations() {

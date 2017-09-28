@@ -7,4 +7,6 @@ import ee.hitsa.ois.domain.subject.Subject;
 
 public interface SubjectRepository extends JpaRepository<Subject, Long>, JpaSpecificationExecutor<Subject> {
 
+    boolean existsBySchoolIdAndCode(Long schoolId, String paramValue);
+    boolean existsBySchoolIdAndCodeAndIdNot(Long schoolId, String code, Long curriculumId);
 }

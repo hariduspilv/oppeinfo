@@ -3,6 +3,17 @@
     <md-dialog-content>
       <div class="md-dialog-content">
 
+        <div layout="row" class="form-readonly">
+          <md-input-container flex>
+            <label>{{'student.name' | translate}}</label>
+            <hois-value value="record.studentName"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.studentGroup' | translate}}</label>
+            <hois-value value="record.studentGroup"></hois-value>
+          </md-input-container>
+        </div>
+
         <div layout="row">
           <md-input-container flex>
             <md-datepicker ng-model="record.validFrom" name="validFrom" md-placeholder="{{'student.absence.validFrom' | translate}}" required></md-datepicker>

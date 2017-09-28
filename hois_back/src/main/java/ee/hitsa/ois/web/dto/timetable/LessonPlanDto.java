@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -20,8 +21,8 @@ import ee.hitsa.ois.domain.timetable.LessonPlanModule;
 import ee.hitsa.ois.enums.CapacityType;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
-import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -29,14 +30,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
     private Long id;
     private List<StudyPeriodDto> studyPeriods;
-    private List<Integer> weekNrs;
+    private List<Short> weekNrs;
     private List<LessonPlanLegendDto> legends;
 
     public static LessonPlanDto of(LessonPlan lessonPlan, Map<Long, Long> weekNrsLegends) {
         LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
         dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList()));
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());
-        dto.setModules(lessonPlan.getLessonPlanModules().stream().map(r -> LessonPlanModuleDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
+        dto.setModules(lessonPlan.getLessonPlanModules().stream().map(r -> LessonPlanModuleDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
         dto.setWeekNrs(dto.getStudyPeriods().stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList()));
 
         Map<Long, String> colors = StreamUtil.toMap(StudyYearScheduleLegend::getId, StudyYearScheduleLegend::getColor, lessonPlan.getSchool().getStudyYearScheduleLegends());
@@ -60,11 +61,11 @@ public class LessonPlanDto extends LessonPlanForm {
         this.studyPeriods = studyPeriods;
     }
 
-    public List<Integer> getWeekNrs() {
+    public List<Short> getWeekNrs() {
         return weekNrs;
     }
 
-    public void setWeekNrs(List<Integer> weekNrs) {
+    public void setWeekNrs(List<Short> weekNrs) {
         this.weekNrs = weekNrs;
     }
 
@@ -89,7 +90,7 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setNameEt(cm.getNameEt());
             dto.setNameEn(cm.getNameEn());
             dto.setTeacher(lessonPlanModule.getTeacher() != null ? AutocompleteResult.of(lessonPlanModule.getTeacher()) : null);
-            dto.setJournals(lessonPlanModule.getJournalOccupationModuleThemes().stream().map(r -> r.getJournal()).distinct().map(r -> LessonPlanModuleJournalDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
+            dto.setJournals(lessonPlanModule.getJournalOccupationModuleThemes().stream().map(r -> r.getJournal()).distinct().map(r -> LessonPlanModuleJournalDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
             dto.setTotalHours(Integer.valueOf(lessonPlanModule.getCurriculumVersionOccupationModule().getCapacities().stream().mapToInt(CurriculumVersionOccupationModuleCapacity::getHours).sum()));
             return dto;
         }
@@ -131,8 +132,8 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setId(journal.getId());
             dto.setNameEt(journal.getNameEt());
             dto.setGroupProportion(EntityUtil.getNullableCode(journal.getGroupProportion()));
-            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
-            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt().toLowerCase())).collect(Collectors.toList()));
+            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
 
             // all hours mapped by capacity type and week nr
             dto.setHours(capacityMapper.mapOutput(journal));
@@ -171,9 +172,9 @@ public class LessonPlanDto extends LessonPlanForm {
             this.teachers = teachers;
         }
     }
-    
+
     public static class LessonPlanModuleJournalForTeacherDto extends LessonPlanModuleJournalDto {
-        
+
         private Boolean isConfirmer;
         private Boolean isFiller;
 
@@ -182,11 +183,12 @@ public class LessonPlanDto extends LessonPlanForm {
             dto.setId(journal.getId());
             dto.setNameEt(journal.getNameEt());
             dto.setGroupProportion(EntityUtil.getNullableCode(journal.getGroupProportion()));
-            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt().toLowerCase())).collect(Collectors.toList()));
-            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt().toLowerCase())).collect(Collectors.toList()));
-            List<JournalTeacher> currentTeacher = StreamUtil.nullSafeList(journal.getJournalTeachers().stream().filter(t -> EntityUtil.getId(t.getTeacher()) == EntityUtil.getId(teacher)).collect(Collectors.toList()));
-            dto.setIsConfirmer(currentTeacher.get(0).getIsConfirmer());
-            dto.setIsFiller(currentTeacher.get(0).getIsFiller());
+            dto.setThemes(journal.getJournalOccupationModuleThemes().stream().map(r -> new LessonPlanModuleJournalThemeDto(r.getCurriculumVersionOccupationModuleTheme())).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+            dto.setTeachers(journal.getJournalTeachers().stream().map(LessonPlanModuleJournalTeacherDto::new).sorted(Comparator.comparing(r -> r.getTeacher().getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+            Long teacherId = EntityUtil.getId(teacher);
+            JournalTeacher currentTeacher = journal.getJournalTeachers().stream().filter(t -> EntityUtil.getId(t.getTeacher()).equals(teacherId)).findFirst().get();
+            dto.setIsConfirmer(currentTeacher.getIsConfirmer());
+            dto.setIsFiller(currentTeacher.getIsFiller());
             // all hours mapped by capacity type and week nr
             dto.setHours(capacityMapper.mapOutput(journal));
             return dto;
@@ -219,8 +221,8 @@ public class LessonPlanDto extends LessonPlanForm {
             nameEt = theme.getNameEt();
             credits = theme.getCredits();
 
-            Map<String, Integer> capacityHours = StreamUtil.toMap(r -> EntityUtil.getCode(r.getCapacityType()), r -> r.getHours(), theme.getCapacities());
-            hours = Arrays.stream(CapacityType.values()).filter(ct -> capacityHours.containsKey(ct.name())).map(ct -> String.format("%s%s", ct.getId(), capacityHours.get(ct.name()))).collect(Collectors.joining("/")); 
+            Map<String, Short> capacityHours = StreamUtil.toMap(r -> EntityUtil.getCode(r.getCapacityType()), r -> r.getHours(), theme.getCapacities());
+            hours = Arrays.stream(CapacityType.values()).filter(ct -> capacityHours.containsKey(ct.name())).map(ct -> String.format("%s%s", ct.getId(), capacityHours.get(ct.name()))).collect(Collectors.joining("/"));
         }
 
         public String getNameEt() {
@@ -255,13 +257,18 @@ public class LessonPlanDto extends LessonPlanForm {
         private final Long id;
         private final String nameEt;
         private final String nameEn;
-        private final List<Integer> weekNrs;
+        private LocalDate startDate;
+        private LocalDate endDate;
+        
+        private final List<Short> weekNrs;
 
         public StudyPeriodDto(StudyPeriod studyPeriod) {
             id = studyPeriod.getId();
             nameEt = studyPeriod.getNameEt();
             nameEn = studyPeriod.getNameEn();
             weekNrs = studyPeriod.getWeekNrs();
+            startDate = studyPeriod.getStartDate();
+            endDate = studyPeriod.getEndDate();
         }
 
         public Long getId() {
@@ -275,8 +282,16 @@ public class LessonPlanDto extends LessonPlanForm {
         public String getNameEn() {
             return nameEn;
         }
+        
+        public LocalDate getStartDate() {
+            return startDate;
+        }
+        
+        public LocalDate getEndDate() {
+            return endDate;
+        }
 
-        public List<Integer> getWeekNrs() {
+        public List<Short> getWeekNrs() {
             return weekNrs;
         }
     }

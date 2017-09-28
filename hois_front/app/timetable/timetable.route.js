@@ -3,47 +3,172 @@
 angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($routeProvider, USER_ROLES) {
   $routeProvider
     .when('/timetable/lessonTime/search', {
-        templateUrl: 'timetable/timetable.lessonTime.list.html',
-        controller: 'TimetableLessonTimeListController',
-        controllerAs: 'controller',
-        resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      templateUrl: 'timetable/timetable.lessonTime.list.html',
+      controller: 'TimetableLessonTimeListController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
         },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
         }
-      })
-      .when('/timetable/lessonTime', {
-        templateUrl: 'timetable/timetable.lessonTime.html',
-        controller: 'TimetableLessonTimeController',
-        controllerAs: 'controller',
-        resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); } ,
-          auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNDAEG]
+      }
+    })
+    .when('/timetable/lessonTime', {
+      templateUrl: 'timetable/timetable.lessonTime.html',
+      controller: 'TimetableLessonTimeController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
         },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
         }
-      })
-      .when('/timetable/lessonTime/:id/:action', {
-        templateUrl: function(urlAttrs) {
-          return urlAttrs.action === 'edit' ? 'timetable/timetable.lessonTime.html' : 'timetable/timetable.lessonTime.view.html';
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/timetable/lessonTime/:id/:action', {
+      templateUrl: function (urlAttrs) {
+        return urlAttrs.action === 'edit' ? 'timetable/timetable.lessonTime.html' : 'timetable/timetable.lessonTime.view.html';
+      },
+      controller: 'TimetableLessonTimeController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
         },
-        controller: 'TimetableLessonTimeController',
-        controllerAs: 'controller',
-        resolve: {
-          translationLoaded: function($translate) { return $translate.onReady(); },
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
-          entity: function(QueryUtils, $route) {
-            return QueryUtils.endpoint('/lessontimes').get({id: $route.current.params.id}).$promise;
-          },
-          isView: function ($route){
-            return $route.current.params.action === 'view';
-          }
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
         },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        entity: function (QueryUtils, $route) {
+          return QueryUtils.endpoint('/lessontimes').get({id: $route.current.params.id}).$promise;
+        },
+        isView: function ($route) {
+          return $route.current.params.action === 'view';
         }
-      });
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/timetable/generalTimetableByGroup', {
+      templateUrl: 'timetable/timetable.generalTimetable.byGroup.html',
+      controller: 'GeneralTimetableController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
+      }
+    })
+    .when('/timetable/timetableManagement', {
+      templateUrl: 'timetable/timetable.timetableManagement.html',
+      controller: 'TimetableManagementController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
+      }
+    })
+    .when('/timetable/new', {
+      templateUrl: 'timetable/timetable.edit.html',
+      controller: 'TimetableEditController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        isCreate: function () {
+          return true;
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/timetable/:id/edit', {
+      templateUrl: 'timetable/timetable.edit.html',
+      controller: 'TimetableEditController',
+      controllerAs: 'controller',
+      resolve: {
+        translationLoaded: function ($translate) {
+          return $translate.onReady();
+        },
+        auth: function (AuthResolver) {
+          return AuthResolver.resolve();
+        },
+        entity: function (QueryUtils, $route) {
+          return QueryUtils.endpoint('/timetables').get({id: $route.current.params.id}).$promise;
+        },
+        isView: function ($route) {
+          return $route.current.params.action === 'view';
+        }
+      },
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/timetable/:id/view', {
+      templateUrl: 'timetable/timetable.view.html',
+      controller: 'TimetableViewController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/timetable/:id/createVocationalPlan/:groupId', {
+      templateUrl: 'timetable/timetable.createVocationalPlan.html',
+      controller: 'VocationalTimetablePlanController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/timetable/:id/createHigherPlan/:groupId', {
+      templateUrl: 'timetable/timetable.createHigherPlan.html',
+      controller: 'HigherTimetablePlanController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/timetable/:id/createHigherPlan', {
+      templateUrl: 'timetable/timetable.createHigherPlan.html',
+      controller: 'HigherTimetablePlanController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+      }
+    })
+    .when('/timetable/group/:periodId/:groupId/:timetableId', {
+      templateUrl: 'timetable/timetable.period.view.html',
+      controller: 'TimetablePeriodViewController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
+      }
+    });
 }]);

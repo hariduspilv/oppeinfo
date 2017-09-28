@@ -1,0 +1,141 @@
+<div class="ois-form-layout-padding form-readonly" ng-cloak>
+  <div flex>
+    <div layout="column">
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex="35">
+          <label>{{'student.label' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.student)"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div ng-if="!contract.subject" layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'module.practice' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.module)"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex flex-offset-gt-md="5">
+          <label class="textInput">{{'contract.theme' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.theme)"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
+          <label class="textInput">{{'contract.credits' | translate}}</label>
+          <hois-value value="contract.credits"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'contract.hours' | translate}}</label>
+          <hois-value value="contract.hours"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div ng-if="contract.subject" layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.subject' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.subject)"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
+          <label class="textInput">{{'contract.credits' | translate}}</label>
+          <hois-value value="contract.credits"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'contract.hours' | translate}}</label>
+          <hois-value value="contract.hours"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex="15">
+          <label>{{'contract.start' | translate}}</label>
+          <hois-value value="contract.startDate | hoisDate"></hois-value>
+        </md-input-container>
+
+        <md-input-container flex="15" flex-offset-gt-md="5">
+          <label>{{'contract.end' | translate}}</label>
+          <hois-value value="contract.endDate | hoisDate"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.practicePlace' | translate}}</label>
+          <hois-value value="contract.practicePlace"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'enterprise.label' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.enterprise)"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.contactPersonName' | translate}}</label>
+          <hois-value value="contract.contactPersonName"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.contactPersonEmail' | translate}}</label>
+          <hois-value value="contract.contactPersonEmail"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.contactPersonPhone' | translate}}</label>
+          <hois-value value="contract.contactPersonPhone"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.supervisorName' | translate}}</label>
+          <hois-value value="contract.supervisorName"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.supervisorEmail' | translate}}</label>
+          <hois-value value="contract.supervisorEmail"></hois-value>
+        </md-input-container>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.supervisorPhone' | translate}}</label>
+          <hois-value value="contract.supervisorPhone"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.schoolSupervisor' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.teacher)"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.otherSupervisor' | translate}}</label>
+          <hois-value value="contract.otherSupervisor"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.contractCoordinator' | translate}}</label>
+          <hois-value value="currentLanguageNameField(contract.contractCoordinator)"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row" layout-sm="column" layout-xs="column" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'contract.practicePlan' | translate}}</label>
+          <hois-value value="contract.practicePlan"></hois-value>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button class="md-raised md-default" ng-click="back('#/contracts/')">{{'main.button.back' | translate}}</md-button>
+        <md-button ng-if="wdId && (contract.status.code === 'LEPING_STAATUS_Y' || contract.status.code === 'LEPING_STAATUS_L' || contract.status.code === 'LEPING_STAATUS_K')"
+          class="md-raised md-default" ng-href="{{getEkisContractUrl(contract.wdId)}}">{{'contract.button.viewContractFromEkis' | translate}}</md-button>
+      </div>
+    </div>
+  </div>
+</div>

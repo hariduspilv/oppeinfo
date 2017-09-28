@@ -8,6 +8,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+import javax.persistence.TypedQuery;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -24,10 +26,10 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.MessageTemplate;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.MessageTemplateRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -43,26 +45,26 @@ public class MessageTemplateService {
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Autowired
+    private EntityManager em;
+    @Autowired
     private MessageTemplateRepository messageTemplateRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
 
     public MessageTemplate create(HoisUserDetails user, MessageTemplateForm form) {
         MessageTemplate messageTemplate = new MessageTemplate();
-        messageTemplate.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        messageTemplate.setSchool(em.getReference(School.class, user.getSchoolId()));
         return save(messageTemplate, form);
     }
 
     public MessageTemplate save(MessageTemplate messageTemplate, MessageTemplateForm form) {
         EntityUtil.bindToEntity(form, messageTemplate, classifierRepository);
         validateTemplateContent(messageTemplate);
-        return messageTemplateRepository.save(messageTemplate);
+        return EntityUtil.save(messageTemplate, em);
     }
 
     public void delete(MessageTemplate messageTemplate) {
-        EntityUtil.deleteEntity(messageTemplateRepository, messageTemplate);
+        EntityUtil.deleteEntity(messageTemplate, em);
     }
 
     public Page<MessageTemplateDto> search(Long schoolId, MessageTemplateSearchCommand criteria, Pageable pageable) {
@@ -94,15 +96,12 @@ public class MessageTemplateService {
     }
 
     public MessageTemplate findValidTemplate(MessageType type, Long schoolId) {
-        List<MessageTemplate> templates = messageTemplateRepository.findAll((root, query, cb) -> {
-            LocalDate now = LocalDate.now();
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
-            filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
-            filters.add(cb.equal(root.get("type").get("code"), type.name()));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        });
+        TypedQuery<MessageTemplate> q = em.createQuery(
+                "select t from MessageTemplate t where t.school.id = ?1 and t.type.code = ?2 and (t.validFrom is null or t.validFrom <= ?3) and (t.validThru is null or t.validThru >= ?3)", MessageTemplate.class);
+        q.setParameter(1, schoolId);
+        q.setParameter(2, type.name());
+        q.setParameter(3, LocalDate.now());
+        List<MessageTemplate> templates = q.setMaxResults(2).getResultList();
 
         if (templates.isEmpty()) {
             log.error("no {} templates found for school {}", type.name(), schoolId);

@@ -28,6 +28,7 @@ import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOccupation;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumOccupation;
+import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -36,6 +37,7 @@ import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
+import ee.hitsa.ois.web.commandobject.StateCurriculumModuleForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
@@ -45,13 +47,13 @@ import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
 @Service
 public class StateCurriculumService {
 
-	@Autowired
-	private StateCurriculumRepository stateCurriculumRepository;
+    @Autowired
+    private StateCurriculumRepository stateCurriculumRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private EntityManager em;
-    
+
     private static final String FROM = "from state_curriculum as sc "
             + "inner join classifier status on status.code = sc.status_code";  // only for sorting by classifier's name
     private static final String SELECT = " sc.id, sc.name_et, sc.name_en, sc.valid_from, sc.valid_thru, sc.credits, "
@@ -64,6 +66,7 @@ public class StateCurriculumService {
                     + "from state_curriculum_occupation as sco "
                     + "where sc.id = sco.state_curriculum_id order by sco.id limit 1) ) as ekr_level, "
             + "status.name_et as statusNameEt, status.name_en as statusNameEn";
+
     /**
      * With this solution StateCurriculumSpecification will not be required anymore.
      * StateCurriculumSearchDto can also be simplified: iscedClass and large constructor can be removed
@@ -103,8 +106,8 @@ public class StateCurriculumService {
                 + "and cc2.main_classifier_code = 'ISCED_VALD' ) "
                 + " = :iscedVald", "iscedVald", criteria.getIscedVald());
 
-        qb.optionalCriteria("sc.inserted >= :insertedFrom", "insertedFrom", criteria.getValidFrom(), DateUtils::firstMomentOfDay);
-        qb.optionalCriteria("sc.inserted <= :insertedThru", "insertedThru", criteria.getValidThru(), DateUtils::lastMomentOfDay);
+        qb.optionalCriteria("sc.valid_from >= :validFrom", "validFrom", criteria.getValidFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("sc.valid_thru <= :validThru", "validThru", criteria.getValidThru(), DateUtils::lastMomentOfDay);
 
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, SELECT, em, pageable);
         return results.map(r -> {
@@ -141,9 +144,9 @@ public class StateCurriculumService {
         }) == 0;
     }
 
-	public void delete(StateCurriculum curriculum) {
-		EntityUtil.deleteEntity(stateCurriculumRepository, curriculum);
-	}
+    public void delete(StateCurriculum curriculum) {
+        EntityUtil.deleteEntity(curriculum, em);
+    }
 
     public List<StateCurriculum> searchAll(StateCurriculumSearchCommand command, Sort sort) {
         return stateCurriculumRepository.findAll((root, query, cb) -> {
@@ -167,12 +170,16 @@ public class StateCurriculumService {
     }
 
     public StateCurriculum create(StateCurriculumForm stateCurriculumForm) {
-        return save(new StateCurriculum(), stateCurriculumForm);
+        StateCurriculum stateCurriculum = new StateCurriculum();
+        stateCurriculum.setStatus(classifierRepository.getOne(CurriculumStatus.OPPEKAVA_STAATUS_S.name()));
+        return save(stateCurriculum, stateCurriculumForm);
     }
 
     public StateCurriculum save(StateCurriculum stateCurriculum, StateCurriculumForm stateCurriculumForm) {
         EntityUtil.bindToEntity(stateCurriculumForm, stateCurriculum, classifierRepository, "occupations", "modules");
-        return updateStateCurriculumModules(stateCurriculum, stateCurriculumForm);
+        updateStateCurriculumOccupations(stateCurriculum, stateCurriculumForm.getOccupations());
+        updateStateCurriculumModules(stateCurriculum, stateCurriculumForm);
+        return EntityUtil.save(stateCurriculum, em);
     }
 
     private void updateModule(StateCurriculumModuleDto dto, StateCurriculumModule module) {
@@ -189,17 +196,54 @@ public class StateCurriculumService {
         });
     }
 
-    public StateCurriculum updateStateCurriculumModules(StateCurriculum stateCurriculum, StateCurriculumForm form) {
-        EntityUtil.bindEntityCollection(stateCurriculum.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), form.getOccupations(), occupation -> {
+    public void updateStateCurriculumOccupations(StateCurriculum stateCurriculum, Set<String> occupations) {
+        EntityUtil.bindEntityCollection(stateCurriculum.getOccupations(), o -> EntityUtil.getCode(o.getOccupation()), occupations, occupation -> {
             return new StateCurriculumOccupation(EntityUtil.validateClassifier(classifierRepository.getOne(occupation), MainClassCode.KUTSE));
         });
+    }
 
-        EntityUtil.bindEntityCollection(stateCurriculum.getModules(), StateCurriculumModule::getId, form.getModules(), StateCurriculumModuleDto::getId, dto -> {
-            StateCurriculumModule module = new StateCurriculumModule();
-            updateModule(dto, module);
-            return module;
-        }, this::updateModule);
+    public void updateStateCurriculumModules(StateCurriculum stateCurriculum, StateCurriculumForm form) {
+        EntityUtil.bindEntityCollection(stateCurriculum.getModules(), StateCurriculumModule::getId, form.getModules(), 
+                StateCurriculumModuleDto::getId, dto -> createModule(dto, stateCurriculum), this::updateModule);
+    }
 
-        return stateCurriculumRepository.save(stateCurriculum);
+    public StateCurriculumModule createModule(StateCurriculumModuleDto dto, StateCurriculum stateCurriculum) {
+        StateCurriculumModule module = new StateCurriculumModule();
+        module.setStateCurriculum(stateCurriculum);
+        updateModule(dto, module);
+        return module;
+    }
+
+    public StateCurriculumModule createModule(StateCurriculumModuleForm form) {
+        StateCurriculum stateCurriculum = stateCurriculumRepository.getOne(form.getStateCurriculum());
+        updateStateCurriculumOccupations(stateCurriculum, form.getStateCurriculumOccupations());
+        StateCurriculumModule module = createModule(form, stateCurriculum);
+        EntityUtil.save(stateCurriculum, em);
+        stateCurriculum.getModules().add(module);
+        return EntityUtil.save(module, em);
+    }
+
+    public void deleteModule(StateCurriculumModule stateCurriculumModule) {
+        StateCurriculum stateCurriculum = stateCurriculumModule.getStateCurriculum();
+        stateCurriculum.getModules().remove(stateCurriculumModule);
+        EntityUtil.deleteEntity(stateCurriculumModule, em);
+    }
+
+    public StateCurriculumModule updateModule(StateCurriculumModule module, StateCurriculumModuleForm form) {
+        StateCurriculum stateCurriculum = module.getStateCurriculum();
+        updateStateCurriculumOccupations(stateCurriculum, form.getStateCurriculumOccupations());
+        updateModule(form, module);
+        EntityUtil.save(stateCurriculum, em);
+        return EntityUtil.save(module, em);
+    }
+
+    public StateCurriculum setStatus(StateCurriculum stateCurriculum, CurriculumStatus status) {
+        stateCurriculum.setStatus(classifierRepository.getOne(status.name()));
+        return EntityUtil.save(stateCurriculum, em);
+    }
+
+    public StateCurriculum setStatusAndSave(StateCurriculum stateCurriculum, StateCurriculumForm form, CurriculumStatus status) {
+        stateCurriculum.setStatus(classifierRepository.getOne(status.name()));
+        return save(stateCurriculum, form);
     }
 }

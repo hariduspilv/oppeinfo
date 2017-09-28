@@ -1,19 +1,12 @@
 'use strict';
 
-angular.module('hitsaOis').controller('DirectiveSearchController', ['$location', '$q', '$scope', 'Classifier', 'QueryUtils',
-  function ($location, $q, $scope, Classifier, QueryUtils) {
-    var clMapper = Classifier.valuemapper({type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'});
-    QueryUtils.createQueryForm($scope, '/directives', {order: '-inserted'}, clMapper.objectmapper);
-
-    $q.all(clMapper.promises).then($scope.loadData);
-  }
-]).controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Curriculum', 'DataUtils', 'QueryUtils', 'Session',
+angular.module('hitsaOis').controller('DirectiveEditController', ['$location', '$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Curriculum', 'DataUtils', 'QueryUtils', 'Session',
   function ($location, $mdDialog, $q, $route, $scope, dialogService, message, Curriculum, DataUtils, QueryUtils, Session) {
     var id = $route.current.params.id;
     var canceledDirective = $route.current.params.canceledDirective;
     var baseUrl = '/directives';
 
-    $scope.formState = {state: (id || canceledDirective ? 'EDIT' : 'CHOOSETYPE'), students: undefined,
+    $scope.formState = {state: (id || canceledDirective ? 'EDIT' : 'CHOOSETYPE'), students: undefined, changedStudents: [],
                         selectedStudents: [], excludedTypes: ['KASKKIRI_KYLALIS'], school: Session.school || {}};
     if(!canceledDirective) {
       $scope.formState.excludedTypes.push('KASKKIRI_TYHIST');
@@ -38,15 +31,17 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
         var templateId = result.canceledDirectiveType ? result.canceledDirectiveType.substr(9).toLowerCase() : 'unknown';
         $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.view.html';
         $scope.formState.canceledDirective = result.canceledDirectiveData;
-        var changedStudents = result.changedStudents || [];
+        $scope.formState.changedStudents = result.changedStudents || [];
         var selectedStudents = result.selectedStudents || [];
-        $scope.record.students = (result.canceledStudents || []).map(function(it) {it.selectable = changedStudents.indexOf(it.student) === -1; return it;});
+        $scope.record.students = (result.canceledStudents || []).map(function(it) {it.selectable = $scope.formState.changedStudents.indexOf(it.student) === -1; return it;});
         $scope.formState.selectedStudents = $scope.record.students.filter(function(it) { return selectedStudents.indexOf(it.student) !== -1;});
         delete result.canceledDirectiveType;
         delete result.canceledDirectiveData;
         delete result.changedStudents;
         delete result.canceledStudents;
         delete result.selectedStudents;
+
+        $scope.cancelTypeChanged();
       } else {
         setTemplateUrl();
         $scope.record.students = studentConverter($scope.record.students);
@@ -61,7 +56,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
 
     function loadFormData() {
       var type = $scope.record.type;
-      if(type === 'KASKKIRI_ENNIST' || type === 'KASKKIRI_IMMAT' || type === 'KASKKIRI_IMMATV' || type === 'KASKKIRI_OKAVA') {
+      if(type === 'KASKKIRI_ENNIST' || type === 'KASKKIRI_IMMAT' || type === 'KASKKIRI_IMMATV' || type === 'KASKKIRI_OKAVA' || type === 'KASKKIRI_OVORM') {
         $scope.formState.curriculumVersions = Curriculum.queryVersions({valid: true});
         $scope.formState.curriculumVersions.$promise.then(function(result) {
           $scope.formState.curriculumVersionMap = result.reduce(function(acc, item) { acc[item.id] = item; return acc; }, {});
@@ -73,13 +68,18 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
           // create mapping curriculumversion -> all possible student groups
           $q.all([$scope.formState.studentGroups.$promise, $scope.formState.curriculumVersions.$promise]).then(function() {
             var groups = $scope.formState.studentGroups;
-            function idgetter(it) {
-              return it.id;
+
+            function getCurriculumVersionIds(sg) {
+              return sg.curriculumVersion ? [sg.curriculumVersion] : $scope.formState.curriculumVersions.filter(function(it) {
+                return it.curriculum === sg.curriculum;
+              }).map(function(it) { return it.id; });
             }
+
             $scope.formState.studentGroupMap = {};
             for(var i = 0; i < groups.length; i++) {
               var sg = groups[i];
-              var cvids = sg.curriculumVersion ? [sg.curriculumVersion] : $scope.formState.curriculumVersions.filter(function(it) { return it.curriculum === sg.curriculum;}).map(idgetter);
+              var cvids = getCurriculumVersionIds(sg);
+
               for(var j = 0; j < cvids.length; j++) {
                 var cv = cvids[j];
                 var cvgroups = $scope.formState.studentGroupMap[cv];
@@ -150,7 +150,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       }else{
         $scope.record.$save().then(function() {
           message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit');
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback');
         });
       }
     };
@@ -159,7 +159,7 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       dialogService.confirmDialog({prompt: 'directive.deleteconfirm'}, function() {
         $scope.record.$delete().then(function() {
           message.info('main.messages.delete.success');
-          $location.url(baseUrl);
+          $location.url(baseUrl + '?_noback');
         });
       });
     };
@@ -279,6 +279,21 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       }
     };
 
+    $scope.cancelTypeChanged = function() {
+      if($scope.record.cancelType === 'KASKKIRI_TYHISTAMISE_VIIS_T') {
+        var selected = [];
+        $scope.record.students.forEach(function(it) {
+          it.selectable = false;
+          selected.push(it);
+        });
+        $scope.formState.selectedStudents = selected;
+      } else if($scope.record.cancelType === 'KASKKIRI_TYHISTAMISE_VIIS_O') {
+        $scope.record.students.forEach(function(it) {
+          it.selectable = ($scope.formState.changedStudents.indexOf(it.student) === -1);
+        });
+      }
+    };
+
     $scope.sendToConfirm = function() {
       $scope.directiveForm.directiveCoordinator.$setValidity('required', !!$scope.record.directiveCoordinator);
       if(!formIsValid()) {
@@ -295,10 +310,11 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
       });
     };
   }
-]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Session', 'QueryUtils',
-  function ($location, $route, $scope, dialogService, message, Session, QueryUtils) {
+]).controller('DirectiveViewController', ['$location', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'Session',
+  function ($location, $route, $scope, dialogService, message, Classifier, QueryUtils, Session) {
     var id = $route.current.params.id;
     var baseUrl = '/directives';
+    var clMapper = Classifier.valuemapper({status: 'KASKKIRI_STAATUS'});
 
     $scope.formState = {school: Session.school || {}};
     $scope.record = QueryUtils.endpoint(baseUrl + '/:id/view').search({id: id});
@@ -306,11 +322,12 @@ angular.module('hitsaOis').controller('DirectiveSearchController', ['$location',
     $scope.record.$promise.then(function() {
       var templateId = $scope.record.type === 'KASKKIRI_TYHIST' ? $scope.record.canceledDirectiveType.substr(9).toLowerCase() : ($scope.record.type ? $scope.record.type.substr(9).toLowerCase() : 'unknown');
       $scope.formState.templateUrl = 'directive/directive.type.'+templateId+'.view.html';
+      clMapper.objectmapper($scope.record.cancelingDirectives || []);
     });
 
     $scope.cancelDirective = function() {
       dialogService.confirmDialog({prompt: 'directive.cancelconfirm'}, function() {
-        $location.url('/directives/new?canceledDirective=' + $scope.record.id);
+        $location.url('/directives/new?canceledDirective=' + $scope.record.id + '&_noback');
       });
     };
 

@@ -9,15 +9,15 @@ import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
 
+import ee.hitsa.ois.auth.LoginMethod;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 
-
 /**
- * DISCLAIMER: "undefined" is a placeholder before proper authentication is setup.
- * TODO: Setup security.
+ * DISCLAIMER: "undefined" is a placeholder before proper authentication is
+ * setup. TODO: Setup security.
  */
 public class HoisUserDetails extends org.springframework.security.core.userdetails.User {
     private static final long serialVersionUID = -7947997673955215575L;
@@ -27,6 +27,8 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     private String role;
     private Long schoolId;
     private Long studentId;
+    private Long teacherId;
+    private LoginMethod loginMethod;
 
     HoisUserDetails(User user, List<String> roles) {
         super(PersonUtil.fullnameAndIdcode(user.getPerson()), "undefined", getAuthorities(roles));
@@ -35,22 +37,11 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
         this.role = EntityUtil.getCode(user.getRole());
         this.schoolId = EntityUtil.getNullableId(user.getSchool());
         this.studentId = EntityUtil.getNullableId(user.getStudent());
+        this.teacherId = EntityUtil.getNullableId(user.getTeacher());
     }
 
     private static Collection<? extends GrantedAuthority> getAuthorities(List<String> roles) {
         return AuthorityUtils.createAuthorityList(roles.toArray(new String[roles.size()]));
-    }
-
-    public Long getUserId() {
-        return userId;
-    }
-
-    public Long getPersonId() {
-        return personId;
-    }
-
-    public Long getSchoolId() {
-        return schoolId;
     }
 
     public boolean isExternalExpert() {
@@ -77,12 +68,36 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
         return Role.ROLL_O.name().equals(role);
     }
 
+    public Long getUserId() {
+        return userId;
+    }
+
+    public Long getPersonId() {
+        return personId;
+    }
+
     public String getRole() {
         return role;
     }
 
+    public Long getSchoolId() {
+        return schoolId;
+    }
+
+    public LoginMethod getLoginMethod() {
+        return loginMethod;
+    }
+
+    public void setLoginMethod(LoginMethod loginMethod) {
+        this.loginMethod = loginMethod;
+    }
+
     public Long getStudentId() {
         return studentId;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
     }
 
     public static HoisUserDetails fromPrincipal(Principal principal) {

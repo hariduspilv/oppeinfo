@@ -109,7 +109,7 @@ public class LessonTimeControllerTests {
         lessonTimeBuildingGroupDto.setBuildings(new HashSet<>(Arrays.asList(buildings.get(0))));
         LessonTimeDto lessonTimeDto = new LessonTimeDto();
         lessonTimeDto.setDayMon(Boolean.TRUE);
-        lessonTimeDto.setLessonNr(Integer.valueOf(1));
+        lessonTimeDto.setLessonNr(Short.valueOf((short) 1));
         lessonTimeDto.setStartTime(LocalTime.of(8, 0));
         lessonTimeDto.setEndTime(LocalTime.of(9, 0));
         lessonTimeBuildingGroupDto.setLessonTimes(new HashSet<>(Arrays.asList(lessonTimeDto)));
@@ -136,7 +136,7 @@ public class LessonTimeControllerTests {
         form = responseEntity.getBody();
         LessonTimeDto secondLessonTimeDto = new LessonTimeDto();
         secondLessonTimeDto.setDayMon(Boolean.TRUE);
-        secondLessonTimeDto.setLessonNr(Integer.valueOf(2));
+        secondLessonTimeDto.setLessonNr(Short.valueOf((short) 2));
         secondLessonTimeDto.setStartTime(LocalTime.of(10, 0));
         secondLessonTimeDto.setEndTime(LocalTime.of(12, 0));
         form.getLessonTimeBuildingGroups().stream().findFirst().get().getLessonTimes().add(secondLessonTimeDto);
@@ -170,7 +170,7 @@ public class LessonTimeControllerTests {
         lessonTimeBuildingGroupDto.setBuildings(new HashSet<>(Arrays.asList(buildings.get(0))));
         LessonTimeDto lessonTimeDto = new LessonTimeDto();
         lessonTimeDto.setDayMon(Boolean.TRUE);
-        lessonTimeDto.setLessonNr(Integer.valueOf(1));
+        lessonTimeDto.setLessonNr(Short.valueOf((short) 1));
         lessonTimeDto.setStartTime(LocalTime.of(8, 0));
         lessonTimeDto.setEndTime(LocalTime.of(9, 0));
         lessonTimeBuildingGroupDto.setLessonTimes(new HashSet<>(Arrays.asList(lessonTimeDto)));
@@ -180,7 +180,6 @@ public class LessonTimeControllerTests {
         ResponseEntity<LessonTimeGroupsDto>responseEntity = restTemplate.postForEntity(uri, form, LessonTimeGroupsDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         LessonTimeDto savedLessonTime = responseEntity.getBody().getLessonTimeBuildingGroups().stream().findFirst().get().getLessonTimes().stream().findFirst().get();
-
 
 
         //create second group
@@ -193,7 +192,7 @@ public class LessonTimeControllerTests {
         lessonTimeBuildingGroupDto.setBuildings(new HashSet<>(Arrays.asList(buildings.get(0))));
         lessonTimeDto = new LessonTimeDto();
         lessonTimeDto.setDayMon(Boolean.TRUE);
-        lessonTimeDto.setLessonNr(Integer.valueOf(1));
+        lessonTimeDto.setLessonNr(Short.valueOf((short) 1));
         lessonTimeDto.setStartTime(LocalTime.of(8, 0));
         lessonTimeDto.setEndTime(LocalTime.of(9, 0));
         lessonTimeBuildingGroupDto.setLessonTimes(new HashSet<>(Arrays.asList(lessonTimeDto)));
@@ -204,7 +203,6 @@ public class LessonTimeControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
 
-
         //validate first group validThru
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(savedLessonTime.getId().toString());
         uri = uriBuilder.build().toUriString();
@@ -212,8 +210,13 @@ public class LessonTimeControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertEquals(validFroms.get(1).minusDays(1), responseEntity.getBody().getLessonTimeBuildingGroups().stream().findFirst().get().getValidThru());
-
     }
 
-
+    @Test
+    public void currentPeriod() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("currentPeriod");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

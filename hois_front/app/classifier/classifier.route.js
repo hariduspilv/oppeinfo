@@ -4,11 +4,15 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
   $routeProvider
   .when('/classifier', {
         templateUrl: 'classifier/classifier.list.html',
-        controller: 'ClassifierListController',
+        controller: 'SimpleListController',
         controllerAs: 'controller',
-        resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); },
+          params: function($translate) { return {order: $translate.use() === 'en' ? 'nameEn' : 'nameEt'}; },
+          url: function() { return '/classifier/heads'; }
+        },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KLASSIFIKAATOR]
         }
       })
       .when('/classifier/:code', {

@@ -1,55 +1,29 @@
 'use strict';
 
 angular.module('hitsaOis').controller('JournalEditController', function ($scope, $route, $filter, QueryUtils, ArrayUtils, DataUtils, Classifier, message, dialogService) {
-  var classifierMapper = Classifier.valuemapper({entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE', absence: 'PUUDUMINE'});
+  var classifierMapper = Classifier.valuemapper({ entryType: 'SISSEKANNE', grade: 'KUTSEHINDAMINE', absence: 'PUUDUMINE' });
 
-  function loadJournalEntries() {
-    $scope.journalEntriesCriteria = {size: 20, page: 1};
-    if (!angular.isDefined($scope.journalEntries)) {
-      $scope.journalEntries = {};
-    }
-    $scope.loadJournalEntries = function() {
-      var query = QueryUtils.getQueryParams($scope.journalEntriesCriteria);
-      $scope.journalEntries.$promise = QueryUtils.endpoint('/journals/' + entity.id + '/journalEntry').search(query, $scope.afterLoadJournalEntries);
-    };
-    $scope.afterLoadJournalEntries = function(result) {
-      $scope.journalEntriesCriteria.size = result.size;
-      $scope.journalEntriesCriteria.page = result.number + 1;
-      $scope.journalEntries.content = result.content;
-      $scope.journalEntries.totalElements = result.totalElements;
-    };
-    $scope.loadJournalEntries();
-  }
+  var LESSON_NRS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+  var LESSONS = [1, 2, 3, 4, 5];
 
-  function dateComparator(v1, v2) {
-    if (v1.type !== 'string' || v2.type !== 'string') {
-      return (v1.index < v2.index) ? -1 : 1;
-    }
-    if(v1.value === null) {
-      return -1;
-    }
-    if(v2.value === null) {
-      return 1;
-    }
-    return $filter('hoisDate')(v1.value) > $filter('hoisDate')(v2.value) ? 1 : -1;
-  }
+  $scope.formState = {};
 
   function loadJournalStudents(showNonStudying) {
-    var journalStudentsQueryPromise = QueryUtils.endpoint('/journals/' + entity.id + '/journalStudents').query({allStudents: !!showNonStudying}).$promise;
+    var journalStudentsQueryPromise = QueryUtils.endpoint('/journals/' + entity.id + '/journalStudents').query({ allStudents: !!showNonStudying }).$promise;
 
-    QueryUtils.endpoint('/journals/' + entity.id + '/journalEntriesByDate').query({allStudents: !!showNonStudying}, function(result) {
+    QueryUtils.endpoint('/journals/' + entity.id + '/journalEntriesByDate').query({ allStudents: !!showNonStudying }, function (result) {
       var journalEntriesByDate = result;
       classifierMapper.objectmapper(journalEntriesByDate);
-      journalEntriesByDate.forEach(function(it) {
+      journalEntriesByDate.forEach(function (it) {
         for (var p in it.journalStudentResults) {
           if (it.journalStudentResults.hasOwnProperty(p)) {
             classifierMapper.objectmapper(it.journalStudentResults[p]);
           }
         }
       });
-      $scope.journal.journalEntriesByDate = $filter('orderBy')(journalEntriesByDate, 'entryDate', false, dateComparator);
+      $scope.journal.journalEntriesByDate = journalEntriesByDate;
 
-      journalStudentsQueryPromise.then(function(result) {
+      journalStudentsQueryPromise.then(function (result) {
         $scope.journal.journalStudents = result;
       });
     });
@@ -63,25 +37,47 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
+    $scope.formState.lessonInfo = QueryUtils.endpoint('/journals/' + entity.id + '/journalEntry/lessonInfo').get();
+    $scope.formState.xlsUrl = 'journals/'+ entity.id + '/journal.xls';
     entityToForm(entity);
   }
 
-  $scope.searchStudent = function() {
-    dialogService.showDialog('journal/journal.searchStudent.dialog.html', function(dialogScope) {
+    function loadJournalEntries() {
+    $scope.journalEntriesCriteria = { size: 20, page: 1 };
+    if (!angular.isDefined($scope.journalEntries)) {
+      $scope.journalEntries = {};
+    }
+
+    $scope.loadJournalEntries = function () {
+      var query = QueryUtils.getQueryParams($scope.journalEntriesCriteria);
+      $scope.journalEntries.$promise = QueryUtils.endpoint('/journals/' + entity.id + '/journalEntry').search(query, $scope.afterLoadJournalEntries);
+    };
+
+    $scope.afterLoadJournalEntries = function (result) {
+      $scope.journalEntriesCriteria.size = result.size;
+      $scope.journalEntriesCriteria.page = result.number + 1;
+      $scope.journalEntries.content = result.content;
+      $scope.journalEntries.totalElements = result.totalElements;
+    };
+    $scope.loadJournalEntries();
+  }
+
+  $scope.searchStudent = function () {
+    dialogService.showDialog('journal/journal.searchStudent.dialog.html', function (dialogScope) {
       dialogScope.selectedStudents = [];
       QueryUtils.createQueryForm(dialogScope, '/journals/' + entity.id + '/otherStudents', {});
       dialogScope.loadData();
-    }, function(submittedDialogScope) {
-      QueryUtils.endpoint('/journals/' + entity.id + '/addStudentsToJournal').save({students: submittedDialogScope.selectedStudents}, function() {
+    }, function (submittedDialogScope) {
+      QueryUtils.endpoint('/journals/' + entity.id + '/addStudentsToJournal').save({ students: submittedDialogScope.selectedStudents }, function () {
         message.info('journal.messages.studentSuccesfullyAdded');
         loadJournalStudents();
       });
     });
   };
 
-  $scope.removeStudentFromJournal = function(studentId) {
-    dialogService.confirmDialog({prompt: 'journal.studentDeleteconfirm'}, function() {
-      QueryUtils.endpoint('/journals/' + entity.id + '/removeStudentsFromJournal').save({students: [studentId]}, function() {
+  $scope.removeStudentFromJournal = function (studentId) {
+    dialogService.confirmDialog({ prompt: 'journal.studentDeleteconfirm' }, function () {
+      QueryUtils.endpoint('/journals/' + entity.id + '/removeStudentsFromJournal').save({ students: [studentId] }, function () {
         message.info('journal.messages.studentSuccesfullyRemoved');
         loadJournalStudents();
       });
@@ -96,12 +92,12 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     'SISSEKANNE_L': 'pink-300'
   };
   $scope.journalEntryTypes = {};
-  Classifier.queryForDropdown({mainClassCode: 'SISSEKANNE'}, function(response) {
-    response.forEach(function(it) {
+  Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (response) {
+    response.forEach(function (it) {
       $scope.journalEntryTypes[it.code] = it;
     });
   });
-  $scope.getEntryColor = function(type) {
+  $scope.getEntryColor = function (type) {
     return $scope.journalEntryTypeColors[type];
   };
 
@@ -109,49 +105,38 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   var JournalEntryEndpoint = QueryUtils.endpoint('/journals/' + entity.id + '/journalEntry');
 
   function loadJournalEntryDialogInitialData(dialogScope) {
-      dialogScope.journalStudents = entity.journalStudents;
-      dialogScope.absenceOptions = {};
-      dialogScope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'});
-      var lessonInfo = QueryUtils.endpoint('/journals/' + entity.id + '/journalEntry/lessonInfo').get();
-      dialogScope.lessonPlanDates = lessonInfo.lessonPlanDates;
-      dialogScope.startLessonNrs = [1,2,3,4,5,6,7,8,9,10].map(function(it){ return {nameEt: it, nameEn: it, id: it};});
-      dialogScope.journalEntry.startLessonNr = lessonInfo.startLessonNr;
-      dialogScope.lessons = [1,2,3,4,5].map(function(it){ return {nameEt: it, nameEn: it, id: it};});
-      dialogScope.journalEntry.lessons = lessonInfo.lessons;
-      Classifier.queryForDropdown({mainClassCode: 'PUUDUMINE'}, function(response) {
-        response.forEach(function(it) {
-          dialogScope.absenceOptions[it.code] = it;
-        });
+    dialogScope.journalStudents = entity.journalStudents;
+    dialogScope.absenceOptions = {};
+    dialogScope.capacityTypes = Classifier.queryForDropdown({ mainClassCode: 'MAHT' });
+    dialogScope.lessonPlanDates = $scope.formState.lessonInfo.lessonPlanDates.map(function (it) {
+      var value = $filter('hoisDate')(it);
+      return { nameEt: value, nameEn: value, id: it };
+    });
+    dialogScope.startLessonNrs = LESSON_NRS.map(function (it) { return { nameEt: it, nameEn: it, id: it }; });
+    dialogScope.journalEntry.startLessonNr = $scope.formState.lessonInfo.startLessonNr;
+    dialogScope.lessons = LESSONS.map(function (it) { return { nameEt: it, nameEn: it, id: it }; });
+    dialogScope.journalEntry.lessons = $scope.formState.lessonInfo.lessons;
+    Classifier.queryForDropdown({ mainClassCode: 'PUUDUMINE' }, function (response) {
+      response.forEach(function (it) {
+        dialogScope.absenceOptions[it.code] = it;
       });
-  }
-
-  function journalEntryStudentsToArray(journalEntryStudents, newEntity) {
-    var journalEntryStudentsArray = [];
-      if (angular.isObject(journalEntryStudents)) {
-        for(var p in journalEntryStudents) {
-          if (journalEntryStudents.hasOwnProperty(p)) {
-            var journalEntryStudent = journalEntryStudents[p];
-            journalEntryStudentsArray.push(journalEntryStudent);
-          }
-        }
-        newEntity.journalEntryStudents = journalEntryStudentsArray;
-      }
+    });
   }
 
   function capacityTypesToArray(selectedCapacityTypes, newEntity) {
     var capacityTypesArray = [];
-      if (angular.isObject(selectedCapacityTypes)) {
-        for(var p in selectedCapacityTypes) {
-          if (selectedCapacityTypes.hasOwnProperty(p) && selectedCapacityTypes[p] === true) {
-            capacityTypesArray.push(p);
-          }
+    if (angular.isObject(selectedCapacityTypes)) {
+      for (var p in selectedCapacityTypes) {
+        if (selectedCapacityTypes.hasOwnProperty(p) && selectedCapacityTypes[p] === true) {
+          capacityTypesArray.push(p);
         }
-        newEntity.journalEntryCapacityTypes = capacityTypesArray;
       }
+      newEntity.journalEntryCapacityTypes = capacityTypesArray;
+    }
   }
 
   function showEntryDialog(editEntity) {
-    dialogService.showDialog('journal/journal.addEntry.dialog.html', function(dialogScope) {
+    dialogService.showDialog('journal/journal.addEntry.dialog.html', function (dialogScope) {
       dialogScope.journalEntry = {};
       dialogScope.selectedCapacityTypes = {};
       dialogScope.journalEntryStudents = {};
@@ -160,43 +145,51 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       if (angular.isDefined(editEntity)) {
         angular.extend(dialogScope.journalEntry, editEntity);
         dialogScope.entryDateCalendar = dialogScope.journalEntry.entryDate;
-        editEntity.journalEntryStudents.forEach(function(it) {
+        editEntity.journalEntryStudents.forEach(function (it) {
           dialogScope.journalEntryStudents[it.journalStudent] = it;
           DataUtils.convertStringToDates(it.journalEntryStudentHistories, ["gradeInserted"]);
           classifierMapper.objectmapper(it.journalEntryStudentHistories);
         });
-        editEntity.journalEntryCapacityTypes.forEach(function(it) {
+        editEntity.journalEntryCapacityTypes.forEach(function (it) {
           dialogScope.selectedCapacityTypes[it] = true;
         });
       }
-      dialogScope.journalEntryStudentChanged = function(journalEntryStudents, row) {
+
+      dialogScope.changedJournalEntryStudents = [];
+      dialogScope.journalEntryStudentChanged = function (journalEntryStudents, row) {
         if (!angular.isObject(journalEntryStudents[row.id])) {
           journalEntryStudents[row.id] = {};
         }
         journalEntryStudents[row.id].journalStudent = row.id;
-      };
-      dialogScope.setJournalEntryDefaultName = function(name) {
-        if (!angular.isDefined(editEntity) && !angular.isString(dialogScope.journalEntry.nameEt)) {
-          var holder = {entryType: name};
-          classifierMapper.objectmapper(holder);
-          dialogScope.journalEntry.nameEt = holder.entryType.nameEt;
+        if (dialogScope.changedJournalEntryStudents.indexOf(journalEntryStudents[row.id]) === -1) {
+          dialogScope.changedJournalEntryStudents.push(journalEntryStudents[row.id]);
         }
       };
-      dialogScope.grades = Classifier.queryForDropdown({mainClassCode: 'KUTSEHINDAMINE'});
-    }, function(submittedDialogScope) {
+      dialogScope.setJournalEntryDefaultName = function (name) {
+        var holder = { entryType: name };
+        classifierMapper.objectmapper(holder);
+        dialogScope.journalEntry.nameEt = holder.entryType.nameEt;
+      };
+      dialogScope.grades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
+    }, function (submittedDialogScope) {
       var newEntity = angular.extend({}, submittedDialogScope.journalEntry);
-      journalEntryStudentsToArray(submittedDialogScope.journalEntryStudents, newEntity);
+      newEntity.journalEntryStudents = submittedDialogScope.changedJournalEntryStudents;
       capacityTypesToArray(submittedDialogScope.selectedCapacityTypes, newEntity);
+
+      // this prevents an exception in back end - '' is sent if empty date is selected otherwise
+      if(!newEntity.entryDate) {
+        delete newEntity.entryDate;
+      }
 
       var journalEntry = new JournalEntryEndpoint(newEntity);
       if (angular.isDefined(newEntity.id)) {
-        journalEntry.$update().then(function() {
+        journalEntry.$update().then(function () {
           message.info('main.messages.create.success');
           loadJournalEntries();
           loadJournalStudents();
         });
       } else {
-        journalEntry.$save().then(function() {
+        journalEntry.$save().then(function () {
           message.info('main.messages.create.success');
           loadJournalEntries();
           loadJournalStudents();
@@ -205,23 +198,23 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     });
   }
 
-  $scope.addNewEntry = function() {
+  $scope.addNewEntry = function () {
     showEntryDialog();
   };
 
-  $scope.editJournalEntry = function(journalEntryId) {
-    JournalEntryEndpoint.get({id: journalEntryId}, function(response) {
+  $scope.editJournalEntry = function (journalEntryId) {
+    JournalEntryEndpoint.get({ id: journalEntryId }, function (response) {
       showEntryDialog(response);
     });
   };
 
-  $scope.moduleDescriptionDialog = function(moduleDescription) {
-    dialogService.showDialog('journal/journal.moduleDescription.dialog.html', function(dialogScope) {
+  $scope.moduleDescriptionDialog = function (moduleDescription) {
+    dialogService.showDialog('journal/journal.moduleDescription.dialog.html', function (dialogScope) {
       dialogScope.moduleDescription = moduleDescription;
     });
   };
 
-  $scope.showAllStudents = function(show) {
+  $scope.showAllStudents = function (show) {
     loadJournalStudents(show);
   };
 });

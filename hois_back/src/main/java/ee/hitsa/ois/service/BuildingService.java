@@ -27,10 +27,8 @@ import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.RoomEquipment;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MainClassCode;
-import ee.hitsa.ois.repository.BuildingRepository;
-import ee.hitsa.ois.repository.RoomRepository;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -45,25 +43,41 @@ import ee.hitsa.ois.web.dto.RoomSearchDto;
 public class BuildingService {
 
     @Autowired
-    private BuildingRepository buildingRepository;
-    @Autowired
     private EntityManager em;
-    @Autowired
-    private RoomRepository roomRepository;
 
+    /**
+     * Create new building
+     *
+     * @param user
+     * @param form
+     * @return
+     */
     public Building create(HoisUserDetails user, BuildingForm form) {
         Building building = new Building();
         building.setSchool(em.getReference(School.class, user.getSchoolId()));
         return save(building, form);
     }
 
+    /**
+     * Store building
+     *
+     * @param building
+     * @param form
+     * @return
+     */
     public Building save(Building building, BuildingForm form) {
         EntityUtil.bindToEntity(form, building);
-        return buildingRepository.save(building);
+        return EntityUtil.save(building, em);
     }
 
+    /**
+     * Delete building
+     *
+     * @param building
+     * @throws EntityRemoveException if there are references to building
+     */
     public void delete(Building building) {
-        EntityUtil.deleteEntity(buildingRepository, building);
+        EntityUtil.deleteEntity(building, em);
     }
 
     @SuppressWarnings("unchecked")
@@ -90,10 +104,26 @@ public class BuildingService {
         return data.map(r -> RoomSearchDto.of((Building)r[0], (Room)r[1], equipment.get(EntityUtil.getNullableId((Room)r[1]))));
     }
 
+    /**
+     * Create new room
+     *
+     * @param user
+     * @param form
+     * @return
+     */
     public Room create(HoisUserDetails user, RoomForm form) {
         return save(user, new Room(), form);
     }
 
+    /**
+     * Store room
+     *
+     * @param user
+     * @param room
+     * @param form
+     * @return
+     * @throws AssertionFailedException if there is duplicate equipment in room
+     */
     public Room save(HoisUserDetails user, Room room, RoomForm form) {
         EntityUtil.bindToEntity(form, room, "roomEquipment");
         if(!Objects.equals(form.getBuilding(), EntityUtil.getNullableId(room.getBuilding()))) {
@@ -128,10 +158,16 @@ public class BuildingService {
         // remove possible leftovers
         Set<String> newRoomEquipmentCodes = StreamUtil.toMappedSet(RoomForm.RoomEquipmentCommand::getEquipment, newRoomEquipment);
         storedRoomEquipment.removeIf(re -> !newRoomEquipmentCodes.contains(EntityUtil.getCode(re.getEquipment())));
-        return roomRepository.save(room);
+        return EntityUtil.save(room, em);
     }
 
+    /**
+     * Delete room
+     *
+     * @param room
+     * @throws EntityRemoveException if there are references to room
+     */
     public void delete(Room room) {
-        EntityUtil.deleteEntity(roomRepository, room);
+        EntityUtil.deleteEntity(room, em);
     }
 }

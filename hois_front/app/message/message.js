@@ -194,6 +194,8 @@ angular.module('hitsaOis')
                 idcode: receiver.idcode,
                 fullname: receiver.fullname,
                 role: $scope.targetGroup ? [$scope.targetGroup] : receiver.role,
+                curriculum: receiver.curriculum,
+                studentGroup: receiver.studentGroup,
                 addedWithAutocomplete: true
             };
             if($scope.auth.isTeacher()) {

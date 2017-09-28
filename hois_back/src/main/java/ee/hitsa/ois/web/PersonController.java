@@ -17,9 +17,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.PersonService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.AssertionFailedException;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -39,21 +39,21 @@ public class PersonController {
     @Autowired
     private PersonService personService;
 
-    //TODO: permission checks
-    @PostMapping("")
-    public PersonWithUsersDto create(@Valid @RequestBody PersonForm request) {
+    @PostMapping
+    public PersonWithUsersDto create(HoisUserDetails user, @Valid @RequestBody PersonForm request) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
         return PersonWithUsersDto.of(personService.create(request), null);
     }
 
-    //TODO: permission checks
     @PutMapping("/{id:\\d+}")
     public PersonWithUsersDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Person person, @Valid @RequestBody PersonForm personForm) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
         return get(user, personService.save(personForm, person));
     }
 
-    //TODO: permission checks
     @GetMapping("/{id:\\d+}")
     public PersonWithUsersDto get(HoisUserDetails user, @WithEntity("id") Person person) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
         Set<User> users = person.getUsers();
         if (user.isSchoolAdmin()) {
             users = users.stream().filter(s -> s.getSchool() != null).filter(s -> EntityUtil.getId(s.getSchool()).equals(user.getSchoolId())).collect(Collectors.toSet());
@@ -63,31 +63,32 @@ public class PersonController {
 
     @GetMapping("/{person:\\d+}/users/{id:\\d+}")
     public UserDto getUser(HoisUserDetails userDetails, @WithEntity("person") Person person, @WithEntity("id") User user) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(userDetails);
         if (!EntityUtil.getId(person).equals(EntityUtil.getId(user.getPerson()))) {
             throw new AssertionFailedException("Person and user don't match");
         }
         return personService.getUser(user);
     }
 
-    //TODO: permission checks
     @GetMapping("/{person:\\d+}/users")
-    public UserDto getPersonAsUser(@WithEntity("person") Person person) {
-        User user = new User();
-        user.setPerson(person);
-        return UserDto.of(user, null);
+    public UserDto getPersonAsUser(HoisUserDetails user, @WithEntity("person") Person person) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
+        return personService.initialValueForUser(user, person);
     }
 
     @PostMapping("/{person:\\d+}/users")
-    public UserDto createUser(HoisUserDetails userDetails, @WithEntity("person") Person person, @Valid @RequestBody UserForm userForm) {
-        if (!userDetails.isMainAdmin()) {
-            userForm.setSchool(new EntityConnectionCommand(userDetails.getSchoolId()));
+    public UserDto createUser(HoisUserDetails user, @WithEntity("person") Person person, @Valid @RequestBody UserForm userForm) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
+        if (!user.isMainAdmin()) {
+            userForm.setSchool(new EntityConnectionCommand(user.getSchoolId()));
         }
         UserUtil.assertCanUpdateUser(userForm.getRole());
-        return getUser(userDetails, person, personService.createUser(userForm, person));
+        return getUser(user, person, personService.createUser(userForm, person));
     }
 
     @PutMapping("/{person:\\d+}/users/{id:\\d+}")
     public UserDto updateUser(HoisUserDetails userDetails, @WithEntity("person") Person person, @WithEntity("id") User user, @Valid @RequestBody UserForm userForm) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(userDetails);
         UserUtil.assertUserBelongsToPerson(user, person);
         UserUtil.assertCanUpdateUser(userForm.getRole());
         if (!userDetails.isMainAdmin()) {
@@ -97,15 +98,15 @@ public class PersonController {
         return getUser(userDetails, person, personService.saveUser(userForm, user));
     }
 
-    //TODO: permission checks
     @DeleteMapping("/{id:\\d+}")
-    public void deletePerson(@WithEntity("id") Person person) {
+    public void deletePerson(HoisUserDetails user, @WithEntity("id") Person person) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(user);
         personService.delete(person);
     }
 
-    //TODO: more permission checks
     @DeleteMapping("/{person:\\d+}/users/{id:\\d+}")
-    public void deleteUser(@WithEntity("person") Person person, @WithEntity("id") User user) {
+    public void deleteUser(HoisUserDetails userDetails, @WithEntity("person") Person person, @WithEntity("id") User user) {
+        UserUtil.assertIsMainAdminOrSchoolAdmin(userDetails);
         UserUtil.assertUserBelongsToPerson(user, person);
         UserUtil.assertCanUpdateUser(EntityUtil.getCode(user.getRole()));
         personService.deleteUser(user);

@@ -20,7 +20,7 @@ public class SubjectStudyPeriodCapacity extends BaseEntityWithId {
     @JoinColumn(updatable = false, nullable = false)
     private Classifier capacityType;
 
-    private Long hours;
+    private Short hours;
 
     public SubjectStudyPeriod getSubjectStudyPeriod() {
         return subjectStudyPeriod;
@@ -34,10 +34,10 @@ public class SubjectStudyPeriodCapacity extends BaseEntityWithId {
     public void setCapacityType(Classifier capacityType) {
         this.capacityType = capacityType;
     }
-    public Long getHours() {
+    public Short getHours() {
         return hours;
     }
-    public void setHours(Long hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
 }

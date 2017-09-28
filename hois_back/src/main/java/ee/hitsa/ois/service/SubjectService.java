@@ -3,7 +3,6 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
 import java.math.BigDecimal;
-
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -13,13 +12,21 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+import org.springframework.util.CollectionUtils;
+
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.SubjectConnect;
@@ -29,52 +36,41 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectConnection;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.SchoolDepartmentRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
-import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
-import ee.hitsa.ois.web.commandobject.SubjectForm;
-import ee.hitsa.ois.web.dto.SubjectSearchDto;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
-
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import ee.hitsa.ois.web.commandobject.SubjectForm;
+import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
+import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.dto.SubjectSearchDto;
 
 @Transactional
 @Service
 public class SubjectService {
 
     @Autowired
-    private SchoolRepository schoolRepository;
-
+    private EntityManager em;
     @Autowired
     private SubjectRepository subjectRepository;
-
     @Autowired
     private ClassifierRepository classifierRepository;
 
-    @Autowired
-    private SchoolDepartmentRepository schoolDepartmentRepository;
-
     public Subject create(HoisUserDetails user, SubjectForm newSubject) {
-        newSubject.setStatus(SubjectStatus.AINESTAATUS_S.name());
-        return save(user, new Subject(), newSubject);
+        Subject subject = new Subject();
+        subject.setStatus(em.getReference(Classifier.class, SubjectStatus.AINESTAATUS_S.name()));
+        return save(user, subject, newSubject);
     }
 
     public Subject save(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
-        // TODO remove comment when status change logic is resolved
-        EntityUtil.bindToEntity(newSubject, subject, classifierRepository /*, "status"*/);
-        subject.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        EntityUtil.bindToEntity(newSubject, subject, classifierRepository, "status");
+
+        subject.setSchool(em.getReference(School.class, user.getSchoolId()));
         SchoolDepartment schoolDepartment = null;
         if (newSubject.getSchoolDepartment() != null && newSubject.getSchoolDepartment().getId() != null && newSubject.getSchoolDepartment().getId().longValue() > 0) {
-            schoolDepartment = schoolDepartmentRepository.getOne(newSubject.getSchoolDepartment().getId());
+            schoolDepartment = em.getReference(SchoolDepartment.class, newSubject.getSchoolDepartment().getId());
         }
         subject.setSchoolDepartment(schoolDepartment);
         EntityUtil.bindEntityCollection(subject.getSubjectLanguages(), language -> EntityUtil.getCode(language.getLanguage()), newSubject.getLanguages(), code -> {
@@ -84,7 +80,7 @@ public class SubjectService {
             return subjectLanguage;
         });
         bindConnections(subject, newSubject);
-        return subjectRepository.save(subject);
+        return EntityUtil.save(subject, em);
     }
 
     private void bindConnections(Subject target, SubjectForm source) {
@@ -139,7 +135,7 @@ public class SubjectService {
     public Page<SubjectSearchDto> search(Long schoolId, SubjectSearchCommand subjectSearchCommand, Pageable pageable) {
         return subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            
+
             if (schoolId != null) {
                 filters.add(cb.equal(root.get("school").get("id"), schoolId));
             }
@@ -198,6 +194,23 @@ public class SubjectService {
     }
 
     public void delete(Subject subject) {
-        EntityUtil.deleteEntity(subjectRepository, subject);
+        EntityUtil.deleteEntity(subject, em);
+    }
+
+    public boolean isCodeUnique(Long schoolId, UniqueCommand command) {
+        if(command.getId() == null) {
+            return !subjectRepository.existsBySchoolIdAndCode(schoolId, command.getParamValue());
+        }
+        return !subjectRepository.existsBySchoolIdAndCodeAndIdNot(schoolId, command.getParamValue(), command.getId());
+    }
+
+    public Subject saveAndConfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
+        subject.setStatus(classifierRepository.getOne(SubjectStatus.AINESTAATUS_K.name()));
+        return save(user, subject, newSubject);
+    }
+
+    public Subject saveAndUnconfirm(HoisUserDetails user, Subject subject, SubjectForm newSubject) {
+        subject.setStatus(classifierRepository.getOne(SubjectStatus.AINESTAATUS_P.name()));
+        return save(user, subject, newSubject);
     }
 }

@@ -28,12 +28,12 @@ angular.module('hitsaOis')
       showTranslatedMessage(messageText, 'toastInfo', params);
     };
 
-    factory.warn = function(messageText) {
-      showTranslatedMessage(messageText, 'toastWarn');
+    factory.warn = function(messageText, params) {
+      showTranslatedMessage(messageText, 'toastWarn', params);
     };
 
-    factory.error = function(messageText) {
-      showTranslatedMessage(messageText, 'toastError');
+    factory.error = function(messageText, params) {
+      showTranslatedMessage(messageText, 'toastError', params);
     };
 
     factory.updateSuccess = function() {

@@ -106,10 +106,10 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
       };
     };
 
-    var endpoint = function(baseUrl) {
+    var endpoint = function(baseUrl, settings) {
       var basePath = config.apiUrl + baseUrl;
       var idPath = basePath + '/:id';
-      return $resource(basePath, {}, {
+      return $resource(basePath, {}, settings || {
           // crud
           save:   {method: 'POST', interceptor: resourceErrorHandler},
           post:   {method: 'POST', isArray: true, interceptor: resourceErrorHandler},

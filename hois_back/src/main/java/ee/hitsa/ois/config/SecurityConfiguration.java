@@ -1,6 +1,5 @@
 package ee.hitsa.ois.config;
 
-import ee.hitsa.ois.service.security.HoisUserDetailsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.context.annotation.Configuration;
@@ -10,47 +9,114 @@ import org.springframework.security.config.annotation.authentication.builders.Au
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
-import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
+import org.springframework.security.config.http.SessionCreationPolicy;
+import org.springframework.security.web.csrf.CookieCsrfTokenRepository;
+import org.springframework.security.web.csrf.CsrfTokenRepository;
+
+import ee.hitsa.ois.auth.EstonianIdCardAuthenticationProvider;
+import ee.hitsa.ois.filter.EstonianIdCardAuthenticationFilter;
+import ee.hitsa.ois.filter.JwtAuthorizationFilter;
+import ee.hitsa.ois.service.BdocService;
+import ee.hitsa.ois.service.security.HoisUserDetailsService;
 
 @Configuration
 @EnableGlobalMethodSecurity(securedEnabled = true)
 @Order(SecurityProperties.ACCESS_OVERRIDE_ORDER)
-@EnableRedisHttpSession
 public class SecurityConfiguration extends WebSecurityConfigurerAdapter {
 
-    private final HoisUserDetailsService userDetailsService;
+    @Autowired
+    private HoisUserDetailsService userDetailsService;
+    @Autowired
+    private HoisJwtProperties hoisJwtProperties;
 
-    public SecurityConfiguration(HoisUserDetailsService userDetailsService) {
-        this.userDetailsService = userDetailsService;
-    }
-
-    /**
-     *  DISCLAIMER: this is mock security and protects from nothing
-     *  TODO: Setup security.
-     */
     @Autowired
     public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
-        auth.userDetailsService(userDetailsService);//.passwordEncoder(passwordencoder());
+        auth.userDetailsService(userDetailsService);
     }
 
-    /**
-     *  TODO: All is allowed before user rights and roles etc is done.
-     */
     @Override
     protected void configure(HttpSecurity http) throws Exception {
         http
-                .httpBasic().and().logout().and()
-                .authorizeRequests()
-                .antMatchers(HttpMethod.OPTIONS).permitAll()
-                .antMatchers("/user", "/", "/logout"/*, "/**"*/).permitAll()
-                //.antMatchers("/subject", "/subject/**").hasAnyAuthority("ROLE_A")
-                //.antMatchers("/subject", "/subject/**").hasAnyRole("A")
-                //.anyRequest().authenticated()
-                .anyRequest().permitAll()
+            .authorizeRequests()
+                .antMatchers("/user").permitAll()
+                .antMatchers(HttpMethod.GET, "/autocomplete/classifiers").permitAll()
+                .antMatchers(HttpMethod.GET, "/autocomplete/schools").permitAll()
+                .anyRequest().authenticated()
                 .and()
-                .exceptionHandling().accessDeniedPage("/403")
+            .httpBasic()
                 .and()
-                .csrf().disable()
-                /*.csrfTokenRepository(CookieCsrfTokenRepository.withHttpOnlyFalse())*/;
+            .addFilter(new JwtAuthorizationFilter(authenticationManager(), userDetailsService, hoisJwtProperties))
+            .csrf().csrfTokenRepository(getRootCookieCsrfTokenRepository());
+    }
+
+    private static CsrfTokenRepository getRootCookieCsrfTokenRepository() {
+        CookieCsrfTokenRepository cookieCsrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
+        cookieCsrfTokenRepository.setCookiePath("/");
+        return cookieCsrfTokenRepository;
     }
 }
+
+@Configuration
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 1)
+class WebServicesConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.antMatcher("/services/**")
+            .authorizeRequests()
+                .anyRequest()
+                .permitAll()
+                .and()
+            .csrf()
+                .disable();
+    }
+}
+
+
+@Configuration
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 2)
+@EnableGlobalMethodSecurity(securedEnabled = true)
+class IdCardLoginSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Autowired
+    private EstonianIdCardAuthenticationProvider estonianIdCardAuthenticationProvider;
+    @Autowired
+    private BdocService bdocService;
+
+    @Autowired
+    public void configAuthentication(AuthenticationManagerBuilder auth) throws Exception {
+        auth.authenticationProvider(estonianIdCardAuthenticationProvider);
+    }
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.antMatcher("/idlogin")
+            .authorizeRequests()
+                .anyRequest()
+                .permitAll()
+                .and()
+            .addFilter(new EstonianIdCardAuthenticationFilter(authenticationManager(), bdocService))
+            .csrf()
+                .disable();
+    }
+}
+
+@Configuration
+@Order(SecurityProperties.ACCESS_OVERRIDE_ORDER - 3)
+class UniqueUrlSecurityConfiguration extends WebSecurityConfigurerAdapter {
+
+    @Override
+    protected void configure(HttpSecurity http) throws Exception {
+        http.antMatcher("/practiceJournals/supervisor/{uuid}/**")
+            .authorizeRequests()
+                .anyRequest()
+                .permitAll()
+                .and()
+            .sessionManagement()
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                .and()
+            .csrf()
+                .disable();
+    }
+}
+

@@ -3,11 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.io.InputStream;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -17,10 +13,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import javax.validation.Valid;
 
-import org.jxls.common.Context;
-import org.jxls.util.JxlsHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -31,9 +24,7 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
-import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.util.AssertionFailedException;
-import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -54,14 +45,12 @@ import ee.hitsa.ois.web.dto.report.TeacherLoadDto;
 @Service
 public class ReportService {
 
-    private static final String XLS_TEMPLATE_PATH = "/templates/";
-
-    @Autowired
-    private ClassifierRepository classifierRepository;
     @Autowired
     private EntityManager em;
+    @Autowired
+    private XlsService xlsService;
 
-    public Page<StudentSearchDto> students(Long schoolId, @Valid StudentSearchCommand criteria, Pageable pageable) {
+    public Page<StudentSearchDto> students(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id " +
                 "inner join curriculum c on cv.curriculum_id = c.id "+
@@ -90,9 +79,12 @@ public class ReportService {
         , em, pageable).map(r -> new StudentSearchDto(r));
     }
 
-    public byte[] studentsAsExcel(Long schoolId, @Valid StudentSearchCommand criteria) {
+    public byte[] studentsAsExcel(Long schoolId, StudentSearchCommand criteria) {
         List<StudentSearchDto> students = students(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
-        return generateExcel("students.xls", Collections.singletonMap("students", students));
+        Map<String, Object> data = new HashMap<>();
+        data.put("criteria", criteria);
+        data.put("students", students);
+        return xlsService.generate("students.xls", data);
     }
 
     public Page<StudentStatisticsDto> studentStatistics(Long schoolId, StudentStatisticsCommand criteria, Pageable pageable) {
@@ -120,6 +112,14 @@ public class ReportService {
             }
         }
         return result;
+    }
+
+    public byte[] studentStatisticsAsExcel(Long schoolId, StudentStatisticsCommand criteria) {
+        List<StudentStatisticsDto> students = studentStatistics(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
+        Map<String, Object> data = new HashMap<>();
+        data.put("criteria", criteria);
+        data.put("students", students);
+        return xlsService.generate("studentstatistics.xls", data);
     }
 
     public Page<StudentStatisticsDto> studentStatisticsByPeriod(Long schoolId, StudentStatisticsByPeriodCommand criteria, Pageable pageable) {
@@ -157,13 +157,21 @@ public class ReportService {
             qb.optionalCriteria("d.confirm_date >= :validFrom", "validFrom", criteria.getFrom());
             qb.optionalCriteria("d.confirm_date <= :validThru", "validThru", criteria.getThru());
             // check for directive cancellation for given student
-            qb.filter("not exists(select 1 from directive cd inner join directive_student cds on cd.id = cds.directive_id and cd.canceled_directive_id = d.id and cds.student_id=ds.student_id and cd.status_code = :directiveStatus)");
+            qb.filter("ds.canceled = false");
 
             List<?> data = qb.select(String.format("cv.curriculum_id, %s, count(*)", groupingField), em).getResultList();
             loadStatisticCounts(cs, data, false);
         }
 
         return result;
+    }
+
+    public byte[] studentStatisticsByPeriodAsExcel(Long schoolId, StudentStatisticsByPeriodCommand criteria) {
+        List<StudentStatisticsDto> students = studentStatisticsByPeriod(schoolId, criteria, new PageRequest(0, Integer.MAX_VALUE)).getContent();
+        Map<String, Object> data = new HashMap<>();
+        data.put("criteria", criteria);
+        data.put("students", students);
+        return xlsService.generate("studentstatisticsbyperiod.xls", data);
     }
 
     public Page<CurriculumCompletionDto> curriculumCompletion(Long schoolId, CurriculumCompletionCommand criteria, Pageable pageable) {
@@ -190,7 +198,15 @@ public class ReportService {
         return null;
     }
 
-    public Page<TeacherLoadDto> teacherLoad(Long schoolId, TeacherLoadCommand criteria, Pageable pageable) {
+    public Page<TeacherLoadDto> teacherLoadVocational(Long schoolId, TeacherLoadCommand criteria, Pageable pageable) {
+        return teacherLoad(schoolId, criteria, pageable, false);
+    }
+
+    public Page<TeacherLoadDto> teacherLoadHigher(Long schoolId, TeacherLoadCommand criteria, Pageable pageable) {
+        return teacherLoad(schoolId, criteria, pageable, true);
+    }
+
+    private Page<TeacherLoadDto> teacherLoad(Long schoolId, TeacherLoadCommand criteria, Pageable pageable, boolean higher) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
                 "from journal_teacher jt inner join journal j on j.id = jt.journal_id " +
                 "inner join study_year sy on j.study_year_id = sy.id " +
@@ -206,51 +222,72 @@ public class ReportService {
 
         qb.groupBy("syc.name_et, syc.name_en, sp.name_et, sp.name_en, p.firstname, p.lastname, jt.teacher_id, jc.study_period_id");
 
-        Page<?> result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(jc.hours), 0, jt.teacher_id, jc.study_period_id", em, pageable);
+        Page<?> result = JpaQueryUtil.pagingResult(qb, "syc.name_et, syc.name_en, sp.name_et as study_period_name_et, sp.name_en as study_period_name_en, p.firstname, p.lastname, sum(jc.hours), jt.teacher_id, jc.study_period_id", em, pageable);
 
         // calculate used teacher id and study period id values for returned page
-        Map<Long, Map<Long, List<Object>>> subjectRecords;
+        Map<Long, Map<Long, List<Object>>> subjectRecords = new HashMap<>();
+        Map<Long, Map<Long, List<Object>>> moduleRecords = new HashMap<>();
+        Map<Long, Map<Long, Long>> actualLoadHours = new HashMap<>();
         if(!result.getContent().isEmpty()) {
             Set<Long> teachers = new HashSet<>();
             Set<Long> studyPeriods = new HashSet<>();
             for(Object record : result.getContent()) {
-                teachers.add(resultAsLong(record, 8));
-                studyPeriods.add(resultAsLong(record, 9));
+                teachers.add(resultAsLong(record, 7));
+                studyPeriods.add(resultAsLong(record, 8));
             }
 
-            // select subjects by teacher and study period id: starting from SubjectStudyPeriodTeacher table
-            qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period_teacher sspt " +
-                    "inner join subject_study_period ssp on sspt.subject_study_period_id = ssp.id "+
-                    "inner join subject s on ssp.subject_id = s.id");
+            if(higher) {
+                // higher: select subjects by teacher and study period id: starting from SubjectStudyPeriodTeacher table
+                qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period_teacher sspt " +
+                        "inner join subject_study_period ssp on sspt.subject_study_period_id = ssp.id "+
+                        "inner join subject s on ssp.subject_id = s.id");
 
-            qb.requiredCriteria("sspt.teacher_id in (:teacher)", "teacher", teachers);
-            qb.requiredCriteria("ssp.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
+                qb.requiredCriteria("sspt.teacher_id in (:teacher)", "teacher", teachers);
+                qb.requiredCriteria("ssp.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
 
-            List<?> subjects = qb.select("s.name_et, s.name_en, s.code, sspt.teacher_id, ssp.study_period_id", em).getResultList();
-            subjectRecords = subjects.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 3), Collectors.groupingBy(r -> resultAsLong(r, 4))));
-        } else {
-            subjectRecords = new HashMap<>();
-        }
+                List<?> subjects = qb.select("s.name_et, s.name_en, s.code, sspt.teacher_id, ssp.study_period_id", em).getResultList();
+                subjects.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 3), () -> subjectRecords, Collectors.groupingBy(r -> resultAsLong(r, 4))));
+            } else {
+                // vocational: select modules by teacher and study period id
+                qb = new JpaQueryUtil.NativeQueryBuilder("from journal_teacher jt " +
+                        "inner join journal j on jt.journal_id = j.id " +
+                        "inner join study_year sy on j.study_year_id = sy.id " +
+                        "inner join study_period sp on sp.study_year_id = sy.id " +
+                        "inner join journal_omodule_theme jot on j.id = jot.journal_id " +
+                        "inner join lesson_plan_module lpm on jot.lesson_plan_module_id = lpm.id "+
+                        "inner join curriculum_version_omodule_theme cvot on lpm.curriculum_version_omodule_id = cvot.id " +
+                        "inner join curriculum_version_omodule cvo on cvot.curriculum_version_omodule_id = cvo.id "+
+                        "inner join curriculum_module cm on cvo.curriculum_module_id = cm.id " +
+                        "inner join classifier m on cm.module_code = m.code " +
+                        "inner join curriculum c on cm.curriculum_id = c.id");
 
-        return result.map(r -> new TeacherLoadDto(r, subjectRecords.computeIfAbsent(resultAsLong(r, 8), key -> new HashMap<>()).get(resultAsLong(r, 9))));
-    }
+                qb.requiredCriteria("jt.teacher_id in (:teacher)", "teacher", teachers);
+                qb.requiredCriteria("sp.id in (:studyPeriod)", "studyPeriod", studyPeriods);
 
-    private byte[] generateExcel(String templateName, Map<String, Object> data) {
-        try {
-            try(InputStream is = ReportService.class.getResourceAsStream(XLS_TEMPLATE_PATH + templateName)) {
-                if(is == null) {
-                    throw new AssertionFailedException("XLS template " + XLS_TEMPLATE_PATH + templateName + " not found");
-                }
-                try (ByteArrayOutputStream os = new ByteArrayOutputStream()) {
-                    Context context = new Context(data);
-                    context.putVar("classifiers", new ClassifierUtil.ClassifierCache(classifierRepository));
-                    JxlsHelper.getInstance().processTemplate(is, os, context);
-                    return os.toByteArray();
-                }
+                List<?> modules = qb.select("cm.name_et, cm.name_en, m.name_et as modulename_et, m.name_en as modulename_en, c.code, jt.teacher_id, sp.id", em).getResultList();
+                modules.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 5), () -> moduleRecords, Collectors.groupingBy(r -> resultAsLong(r, 6))));
             }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
+
+            // actual load
+            qb = new JpaQueryUtil.NativeQueryBuilder("from timetable_object tto " +
+                    "inner join timetable t on tto.timetable_id = t.id " +
+                    "inner join timetable_event te on te.timetable_object_id = tto.id " +
+                    "inner join timetable_event_time tet on tet.timetable_event_id = te.id " +
+                    "inner join timetable_event_teacher tete on tete.timetable_event_time_id = tet.id");
+
+            qb.requiredCriteria("tete.teacher_id in (:teacher)", "teacher", teachers);
+            qb.requiredCriteria("t.study_period_id in (:studyPeriod)", "studyPeriod", studyPeriods);
+
+            qb.groupBy("tete.teacher_id, t.study_period_id");
+            List<?> actualLoad = qb.select("tete.teacher_id, t.study_period_id, sum(te.lessons)", em).getResultList();
+            actualLoad.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), () -> actualLoadHours, Collectors.toMap(r -> resultAsLong(r, 1), r -> resultAsLong(r, 2))));
         }
+
+        return result.map(r -> {
+            Long teacherId = resultAsLong(r, 7);
+            Long studyPeriodId = resultAsLong(r, 8);
+            return new TeacherLoadDto(r, subjectRecords.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId), moduleRecords.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId), actualLoadHours.computeIfAbsent(teacherId, key -> new HashMap<>()).get(studyPeriodId));
+        });
     }
 
     private Page<StudentStatisticsDto> loadCurriculums(Long schoolId, List<EntityConnectionCommand> curriculumIds, Pageable pageable) {

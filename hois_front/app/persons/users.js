@@ -1,94 +1,59 @@
 'use strict';
 
-angular.module('hitsaOis')
-  .controller('UsersEditController', ['$scope', '$location', '$route', '$rootScope', 'dialogService', 'Classifier', 'DataUtils', 'message', 'QueryUtils', 'Session', function ($scope, $location, $route, $rootScope, dialogService, Classifier, DataUtils, message, QueryUtils, Session) {
-    var id = $route.current.params.person;
-    var code = $route.current.params.user;
+angular.module('hitsaOis').controller('UsersEditController', ['$location', '$q', '$rootScope', '$route', '$scope', 'dialogService', 'Classifier', 'message', 'QueryUtils',
+  function ($location, $q, $rootScope, $route, $scope, dialogService, Classifier, message, QueryUtils) {
+    var personId = $route.current.params.person;
+    var userId = $route.current.params.user;
+    var Endpoint = QueryUtils.endpoint('/persons/'+personId+'/users');
 
+    $scope.auth = $route.current.locals.auth;
     $scope.noSchool = ['ROLL_P', 'ROLL_V'];
-    $scope.showSchool = $route.current.locals.auth.isMainAdmin();
-
-    var Endpoint = QueryUtils.endpoint('/persons/'+id+'/users');
-    var clMapper = Classifier.valuemapper({object: 'TEEMAOIGUS'});
-
-    function loadDefaults(action) {
-      QueryUtils.endpoint('/users/rolesDefaults').search().$promise.then(function (response) {
-        $scope.userRoleDefaults = response;
-        if (action) {
-          action(response);
-        }
-      });
-    }
-
-    function afterLoad() {
-      DataUtils.convertStringToDates($scope.user, ['validFrom', 'validThru']);
-      if ($scope.user.school) {
-        $scope.user.school.id = Session.school.id.toString();
-      }
-      loadDefaults();
-    }
-
-    function afterNewLoad() {
-      $scope.user.validFrom = new Date();
-      loadDefaults(function (response) {
-        $scope.user.rights = response.userRoles;
-      });
-      if (!$scope.showSchool) {
-        $scope.user.school = {id: (Session.school.id.toString())};
-      }
-    }
-
-    $scope.filterValues = ['ROLL_T', 'ROLL_L'];
-
-    if (!$scope.showSchool) {
+    $scope.filterValues = ['ROLL_L', 'ROLL_O', 'ROLL_T'];
+    if (!$scope.auth.isMainAdmin()) {
       $scope.filterValues.push('ROLL_P');
     }
-
-    if ($route.current.locals.auth.isAdmin()) {
+    if ($scope.auth.isAdmin()) {
       $scope.filterValues.push('ROLL_V');
     }
 
-    if (code) {
-      $scope.user = Endpoint.get({id: code}, afterLoad);
-    } else {
-      $scope.user = new Endpoint.get(afterNewLoad);
+    $scope.objects = Classifier.queryForDropdown({mainClassCode: 'TEEMAOIGUS'});
+    $scope.permissions = Classifier.queryForDropdown({mainClassCode: 'OIGUS'});
+    $scope.userRoleDefaults = QueryUtils.endpoint('/users/rolesDefaults').search();
+    var rightsForEditing = {};
+
+    function afterLoad(rights) {
+      if(!rights) {
+        return;
+      }
+      rightsForEditing[$scope.user.role] = $scope.objects.reduce(function(roleMapping, object) {
+        var objcode = object.code;
+        roleMapping[objcode] = $scope.permissions.reduce(function(permissions, perm) {
+          var permcode = perm.code;
+          permissions[permcode] = (rights[objcode] || []).indexOf(permcode) !== -1;
+          return permissions;
+        }, {});
+        return roleMapping;
+      }, {});
     }
 
-    $scope.roleChange = function () {
-      if ($scope.noSchool.indexOf($scope.user.role) !== -1) {
+    $scope.roleChanged = function () {
+      var role = $scope.user.role;
+      if ($scope.noSchool.indexOf(role) !== -1) {
         $scope.user.school = null;
       }
-      if ($scope.userRoleDefaults) {
-        var rights = $scope.userRoleDefaults.defaultRights.filter(function (it) {
-          return it.roleCode === $scope.user.role;
-        });
-        if (rights && rights.length) {
-          var map = JSON.parse(rights[0].data).reduce(function (map, obj) {
-            map[obj.object] = {oigusM: obj.oigusM, oigusK: obj.oigusK, oigusV: obj.oigusV};
-            return map;
-          }, {});
-          for (var i = 0; i < $scope.user.rights.length; i++) {
-            var key = $scope.user.rights[i].object;
-            var values = map[key];
-            if (values) {
-              $scope.user.rights[i].oigusM = (values.oigusM || false);
-              $scope.user.rights[i].oigusK = (values.oigusK || false);
-              $scope.user.rights[i].oigusV = (values.oigusV || false);
-            }
-          }
-        }
+      var objects = $scope.userRoleDefaults.defaultRights[role] || {};
+      $scope.objectsForRole = $scope.objects.filter(function(it) { return objects[it.code]; });
+      if(!rightsForEditing[role]) {
+        afterLoad(objects);
       }
-    };
-
-    $scope.orderValue = function (item) {
-      return $scope.currentLanguageNameField(clMapper.objectmapper({object: item.object}).object);
+      $scope.rights = rightsForEditing[role];
     };
 
     $scope.delete = function () {
       dialogService.confirmDialog({prompt: 'user.deleteconfirm'}, function () {
         $scope.user.$delete().then(function () {
           message.info('main.messages.delete.success');
-          $rootScope.back('#/persons/' + id);
+          $rootScope.back('#/persons/' + personId);
         });
       });
     };
@@ -96,34 +61,54 @@ angular.module('hitsaOis')
     $scope.update = function () {
       $scope.userForm.$setSubmitted();
       if ($scope.userForm.$valid) {
+        // set rights
+        var code = function(it) {
+          return it.code;
+        };
+        $scope.user.rights = $scope.objectsForRole.reduce(function(rights, object) {
+          var objcode = object.code;
+          rights[objcode] = $scope.permissions.filter(function (it) { return $scope.rights[objcode][it.code]; }).map(code);
+          return rights;
+        }, {});
+
         if ($scope.user.id) {
-          $scope.user.$update().then(message.updateSuccess);
+          $scope.user.$update().then(message.updateSuccess).then(function() {
+            afterLoad($scope.user.rights);
+          });
         } else {
           $scope.user.$save().then(function (response) {
-            $location.path('/persons/' + response.person.id + '/users/' + response.id + '/edit').search({_noback: ''});
+            $location.url('/persons/' + response.person.id + '/users/' + response.id + '/edit?_noback');
             message.info('main.messages.create.success');
           });
         }
       }
     };
-  }])
-  .controller('UsersViewController', ['$scope', '$route', '$rootScope', 'DataUtils', 'dialogService', 'message', 'QueryUtils', function ($scope, $route, $rootScope, DataUtils, dialogService, message, QueryUtils) {
-    var id = $route.current.params.person;
-    var code = $route.current.params.user;
-    var Endpoint = QueryUtils.endpoint('/persons/'+id+'/users');
 
-    $scope.delete = function () {
-      dialogService.confirmDialog({prompt: 'user.deleteconfirm'}, function () {
-        $scope.user.$delete().then(function () {
-          message.info('main.messages.delete.success');
-          $rootScope.back('#/persons/' + id);
-        });
-      });
-    };
-
-    function afterLoad() {
-      DataUtils.convertStringToDates($scope.user, ['validFrom', 'validThru']);
+    if (userId) {
+      $scope.user = Endpoint.get({id: userId});
+    } else {
+      $scope.user = Endpoint.search();
     }
 
-    $scope.user = Endpoint.get({id: code}, afterLoad);
-  }]);
+    $q.all([$scope.objects.$promise, $scope.permissions.$promise, $scope.userRoleDefaults.$promise, $scope.user.$promise]).then(function() {
+      afterLoad($scope.user.rights);
+      $scope.roleChanged();
+    });
+  }
+]).controller('UsersViewController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils',
+  function ($q, $route, $scope, Classifier, QueryUtils) {
+    var personId = $route.current.params.person;
+    var userId = $route.current.params.user;
+    var Endpoint = QueryUtils.endpoint('/persons/'+personId+'/users');
+
+    $scope.objects = Classifier.queryForDropdown({mainClassCode: 'TEEMAOIGUS'});
+    $scope.permissions = Classifier.queryForDropdown({mainClassCode: 'OIGUS'});
+    $scope.userRoleDefaults = QueryUtils.endpoint('/users/rolesDefaults').search();
+    $scope.user = Endpoint.get({id: userId});
+
+    $q.all([$scope.objects.$promise, $scope.permissions.$promise, $scope.userRoleDefaults.$promise, $scope.user.$promise]).then(function() {
+      var objects = $scope.userRoleDefaults.defaultRights[$scope.user.role] || {};
+      $scope.objects = $scope.objects.filter(function(it) { return objects[it.code]; });
+    });
+  }
+]);

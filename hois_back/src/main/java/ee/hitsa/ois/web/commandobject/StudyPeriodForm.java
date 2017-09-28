@@ -6,12 +6,17 @@ import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import java.time.LocalDate;
 
 @DateRange(from = "startDate", thru = "endDate")
 public class StudyPeriodForm extends VersionedCommand {
+
     @NotEmpty
+    @Size(max = 100)
     private String nameEt;
+    @Size(max = 100)
     private String nameEn;
     @NotEmpty
     @ClassifierRestriction(MainClassCode.OPPEPERIOOD)

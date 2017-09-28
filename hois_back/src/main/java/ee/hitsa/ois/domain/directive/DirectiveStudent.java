@@ -99,13 +99,13 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private Application application;
     @NotNull(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(updatable = false)
     private Person person;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudentHistory studentHistory;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(updatable = false)
     private SaisApplication saisApplication;
+    private Boolean canceled;
 
     public Directive getDirective() {
         return directive;
@@ -366,5 +366,13 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
 
     public void setSaisApplication(SaisApplication saisApplication) {
         this.saisApplication = saisApplication;
+    }
+
+    public Boolean getCanceled() {
+        return canceled;
+    }
+
+    public void setCanceled(Boolean canceled) {
+        this.canceled = canceled;
     }
 }

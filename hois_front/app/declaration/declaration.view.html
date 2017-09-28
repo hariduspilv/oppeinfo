@@ -72,7 +72,7 @@
             </table>
           </td>
           <td md-cell>{{subject.subject.credits}} / {{subject.subject.assessment}}</td>
-          <td md-cell>{{currentLanguageNameField(subject.module)}} / {{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
+          <td md-cell>{{subject.module != null ? currentLanguageNameField(subject.module) : ' - '}} / {{subject.isOptional ? 'main.no' : 'main.yes' | translate}}</td>
           <td md-cell>
             <span ng-show="!hasPrerequisites(subject)"> - </span>
             <span ng-show="hasPrerequisites(subject)"><a href="" ng-click="seePrerequisites(subject)">

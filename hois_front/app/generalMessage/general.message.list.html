@@ -1,11 +1,18 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
+      <fieldset tabindex="1">
+          <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.searchlabel' | translate}}</legend>
     <form ng-submit="loadData()" novalidate>
         <div flex layout="column">
           <md-input-container>
             <label class="textInput">{{'generalmessage.title' | translate}}</label>
             <input ng-model="criteria.title" type="text" autofocus>
           </md-input-container>
+          <md-input-container>
+              <label>{{'generalmessage.targets' | translate}}</label>
+              <hois-classifier-select ng-model="criteria.targets" model-value-attr="code" main-classifier-code="ROLL" multiple></hois-classifier-select>
+            </md-input-container>
+
 	<div layout="row" flex>
           <md-input-container>
 		     <label>{{'generalmessage.validFrom' | translate}}</label>
@@ -16,10 +23,6 @@
              <md-datepicker ng-model="criteria.validThru" md-min-date="criteria.validFrom"></md-datepicker>
           </md-input-container>
 </div>
-          <md-input-container>
-            <label>{{'generalmessage.targets' | translate}}</label>
-            <hois-classifier-select ng-model="criteria.targets" model-value-attr="code" main-classifier-code="ROLL" multiple></hois-classifier-select>
-          </md-input-container>
 
           <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
@@ -28,6 +31,7 @@
           </div>
         </div>
     </form>
+    </fieldset>
   </div>
 </div>
 <div layout-padding>

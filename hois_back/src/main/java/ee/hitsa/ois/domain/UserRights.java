@@ -2,18 +2,20 @@ package ee.hitsa.ois.domain;
 
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
 public class UserRights extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private User user;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier permission;
-
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
     private Classifier object;
 
     public User getUser() {

@@ -1,10 +1,9 @@
-<md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
-</md-nav-bar>
+<div ng-cloak>
+  <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+  <div ng-if="!student || student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+</div>
 
-<div layout-padding>
+<div layout-padding ng-cloak>
   <div flex>
     <h2>{{'student.application.label' | translate}}</h2>
     <md-table-container>
@@ -40,7 +39,7 @@
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
     <br/>
-    <md-table-container>
+    <md-table-container ng-if="!auth.isTeacher() && !auth.isParent()">
       <table md-table md-progress="applicationTypes.$promise">
         <thead md-head>
         <tr md-row>
@@ -61,7 +60,6 @@
       </table>
     </md-table-container>
     <br/>
-
 
     <h2>{{'student.directive.label' | translate}}</h2>
     <md-table-container>
@@ -92,6 +90,6 @@
                          md-page="directivesCriteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadDirectives"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
-    <md-button ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

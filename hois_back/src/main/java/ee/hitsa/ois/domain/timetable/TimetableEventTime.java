@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -17,20 +18,22 @@ import ee.hitsa.ois.domain.BaseEntityWithId;
 public class TimetableEventTime extends BaseEntityWithId {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false, insertable = false, updatable = false)
     private TimetableEvent timetableEvent;
 
     private LocalDateTime start;
+    //FIXME: rename in database
+    @Column(name = "\"end\"")
     private LocalDateTime end;
     private String otherTeacher;
     private String otherRoom;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
+    @JoinColumn(name = "timetable_event_time_id")
     private List<TimetableEventTeacher> timetableEventTeachers = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
+    @JoinColumn(name = "timetable_event_time_id")
     private List<TimetableEventRoom> timetableEventRooms = new ArrayList<>();
 
     public TimetableEvent getTimetableEvent() {
@@ -88,6 +91,6 @@ public class TimetableEventTime extends BaseEntityWithId {
     public void setTimetableEventRooms(List<TimetableEventRoom> timetableEventRooms) {
         this.timetableEventRooms = timetableEventRooms;
     }
-    
-    
+
+
 }

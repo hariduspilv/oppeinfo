@@ -46,15 +46,15 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
       message.clicked = !message.clicked;
     };
 
-    if (AuthService.isAuthenticated()) {
+    function afterAuthentication() {
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
     }
 
-    $scope.$on(AUTH_EVENTS.loginSuccess, $scope.loadGeneralMessages);
-    $scope.$on(AUTH_EVENTS.userChanged, $scope.loadGeneralMessages);
-
-    $scope.$on(AUTH_EVENTS.loginSuccess, $scope.loadUnreadMessages);
-    $scope.$on(AUTH_EVENTS.userChanged, $scope.loadUnreadMessages);
+    if (AuthService.isAuthenticated()) {
+      afterAuthentication();
+    }
+    $scope.$on(AUTH_EVENTS.loginSuccess, afterAuthentication);
+    $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
   }
 ]);

@@ -7,79 +7,20 @@ import ee.hitsa.ois.validation.NotEmpty;
 
 import javax.validation.constraints.NotNull;
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
+import java.util.Map;
 
 @DateRange
 public class UserForm extends VersionedCommand {
 
     private EntityConnectionCommand school;
-
     @NotEmpty
     @ClassifierRestriction(MainClassCode.ROLL)
     private String role;
     @NotNull
     private LocalDate validFrom;
     private LocalDate validThru;
-
-    private Set<UserRight> rights;
-
-    public static class UserRight {
-        @NotEmpty
-        @ClassifierRestriction(MainClassCode.TEEMAOIGUS)
-        private String object;
-
-        private Boolean oigusV = Boolean.FALSE;
-        private Boolean oigusK = Boolean.FALSE;
-        private Boolean oigusM = Boolean.FALSE;
-        //private Boolean OIGUS_D = Boolean.FALSE;
-
-        public static UserRight of(String object) {
-            UserRight dto = new UserRight();
-            dto.object = object;
-            return dto;
-        }
-
-        public String getObject() {
-            return object;
-        }
-
-        public void setObject(String object) {
-            this.object = object;
-        }
-
-        public Boolean getOigusV() {
-            return oigusV;
-        }
-
-        public void setOigusV(Boolean oigusV) {
-            this.oigusV = oigusV;
-        }
-
-        public Boolean getOigusK() {
-            return oigusK;
-        }
-
-        public void setOigusK(Boolean oigusK) {
-            this.oigusK = oigusK;
-        }
-
-        public Boolean getOigusM() {
-            return oigusM;
-        }
-
-        public void setOigusM(Boolean oigusM) {
-            this.oigusM = oigusM;
-        }
-/*
-        public Boolean getOIGUS_D() {
-            return OIGUS_D;
-        }
-
-        public void setOIGUS_D(Boolean OIGUS_D) {
-            this.OIGUS_D = OIGUS_D;
-        }
-*/
-    }
+    private Map<String, List<String>> rights;
 
     public EntityConnectionCommand getSchool() {
         return school;
@@ -105,11 +46,11 @@ public class UserForm extends VersionedCommand {
         this.validFrom = validFrom;
     }
 
-    public Set<UserRight> getRights() {
+    public Map<String, List<String>> getRights() {
         return rights;
     }
 
-    public void setRights(Set<UserRight> rights) {
+    public void setRights(Map<String, List<String>> rights) {
         this.rights = rights;
     }
 

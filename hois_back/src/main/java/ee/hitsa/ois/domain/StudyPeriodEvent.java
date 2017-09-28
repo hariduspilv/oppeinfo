@@ -1,11 +1,12 @@
 package ee.hitsa.ois.domain;
 
+import java.time.LocalDateTime;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import java.time.LocalDateTime;
 
 @Entity
 public class StudyPeriodEvent extends BaseEntityWithId {
@@ -20,6 +21,7 @@ public class StudyPeriodEvent extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     private Classifier eventType;
     private LocalDateTime start;
+    //FIXME: rename in database
     @Column(name = "\"end\"")
     private LocalDateTime end;
 

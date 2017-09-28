@@ -19,9 +19,10 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.DirectiveConfirmService;
 import ee.hitsa.ois.service.DirectiveService;
-import ee.hitsa.ois.service.ehis.EhisDirectiveStudentService;
+import ee.hitsa.ois.service.JobService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -47,7 +48,7 @@ public class DirectiveController {
     @Autowired
     private DirectiveService directiveService;
     @Autowired
-    private EhisDirectiveStudentService ehisDirectiveStudentService;
+    private JobService jobService;
 
     @GetMapping
     public Page<DirectiveSearchDto> search(HoisUserDetails user, @Valid DirectiveSearchCommand criteria, Pageable pageable) {
@@ -75,13 +76,13 @@ public class DirectiveController {
 
     @PutMapping("/{id:\\d+}")
     public DirectiveDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Directive directive, @Valid @RequestBody DirectiveForm form) {
-        UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
+        assertCanEditDirective(user, directive);
         return get(user, directiveService.save(directive, form));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Directive directive, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
+        assertCanEditDirective(user, directive);
         directiveService.delete(directive);
     }
 
@@ -96,7 +97,7 @@ public class DirectiveController {
     public DirectiveDto confirm(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
         // start requests after save has been successful
-        ehisDirectiveStudentService.updateEhis(directiveConfirmService.confirm(user, directive, LocalDate.now()));
+        jobService.directiveConfirmed(directiveConfirmService.confirm(user.getUsername(), directive, LocalDate.now()));
         return get(user, directive);
     }
 
@@ -114,29 +115,35 @@ public class DirectiveController {
 
     @GetMapping("/coordinators")
     public Page<DirectiveCoordinatorDto> searchCoordinators(HoisUserDetails user, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
         return directiveService.search(user.getSchoolId(), pageable);
     }
 
     @GetMapping("/coordinators/{id:\\d+}")
     public DirectiveCoordinatorDto getCoordinator(HoisUserDetails user, @WithEntity("id") DirectiveCoordinator coordinator) {
-        UserUtil.assertSameSchool(user, coordinator.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
         return DirectiveCoordinatorDto.of(coordinator);
     }
 
     @PostMapping("/coordinators")
     public HttpUtil.CreatedResponse createCoordinator(HoisUserDetails user, @Valid @RequestBody DirectiveCoordinatorForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
         return HttpUtil.created(directiveService.create(user, form));
     }
 
     @PutMapping("/coordinators/{id:\\d+}")
     public DirectiveCoordinatorDto updateCoordinator(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) DirectiveCoordinator coordinator, @Valid @RequestBody DirectiveCoordinatorForm form) {
-        UserUtil.assertSameSchool(user, coordinator.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
         return getCoordinator(user, directiveService.save(coordinator, form));
     }
 
     @DeleteMapping("/coordinators/{id:\\d+}")
     public void deleteCoordinator(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") DirectiveCoordinator coordinator, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertSameSchool(user, coordinator.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
         directiveService.delete(coordinator);
+    }
+
+    private static void assertCanEditDirective(HoisUserDetails user, Directive directive) {
+        AssertionFailedException.throwIf(!UserUtil.canEditDirective(user, directive), "User cannot edit directive");
     }
 }

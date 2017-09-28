@@ -1,11 +1,31 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', '$sessionStorage', 'QueryUtils', function ($scope, $sessionStorage, QueryUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', function ($scope, $sessionStorage, QueryUtils, DataUtils) {
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods', {order: 's.' + $scope.currentLanguageNameField()});
-    $scope.loadData();
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query(function(result) {
-        $scope.studyPeriods = result;
+
+    function setCurrentStudyPeriod() {
+        if($scope.criteria && $scope.studyPeriods && !$scope.criteria.studyPeriods) {
+            $scope.criteria.studyPeriods = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
+        }
+    }
+
+    QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
+        $scope.studyPeriods = response;
+        setCurrentStudyPeriod();
+        $scope.loadData();
     });
+
+    $scope.$watch('criteria.studyPeriods', function() {
+          setCurrentStudyPeriod();
+        }
+    );
+
+    $scope.$watch('criteria.studentObject', function() {
+      if($scope.criteria) {
+        $scope.criteria.student = $scope.criteria.studentObject ? $scope.criteria.studentObject.id : null;
+      }
+    });
+
     $scope.showTeachers = function(row, bool) {
         var name = "";
         if( row.teachers) {
@@ -18,9 +38,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         return name;
     };
 
-
-
-}]).controller('SubjectStudyPeriodEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$q', '$rootScope', function ($scope, QueryUtils, ArrayUtils, $route, dialogService, message, $q, $rootScope) {
+}]).controller('SubjectStudyPeriodEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$q', '$rootScope', 'DeclarationType', function ($scope, QueryUtils, ArrayUtils, $route, dialogService, message, $q, $rootScope, DeclarationType) {
 
     var baseUrl = '/subjectStudyPeriods';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -53,10 +71,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         });
     } else {
         var initialObject = {
-            groupProportion: 'PAEVIK_GRUPI_JAOTUS_1', 
-            studyPeriod: studyPeriodId ? studyPeriodId : null, 
-            subject: subjectId, 
-            teachers: [], 
+            groupProportion: 'PAEVIK_GRUPI_JAOTUS_1',
+            studyPeriod: studyPeriodId,
+            subject: subjectId,
+            teachers: [],
             studentGroups: []
         };
         $scope.record = new Endpoint(initialObject);
@@ -74,7 +92,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
 
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
         $scope.studentGroups = result.filter(function(el){
-            return studentGroupId ? el.id !== studentGroupId : true; 
+            return studentGroupId ? el.id !== studentGroupId : true;
         }).map(function(el){
             var newEl = el;
             newEl.nameEt = el.code;
@@ -120,49 +138,111 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         ArrayUtils.remove($scope.record.teachers, teacher);
     };
 
+    function subjectAddedAutomaticallyToDecaration() {
+      return DeclarationType.DEKLARATSIOON_KOIK === $scope.record.declarationType ||
+      DeclarationType.DEKLARATSIOON_LISA === $scope.record.declarationType;
+    }
+
+    function formValid() {
+      $scope.subjectStudyPeriodEditForm.$setSubmitted();
+      if(!$scope.subjectStudyPeriodEditForm.$valid) {
+        message.error('main.messages.form-has-errors');
+        return false;
+      }
+      if(!$scope.record.teachers || $scope.record.teachers.length === 0) {
+          message.error('subjectStudyPeriod.error.teacherNotAdded');
+          return false;
+      }
+      return true;
+    }
+
+    function prepareDtoForSaving() {
+      if(studentGroupId) {
+        $scope.record.studentGroups.push(studentGroupId);
+      }
+      if($scope.record.teachers.length === 1) {
+          $scope.record.teachers[0].isSignatory = true;
+      }
+    }
+
+    function replaceLastUrlIf(lastUrl) {
+      return lastUrl.indexOf("new") !== -1;
+    }
+
+    function replaceLastUrl() {
+      if(studentGroupId && studyPeriodId) {
+        $rootScope.replaceLastUrl("#/subjectStudyPeriods/studentGroups/" + studentGroupId + "/" + studyPeriodId + "/edit", replaceLastUrlIf);
+      } else if(teacherId && studyPeriodId) {
+          $rootScope.replaceLastUrl("#/subjectStudyPeriods/teachers/" + teacherId + "/" + studyPeriodId + "/edit", replaceLastUrlIf);
+      } else if (subjectId && studyPeriodId && !studentGroupId && !teacherId) {
+          $rootScope.replaceLastUrl("#/subjectStudyPeriods/subjects/" + subjectId + "/" + studyPeriodId + "/edit", replaceLastUrlIf);
+      }
+    }
+
+    function afterCreate() {
+      message.updateSuccess();
+      replaceLastUrl();
+    }
+
+
+
+    function save() {
+      if(!formValid()) {
+        return;
+      }
+      prepareDtoForSaving();
+
+      if($scope.record.id) {
+          $scope.record.$update().then(message.updateSuccess);
+      } else {
+          $scope.record.$save().then(afterCreate);
+      }
+    }
+
     $scope.save = function() {
-        if(!$scope.subjectStudyPeriodEditForm.$valid) {
-            message.error('main.messages.form-has-errors');
-            return;
-        }
-        if(!$scope.record.teachers || $scope.record.teachers.length === 0) {
-            message.error('subjectStudyPeriod.error.teacherNotAdded');
-            return;
-        }
-        if(studentGroupId) {
-            $scope.record.studentGroups.push(studentGroupId);
-        }
-        if($scope.record.teachers.length === 1) {
-            $scope.record.teachers[0].isSignatory = true;
-        }
-        if($scope.record.id) {
-            $scope.record.$update().then(message.updateSuccess);
-        } else {
-            $scope.record.$save().then(function(){
-                message.updateSuccess();
-                if(studentGroupId && studyPeriodId) {
-                    $rootScope.replaceLastUrl("#/subjectStudyPeriods/studentGroups/" + studentGroupId + "/" + studyPeriodId + "/edit", function(lastUrl){
-                        return lastUrl.indexOf("new") !== -1;
-                    });
-                } else if(teacherId && studyPeriodId) {
-                    $rootScope.replaceLastUrl("#/subjectStudyPeriods/teachers/" + teacherId + "/" + studyPeriodId + "/edit", function(lastUrl){
-                        return lastUrl.indexOf("new") !== -1;
-                    });
-                } else if (subjectId && studyPeriodId && !studentGroupId && !teacherId) {
-                    $rootScope.replaceLastUrl("#/subjectStudyPeriods/subjects/" + subjectId + "/" + studyPeriodId + "/edit", function(lastUrl){
-                        return lastUrl.indexOf("new") !== -1;
-                    });
-                }
-            });
-        }
+      if(subjectAddedAutomaticallyToDecaration()) {
+        dialogService.confirmDialog({prompt: 'subjectStudyPeriod.prompt.addedAutomaticallyToDeclarations'}, save);
+      } else {
+        save();
+      }
     };
 
     $scope.delete = function() {
        dialogService.confirmDialog({prompt: 'subjectStudyPeriodTeacher.deleteconfirm'}, function() {
          $scope.record.$delete().then(function() {
            message.info('main.messages.delete.success');
-            $rootScope.back(baseUrl);
+            $rootScope.back('#' + baseUrl);
          });
       });
     };
-}]);
+}]).controller('SubjectStudyPeriodViewController', ['$scope', 'QueryUtils', '$route', function ($scope, QueryUtils, $route) {
+
+    var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods');
+    var id = $route.current.params.id;
+
+    Endpoint.get({id: id}).$promise.then(function(response){
+        $scope.record = response;
+    });
+
+    QueryUtils.endpoint('/autocomplete/studyPeriods').query(function(result) {
+        $scope.studyPeriods = result;
+    });
+
+    QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
+        $scope.studentGroups = result.map(function(el){
+            var newEl = el;
+            newEl.nameEt = el.code;
+            newEl.nameEn = el.code;
+            return newEl;
+        });
+    });
+
+    QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query(function(result) {
+        $scope.subjects = result;
+    });
+
+}]).constant('DeclarationType', {
+  'DEKLARATSIOON_EI': 'DEKLARATSIOON_EI',
+  'DEKLARATSIOON_KOIK' : 'DEKLARATSIOON_KOIK',
+  'DEKLARATSIOON_LISA': 'DEKLARATSIOON_LISA'
+});

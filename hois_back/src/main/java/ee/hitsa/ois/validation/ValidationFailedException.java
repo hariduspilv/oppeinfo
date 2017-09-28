@@ -39,4 +39,10 @@ public class ValidationFailedException extends RuntimeException {
     public ErrorInfo getErrorInfo() {
         return errorInfo;
     }
+
+    public static <T> void throwOnError(Set<ConstraintViolation<T>> errors) {
+        if(!errors.isEmpty()) {
+            throw new ValidationFailedException(errors);
+        }
+    }
 }

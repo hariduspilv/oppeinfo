@@ -17,13 +17,13 @@ import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
 
 /**
- * 
+ *
  * This is just proposal for creating instances of objects for testing (currently not used)
- * In most cases this approach does not work as inserted_by column, which is 
+ * In most cases this approach does not work as inserted_by column, which is
  * mandatory in most tables and is handled by Spring, is left empty.
- * 
+ *
  * Methods are placed in alphabetical order.
- * 
+ *
  * Remember that not all objects have cascade delete option when cleaning test data!
  */
 @Service
@@ -45,15 +45,15 @@ public class TestData {
         c.setNameEt(STRING);
         c.setNameEn(STRING);
         c.setCode(STRING);
-        
+
         c.setStudyPeriod(Integer.valueOf(1));
         c.setOptionalStudyCredits(BigDecimal.valueOf(1));
-        
+
         c.setHigher(Boolean.FALSE);
         c.setJoint(Boolean.FALSE);
         c.setOccupation(Boolean.FALSE);
         c.setValidFrom(LocalDate.now());
-        
+
         c.setConsecution(classifierRepository.getOne("OPPEKAVA_TYPE_E"));
         c.setStatus(classifierRepository.getOne("OPPEKAVA_STAATUS_S"));
         c.setDraft(classifierRepository.getOne("OPPEKAVA_LOOMISE_VIIS_PUUDUB"));
@@ -62,7 +62,7 @@ public class TestData {
 
         return c;
     }
-    
+
     public School getSchool() {
         if(school == null) {
             school = schoolRepository.getOne(hoisUserDetailsService.
@@ -70,17 +70,17 @@ public class TestData {
         }
         return school;
     }
-    
+
     public StudentGroup getStudentGroup(Curriculum curriculum) {
         StudentGroup sg = new StudentGroup();
         sg.setCode(STRING);
         sg.setSchool(getSchool());
-        sg.setCourse(Integer.valueOf(1));
+        sg.setCourse(Short.valueOf((short) 1));
         sg.setCurriculum(curriculum);
         sg.setStudyForm(classifierRepository.getOne("OPPEVORM_MS"));
         return sg;
     }
-    
+
     public StudyPeriod getStudyPeriod(StudyYear studyYear) {
         StudyPeriod studyPeriod = new StudyPeriod();
         studyPeriod.setStudyYear(studyYear);
@@ -90,16 +90,16 @@ public class TestData {
         studyPeriod.setEndDate(LocalDate.now());
         return studyPeriod;
     }
-    
+
     public StudyYear getStudyYear() {
         StudyYear studyYear = new StudyYear();
-        studyYear.setStartDate(LocalDate.now());
-        studyYear.setEndDate(LocalDate.now());
+        studyYear.setStartDate(LocalDate.now().minusMonths(1));
+        studyYear.setEndDate(LocalDate.now().plusMonths(1));
         studyYear.setSchool(getSchool());
         studyYear.setYear(classifierRepository.getOne("OPPEAASTA_2016_17"));
         return studyYear;
     }
-    
+
     public StudyYearScheduleLegend getStudyYearScheduleLegend() {
         StudyYearScheduleLegend legend = new StudyYearScheduleLegend();
         legend.setSchool(getSchool());

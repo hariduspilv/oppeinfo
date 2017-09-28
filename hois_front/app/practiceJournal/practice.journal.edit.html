@@ -1,0 +1,121 @@
+<div class="ois-form-layout-padding" ng-cloak>
+  <div flex>
+    <form name="practiceJournalForm" ng-submit="practiceJournalForm.$valid && save()" novalidate layout="column">
+      <div flex>
+        <hois-autocomplete ng-model="practiceJournal.student" method="students" additional-query-params="{active: true, higher: formState.isHigher}" name="student"
+          label="student.label" required></hois-autocomplete>
+      </div>
+
+      <div ng-if="practiceJournal.student && formState.student" class="form-readonly" layout="column">
+        <br>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label>{{'student.name' | translate}}</label>
+            <hois-value value="formState.student.person.firstname + ' ' + formState.student.person.lastname"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.idcode' | translate}}</label>
+            <hois-value value="formState.student.person.idcode"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.email' | translate}}</label>
+            <hois-value value="formState.student.person.email"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.course' | translate}}</label>
+            <hois-value value="formState.student.course"></hois-value>
+          </md-input-container>
+        </div>
+        <div layout="row" flex>
+          <md-input-container flex>
+            <label>{{'student.curriculum' | translate}}</label>
+            <hois-value value="currentLanguageNameField(formState.student.curriculumVersion)"></hois-value>
+          </md-input-container>
+          <md-input-container flex>
+            <label>{{'student.studyForm' | translate}}</label>
+            <hois-value value="currentLanguageNameField(formState.student.studyForm)"></hois-value>
+          </md-input-container>
+        </div>
+      </div>
+
+      <div ng-if="!formState.isHigher" layout="row" layout-sm="column" layout-xs="column" flex="50">
+        <md-input-container flex>
+          <label class="textInput">{{'module.practice' | translate}}</label>
+          <hois-select ng-model="practiceJournal.module" values="formState.modules" ng-change="moduleChanged(practiceJournal.module)" required></hois-select>
+        </md-input-container>
+
+        <md-input-container flex flex-offset-gt-md="5">
+          <label class="textInput">{{'practiceJournal.theme' | translate}}</label>
+          <hois-select ng-model="practiceJournal.theme" values="formState.themes" ng-change="themeChanged(practiceJournal.theme)"></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
+          <label class="textInput">{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
+          <input type="number" ng-model="practiceJournal.credits" ng-min="0" ng-max="999.9" required>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'practiceJournal.hours' | translate}}</label>
+          <input type="number" ng-model="practiceJournal.hours" ng-min="0" ng-max="32767" required>
+        </md-input-container>
+      </div>
+
+      <div ng-if="formState.isHigher" layout="row" layout-sm="column" layout-xs="column" flex="50">
+        <md-input-container flex>
+          <label class="textInput">{{'practiceJournal.subject' | translate}}</label>
+          <hois-select ng-model="practiceJournal.subject" values="formState.subjects" ng-change="subjectChanged(practiceJournal.subject)"></hois-select>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
+          <label class="textInput">{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
+          <input type="number" ng-model="practiceJournal.credits" required>
+        </md-input-container>
+
+        <md-input-container flex="10" flex-sm="100" flex-xs="100">
+          <label class="textInput">{{'practiceJournal.hours' | translate}}</label>
+          <input type="number" ng-model="practiceJournal.hours" required>
+        </md-input-container>
+      </div>
+
+
+      <div layout="row" flex>
+        <md-input-container>
+          <label>{{'practiceJournal.startDate' | translate}}</label>
+          <md-datepicker ng-model="practiceJournal.startDate" required></md-datepicker>
+        </md-input-container>
+
+        <md-input-container>
+          <label>{{'practiceJournal.endDate' | translate}}</label>
+          <md-datepicker ng-model="practiceJournal.endDate" md-min-date="practiceJournal.startDate" required></md-datepicker>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'practiceJournal.practicePlace' | translate}}</label>
+          <input type="text" ng-model="practiceJournal.practicePlace" required>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'practiceJournal.schoolSupervisor' | translate}}</label>
+          <hois-select ng-model="practiceJournal.teacher" type="teacher" required></hois-select>
+        </md-input-container>
+      </div>
+
+      <div layout="row" flex>
+        <md-input-container flex>
+          <label class="textInput">{{'practiceJournal.practicePlan' | translate}}</label>
+          <textarea ng-model="practiceJournal.practicePlan" required md-maxlength="10000" max-rows="2"></textarea>
+        </md-input-container>
+      </div>
+
+      <div layout="row">
+        <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+        <md-button ng-show="practiceJournal.id && practiceJournal.canDelete" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="back('#/practiceJournals/', practiceJournalForm)">{{'main.button.back' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>

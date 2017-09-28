@@ -116,6 +116,21 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
     }
   }
 
+  function eachBlockHasOneValidRow() {
+    var valid = true;
+    //console.log($scope.blocks.length);
+    for(var i = 0; $scope.blocks.length > i; i++) {
+      var currentValid = false;
+      for(var j = 0; $scope.blocks[i].lessonTimes.length > j; j++) {
+        if($scope.isLessonTimeRowFilled($scope.blocks[i].lessonTimes[j])) {
+          currentValid = true;
+        }
+      }
+      valid = !currentValid ? currentValid : valid;
+    }
+    return valid;
+  }
+
   function dtoToEntity(scope) {
     var entity = {validFrom: scope.validFrom, lessonTimeBuildingGroups: []};
     if (angular.isArray(scope.blocks)) {
@@ -212,7 +227,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
 
   $scope.save = function() {
     $scope.lessonTimeForm.$setSubmitted();
-    if($scope.lessonTimeForm.$valid) {
+    if($scope.lessonTimeForm.$valid && eachBlockHasOneValidRow()) {
       var LessonTimeEndpoint;
       if(isEdit()) {
         LessonTimeEndpoint = QueryUtils.endpoint('/lessontimes/');
@@ -235,8 +250,10 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
           }
         });
       }
+    } else if(!eachBlockHasOneValidRow()){
+      message.error('timetable.lessonTime.oneRowRequired');
     } else {
-        console.log($scope.lessonTimeForm.$error);
+      //console.log($scope.lessonTimeForm.$error);
     }
   };
 });

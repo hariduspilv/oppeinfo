@@ -12,7 +12,6 @@
     <md-dialog-content>
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
-        <div layout="column">
 		  <fieldset tabindex="1">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
 				<div layout="column">
@@ -74,9 +73,9 @@
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}} *</legend>
 			<div layout="column">
             <!--md-list flex-->
-              <div ng-repeat="item in module.outcomes | orderBy: 'outcomeEt'" class="occupation-row align-center" layout="row" flex>
-                <div flex="45">{{item.outcomeEt}}</div>
-				        <div flex="50" flex-offset="5">{{item.outcomeEn}}</div>
+              <div ng-repeat="item in module.outcomes | orderBy: 'orderNr'" class="occupation-row align-center" layout="row" flex>
+                <div flex="45"><pre>{{item.outcomeEt}}</pre></div>
+				        <div flex="50" flex-offset="5"><pre>{{item.outcomeEn}}</pre></div>
               </div>
             <!--/md-list-->
           </div>
@@ -91,7 +90,6 @@
             <md-checkbox ng-model="module.practice" disabled>{{'module.practice' | translate}}</md-checkbox>
           </md-input-container>
         </div>
-      </div>
     </md-dialog-content>
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">

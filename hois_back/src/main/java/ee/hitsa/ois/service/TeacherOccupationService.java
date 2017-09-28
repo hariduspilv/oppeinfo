@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import java.util.ArrayList;
 import java.util.List;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -13,8 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
@@ -28,7 +29,7 @@ import ee.hitsa.ois.web.dto.TeacherOccupationDto;
 public class TeacherOccupationService {
 
     @Autowired
-    private SchoolRepository schoolRepository;
+    private EntityManager em;
     @Autowired
     private TeacherOccupationRepository teacherOccupationRepository;
 
@@ -47,21 +48,21 @@ public class TeacherOccupationService {
 
     public List<TeacherOccupationDto> listAll(Long schoolId) {
         return StreamUtil.toMappedList(TeacherOccupationDto::of,
-                teacherOccupationRepository.findAll((root, query, cb) -> cb.and(cb.equal(root.get("school").get("id"), schoolId))));
+                teacherOccupationRepository.findAll((root, query, cb) -> cb.equal(root.get("school").get("id"), schoolId)));
     }
 
     public TeacherOccupation create(HoisUserDetails user, TeacherOccupationForm form) {
         TeacherOccupation teacherOccupation = new TeacherOccupation();
-        teacherOccupation.setSchool(schoolRepository.getOne(user.getSchoolId()));
+        teacherOccupation.setSchool(em.getReference(School.class, user.getSchoolId()));
         return save(teacherOccupation, form);
     }
 
     public TeacherOccupation save(TeacherOccupation teacherOccupation, TeacherOccupationForm form) {
         EntityUtil.bindToEntity(form, teacherOccupation);
-        return teacherOccupationRepository.save(teacherOccupation);
+        return EntityUtil.save(teacherOccupation, em);
     }
 
     public void delete(TeacherOccupation teacherOccupation) {
-        EntityUtil.deleteEntity(teacherOccupationRepository, teacherOccupation);
+        EntityUtil.deleteEntity(teacherOccupation, em);
     }
 }

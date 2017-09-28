@@ -55,8 +55,8 @@ angular
   .config(function ($httpProvider) {
     $httpProvider.defaults.withCredentials = true;
     $httpProvider.defaults.headers.common["X-Requested-With"] = 'XMLHttpRequest';
-    /*$httpProvider.defaults.xsrfCookieName = 'XSRF-TOKEN';
-    $httpProvider.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';*/
+    $httpProvider.defaults.xsrfCookieName = 'XSRF-TOKEN';
+    $httpProvider.defaults.xsrfHeaderName = 'X-XSRF-TOKEN';
   })
   .config(['$resourceProvider', function ($resourceProvider) {
     $resourceProvider.defaults.actions.update = {method: 'PUT', params: {id: '@id'}};
@@ -75,6 +75,19 @@ angular
       return $injector.get('AuthInterceptor');
     }
   ]);
+  $httpProvider.interceptors.push(function(Session, $rootScope) {
+    return {
+     'response': function(response) {
+         var url = response.config.url;
+         if (url.indexOf !== undefined && url.indexOf('session.timing.out.dialog.html') === -1 &&
+             url.indexOf('session.timed.out.dialog.html') === -1 && url.indexOf('/logout') === -1) {
+           $rootScope.restartTimeoutDialogCounter();
+         }
+         return response;
+      },
+    };
+  });
+
 }).config(function (CacheFactoryProvider) {
   angular.extend(CacheFactoryProvider.defaults, { maxAge: 60 * 60 * 1000, deleteOnExpire: 'passive'});
 });

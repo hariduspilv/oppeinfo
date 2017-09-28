@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -12,18 +13,28 @@ import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
 
 @Entity
 public class TimetableEvent extends BaseEntityWithId {
 
     private LocalDateTime start;
+    // FIXME: rename in database
+    @Column(name = "\"end\"")
     private LocalDateTime end;
     private Long lessons;
     private Boolean considerBreak;
     private String name;
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    private Classifier repeat;
+    private Short lessonNr;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier capacityType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private SubjectStudyPeriodStudentGroup subjectStudyPeriodStudentGroup;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false, insertable = false)
+    @JoinColumn(nullable = false, updatable = false)
     private TimetableObject timetableObject;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -68,6 +79,46 @@ public class TimetableEvent extends BaseEntityWithId {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public Classifier getRepeatCode() {
+        return repeat;
+    }
+
+    public void setRepeatCode(Classifier repeat) {
+        this.repeat = repeat;
+    }
+
+    public Short getLessonNr() {
+        return lessonNr;
+    }
+
+    public void setLessonNr(Short lessonNr) {
+        this.lessonNr = lessonNr;
+    }
+
+    public Classifier getRepeat() {
+        return repeat;
+    }
+
+    public void setRepeat(Classifier repeat) {
+        this.repeat = repeat;
+    }
+
+    public Classifier getCapacityType() {
+        return capacityType;
+    }
+
+    public void setCapacityType(Classifier capacityType) {
+        this.capacityType = capacityType;
+    }
+
+    public SubjectStudyPeriodStudentGroup getSubjectStudyPeriodStudentGroup() {
+        return subjectStudyPeriodStudentGroup;
+    }
+
+    public void setSubjectStudyPeriodStudentGroup(SubjectStudyPeriodStudentGroup subjectStudyPeriodStudentGroup) {
+        this.subjectStudyPeriodStudentGroup = subjectStudyPeriodStudentGroup;
     }
 
     public TimetableObject getTimetableObject() {

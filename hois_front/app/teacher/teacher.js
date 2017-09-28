@@ -1,16 +1,25 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$route', '$location', 'message', 'DataUtils', 'dialogService', 'QueryUtils', function ($scope, $route, $location, message, DataUtils, dialogService, QueryUtils) {
+angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$route', '$translate', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
+  function ($location, $route, $translate, $scope, dialogService, message, DataUtils, QueryUtils) {
+
   var id = $route.current.params.id;
   var baseUrl = '/teachers';
   var Endpoint = QueryUtils.endpoint(baseUrl);
+  var TeacherContinuingEducationsEndpoint = QueryUtils.endpoint('/teachers/' + id + '/continuingEducations');
   var TeacherQualificationsEndpoint = QueryUtils.endpoint('/teachers/' + id + '/qualifications');
   var TeacherMobilityEndpoint = QueryUtils.endpoint('/teachers/' + id + '/mobilities');
   var TeacherPositionEhisEndpoint = QueryUtils.endpoint('/teachers/' + id + '/ehisPositions');
+  var EmailGeneratorEndpoint = QueryUtils.endpoint('/school/generateEmail', {post: {method: 'POST'}});
 
-  QueryUtils.endpoint('/school/teacheroccupations/all').query().$promise.then(function (response) {
-    $scope.occupations = response;
-  });
+  $scope.occupations = QueryUtils.endpoint('/school/teacheroccupations/all').query();
+
+  function updateContinuingEducations(teacher) {
+    if (teacher.teacherContinuingEducations) {
+      $scope.teacherContinuingEducations = new TeacherContinuingEducationsEndpoint({continuingEducations: teacher.teacherContinuingEducations});
+      teacher.teacherContinuingEducations = undefined;
+    }
+  }
 
   function updateQualifications(teacher) {
     if (teacher.teacherQualifications) {
@@ -21,45 +30,56 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
 
   function updateMobilities(teacher) {
     if (teacher.teacherMobility) {
-      teacher.teacherMobility.forEach(function (it) {
-        DataUtils.convertStringToDates(it, ['start', 'end']);
-      });
+      DataUtils.convertStringToDates(teacher.teacherMobility, ['start', 'end']);
+
       $scope.teacherMobility = new TeacherMobilityEndpoint({mobilities: teacher.teacherMobility});
       teacher.teacherMobility = undefined;
     }
   }
 
+  function setIsVocationalOrIsHigher() {
+    $scope.vocationalHigher = '';
+    var array = [];
+    if($scope.teacher.isVocational) {
+      array.push('teacher.isVocational');
+    }
+    if($scope.teacher.isHigher) {
+      array.push('teacher.isHigher');
+    }
+    $translate(array).then(function (value) {
+      $scope.vocationalHigher = Object.keys(value).map(function (key) {
+        return value[key];
+      }).join('; ');
+    });
+  }
+
   function afterLoad() {
+    setIsVocationalOrIsHigher();
+
     if ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11) {
       $scope.teacher.person.sex = DataUtils.sexFromIdcode($scope.teacher.person.idcode);
     }
     if ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11) {
       $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
     }
-    $scope.teacher.teacherPositionEhis.forEach(function (it) {
-      DataUtils.convertStringToDates(it, ['contractStart', 'contractEnd']);
-    });
+    DataUtils.convertStringToDates($scope.teacher.teacherPositionEhis, ['contractStart', 'contractEnd']);
     $scope.isHigher = $scope.teacher.isHigher;
     DataUtils.convertStringToDates($scope.teacher.person, ['birthdate']);
+    updateContinuingEducations($scope.teacher);
     updateQualifications($scope.teacher);
     updateMobilities($scope.teacher);
     $scope.displaySendEhis = ($scope.teacher.teacherPositionEhis.filter(function (it) {
       return it.id > 0;
     }).length > 0);
-    $scope.formState = {
-      person: true,
-      id: true
-    };
+    $scope.formState = {person: true, id: true};
   }
 
   $scope.lookupFailure = function () {
     $scope.cleanReadOnly();
-    $scope.formState = {
-      person: false,
-      id: true
-    };
+    $scope.formState = {person: false, id: true};
     $scope.teacher.person.sex = DataUtils.sexFromIdcode($scope.teacher.person.idcode);
     $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
+    $scope.teacherForm.idcode.$setValidity('teacherIdCode', true);
   };
 
   if (id) {
@@ -70,6 +90,11 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
 
   if (!angular.isArray($scope.teacher.teacherPositionEhis)) {
     $scope.teacher.teacherPositionEhis = [];
+  }
+
+  if (!$scope.teacher.teacherContinuingEducations || !angular.isArray($scope.continuingEducations)) {
+    $scope.teacher.teacherContinuingEducations = [];
+    updateContinuingEducations($scope.teacher);
   }
 
   if (!$scope.teacher.teacherQualifications || !angular.isArray($scope.qualifications)) {
@@ -89,6 +114,10 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     });
   };
 
+  $scope.newTeacherContinuingEducation = function () {
+    $scope.teacherContinuingEducations.continuingEducations.push({});
+  };
+
   $scope.newTeacherQualification = function () {
     $scope.teacherQualifications.qualifications.push({});
   };
@@ -106,16 +135,15 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
   };
 
   $scope.cleanReadOnly = function () {
-    $scope.formState = {
-      person: false,
-      id:false
-    };
+    $scope.formState = {person: false, id:false};
+
     $scope.teacher.person.citizenship = 'RIIK_EST';
     $scope.teacher.person.firstname = '';
     $scope.teacher.person.lastname = '';
     $scope.teacher.person.nativeLanguage = '';
     $scope.teacher.person.birthdate = null;
     $scope.teacher.person.sex = null;
+    $scope.teacher.email = undefined;
 
     if ($scope.oldFoundPerson && $scope.oldFoundPerson.idcode &&
           ($scope.oldFoundPerson.idcode === $scope.teacher.person.idcode)) {
@@ -131,8 +159,11 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     $scope.teacher.person.nativeLanguage = response.nativeLanguage;
     $scope.teacher.person.birthdate = response.birthdate;
     $scope.teacher.person.sex = response.sex;
+    $scope.teacher.email = response.schoolEmail || undefined;
 
+    $scope.teacherForm.idcode.$setValidity('teacherIdCode', response.teacherId === null);
     afterLoad();
+    $scope.generateEmail();
   };
 
   $scope.delete = function () {
@@ -158,6 +189,32 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     } else {
         message.error('main.messages.form-has-errors');
     }
+  };
+
+  $scope.updateContinuingEducations = function () {
+    $scope.continuingEducationsForm.$setSubmitted();
+    if ($scope.continuingEducationsForm.$valid) {
+      $scope.teacherContinuingEducations.$update().then(function (response) {
+        message.updateSuccess();
+        updateContinuingEducations(response);
+      });
+    }
+  };
+
+  $scope.deleteContinuingEducation = function (continuingEducation) {
+    dialogService.confirmDialog({prompt: 'teacher.continuingEducation.deleteConfirm'}, function () {
+      if (continuingEducation.id) {
+        continuingEducation = new TeacherContinuingEducationsEndpoint(continuingEducation);
+        continuingEducation.$delete().then(function () {
+          message.info('main.messages.delete.success');
+          $scope.teacherContinuingEducations.continuingEducations = $scope.teacherContinuingEducations.continuingEducations.filter(function (it) {
+            return it.id !== continuingEducation.id;
+          });
+        });
+      } else {
+        $scope.removeFromCollection($scope.teacherContinuingEducations, 'continuingEducations', continuingEducation);
+      }
+    });
   };
 
   $scope.updateQualifications = function () {
@@ -212,7 +269,6 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
     });
   };
 
-
   $scope.deleteEhisPosition = function (ehisPosition) {
     dialogService.confirmDialog({prompt: 'teacher.teacherPositionEhis.deleteConfirm'}, function () {
       if (ehisPosition.id) {
@@ -228,6 +284,21 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       }
     });
   };
+
+  $scope.displayEHISAndDeleteButtons = true;
+  $scope.changeDisplayEHISAndDeleteButtons = function (displayButtons) {
+    $scope.displayEHISAndDeleteButtons = displayButtons;
+  };
+
+  var generatedEmail;
+  $scope.generateEmail = function() {
+    if(!$scope.teacher.id && (generatedEmail === $scope.teacher.email || $scope.teacher.email === undefined) && $scope.teacher.person && $scope.teacher.person.lastname) {
+      EmailGeneratorEndpoint.post({firstname: $scope.teacher.person.firstname, lastname: $scope.teacher.person.lastname}).$promise.then(function(result) {
+        $scope.teacher.email = generatedEmail = result.email;
+      }, function() { /* ignore errors */ });
+    }
+  };
+
 }]).controller('TeacherListController', ['$scope', '$route', 'QueryUtils', 'ArrayUtils', function ($scope, $route, QueryUtils, ArrayUtils) {
   QueryUtils.createQueryForm($scope, '/teachers', {order: 'person.lastname,person.firstname'});
 
@@ -235,9 +306,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
   $scope.schoolHigher = $route.current.locals.auth.school  && $route.current.locals.auth.school.higher;
 
     //TODO: external expert has no school!
-    QueryUtils.endpoint('/teachers/teacheroccupations').query(function(result) {
-        $scope.teacherOccupations = result;
-    });
+  $scope.teacherOccupations = QueryUtils.endpoint('/teachers/teacheroccupations').query();
 
   function setContains(set, item) {
     var ids = set.map(function(el){
@@ -258,18 +327,36 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
 
   $scope.loadData();
 }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {
-  var id = $route.current.params.id;
+  $scope.auth = $route.current.locals.auth;
+  var auth = $route.current.locals.auth;
+
+  var id = (auth.isTeacher() ? auth.teacher : $route.current.params.id);
+
+  //var id = $route.current.params.id;
   $scope.teacherId = id;
   var Endpoint = QueryUtils.endpoint('/teachers');
 
-  function afterLoad() {
-    $scope.teacher.scheduleLoad = angular.isNumber($scope.teacher.scheduleLoad) ? String($scope.teacher.scheduleLoad) : '';
+  function setIsVocationalOrIsHigher() {
     $scope.vocationalHigher = '';
-    $translate(['teacher.isVocational', 'teacher.isHigher']).then(function (value) {
+    var array = [];
+    if($scope.teacher.isVocational) {
+      array.push('teacher.isVocational');
+    }
+    if($scope.teacher.isHigher) {
+      array.push('teacher.isHigher');
+    }
+    $translate(array).then(function (value) {
       $scope.vocationalHigher = Object.keys(value).map(function (key) {
         return value[key];
       }).join('; ');
     });
+  }
+
+  function afterLoad() {
+    $scope.teacher.scheduleLoad = angular.isNumber($scope.teacher.scheduleLoad) ? String($scope.teacher.scheduleLoad) : '';
+
+    setIsVocationalOrIsHigher();
+
     $scope.teacher.teacherPositionEhis.forEach(function (it) {
       it.load = angular.isNumber(it.load) ? String(it.load) : '';
     });
@@ -277,6 +364,13 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$scope', '$rout
       it.year = angular.isNumber(it.year) ? String(it.year) : '';
     });
   }
+
+  QueryUtils.endpoint('/autocomplete/schooldepartments').query(function(result) {
+    $scope.schoolDepartmentsById = result.reduce(function(map, it) {
+      map[it.id] = it;
+      return map;
+    });
+  });
 
   $scope.teacher = Endpoint.get({id: id}, afterLoad);
 }]);

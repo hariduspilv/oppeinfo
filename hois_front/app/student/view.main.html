@@ -1,12 +1,10 @@
-<md-nav-bar md-selected-nav-item="currentNavItem">
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
-  <md-nav-item ng-if="student.isVocational" md-nav-href="#/students/{{::studentId}}/absences?_noback" name="student.absences">{{'student.absences' | translate}}</md-nav-item>
-  <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
-</md-nav-bar>
+<div ng-cloak>
+  <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+  <div ng-if="!student || student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+</div>
 
 <div layout-padding ng-cloak class="form-readonly">
   <div flex>
-
     <div layout="row" layout-xs="column" flex>
       <div flex="70">
         <div layout="row" layout-sm="column" layout-xs="column">
@@ -40,7 +38,7 @@
             <label>{{'student.language' | translate}}</label>
             <hois-classifier-value ng-model="student.person.language" main-classifier-code="OPPEKEEL"></hois-classifier-value>
           </md-input-container>
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.bankaccount' | translate}}</label>
             <hois-value value="student.person.bankaccount"></hois-value>
           </md-input-container>
@@ -60,14 +58,15 @@
             <hois-classifier-value ng-model="student.status" main-classifier-code="OPPURSTAATUS"></hois-classifier-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'student.curriculum' | translate}}</label>
-            <hois-value value="currentLanguageNameField(student.curriculumVersion)"></hois-value>
+            <label>{{student.isVocational ? 'student.implementationPlan' : 'student.curriculumVersion' | translate}}</label>
+            <hois-value value="currentLanguageNameField(student.curriculumVersion)"
+            href-value="student.isVocational ? '#/vocationalCurriculum/' + student.curriculum + '/moduleImplementationPlan/' + student.curriculumVersion.id + '/view' : '#/higherCurriculum/' + student.curriculum + '/version/' + student.curriculumVersion.id + '/view'"></hois-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.studyLanguage' | translate}}</label>
             <hois-classifier-value ng-model="student.studyLanguage" main-classifier-code="OPPEKEEL"></hois-classifier-value>
           </md-input-container>
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isVocational">
             <label>{{'student.curriculumSpeciality' | translate}}</label>
             <hois-value value="currentLanguageNameField(student.curriculumSpeciality)"></hois-value>
           </md-input-container>
@@ -76,7 +75,8 @@
         <div layout="row" layout-sm="column" layout-xs="column">
           <md-input-container flex="20" flex-sm="100" flex-xs="100">
             <label>{{'student.studentGroup' | translate}}</label>
-            <hois-value value="currentLanguageNameField(student.studentGroup)"></hois-value>
+            <hois-value value="currentLanguageNameField(student.studentGroup)"
+            href-value="'#/studentgroups/' + student.studentGroup.id + '/view'"></hois-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.course' | translate}}</label>
@@ -87,8 +87,8 @@
             <hois-value value="student.studyStart | hoisDate"></hois-value>
           </md-input-container>
           <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
-            <label>{{'student.nominalStudyEnd' | translate}}</label>
-            <hois-value value="student.nominalStudyEnd | hoisDate"></hois-value>
+            <label>{{student.studyEnd ? 'student.studyEnd' : 'student.nominalStudyEnd' | translate}}</label>
+            <hois-value value="student.studyEnd ? student.studyEnd : student.nominalStudyEnd | hoisDate"></hois-value>
           </md-input-container>
         </div>
 
@@ -97,7 +97,7 @@
             <label>{{'student.studyForm' | translate}}</label>
             <hois-classifier-value ng-model="student.studyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
           </md-input-container>
-          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" ng-if="!student.isVocational">
             <label>{{'student.studyLoad' | translate}}</label>
             <hois-classifier-value ng-model="student.studyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
           </md-input-container>
@@ -141,7 +141,7 @@
             <label>{{'student.schoolEmail' | translate}}</label>
             <hois-value value="student.schoolEmail"></hois-value>
           </md-input-container>
-          <md-input-container flex="60" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+          <md-input-container flex="55" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
             <label>{{'student.phone' | translate}}</label>
             <hois-value value="student.person.phone"></hois-value>
           </md-input-container>
@@ -177,8 +177,8 @@
                 <th md-column md-order-by="person.lastname">{{'student.representative.name' | translate}}</th>
                 <th md-column md-order-by="person.idcode">{{'student.representative.idcode' | translate}}</th>
                 <th md-column md-order-by="relation.nameEt">{{'student.representative.relation' | translate}}</th>
-                <th md-column md-order-by="relation.phone">{{'student.representative.phone' | translate}}</th>
-                <th md-column md-order-by="relation.email">{{'student.representative.email' | translate}}</th>
+                <th md-column md-order-by="person.phone">{{'student.representative.phone' | translate}}</th>
+                <th md-column md-order-by="person.email">{{'student.representative.email' | translate}}</th>
                 <th md-column>{{'student.representative.studentVisible' | translate}}</th>
                 <th md-column></th>
               </tr>
@@ -232,6 +232,6 @@
     </div>
 
     <md-button ng-href="#/students/{{student.id}}/edit?_noback" ng-if="student.userCanEditStudent" class="md-primary md-raised">{{'main.button.change' | translate}}</md-button>
-    <md-button ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

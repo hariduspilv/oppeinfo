@@ -2,11 +2,21 @@ package ee.hitsa.ois.web.commandobject;
 
 import java.util.Set;
 
+import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
+import ee.hitsa.ois.validation.NotEmpty;
+
 public class MessageForm extends VersionedCommand {
     
+    @NotNull
+    @Size(max=1000)
     private String subject;
+    @NotNull
+    @Size(max=2000)
     private String content;
     private Long responseTo;
+    @NotEmpty
     private Set<Long> receivers;
 
     public Set<Long> getReceivers() {

@@ -1,0 +1,22 @@
+<md-dialog aria-label="vaocational higher select dialog">
+  <form name="dialogForm" ng-submit="dialogForm.$valid && submit()" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2 flex>{{"practiceJournal.vocationalOrHigherSelect" | translate}}</h2>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <div class="md-dialog-content">
+        {{"practiceJournal.vocationalOrHigherPracticeJournal" | translate}}
+      </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start start">
+      <md-button class="md-raised" type="submit">{{'practiceJournal.button.vocational' | translate}}</md-button>
+      <md-button class="md-raised" type="submit" ng-click="higher=true">{{"practiceJournal.button.higher" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

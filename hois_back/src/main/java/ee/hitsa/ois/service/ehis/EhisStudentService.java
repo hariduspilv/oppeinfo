@@ -1,89 +1,123 @@
 package ee.hitsa.ois.service.ehis;
 
-import ee.hitsa.ois.domain.WsEhisStudentLog;
-import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.repository.DirectiveRepository;
-import ee.hitsa.ois.util.JpaQueryUtil;
-import ee.hitsa.ois.web.commandobject.EhisStudentForm;
-import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
-import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
-import ee.hois.xroad.ehis.generated.KhlOppekavaTaitmine;
-import ee.hois.xroad.helpers.XRoadHeaderV4;
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
+
+import javax.persistence.TypedQuery;
+import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import javax.persistence.EntityManager;
-import javax.transaction.Transactional;
-import javax.xml.datatype.DatatypeConfigurationException;
-import java.math.BigDecimal;
-import java.time.LocalDate;
-import java.util.List;
-
-import static ee.hitsa.ois.enums.DirectiveType.KASKKIRI_LOPET;
-import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
+import ee.hitsa.ois.domain.WsEhisStudentLog;
+import ee.hitsa.ois.domain.directive.Directive;
+import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.DirectiveStatus;
+import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
+import ee.hitsa.ois.web.dto.EhisStudentReport;
+import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
+import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
+import ee.hois.xroad.ehis.generated.KhlOppekavaTaitmine;
 
 @Transactional
 @Service
-public class EhisStudentService  extends EhisService {
-
-    @Autowired
-    private DirectiveRepository directiveRepository;
-
-    @Autowired
-    private EntityManager em;
+public class EhisStudentService extends EhisService {
 
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
 
-    public void curriculumFulfillment(Student student) throws DatatypeConfigurationException {
-        XRoadHeaderV4 xRoadHeaderV4 = getXroadHeader();
+    public EhisStudentReport exportStudents(Long schoolId, EhisStudentForm ehisStudentForm) {
+        EhisStudentReport ehisStudentReport = new EhisStudentReport();
+        switch (ehisStudentForm.getDataType()) {
+        case CURRICULA_FULFILMENT:
+            List<EhisStudentReport.CurriculaFulfilment> fulfilment = new ArrayList<>();
+            for (Student student : findStudents(schoolId)) {
+                WsEhisStudentLog log;
+                try {
+                    log = curriculumFulfillment(student);
+                } catch (Exception e) {
+                    log = bindingException(student, e);
+                }
+                fulfilment.add(EhisStudentReport.CurriculaFulfilment.of(student, log));
+            }
+            ehisStudentReport.setFulfilments(fulfilment);
+            break;
+        case FOREIGN_STUDY:
+            throw new UnsupportedOperationException();
+        case GRADUATION:
+            List<EhisStudentReport.Graduation> graduations = new ArrayList<>();
+            for (Directive directive : findDirectives(schoolId, ehisStudentForm)) {
+                for (DirectiveStudent directiveStudent : directive.getStudents()) {
+                    // TODO check for printed status
+                    WsEhisStudentLog log;
+                    try {
+                        log = ehisDirectiveStudentService.graduation(directiveStudent);
+                    } catch (Exception e) {
+                        log = bindingException(directive, e);
+                    }
+                    graduations.add(EhisStudentReport.Graduation.of(directiveStudent, log));
+                }
+            }
+            ehisStudentReport.setGraduations(graduations);
+            break;
+        case VOTA:
+            throw new UnsupportedOperationException();
+        default:
+            break;
+        }
+        return ehisStudentReport;
+    }
+
+    private WsEhisStudentLog curriculumFulfillment(Student student) {
         KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
         KhlOppekavaTaitmine oppekavaTaitmine = new KhlOppekavaTaitmine();
-        oppekavaTaitmine.setMuutusKp(getDate(LocalDate.now(), student));
-        // todo currently no way to find
+        oppekavaTaitmine.setMuutusKp(date(LocalDate.now()));
+        // TODO currently no way to find
         oppekavaTaitmine.setTaitmiseProtsent(new BigDecimal(100));
-        // todo currently no way to find
+        // TODO currently no way to find
         oppekavaTaitmine.setAinepunkte(new BigDecimal(50));
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setOppekavaTaitmine(oppekavaTaitmine);
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
-        makeRequest(student, xRoadHeaderV4, khlOppeasutusList);
+        return makeRequest(student, khlOppeasutusList);
     }
 
-    private void makeRequest(Student student, XRoadHeaderV4 xRoadHeaderV4, KhlOppeasutusList khlOppeasutusList) {
+    private WsEhisStudentLog makeRequest(Student student, KhlOppeasutusList khlOppeasutusList) {
         WsEhisStudentLog wsEhisStudentLog = new WsEhisStudentLog();
         wsEhisStudentLog.setSchool(student.getSchool());
 
-        laeKorgharidused(xRoadHeaderV4, khlOppeasutusList, wsEhisStudentLog);
+        return laeKorgharidused(khlOppeasutusList, wsEhisStudentLog);
     }
 
-    public void exportStudents(EhisStudentForm ehisStudentForm) {
-        switch (ehisStudentForm.getDataType()) {
-            case CURRICULA_FULFILMENT:
-                // todo: find people and do request
-                //curriculumFulfillment();
-            case FOREIGN_STUDY:
-                throw new UnsupportedOperationException();
-            case GRADUATION:
-                JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive d");
-                qb.requiredCriteria("d.school_id = :schoolId", "schoolId", ehisStudentForm.getSchoolID());
-                qb.requiredCriteria("d.confirm_date >= :from", "from", ehisStudentForm.getFrom());
-                qb.requiredCriteria("d.confirm_date >= :thru", "thru", ehisStudentForm.getThru());
-                qb.requiredCriteria("d.type_code = :type", "type", KASKKIRI_LOPET.name());
-                qb.filter("d.directive_nr IS NOT NULL");
-                List<?> data = qb.select("d.id", em).getResultList();
-                for(Object r : data) {
-                    Long directiveID = resultAsLong(r, 0);
-                    ehisDirectiveStudentService.updateStudents(directiveID);
-                }
-            case VOTA:
-                throw new UnsupportedOperationException();
-            default:
-                break;
-        }
+    private List<Student> findStudents(Long schoolId) {
+        TypedQuery<Student> q = em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code = ?2", Student.class);
+        q.setParameter(1, schoolId);
+        q.setParameter(2, StudentStatus.OPPURSTAATUS_O.name());
+
+        return q.getResultList();
+    }
+
+    private List<Directive> findDirectives(Long schoolId, EhisStudentForm criteria) {
+        TypedQuery<Directive> q = em.createQuery("select d from Directive d where d.school.id = ?1 and d.type.code = ?2 and d.status.code = ?3 and d.confirmDate >= ?4 and d.confirmDate <= ?5", Directive.class);
+        q.setParameter(1, schoolId);
+        q.setParameter(2, DirectiveType.KASKKIRI_LOPET.name());
+        q.setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        q.setParameter(4, criteria.getFrom());
+        q.setParameter(5, criteria.getThru());
+
+        return q.getResultList();
+    }
+
+    @Override
+    protected String getServiceCode() {
+        return LAE_KORGHARIDUS_SERVICE_CODE;
     }
 }

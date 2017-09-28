@@ -15,12 +15,12 @@ public class SubjectStudyPeriodPlanCapacityDto {
     @NotNull
     private Boolean isContact;
     @Min(0)
-    @Max(32767)
-    private Long hours;
+    @Max(Short.MAX_VALUE)
+    private Short hours;
     @NotNull
     @ClassifierRestriction(MainClassCode.MAHT)
     private String capacityType;
-    
+
     public static SubjectStudyPeriodPlanCapacityDto of (SubjectStudyPeriodPlanCapacity capacity) {
         SubjectStudyPeriodPlanCapacityDto dto = new SubjectStudyPeriodPlanCapacityDto();
         dto.setId(EntityUtil.getId(capacity));
@@ -42,10 +42,10 @@ public class SubjectStudyPeriodPlanCapacityDto {
     public void setIsContact(Boolean isContact) {
         this.isContact = isContact;
     }
-    public Long getHours() {
+    public Short getHours() {
         return hours;
     }
-    public void setHours(Long hours) {
+    public void setHours(Short hours) {
         this.hours = hours;
     }
     public String getCapacityType() {

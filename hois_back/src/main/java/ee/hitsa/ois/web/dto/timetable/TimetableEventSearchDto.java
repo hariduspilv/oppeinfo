@@ -9,18 +9,20 @@ public class TimetableEventSearchDto {
     private Long id;
     private String name;
     private LocalDate date;
-    private LocalTime time;
+    private LocalTime timeStart;
+    private LocalTime timeEnd;
     private List<String> teachers;
     private List<String> rooms;
     private String studentGroup;
     private Boolean singleEvent;
 
-    public TimetableEventSearchDto(Long id, String name, LocalDate date, LocalTime time, String studentGroup,
+    public TimetableEventSearchDto(Long id, String name, LocalDate date, LocalTime timeStart, LocalTime timeEnd, String studentGroup,
             Boolean singleEvent) {
         this.id = id;
         this.name = name;
         this.date = date;
-        this.time = time;
+        this.timeStart = timeStart;
+        this.timeEnd = timeEnd;
         this.studentGroup = studentGroup;
         this.singleEvent = singleEvent;
     }
@@ -49,12 +51,20 @@ public class TimetableEventSearchDto {
         this.date = date;
     }
 
-    public LocalTime getTime() {
-        return time;
+    public LocalTime getTimeStart() {
+        return timeStart;
     }
 
-    public void setTime(LocalTime time) {
-        this.time = time;
+    public void setTimeStart(LocalTime timeStart) {
+        this.timeStart = timeStart;
+    }
+    
+    public LocalTime getTimeEnd() {
+        return timeEnd;
+    }
+
+    public void setTimeEnd(LocalTime timeEnd) {
+        this.timeEnd = timeEnd;
     }
 
     public List<String> getTeachers() {

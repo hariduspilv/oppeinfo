@@ -94,11 +94,14 @@
         <label>{{'subject.linkDepartment' | translate}}</label>
         <hois-value value="currentLanguageNameField(subject.schoolDepartment)"></hois-value>
       </md-input-container>
+      <md-input-container flex>
+        <label>{{'subject.isPractice' | translate}}</label>
+        <hois-value value="subject.isPractice ? 'main.yes' : 'main.no' | translate"></hois-value>
+      </md-input-container>
       <md-input-container>
         <label>{{'subject.status' | translate}}</label>
         <hois-classifier-value ng-model="subject.status" main-classifier-code="AINESTAATUS"></hois-classifier-value>
       </md-input-container>
-
       <h3>{{'subject.subjectIsPrerequisite' | translate}}</h3>
       <div ng-repeat="it in subject.primarySubjects">
         <a ng-href="#/subject/{{it.id}}">{{currentLanguageNameField(it)}}</a>
@@ -109,7 +112,7 @@
       </div>
       <hois-created-modified object="subject"></hois-created-modified>
       <div layout="row">
-        <md-button ng-href="#/subject/{{subject.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
+        <md-button ng-if="!auth.isStudent()" ng-href="#/subject/{{subject.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
         <md-button ng-href="{{::formState.backUrl}}" class="md-raised">{{'main.button.back' | translate}}</md-button>
       </div>
     </form>

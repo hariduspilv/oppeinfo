@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web;
 
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -8,6 +9,7 @@ import java.util.stream.Collectors;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
+import org.apache.commons.beanutils.BeanUtils;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -60,13 +62,14 @@ public class ApplicationControllerTests {
     private TestConfigurationService testConfigurationService;
 
     private Student student;
+    private List<School> userSchools;
     private School userSchool;
 
     @Before
     public void setUp() {
         Role role = Role.ROLL_A;
         if(student == null) {
-            List<School> userSchools = userRepository.findAll((root, query, cb) -> {
+            userSchools = userRepository.findAll((root, query, cb) -> {
                 List<Predicate> filters = new ArrayList<>();
                 filters.add(cb.isNotNull(root.get("school").get("id")));
                 filters.add(cb.equal(root.get("role").get("code"), role.name()));
@@ -81,7 +84,7 @@ public class ApplicationControllerTests {
                 filters.add(cb.equal(root.get("status").get("code"), StudentStatus.OPPURSTAATUS_O.name()));
                 filters.add(root.get("school").in(userSchools));
                 return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).stream().findFirst().get();
+            }).get(0);
 
             userSchool = student.getSchool();
         }
@@ -109,45 +112,42 @@ public class ApplicationControllerTests {
         uriBuilder.queryParam("student", student.getId());
         uriBuilder.queryParam("studentName", student.getPerson().getFirstname());
         uriBuilder.queryParam("studentIdCode", student.getPerson().getIdcode());
-        String url = uriBuilder.build().toUriString();
 
-        responseEntity = restTemplate.getForEntity(url, ApplicationSearchDto.class);
+        responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), ApplicationSearchDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     @Test
-    public void crud() {
+    public void crud() throws IllegalAccessException, InvocationTargetException {
         //create
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
         ApplicationForm form = new ApplicationForm();
         form.setType(ApplicationType.AVALDUS_LIIK_EKSMAT.name());
         form.setStatus(ApplicationStatus.AVALDUS_STAATUS_KOOST.name());
 
-        ResponseEntity<ApplicationDto> responseEntity = restTemplate.postForEntity(uriBuilder.build().toUriString(), form, ApplicationDto.class);
+        ResponseEntity<ApplicationDto> responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ApplicationDto.class);
         Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
 
         AutocompleteResult studentAutocomplete = new AutocompleteResult(student.getId(), "nameEt", "nameEn");
         form.setStudent(studentAutocomplete);
         form.setReason(ExmatriculationReason.EKSMAT_POHJUS_A.name());
 
-        responseEntity = restTemplate.postForEntity(uriBuilder.build().toUriString(), form, ApplicationDto.class);
+        responseEntity = restTemplate.postForEntity(uriBuilder.toUriString(), form, ApplicationDto.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         Long applicationId = responseEntity.getBody().getId();
 
         //read
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(applicationId.toString());
-        String uri = uriBuilder.build().toUriString();
-        ResponseEntity<ApplicationDto> response = restTemplate.getForEntity(uri, ApplicationDto.class);
+        ResponseEntity<ApplicationDto> response = restTemplate.getForEntity(uriBuilder.toUriString(), ApplicationDto.class);
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 
         //update
-        form = responseEntity.getBody();
+        BeanUtils.copyProperties(form, response.getBody());
         form.setAddInfo("additional info update");
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(applicationId.toString());
-        uri = uriBuilder.build().toUriString();
-        responseEntity = restTemplate.exchange(uri, HttpMethod.PUT, new HttpEntity<>(form), ApplicationDto.class);
+        responseEntity = restTemplate.exchange(uriBuilder.toUriString(), HttpMethod.PUT, new HttpEntity<>(form), ApplicationDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
@@ -155,25 +155,29 @@ public class ApplicationControllerTests {
         Long version = responseEntity.getBody().getVersion();
         uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment(applicationId.toString());
         uriBuilder.queryParam("version", version);
-        uri = uriBuilder.build().toUriString();
-        restTemplate.delete(uri);
+        restTemplate.delete(uriBuilder.toUriString());
     }
 
     @SuppressWarnings("unchecked")
     @Test
     public void applicable() {
-        List<Student> students = studentRepository.findAll((root, query, cb) -> {
+        List<Student> allNotStudyingStudents = studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), userSchool.getId()));
+            filters.add(root.get("school").in(userSchools));
             filters.add(cb.not(root.get("status").get("code").in(StudentStatus.STUDENT_STATUS_ACTIVE)));
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
 
-        Assert.assertTrue(!CollectionUtils.isEmpty(students));
+        Assert.assertTrue(!CollectionUtils.isEmpty(allNotStudyingStudents));
 
-        for (Student notStudyingStudent : students) {
+        userSchool = allNotStudyingStudents.get(0).getSchool();
+        testConfigurationService.userToRoleInSchool(Role.ROLL_A, EntityUtil.getId(userSchool), restTemplate);
+        List<Student> notStudyingStudents = allNotStudyingStudents.stream()
+                .filter(s -> s.getSchool().getId() == userSchool.getId()).collect(Collectors.toList());
+
+        for (Student notStudyingStudent : notStudyingStudents) {
             UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT + "/student/"+notStudyingStudent.getId()+"/applicable");
-            ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+            ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
             Assert.assertNotNull(responseEntity);
             Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
             Map<String, Map<?, ?>> result = (Map<String, Map<?, ?>>) responseEntity.getBody();
@@ -186,7 +190,7 @@ public class ApplicationControllerTests {
     @Test
     public void validAcademicLeave() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT + "/student/"+student.getId()+"/validAcademicLeave");
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

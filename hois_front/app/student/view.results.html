@@ -1,0 +1,16 @@
+<div ng-cloak>
+   <div>
+    <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+    <div ng-if="student && student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+  </div>
+
+  <div>
+    <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.results.vocational.tmpl.html'"></div>
+    <div ng-if="student && student.isVocational===false" ng-include="'student/templates/view.results.higher.tmpl.html'"></div>
+  </div>
+
+
+  <div layout="row" layout-margin>
+    <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  </div>
+</div>

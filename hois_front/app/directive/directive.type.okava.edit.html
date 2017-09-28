@@ -21,7 +21,7 @@
           <hois-classifier-value ng-model="row.oldStudyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>
         </td>
         <td md-cell>
-          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersions" filter-values="[row.oldCurriculumVersion.id]" aria-label="{{'directive.student.newCurriculumVersion' | translate}}"></hois-select>
+          <hois-select ng-model="row.curriculumVersion" values="formState.curriculumVersions" filter-values="[row.oldCurriculumVersion]" aria-label="{{'directive.student.newCurriculumVersion' | translate}}"></hois-select>
         </td>
         <td md-cell>
           <hois-classifier-select ng-model="row.studyForm" model-value-attr="code" main-classifier-code="OPPEVORM" aria-label="{{'directive.student.newStudyForm' | translate}}"></hois-classifier-select>

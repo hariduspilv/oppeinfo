@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import javax.persistence.CascadeType;
+import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -20,6 +21,7 @@ public class Directive extends BaseEntityWithId {
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
     private School school;
+    @Column(nullable = false)
     private String headline;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)

@@ -10,11 +10,15 @@
         <input ng-model="criteria.teachersFullname" type="text">
       </md-input-container>
     </div>
-    <div layout="row">
-      <md-input-container flex="50" flex-sm="100" flex-xs="100">
+    <div layout="row" layout-sm="column" layout-xs="column">
+      <md-input-container flex="45" flex-sm="100" flex-xs="100">
         <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
-        <hois-select ng-model="criteria.studyPeriods" values="studyPeriods" multiple></hois-select>
+        <hois-select ng-model="criteria.studyPeriods" values="studyPeriods" required></hois-select>
       </md-input-container>
+      <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+        <hois-autocomplete ng-model="criteria.studentObject" method="students" name="student"
+          label="student.label"></hois-autocomplete>
+      </div>
     </div>
     <div layout="row">
       <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
@@ -32,19 +36,22 @@
             <th md-column md-order-by="s.{{currentLanguageNameField()}},s.code">{{'subjectStudyPeriod.nameCode' | translate}}</th>
             <th md-column>{{'subjectStudyPeriod.teachersFullname' | translate}}</th>
             <th md-column md-order-by="sp.{{currentLanguageNameField()}}">{{'subjectStudyPeriod.studyPeriod' | translate}}</th>
-            <th md-column md-order-by="">{{'subjectStudyPeriod.declaredStudentsNumber' | translate}}</th>
+            <th md-column md-order-by="declared_students">{{'subjectStudyPeriod.declaredStudentsNumber' | translate}}</th>
             <th md-column></th>
           </tr>
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell><a href="#/subject/{{row.subject.id}}/edit?backUrl=subjectStudyPeriods">{{currentLanguageNameField(row.subject)}}</a></td>
-            <td md-cell ng-click="row.clicked = !row.clicked">
-              <span ng-if="!row.clicked">{{showTeachers(row, false)}}</span>
-              <span ng-if="row.clicked">{{showTeachers(row, true)}}</span>
+            <td md-cell><a href="#/subjectStudyPeriod/{{::row.id}}/view">{{currentLanguageNameField(row.subject)}}</a></td>
+            <td md-cell>
+                <table>
+                    <tr ng-repeat="teacher in row.teachers | orderBy">
+                        <td><a href="#/subjectStudyPeriod/{{::row.id}}/view">{{teacher}}</a></td>
+                    </tr>
+                </table>
             </td>
             <td md-cell>{{currentLanguageNameField(row.studyPeriod)}}</td>
-            <td md-cell>{{::row.studyPeriods}}</td>
+            <td md-cell><a href="#/subjectStudyPeriods/{{::row.id}}/midtermTasks/studentResults">{{::row.studentsNumber}}</a></td>
             <td md-cell>
               <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriod/{{::row.id}}/edit">{{'main.button.change' | translate}}
               </md-button>

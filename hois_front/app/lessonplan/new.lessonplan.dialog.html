@@ -1,6 +1,16 @@
 <md-dialog aria-label="grade add dialog" flex="30" flex-sm="100" flex-xs="100">
   <form name="newLessonPlanForm" ng-cloak>
-    <div flex>
+      <md-toolbar>
+          <div class="md-toolbar-tools">
+            <h2>{{"lessonplan.addPlanDialog" | translate}}</h2>
+            <span flex></span>
+            <md-button class="md-icon-button" ng-click="cancel()">
+              <md-icon md-font-set="material-icons">close</md-icon>
+            </md-button>
+          </div>
+        </md-toolbar>
+        <md-dialog-content>
+            <div class="ois-form-layout-padding nomargin" layout="column" ng-cloak>
       <md-input-container class="md-block">
         <label class="textInput">{{'lessonplan.studyYear' | translate}}</label>
         <hois-select values="formState.studyYears" ng-model="record.studyYear" md-autofocus></hois-select>
@@ -11,10 +21,12 @@
         <hois-select values="formState.studentGroupMap[record.studyYear]" ng-model="record.studentGroup"></hois-select>
       </md-input-container>
     </div>
+  </md-dialog-content>
 
     <md-dialog-actions layout="row" layout-align="start center">
       <md-button ng-click="create()" class="md-raised md-primary">{{'main.button.create' | translate}}</md-button>
       <md-button ng-click="cancel()" class="md-raised">{{'main.button.back' | translate}}</md-button>
     </md-dialog-actions>
+
   </form>
 </md-dialog>

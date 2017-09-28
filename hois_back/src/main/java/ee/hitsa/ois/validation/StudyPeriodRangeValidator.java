@@ -8,8 +8,8 @@ import org.springframework.beans.PropertyAccessorFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.StudyPeriodRepository;
-import ee.hitsa.ois.util.AssertionFailedException;
 
 public class StudyPeriodRangeValidator implements ConstraintValidator<StudyPeriodRange, Object> {
 

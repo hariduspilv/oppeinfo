@@ -18,6 +18,7 @@ import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
+import ee.hitsa.ois.enums.StudyLoad;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
@@ -99,6 +100,18 @@ public class ReportControllerTests {
     }
 
     @Test
+    public void studentStatisticsAsExcel() {
+        String url = "/reports/students/statistics/studentstatistics.xls";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("result", MainClassCode.FINALLIKAS.name());
+        uriBuilder.queryParam("date", "2017-01-01T00:00:00.000Z");
+
+        ResponseEntity<?> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Void.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void studentStatisticsByPeriod() {
         String url = "/reports/students/statistics/byperiod";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
@@ -126,13 +139,26 @@ public class ReportControllerTests {
     }
 
     @Test
+    public void studentStatisticsByPeriodAsExcel() {
+        String url = "/reports/students/statistics/studentstatisticsbyperiod.xls";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("result", StudentStatus.OPPURSTAATUS_A.name());
+        uriBuilder.queryParam("from", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("thru", "2017-01-01T00:00:00.000Z");
+
+        ResponseEntity<?> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Void.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
     public void curriculumCompletion() {
         String url = "/reports/curriculums/completion";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("name", "nimi");
         uriBuilder.queryParam("curriculumVersion", Long.valueOf(1));
         uriBuilder.queryParam("studentGroup", Long.valueOf(1));
-        uriBuilder.queryParam("studyLoad", "OPPEKOORMUS_TAIS");
+        uriBuilder.queryParam("studyLoad", StudyLoad.OPPEKOORMUS_TAIS.name());
         uriBuilder.queryParam("studyForm", "OPPEVORM_P");
 
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
@@ -141,8 +167,19 @@ public class ReportControllerTests {
     }
 
     @Test
-    public void teacherLoad() {
-        String url = "/reports/teachers/load";
+    public void teacherLoadHigher() {
+        String url = "/reports/teachers/load/higher";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("studyYear", Long.valueOf(1));
+
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void teacherLoadVocational() {
+        String url = "/reports/teachers/load/vocational";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("studyYear", Long.valueOf(1));
 

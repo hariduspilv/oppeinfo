@@ -1,6 +1,8 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalTime;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -19,7 +21,7 @@ public class LessonTimeDto {
     private LocalTime endTime;
     @NotNull
     @Min(1)
-    private Integer lessonNr;
+    private Short lessonNr;
     private Boolean dayMon;
     private Boolean dayTue;
     private Boolean dayWed;
@@ -27,10 +29,33 @@ public class LessonTimeDto {
     private Boolean dayFri;
     private Boolean daySat;
     private Boolean daySun;
+    private Long buildingId;
+    private List<Long> buildingIds = new ArrayList<>();
 
     public static LessonTimeDto of(LessonTime lessonTime) {
         LessonTimeDto dto = EntityUtil.bindToDto(lessonTime, new LessonTimeDto());
         return dto;
+    }
+
+    public LessonTimeDto() {
+
+    }
+
+    public LessonTimeDto(Long id, LocalTime startTime, LocalTime endTime, short lessonNr, Boolean dayMon,
+            Boolean dayTue, Boolean dayWed, Boolean dayThu, Boolean dayFri, Boolean daySat, Boolean daySun,
+            List<Long> buildingIds) {
+        this.id = id;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.lessonNr = Short.valueOf(lessonNr);
+        this.dayMon = dayMon;
+        this.dayTue = dayTue;
+        this.dayWed = dayWed;
+        this.dayThu = dayThu;
+        this.dayFri = dayFri;
+        this.daySat = daySat;
+        this.daySun = daySun;
+        this.buildingIds = buildingIds;
     }
 
     public Long getId() {
@@ -57,11 +82,11 @@ public class LessonTimeDto {
         this.endTime = endTime;
     }
 
-    public Integer getLessonNr() {
+    public Short getLessonNr() {
         return lessonNr;
     }
 
-    public void setLessonNr(Integer lessonNr) {
+    public void setLessonNr(Short lessonNr) {
         this.lessonNr = lessonNr;
     }
 
@@ -119,6 +144,22 @@ public class LessonTimeDto {
 
     public void setDaySun(Boolean daySun) {
         this.daySun = daySun;
+    }
+
+    public Long getBuildingId() {
+        return buildingId;
+    }
+
+    public void setBuildingId(Long buildingId) {
+        this.buildingId = buildingId;
+    }
+
+    public List<Long> getBuildingIds() {
+        return buildingIds;
+    }
+
+    public void setBuildingIds(List<Long> buildingIds) {
+        this.buildingIds = buildingIds;
     }
 
 }

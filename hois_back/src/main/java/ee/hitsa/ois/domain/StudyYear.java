@@ -1,6 +1,8 @@
 package ee.hitsa.ois.domain;
 
+import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAdjusters;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -73,5 +75,15 @@ public class StudyYear extends BaseEntityWithId {
 
     public void setStudyPeriodEvents(Set<StudyPeriodEvent> studyPeriodEvents) {
         this.studyPeriodEvents = studyPeriodEvents;
+    }
+    
+    public LocalDate getWeekBeginningDate(Long weekNr) {
+        LocalDate mondayStartDate = startDate.with(TemporalAdjusters.previous(DayOfWeek.MONDAY));
+        long currWeekNr = 1;
+        while (currWeekNr != weekNr.longValue()) {
+            mondayStartDate = mondayStartDate.plusDays(7);
+            currWeekNr++;
+        }
+        return mondayStartDate;
     }
 }

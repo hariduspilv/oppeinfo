@@ -9,7 +9,9 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controller: 'StudyYearsListController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-      data: authorizedRoles
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEPERIOOD]
+      }
     })
     .when('/school/studyYears/:code/new', {
       templateUrl: 'studyYear/study.year.edit.html',
@@ -44,12 +46,8 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       $scope.studyPeriods = $scope.studyYear.studyPeriods || [];
       $scope.studyPeriodEvents = $scope.studyYear.studyPeriodEvents || [];
       periodTypes.objectmapper($scope.studyPeriods);
-      $scope.studyPeriods.forEach(function (it) {
-        DataUtils.convertStringToDates(it, ['startDate', 'endDate']);
-      });
-      $scope.studyPeriodEvents.forEach(function (it) {
-        DataUtils.convertStringToDates(it, ['start', 'end']);
-      });
+      DataUtils.convertStringToDates($scope.studyPeriods, ['startDate', 'endDate']);
+      DataUtils.convertStringToDates($scope.studyPeriodEvents, ['start', 'end']);
     }
 
     if (id) {
@@ -72,6 +70,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
           scope.studyPeriod = new StudyPeriodEndpoint({});
         }
         scope.studyPeriod.year = parentScope.studyYear.year;
+        scope.studyYear = parentScope.studyYear;
 
         scope.typeChange = function () {
           if (scope.studyPeriod.type) {
@@ -112,19 +111,50 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         };
 
         scope.submit = function () {
-          scope.dialogForm.$setSubmitted();
-          if (scope.dialogForm.$valid) {
-            var period = scope.studyPeriod;
-            if (period.id) {
-              period.$update().then(afterSave);
-            } else {
-              period.$save().then(afterSave);
-            }
+          if(!formValid()) {
+            return;
+          }
+          var period = scope.studyPeriod;
+          if (period.id) {
+            period.$update().then(afterSave);
+          } else {
+            period.$save().then(afterSave);
           }
         };
         $scope.cancel = function() {
           $mdDialog.hide();
         };
+
+        function formValid() {
+          scope.dialogForm.$setSubmitted();
+          if(!scope.dialogForm.startDate.$valid && scope.dialogForm.startDate.$error.mindate ||
+             !scope.dialogForm.endDate.$valid && scope.dialogForm.endDate.$error.maxdate) {
+            message.error('studyYear.studyPeriod.error.notInsideStudyYear');
+            return false;
+          }
+          if(overlapWithOtherStudyPeriods(scope.studyPeriod)) {
+            message.error('studyYear.studyPeriod.error.overlapWithOtherStudyPeriod');
+            return false;
+          }
+          if(!scope.dialogForm.$valid) {
+            message.error('main.messages.form-has-errors');
+            return false;
+          }
+          return true;
+        }
+
+        function overlapWithOtherStudyPeriods(studyPeriod) {
+          for(var i = 0; i < parentScope.studyPeriods.length; i++) {
+            if(parentScope.studyPeriods[i].id === studyPeriod.id) {
+              continue;
+            }
+            if(DataUtils.periodsOverlap(studyPeriod, parentScope.studyPeriods[i])) {
+              return true;
+            }
+          }
+          return false;
+        }
+
       };
 
       $mdDialog.show({
@@ -198,6 +228,12 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
                 message.error(error);
               });
             }
+          }
+
+          // kalendri-sündmuse algus (kellaaeg) peab olema varajasem kui lõpp (kellaaeg)
+          if ($scope.studyPeriodEvent.start && $scope.studyPeriodEvent.end && $scope.studyPeriodEvent.start.getTime() > $scope.studyPeriodEvent.end.getTime()) {
+            errors = true;
+            message.error('studyYear.studyPeriod.error.startDateLaterThanEndDate');
           }
 
           if ($scope.dialogForm.$valid && !errors) {
