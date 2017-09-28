@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="utf-8"?>
+<definitions xmlns="http://schemas.xmlsoap.org/wsdl/" xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/" xmlns:tns="urn:ekis" xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap-enc="http://schemas.xmlsoap.org/soap/encoding/" xmlns:soap12="http://schemas.xmlsoap.org/wsdl/soap12/" name="Api" targetNamespace="urn:ekis">
+	<types>
+		<xsd:schema targetNamespace="urn:ekis">
+			<xsd:import namespace="http://schemas.xmlsoap.org/soap/encoding/"/>
+			<xsd:import namespace="http://schemas.xmlsoap.org/wsdl/"/>
+			<xsd:complexType name="answer">
+				<xsd:sequence>
+					<xsd:element name="ois_id" type="xsd:string"/>
+					<xsd:element name="wd_id" type="xsd:int"/>
+					<xsd:element name="regno" minOccurs="0" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name="content">
+				<xsd:sequence>
+					<xsd:element name="id_code" type="xsd:string"/>
+					<xsd:element name="first_name" type="xsd:string"/>
+					<xsd:element name="last_name" type="xsd:string"/>
+					<xsd:element name="start_date" type="xsd:string"/>
+					<xsd:element name="end_date" type="xsd:string"/>
+					<xsd:element name="reason" type="xsd:string"/>
+					<xsd:element name="load" type="xsd:string"/>
+					<xsd:element name="curricula" type="xsd:string"/>
+					<xsd:element name="form" type="xsd:string"/>
+					<xsd:element name="group" type="xsd:string"/>
+					<xsd:element name="finsource" type="xsd:string"/>
+					<xsd:element name="outerschool" type="xsd:string"/>
+					<xsd:element name="lang" type="xsd:string"/>
+					<xsd:element name="kudos" type="xsd:string"/>
+					<xsd:element name="degree" type="xsd:string"/>
+					<xsd:element name="eap" type="xsd:string"/>
+				</xsd:sequence>
+			</xsd:complexType>
+			<xsd:complexType name="contentArray">
+				<xsd:sequence>
+					<xsd:element maxOccurs="unbounded" name="content" type="tns:content"/>
+				</xsd:sequence>
+			</xsd:complexType>
+		</xsd:schema>
+	</types>
+	<message name="registerCertificateRequest">
+		<part name="q_guid" type="xsd:string"/>
+		<part name="ehis_id" type="xsd:string"/>
+		<part name="ois_id" type="xsd:string"/>
+		<part name="student" type="xsd:string"/>
+		<part name="email" type="xsd:string"/>
+		<part name="subject" type="xsd:string"/>
+		<part name="body" type="xsd:string"/>
+		<part name="item_creator" type="xsd:string"/>
+		<part name="type" type="xsd:string"/>
+		<part name="institution" type="xsd:string"/>
+	</message>
+	<message name="registerCertificateResponse">
+		<part name="return" type="tns:answer"/>
+	</message>
+	<message name="registerDirectiveRequest">
+		<part name="q_guid" type="xsd:string"/>
+		<part name="ehis_id" type="xsd:int"/>
+		<part name="ois_id" type="xsd:string"/>
+		<part name="directive_type" type="xsd:string"/>
+		<part name="title" type="xsd:string"/>
+		<part name="item_creator" type="xsd:string"/>
+		<part name="create_time" type="xsd:string"/>
+		<part name="manager" type="xsd:string"/>
+		<part name="content" type="tns:contentArray"/>
+		<part name="wd_id" type="xsd:int"/>
+	</message>
+	<message name="registerDirectiveResponse">
+		<part name="return" type="tns:answer"/>
+	</message>
+	<message name="deleteDirectiveRequest">
+		<part name="q_guid" type="xsd:string"/>
+		<part name="ois_id" type="xsd:string"/>
+		<part name="status" type="xsd:string"/>
+		<part name="wd_id" type="xsd:int"/>
+	</message>
+	<message name="deleteDirectiveResponse">
+		<part name="return" type="tns:answer"/>
+	</message>
+	<message name="registerPracticeContractRequest">
+		<part name="q_guid" type="xsd:string"/>
+		<part name="ehis_id" type="xsd:int"/>
+		<part name="ois_id" type="xsd:string"/>
+		<part name="create_date" type="xsd:string"/>
+		<part name="manager" type="xsd:string"/>
+		<part name="st_id_code" type="xsd:string"/>
+		<part name="st_first_names" type="xsd:string"/>
+		<part name="st_last_name" type="xsd:string"/>
+		<part name="st_email" type="xsd:string"/>
+		<part name="st_curricula" type="xsd:string"/>
+		<part name="st_form" type="xsd:string"/>
+		<part name="st_course" type="xsd:string"/>
+		<part name="st_ekap" type="xsd:string"/>
+		<part name="st_hours" type="xsd:string"/>
+		<part name="st_module" type="xsd:string"/>
+		<part name="org_name" type="xsd:string"/>
+		<part name="org_code" type="xsd:string"/>
+		<part name="org_contact_name" type="xsd:string"/>
+		<part name="org_tel" type="xsd:string"/>
+		<part name="org_email" type="xsd:string"/>
+		<part name="org_tutor_name" type="xsd:string"/>
+		<part name="org_tutor_tel" type="xsd:string"/>
+		<part name="org_tutor_email" type="xsd:string"/>
+		<part name="programme" type="xsd:string"/>
+	</message>
+	<message name="registerPracticeContractResponse">
+		<part name="return" type="tns:answer"/>
+	</message>
+	<portType name="wdoisPortType">
+		<operation name="registerCertificate">
+			<input message="tns:registerCertificateRequest"/>
+			<output message="tns:registerCertificateResponse"/>
+		</operation>
+		<operation name="registerDirective">
+			<input message="tns:registerDirectiveRequest"/>
+			<output message="tns:registerDirectiveResponse"/>
+		</operation>
+		<operation name="deleteDirective">
+			<input message="tns:deleteDirectiveRequest"/>
+			<output message="tns:deleteDirectiveResponse"/>
+		</operation>
+		<operation name="registerPracticeContract">
+			<input message="tns:registerPracticeContractRequest"/>
+			<output message="tns:registerPracticeContractResponse"/>
+		</operation>
+	</portType>
+	<binding name="wdoisBinding" type="tns:wdoisPortType">
+		<soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
+		<operation name="registerCertificate">
+			<soap:operation soapAction="https://kis-test.hm.ee/?page=ois2_toend/registerCertificate" style="rpc"/>
+			<input>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</input>
+			<output>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</output>
+		</operation>
+		<operation name="registerDirective">
+			<soap:operation soapAction="https://kis-test.hm.ee/?page=ois2_kaskkiri/registerDirective" style="rpc"/>
+			<input>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</input>
+			<output>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</output>
+		</operation>
+		<operation name="deleteDirective">
+			<soap:operation soapAction="https://kis-test.hm.ee/?page=ois2_kaskkiri/deleteDirective" style="rpc"/>
+			<input>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</input>
+			<output>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</output>
+		</operation>
+		<operation name="registerPracticeContract">
+			<soap:operation soapAction="https://kis-test.hm.ee/?page=ois2_praktika/registerPracticeContract" style="rpc"/>
+			<input>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</input>
+			<output>
+				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+			</output>
+		</operation>
+	</binding>
+	<service name="wdois">
+		<port name="wdoisPort" binding="tns:wdoisBinding">
+			<soap:address location="https://kis-test.hm.ee/?page=ois2_toend"/>
+		</port>
+	</service>
+</definitions>

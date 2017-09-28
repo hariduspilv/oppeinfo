@@ -1,17 +1,16 @@
 package ee.hois.xroad.helpers;
 
+import ee.hois.soap.LogContext;
+
 public class XRoadHeaderV4 {
 
+    public static final String XROAD_HEADER = "xRoadHeader";
+    private static final String PROTOCOL_VERSION = "4.0";
+
     private Client client;
-
     private Service service;
-
     private String userId;
-
     private String id;
-
-    private static final String protocolVersion = "4.0";
-
     private String endpoint;
 
     public Client getClient() {
@@ -39,7 +38,7 @@ public class XRoadHeaderV4 {
     }
 
     public static String getProtocolVersion() {
-        return protocolVersion;
+        return PROTOCOL_VERSION;
     }
 
     public void setEndpoint(String endpoint) {
@@ -56,6 +55,11 @@ public class XRoadHeaderV4 {
 
     public void setService(Service service) {
         this.service = service;
+    }
+
+    public LogContext logContext() {
+        String queryName = String.format("%s.%s.%s", service.getSubsystemCode(), service.getServiceCode(), service.getServiceVersion());
+        return new LogContext(getId(), queryName);
     }
 
     public static class Client {
