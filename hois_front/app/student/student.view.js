@@ -3,7 +3,11 @@
 angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog', '$q', '$route', '$scope', 'dialogService', 'message', 'Classifier', 'QueryUtils', 'oisFileService',
 
   function ($mdDialog, $q, $route, $scope, dialogService, message, Classifier, QueryUtils, oisFileService) {
-    var studentId = $route.current.params.id;
+    $scope.auth = $route.current.locals.auth;
+    var auth = $route.current.locals.auth;
+
+    var studentId = (auth.isStudent() ? auth.student : $route.current.params.id);
+
     var Endpoint = QueryUtils.endpoint('/students');
 
     $scope.studentId = studentId;
@@ -96,18 +100,45 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       });
     };
   }
-]).controller('StudentViewResultsController', ['$q', '$route', '$scope', function ($q, $route, $scope) {
+]).controller('StudentViewResultsController', ['$q', '$route', '$scope', 'QueryUtils', function ($q, $route, $scope, QueryUtils) {
+  $scope.auth = $route.current.locals.auth;
+  var auth = $route.current.locals.auth;
+
+  var studentId = (auth.isStudent() ? auth.student : $route.current.params.id);
+
+  console.log(studentId);
+
+  if (auth.isStudent() && !$route.current.locals.student) {
+    var Endpoint = QueryUtils.endpoint('/students');
+
+    $scope.studentId = studentId;
+    $scope.currentNavItem = 'student.main';
+
+    Endpoint.get({ id: studentId }, function (result) {
+      $scope.student = result;
+      /*if ($scope.student.photo) {
+        $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo);
+      } else {
+        $scope.student.imageUrl = '?' + new Date().getTime();
+      }*/
+    });
+
+  } else {
+    $scope.studentId = studentId;
+    $scope.student = $route.current.locals.student;
+  }
+
   $scope.currentNavItem = 'student.results';
   $scope.resultsCurrentNavItem = 'student.curriculumFulfillment';
-  $scope.auth = $route.current.locals.auth;
+  //$scope.auth = $route.current.locals.auth;
 
-  $scope.student = $route.current.locals.student;
-  $scope.studentId = $route.current.params.id;  //used in links in html files
+  //$scope.student = $route.current.locals.student;
+  //$scope.studentId = $route.current.params.id;  //used in links in html files
 
   $scope.isStudentCurriculumFulfilled = function (student) {
     return student && angular.isNumber(student.credits) && student.credits >= student.curriculumCredits;
   };
-}]).controller('StudentViewResultsVocationalController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', function ($q, $route, $scope, Classifier, QueryUtils, $rootScope) {
+}]).controller('StudentViewResultsVocationalController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope', 'VocationalGradeUtil', function ($q, $route, $scope, Classifier, QueryUtils, $rootScope, VocationalGradeUtil) {
   var gradeMapper = Classifier.valuemapper({ grade: 'KUTSEHINDAMINE', studyYear: 'OPPEAASTA' });
   var moduleMapper = Classifier.valuemapper({ module: 'KUTSEMOODUL' });
   $scope.loadCurriculumFulfillment = function () {
@@ -141,7 +172,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 
       $scope.moduleResultById = moduleResultById;
       $scope.positiveThemeResult = function (themeResult) {
-        return angular.isObject(themeResult) && angular.isObject(themeResult.grade) && angular.isString(themeResult.grade.value) && parseInt(themeResult.grade.value) > 2;
+        return angular.isObject(themeResult) && angular.isObject(themeResult.grade) && angular.isString(themeResult.grade.code) && VocationalGradeUtil.isPositive(themeResult.grade.code);
       };
       $scope.vocationalResultsCurriculum = {};
       $scope.vocationalResultsCurriculum.vocationalResultsModules = $scope.vocationalResults.curriculumModules.sort(function (m1, m2) {
@@ -185,18 +216,20 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       vocationalResultsStudyYear.forEach(function (studyYearModulesThemes) {
         var creditsSum = 0;
         var gradeCreditsSum = 0;
+        var creditsSumForAverage = 0;
         studyYearModulesThemes.results.forEach(function (moduleTheme) {
-          if (moduleTheme.theme === null) {
-            var grade = parseInt(moduleTheme.grade.value);
-            if ($scope.positiveGrade(grade)) {
-              creditsSum += moduleTheme.credits;
+          if (moduleTheme.grade && VocationalGradeUtil.isPositive(moduleTheme.grade.code)) {
+            if(VocationalGradeUtil.isDistinctive(moduleTheme.grade.code)) {
+              var grade = parseInt(moduleTheme.grade.value);
+              creditsSumForAverage += moduleTheme.credits;
               gradeCreditsSum += moduleTheme.credits * parseInt(grade);
             }
+            creditsSum += moduleTheme.credits;
           }
         });
 
-        if (creditsSum !== 0) {
-          studyYearModulesThemes.kkh = gradeCreditsSum / creditsSum;
+        if (creditsSumForAverage !== 0) {
+          studyYearModulesThemes.kkh = gradeCreditsSum / creditsSumForAverage;
         }
         studyYearModulesThemes.credits = creditsSum;
       });
@@ -243,10 +276,11 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 
 }]).controller('StudentViewResultsHigherController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', '$rootScope',
   function ($q, $route, $scope, Classifier, QueryUtils, $rootScope) {
+    var auth = $route.current.locals.auth;
 
     function getHigherResults() {
       if (!angular.isDefined($scope.higherResults)) {
-        var id = $route.current.params.id;
+        var id =(auth.isStudent() ? auth.student : $route.current.params.id);
         QueryUtils.endpoint('/students/' + id + '/higherResults').get().$promise.then(function (response) {
           $scope.higherResults = response;
           $scope.student.higherResults = $scope.higherResults;
@@ -296,7 +330,8 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     }
 
   }]).controller('StudentViewDocumentsController', ['$q', '$route', '$scope', 'Classifier', 'QueryUtils', function ($q, $route, $scope, Classifier, QueryUtils) {
-    $scope.studentId = $route.current.params.id;
+   // var studentId = (auth.isStudent() ? auth.student : $route.current.params.id);
+    $scope.studentId = ($route.current.locals.auth.isStudent() ? $route.current.locals.auth.student : $route.current.params.id);
     $scope.currentNavItem = 'student.documents';
     $scope.applicationsCriteria = { order: 'submitted', studentId: $scope.studentId };
     $scope.applications = {};
@@ -366,6 +401,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     };
   }]).controller('StudentAbsencesController', ['$mdDialog', '$route', '$scope', 'dialogService', 'message', 'QueryUtils',
     function ($mdDialog, $route, $scope, dialogService, message, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
       $scope.studentId = $route.current.params.id;
       $scope.currentNavItem = 'student.absences';
       QueryUtils.createQueryForm($scope, '/students/' + $scope.studentId + '/absences', { order: 'validFrom'});

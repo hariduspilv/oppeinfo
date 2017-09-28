@@ -34,6 +34,6 @@
 
 
     <md-button ng-click="editAbsence({})" class="md-primary md-raised" ng-if="tabledata.canAddAbsence">{{'main.button.create' | translate}}</md-button>
-    <md-button ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

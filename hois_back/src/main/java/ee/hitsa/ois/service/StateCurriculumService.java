@@ -106,8 +106,8 @@ public class StateCurriculumService {
                 + "and cc2.main_classifier_code = 'ISCED_VALD' ) "
                 + " = :iscedVald", "iscedVald", criteria.getIscedVald());
 
-        qb.optionalCriteria("sc.inserted >= :insertedFrom", "insertedFrom", criteria.getValidFrom(), DateUtils::firstMomentOfDay);
-        qb.optionalCriteria("sc.inserted <= :insertedThru", "insertedThru", criteria.getValidThru(), DateUtils::lastMomentOfDay);
+        qb.optionalCriteria("sc.valid_from >= :validFrom", "validFrom", criteria.getValidFrom(), DateUtils::firstMomentOfDay);
+        qb.optionalCriteria("sc.valid_thru <= :validThru", "validThru", criteria.getValidThru(), DateUtils::lastMomentOfDay);
 
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, SELECT, em, pageable);
         return results.map(r -> {
@@ -218,8 +218,8 @@ public class StateCurriculumService {
         StateCurriculum stateCurriculum = stateCurriculumRepository.getOne(form.getStateCurriculum());
         updateStateCurriculumOccupations(stateCurriculum, form.getStateCurriculumOccupations());
         StateCurriculumModule module = createModule(form, stateCurriculum);
-        stateCurriculum.getModules().add(module);
         EntityUtil.save(stateCurriculum, em);
+        stateCurriculum.getModules().add(module);
         return EntityUtil.save(module, em);
     }
 

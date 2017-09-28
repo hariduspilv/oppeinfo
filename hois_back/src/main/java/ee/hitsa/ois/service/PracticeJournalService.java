@@ -23,6 +23,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.PracticeJournal;
@@ -39,7 +40,6 @@ import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.ContractRepository;
 import ee.hitsa.ois.repository.PracticeJournalRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -75,8 +75,6 @@ public class PracticeJournalService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
     private StudyYearService studyYearService;
     @Autowired
     private ModuleProtocolService moduleProtocolService;
@@ -85,7 +83,7 @@ public class PracticeJournalService {
     @Autowired
     private Validator validator;
 
-    private static final int DAYS_BEFORE_END_CAN_EDIT = 30;
+    private static final int DAYS_AFTER_END_CAN_EDIT = 30;
 
     private static final String SEARCH_FROM = "from practice_journal pj "
             + "inner join student student on pj.student_id = student.id "
@@ -99,7 +97,7 @@ public class PracticeJournalService {
             + "left join curriculum_module cm on cm.id = cvo.curriculum_module_id "
             + "left join curriculum_version cv on cv.id = cvo.curriculum_version_id "
             + "left join classifier mcl on mcl.code = cm.module_code "
-            + "left join curriculum_version_omodule_theme cvot on cvot.curriculum_version_omodule_id = cvo.id "
+            + "left join curriculum_version_omodule_theme cvot on cvot.id = pj.curriculum_version_omodule_theme_id "
             + "left join subject subject on subject.id = pj.subject_id ";
 
     private static final String SEARCH_SELECT = "pj.id, pj.start_date, pj.end_date, pj.practice_place, pj.status_code, "
@@ -125,7 +123,7 @@ public class PracticeJournalService {
                 Arrays.asList("student_person.firstname", "student_person.lastname",
                         "student_person.firstname || ' ' || student_person.lastname"),
                 "name", command.getStudentName());
-        qb.optionalCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
+        qb.optionalCriteria("student.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
                 command.getCurriculumVersion());
         qb.optionalCriteria("pj.teacher_id = :teacherId", "teacherId", command.getTeacher());
         qb.optionalCriteria("pj.student_id = :studentId", "studentId", command.getStudent());
@@ -142,7 +140,7 @@ public class PracticeJournalService {
                     Boolean.valueOf(JournalStatus.PAEVIK_STAATUS_T.name().equals(resultAsString(r, 4))
                             && Boolean.FALSE.equals(hasSupervisorOpinion)));
             dto.setCanEdit(
-                    Boolean.valueOf(LocalDate.now().isBefore(dto.getEndDate().plusDays(DAYS_BEFORE_END_CAN_EDIT))));
+                    Boolean.valueOf(LocalDate.now().isBefore(dto.getEndDate().plusDays(DAYS_AFTER_END_CAN_EDIT))));
 
             Boolean hasPositiveModuleGrade = resultAsBoolean(r, 24);
             dto.setCanTeacherAddEntries(Boolean.valueOf(Boolean.FALSE.equals(hasPositiveModuleGrade)));
@@ -187,12 +185,11 @@ public class PracticeJournalService {
         return !hasPracticeEnded(practiceJournal);
     }
 
-    public PracticeJournal create(HoisUserDetails user, PracticeJournalForm practiceJournalForm) {
-        School school = schoolRepository.getOne(user.getSchoolId());
+    public PracticeJournal create(Long schoolId, PracticeJournalForm practiceJournalForm) {
         PracticeJournal practiceJournal = new PracticeJournal();
-        practiceJournal.setStatus(classifierRepository.getOne(JournalStatus.PAEVIK_STAATUS_T.name()));
-        practiceJournal.setSchool(school);
-        practiceJournal.setStudyYear(studyYearService.getCurrentStudyYear(school));
+        practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
+        practiceJournal.setSchool(em.getReference(School.class, schoolId));
+        practiceJournal.setStudyYear(studyYearService.getCurrentStudyYear(schoolId));
         return save(practiceJournal, practiceJournalForm);
     }
 
@@ -323,7 +320,7 @@ public class PracticeJournalService {
     }
 
     private static boolean hasPracticeEnded(PracticeJournal practiceJournal) {
-        return LocalDate.now().isBefore(practiceJournal.getEndDate());
+        return LocalDate.now().isAfter(practiceJournal.getEndDate());
     }
 
     public PracticeJournal getFromSupervisorUrl(String uuid) {

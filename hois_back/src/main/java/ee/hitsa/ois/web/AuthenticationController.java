@@ -7,7 +7,6 @@ import java.util.Map;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.preauth.PreAuthenticatedAuthenticationToken;
@@ -23,12 +22,8 @@ import ee.hitsa.ois.auth.EstonianIdCardAuthenticationToken;
 import ee.hitsa.ois.auth.LoginMethod;
 import ee.hitsa.ois.config.HoisJwtProperties;
 import ee.hitsa.ois.domain.User;
-import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.repository.UserRepository;
-import ee.hitsa.ois.service.SchoolService;
-import ee.hitsa.ois.service.UserService;
-import ee.hitsa.ois.service.security.AuthenticatedSchool;
 import ee.hitsa.ois.service.security.AuthenticatedUser;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
@@ -42,39 +37,14 @@ public class AuthenticationController {
     @Autowired
     private HoisUserDetailsService userDetailsService;
     @Autowired
-    private SchoolService schoolService;
-    @Autowired
     private UserRepository userRepository;
     @Autowired
-    private UserService userService;
-    @Autowired
     private HoisJwtProperties hoisJwtProperties;
-    @Value("${server.session.timeout}")
-    private Integer sessionTimeoutInSeconds;
 
     @RequestMapping("/user")
     @ResponseBody
     public AuthenticatedUser user(Principal principal) {
-        if (principal != null) {
-            HoisUserDetails userDetails = HoisUserDetails.fromPrincipal(principal);
-            User user = userRepository.getOne(userDetails.getUserId());
-            AuthenticatedUser authenticatedUser = new AuthenticatedUser(user, sessionTimeoutInSeconds);
-
-            School school = user.getSchool();
-            AuthenticatedSchool authenticatedSchool = null;
-            if(school != null) {
-                SchoolService.SchoolType type = schoolService.schoolType(school.getId());
-                authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isHigher(), type.isVocational(), EntityUtil.getCode(school.getEhisSchool()));
-            }
-            authenticatedUser.setSchool(authenticatedSchool);
-            authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());
-            authenticatedUser.setFullname(user.getPerson().getFullname());
-            authenticatedUser.setUsers(userService.findAllActiveUsers(user.getPerson().getId()));
-            authenticatedUser.setLoginMethod(userDetails.getLoginMethod());
-
-            return authenticatedUser;
-        }
-        return null;
+        return principal != null ? userDetailsService.authenticatedUser(principal) : null;
     }
 
     @CrossOrigin

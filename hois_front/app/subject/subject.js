@@ -112,6 +112,8 @@ angular.module('hitsaOis')
     })
   .controller('SubjectViewController',
     function ($scope, $route, $q, QueryUtils) {
+      $scope.auth = $route.current.locals.auth;
+
       var id = $route.current.params.id;
 
       var backUrl = $route.current.params.backUrl;
@@ -123,8 +125,9 @@ angular.module('hitsaOis')
 
       $scope.subject = Endpoint.get({id: id});
   })
-  .controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils',
-    function ($q, $scope, Classifier, QueryUtils) {
+  .controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils','$route',
+    function ($q, $scope, Classifier, QueryUtils, $route) {
+      $scope.auth = $route.current.locals.auth;
       var clMapper = Classifier.valuemapper({status: 'AINESTAATUS', assessment: 'HINDAMISVIIS', languages: 'OPPEKEEL'});
       QueryUtils.createQueryForm($scope, '/subject', {order: $scope.currentLanguage() === 'en' ? 'nameEn' : 'nameEt'}, clMapper.objectmapper);
 

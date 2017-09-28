@@ -7,5 +7,7 @@ public enum JobType {
     JOB_AKAD_TULEK,
     JOB_VALIS_MINEK,
     JOB_VALIS_TULEK,
-    JOB_EHIS
+    JOB_EHIS,
+    JOB_EKIS,
+    JOB_PRAKTIKALEPING_KEHTETU
 }

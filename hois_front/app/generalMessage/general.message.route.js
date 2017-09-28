@@ -7,7 +7,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       controller: 'GeneralMessageSearchController',
       controllerAs: 'controller',
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_YLDTEADE]
       }
     })
     .when('/generalmessages/new', {

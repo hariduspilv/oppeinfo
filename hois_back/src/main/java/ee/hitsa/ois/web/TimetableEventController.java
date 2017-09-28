@@ -17,6 +17,7 @@ import ee.hitsa.ois.service.TimetableEventService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventSearchCommand;
+import ee.hitsa.ois.web.dto.timetable.TimetableByGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchDto;
 
 @RestController
@@ -40,11 +41,11 @@ public class TimetableEventController {
     }
 
     @GetMapping("/timetableByGroup")
-    public List<TimetableEventSearchDto> timetableByGroup(HoisUserDetails user,
-            @RequestParam("studyperiodId") Long studyperiodId, @RequestParam("studentGroupId") Long studentGroupId,
-            @RequestParam("weekNr") Long weekNr) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return timetableEventService.getTimetableForWeek(studyperiodId, studentGroupId, weekNr);
+    public TimetableByGroupDto timetableByGroup(HoisUserDetails user,
+            @RequestParam("studyperiodId") Long studyperiodId, @RequestParam("studentGroupId") Long studentGroupId, 
+            @RequestParam("timetableId") Long timetableId) {
+        //UserUtil.assertIsSchoolAdmin(user);
+        return timetableEventService.getTimetableForWeek(studyperiodId, studentGroupId, timetableId);
     }
 
 }

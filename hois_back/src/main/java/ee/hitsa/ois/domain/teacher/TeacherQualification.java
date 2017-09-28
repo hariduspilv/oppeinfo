@@ -1,5 +1,7 @@
 package ee.hitsa.ois.domain.teacher;
 
+import java.time.LocalDate;
+
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
@@ -24,9 +26,17 @@ public class TeacherQualification extends BaseEntityWithId {
     private Classifier school;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier exSchool;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier studyLevel;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private Classifier language;
     private String qualificationOther;
     private Short year;
     private String schoolOther;
+    private String diplomaNr;
+    private LocalDate endDate;
+    private String specialty;
+    private String addInfo;
 
     public Teacher getTeacher() {
         return teacher;
@@ -75,6 +85,22 @@ public class TeacherQualification extends BaseEntityWithId {
     public void setExSchool(Classifier exSchool) {
         this.exSchool = exSchool;
     }
+    
+    public Classifier getStudyLevel() {
+        return studyLevel;
+    }
+
+    public void setStudyLevel(Classifier studyLevel) {
+        this.studyLevel = studyLevel;
+    }
+
+    public Classifier getLanguage() {
+        return language;
+    }
+
+    public void setLanguage(Classifier language) {
+        this.language = language;
+    }
 
     public String getQualificationOther() {
         return qualificationOther;
@@ -99,4 +125,37 @@ public class TeacherQualification extends BaseEntityWithId {
     public void setSchoolOther(String schoolOther) {
         this.schoolOther = schoolOther;
     }
+
+    public String getDiplomaNr() {
+        return diplomaNr;
+    }
+
+    public void setDiplomaNr(String diplomaNr) {
+        this.diplomaNr = diplomaNr;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate endDate) {
+        this.endDate = endDate;
+    }
+
+    public String getSpecialty() {
+        return specialty;
+    }
+
+    public void setSpecialty(String specialty) {
+        this.specialty = specialty;
+    }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+    
 }

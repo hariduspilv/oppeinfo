@@ -5,6 +5,7 @@ angular.module('hitsaOis')
     message, oisFileService, QueryUtils, $route, DataUtils, $location, Curriculum, $q, config, $rootScope, Session) {
       var clMapper = Classifier.valuemapper({occupations: 'KUTSE', partOccupations: 'OSAKUTSE', specialities: 'SPETSKUTSE'});
       $scope.school = $route.current.locals.auth ? $route.current.locals.auth.school : null;
+      $scope.auth = $route.current.locals.auth;
 
       $scope.maxStydyYears = {max: 100};
 
@@ -179,7 +180,8 @@ angular.module('hitsaOis')
       files: [],
       jointPartners: [],
       studyLanguageClassifiers: [],
-      studyFormClassifiers: []
+      studyFormClassifiers: [],
+      abroad: false
     };
     /**
      * Setting values from defaultValues into initialCurriculumScope caused error
@@ -662,8 +664,9 @@ angular.module('hitsaOis')
             //     }
             //   });
             }
-            dialogScope.formState = $scope.formState;
-            dialogScope.formState.readOnly = $scope.formState.readOnly || !$scope.occupationCanBeChanged();
+            dialogScope.formState = {
+              readOnly: $scope.formState.readOnly || !$scope.occupationCanBeChanged()
+            };
           },
           function(submittedDialogScope) {
             if (!angular.isDefined(curriculumPartOccupation)) {
@@ -1086,21 +1089,22 @@ angular.module('hitsaOis')
     }
 
     function updateJointInfo() {
-      if(!$scope.curriculum.joint) {
+      if($scope.curriculum.joint) {
+          addSharedInformationToJointPartners();
+          if(jointInfoAddedButNotPartners()) {
+              var jointPartner = {
+                abroad: $scope.curriculum.abroad,
+                supervisor: $scope.curriculum.supervisor,
+                contractEt: $scope.curriculum.contractEt,
+                contractEn: $scope.curriculum.contractEn
+              };
+              $scope.curriculum.jointPartners.push(jointPartner);
+          }
+      } else {
           $scope.curriculum.jointMentor = undefined;
-      }
-
-      if($scope.curriculum.joint && jointInfoAddedButNotPartners()) {
-          var jointPartner = {
-          abroad: $scope.curriculum.abroad,
-          supervisor: $scope.curriculum.supervisor,
-          contractEt: $scope.curriculum.contractEt,
-          contractEn: $scope.curriculum.contractEn
-          };
-          $scope.curriculum.jointPartners.push(jointPartner);
+          $scope.curriculum.jointPartners = [];
       }
     }
-
 
     function emptyModulesCreditsAreValid() {
       var modules = $scope.curriculum.modules.filter(function(el){
@@ -1265,6 +1269,7 @@ angular.module('hitsaOis')
       if(!validationPassed(messages)) {
         return;
       }
+
       //before save collect some data;
       addSharedInformationToJointPartners();
       updateJointInfo();

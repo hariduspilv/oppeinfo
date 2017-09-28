@@ -8,6 +8,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
   var id = $route.current.params.id;
   $scope.formState = {};
   $scope.auth = $route.current.locals.auth;
+
   if($scope.auth.isStudent() && !angular.isDefined(id)) {
     QueryUtils.endpoint('/declarations/hasPrevious').search().$promise.then(function(response){
       $scope.currentNavItem = 'current';
@@ -291,7 +292,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
     var Endpoint = QueryUtils.endpoint('/declarations/create/' + $scope.student.id);
     new Endpoint().$save().then(function(response){
       message.info('main.messages.create.success');
-      $location.path("/declarations/" + response.id + "/edit").search({_noback: true});
+      $location.url("/declarations/" + response.id + "/edit?_noback");
     });
   };
 }]);

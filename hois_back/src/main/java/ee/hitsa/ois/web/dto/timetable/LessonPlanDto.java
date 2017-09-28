@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
@@ -256,6 +257,9 @@ public class LessonPlanDto extends LessonPlanForm {
         private final Long id;
         private final String nameEt;
         private final String nameEn;
+        private LocalDate startDate;
+        private LocalDate endDate;
+        
         private final List<Short> weekNrs;
 
         public StudyPeriodDto(StudyPeriod studyPeriod) {
@@ -263,6 +267,8 @@ public class LessonPlanDto extends LessonPlanForm {
             nameEt = studyPeriod.getNameEt();
             nameEn = studyPeriod.getNameEn();
             weekNrs = studyPeriod.getWeekNrs();
+            startDate = studyPeriod.getStartDate();
+            endDate = studyPeriod.getEndDate();
         }
 
         public Long getId() {
@@ -275,6 +281,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
         public String getNameEn() {
             return nameEn;
+        }
+        
+        public LocalDate getStartDate() {
+            return startDate;
+        }
+        
+        public LocalDate getEndDate() {
+            return endDate;
         }
 
         public List<Short> getWeekNrs() {

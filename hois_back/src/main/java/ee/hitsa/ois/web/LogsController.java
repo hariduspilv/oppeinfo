@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web;
 
-import ee.hitsa.ois.service.LogsService;
+import ee.hitsa.ois.service.ehis.EhisLogService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisLogCommand;
@@ -22,16 +22,16 @@ import javax.validation.constraints.NotNull;
 public class LogsController {
 
     @Autowired
-    private LogsService logsService;
+    private EhisLogService ehisLogService;
 
     @GetMapping("/ehis")
     public Page<EhisLogDto> ehisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return logsService.ehisSearch(user.getSchoolId(), command, pageable);
+        return ehisLogService.search(user.getSchoolId(), command, pageable);
     }
 
     @GetMapping("/ehis/{id:\\d+}")
     public EhisLogDto ehisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
-        return logsService.ehisGet(user, id, messageType);
+        return ehisLogService.get(user, id, messageType);
     }
 }

@@ -2,7 +2,10 @@
   <md-toolbar>
     <div class="md-toolbar-tools">
       <h2 flex>{{'ehis.message.' + record.wsName | translate}}</h2>
-      <span flex></span>
+      <span flex>
+        <hois-value class="md-button md-raised" ng-if="record.directive.id" value="record.directive.nameEt" href-value="'#/directives/' + record.directive.id + '/view'"></hois-value>
+        <hois-value class="md-button md-raised" ng-if="record.teacher.id" value="record.teacher.nameEt" href-value="'#/teachers/' + record.teacher.id"></hois-value>
+      </span>
       <md-button class="md-icon-button" ng-click="cancel()">
         <md-icon md-font-set="material-icons">close</md-icon>
       </md-button>
@@ -11,12 +14,20 @@
 
   <md-dialog-content>
     <div class="md-dialog-content">
-      <div>
-        <label>{{'ehis.message.request' | translate}}</label>&nbsp;{{record.request | limitTo:requestLength }}<a ng-click="showAll(true)" ng-if="requestLength">&hellip;</a>
+      <div layout="row">
+        <md-input-container>
+          <label>{{'ehis.message.request' | translate}}</label>&nbsp;
+          <pre><hois-value value="record.request | limitTo:requestLength"></hois-value></pre>
+          <a ng-click="showAll(true)" ng-if="requestLength">&hellip;</a>
+        </md-input-container>
       </div>
       <hr>
-      <div>
-        <label>{{'ehis.message.response' | translate}}</label>&nbsp;{{record.response | limitTo:responseLength }}<a ng-click="showAll(false)" ng-if="responseLength">&hellip;</a>
+      <div layout="row">
+        <md-input-container>
+          <label>{{'ehis.message.response' | translate}}</label>&nbsp;
+          <pre><hois-value value="record.response | limitTo:responseLength"></hois-value></pre>
+          <a ng-click="showAll(false)" ng-if="responseLength">&hellip;</a>
+        </md-input-container>
       </div>
     </div>
   </md-dialog-content>

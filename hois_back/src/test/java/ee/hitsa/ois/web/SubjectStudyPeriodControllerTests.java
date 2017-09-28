@@ -20,6 +20,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.enums.DeclarationType;
 import ee.hitsa.ois.enums.GroupProportion;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodForm;
@@ -202,7 +203,7 @@ public class SubjectStudyPeriodControllerTests {
         form.setStudyPeriod(Long.valueOf(4));
         form.setSubject(Long.valueOf(50));
         form.setGroupProportion(GroupProportion.PAEVIK_GRUPI_JAOTUS_1.name());
-        form.setDeclarationType("DEKLARATSIOON_LISA");
+        form.setDeclarationType(DeclarationType.DEKLARATSIOON_EI.name());
         
         SubjectStudyPeriodTeacherForm t1 = new SubjectStudyPeriodTeacherForm();
         t1.setTeacherId(Long.valueOf(8));

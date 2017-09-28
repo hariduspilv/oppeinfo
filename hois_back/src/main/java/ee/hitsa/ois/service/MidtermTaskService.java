@@ -22,7 +22,6 @@ import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.MidtermTaskStudentResult;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
-import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.repository.DeclarationSubjectRepository;
 import ee.hitsa.ois.repository.MidtermTaskRepository;
 import ee.hitsa.ois.repository.MidtermTaskStudentResultRepository;
@@ -75,7 +74,7 @@ public class MidtermTaskService {
     }
 
     public Page<SubjectStudyPeriodSearchDto> searchSubjectStudyPeriods(
-            Long subjectStudyPeriodId, SubjectStudyPeriodSearchCommand criteria, Pageable pageable, Long teachersPersonId) {
+            Long subjectStudyPeriodId, SubjectStudyPeriodSearchCommand criteria, Pageable pageable) {
         return  subjectStudyPeriodRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
@@ -92,25 +91,6 @@ public class MidtermTaskService {
                 teacherSubquery = teacherSubquery.select(targetRoot.get("subjectStudyPeriod").get("id"))
                         .where(cb.equal(targetRoot.get("teacher").get("id"), criteria.getTeacher()));
                 filters.add(root.get("id").in(teacherSubquery));
-            }
-            
-            /*
-             * If user is teacher, he only should see his own subjectsStudyPeriods
-             */
-            if(teachersPersonId != null) {
-                
-              Subquery<Long> personSubquery = query.subquery(Long.class);
-              Root<Teacher> teacherRoot = personSubquery.from(Teacher.class);
-              personSubquery = personSubquery.select(teacherRoot.get("id"))
-                      .where(cb.equal(teacherRoot.get("person").get("id"), teachersPersonId));
-              
-              Subquery<Long> teacherSubquery = personSubquery.subquery(Long.class);
-              Root<SubjectStudyPeriodTeacher> sspTeacherRoot = teacherSubquery
-                        .from(SubjectStudyPeriodTeacher.class);
-              teacherSubquery = teacherSubquery.select(sspTeacherRoot.get("subjectStudyPeriod").get("id"))
-                    .where(cb.equal(sspTeacherRoot.get("teacher").get("id"), personSubquery));
-      
-              filters.add(root.get("id").in(teacherSubquery));
             }
             
             /*
@@ -207,8 +187,9 @@ public class MidtermTaskService {
 
     public void updateStudentResult(MidtermTaskStudentResultDto dto, MidtermTaskStudentResult studentResult) {
 
-        MidtermTaskUtil.checkIfStudentResultCanBeChanged(studentResult.getDeclarationSubject());
-
+        if(!MidtermTaskUtil.studentResultCanBeChanged(studentResult.getDeclarationSubject())) {
+            return;
+        }
         if(MidtermTaskUtil.resultIsText(studentResult.getMidtermTask())) {
             studentResult.setPoints(null);
             studentResult.setPointsTxt(dto.getPointsTxt());

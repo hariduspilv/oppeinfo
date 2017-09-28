@@ -1,9 +1,6 @@
 package ee.hitsa.ois.util;
 
 import java.util.Set;
-import java.util.stream.Collectors;
-
-import org.apache.commons.collections.CollectionUtils;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.enums.ProtocolStatus;
@@ -30,10 +27,8 @@ public abstract class HigherProtocolUtil {
         if(!user.isTeacher()) {
             return false;
         }
-        // TODO use anyMatch
-        Set<Long> teachersWhoCanConfirm = protocol.getProtocolHdata().getSubjectStudyPeriod().getTeachers().stream()
-                .filter(t -> Boolean.TRUE.equals(t.getIsSignatory())).map(t -> EntityUtil.getId(t.getTeacher().getPerson())).collect(Collectors.toSet());
-        return teachersWhoCanConfirm.contains(user.getPersonId());
+        return protocol.getProtocolHdata().getSubjectStudyPeriod().getTeachers().stream().anyMatch(t -> Boolean.TRUE.equals(t.getIsSignatory()) && 
+                EntityUtil.getId(t.getTeacher()).equals(user.getTeacherId()));
     }
     
     public static void assertCanChange(HoisUserDetails user, Protocol protocol) {
@@ -65,6 +60,7 @@ public abstract class HigherProtocolUtil {
         AssertionFailedException.throwIf(formProtocolStudents.size() 
                 != entityProtocolStudents.size(), message);
         for(Long fPm : formProtocolStudents) {
+            // TODO remove duplicate code?
             AssertionFailedException.throwIf(!entityProtocolStudents.contains(fPm), message);
             if(!entityProtocolStudents.contains(fPm)) {
                 throw new ValidationFailedException("higherProtocol.error.protocolStudentsAddedOrRemoved");
@@ -87,7 +83,7 @@ public abstract class HigherProtocolUtil {
     }
 
     public static void assertStudentsAdded(HigherProtocolCreateForm form) {
-        if(CollectionUtils.isEmpty(form.getStudents())) {
+        if(form.getStudents() == null || form.getStudents().isEmpty()) {
             throw new ValidationFailedException("higherProtocol.error.noStudents");
         }
     }

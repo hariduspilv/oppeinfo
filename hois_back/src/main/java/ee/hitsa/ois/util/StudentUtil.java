@@ -18,9 +18,21 @@ public class StudentUtil {
     public static boolean isStudying(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_O, student.getStatus());
     }
+    
+    public static boolean hasFinished(Student student) {
+        return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_L, student.getStatus());
+    }
 
     public static boolean isOnAcademicLeave(Student student) {
         return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_A, student.getStatus());
+    }
+    
+    public static boolean isHigher(Student student) {
+        return Boolean.TRUE.equals(student.getCurriculumVersion().getCurriculum().getHigher());
+    }
+    
+    public static boolean hasQuit(Student student) {
+        return ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_K, student.getStatus());
     }
 
     public static boolean isNominalStudy(Student student) {

@@ -7,6 +7,8 @@ import java.util.List;
 import javax.validation.Valid;
 import javax.validation.constraints.Size;
 
+import org.hibernate.validator.constraints.NotBlank;
+
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.DateRange;
@@ -101,13 +103,13 @@ public class DirectiveForm extends VersionedCommand {
     @StudyPeriodRange(from = "studyPeriodStart", thru = "studyPeriodEnd")
     public static class DirectiveFormStudent {
         private Long id;
-        @NotEmpty(groups = Immat.class)
+        @NotBlank(groups = Immat.class)
         @EstonianIdCode
         private String idcode;
-        @NotEmpty(groups = Immat.class)
+        @NotBlank(groups = Immat.class)
         @Size(max = 255)
         private String firstname;
-        @NotEmpty(groups = Immat.class)
+        @NotBlank(groups = Immat.class)
         @Size(max = 255)
         private String lastname;
         private LocalDate startDate;

@@ -14,6 +14,7 @@ angular.module('hitsaOis')
     $scope.ehisSchools.push($scope.myEhisSchool);
     // var SpecialityEndpoint = QueryUtils.endpoint(baseUrl + '/speciality');
     var SpecialityEndpoint = QueryUtils.endpoint('/curriculum/' + $scope.curriculum.id + '/speciality');
+    $scope.auth = $route.current.locals.auth;
 
 
     var entity = { curriculum: $scope.curriculum.id, modules: [] };
@@ -56,6 +57,7 @@ angular.module('hitsaOis')
     }
     DataUtils.convertStringToDates($scope.version, ["validFrom", "validThru"]);
     $scope.formState.curriculumPdfUrl = config.apiUrl + baseUrl + '/print/' + $scope.version.id + '/curriculum.pdf';
+    $scope.formState.curriculumXmlUrl = config.apiUrl + baseUrl + '/xml/' + $scope.version.id + '/curriculum.version.xml';
 
     var CurriculumVersionEndpoint = QueryUtils.endpoint('/curriculum/' + $scope.version.curriculum + '/versions');
 

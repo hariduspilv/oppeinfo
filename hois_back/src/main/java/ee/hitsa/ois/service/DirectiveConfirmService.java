@@ -36,8 +36,6 @@ import org.springframework.util.StringUtils;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.Person;
-import ee.hitsa.ois.domain.User;
-import ee.hitsa.ois.domain.UserRights;
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
@@ -50,8 +48,6 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.enums.MessageType;
-import ee.hitsa.ois.enums.Permission;
-import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
@@ -79,11 +75,15 @@ public class DirectiveConfirmService {
     @Autowired
     private EmailGeneratorService emailGeneratorService;
     @Autowired
+    private JobService jobService;
+    @Autowired
     private StudentService studentService;
+    @Autowired
+    private UserService userService;
     @Autowired
     private Validator validator;
 
-    public void sendToConfirm(Directive directive) {
+    public Directive sendToConfirm(Directive directive) {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL, directive.getStatus()), "Invalid directive status");
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
@@ -141,7 +141,10 @@ public class DirectiveConfirmService {
 
         // TODO send to sais, if service returns no errors then update wdId with service return value and set status to kinnitamisel
         setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL);
-        EntityUtil.save(directive, em);
+        directive = EntityUtil.save(directive, em);
+
+        jobService.sendToEkis(directive);
+        return directive;
     }
 
     public Directive rejectByEkis(long directiveId, String rejectComment, String preamble, long wdId) {
@@ -149,12 +152,11 @@ public class DirectiveConfirmService {
         // • ÕISi käskkiri ei leitud – ÕISist ei leita vastava OIS_ID ja WD_ID-ga käskkirja
         // • Vale staatus – tagasi lükata saab ainult „kinnitamisel“ staatusega käskkirja. „Koostamisel“ ja „Kinnitatud“ käskkirju tagasi lükata ei saa.
         // • Üldine veateade – üldine viga salvestamisel, nt liiga lühike andmeväli, vale andmetüüp vms.
-        Directive directive = findDirective(directiveId);
+        Directive directive = findDirective(directiveId, wdId);
         log.info("directive {} rejected by ekis with reason {}", EntityUtil.getId(directive), rejectComment);
         setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL);
         directive.setPreamble(preamble);
         directive.setAddInfo(directive.getAddInfo() + " " + rejectComment);
-        directive.setWdId(Long.valueOf(wdId));
         return EntityUtil.save(directive, em);
     }
 
@@ -164,18 +166,20 @@ public class DirectiveConfirmService {
         //• ÕISi käskkiri ei leitud – ÕISist ei leita vastava vastava OIS_ID ja WD_ID-ga käskkirja
         //• Vale staatus – kinnitada saab ainult „kinnitamisel“ staatusega käskkirja. „Koostamisel“ ja „Kinnitatud“ käskkirju kinnitada ei saa.
         //• Üldine veateade – üldine viga salvestamisel, nt liiga lühike andmeväli, vale andmetüüp vms
-        Directive directive = findDirective(directiveId);
+        Directive directive = findDirective(directiveId, wdId);
         directive.setDirectiveNr(directiveNr);
         directive.setPreamble(preamble);
-        directive.setWdId(Long.valueOf(wdId));
         return confirm(PersonUtil.fullnameAndIdcode(signerName, signerIdCode), directive, confirmDate);
     }
 
-    private Directive findDirective(long directiveId) {
+    private Directive findDirective(long directiveId, long wdId) {
         try {
             Directive directive = em.getReference(Directive.class, Long.valueOf(directiveId));
             if(!ClassifierUtil.equals(DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL, directive.getStatus())) {
                 throw new HoisException("Käskkiri vale staatusega");
+            }
+            if(directive.getWdId() == null || directive.getWdId().longValue() != wdId) {
+                throw new HoisException("Käskkiri vale ekise id-ga");
             }
             return directive;
         } catch(@SuppressWarnings("unused") EntityNotFoundException e) {
@@ -253,7 +257,6 @@ public class DirectiveConfirmService {
 
         // directive type specific calculated data and additional actions
         LocalDate confirmDate = directiveStudent.getDirective().getConfirmDate();
-        User user;
         long duration;
 
         switch(directiveType) {
@@ -268,22 +271,12 @@ public class DirectiveConfirmService {
         case KASKKIRI_EKSMAT:
             // FIXME correct field for Õppuri eksmatrikuleerimise kuupäev?
             student.setStudyEnd(confirmDate);
-            user = userForStudent(student);
-            if(user != null) {
-                user.setValidThru(confirmDate);
-            }
+            userService.disableUser(student, confirmDate);
             break;
         case KASKKIRI_ENNIST:
             student.setStudyStart(confirmDate);
             student.setStudyEnd(null);
-            user = userForStudent(student);
-            // FIXME can user be null?
-            if(user == null) {
-                createUser(student, confirmDate);
-            } else {
-                user.setValidFrom(confirmDate);
-                user.setValidThru(null);
-            }
+            userService.enableUser(student, confirmDate);
             break;
         case KASKKIRI_IMMATV:
             Integer months = directiveStudent.getCurriculumVersion().getCurriculum().getStudyPeriod();
@@ -296,10 +289,7 @@ public class DirectiveConfirmService {
             break;
         case KASKKIRI_LOPET:
             student.setStudyEnd(confirmDate);
-            user = userForStudent(student);
-            if(user != null) {
-                user.setValidThru(confirmDate);
-            }
+            userService.disableUser(student, confirmDate);
             break;
         default:
             break;
@@ -327,19 +317,17 @@ public class DirectiveConfirmService {
         Map<Long, DirectiveStudent> includedStudents = StreamUtil.toMap(ds -> EntityUtil.getId(ds.getStudent()), ds -> ds, directive.getStudents());
         Directive canceledDirective = directive.getCanceledDirective();
         DirectiveType canceledDirectiveType = DirectiveType.valueOf(EntityUtil.getCode(canceledDirective.getType()));
+        LocalDate confirmDate = directive.getConfirmDate();
+
         for(DirectiveStudent ds : canceledDirective.getStudents()) {
             Student student = ds.getStudent();
             DirectiveStudent cancelds = includedStudents.get(student.getId());
             if(cancelds != null) {
                 if(KASKKIRI_IMMAT.equals(canceledDirectiveType) || KASKKIRI_IMMATV.equals(canceledDirectiveType)) {
                     // undo create student. Logic similar to EKSMAT
-                    LocalDate confirmDate = directive.getConfirmDate();
                     student.setStudyEnd(confirmDate);
                     student.setStatus(em.getReference(Classifier.class, StudentStatus.OPPURSTAATUS_K.name()));
-                    User user = userForStudent(student);
-                    if(user != null) {
-                        user.setValidThru(confirmDate);
-                    }
+                    userService.disableUser(student, confirmDate);
                 } else {
                     StudentHistory original = ds.getStudentHistory();
                     copyDirectiveProperties(canceledDirectiveType, original, student);
@@ -352,10 +340,16 @@ public class DirectiveConfirmService {
                     case KASKKIRI_EKSMAT:
                         student.setStudyEnd(null);
                         student.setStatus(original.getStatus());
-                        User user = userForStudent(student);
-                        if(user != null) {
-                            user.setValidThru(null);
-                        }
+                        userService.enableUser(student, confirmDate);
+                        break;
+                    case KASKKIRI_ENNIST:
+                        student.setStudyStart(original.getStudyStart());
+                        student.setStudyEnd(original.getStudyEnd());
+                        userService.disableUser(student, confirmDate);
+                        break;
+                    case KASKKIRI_LOPET:
+                        student.setStudyEnd(null);
+                        userService.enableUser(student, confirmDate);
                         break;
                     case KASKKIRI_VALIS:
                         student.setStatus(original.getStatus());
@@ -418,11 +412,6 @@ public class DirectiveConfirmService {
         directive.setStatus(em.getReference(Classifier.class, status.name()));
     }
 
-    private static User userForStudent(Student student) {
-        Long studentId = student.getId();
-        return student.getPerson().getUsers().stream().filter(u -> studentId.equals(EntityUtil.getNullableId(u.getStudent()))).findFirst().orElse(null);        
-    }
-
     private Student createStudent(DirectiveStudent directiveStudent) {
         School school = directiveStudent.getDirective().getSchool();
 
@@ -433,7 +422,7 @@ public class DirectiveConfirmService {
         student.setIsRepresentativeMandatory(Boolean.FALSE);
         student.setIsSpecialNeed(Boolean.FALSE);
 
-        // student's email
+        // fill student's email
         Person person = student.getPerson();
         String email = emailGeneratorService.lookupSchoolEmail(school, person);
         if(email == null && Boolean.TRUE.equals(school.getGenerateUserEmail())) {
@@ -446,26 +435,8 @@ public class DirectiveConfirmService {
         student.setEmail(email);
 
         // new role for student
-        createUser(student, directiveStudent.getDirective().getConfirmDate());
+        userService.enableUser(student, directiveStudent.getDirective().getConfirmDate());
         return student;
-    }
-
-    private User createUser(Student student, LocalDate validFrom) {
-        User user = new User();
-        user.setPerson(student.getPerson());
-        user.setSchool(student.getSchool());
-        user.setRole(em.getReference(Classifier.class, Role.ROLL_T.name()));
-        user.setStudent(student);
-        user.setValidFrom(validFrom);
-        // rights for logging in
-        // TODO wrong rights, replace!
-        UserRights userRights = new UserRights();
-        userRights.setUser(user);
-        userRights.setPermission(em.getReference(Classifier.class, Permission.OIGUS_V.name()));
-        userRights.setObject(em.getReference(Classifier.class, "TEEMAOIGUS_A"));
-        user.setUserRights(Collections.singleton(userRights));
-        em.persist(user);
-        return user;
     }
 
     private static void copyDirectiveProperties(DirectiveType directiveType, Object source, Student student) {

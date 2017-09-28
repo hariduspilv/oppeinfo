@@ -156,7 +156,7 @@ public class ProtocolService {
 
         List<?> rows = qb.select(
                 "cvo_id, cv_code, cm_name_et, mcl_name_et, cm_name_en, mcl_name_en,"
-                        + "cvot_id, cvot_name_et, cvot_credits, jes_grade_code, jes_grade_inserted, journal_teacher_id, journal_teacher_firstname, journal_teacher_lastname, sy_year_code, sy_start_date",
+                        + "cvot_id, cvot_name_et, cvot_credits, jes_grade_code, jes_grade_inserted, journal_teacher_id, journal_teacher_firstname, journal_teacher_lastname, sy_year_code, sy_start_date ",
                 em).getResultList();
 
         Map<Long, StudentVocationalResultModuleThemeDto> result = new HashMap<>();

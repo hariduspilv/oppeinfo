@@ -86,6 +86,8 @@ public class SchoolControllerTests {
 
     @Test
     public void get() {
+        testConfigurationService.userToRoleInSchool(Role.ROLL_P, null, restTemplate);
+
         ResponseEntity<Object> responseEntity = restTemplate
                 .getForEntity(String.format("/school/%d", MISSING_SCHOOL_ID), Object.class);
         Assert.assertNotNull(responseEntity);
@@ -99,6 +101,8 @@ public class SchoolControllerTests {
 
     @Test
     public void search() {
+        testConfigurationService.userToRoleInSchool(Role.ROLL_P, null, restTemplate);
+
         String uri = UriComponentsBuilder.fromUriString("/school").queryParam("lang", "ET").build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);

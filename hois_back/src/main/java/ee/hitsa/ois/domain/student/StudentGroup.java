@@ -28,8 +28,10 @@ public class StudentGroup extends BaseEntityWithId {
     @ManyToOne(fetch = FetchType.LAZY)
     private CurriculumVersion curriculumVersion;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
     private Curriculum curriculum;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false)
     private Classifier studyForm;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier language;

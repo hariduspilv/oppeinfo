@@ -50,7 +50,7 @@
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
-          <label class="textInput">{{'practiceJournal.credits' | translate}}</label>
+          <label class="textInput">{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
           <input type="number" ng-model="practiceJournal.credits" ng-min="0" ng-max="999.9" required>
         </md-input-container>
 
@@ -67,7 +67,7 @@
         </md-input-container>
 
         <md-input-container flex="10" flex-sm="100" flex-xs="100" flex-offset-gt-md="5">
-          <label class="textInput">{{'practiceJournal.credits' | translate}}</label>
+          <label class="textInput">{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
           <input type="number" ng-model="practiceJournal.credits" required>
         </md-input-container>
 

@@ -22,7 +22,7 @@ public class TimetableEvent extends BaseEntityWithId {
     // FIXME: rename in database
     @Column(name = "\"end\"")
     private LocalDateTime end;
-    private Short lessons;
+    private Long lessons;
     private Boolean considerBreak;
     private String name;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
@@ -30,6 +30,8 @@ public class TimetableEvent extends BaseEntityWithId {
     private Short lessonNr;
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier capacityType;
+    @ManyToOne(fetch = FetchType.LAZY)
+    private SubjectStudyPeriodStudentGroup subjectStudyPeriodStudentGroup;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
@@ -55,11 +57,11 @@ public class TimetableEvent extends BaseEntityWithId {
         this.end = end;
     }
 
-    public Short getLessons() {
+    public Long getLessons() {
         return lessons;
     }
 
-    public void setLessons(Short lessons) {
+    public void setLessons(Long lessons) {
         this.lessons = lessons;
     }
 
@@ -109,6 +111,14 @@ public class TimetableEvent extends BaseEntityWithId {
 
     public void setCapacityType(Classifier capacityType) {
         this.capacityType = capacityType;
+    }
+
+    public SubjectStudyPeriodStudentGroup getSubjectStudyPeriodStudentGroup() {
+        return subjectStudyPeriodStudentGroup;
+    }
+
+    public void setSubjectStudyPeriodStudentGroup(SubjectStudyPeriodStudentGroup subjectStudyPeriodStudentGroup) {
+        this.subjectStudyPeriodStudentGroup = subjectStudyPeriodStudentGroup;
     }
 
     public TimetableObject getTimetableObject() {

@@ -13,8 +13,6 @@ import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.MidtermTaskStudentResult;
 import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
-import ee.hitsa.ois.enums.DeclarationStatus;
-import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -29,8 +27,8 @@ public abstract class MidtermTaskUtil {
 
     public static boolean studentResultCanBeChanged(DeclarationSubject declarationSubject) {
         Declaration declaration = declarationSubject.getDeclaration();
-        return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_K, declaration.getStatus()) &&
-               !ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_L, declaration.getStudent().getStatus()) && 
+        return DeclarationUtil.declarationConfirmed(declaration) &&
+               StudentUtil.isActive(declaration.getStudent()) &&
                !studentHasConfirmedProtocol(declarationSubject);
     }
 
@@ -39,12 +37,11 @@ public abstract class MidtermTaskUtil {
                 .stream().anyMatch(p -> HigherProtocolUtil.isConfirmed(p.getProtocol()) &&
                         protocolIncludesStudent(p, declarationSubject));
     }
-
+    
     private static boolean protocolIncludesStudent(ProtocolHdata p, DeclarationSubject declarationSubject) {
-        Set<Long> protocolStudents = 
-                StreamUtil.toMappedSet(s -> EntityUtil.getId(s.getStudent()), 
-                        p.getProtocol().getProtocolStudents());
-        return protocolStudents.contains(EntityUtil.getId(declarationSubject.getDeclaration().getStudent()));
+        return p.getProtocol().getProtocolStudents().stream().anyMatch(ps -> 
+        EntityUtil.getId(declarationSubject.getDeclaration().getStudent())
+                .equals(EntityUtil.getId(ps.getStudent())));
     }
 
     public static Boolean getStudentResultIsText(MidtermTask midtermTask) {

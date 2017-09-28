@@ -1,0 +1,55 @@
+<div class="ois-form-layout-padding form-readonly">
+    <div flex>
+        <div ng-repeat="continuingEducation in teacher.teacherContinuingEducations">
+            <hois-collapsable label="('teacher.continuingEducation.continuingEducation' | translate)">
+                <div layout="row" layout-sm="column" layout-xs="column">
+                    <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.continuingEducation.school' | translate}}</label>
+                        <hois-classifier-value ng-model="continuingEducation.school" main-classifier-code="EHIS_TAIEND_OPPEAS"></hois-classifier-value>
+                    </md-input-container>
+                    <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.continuingEducation.otherSchool' | translate}}</label>
+                        <hois-value value="continuingEducation.otherSchool"></hois-value>
+                    </md-input-container>
+                    <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.continuingEducation.field' | translate}}</label>
+                        <hois-classifier-value ng-model="continuingEducation.field" main-classifier-code="EHIS_TAIEND_VALDKOND"></hois-classifier-value>
+                    </md-input-container>
+                </div>
+                <div layout="row" layout-sm="column" layout-xs="column">
+                    <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.continuingEducation.name' | translate}}</label>
+                        <hois-value value="continuingEducation.nameEt"></hois-value>
+                    </md-input-container>
+                    <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.continuingEducation.capacity' | translate}}</label>
+                        <hois-value value="continuingEducation.capacity"></hois-value>
+                    </md-input-container>
+                    <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.continuingEducation.diplomaCode' | translate}}</label>
+                        <hois-classifier-value ng-model="continuingEducation.diploma" main-classifier-code="EHIS_TAIEND_DOK"></hois-classifier-value>
+                    </md-input-container>
+                </div>
+                <div layout="row" layout-sm="column" layout-xs="column">
+                    <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.continuingEducation.diplomaDate' | translate}}</label>
+                        <hois-value value="continuingEducation.diplomaDate | hoisDate"></hois-value>
+                    </md-input-container>
+                    <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.continuingEducation.diplomaNr' | translate}}</label>
+                        <hois-value value="continuingEducation.diplomaNr"></hois-value>
+                    </md-input-container>
+                    <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                        <md-checkbox ng-model="continuingEducation.isAbroad" disabled>{{'teacher.continuingEducation.isAbroad' | translate}}</md-checkbox>
+                    </md-input-container>
+                </div>
+                <div layout="row" layout-sm="column" layout-xs="column">
+                    <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.continuingEducation.abroadDescription' | translate}}</label>
+                        <hois-value value="continuingEducation.abroadDesc"></hois-value>
+                    </md-input-container>
+                </div>
+            </hois-collapsable>
+        </div>
+    </div>
+</div>

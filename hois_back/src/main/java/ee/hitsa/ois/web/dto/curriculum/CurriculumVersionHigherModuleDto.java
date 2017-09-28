@@ -8,8 +8,6 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
 
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -83,8 +81,6 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         return dto;
     }
 
-    @XmlElementWrapper(name = "curriculumSpecialities")
-    @XmlElement(name="curriculumSpecialityId")
     public Set<Long> getSpecialitiesReferenceNumbers() {
         return specialitiesReferenceNumbers != null ? specialitiesReferenceNumbers : (specialitiesReferenceNumbers = new HashSet<>());
     }
@@ -212,8 +208,7 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     public void setType(String type) {
         this.type = type;
     }
-    @XmlElementWrapper(name = "subjects")
-    @XmlElement(name="subject")
+
     public Set<CurriculumVersionHigherModuleSubjectDto> getSubjects() {
         return subjects;
     }
@@ -222,8 +217,6 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         this.subjects = subjects;
     }
 
-    @XmlElementWrapper(name = "electiveModules")
-    @XmlElement(name="electiveModule")
     public Set<CurriculumVersionElectiveModuleDto> getElectiveModules() {
         return electiveModules != null ? electiveModules : (electiveModules = new HashSet<>());
     }

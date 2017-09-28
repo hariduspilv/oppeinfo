@@ -4,6 +4,8 @@ import java.util.Arrays;
 import java.util.EnumSet;
 import java.util.Set;
 
+import javax.persistence.EntityManager;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -21,8 +23,11 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.directive.Directive;
+import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.service.DirectiveService;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveCoordinatorForm;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveDataCommand;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
@@ -35,9 +40,15 @@ import ee.hitsa.ois.web.dto.directive.DirectiveViewDto;
 public class DirectiveControllerTests {
 
     @Autowired
+    private DirectiveService directiveService;
+    @Autowired
+    private EntityManager em;
+    @Autowired
     private TestRestTemplate restTemplate;
     @Autowired
     private TestConfigurationService testConfigurationService;
+    private Long coordinatorId;
+    private Long directiveId;
 
     @Before
     public void setUp() {
@@ -47,6 +58,14 @@ public class DirectiveControllerTests {
     @After
     public void cleanUp() {
         testConfigurationService.setSessionCookie(null);
+        if(coordinatorId != null) {
+            directiveService.delete(em.getReference(DirectiveCoordinator.class, coordinatorId));
+            coordinatorId = null;
+        }
+        if(directiveId != null) {
+            directiveService.delete(em.getReference(Directive.class, directiveId));
+            directiveId = null;
+        }
     }
 
     @Test
@@ -178,23 +197,23 @@ public class DirectiveControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
-        Long id = responseEntity.getBody().getId();
-        Assert.assertNotNull(id);
+        directiveId = responseEntity.getBody().getId();
+        Assert.assertNotNull(directiveId);
 
         // read
-        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(directiveId.toString());
         ResponseEntity<DirectiveDto> response = restTemplate.getForEntity(uriBuilder.build().toUriString(), DirectiveDto.class);
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 
         // read for view
-        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString()).pathSegment("view");
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(directiveId.toString()).pathSegment("view");
         ResponseEntity<DirectiveViewDto> viewResponse = restTemplate.getForEntity(uriBuilder.build().toUriString(), DirectiveViewDto.class);
         Assert.assertNotNull(viewResponse);
         Assert.assertEquals(HttpStatus.OK, viewResponse.getStatusCode());
 
         // update
-        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(directiveId.toString());
         form = response.getBody();
         Assert.assertNotNull(form);
         form.setHeadline("Akad katkestamise käskkiri (muudetud)");
@@ -203,7 +222,7 @@ public class DirectiveControllerTests {
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
 
         // read
-        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(directiveId.toString());
         responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), DirectiveDto.class);
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
@@ -211,9 +230,10 @@ public class DirectiveControllerTests {
         Assert.assertNotNull(version);
 
         // delete
-        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(directiveId.toString());
         uriBuilder.queryParam("version", version);
         restTemplate.delete(uriBuilder.build().toUriString());
+        directiveId = null;
     }
 
     @Test
@@ -229,11 +249,16 @@ public class DirectiveControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
-        Long id = responseEntity.getBody().getId();
-        Assert.assertNotNull(id);
+        coordinatorId = responseEntity.getBody().getId();
+        Assert.assertNotNull(coordinatorId);
+
+        // duplicate entry
+        responseEntity = restTemplate.postForEntity(uri, form, DirectiveCoordinatorDto.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
 
         // read
-        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(coordinatorId.toString());
         uri = uriBuilder.build().toUriString();
         ResponseEntity<DirectiveCoordinatorDto> response = restTemplate.getForEntity(uri, DirectiveCoordinatorDto.class);
         Assert.assertNotNull(response);
@@ -267,9 +292,10 @@ public class DirectiveControllerTests {
         Assert.assertEquals(HttpStatus.OK, searchResponseEntity.getStatusCode());
 
         // delete
-        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(id.toString());
+        uriBuilder = UriComponentsBuilder.fromUriString(baseUrl).pathSegment(coordinatorId.toString());
         uriBuilder.queryParam("version", version);
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);
+        coordinatorId = null;
     }
 }

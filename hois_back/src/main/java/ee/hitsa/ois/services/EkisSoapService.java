@@ -5,23 +5,26 @@ import java.time.LocalDate;
 import java.util.function.Supplier;
 
 import javax.jws.WebService;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.exception.HoisException;
+import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.DirectiveConfirmService;
 import ee.hitsa.ois.service.JobService;
-import ee.hois.soap.ekis.generated.EkisTahvelPort;
-import ee.hois.soap.ekis.generated.EnforceCertificate;
-import ee.hois.soap.ekis.generated.EnforceCertificateResponse;
-import ee.hois.soap.ekis.generated.EnforceDirective;
-import ee.hois.soap.ekis.generated.EnforceDirectiveResponse;
-import ee.hois.soap.ekis.generated.RejectDirective;
-import ee.hois.soap.ekis.generated.RejectDirectiveResponse;
+import ee.hois.soap.ekis.service.generated.EkisTahvelPort;
+import ee.hois.soap.ekis.service.generated.EnforceContract;
+import ee.hois.soap.ekis.service.generated.EnforceContractResponse;
+import ee.hois.soap.ekis.service.generated.EnforceDirective;
+import ee.hois.soap.ekis.service.generated.EnforceDirectiveResponse;
+import ee.hois.soap.ekis.service.generated.RejectDirective;
+import ee.hois.soap.ekis.service.generated.RejectDirectiveResponse;
 
 @Component
 @WebService(
@@ -35,15 +38,25 @@ public class EkisSoapService implements EkisTahvelPort {
     private static final String SYSTEM_FAULT = "süsteemi viga";
 
     @Autowired
+    private ContractService contractService;
+    @Autowired
     private DirectiveConfirmService directiveConfirmService;
     @Autowired
     private JobService jobService;
 
     @Override
-    public EnforceCertificateResponse enforceCertificate(EnforceCertificate request) {
-        //TODO analüüs on veel poolik
-        log.info("EkisSoapService: enforceCertificate");
-        EnforceCertificateResponse response = new EnforceCertificateResponse();
+    public EnforceContractResponse enforceContract(EnforceContract request) {
+        log.info("EkisSoapService: enforceContract");
+        LocalDate contractDate = toLocalDate(request.getContractDate());
+        Contract contract = withExceptionHandler(() -> {
+            Contract c = contractService.confirmedByEkis(request.getOisContractId(), request.getContractNumber(), contractDate, request.getWdContractId());
+            jobService.contractConfirmed(c);
+            return c;
+        });
+        EnforceContractResponse response = new EnforceContractResponse();
+        response.setOisContractId(request.getOisContractId());
+        response.setWdContractId(request.getWdContractId());
+        response.setStatus(contract.getStatus().getNameEt());
         return response;
     }
 
@@ -57,7 +70,7 @@ public class EkisSoapService implements EkisTahvelPort {
     @Override
     public EnforceDirectiveResponse enforceDirective(EnforceDirective request) {
         log.info("EkisSoapService: enforceDirective");
-        LocalDate directiveDate = request.getDirectiveDate().toGregorianCalendar().toZonedDateTime().toLocalDate();
+        LocalDate directiveDate = toLocalDate(request.getDirectiveDate());
         Directive directive = withExceptionHandler(() -> {
             Directive d = directiveConfirmService.confirmedByEkis(request.getOisDirectiveId(), request.getDirectiveNumber(), directiveDate,
                     request.getPreamble(), request.getWdDirectiveId(), request.getSignerIDCode(), request.getSignerName());
@@ -86,7 +99,11 @@ public class EkisSoapService implements EkisTahvelPort {
         return response;
     }
 
-    private static Directive withExceptionHandler(Supplier<Directive> supplier) {
+    private static LocalDate toLocalDate(XMLGregorianCalendar date) {
+        return date.toGregorianCalendar().toZonedDateTime().toLocalDate();
+    }
+
+    private static <T> T withExceptionHandler(Supplier<T> supplier) {
         try {
             return supplier.get();
         } catch (HoisException e) {

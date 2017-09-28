@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.Comparator;
 import java.util.List;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -60,6 +61,23 @@ public abstract class PersonUtil {
      */
     public static String stripIdcodeFromFullnameAndIdcode(String fullnameAndIdcode) {
         return fullnameAndIdcode != null ? IDCODE_PATTERN.matcher(fullnameAndIdcode).replaceAll("").trim() : null;
+    }
+
+    /**
+     * Returns estonian idcode-like value (see regex IDCODE_PATTERN in this file) from string.
+     * @param fullnameAndIdcode
+     * @return null if fullnameAndIdcode is null or match is not found
+     */
+    public static String idcodeFromFullnameAndIdcode(String fullnameAndIdcode) {
+        if(fullnameAndIdcode != null) {
+            Matcher m = IDCODE_PATTERN.matcher(fullnameAndIdcode);
+            if(m.find()) {
+                String idcode = m.group();
+                // strip parenthesis
+                return idcode.substring(1, idcode.length() - 1);
+            }
+        }
+        return null;
     }
 
     public static final Comparator<Person> SORT = Comparator.comparing(Person::getLastname, String.CASE_INSENSITIVE_ORDER)

@@ -1,15 +1,11 @@
 package ee.hitsa.ois.service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,12 +16,13 @@ import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.StudyPeriodEventRepository;
-import ee.hitsa.ois.repository.StudyYearRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.StudyPeriodValidation;
@@ -39,17 +36,15 @@ import ee.hitsa.ois.web.dto.StudyYearSearchDto;
 @Transactional
 public class StudyYearService {
 
+    private static final Set<String> STUDY_PERIOD_EVENTS = EnumUtil.toNameSet(
+            StudyPeriodEventType.SYNDMUS_AVES, StudyPeriodEventType.SYNDMUS_DEKP, StudyPeriodEventType.SYNDMUS_VOTA);
+
     @Autowired
     private EntityManager em;
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
-    private StudyYearRepository studyYearRepository;
-    @Autowired
     private StudyPeriodEventRepository studyPeriodEventRepository;
-
-    // TODO use enum for classifier
-    private static final Set<String> STUDY_PERIOD_EVENTS = new HashSet<>(Arrays.asList("SYNDMUS_AVES", "SYNDMUS_DEKP", "SYNDMUS_VOTA"));
 
     public List<StudyYearSearchDto> getStudyYears(Long schoolId) {
         Query q = em.createNativeQuery("select c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, sy.count " +
@@ -129,47 +124,43 @@ public class StudyYearService {
         EntityUtil.deleteEntity(studyPeriodEvent, em);
     }
 
-    public Long getPreviousStudyPeriod(Long school) {
+    public Long getPreviousStudyPeriod(Long schoolId) {
         String from = "from study_period ss inner join study_year yy on ss.study_year_id = yy.id";
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
 
-        qb.requiredCriteria("yy.school_id = :school_id", "school_id", school);
+        qb.requiredCriteria("yy.school_id = :school_id", "school_id", schoolId);
         qb.requiredCriteria(
                 "ss.end_date = (select max(ss2.end_date) from study_period ss2 join study_year yy2"
                         + " on ss2.study_year_id = yy2.id and yy2.school_id = :school_id where ss2.end_date < current_date) ",
-                "school_id", school);
-        List<?> result = qb.select("ss.id", em).getResultList();
+                "school_id", schoolId);
+        List<?> result = qb.select("ss.id", em).setMaxResults(1).getResultList();
         if (result.isEmpty()) {
             return null;
         }
         return Long.valueOf(((Number) result.get(0)).longValue());
     }
 
-    public Long getCurrentStudyPeriod(Long school) {
+    public Long getCurrentStudyPeriod(Long schoolId) {
         String from = "from study_period ss inner join study_year yy on ss.study_year_id = yy.id";
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
 
-        qb.requiredCriteria("yy.school_id = :school_id", "school_id", school);
+        qb.requiredCriteria("yy.school_id = :school_id", "school_id", schoolId);
         qb.requiredCriteria(
                 "ss.end_date = (select min(ss2.end_date) from study_period ss2 join study_year yy2"
                         + " on ss2.study_year_id = yy2.id and yy2.school_id = :school_id where ss2.end_date >= current_date)",
-                "school_id", school);
-        List<?> result = qb.select("ss.id", em).getResultList();
+                "school_id", schoolId);
+        List<?> result = qb.select("ss.id", em).setMaxResults(1).getResultList();
         if (result.isEmpty()) {
             return null;
         }
         return Long.valueOf(((Number) result.get(0)).longValue());
     }
 
-    public StudyYear getCurrentStudyYear(School school) {
+    public StudyYear getCurrentStudyYear(Long schoolId) {
         //TODO: what if study year is not found? Should we return previous study year or next study year instead of null?
         LocalDate now = LocalDate.now();
-        return studyYearRepository.findOne((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), EntityUtil.getId(school)));
-            filters.add(cb.lessThanOrEqualTo(root.get("startDate"), now));
-            filters.add(cb.greaterThanOrEqualTo(root.get("endDate"), now));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        });
+        List<StudyYear> data = em.createQuery("select sy from StudyYear sy where sy.school.id = ?1 and sy.startDate <= ?2 and sy.endDate >= ?2", StudyYear.class)
+            .setParameter(1, schoolId).setParameter(2, now).setMaxResults(1).getResultList();
+        return data.isEmpty() ? null : data.get(0);
     }
 }

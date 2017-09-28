@@ -2,7 +2,6 @@
 
 angular.module('hitsaOis').controller('HigherProtocolSearchController', function ($scope, $route, $location, QueryUtils, DataUtils, Classifier, message, $q, dialogService, ArrayUtils) {
   $scope.auth = $route.current.locals.auth;
-  var currentStudyPeriod = null;
   var baseUrl = "/higherProtocols";
 
   var clMapper = Classifier.valuemapper({status: 'PROTOKOLL_STAATUS', protocolType: 'PROTOKOLLI_LIIK'});
@@ -12,25 +11,22 @@ angular.module('hitsaOis').controller('HigherProtocolSearchController', function
 
   var Endpoint = QueryUtils.endpoint(baseUrl);
 
-  function selectCurrentStudyPeriod() {
-    if(currentStudyPeriod) {
-        $scope.criteria.studyPeriod = currentStudyPeriod;
-        $scope.loadData();
-    } else {
-      QueryUtils.endpoint('/school/studyPeriod/current').get().$promise.then(function(response){
-        currentStudyPeriod = response.currentStudyPeriod;
-        $scope.criteria.studyPeriod = currentStudyPeriod;
-        $scope.loadData();
-      });
+  function setCurrentStudyPeriod() {
+    if($scope.criteria && $scope.studyPeriods && !$scope.criteria.studyPeriod) {
+        $scope.criteria.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
     }
   }
 
-  $scope.$watch("criteria.studyPeriod", function() {
-    if(!$scope.criteria.studyPeriod) {
-      selectCurrentStudyPeriod();
-    }
+  QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
+      $scope.studyPeriods = response;
+      setCurrentStudyPeriod();
+      $scope.loadData();
   });
-  selectCurrentStudyPeriod();
+
+  $scope.$watch('criteria.studyPeriod', function() {
+        setCurrentStudyPeriod();
+      }
+  );
 
   $scope.openCreateProtocolDialog = function() {
     var DialogController = function (scope) {

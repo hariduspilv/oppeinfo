@@ -9,7 +9,11 @@
         <br>
         <div layout="column">
             <div layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
-                <md-input-container flex="25" flex-sm="100" flex-xs="100">
+                <md-input-container ng-if="isNew" flex="25" flex-sm="100" flex-xs="100">
+                    <label>{{'subjectStudyPeriod.teacher' | translate}}</label>
+                    <hois-select ng-model="record.studyPeriod" values="studyPeriods" required></hois-select>
+                </md-input-container>
+                <md-input-container ng-if="!isNew" flex="25" flex-sm="100" flex-xs="100">
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
                     <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
                 </md-input-container>

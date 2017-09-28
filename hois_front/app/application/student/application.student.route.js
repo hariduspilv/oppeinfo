@@ -11,7 +11,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS]
         }
       })
       .when('/applications/student/new/:type', {
@@ -24,7 +24,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           isCreate: function (){return true;}
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AVALDUS]
         }
       });
 }]);

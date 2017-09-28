@@ -9,8 +9,13 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 import ee.hitsa.ois.services.EkisSoapService;
+import ee.hois.soap.ekis.client.EkisClient;
+import ee.hois.xroad.ehis.service.EhisClient;
+import ee.hois.xroad.sais2.service.SaisClient;
 
 /**
+ * Configuration file for services hois offers (ekis) and consumes (ehis, ekis, sais)
+ *
  * By default CXF JAX-WS servlet path is /services/*
  *
  * http://cxf.apache.org/docs/springboot.html
@@ -25,6 +30,11 @@ public class ServicesConfiguration {
     @Autowired
     private EkisSoapService ekisSoapService;
 
+    /**
+     * Ekis service endpoint
+     *
+     * @return
+     */
     @Bean
     public Endpoint endpoint() {
         EndpointImpl endpoint = new EndpointImpl(bus, ekisSoapService);
@@ -32,4 +42,33 @@ public class ServicesConfiguration {
         return endpoint;
     }
 
+    /**
+     * Ehis client
+     *
+     * @return
+     */
+    @Bean
+    public EhisClient ehisClient() {
+        return new EhisClient();
+    }
+
+    /**
+     * Ekis client
+     *
+     * @return
+     */
+    @Bean
+    public EkisClient ekisClient() {
+        return new EkisClient();
+    }
+
+    /**
+     * Sais client
+     *
+     * @return
+     */
+    @Bean
+    public SaisClient saisClient() {
+        return new SaisClient();
+    }
 }

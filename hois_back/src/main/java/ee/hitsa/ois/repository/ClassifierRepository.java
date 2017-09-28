@@ -27,9 +27,6 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String>,
 	        + " and a.main_class_code = 'ISCED_VALD' and is_higher", nativeQuery = true)
 	List<Classifier> findAreasOfStudyByGroupOfStudy(String code);
 
-    @Query("select c.code from Classifier c where c.mainClassCode = ?1")
-    List<String> findAllCodesByMainClassCode(String mainClassCode);
-
     List<Classifier> findAllByMainClassCode(String mainClassCode);
 
     Classifier findByValueAndMainClassCode(String value, String mainClassCode);

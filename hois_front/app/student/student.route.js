@@ -8,7 +8,11 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       templateUrl: 'student/view.main.html',
       controller: 'StudentViewMainController',
       controllerAs: 'controller',
-      data: authorizedRoles,
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR
+        ]
+      },
       resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
@@ -56,12 +60,41 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       templateUrl: 'student/list.html',
       controller: 'SimpleListController',
       controllerAs: 'controller',
-      data: authorizedRoles,
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR]
+      },
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); },
         clMapping: function() { return {studyForm: 'OPPEVORM', status: 'OPPURSTAATUS'}; },
         params: function() { return {order: 'person.lastname,person.firstname'}; },
-        url: function() { return '/students'; }
+        url: function() { return '/students'; },
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      }
+    }).when('/students/myData', {
+      templateUrl: 'student/view.main.html',
+      controller: 'StudentViewMainController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR
+        ]
+      },
+      resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
+    }).when('/students/myResults', {
+      templateUrl: 'student/view.results.html',
+      controller: 'StudentViewResultsController',
+      controllerAs: 'controller',
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR
+        ]
+      },
+      resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); } ,
+          auth: function (AuthResolver) { return AuthResolver.resolve(); },
       }
     });
 });

@@ -55,11 +55,10 @@ public class MidtermTaskController {
     public Page<SubjectStudyPeriodSearchDto> searchSubjectStudyPeriods
     (HoisUserDetails user, SubjectStudyPeriodSearchCommand criteria, Pageable pageable, 
             @NotNull @PathVariable("id") Long subjectStudyPeriodId) {
-        Long teachersPersonId = null;
         if(user.isTeacher()) {
-            teachersPersonId = user.getPersonId();
+            criteria.setTeacher(user.getTeacherId());
         }
-        return midtermTaskService.searchSubjectStudyPeriods(subjectStudyPeriodId, criteria, pageable, teachersPersonId);
+        return midtermTaskService.searchSubjectStudyPeriods(subjectStudyPeriodId, criteria, pageable);
     }
     
     @PutMapping("/{id:\\d+}/subjectStudyPeriodCopy/{copiedId:\\d+}")

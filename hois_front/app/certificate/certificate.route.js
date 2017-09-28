@@ -11,7 +11,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TOEND]
         }
       })
       .when('/certificate/new', {
@@ -26,17 +26,6 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       })
       .when('/certificate/:typeCode/new', {
-        templateUrl: 'certificate/certificate.student.new.html',
-        controller: 'CertificateStudentOrderController',
-        controllerAs: 'controller',
-        resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
-        },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
-        }
-      })
-      .when('/certificate/:typeCode/:id/edit', {
         templateUrl: 'certificate/certificate.student.new.html',
         controller: 'CertificateStudentOrderController',
         controllerAs: 'controller',
@@ -63,7 +52,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'CertificateViewController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+            translationLoaded: function($translate) { return $translate.onReady(); },
+            auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]

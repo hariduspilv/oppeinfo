@@ -6,6 +6,7 @@ public class CerfificateReportCurriculum {
     
     private String name;
     private String code;
+    private String studyLevel;
     private int nominalStudyYears;
     private int nominalStudyMonths;
     
@@ -18,9 +19,18 @@ public class CerfificateReportCurriculum {
         curriculumReport.setCode(curriculum.getCode());
         curriculumReport.setNominalStudyYears(curriculum.getStudyPeriod() / MONTHS_IN_YEAR);
         curriculumReport.setNominalStudyMonths(curriculum.getStudyPeriod() % MONTHS_IN_YEAR);
+        curriculumReport.setStudyLevel(curriculum.getOrigStudyLevel().getNameEt());
         return curriculumReport;
     }
     
+    public String getStudyLevel() {
+        return studyLevel;
+    }
+
+    public void setStudyLevel(String studyLevel) {
+        this.studyLevel = studyLevel;
+    }
+
     public int getNominalStudyYears() {
         return nominalStudyYears;
     }

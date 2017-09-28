@@ -1,8 +1,12 @@
 package ee.hitsa.ois.web;
 
+import java.time.LocalDate;
+
 import javax.transaction.Transactional;
 
+import org.junit.After;
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -11,27 +15,36 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.enums.FinSource;
-import ee.hitsa.ois.repository.SaisAdmissionRepository;
-import ee.hitsa.ois.service.security.HoisUserDetailsService;
+import ee.hitsa.ois.enums.Role;
+import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionImportForm;
 import ee.hitsa.ois.web.dto.sais.SaisAdmissionSearchDto;
 
 @Transactional
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class SaisAdmissionControllerTests {
 
     @Autowired
-    private HoisUserDetailsService hoisUserDetailsService;
-
+    private TestConfigurationService testConfigurationService;
     @Autowired
     private TestRestTemplate restTemplate;
 
-    @Autowired
-    private SaisAdmissionRepository saisAdmissionRepository;
+    @Before
+    public void setUp() {
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
+    }
+
+    @After
+    public void cleanUp() {
+        testConfigurationService.setSessionCookie(null);
+    }
 
     @Test
     public void search() {
@@ -64,4 +77,14 @@ public class SaisAdmissionControllerTests {
 //        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
 
+    @Test
+    public void saisImport() {
+        String uri = UriComponentsBuilder.fromUriString("/saisAdmissions/saisImport").build().toUriString();
+        SaisAdmissionImportForm form = new SaisAdmissionImportForm();
+        form.setCreateDateFrom(LocalDate.parse("2016-10-31"));
+        form.setCreateDateTo(LocalDate.parse("2016-12-31"));
+        ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri, form, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

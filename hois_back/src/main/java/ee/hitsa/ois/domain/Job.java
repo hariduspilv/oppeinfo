@@ -46,6 +46,9 @@ public class Job implements Serializable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(updatable = false)
     private Student student;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(updatable = false)
+    private Contract contract;
     @CreatedDate
     @Column(nullable = false, updatable = false)
     private LocalDateTime inserted;
@@ -106,6 +109,14 @@ public class Job implements Serializable {
 
     public void setStudent(Student student) {
         this.student = student;
+    }
+
+    public Contract getContract() {
+        return contract;
+    }
+
+    public void setContract(Contract contract) {
+        this.contract = contract;
     }
 
     public LocalDateTime getInserted() {

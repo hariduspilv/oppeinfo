@@ -8,12 +8,14 @@ public class TimetableManagementSearchDto {
     private String status;
     private LocalDate start;
     private LocalDate end;
+    private Boolean isHigher;
 
-    public TimetableManagementSearchDto(Long id, String status, LocalDate start, LocalDate end) {
+    public TimetableManagementSearchDto(Long id, String status, LocalDate start, LocalDate end, Boolean isHigher) {
         this.id = id;
         this.status = status;
         this.start = start;
         this.end = end;
+        this.isHigher = isHigher;
     }
 
     public Long getId() {
@@ -46,5 +48,13 @@ public class TimetableManagementSearchDto {
 
     public void setEnd(LocalDate end) {
         this.end = end;
+    }
+
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
     }
 }

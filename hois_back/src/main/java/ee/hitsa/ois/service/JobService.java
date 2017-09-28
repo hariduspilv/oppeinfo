@@ -12,9 +12,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.JobStatus;
 import ee.hitsa.ois.enums.JobType;
@@ -36,6 +38,36 @@ public class JobService {
 
     @Autowired
     private EntityManager em;
+
+    public void contractConfirmed(Contract contract) {
+        if(contract.getEndDate() != null) {
+            Job ehis = new Job();
+            Student student = contract.getStudent();
+            ehis.setSchool(student.getSchool());
+            ehis.setStudent(student);
+            ehis.setContract(contract);
+            ehis.setJobTime(contract.getEndDate().atStartOfDay().plusDays(1));
+            submitJob(JobType.JOB_PRAKTIKALEPING_KEHTETU, ehis);
+        }
+    }
+
+    public void sendToEkis(Contract contract) {
+        Job ekis = new Job();
+        Student student = contract.getStudent();
+        ekis.setSchool(student.getSchool());
+        ekis.setStudent(student);
+        ekis.setContract(contract);
+        ekis.setJobTime(LocalDateTime.now());
+        submitJob(JobType.JOB_EKIS, ekis);
+    }
+
+    public void sendToEkis(Directive directive) {
+        Job ekis = new Job();
+        ekis.setSchool(directive.getSchool());
+        ekis.setDirective(directive);
+        ekis.setJobTime(LocalDateTime.now());
+        submitJob(JobType.JOB_EKIS, ekis);
+    }
 
     public void directiveConfirmed(Directive directive) {
         submitEhisSend(directive);
@@ -73,6 +105,25 @@ public class JobService {
         default:
             // do nothing
         }
+    }
+
+    public List<Job> findExecutableJobs(JobType... types) {
+        List<String> typeNames = EnumUtil.toNameList(types);
+        return em.createQuery("select j from Job j where j.status.code = ?1 and j.type.code in ?2 and j.jobTime <= ?3", Job.class)
+            .setParameter(1, JobStatus.JOB_STATUS_VALMIS.name())
+            .setParameter(2, typeNames)
+            .setParameter(3, LocalDateTime.now())
+            .getResultList();
+    }
+
+    public Job jobFailed(Job job) {
+        setJobStatus(job, JobStatus.JOB_STATUS_VIGA);
+        return em.merge(job);
+    }
+
+    public Job jobDone(Job job) {
+        setJobStatus(job, JobStatus.JOB_STATUS_TAIDETUD);
+        return em.merge(job);
     }
 
     private void submitAkadJob(DirectiveStudent ds) {
@@ -135,8 +186,12 @@ public class JobService {
 
     private void submitJob(JobType type, Job job) {
         job.setType(em.getReference(Classifier.class, type.name()));
-        job.setStatus(em.getReference(Classifier.class, JobStatus.JOB_STATUS_VALMIS.name()));
+        setJobStatus(job, JobStatus.JOB_STATUS_VALMIS);
         em.persist(job);
+    }
+
+    private void setJobStatus(Job job, JobStatus status) {
+        job.setStatus(em.getReference(Classifier.class, status.name()));
     }
 
     private void cancelJobs(List<String> types, Directive directive) {

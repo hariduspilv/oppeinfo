@@ -92,6 +92,9 @@ public class SubjectStudyPeriodService {
     private StudentGroupRepository studentGroupRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private SubjectStudyPeriodDeclarationService subjectStudyPeriodDeclarationService;
+    
 
     public Page<SubjectStudyPeriodSearchDto> search(Long schoolId, SubjectStudyPeriodSearchCommand criteria,
             Pageable pageable) {
@@ -164,7 +167,10 @@ public class SubjectStudyPeriodService {
                 "studentGroups");
         updateSubjectStudyPeriodTeachers(subjectStudyPeriod, form);
         updateStudentGroups(subjectStudyPeriod, form.getStudentGroups());
-        return EntityUtil.save(subjectStudyPeriod, em);
+        
+        subjectStudyPeriod = EntityUtil.save(subjectStudyPeriod, em);
+        subjectStudyPeriodDeclarationService.addToDeclarations(subjectStudyPeriod);
+        return subjectStudyPeriod;
     }
 
     public void updateSubjectStudyPeriodTeachers(SubjectStudyPeriod subjectStudyPeriod, SubjectStudyPeriodForm form) {

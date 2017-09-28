@@ -17,6 +17,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -25,13 +26,16 @@ import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.enums.EhisStudentDataType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class StudentControllerTests {
 
     private static final String ENDPOINT = "/students";
@@ -152,7 +156,7 @@ public class StudentControllerTests {
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void higherResults() {
         Assert.assertNotNull(student);
@@ -164,5 +168,23 @@ public class StudentControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
+    @Test
+    public void ehisStudentExport() {
+        UriComponentsBuilder uri = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("ehisStudentExport");
 
+        EhisStudentForm form = new EhisStudentForm();
+        ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri.build().toUriString(), form, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.PRECONDITION_FAILED, responseEntity.getStatusCode());
+
+        form.setDataType(EhisStudentDataType.CURRICULA_FULFILMENT);
+        responseEntity = restTemplate.postForEntity(uri.build().toUriString(), form, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        form.setDataType(EhisStudentDataType.GRADUATION);
+        responseEntity = restTemplate.postForEntity(uri.build().toUriString(), form, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

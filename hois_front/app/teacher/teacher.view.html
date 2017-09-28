@@ -181,6 +181,11 @@
       </div>
     </md-content>
   </md-tab>
+  <md-tab label="{{'teacher.continuingEducation.continuingEducation' | translate}}" ng-if="teacher.teacherContinuingEducations.length > 0 && teacher.isVocational">
+      <md-content class="md-padding">
+        <div ng-include="'teacher/teacher.continuing.education.view.html'"></div>
+      </md-content>
+    </md-tab>
   <md-tab label="{{'teacher.qualification.qualification' | translate}}" ng-if="teacher.teacherQualifications.length > 0">
     <md-content class="md-padding">
       <div ng-include="'teacher/teacher.qualification.view.html'"></div>
@@ -192,7 +197,7 @@
     </md-content>
   </md-tab>
 </md-tabs>
-<div layout="row" layout-margin>
+<div layout="row" layout-margin ng-if="!auth.isTeacher()" >
   <md-button ng-href="#/teachers/{{teacher.id}}/edit" class="md-raised md-primary">{{'main.button.change' | translate}}</md-button>
-  <md-button ng-href="#/teachers" class="md-raised">{{'main.button.back' | translate}}</md-button>
+  <md-button ng-click="back('#/teachers')" class="md-raised">{{'main.button.back' | translate}}</md-button>
 </div>

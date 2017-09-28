@@ -87,7 +87,7 @@ angular.module('hitsaOis')
       new Endpoint($scope.classifier).$save().then(function(result) {
           ClassifierConnect.sendListOfParents(result, $scope.parents);
           message.info('main.messages.create.success');
-          $location.path( '/classifier/' + $scope.mainClassCode + '/' + result.code + '/edit');
+          $location.url( '/classifier/' + $scope.mainClassCode + '/' + result.code + '/edit?_noback');
         });
     }
 

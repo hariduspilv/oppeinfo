@@ -24,19 +24,23 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.web.commandobject.TimetableRoomAndTimeForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEditForm;
-import ee.hitsa.ois.web.commandobject.timetable.TimetableEventForm;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableEventHigherForm;
+import ee.hitsa.ois.web.commandobject.timetable.TimetableEventVocationalForm;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableManagementSearchCommand;
+import ee.hitsa.ois.web.dto.timetable.GeneralTimetableDto;
+import ee.hitsa.ois.web.dto.timetable.HigherTimetablePlanDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDatesDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableManagementSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetablePlanDto;
+import ee.hitsa.ois.web.dto.timetable.VocationalTimetablePlanDto;
 
 @RestController
 @RequestMapping("/timetables")
 public class TimetableController {
 
     @Autowired
-    TimetableService timetableService;
+    private TimetableService timetableService;
 
     @GetMapping("/{id:\\d+}")
     public TimetableDto edit(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
@@ -46,14 +50,21 @@ public class TimetableController {
 
     @GetMapping("/{id:\\d+}/view")
     public TimetableDto get(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
-        UserUtil.assertIsSchoolAdmin(user);
+        //UserUtil.assertIsSchoolAdmin(user);
+    	/* IKE TODO */
         return timetableService.getForView(timetable);
     }
 
-    @GetMapping("/{id:\\d+}/createPlan")
-    public TimetablePlanDto createPlan(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
+    @GetMapping("/{id:\\d+}/createVocationalPlan")
+    public VocationalTimetablePlanDto createVocationalPlan(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return timetableService.getPlan(timetable);
+        return timetableService.getVocationalPlan(timetable);
+    }
+    
+    @GetMapping("/{id:\\d+}/createHigherPlan")
+    public HigherTimetablePlanDto createHigherPlan(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return timetableService.getHigherPlan(timetable);
     }
 
     @GetMapping("/managementSearchFormData")
@@ -77,30 +88,62 @@ public class TimetableController {
         return timetableService.getBlockedDatesForPeriod(user, studyPeriod, code, currentTimetable);
     }
 
-    @PostMapping()
+    @PostMapping
     public HttpUtil.CreatedResponse create(HoisUserDetails user, @Valid @RequestBody TimetableEditForm form) {
         UserUtil.assertIsSchoolAdmin(user);
         return HttpUtil.created(timetableService.createTimetable(user, form));
     }
 
-    @PostMapping("/saveEvent")
-    public TimetablePlanDto saveEvent(HoisUserDetails user, @Valid @RequestBody TimetableEventForm form) {
+    @PostMapping("/saveVocationalEvent")
+    public TimetablePlanDto saveVocationalEvent(HoisUserDetails user,
+            @Valid @RequestBody TimetableEventVocationalForm form) {
         UserUtil.assertIsSchoolAdmin(user);
-        Timetable timetable = timetableService.saveEvent(form);
-        //TODO: create a different smaller query for getting updated subjects after saving a subject
-        return createPlan(user, timetable);
+        Timetable timetable = timetableService.saveVocationalEvent(form);
+        // TODO: create a different smaller query for getting updated subjects after
+        // saving a subject
+        return createVocationalPlan(user, timetable);
+    }
+
+    @PostMapping("/saveHigherEvent")
+    public TimetablePlanDto saveHigherEvent(HoisUserDetails user, @Valid @RequestBody TimetableEventHigherForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        Timetable timetable = timetableService.saveHigherEvent(form);
+        // TODO: create a different smaller query for getting updated subjects after
+        // saving a subject
+        return createHigherPlan(user, timetable);
+    }
+
+    @PostMapping("/deleteVocationalEvent")
+    public TimetablePlanDto deleteVocationalEvent(HoisUserDetails user, @Valid @RequestBody TimetableRoomAndTimeForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return createVocationalPlan(user, timetableService.deleteEvent(form));
+    }
+
+    @PostMapping("/deleteHigherEvent")
+    public TimetablePlanDto deleteHigherEvent(HoisUserDetails user, @Valid @RequestBody TimetableRoomAndTimeForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return createHigherPlan(user, timetableService.deleteEvent(form));
+    }
+
+    
+    /*@GetMapping("/copyTimetable")
+    public HttpUtil.CreatedResponse copyTimetable(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return HttpUtil.created(timetableService.cloneTimetableForNextWeek(timetable));
+    }*/
+
+    @PostMapping("/saveVocationalEventRoomsAndTimes")
+    public TimetablePlanDto saveVocationalEventRoomsAndTimes(HoisUserDetails user,
+            @Valid @RequestBody TimetableRoomAndTimeForm form) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return createVocationalPlan(user, timetableService.saveEventRoomsAndTimes(form));
     }
     
-    @PostMapping("/deleteEvent")
-    public TimetablePlanDto deleteEvent(HoisUserDetails user, @Valid @RequestBody TimetableRoomAndTimeForm form) {
+    @PostMapping("/saveHigherEventRoomsAndTimes")
+    public TimetablePlanDto saveHigherEventRoomsAndTimes(HoisUserDetails user,
+            @Valid @RequestBody TimetableRoomAndTimeForm form) {
         UserUtil.assertIsSchoolAdmin(user);
-        return createPlan(user, timetableService.deleteEvent(form));
-    }
-    
-    @PostMapping("/saveEventRoomsAndTimes")
-    public TimetablePlanDto saveEventRoomsAndTimes(HoisUserDetails user, @Valid @RequestBody TimetableRoomAndTimeForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
-        return createPlan(user, timetableService.saveEventRoomsAndTimes(form));
+        return createHigherPlan(user, timetableService.saveEventRoomsAndTimes(form));
     }
 
     @PutMapping("/{id:\\d+}")
@@ -108,5 +151,12 @@ public class TimetableController {
             @WithEntity("id") Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
         return get(user, timetableService.save(user, form, timetable));
+    }
+    
+    @GetMapping("/generalTimetables")
+    public List<GeneralTimetableDto> generalTimetables(HoisUserDetails user) {
+        // @RequestParam("studyYearId") Long studyYearId, @RequestParam("schoolId") Long schoolId
+        // TODO: user rights control 
+        return timetableService.getGeneralTimetables(user.getSchoolId());
     }
 }

@@ -144,7 +144,7 @@ public class JournalController {
     private static void assertIsConfirmer(HoisUserDetails user, Journal journal) {
         if (user.isTeacher()) {
             Optional<JournalTeacher> teacher =
-                    journal.getJournalTeachers().stream().filter(it -> EntityUtil.getId(it.getTeacher().getPerson()).equals(user.getPersonId())).findFirst();
+                    journal.getJournalTeachers().stream().filter(it -> EntityUtil.getId(it.getTeacher()).equals(user.getTeacherId())).findFirst();
             if (!teacher.isPresent() || !Boolean.TRUE.equals(teacher.get().getIsConfirmer())) {
                 throw new ValidationFailedException("journal.messages.teacherNotAllowedToChangeEndDate");
             }
@@ -152,13 +152,13 @@ public class JournalController {
     }
 
     private static void assertAddStudentsToJournal(HoisUserDetails user, Journal journal) {
-        if (!CollectionUtils.isEmpty(journal.getJournalEntries()) && user.isTeacher()) {
+        if (user.isTeacher() && !CollectionUtils.isEmpty(journal.getJournalEntries())) {
             throw new ValidationFailedException("journal.messages.addingStudentIsNotAllowed");
         }
     }
 
     private static void assertRemoveStudentsFromJournal(HoisUserDetails user, Journal journal) {
-        if (!CollectionUtils.isEmpty(journal.getJournalEntries()) && user.isTeacher()) {
+        if (user.isTeacher() && !CollectionUtils.isEmpty(journal.getJournalEntries())) {
             throw new ValidationFailedException("journal.messages.removingStudentIsNotAllowed");
         }
     }

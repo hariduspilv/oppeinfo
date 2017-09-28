@@ -74,5 +74,5 @@
         $scope.criteria.curriculumGroup = undefined;
       }
     });
-
+    
 }]);

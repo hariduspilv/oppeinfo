@@ -1,30 +1,35 @@
 package ee.hitsa.ois.service.ehis;
 
-import ee.hitsa.ois.domain.BaseEntityWithId;
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.repository.WsEhisStudentLogRepository;
+import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hois.soap.LogContext;
 import ee.hois.xroad.ehis.generated.KhlIsikuandmedLisa;
 import ee.hois.xroad.ehis.generated.KhlLisamine;
 import ee.hois.xroad.ehis.generated.KhlMuutmine;
 import ee.hois.xroad.ehis.generated.KhlOppeasutus;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppur;
+import ee.hois.xroad.ehis.service.EhisClient;
 import ee.hois.xroad.ehis.service.EhisLaeKorgharidusedResponse;
-import ee.hois.xroad.ehis.service.EhisXroadService;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 
+import javax.annotation.PostConstruct;
+import javax.persistence.EntityManager;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
 import javax.xml.datatype.XMLGregorianCalendar;
+
 import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
 import java.time.LocalDate;
@@ -33,11 +38,17 @@ public abstract class EhisService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
-    @Autowired
-    private EhisXroadService ehisXroadService;
+    static final String LAE_KORGHARIDUS_SERVICE_CODE = "laeKorgharidus";
+    public static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE + ".v1";
+    private static final String birthDateEntered = "SS";
 
+    private DatatypeFactory datatypeFactory;
     @Autowired
-    private WsEhisStudentLogRepository wsEhisStudentLogRepository;
+    protected EhisClient ehisClient;
+    @Autowired
+    protected EhisLogService ehisLogService;
+    @Autowired
+    protected EntityManager em;
 
     @Value("${ehis.endpoint}")
     protected String endpoint;
@@ -63,32 +74,30 @@ public abstract class EhisService {
     @Value("${ehis.service.subsystemCode}")
     protected String serviceSubsystemCode;
 
-    static final String LAE_KORGHARIDUS_SERVICE_CODE = "laeKorgharidus";
-    public static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE + ".v1";
-    private static final String birthDateEntered = "SS";
-
-    static final String YES = "jah";
-    static final String NO = "ei";
-
-    WsEhisStudentLog laeKorgharidused(XRoadHeaderV4 xRoadHeaderV4, KhlOppeasutusList khlOppeasutusList, WsEhisStudentLog wsEhisStudentLog) {
-        EhisLaeKorgharidusedResponse ehisLaeKorgharidusedResponse = ehisXroadService.laeKorgharidused(xRoadHeaderV4, khlOppeasutusList);
-
-        wsEhisStudentLog.setRequest(ehisLaeKorgharidusedResponse.getRequest());
-        wsEhisStudentLog.setResponse(ehisLaeKorgharidusedResponse.getResponse());
-        wsEhisStudentLog.setHasOtherErrors(ehisLaeKorgharidusedResponse.isHasOtherErrors());
-        wsEhisStudentLog.setHasXteeErrors(ehisLaeKorgharidusedResponse.isHasXRoadErrors());
-
-        wsEhisStudentLog.setWsName(LAE_KORGHARIDUS_SERVICE);
-
-        String txt = ehisLaeKorgharidusedResponse.getLogTxt().toLowerCase();
-        if (txt.contains("viga") || txt.contains("error")) {
-            wsEhisStudentLog.setHasOtherErrors(Boolean.TRUE);
+    @PostConstruct
+    public void postConstruct() {
+        try {
+            datatypeFactory = DatatypeFactory.newInstance();
+        } catch (DatatypeConfigurationException e) {
+            throw new BadConfigurationException("Unable to create data type factory", e);
         }
-        wsEhisStudentLog.setLogTxt(ehisLaeKorgharidusedResponse.getLogTxt());
-        return wsEhisStudentLogRepository.save(wsEhisStudentLog);
     }
 
-    static KhlOppeasutusList getKhlOppeasutusList(Student student) {
+    protected WsEhisStudentLog laeKorgharidused(KhlOppeasutusList khlOppeasutusList, WsEhisStudentLog wsEhisStudentLog) {
+        XRoadHeaderV4 xRoadHeaderV4 = getXroadHeader();
+        EhisLaeKorgharidusedResponse response = ehisClient.laeKorgharidused(xRoadHeaderV4, khlOppeasutusList);
+
+        LogContext queryLog = response.getLog();
+        wsEhisStudentLog.setHasOtherErrors(Boolean.FALSE);
+        wsEhisStudentLog.setHasXteeErrors(Boolean.valueOf(queryLog.getError() != null));
+
+        if(!response.hasError()) {
+            wsEhisStudentLog.setLogTxt(String.join(";", StreamUtil.nullSafeList(response.getResult())));
+        }
+        return ehisLogService.insert(queryLog, wsEhisStudentLog);
+    }
+
+    protected static KhlOppeasutusList getKhlOppeasutusList(Student student) {
         KhlOppeasutusList khlOppeasutusList = new KhlOppeasutusList();
         KhlOppeasutus khlOppeasutus = new KhlOppeasutus();
 
@@ -99,7 +108,7 @@ public abstract class EhisService {
         return khlOppeasutusList;
     }
 
-    static KhlOppur getKhlOppurMuutmine(Student student, boolean setOppekava) {
+    protected static KhlOppur getKhlOppurMuutmine(Student student, boolean setOppekava) {
         KhlOppur khlOppur = new KhlOppur();
         KhlMuutmine muutmine = new KhlMuutmine();
         Person person = student.getPerson();
@@ -118,7 +127,7 @@ public abstract class EhisService {
         return khlOppur;
     }
 
-    static KhlOppur getKhlOppurLisamine(Student student, Directive directive) throws DatatypeConfigurationException {
+    protected KhlOppur getKhlOppurLisamine(Student student) {
         Person person = student.getPerson();
         KhlOppur khlOppur = new KhlOppur();
         KhlLisamine lisamine = new KhlLisamine();
@@ -130,7 +139,7 @@ public abstract class EhisService {
             isikuandmedLisa.setKlIsikukoodRiik(birthDateEntered);
         }
         if (isikuandmedLisa.getIsikukood() == null) {
-            isikuandmedLisa.setSynniKp(getDate(person.getBirthdate(), directive));
+            isikuandmedLisa.setSynniKp(date(person.getBirthdate()));
         }
         if (person.getSex() != null) {
             isikuandmedLisa.setKlSugu(person.getSex().getEhisValue());
@@ -156,18 +165,36 @@ public abstract class EhisService {
         return khlOppur;
     }
 
-    static XMLGregorianCalendar getDate(LocalDate date, BaseEntityWithId baseEntity) throws DatatypeConfigurationException {
-        try {
-            return DatatypeFactory.newInstance().newXMLGregorianCalendar(date.toString());
-        } catch (DatatypeConfigurationException e) {
-            log.error("Converting date failed on object {} of {}:", EntityUtil.getId(baseEntity), baseEntity.getClass(), e);
-
-            throw e;
+    protected XMLGregorianCalendar date(LocalDate date) {
+        if(date == null) {
+            return null;
         }
+        return datatypeFactory.newXMLGregorianCalendar(date.toString());
     }
 
-    static BigInteger getCurriculum(CurriculumVersion curriculumVersion) {
-        return new BigInteger(curriculumVersion.getCurriculum().getMerCode());
+    protected static String code(Classifier classifier) {
+        return EntityUtil.getNullableCode(classifier);
+    }
+
+    protected static String ehisValue(Classifier classifier) {
+        return classifier != null ? classifier.getEhisValue() : null;
+    }
+
+    protected static String value(Classifier classifier) {
+        return classifier != null ? classifier.getValue() : null;
+    }
+
+    protected static String value2(Classifier classifier) {
+        return classifier != null ? classifier.getValue2() : null;
+    }
+
+    protected static String yesNo(Boolean value) {
+        return Boolean.TRUE.equals(value) ? "jah" : "ei";
+    }
+
+    protected static BigInteger getCurriculum(CurriculumVersion curriculumVersion) {
+        String merCode = curriculumVersion.getCurriculum().getMerCode();
+        return merCode != null ? new BigInteger(merCode) : null;
     }
 
     private static String getPersonId(Person person) {
@@ -176,29 +203,32 @@ public abstract class EhisService {
                         person.getBirthdate().toString());
     }
 
-    WsEhisStudentLog bindingException(Directive directive, Exception e) {
+    protected WsEhisStudentLog bindingException(Directive directive, Exception e) {
         WsEhisStudentLog studentLog = baseBindingException(e);
         studentLog.setDirective(directive);
         studentLog.setSchool(directive.getSchool());
-        return wsEhisStudentLogRepository.save(studentLog);
+        LogContext logContext = new LogContext(null, LAE_KORGHARIDUS_SERVICE);
+        logContext.setError(e);
+        return ehisLogService.insert(logContext, studentLog);
     }
 
-    WsEhisStudentLog bindingException(Student student, Exception e) {
+    protected WsEhisStudentLog bindingException(Student student, Exception e) {
         WsEhisStudentLog studentLog = baseBindingException(e);
         studentLog.setSchool(student.getSchool());
-        return wsEhisStudentLogRepository.save(studentLog);
+        LogContext logContext = new LogContext(null, LAE_KORGHARIDUS_SERVICE);
+        logContext.setError(e);
+        return ehisLogService.insert(logContext, studentLog);
     }
 
     private static WsEhisStudentLog baseBindingException(Exception e) {
         WsEhisStudentLog studentLog = new WsEhisStudentLog();
         studentLog.setHasOtherErrors(Boolean.TRUE);
-        studentLog.setWsName(LAE_KORGHARIDUS_SERVICE);
         studentLog.setLogTxt(e.toString());
         log.error("Binding failed: ", e);
         return studentLog;
     }
 
-    XRoadHeaderV4 getXroadHeader() {
+    protected XRoadHeaderV4 getXroadHeader() {
         XRoadHeaderV4.Client client = new XRoadHeaderV4.Client();
         client.setXRoadInstantce(clientXRoadInstance);
         client.setMemberClass(clientMemberClass);
@@ -209,6 +239,7 @@ public abstract class EhisService {
         service.setxRoadInstance(serviceXRoadInstance);
         service.setMemberClass(serviceMemberClass);
         service.setMemberCode(serviceMemberCode);
+        service.setServiceCode(getServiceCode());
         service.setSubsystemCode(serviceSubsystemCode);
 
         XRoadHeaderV4 header = new XRoadHeaderV4();
@@ -218,4 +249,6 @@ public abstract class EhisService {
         header.setUserId(user);
         return header;
     }
+
+    protected abstract String getServiceCode();
 }

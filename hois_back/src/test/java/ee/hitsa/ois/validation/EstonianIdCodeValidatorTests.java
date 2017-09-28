@@ -24,6 +24,11 @@ public class EstonianIdCodeValidatorTests {
         Assert.assertFalse("Invalid idcode passes", validator.isValid("12345678901", null));
         Assert.assertFalse("Invalid idcode passes", validator.isValid("42311318901", null));
         Assert.assertFalse("Invalid idcode passes", validator.isValid("12310178901", null));
+
+        // whitespace
+        Assert.assertFalse("Invalid idcode passes", validator.isValid(" 47101010033", null));
+        Assert.assertFalse("Invalid idcode passes", validator.isValid("47101010033 ", null));
+        Assert.assertFalse("Invalid idcode passes", validator.isValid(" 47101010033 ", null));
     }
 
     @Test

@@ -20,4 +20,8 @@ public enum OccupationalGrade {
 
     public static final List<String> OCCUPATIONAL_VALUE_GRADE_POSITIVE = EnumUtil.toNameList(KUTSEHINDAMINE_5, KUTSEHINDAMINE_4,
             KUTSEHINDAMINE_3);
+    
+    public static boolean isPositive(String gradeCode) {
+        return OCCUPATIONAL_GRADE_POSITIVE.contains(gradeCode);
+    }
 }

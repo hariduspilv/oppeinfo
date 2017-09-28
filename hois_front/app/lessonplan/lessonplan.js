@@ -180,6 +180,7 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
 
     QueryUtils.endpoint(baseUrl).get({id: id}).$promise.then(function(result) {
       $scope.formState.studyPeriods = result.studyPeriods;
+      //console.log($scope.formState.studyPeriods);
       $scope.formState.weekNrs = result.weekNrs;
       $scope.formState.legends = result.legends.reduce(function(acc, item) { acc[item.weekNr] = item.color; return acc; }, {});
       delete result.studyPeriods;

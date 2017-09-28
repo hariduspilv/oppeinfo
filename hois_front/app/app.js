@@ -78,9 +78,10 @@ angular
   $httpProvider.interceptors.push(function(Session, $rootScope) {
     return {
      'response': function(response) {
-         if (response.config.url.indexOf('session.timing.out.dialog.html') === -1 &&
-          response.config.url.indexOf('session.timed.out.dialog.html') === -1 && response.config.url.indexOf('/logout') === -1) {
-          $rootScope.restartTimeoutDialogCounter();
+         var url = response.config.url;
+         if (url.indexOf !== undefined && url.indexOf('session.timing.out.dialog.html') === -1 &&
+             url.indexOf('session.timed.out.dialog.html') === -1 && url.indexOf('/logout') === -1) {
+           $rootScope.restartTimeoutDialogCounter();
          }
          return response;
       },

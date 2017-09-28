@@ -2,7 +2,6 @@ package ee.hitsa.ois.service;
 
 import java.io.IOException;
 import java.io.StringWriter;
-import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
@@ -33,7 +32,7 @@ import ee.hitsa.ois.util.TranslateUtil;
 @Service
 public class TemplateService {
 
-    private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
+    private static final Logger log = LoggerFactory.getLogger(TemplateService.class);
     private static final String TEMPLATE_PATH = "templates/";
 
     private final PebbleEngine pebble = new PebbleEngine.Builder()
@@ -42,7 +41,7 @@ public class TemplateService {
             .defaultEscapingStrategy("text").build();
 
     static Loader<String> templateLoader() {
-        ClasspathLoader loader = new ClasspathLoader(PdfService.class.getClassLoader());
+        ClasspathLoader loader = new ClasspathLoader(TemplateService.class.getClassLoader());
         loader.setPrefix(TEMPLATE_PATH);
         return loader;
     }

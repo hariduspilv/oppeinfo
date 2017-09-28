@@ -12,7 +12,9 @@ angular.module('hitsaOis').directive('oisDrag', function() {
         if(event.target.attributes.getNamedItem('capacity-type') !== null) {
           event.dataTransfer.setData('capacityType', event.target.attributes.getNamedItem('capacity-type').value);
         }
-        event.dataTransfer.setData('journalId', event.target.attributes.getNamedItem('journal-id').value);
+        if(event.target.attributes.getNamedItem('journal-id') !== null) {
+          event.dataTransfer.setData('journalId', event.target.attributes.getNamedItem('journal-id').value);
+        }
         event.dataTransfer.setData('elementId', event.target.id);
       });
     }
@@ -30,14 +32,16 @@ angular.module('hitsaOis').directive('oisDrop', function() {
         }
       });
       element.on('drop', function(event) {
-        if(attrs.oisDrop === "true") {  
+        if(attrs.oisDrop === "true") {
           event.preventDefault();
           var data = {};
           data.id = event.dataTransfer.getData("elementId");
           data.journalId = event.dataTransfer.getData("journalId");
           data.oldEventId = event.dataTransfer.getData("oldEventId");
           data.capacityType = event.dataTransfer.getData("capacityType");
-          data.index = event.target.attributes.getNamedItem('index-value').value;
+          if(event.target.attributes.getNamedItem('index-value') !== null) {
+            data.index = event.target.attributes.getNamedItem('index-value').value;
+          }
           event.target.appendChild(document.getElementById(data.id));
           scope.dropFn({data: data});
         }

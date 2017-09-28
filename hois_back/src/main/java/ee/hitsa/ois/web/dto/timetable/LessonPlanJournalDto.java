@@ -22,14 +22,15 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
 
     public static LessonPlanJournalDto of(Journal journal, LessonPlanModule lessonPlanModule) {
         LessonPlanJournalDto dto = EntityUtil.bindToDto(journal, new LessonPlanJournalDto());
-        Long lessonPlanModuleId = lessonPlanModule.getId();
+        Long lessonPlanModuleId = EntityUtil.getId(lessonPlanModule);
         dto.setLessonPlanModuleId(lessonPlanModuleId);
         dto.setJournalCapacityTypes(StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getCapacityType()), journal.getJournalCapacityTypes()));
         
         if(journal.getJournalOccupationModuleThemes() != null) {
             //journalOccupationModuleThemes is only for the themes of the journal and not for the groups which are stored in the same table
-            // TODO bad equals
-            dto.setJournalOccupationModuleThemes(StreamUtil.toMappedList(r -> EntityUtil.getId(r.getCurriculumVersionOccupationModuleTheme()), journal.getJournalOccupationModuleThemes().stream().filter(module -> module.getLessonPlanModule() == lessonPlanModule)));
+            dto.setJournalOccupationModuleThemes(
+                    StreamUtil.toMappedList(r -> EntityUtil.getId(r.getCurriculumVersionOccupationModuleTheme()), 
+                            journal.getJournalOccupationModuleThemes().stream().filter(module -> EntityUtil.getId(module.getLessonPlanModule()).equals(EntityUtil.getId(lessonPlanModule)))));
             //all other themes will be used for groups
             List<JournalOccupationModuleTheme> journalModuleThemes = journal.getJournalOccupationModuleThemes().stream().filter(it -> !lessonPlanModuleId.equals(EntityUtil.getId(it.getLessonPlanModule()))).collect(Collectors.toList());
             Map<StudentGroup, List<JournalOccupationModuleTheme>> studentGroupMap = journalModuleThemes.stream().collect(Collectors.groupingBy(module -> module.getLessonPlanModule().getLessonPlan().getStudentGroup()));

@@ -36,14 +36,14 @@ public class DeclarationDto {
         student.setFullname(declaration.getStudent().getPerson().getFullname());
         student.setIdcode(declaration.getStudent().getPerson().getIdcode());
         student.setStatus(EntityUtil.getNullableCode(declaration.getStudent().getStatus()));
+        
+        CurriculumVersion cv = declaration.getStudent().getCurriculumVersion();
+        student.setCurriculumVersion(new AutocompleteResult(cv.getId(), cv.getCode(), cv.getCode()));
+        
         StudentGroup sg = declaration.getStudent().getStudentGroup();
         if(sg != null) {
             dto.setCourse(sg.getCourse());
             student.setStudentGroup(AutocompleteResult.of(sg));
-            CurriculumVersion cv = sg.getCurriculumVersion();
-            if(cv != null) {
-                student.setCurriculumVersion(AutocompleteResult.of(cv));
-            }
         }
         dto.setStudent(student);
         return dto;

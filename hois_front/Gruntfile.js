@@ -91,7 +91,7 @@ module.exports = function (grunt) {
       },
       proxies: [{
         context: '/hois_back',
-        host: 'devhois',
+        host: 'localhost',
         port: 8080,
         rewrite: {
           // the key '^/api' is a regex for the path to be rewritten

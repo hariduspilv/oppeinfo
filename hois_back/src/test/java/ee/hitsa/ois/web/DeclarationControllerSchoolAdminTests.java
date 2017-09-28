@@ -93,6 +93,8 @@ public class DeclarationControllerSchoolAdminTests {
 
     /*
      * TODO: adding/removing subjects
+     * 
+     * FIXME: test fails because it pollutes the database
      */
     @Test
     public void crud() {

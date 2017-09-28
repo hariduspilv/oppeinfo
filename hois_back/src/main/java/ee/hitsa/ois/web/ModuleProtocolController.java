@@ -36,6 +36,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.validation.NotEmpty;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSearchCommand;
@@ -90,7 +91,7 @@ public class ModuleProtocolController {
     public ModuleProtocolDto save(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        assertIsTeacherResponsible(user, protocol);
+        assertIsSchoolAdminOrTeacherResponsible(user, protocol);
         return get(moduleProtocolService.save(protocol, moduleProtocolSaveForm));
     }
 
@@ -132,7 +133,7 @@ public class ModuleProtocolController {
     public ModuleProtocolDto addStudents(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        assertIsTeacherResponsible(user, protocol);
+        assertIsSchoolAdminOrTeacherResponsible(user, protocol);
         return get(moduleProtocolService.addStudents(protocol, moduleProtocolSaveForm));
     }
 
@@ -141,9 +142,8 @@ public class ModuleProtocolController {
             @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSignForm moduleProtocolSignForm, HttpSession httpSession) {
         //Administratiivne töötaja saab moodulite protokolle kinnitada ilma digiallkirjata, õpetaja peab mooduli protokollid kinnitama digiallkirjaga.
-        if (user.isTeacher()) {
-            assertIsTeacherResponsible(user, protocol);
-        }
+
+        assertIsSchoolAdminOrTeacherResponsible(user, protocol);
 
         Protocol savedProtocol = moduleProtocolService.save(protocol, moduleProtocolSignForm);
 
@@ -172,17 +172,23 @@ public class ModuleProtocolController {
     public ModuleProtocolDto confirm(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        UserUtil.assertIsSchoolAdmin(user);
+        assertIsSchoolAdminOrTeacherResponsible(user, protocol);
         return get(moduleProtocolService.confirm(user, protocol, moduleProtocolSaveForm));
-    }
-
-    private static void assertIsTeacherResponsible(HoisUserDetails user, Protocol protocol) {
-        UserUtil.assertIsPerson(user, protocol.getProtocolVdata().getTeacher().getPerson());
     }
 
     private void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, Long teacherId) {
         if (!user.isSchoolAdmin()) {
             UserUtil.assertIsPerson(user, teacherRepository.getOne(teacherId).getPerson());
+        }
+    }
+    
+    private void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, Protocol protocol) {
+        if(user.isSchoolAdmin()) {
+            UserUtil.assertIsSchoolAdmin(user, protocol.getSchool());
+        } else if(user.isTeacher()) {
+            UserUtil.assertIsPerson(user, protocol.getProtocolVdata().getTeacher().getPerson());
+        } else {
+            throw new ValidationFailedException("no rights");
         }
     }
 

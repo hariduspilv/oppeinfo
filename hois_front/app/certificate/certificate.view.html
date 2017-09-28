@@ -5,21 +5,22 @@
           <hois-classifier-value ng-model="record.type" main-classifier-code="TOEND_LIIK"></hois-classifier-value>
       </md-input-container>
 
-      <div ng-show="record.type !== 'TOEND_LIIK_MUU'" layout="column">
+      <div ng-show="!isOtherCertificate()" layout="column">
         <md-input-container>
-            <label>{{'certificate.headline' | translate}}</label>
-            <hois-value value="student.nameEt"></hois-value>
+            <label>{{'certificate.student' | translate}}</label>
+            <hois-value value="student.nameEt" href-value="'#/students/' + student.id + '/main'"></hois-value>
         </md-input-container>
       </div>
 
-      <div ng-if="record.type === 'TOEND_LIIK_MUU'">
+      <div ng-if="isOtherCertificate()">
           <md-input-container class="md-block">
               <label>{{'certificate.otherIdcode' | translate}}</label>
               <hois-value value="record.otherIdcode"></hois-value>
           </md-input-container>
           <md-input-container class="md-block">
               <label>{{'certificate.otherName' | translate}}</label>
-              <hois-value value="record.otherName"></hois-value>
+              <hois-value ng-if="student.id" value="record.otherName" href-value="'#/students/' + student.id + '/main'"></hois-value>
+              <hois-value ng-if="!student.id" value="record.otherName"></hois-value>
           </md-input-container>
       </div>
       <md-input-container>
@@ -34,17 +35,19 @@
           <label>{{'certificate.signatory' | translate}}</label>
           <hois-value value="record.signatoryName"></hois-value>
       </md-input-container>
-      <md-input-container ng-if="isOtherCertificate()">
+      <md-input-container ng-if="contentEditable()">
           <label>{{'certificate.content' | translate}}</label>
           <hois-value value="record.content"></hois-value>
       </md-input-container>
-      <div ng-if="!isOtherCertificate()">
+      <div ng-if="!contentEditable()">
         <label class="common-label">{{'certificate.content' | translate}}</label>
         <div id="content" class="md-body-1"></div>
       </div>
   </div>
   <div layout="row">
-      <md-button class="md-raised md-primary" ng-href="/#/certificate/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-if="record.canBeChanged" ng-href="/#/certificate/{{::record.id}}/edit">{{'main.button.change' | translate}}</md-button>
       <md-button class="md-raised md-default" ng-href="/#/certificate">{{'main.button.back' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-if="record.canViewFromEkis"
+       ng-href="{{getCertificateUrl(record.wdId)}}">{{'certificate.viewFromEkis' | translate}}</md-button>
   </div>
 </div>

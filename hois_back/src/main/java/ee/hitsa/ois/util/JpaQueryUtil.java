@@ -197,6 +197,12 @@ public abstract class JpaQueryUtil {
             }
         }
 
+        public void optionalCriteria(String criteria, String name, Enum<?> value) {
+            if(value != null) {
+                filter(criteria, name, value.name());
+            }
+        }
+
         public void optionalCriteria(String criteria, String name, LocalDate value) {
             if(value != null) {
                 filter(criteria, name, parameterAsTimestamp(value));

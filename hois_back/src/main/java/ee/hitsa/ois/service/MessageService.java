@@ -283,13 +283,13 @@ public class MessageService {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
         qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname", "p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
-        
-        qb.requiredCriteria("t.id in ( select sg.teacher_id "
+
+        qb.requiredCriteria("t.id in (select sg.teacher_id "
                 + "from student_group sg "
                 + "join student s on s.student_group_id = sg.id "
                 + "join student_representative sr on sr.student_id = s.id "
                 + "where sr.person_id = :parentsPersonId "
-                + "union "
+                + "union all "
                 + "select sspt.teacher_id "
                 + "from declaration d "
                 + "join declaration_subject ds on ds.declaration_id = d.id "
@@ -305,10 +305,10 @@ public class MessageService {
     private List<MessageReceiverDto> searchStudentsTeachers(HoisUserDetails user, UsersSearchCommand criteria) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
         qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname", "p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
-        
+
         qb.requiredCriteria("t.id in (select sg.teacher_id from student_group sg "
                 + "join student s on s.student_group_id = sg.id where s.id = :studentId "
-                + "union "
+                + "union all "
                 + "select sspt.teacher_id "
                 + "from declaration d "
                 + "join declaration_subject ds on ds.declaration_id = d.id "
@@ -318,7 +318,7 @@ public class MessageService {
 
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
         qb.filter(" p3.id is not null");
-        
+
         List<?> result = qb.select(SELECT_TEACHERS, em).getResultList();
         return mapUserSearchDtoPage(result, Role.ROLL_O);
     }
@@ -327,23 +327,21 @@ public class MessageService {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
         qb.optionalContains(Arrays.asList("p1.firstname", "p1.lastname", "p1.firstname || ' ' || p1.lastname"), "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
-        
+
         qb.requiredCriteria("s.id in ("
                 + " select s2.id "
                 + "from student s2 "
                 + "join student_group sg on sg.id = s2.student_group_id "
-                + "join teacher t on t.id = sg.teacher_id "
-                + "where t.person_id = :teachersPersonId "
-                + "union "
+                + "where sg.teacher_id = :teacherId "
+                + "union all "
                 + "select d.student_id "
                 + "from declaration d "
                 + "join declaration_subject ds on d.id = ds.declaration_id "
                 + "join subject_study_period ssp on ds.subject_study_period_id = ssp.id "
                 + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
-                + "join teacher t on t.id = sspt.teacher_id where t.person_id = :teachersPersonId)", "teachersPersonId", user.getPersonId());
+                + "where sspt.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
 
         List<?> result = qb.select(SELECT_STUDENTS, em).getResultList();
-           
         return StreamUtil.toMappedList(r -> {
             MessageReceiverDto dto = new MessageReceiverDto();
             dto.setPersonId(resultAsLong(r, 0));
@@ -370,15 +368,14 @@ public class MessageService {
                 + " select s2.id "
                 + "from student s2 "
                 + "join student_group sg on sg.id = s2.student_group_id "
-                + "join teacher t on t.id = sg.teacher_id "
-                + "where t.person_id = :teachersPersonId "
-                + "union "
+                + "where sg.teacher_id = :teacherId "
+                + "union all "
                 + "select d.student_id "
                 + "from declaration d "
                 + "join declaration_subject ds on d.id = ds.declaration_id "
                 + "join subject_study_period ssp on ds.subject_study_period_id = ssp.id "
                 + "join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id "
-                + "join teacher t on t.id = sspt.teacher_id where t.person_id = :teachersPersonId)", "teachersPersonId", user.getPersonId());
+                + "where sspt.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
         
         List<?> result = qb.select(SELECT_PARENTS, em).getResultList();
         return StreamUtil.toMappedList(r -> {

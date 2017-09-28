@@ -3,6 +3,7 @@ package ee.hitsa.ois.web;
 import java.io.IOException;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -14,13 +15,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.sais.SaisApplication;
-import ee.hitsa.ois.service.SaisApplicationService;
+import ee.hitsa.ois.service.sais.SaisApplicationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
-import ee.hitsa.ois.web.commandobject.SaisApplicationImportForm;
 import ee.hitsa.ois.web.commandobject.sais.SaisApplicationImportCsvCommand;
+import ee.hitsa.ois.web.commandobject.sais.SaisApplicationImportForm;
 import ee.hitsa.ois.web.commandobject.sais.SaisApplicationSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationDto;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationImportResultDto;
@@ -52,11 +53,10 @@ public class SaisApplicationController {
     }
 
     @PostMapping("importSais")
-    public SaisApplicationImportResultDto importSais(@RequestBody SaisApplicationImportForm form, HoisUserDetails user) {
+    public SaisApplicationImportResultDto importSais(@Valid @RequestBody SaisApplicationImportForm form, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return saisApplicationService.importFromSais(form,  user);
     }
-
 
     @GetMapping("sample.csv")
     public void csvSampleFile(HttpServletResponse response) throws IOException {

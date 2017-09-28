@@ -37,6 +37,7 @@
             <label>{{'curriculum.minorSpecialty.outcomesEn' | translate}}</label>
             <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
+          <div flex>
           <fieldset>
             <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
             <div layout="row" layout-sm="column" layout-xs="column" ng-show="!readOnly">
@@ -61,6 +62,7 @@
               <div><a flex="20" class="remove nomargin" ng-click="deleteElectiveModule(electiveModule)" ng-if="!readOnly">&times;</a></div>
             </div>
           </fieldset>
+        </div>
           <div>&nbsp;</div>
           <md-input-container>
             <label>{{'module.optionalModulesNumber' | translate}}</label>
@@ -81,7 +83,7 @@
               </div>
             </div>
           </md-input-container>
-
+<div>
           <fieldset>
             <legend md-colors="{color: 'primary-800'}" ng-class="{invalid: dialogForm.$submitted && data.subjects.length == 0}" class="md-title-small">{{'curriculum.version.subjects' | translate}}&nbsp;*</legend>
             <md-input-container hide>
@@ -138,6 +140,7 @@
               </tbody>
             </table>
           </fieldset>
+        </div>
 
           <div>&nbsp;</div>
 

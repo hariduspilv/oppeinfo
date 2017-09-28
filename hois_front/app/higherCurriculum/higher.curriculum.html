@@ -551,7 +551,7 @@
               <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
             </div>
             <div ng-show="curriculum.id && formState.readOnly">
-              <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
             </div>
           </div>
           <div ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis">
@@ -560,21 +560,21 @@
               <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
             </div>
             <div ng-show="formState.readOnly">
-              <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
-              <md-button class="md-raised md-default" ng-click="sendToEhis()">{{'main.button.sendToEhis' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+              <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="sendToEhis()">{{'main.button.sendToEhis' | translate}}</md-button>
               <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
             </div>
           </div>
           <div ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis">
-            <md-button class="md-raised md-default" ng-click="updateFromEhis()">{{'main.button.updateFromEhis' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="updateFromEhis()">{{'main.button.updateFromEhis' | translate}}</md-button>
           </div>
           <div ng-show="curriculum.status === STATUS.VERIFIED">
             <div ng-show="!formState.readOnly">
               <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
             </div>
             <div ng-show="formState.readOnly">
-              <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
-              <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+              <md-button class="md-raised" ng-if="auth.isAdmin()" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
             </div>
           </div>
           <a href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculum.id">XML</a>

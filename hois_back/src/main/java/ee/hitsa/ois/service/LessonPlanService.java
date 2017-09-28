@@ -175,7 +175,7 @@ public class LessonPlanService {
         if(user.isTeacher()) {
             // TODO is_usable from lesson_plan
             // qb.filter("lp.is_usable = true");
-            qb.requiredCriteria("t.person_id = :personId", "personId", user.getPersonId());
+            qb.requiredCriteria("jt.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         } else {
             qb.optionalCriteria("jt.teacher_id = :teacherId", "teacherId", criteria.getTeacher());
         }

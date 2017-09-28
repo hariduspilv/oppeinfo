@@ -6,7 +6,7 @@ angular.module('hitsaOis').factory('resourceErrorHandler', function ($q, message
       if (response.status === 404) {
         message.error('not.found');
       } else if (response.status === 409) {
-        message.error('record.modified');
+        message.error('main.messages.record.modified');
       } else if (response.data && response.data._errors) {
         angular.forEach(response.data._errors, function (err) {
           message.error(err.code + (err.field ? ' ' + err.field : ''), err.params);

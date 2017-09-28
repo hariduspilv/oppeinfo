@@ -25,6 +25,7 @@ import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.teacher.TeacherContinuingEducation;
 import ee.hitsa.ois.domain.teacher.TeacherMobility;
 import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
@@ -38,10 +39,10 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherContinuingEducationForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityForm;
-import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFrom;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherSearchCommand;
 import ee.hitsa.ois.web.dto.TeacherDto;
 import ee.hitsa.ois.web.dto.TeacherSearchDto;
@@ -60,6 +61,8 @@ public class TeacherService {
     private TeacherOccupationRepository teacherOccupationRepository;
     @Autowired
     private TeacherRepository teacherRepository;
+    @Autowired
+    private UserService userService;
 
     public TeacherDto create(HoisUserDetails user, TeacherForm teacherForm) {
         return save(user, new Teacher(), teacherForm);
@@ -69,7 +72,7 @@ public class TeacherService {
         if (!Boolean.TRUE.equals(teacherForm.getIsHigher()) && !Boolean.TRUE.equals(teacherForm.getIsVocational())) {
             throw new ValidationFailedException("teacher-vocational-higher");
         }
-        EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification");
+        EntityUtil.bindToEntity(teacherForm, teacher, classifierRepository, "person", "teacherPositionEhis", "teacherMobility", "teacherQualification", "teacherContinuingEducation");
         teacher.setSchool(em.getReference(School.class, user.getSchoolId()));
         teacher.setTeacherOccupation(teacherOccupationRepository.getOneByIdAndSchool_Id(teacherForm.getTeacherOccupation().getId(), user.getSchoolId()));
         // TODO: this logic is wrong?
@@ -88,11 +91,19 @@ public class TeacherService {
         }
         bindTeacherPositionEhisForm(teacher, teacherForm);
         if (!Boolean.TRUE.equals(teacher.getIsHigher())) {
+            // remove possible leftovers of higher teacher
+            bindTeacherContinuingEducationForm(teacher, Collections.emptyList());
             bindTeacherMobilityForm(teacher, Collections.emptySet());
             bindTeacherQualificationForm(teacher, Collections.emptySet());
         }
 
-        return TeacherDto.of(EntityUtil.save(teacher, em));
+        teacher = EntityUtil.save(teacher, em);
+        if(Boolean.TRUE.equals(teacher.getIsActive())) {
+            userService.enableUser(teacher, LocalDate.now());
+        } else {
+            userService.disableUser(teacher, LocalDate.now());
+        }
+        return TeacherDto.of(teacher);
     }
 
     private void bindOldPerson(TeacherForm teacherForm, Person person) {
@@ -134,19 +145,33 @@ public class TeacherService {
         teacherMobility.setTeacher(teacher);
         return teacherMobility;
     }
-
-    private void bindTeacherQualificationForm(Teacher teacher, Set<TeacherQualificationFrom> qualificationFroms) {
-        Set<TeacherQualification> teacherQualifications = teacher.getTeacherQualification();
-        if (Boolean.TRUE.equals(teacher.getIsHigher())) {
-            EntityUtil.bindEntityCollection(teacherQualifications, TeacherQualification::getId, qualificationFroms, TeacherQualificationFrom::getId,
-                    teacherQualificationFrom -> createTeacherQualification(teacher, teacherQualificationFrom, new TeacherQualification()),
-                    (teacherQualificationFrom, teacherQualification) -> createTeacherQualification(teacher, teacherQualificationFrom, teacherQualification));
-        } else if(!teacherQualifications.isEmpty()) {
-            teacherQualifications.clear();
+    
+    private void bindTeacherContinuingEducationForm(Teacher teacher, List<TeacherContinuingEducationForm> continuingEducationForms) {
+        List<TeacherContinuingEducation> teacherContinuingEducations = teacher.getTeacherContinuingEducation();
+        if (Boolean.TRUE.equals(teacher.getIsVocational())) {
+            EntityUtil.bindEntityCollection(teacherContinuingEducations, TeacherContinuingEducation::getId, continuingEducationForms, TeacherContinuingEducationForm::getId,
+                    teacherContinuingEducationForm -> createTeacherContinuingEducation(teacher, teacherContinuingEducationForm, new TeacherContinuingEducation()),
+                    (teacherContinuingEducationForm, teacherContinuingEducation) -> createTeacherContinuingEducation(teacher, teacherContinuingEducationForm, teacherContinuingEducation));
+        } else if(!teacherContinuingEducations.isEmpty()) {
+            teacherContinuingEducations.clear();
         }
     }
 
-    private TeacherQualification createTeacherQualification(Teacher teacher, TeacherQualificationFrom teacherQualificationForm, TeacherQualification teacherQualification) {
+    private TeacherContinuingEducation createTeacherContinuingEducation(Teacher teacher, TeacherContinuingEducationForm teacherContinuingEducationForm, TeacherContinuingEducation teacherContinuingEducation) {
+        EntityUtil.bindToEntity(teacherContinuingEducationForm, teacherContinuingEducation, classifierRepository);
+        teacherContinuingEducation.setTeacher(teacher);
+        
+        return teacherContinuingEducation;
+    }
+
+    private void bindTeacherQualificationForm(Teacher teacher, Set<TeacherQualificationForm> qualificationFroms) {
+        Set<TeacherQualification> teacherQualifications = teacher.getTeacherQualification();
+        EntityUtil.bindEntityCollection(teacherQualifications, TeacherQualification::getId, qualificationFroms, TeacherQualificationForm::getId,
+                 teacherQualificationFrom -> createTeacherQualification(teacher, teacherQualificationFrom, new TeacherQualification()),
+                 (teacherQualificationFrom, teacherQualification) -> createTeacherQualification(teacher, teacherQualificationFrom, teacherQualification));
+    }
+
+    private TeacherQualification createTeacherQualification(Teacher teacher, TeacherQualificationForm teacherQualificationForm, TeacherQualification teacherQualification) {
         EntityUtil.bindToEntity(teacherQualificationForm, teacherQualification, classifierRepository);
         teacherQualification.setTeacher(teacher);
         if (ClassifierUtil.isEstonia(teacherQualification.getState())) {
@@ -247,8 +272,17 @@ public class TeacherService {
         bindTeacherMobilityForm(teacher, mobilityForms);
         return TeacherDto.of(EntityUtil.save(teacher, em));
     }
+    
+    public TeacherDto saveContinuingEducations(Teacher teacher, List<TeacherContinuingEducationForm> teacherContinuingEducationForms) {
+        bindTeacherContinuingEducationForm(teacher, teacherContinuingEducationForms);
+        return TeacherDto.of(EntityUtil.save(teacher, em));
+    }
 
-    public TeacherDto saveQualifications(Teacher teacher, Set<TeacherQualificationFrom> teacherQualificationFroms) {
+    public void delete(TeacherContinuingEducation continuingEducation) {
+        EntityUtil.deleteEntity(continuingEducation, em);
+    }
+
+    public TeacherDto saveQualifications(Teacher teacher, Set<TeacherQualificationForm> teacherQualificationFroms) {
         bindTeacherQualificationForm(teacher, teacherQualificationFroms);
         return TeacherDto.of(EntityUtil.save(teacher, em));
     }
@@ -263,9 +297,5 @@ public class TeacherService {
 
     public void delete(TeacherPositionEhis teacherPositionEhis) {
         EntityUtil.deleteEntity(teacherPositionEhis, em);
-    }
-
-    public boolean isUnique(Long schoolId, UniqueCommand command) {
-        return teacherRepository.isUnique(schoolId, command.getParamValue());
     }
 }

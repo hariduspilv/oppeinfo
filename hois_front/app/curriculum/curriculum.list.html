@@ -159,6 +159,8 @@
       <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="auth.school.vocational && auth.isAdmin()" ng-href="#/vocationalCurriculum/new">{{'main.button.insertVocationalCurriculum' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="auth.school.higher && auth.isAdmin()" ng-href="#/higherCurriculum/new">{{'main.button.insertHigherCurriculum' | translate}}</md-button>
       </div>
 	  </fieldset>
   </form>
@@ -189,7 +191,7 @@
         <td md-cell>{{row.validThru | hoisDate}}</td>
         <td md-cell>{{currentLanguageNameField(row.status)}}</td>
         <td md-cell>
-            <md-button md-no-ink class="md-primary change-button" ng-click="edit(row)" ng-if="canBeEdited(row)">{{'main.button.change' | translate}}</md-button>
+            <md-button md-no-ink class="md-primary change-button" ng-if="auth.isAdmin() && canBeEdited(row)" ng-click="edit(row)">{{'main.button.change' | translate}}</md-button>
         </td>
     </tr>
     </tbody>

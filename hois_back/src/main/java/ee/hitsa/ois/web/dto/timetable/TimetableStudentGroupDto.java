@@ -1,9 +1,12 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 public class TimetableStudentGroupDto {
-    private Long id;
-    private String code;
-    private Long curriculumId;
+    protected Long id;
+    protected String code;
+    protected Long curriculumId;
+
+    public TimetableStudentGroupDto() {
+    }
 
     public TimetableStudentGroupDto(Long id, String code, Long curriculumId) {
         this.id = id;

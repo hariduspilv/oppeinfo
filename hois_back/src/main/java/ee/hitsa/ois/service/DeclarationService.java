@@ -9,6 +9,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -17,6 +18,9 @@ import java.util.Set;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
 import javax.persistence.TypedQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,12 +34,17 @@ import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
+import ee.hitsa.ois.domain.protocol.ProtocolHdata;
+import ee.hitsa.ois.domain.protocol.ProtocolStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
+import ee.hitsa.ois.repository.DeclarationRepository;
+import ee.hitsa.ois.repository.ProtocolStudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.DeclarationUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -59,6 +68,10 @@ public class DeclarationService {
     private StudyYearService studyYearService;
     @Autowired
     private EntityManager em;
+    @Autowired
+    private DeclarationRepository declarationRepository;
+    @Autowired
+    private ProtocolStudentRepository protocolStudentRepository;
 
     private static final String DECLARATION_SELECT = " distinct d.id as d_id, s.id as sId, "
             + "p.firstname, p.lastname, p.idcode, cv.id as cv_id, cv.code as cv_code, "
@@ -90,7 +103,7 @@ public class DeclarationService {
             + "s.name_et, s.name_en, s.code, s.credits, c.value, null as moduleId, "
             + " false as isOptional, array_to_string(teachers.teacher, ', ')";
 
-    public Page<DeclarationDto> search(DeclarationSearchCommand criteria, Pageable pageable) {
+    public Page<DeclarationDto> search(HoisUserDetails user, DeclarationSearchCommand criteria, Pageable pageable) {
 
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(DECLARATION_FROM).sort(pageable);
 
@@ -139,6 +152,7 @@ public class DeclarationService {
             dto.setInserted(resultAsLocalDateTime(r, 9));
             dto.setStatus(resultAsString(r, 10));
             dto.setConfirmDate(resultAsLocalDate(r, 11));
+            dto.setCanBeChanged(DeclarationUtil.canChangeDeclarationFromSearchForm(user, dto));
             return dto;
         });
     }
@@ -166,17 +180,21 @@ public class DeclarationService {
         if(!user.isStudent() && !user.isSchoolAdmin()) {
             return false;
         }
-
-        if(getCurrent(user.getSchoolId(), studentId) != null) {
-            // declaration already exists
+        if(declarationAlreadyCreated(user.getSchoolId(), studentId)) {
             return false;
         }
-
         Student student = em.getReference(Student.class, studentId);
+        if(!StudentUtil.isHigher(student)) {
+            return false;
+        }
         if(user.isStudent()) {
             return UserUtil.isSame(user, student) && StudentUtil.isStudying(student);
         }
         return UserUtil.isSchoolAdmin(user, student.getSchool());
+    }
+    
+    private boolean declarationAlreadyCreated(Long schoolId, Long studentId) {
+        return getCurrent(schoolId, studentId) != null;
     }
 
     public boolean studentHasPreviousDeclarations(Long studentId) {
@@ -187,7 +205,27 @@ public class DeclarationService {
     }
 
     public void deleteSubject(DeclarationSubject subject) {
+        deleteFromProtocol(subject);
         EntityUtil.deleteEntity(subject, em);
+    }
+
+    private void deleteFromProtocol(DeclarationSubject subject) {
+        Long studentId = EntityUtil.getId(subject.getDeclaration().getStudent());
+        Long subjectStudyPeriodId = EntityUtil.getId(subject.getSubjectStudyPeriod());
+        List<ProtocolStudent> list = protocolStudentRepository.findAll((root, query, cb) -> {
+            
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("student").get("id"), studentId));
+            Subquery<Long> protocolHdataQuery = query.subquery(Long.class);
+            Root<ProtocolHdata> targetRoot = protocolHdataQuery.from(ProtocolHdata.class);
+            protocolHdataQuery = protocolHdataQuery
+                    .select(targetRoot.get("protocol").get("id")).where(cb.equal(targetRoot.get("subjectStudyPeriod").get("id"), subjectStudyPeriodId));
+            filters.add(root.get("protocol").get("id").in(protocolHdataQuery));
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        });
+        if(!CollectionUtils.isEmpty(list)) {
+            protocolStudentRepository.delete(list);
+        }
     }
 
     /*
@@ -251,23 +289,30 @@ public class DeclarationService {
         return EntityUtil.save(declaration, em);
     }
 
+    /**
+     * @return number of confirmed declarations
+     */
     public Integer confirmAll(HoisUserDetails user) {
-        Long studyPeriodId = studyYearService.getCurrentStudyPeriod(user.getSchoolId());
-        TypedQuery<Declaration> q = em.createQuery("select d from Declaration where d.studyPeriod.id = ?1", Declaration.class);
-        q.setParameter(1, studyPeriodId);
-        List<Declaration> declarations = q.getResultList();
-        int count = 0;
+        List<Declaration> declarations = getAllUnconfirmedDeclarations(user.getSchoolId());
         Classifier confirmedStatus = em.getReference(Classifier.class, DeclarationStatus.OPINGUKAVA_STAATUS_K.name());
         for (Declaration declaration : declarations) {
-            if (declaration.getConfirmDate() == null) {
-                declaration.setStatus(confirmedStatus);
-                declaration.setConfirmer(user.getUsername());
-                declaration.setConfirmDate(LocalDate.now());
-                EntityUtil.save(declaration, em);
-                count++;
-            }
+            declaration.setStatus(confirmedStatus);
+            declaration.setConfirmer(user.getUsername());
+            declaration.setConfirmDate(LocalDate.now());
+        } 
+        if(!CollectionUtils.isEmpty(declarations)) {
+            declarationRepository.save(declarations);
         }
-        return Integer.valueOf(count);
+        return Integer.valueOf(declarations.size());
+    }
+    
+    private List<Declaration> getAllUnconfirmedDeclarations(Long schoolId) {
+        return declarationRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+            filters.add(cb.equal(root.get("student").get("school").get("id"), schoolId));
+            filters.add(cb.equal(root.get("status").get("code"), DeclarationStatus.OPINGUKAVA_STAATUS_S.name()));
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        });
     }
 
     public Declaration removeConfirmation(Declaration declaration) {
@@ -353,11 +398,14 @@ public class DeclarationService {
     public Page<AutocompleteResult> getStudentsWithoutDeclaration(UsersSearchCommand command, Pageable pageable,
             Long schoolId) {
         final String SELECT = "s.id, p.firstname, p.lastname";
-        final String FROM = "from student s join person p on p.id = s.person_id";
+        final String FROM = "from student s join person p on p.id = s.person_id "
+                + "join curriculum_version cv on cv.id = s.curriculum_version_id "
+                + "join curriculum c on c.id = cv.curriculum_id ";
         Long studyPeriodId = studyYearService.getCurrentStudyPeriod(schoolId);
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM).sort(pageable);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.filter("s.status_code = 'OPPURSTAATUS_O'");
+        qb.filter(" c.is_higher = true ");
         // select only students without declaration
         qb.requiredCriteria(
                 "not exists(select d.student_id from declaration d "
@@ -410,5 +458,12 @@ public class DeclarationService {
 
     private void setDeclarationStatus(Declaration declaration, DeclarationStatus status) {
         declaration.setStatus(em.getReference(Classifier.class, status.name()));
+    }
+
+    public boolean subjectAssessed(DeclarationSubject subject) {
+        Long studentId = EntityUtil.getId(subject.getDeclaration().getStudent());
+        Long subjectStudyPeriodId = EntityUtil.getId(subject.getSubjectStudyPeriod());
+        Long declarationSubjectId = EntityUtil.getId(subject);
+        return declarationRepository.subjectAssessed(studentId, subjectStudyPeriodId, declarationSubjectId);
     }
 }

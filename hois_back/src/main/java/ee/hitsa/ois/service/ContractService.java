@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
@@ -13,6 +14,7 @@ import java.util.Map;
 import java.util.UUID;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.transaction.Transactional;
 import javax.validation.Validator;
 
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Enterprise;
+import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -37,9 +40,10 @@ import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.message.PracticeJournalUniqueUrlMessage;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -61,13 +65,13 @@ import ee.hitsa.ois.web.dto.ContractStudentThemeDto;
 public class ContractService {
 
     @Autowired
+    private AutomaticMessageService automaticMessageService;
+    @Autowired
     private EntityManager em;
     @Autowired
-    private SchoolRepository schoolRepository;
+    private JobService jobService;
     @Autowired
     private StudyYearService studyYearService;
-    @Autowired
-    private AutomaticMessageService automaticMessageService;
     @Autowired
     private Validator validator;
 
@@ -223,7 +227,6 @@ public class ContractService {
         return modulesById.values();
     }
 
-
     public ContractDto get(Contract contract) {
         return ContractDto.of(contract);
     }
@@ -233,10 +236,6 @@ public class ContractService {
         setContractStatus(contract, ContractStatus.LEPING_STAATUS_S);
         contract.setSupervisorUrl(generateUniqueUrl());
         return save(contract, contractForm);
-    }
-
-    private static String generateUniqueUrl() {
-        return UUID.randomUUID().toString();
     }
 
     public Contract save(Contract contract, ContractForm contractForm) {
@@ -254,6 +253,69 @@ public class ContractService {
         return EntityUtil.save(changedContract, em);
     }
 
+    public void delete(Contract contract) {
+        EntityUtil.deleteEntity(contract, em);
+    }
+
+    public Contract sendToEkis(HoisUserDetails user, Contract contract) {
+        setContractStatus(contract, ContractStatus.LEPING_STAATUS_Y);
+        EntityUtil.save(createPracticeJournal(contract, user.getSchoolId()), em);
+        contract = EntityUtil.save(contract, em);
+
+        jobService.sendToEkis(contract);
+        return contract;
+    }
+
+    public Contract confirmedByEkis(long contractId, String contractNr, LocalDate confirmDate, long wdId) {
+        Contract contract = findContract(contractId, wdId);
+        contract.setContractNr(contractNr);
+        contract.setConfirmDate(confirmDate);
+        setContractStatus(contract, ContractStatus.LEPING_STAATUS_K);
+        return EntityUtil.save(contract, em);
+    }
+
+    public void endContract(Job job) {
+        Contract contract = job.getContract();
+        if(contract.getEndDate() != null && contract.getEndDate().isBefore(LocalDate.now())) {
+            setContractStatus(contract, ContractStatus.LEPING_STAATUS_L);
+            EntityUtil.save(contract, em);
+        }
+    }
+
+    public void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, Contract contract) {
+        PracticeJournalUniqueUrlMessage data = new PracticeJournalUniqueUrlMessage();
+        data.setUrl(getPracticeJournalSupervisorUrl(contract));
+        automaticMessageService.sendMessageToEnterprise(contract.getEnterprise(), em.getReference(School.class, user.getSchoolId()), MessageType.TEATE_LIIK_PRAKTIKA_URL, data);
+    }
+
+    private String getPracticeJournalSupervisorUrl(Contract contract) {
+        return frontendBaseUrl + "practiceJournals/supervisor/" + contract.getSupervisorUrl();
+    }
+
+    private PracticeJournal createPracticeJournal(Contract contract, Long schoolId) {
+        PracticeJournal practiceJournal = EntityUtil.bindToEntity(contract, new PracticeJournal(), "contract", "school", "studyYear", "status");
+        practiceJournal.setContract(contract);
+        practiceJournal.setSchool(em.getReference(School.class, schoolId));
+        practiceJournal.setStudyYear(studyYearService.getCurrentStudyYear(schoolId));
+        practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
+        return practiceJournal;
+    }
+
+    private Contract findContract(long contractId, long wdId) {
+        try {
+            Contract contract = em.getReference(Contract.class, Long.valueOf(contractId));
+            if(!ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_Y, contract.getStatus())) {
+                throw new HoisException("Leping vale staatusega");
+            }
+            if(contract.getWdId() == null || contract.getWdId().longValue() != wdId) {
+                throw new HoisException("Praktika leping vale ekise id-ga");
+            }
+            return contract;
+        } catch(@SuppressWarnings("unused") EntityNotFoundException e) {
+            throw new HoisException("Lepingut ei leitud");
+        }
+    }
+
     private void assertValidationRules(ContractForm contractForm) {
         if (Boolean.TRUE.equals(contractForm.getIsHigher()) &&
                 !validator.validate(contractForm, ContractValidation.Higher.class).isEmpty()) {
@@ -264,36 +326,11 @@ public class ContractService {
         }
     }
 
-    public void delete(Contract contract) {
-        EntityUtil.deleteEntity(contract, em);
-    }
-
-    public Contract sendToEkis(HoisUserDetails user, Contract contract) {
-        setContractStatus(contract, ContractStatus.LEPING_STAATUS_Y);
-        EntityUtil.save(createPracticeJournal(contract, schoolRepository.getOne(user.getSchoolId())), em);
-        return EntityUtil.save(contract, em);
-    }
-
-    private PracticeJournal createPracticeJournal(Contract contract, School school) {
-        PracticeJournal practiceJournal = EntityUtil.bindToEntity(contract, new PracticeJournal(), "contract", "school", "studyYear", "status");
-        practiceJournal.setContract(contract);
-        practiceJournal.setSchool(school);
-        practiceJournal.setStudyYear(studyYearService.getCurrentStudyYear(school));
-        practiceJournal.setStatus(em.getReference(Classifier.class, JournalStatus.PAEVIK_STAATUS_T.name()));
-        return practiceJournal;
-    }
-
-    public void sendUniqueUrlEmailToEnterpriseSupervisor(HoisUserDetails user, Contract contract) {
-        PracticeJournalUniqueUrlMessage data = new PracticeJournalUniqueUrlMessage();
-        data.setUrl(getPracticeJournalSupervisorUrl(contract));
-        automaticMessageService.sendMessageToEnterprise(contract.getEnterprise(), schoolRepository.getOne(user.getSchoolId()), MessageType.TEATE_LIIK_PRAKTIKA_URL, data);
-    }
-
-    public String getPracticeJournalSupervisorUrl(Contract contract) {
-        return frontendBaseUrl + "practiceJournals/supervisor/" + contract.getSupervisorUrl();
-    }
-
     private void setContractStatus(Contract contract, ContractStatus status) {
         contract.setStatus(em.getReference(Classifier.class, status.name()));
+    }
+
+    private static String generateUniqueUrl() {
+        return UUID.randomUUID().toString();
     }
 }

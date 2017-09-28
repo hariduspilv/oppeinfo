@@ -29,7 +29,7 @@
             <hois-value value="currentLanguageNameField(practiceJournal.theme)"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <label>{{'practiceJournal.credits' | translate}}</label>
+            <label>{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
             <hois-value value="practiceJournal.credits"></hois-value>
           </md-input-container>
           <md-input-container flex>
@@ -44,7 +44,7 @@
             <hois-value value="currentLanguageNameField(practiceJournal.subject)"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <label>{{'practiceJournal.credits' | translate}}</label>
+            <label>{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
             <hois-value value="practiceJournal.credits"></hois-value>
           </md-input-container>
           <md-input-container flex>
@@ -183,7 +183,7 @@
                 <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
                 <th md-column><span>{{'file.additionDate' | translate}}</span></th>
                 <th md-column>{{'file.addedBy' | translate}}</th>
-                <th md-column></th>
+                <th md-column ng-if="!auth.isStudent()"></th>
               </tr>
             </thead>
             <tbody md-body>
@@ -200,7 +200,7 @@
                 <td md-cell>
                   {{file.insertedBy}}
                 </td>
-                <td md-cell>
+                <td md-cell ng-if="!auth.isStudent()">
                   <md-button class="remove nomargin" ng-click="removeFromArray(practiceJournal.practiceJournalFiles, file)">&times;</md-button>
                 </td>
               </tr>

@@ -22,6 +22,16 @@ public class RoomDto extends RoomForm {
     public static RoomDto of(Room room) {
         return fill(room, room.getRoomEquipment(), new RoomDto());
     }
+    
+    public RoomDto() {
+        
+    }
+    
+    public RoomDto(Long id, Long buildingId, String code) {
+        this.id = id;
+        this.setBuilding(buildingId);
+        this.setCode(code);
+    }
 
     protected static <DTO extends RoomDto> DTO fill(Room room, Collection<RoomEquipment> equipment, DTO dto) {
         EntityUtil.bindToDto(room, dto, "roomEquipment");

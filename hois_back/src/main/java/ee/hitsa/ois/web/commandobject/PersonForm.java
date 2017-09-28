@@ -9,24 +9,21 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.EstonianIdCode;
 import ee.hitsa.ois.validation.NotEmpty;
 
-@EstonianIdCode
 public class PersonForm extends VersionedCommand {
+
     @NotEmpty
     @EstonianIdCode
     private String idcode;
-
     @NotEmpty
+    @Size(max = 100)
     private String firstname;
-
     @NotEmpty
+    @Size(max = 100)
     private String lastname;
-
     private LocalDate birthdate;
-
     @NotEmpty
     @ClassifierRestriction(MainClassCode.SUGU)
     private String sex;
-
     @Size(max = 100)
     private String email;
     @Size(max = 100)

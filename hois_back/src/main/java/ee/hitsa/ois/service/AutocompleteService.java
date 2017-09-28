@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
@@ -31,8 +32,6 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumModuleRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
-import ee.hitsa.ois.repository.StudyPeriodRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -74,10 +73,6 @@ public class AutocompleteService {
     private EmailGeneratorService emailGeneratorService;
     @Autowired
     private PersonRepository personRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
-    private StudyPeriodRepository studyPeriodRepository;
     @Autowired
     private SaisAdmissionRepository saisAdmissionRepository;
     @Autowired
@@ -247,22 +242,35 @@ public class AutocompleteService {
         if("student".equals(lookup.getRole())) {
             // FIXME multiple students with same idcode?
             // FIXME should filter by school?
-            person = personRepository.findByIdcodeStudent(lookup.getIdcode());
+            person = personRepository.findByIdcodeStudent(lookup.getIdcode().trim());
         } else {
-           person = personRepository.findByIdcode(lookup.getIdcode());
+           person = personRepository.findByIdcode(lookup.getIdcode().trim());
         }
         PersonDto dto = null;
         if(person != null) {
             dto = PersonDto.of(person);
-            if("forteacher".equals(lookup.getRole()) && user.isSchoolAdmin()) {
-                dto.setSchoolEmail(emailGeneratorService.lookupSchoolEmail(em.getReference(School.class, user.getSchoolId()), person));
+            if("forteacher".equals(lookup.getRole())) {
+                if(user.isSchoolAdmin()) {
+                    List<?> teacher = em.createNativeQuery("select id from teacher where school_id = ?1 and person_id = ?2")
+                            .setParameter(1, user.getSchoolId()).setParameter(2, person.getId()).getResultList();
+                    dto.setTeacherId(teacher.isEmpty() ? null : resultAsLong(teacher.get(0), 0));
+                    dto.setSchoolEmail(emailGeneratorService.lookupSchoolEmail(em.getReference(School.class, user.getSchoolId()), person));
+                }
             }
         }
         return dto;
     }
 
     public List<SchoolWithoutLogo> schools() {
-        return schoolRepository.findAllSchools();
+        List<?> data = em.createQuery("select id, code, nameEt, nameEn, email from School").getResultList();
+        return StreamUtil.toMappedList(r -> {
+            return new SchoolWithoutLogo(
+                    resultAsLong(r, 0),
+                    resultAsString(r, 1),
+                    resultAsString(r, 2),
+                    resultAsString(r, 3),
+                    resultAsString(r, 4));
+        }, data);
     }
 
     /**
@@ -314,12 +322,17 @@ public class AutocompleteService {
         if (Boolean.TRUE.equals(lookup.getActive())) {
             qb.requiredCriteria("s.status_code in :statusCodes", "statusCodes", StudentStatus.STUDENT_STATUS_ACTIVE);
         }
-        if (Boolean.TRUE.equals(lookup.getStudying())) {
-            qb.requiredCriteria("s.status_code = :statusCode", "statusCode", StudentStatus.OPPURSTAATUS_O);
+
+        StudentStatus status = null;
+        if (Boolean.TRUE.equals(lookup.getFinished())) {
+            status = StudentStatus.OPPURSTAATUS_L;
+        } else if (Boolean.TRUE.equals(lookup.getStudying())) {
+            status = StudentStatus.OPPURSTAATUS_O;
+        } else if (Boolean.TRUE.equals(lookup.getAcademicLeave())) {
+            status = StudentStatus.OPPURSTAATUS_A;
         }
-        if (Boolean.TRUE.equals(lookup.getAcademicLeave())) {
-            qb.requiredCriteria("s.status_code = :statusCode", "statusCode", StudentStatus.OPPURSTAATUS_A);
-        }
+        qb.optionalCriteria("s.status_code = :statusCode", "statusCode", status);
+
         if (Boolean.TRUE.equals(lookup.getNominalStudy())) {
             qb.requiredCriteria("s.nominal_study_end > :currentDate", "currentDate", LocalDate.now());
         }
@@ -378,9 +391,9 @@ public class AutocompleteService {
      * startDate and endDate required to get current studyPeriod in front end
      */
     public List<StudyPeriodWithYearDto> studyPeriods(Long schoolId) {
-        return StreamUtil.toMappedList(StudyPeriodWithYearDto::of, studyPeriodRepository.findAll((root, query, cb) -> {
-            return cb.equal(root.get("studyYear").get("school").get("id"), schoolId);
-        }));
+        List<StudyPeriod> data = em.createQuery("select sp from StudyPeriod sp where sp.studyYear.school.id = ?1", StudyPeriod.class)
+                .setParameter(1, schoolId).getResultList();
+        return StreamUtil.toMappedList(StudyPeriodWithYearDto::of, data);
     }
 
     public List<StudyYearSearchDto> studyYears(Long schoolId) {
@@ -426,7 +439,7 @@ public class AutocompleteService {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from journal j");
         qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
         if (user.isTeacher()) {
-            qb.requiredCriteria("j.id in (select jt.journal_id from journal_teacher jt inner join teacher t on jt.teacher_id = t.id and t.person_id = :personId)", "personId", user.getPersonId());
+            qb.requiredCriteria("j.id in (select jt.journal_id from journal_teacher jt where jt.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
         }
         qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", studyYear);
 

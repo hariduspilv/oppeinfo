@@ -6,7 +6,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -136,7 +135,7 @@ public class HigherProtocolService {
                 Subquery<Long> targetQuery = query.subquery(Long.class);
                 Root<SubjectStudyPeriodTeacher> targetRoot = targetQuery.from(SubjectStudyPeriodTeacher.class);
                 targetQuery = targetQuery.select(targetRoot.get("subjectStudyPeriod").get("id"))
-                        .where(cb.equal(targetRoot.get("teacher").get("person").get("id"), user.getPersonId()));
+                        .where(cb.equal(targetRoot.get("teacher").get("id"), user.getTeacherId()));
                 filters.add(root.get("protocolHdata").get("subjectStudyPeriod").get("id").in(targetQuery));
             } else {
                 if(criteria.getTeacher() != null) {
@@ -353,21 +352,18 @@ public class HigherProtocolService {
             Map<Long, String> practiceResults = StreamUtil.toMap(r -> resultAsLong(r, 0),  r -> resultAsString(r, 1), data);
 
             for(HigherProtocolStudentDto protocolStudent : dto.getProtocolStudents()) {
-                if(practiceResults.containsKey(protocolStudent.getStudent().getId())) {
-                    protocolStudent.setPracticeResult(practiceResults.get(protocolStudent.getStudent().getId()));
+                Long studentId = protocolStudent.getStudent().getId();
+                if(practiceResults.containsKey(studentId)) {
+                    protocolStudent.setPracticeResult(practiceResults.get(studentId));
                 }
             }
         }
     }
 
     private static void assertDoesNotHaveDuplicates(List<?> data) {
-        Set<Long> existingIds = new HashSet<>();
-        for (Object r : data) {
-            Long id = resultAsLong(r, 0);
-            if (existingIds.contains(id)) {
-                throw new ValidationFailedException("higherProtocol.error.duplicatesInPracticeResults");
-            }
-            existingIds.add(id);
+        Set<Long> existingIds = StreamUtil.toMappedSet(r -> resultAsLong(r, 0), data);
+        if(data.size() != existingIds.size()) {
+            throw new ValidationFailedException("higherProtocol.error.duplicatesInPracticeResults");
         }
     }
 }

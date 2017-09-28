@@ -1,34 +1,34 @@
 
-<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+<div layout-padding ng-cloak class="form-readonly">
     <form layout="column" novalidate>
         <div layout="row">
-            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <md-input-container flex>
                 <label class="textInput">{{'message.subject' | translate}}</label>
-                <input ng-model="record.subject" type="text" readonly>
+                <hois-value value="record.subject"/>
             </md-input-container>
         </div>
         <div layout="row">
-            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <md-input-container flex>
                 <label class="textInput">{{'message.content' | translate}}</label>
-                <textarea ng-model="record.content" max-rows="20" readonly></textarea>
+                <hois-value value="record.content"/>
             </md-input-container>
         </div>
         <div layout="row" ng-show="!isSent">
-            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <md-input-container flex>
                 <label class="textInput">{{'message.sender' | translate}}</label>
-                <input ng-model="record.sendersName" type="text" readonly>
+                <hois-value value="record.sendersName"/>
             </md-input-container>
         </div>
         <div layout="row" ng-show="isSent">
-            <md-input-container flex="50" flex-sm="100" flex-xs="100">
+            <md-input-container flex>
                 <label class="textInput">{{'message.receiver' | translate}}</label>
-                <input ng-model="record.receivers" type="text" readonly>
+                <hois-value value="record.receivers"/>
             </md-input-container>
         </div>
         <div layout="row">
                 <md-input-container flex>
                     <label>{{'message.dateSent' | translate}}</label>
-                    <md-datepicker ng-model="record.inserted" disabled></md-datepicker>
+                    <hois-value value="record.inserted | hoisDate"/>
                 </md-input-container>
         </div>
         <div layout="row">

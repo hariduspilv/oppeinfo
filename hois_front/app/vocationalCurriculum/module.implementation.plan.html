@@ -297,14 +297,14 @@
                 <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
                 <md-button ng-click="saveAndConfirm()" class="md-raised">{{'curriculum.statuschange.implementationPlan.button.verify' | translate}}</md-button>
                 <md-button ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
-                <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+                <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
                 <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
             </div>
             <div ng-show="formState.readOnly">
                 <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
                 <md-button ng-click="confirm()" class="md-raised">{{'curriculum.statuschange.implementationPlan.button.verify' | translate}}</md-button>
                 <md-button ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
-                <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+                <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
             </div>
          </div>
          <div ng-show="implementationPlan.status === VERSION_STATUS.K">
@@ -314,11 +314,11 @@
              <div ng-show="formState.readOnly">
                 <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
                 <md-button ng-click="setStatusClosed()" class="md-raised">{{'curriculum.statuschange.implementationPlan.button.close' | translate}}</md-button>
-                <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+                <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
              </div>
          </div>
          <div ng-show="implementationPlan.status === VERSION_STATUS.C">
-            <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
          </div>
         <md-button class="md-raised md-default" ng-click="back('#/vocationalCurriculum/' + curriculumId + '/view')">{{'main.button.back' | translate}}</md-button>
     </div>

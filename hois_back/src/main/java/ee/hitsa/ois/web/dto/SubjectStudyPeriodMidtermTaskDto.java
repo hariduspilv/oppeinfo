@@ -53,12 +53,12 @@ public class SubjectStudyPeriodMidtermTaskDto extends SubjectStudyPeriodMidtermT
                 assessmentClassifier.getValue() + " - " + assessmentClassifier.getNameEn());
     }
 
-    public static SubjectStudyPeriodMidtermTaskDto ofForProtocol(Set<Long> studetnIds, 
+    public static SubjectStudyPeriodMidtermTaskDto ofForProtocol(Set<Long> studentIds,
             SubjectStudyPeriod subjectStudyPeriod) {
-        SubjectStudyPeriodMidtermTaskDto dto = SubjectStudyPeriodMidtermTaskDto.of(subjectStudyPeriod);      
-        
+        SubjectStudyPeriodMidtermTaskDto dto = SubjectStudyPeriodMidtermTaskDto.of(subjectStudyPeriod);
+
         dto.setStudentResults(MidtermTaskUtil.getStudentResults(subjectStudyPeriod).stream()
-                .filter(sr -> studetnIds.contains(EntityUtil.getId(sr.getDeclarationSubject()
+                .filter(sr -> studentIds.contains(EntityUtil.getId(sr.getDeclarationSubject()
                         .getDeclaration().getStudent())))
                 .map(MidtermTaskStudentResultDto::of).collect(Collectors.toSet()));
         return dto;

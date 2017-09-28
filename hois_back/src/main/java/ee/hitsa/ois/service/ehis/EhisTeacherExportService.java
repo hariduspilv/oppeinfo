@@ -5,7 +5,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -13,24 +12,20 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
-import javax.xml.datatype.DatatypeConfigurationException;
-import javax.xml.datatype.DatatypeFactory;
-import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEhisTeacherLog;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.teacher.TeacherContinuingEducation;
 import ee.hitsa.ois.domain.teacher.TeacherMobility;
 import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
@@ -40,100 +35,80 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
 import ee.hitsa.ois.web.dto.EhisTeacherExportResultDto;
+import ee.hois.soap.LogContext;
 import ee.hois.xroad.ehis.generated.Oppeaine;
+import ee.hois.xroad.ehis.generated.Oppeasutus;
+import ee.hois.xroad.ehis.generated.OppeasutusList;
 import ee.hois.xroad.ehis.generated.Oppejoud;
 import ee.hois.xroad.ehis.generated.OppejoudAmetikoht;
 import ee.hois.xroad.ehis.generated.OppejoudIsikuandmed;
 import ee.hois.xroad.ehis.generated.OppejoudKvalifikatsioon;
 import ee.hois.xroad.ehis.generated.OppejoudList;
 import ee.hois.xroad.ehis.generated.OppejoudLyhiajalineMobiilsus;
-import ee.hois.xroad.ehis.service.EhisLaeOppejoudResponse;
-import ee.hois.xroad.ehis.service.EhisXroadService;
+import ee.hois.xroad.ehis.generated.Pedagoog;
+import ee.hois.xroad.ehis.generated.PedagoogAmetikohtType;
+import ee.hois.xroad.ehis.generated.PedagoogTaiendkoolitus;
+import ee.hois.xroad.ehis.generated.PedagoogTasemekoolitus;
+import ee.hois.xroad.ehis.service.EhisResponse;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
 
 @Transactional
 @Service
-public class EhisTeacherExportService {
+public class EhisTeacherExportService extends EhisService {
 
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
-    private static final String LAE_OPPEJOUD_SERIVCE_CODE = "laeOppejoud";
-    public static final String LAE_OPPEJOUD_SERVICE = "ehis." + LAE_OPPEJOUD_SERIVCE_CODE + ".v1";
+    private static final String LAE_OPPEJOUD_SERVICE_CODE = "laeOppejoud";
+    private static final String LAE_PEDAGOOGID_SERVICE_CODE = "laePedagoogid";
+    private static final String SUBSYSTEM_CODE = "ehis";
+    private static final String SERVICE_VERSION = "v1";
+    public static final String LAE_OPPEJOUD_SERVICE = String.format("%s.%s.%s", SUBSYSTEM_CODE, LAE_OPPEJOUD_SERVICE_CODE, SERVICE_VERSION);
+    public static final String LAE_PEDAGOOGID_SERVICE = String.format("%s.%s.%s", SUBSYSTEM_CODE, LAE_PEDAGOOGID_SERVICE_CODE, SERVICE_VERSION);
 
     private static final String EHIS_TOOSUHE_MUU = "EHIS_TOOSUHE_MUU";
     private static final String EHIS_KVALIFIKATSIOON_NIMI_MUU = "EHIS_KVALIFIKATSIOON_NIMI_MUU";
     private static final String EHIS_AMETIKOHT_MUU = "EHIS_AMETIKOHT_MUU";
 
     @Autowired
-    private EntityManager em;
-    @Autowired
-    private EhisXroadService ehisXroadService;
-    @Autowired
     private StudyYearService studyYearService;
 
-    @Value("${ehis.endpoint}")
-    private String endpoint;
-
-    @Value("${ehis.user}")
-    private String user;
-
-    @Value("${ehis.client.xRoadInstance}")
-    private String clientXRoadInstance;
-    @Value("${ehis.client.memberClass}")
-    private String clientMemberClass;
-    @Value("${ehis.client.memberCode}")
-    private String clientMemberCode;
-    @Value("${ehis.client.subsystemCode}")
-    private String clientSubsystemCode;
-
-    @Value("${ehis.service.xRoadInstance}")
-    private String serviceXRoadInstance;
-    @Value("${ehis.service.memberClass}")
-    private String serviceMemberClass;
-    @Value("${ehis.service.memberCode}")
-    private String serviceMemberCode;
-    @Value("${ehis.service.subsystemCode}")
-    private String serviceSubsystemCode;
-
-    public List<EhisTeacherExportResultDto> exportToEhis(Long schoolId, EhisTeacherExportForm form) {
+    public List<EhisTeacherExportResultDto> exportToEhis(Long schoolId, boolean higher, EhisTeacherExportForm form) {
         List<EhisTeacherExportResultDto> resultList = new ArrayList<>();
-        List<RequestObject> requestList = getRequest(schoolId, form);
 
-        XRoadHeaderV4 xRoadHeaderV4 = getXroadHeader();
-
-        for (RequestObject requestObject : requestList) {
-            EhisLaeOppejoudResponse ehisLaeOppejoudResponse;
-            if(requestObject.getError() == null) {
-                ehisLaeOppejoudResponse = ehisXroadService.laeOppejoud(xRoadHeaderV4, requestObject.getOppejoudList());
-            } else {
-                ehisLaeOppejoudResponse = new EhisLaeOppejoudResponse();
-                ehisLaeOppejoudResponse.setHasOtherErrors(Boolean.TRUE);
-                ehisLaeOppejoudResponse.setLogTxt(requestObject.getError());
-                ehisLaeOppejoudResponse.setRequest("Could not generate request");
-            }
+        for (RequestObject request : createRequests(schoolId, higher, form)) {
+            LogContext queryLog;
             WsEhisTeacherLog wsEhisTeacherLog = new WsEhisTeacherLog();
-            wsEhisTeacherLog.setRequest(ehisLaeOppejoudResponse.getRequest());
-            wsEhisTeacherLog.setResponse(ehisLaeOppejoudResponse.getResponse());
-            wsEhisTeacherLog.setHasOtherErrors(ehisLaeOppejoudResponse.isHasOtherErrors());
-            wsEhisTeacherLog.setHasXteeErrors(ehisLaeOppejoudResponse.isHasXRoadErrors());
-            wsEhisTeacherLog.setTeacher(requestObject.getTeacher());
-            wsEhisTeacherLog.setWsName(LAE_OPPEJOUD_SERVICE);
-            wsEhisTeacherLog.setSchool(requestObject.getTeacher().getSchool());
-            String txt = ehisLaeOppejoudResponse.getLogTxt().toLowerCase();
-            if (txt.contains("viga") || txt.contains("error") || txt.contains("exception")) {
+            XRoadHeaderV4 xRoadHeader = getXroadHeader();
+            if(request.getError() == null) {
+                EhisResponse<List<String>> response;
+                if(higher) {
+                    response = ehisClient.laeOppejoud(xRoadHeader, request.getOppejoudList());
+                } else {
+                    xRoadHeader.getService().setServiceCode(LAE_PEDAGOOGID_SERVICE_CODE);
+                    response = ehisClient.laePedagoogid(xRoadHeader, request.getOppeasutusList());
+                }
+                queryLog = response.getLog();
+                if(!response.hasError()) {
+                    wsEhisTeacherLog.setLogTxt(String.join(";", StreamUtil.nullSafeList(response.getResult())));
+                } else {
+                    wsEhisTeacherLog.setHasXteeErrors(Boolean.TRUE);
+                }
+            } else {
+                queryLog = xRoadHeader.logContext();
                 wsEhisTeacherLog.setHasOtherErrors(Boolean.TRUE);
+                wsEhisTeacherLog.setLogTxt(request.getError());
             }
-            wsEhisTeacherLog.setLogTxt(ehisLaeOppejoudResponse.getLogTxt());
-            em.persist(wsEhisTeacherLog);
+            wsEhisTeacherLog.setTeacher(request.getTeacher());
+            wsEhisTeacherLog.setSchool(request.getTeacher().getSchool());
+            ehisLogService.insert(queryLog, wsEhisTeacherLog);
 
-            resultList.add(new EhisTeacherExportResultDto(requestObject.getTeacher().getPerson().getFullname(),
-                    ehisLaeOppejoudResponse.getLogTxt()));
+            resultList.add(new EhisTeacherExportResultDto(request.getTeacher().getPerson().getFullname(), wsEhisTeacherLog.getLogTxt()));
         }
         return resultList;
     }
 
-    private List<RequestObject> getRequest(Long schoolId, EhisTeacherExportForm form) {
+    private List<RequestObject> createRequests(Long schoolId, boolean higher, EhisTeacherExportForm form) {
         List<RequestObject> result = new ArrayList<>();
-        Set<Long> schoolTeachers = getTeacherIds(schoolId, form);
+        Set<Long> schoolTeachers = getTeacherIds(schoolId, higher, form);
         if(schoolTeachers.isEmpty()) {
             return result;
         }
@@ -154,14 +129,21 @@ public class EhisTeacherExportService {
         List<Teacher> teachers = em.createQuery("select t from Teacher t where t.id in ?1", Teacher.class)
                 .setParameter(1,  schoolTeachers).getResultList();
         for (Teacher teacher : teachers) {
+            // for every teacher we make a separate request
             try {
-                // for every teacher we make a separate request
-                Oppejoud oppejoud = getOppejoud(teacher, subjectByTeacher.getOrDefault(EntityUtil.getId(teacher), Collections.emptyList()));
-                OppejoudList oppejoudList = new OppejoudList();
-                oppejoudList.getItem().add(oppejoud);
-                String error = validateOppejoud(oppejoud);
-
-                result.add(error != null ? new RequestObject(teacher, error) : new RequestObject(teacher, oppejoudList));
+                RequestObject request;
+                if(higher) {
+                    Oppejoud oppejoud = createOppejoud(teacher, subjectByTeacher.getOrDefault(EntityUtil.getId(teacher), Collections.emptyList()));
+                    OppejoudList oppejoudList = new OppejoudList();
+                    oppejoudList.getItem().add(oppejoud);
+                    request = new RequestObject(teacher, oppejoudList);
+                } else {
+                    Oppeasutus oppeasutus = createOppeasutus(teacher, subjectByTeacher.getOrDefault(EntityUtil.getId(teacher), Collections.emptyList()));
+                    OppeasutusList oppeasutusList = new OppeasutusList();
+                    oppeasutusList.getItem().add(oppeasutus);
+                    request = new RequestObject(teacher, oppeasutusList);
+                }
+                result.add(request);
             } catch (Exception e) {
                 log.error("Generating request object on teacher with id {} failed :", EntityUtil.getId(teacher), e);
                 result.add(new RequestObject(teacher, "Antud õpetaja päringu genereerimine ebaõnnestus"));
@@ -170,41 +152,42 @@ public class EhisTeacherExportService {
         return result;
     }
 
-    private Oppejoud getOppejoud(Teacher teacher, List<TeacherWithSubject> subjectStudyPeriodTeacher)
-            throws DatatypeConfigurationException {
+    private Oppejoud createOppejoud(Teacher teacher, List<TeacherWithSubject> subjects) {
         Oppejoud oppejoud = new Oppejoud();
-        Person person = teacher.getPerson();
-
+        String koolId = ehisValue(teacher.getSchool().getEhisSchool());
         // FIXME strings are allowed values too
-        oppejoud.setKoolId(new BigInteger(ehisValue(teacher.getSchool().getEhisSchool())));
-        oppejoud.setIsikukood(person.getIdcode());
+        oppejoud.setKoolId(koolId != null ? new BigInteger(koolId) : null);
+
+        Person person = teacher.getPerson();
+        if(StringUtils.hasText(person.getIdcode())) {
+            oppejoud.setIsikukood(person.getIdcode());
+        } else {
+            OppejoudIsikuandmed isikuandmed = new OppejoudIsikuandmed();
+            isikuandmed.setEesnimi(person.getFirstname());
+            isikuandmed.setPerenimi(person.getLastname());
+            isikuandmed.setSynniKp(date(person.getBirthdate()));
+            isikuandmed.setKlSugu(ehisValue(person.getSex()));
+            isikuandmed.setKlKodakondsus(value(person.getCitizenship()));
+            oppejoud.setIsikuandmed(isikuandmed);
+        }
+
         oppejoud.setTelefon(teacher.getPhone());
         oppejoud.setEmail(teacher.getEmail());
 
-        OppejoudIsikuandmed isikuandmed = new OppejoudIsikuandmed();
-        isikuandmed.setEesnimi(person.getFirstname());
-        isikuandmed.setPerenimi(person.getLastname());
-        isikuandmed.setSynniKp(getXMLGregorianCalendarDate(person.getBirthdate(),
-                String.format("birthdate for teacher with id %s", EntityUtil.getId(teacher))));
-        isikuandmed.setKlSugu(ehisValue(person.getSex()));
-        isikuandmed.setKlKodakondsus(person.getCitizenship() != null ? person.getCitizenship().getValue() : null);
-
-        oppejoud.setIsikuandmed(isikuandmed);
-        addPositionEhis(oppejoud.getAmetikoht(), teacher, subjectStudyPeriodTeacher);
+        addPositionEhis(oppejoud.getAmetikoht(), teacher, subjects);
         addQualifications(oppejoud.getKvalifikatsioon(), teacher);
         addMobilities(oppejoud.getLyhiajalineMobiilsus(), teacher);
         return oppejoud;
     }
 
-    private void addPositionEhis(List<OppejoudAmetikoht> resultList, Teacher teacher,
-            List<TeacherWithSubject> subjectStudyPeriodTeacher) throws DatatypeConfigurationException {
+    private void addPositionEhis(List<OppejoudAmetikoht> resultList, Teacher teacher, List<TeacherWithSubject> subjectStudyPeriodTeacher) {
         for (TeacherPositionEhis positionEhis : teacher.getTeacherPositionEhis()) {
             if (Boolean.TRUE.equals(positionEhis.getIsVocational())) {
                 continue;
             }
 
             OppejoudAmetikoht ametikoht = new OppejoudAmetikoht();
-            ametikoht.setOnOppejoud(Boolean.TRUE.equals(positionEhis.getIsTeacher()) ? "jah" : "ei");
+            ametikoht.setOnOppejoud(yesNo(positionEhis.getIsTeacher()));
             ametikoht.setKlAmetikoht(ehisValue(positionEhis.getPosition()));
             if (EHIS_AMETIKOHT_MUU.equals(code(positionEhis.getPosition()))) {
                 ametikoht.setAmetikohtMuu(positionEhis.getPositionSpecificationEt());
@@ -214,12 +197,10 @@ public class EhisTeacherExportService {
                 ametikoht.setToosuheMuu(positionEhis.getEmploymentTypeSpecification());
             }
             ametikoht.setKlLepinguLiik(ehisValue(positionEhis.getContractType()));
-            ametikoht.setLepingAlgKp(getXMLGregorianCalendarDate(positionEhis.getContractStart(), String.format(
-                    "contract start for teacher_position_ehis with id %s", EntityUtil.getId(positionEhis))));
-            ametikoht.setLepingLoppKp(getXMLGregorianCalendarDate(positionEhis.getContractEnd(), String
-                    .format("contract end for teacher_position_ehis with id %s", EntityUtil.getId(positionEhis))));
+            ametikoht.setLepingAlgKp(date(positionEhis.getContractStart()));
+            ametikoht.setLepingLoppKp(date(positionEhis.getContractEnd()));
             ametikoht.setKoormus(positionEhis.getLoad().doubleValue());
-            ametikoht.setLepingOnLopetatud(Boolean.TRUE.equals(positionEhis.getIsContractEnded()) ? "jah" : "ei");
+            ametikoht.setLepingOnLopetatud(yesNo(positionEhis.getIsContractEnded()));
             if(positionEhis.getSchoolDepartment() != null) {
                 ametikoht.setStruktNimi(positionEhis.getSchoolDepartment().getNameEt());
                 ametikoht.setStruktKood(positionEhis.getSchoolDepartment().getCode());
@@ -241,7 +222,7 @@ public class EhisTeacherExportService {
                 for(Long curriculumId : tws.getValue()) {
                     Curriculum curriculum = em.getReference(Curriculum.class, curriculumId);
                     // FIXME strings are allowed values too
-                    oppeaine.getOkKood().add(curriculum.getMerCode() != null && !curriculum.getMerCode().isEmpty() ? new BigInteger(curriculum.getMerCode()) : null);
+                    oppeaine.getOkKood().add(StringUtils.hasText(curriculum.getMerCode()) ? new BigInteger(curriculum.getMerCode()) : null);
                 }
                 oppeaine.setMaht(subject.getCredits().toString());
                 ametikoht.getOppeained().add(oppeaine);
@@ -266,14 +247,11 @@ public class EhisTeacherExportService {
         }
     }
 
-    private static void addMobilities(List<OppejoudLyhiajalineMobiilsus> resultList, Teacher teacher)
-            throws DatatypeConfigurationException {
+    private void addMobilities(List<OppejoudLyhiajalineMobiilsus> resultList, Teacher teacher) {
         for (TeacherMobility mob : teacher.getTeacherMobility()) {
             OppejoudLyhiajalineMobiilsus mobiilsus = new OppejoudLyhiajalineMobiilsus();
-            mobiilsus.setPerioodiAlgus(getXMLGregorianCalendarDate(mob.getStart(),
-                    String.format("mobiilsus start for teacher_mobility with id %s", EntityUtil.getId(mob))));
-            mobiilsus.setPerioodiLopp(getXMLGregorianCalendarDate(mob.getEnd(),
-                    String.format("mobiilsus end for teacher_mobility with id %s", EntityUtil.getId(mob))));
+            mobiilsus.setPerioodiAlgus(date(mob.getStart()));
+            mobiilsus.setPerioodiLopp(date(mob.getEnd()));
             mobiilsus.setKlEesmark(ehisValue(mob.getTarget()));
             mobiilsus.setSihtoppeasutus(mob.getSchool());
             mobiilsus.setKlSihtriik(value2(mob.getState()));
@@ -281,29 +259,74 @@ public class EhisTeacherExportService {
         }
     }
 
-    private static XMLGregorianCalendar getXMLGregorianCalendarDate(LocalDate date, String errorCode)
-            throws DatatypeConfigurationException {
-        try {
-            return DatatypeFactory.newInstance().newXMLGregorianCalendar(date.toString());
-        } catch (DatatypeConfigurationException e) {
-            log.error("Converting date failed on {} :", errorCode, e);
-            throw e;
+    private Oppeasutus createOppeasutus(Teacher teacher, List<TeacherWithSubject> subjects) {
+        Oppeasutus oppeasutus = new Oppeasutus();
+        oppeasutus.setKoolId(ehisValue(teacher.getSchool().getEhisSchool()));
+
+        Person person = teacher.getPerson();
+        Pedagoog pedagoog = new Pedagoog();
+        pedagoog.setIsikukood(person.getIdcode());
+
+        for(TeacherPositionEhis position : teacher.getTeacherPositionEhis()) {
+            if(!Boolean.TRUE.equals(position.getIsVocational())) {
+                continue;
+            }
+
+            PedagoogAmetikohtType ametikoht = new PedagoogAmetikohtType();
+            ametikoht.setKlAmetikoht(ehisValue(position.getPosition()));
+            ametikoht.setKlLepinguLiik(ehisValue(position.getContractType()));
+            ametikoht.setLepingAlgKp(date(position.getContractStart()));
+            ametikoht.setLepingLoppKp(date(position.getContractEnd()));
+            ametikoht.setOnLopetatud(yesNo(position.getIsContractEnded()));
+            if(position.getLoad() != null) {
+                ametikoht.setKoormus(position.getLoad().doubleValue());
+            }
+            ametikoht.setOnLapsepuhkus(yesNo(position.getIsChildCare()));
+            ametikoht.setVastavusKval(yesNo(position.getMeetsQualification()));
+            ametikoht.setKlassiJuhataja(yesNo(position.getIsClassTeacher()));
+
+            for(TeacherWithSubject subject : subjects) {
+                // TODO
+            }
+
+            pedagoog.getAmetikoht().add(ametikoht);
         }
+
+        // pedagoogTaiendkoolitus
+        for(TeacherContinuingEducation e : teacher.getTeacherContinuingEducation()) {
+            PedagoogTaiendkoolitus koolitus = new PedagoogTaiendkoolitus();
+            koolitus.setTaiendOppeas(e.getSchool() != null ? code(e.getSchool()) : e.getOtherSchool());
+            koolitus.setKlTaiendDoc(ehisValue(e.getDiploma()));
+            koolitus.setTaiendDocKp(date(e.getDiplomaDate()));
+            koolitus.setKlTaiendValdkond(ehisValue(e.getField()));
+            koolitus.setTaiendkoolitus(e.getNameEt());
+            koolitus.setTaiendkoolitusMahtH(e.getCapacity() != null ? BigInteger.valueOf(e.getCapacity().longValue()): null);
+            koolitus.setTaiendDocNr(e.getDiplomaNr());
+            koolitus.setOnTaiendvalisriigis(yesNo(e.getIsAbroad()));
+            koolitus.setTaiendValisriigisSisu(e.getAbroadDesc());
+            pedagoog.getTaiendkoolitus().add(koolitus);
+        }
+        // pedagoogTasemekoolitus
+        for(TeacherQualification q : teacher.getTeacherQualification()) {
+            PedagoogTasemekoolitus koolitus = new PedagoogTasemekoolitus();
+            koolitus.setKlKvalDok(ehisValue(q.getQualification()));
+            koolitus.setKlKval(ehisValue(q.getQualificationName()));
+            koolitus.setKlRiik(value2(q.getState()));
+            koolitus.setTasemeOppeas(ehisValue(q.getSchool()));
+            koolitus.setKlHaridustase(ehisValue(q.getStudyLevel()));
+            koolitus.setTasemeDokNr(q.getDiplomaNr());
+            koolitus.setTasemeLopetKp(date(q.getEndDate()));
+            koolitus.setErialaOppekava(q.getSpecialty());
+            koolitus.setKlKeel(ehisValue(q.getLanguage()));
+            koolitus.setKommentaar(q.getAddInfo());
+            pedagoog.getTasemekoolitus().add(koolitus);
+        }
+
+        oppeasutus.getPedagoog().add(pedagoog);
+        return oppeasutus;
     }
 
-    private static String code(Classifier classifier) {
-        return EntityUtil.getNullableCode(classifier);
-    }
-
-    private static String ehisValue(Classifier classifier) {
-        return classifier != null ? classifier.getEhisValue() : null;
-    }
-
-    private static String value2(Classifier classifier) {
-        return classifier != null ? classifier.getValue2() : null;
-    }
-
-    private Set<Long> getTeacherIds(Long schoolId, EhisTeacherExportForm form) {
+    private Set<Long> getTeacherIds(Long schoolId, boolean higher, EhisTeacherExportForm form) {
         JpaQueryUtil.NativeQueryBuilder qb;
         if (form.isAllDates()) {
             qb = new JpaQueryUtil.NativeQueryBuilder("from teacher t");
@@ -315,8 +338,14 @@ public class EhisTeacherExportService {
         }
 
         qb.requiredCriteria("t.school_id = :school", "school", schoolId);
-        qb.filter("t.is_active = true");
-        if (!form.isAllDates()) {
+        if(higher) {
+            qb.filter("t.is_higher = true");
+        } else {
+            qb.filter("t.is_vocational = true");
+        }
+        if(form.isAllDates()) {
+            qb.filter("t.is_active = true");
+        } else {
             qb.parameter("dateTo", parameterAsTimestamp(form.getChangeDateTo().atStartOfDay()));
             qb.parameter("dateFrom", parameterAsTimestamp(form.getChangeDateFrom().atStartOfDay()));
             String filter = "(t.changed between :dateFrom and :dateTo or tm.changed between :dateFrom and :dateTo "
@@ -342,34 +371,6 @@ public class EhisTeacherExportService {
         List<?> result = qb.select("ssp.subject_id, sspt.teacher_id, c.id", em).getResultList();
         return StreamUtil.toMappedList(
                 r -> new TeacherWithSubject(resultAsLong(r, 0), resultAsLong(r, 1), resultAsLong(r, 2)), result);
-    }
-
-    private static String validateOppejoud(Oppejoud oppejoud) {
-        String error = "Puudub/puuduvad jargmised parameetrid: ";
-        List<String> errors = new ArrayList<>();
-
-        OppejoudIsikuandmed isikuandmed = oppejoud.getIsikuandmed();
-        if(isikuandmed.getEesnimi() == null) {
-            errors.add("eesnimi");
-        }
-        if(isikuandmed.getPerenimi() == null) {
-            errors.add("perekonnanimi");
-        }
-        if(isikuandmed.getSynniKp() == null) {
-            errors.add("sünnikuupäev");
-        }
-        if(isikuandmed.getKlSugu() == null) {
-            errors.add("sugu");
-        }
-        if(isikuandmed.getKlKodakondsus() == null) {
-            errors.add("kodakondsus");
-        }
-
-        if(!errors.isEmpty()) {
-            return error + String.join(", ", errors);
-        }
-
-        return null;
     }
 
     private static class TeacherWithSubject {
@@ -399,18 +400,28 @@ public class EhisTeacherExportService {
     private static class RequestObject {
         private final Teacher teacher;
         private final OppejoudList oppejoudList;
+        private final OppeasutusList oppeasutusList;
         private final String error;
 
         public RequestObject(Teacher teacher, OppejoudList oppejoudList) {
             this.teacher = teacher;
             this.oppejoudList = oppejoudList;
+            this.oppeasutusList = null;
+            this.error = null;
+        }
+
+        public RequestObject(Teacher teacher, OppeasutusList oppeasutusList) {
+            this.teacher = teacher;
+            this.oppejoudList = null;
+            this.oppeasutusList = oppeasutusList;
             this.error = null;
         }
 
         public RequestObject(Teacher teacher, String error) {
             this.teacher = teacher;
-            this.error = error;
             this.oppejoudList = null;
+            this.oppeasutusList = null;
+            this.error = error;
         }
 
         public Teacher getTeacher() {
@@ -421,30 +432,17 @@ public class EhisTeacherExportService {
             return oppejoudList;
         }
 
+        public OppeasutusList getOppeasutusList() {
+            return oppeasutusList;
+        }
+
         public String getError() {
             return error;
         }
     }
 
-    private XRoadHeaderV4 getXroadHeader() {
-        XRoadHeaderV4.Client client = new XRoadHeaderV4.Client();
-        client.setXRoadInstantce(clientXRoadInstance);
-        client.setMemberClass(clientMemberClass);
-        client.setMemberCode(clientMemberCode);
-        client.setSubSystemCode(clientSubsystemCode);
-
-        XRoadHeaderV4.Service service = new XRoadHeaderV4.Service();
-        service.setxRoadInstance(serviceXRoadInstance);
-        service.setMemberClass(serviceMemberClass);
-        service.setMemberCode(serviceMemberCode);
-        service.setServiceCode(LAE_OPPEJOUD_SERIVCE_CODE);
-        service.setSubsystemCode(serviceSubsystemCode);
-
-        XRoadHeaderV4 header = new XRoadHeaderV4();
-        header.setClient(client);
-        header.setService(service);
-        header.setEndpoint(endpoint);
-        header.setUserId(user);
-        return header;
+    @Override
+    protected String getServiceCode() {
+        return LAE_OPPEJOUD_SERVICE_CODE;
     }
 }

@@ -1,7 +1,7 @@
 <table md-table class="secondary-table">
   <thead md-head>
   <tr md-row>
-    <th ng-if="showSchool" md-column>{{'school.label' | translate}}</th>
+    <th ng-if="auth.isMainAdmin()" md-column>{{'school.label' | translate}}</th>
     <th md-column>{{'user.role' | translate}}</th>
     <th md-column>{{'main.status' | translate}}</th>
     <th md-column></th>
@@ -9,7 +9,7 @@
   </thead>
   <tbody md-body>
   <tr md-row ng-repeat="user in users | orderBy: orderValue" ng-class-odd="'odd'" ng-class-even="'even'">
-    <td ng-if="showSchool" md-cell>{{currentLanguageNameField(user.school)}}</td>
+    <td ng-if="auth.isMainAdmin()" md-cell>{{currentLanguageNameField(user.school)}}</td>
     <td md-cell><a ng-href="#/persons/{{::person.id}}/users/{{::user.id}}">{{currentLanguageNameField(user.role)}}</a></td>
     <td md-cell>{{user.valid ? 'main.valid' : 'main.invalid' | translate }}</td>
     <td md-cell><md-button ng-if="user.role.code !== 'ROLL_T' && user.role.code !== 'ROLL_L'" class="md-primary change-button" ng-href="#/persons/{{::person.id}}/users/{{::user.id}}/edit">{{'main.button.change' | translate}}</md-button></td>

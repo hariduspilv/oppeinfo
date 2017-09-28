@@ -10,21 +10,17 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlElement;
-import javax.xml.bind.annotation.XmlElementWrapper;
-import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 
 import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 
-import ee.hitsa.ois.LocalDateXmlAdapter;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.validation.CurriculumValidator.Confirmed;
 import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedHigher;
 import ee.hitsa.ois.validation.CurriculumValidator.ConfirmedVocational;
-import ee.hitsa.ois.validation.CurriculumValidator.Vocational;
 import ee.hitsa.ois.validation.CurriculumValidator.Joint;
+import ee.hitsa.ois.validation.CurriculumValidator.Vocational;
 import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
@@ -61,7 +57,7 @@ public class CurriculumForm extends VersionedCommand {
     @Size(max = 20000)
     @NotNull(groups = {ConfirmedHigher.class})
     private String outcomesEn;
-    @Size(max = 4000)
+    @Size(max = 20000)
     private String structure;
     @Size(max = 20000)
     @NotNull(groups = {Confirmed.class})
@@ -178,8 +174,6 @@ public class CurriculumForm extends VersionedCommand {
     private String contractEn;
     private String supervisor;
 
-    @XmlElementWrapper(name = "curriculumFiles")
-    @XmlElement(name="curriculumFile")
     public Set<CurriculumFileUpdateDto> getFiles() {
         return files;
     }
@@ -187,8 +181,7 @@ public class CurriculumForm extends VersionedCommand {
     public void setFiles(Set<CurriculumFileUpdateDto> files) {
         this.files = files;
     }
-    @XmlElementWrapper(name = "curriculumJointPartners")
-    @XmlElement(name="curriculumJointPartner")
+
     public Set<CurriculumJointPartnerDto> getJointPartners() {
         return jointPartners;
     }
@@ -200,8 +193,7 @@ public class CurriculumForm extends VersionedCommand {
     public Set<CurriculumSpecialityDto> getSpecialities() {
         return specialities;
     }
-    @XmlElementWrapper(name = "curriculumSpecialities")
-    @XmlElement(name="curriculumSpeciality")
+
     public void setSpecialities(Set<CurriculumSpecialityDto> specialities) {
         this.specialities = specialities;
     }
@@ -221,13 +213,11 @@ public class CurriculumForm extends VersionedCommand {
     public void setOccupations(Set<CurriculumOccupationDto> occupations) {
         this.occupations = occupations;
     }
-    @XmlElementWrapper(name = "curriculumVersions")
-    @XmlElement(name="curriculumVersion")
+
     public Set<CurriculumVersionDto> getVersions() {
         return versions != null ? versions : (versions = new HashSet<>());
     }
-    @XmlElementWrapper(name = "curriculumGrades")
-    @XmlElement(name="curriculumGrade")
+
     public Set<CurriculumGradeDto> getGrades() {
         return grades;
     }
@@ -303,7 +293,7 @@ public class CurriculumForm extends VersionedCommand {
     public void setMerCode(String merCode) {
         this.merCode = merCode;
     }
-    @XmlJavaTypeAdapter(type=LocalDate.class, value = LocalDateXmlAdapter.class)
+
     public LocalDate getApproval() {
         return approval;
     }
@@ -431,7 +421,7 @@ public class CurriculumForm extends VersionedCommand {
     public void setDescription(String description) {
         this.description = description;
     }
-    @XmlJavaTypeAdapter(type=LocalDate.class, value = LocalDateXmlAdapter.class)
+
     public LocalDate getEhisChanged() {
         return ehisChanged;
     }
@@ -503,7 +493,7 @@ public class CurriculumForm extends VersionedCommand {
     public void setAddInfo(String addInfo) {
         this.addInfo = addInfo;
     }
-    @XmlJavaTypeAdapter(type=LocalDate.class, value = LocalDateXmlAdapter.class)
+
     public LocalDate getMerRegDate() {
         return merRegDate;
     }
@@ -511,7 +501,7 @@ public class CurriculumForm extends VersionedCommand {
     public void setMerRegDate(LocalDate merRegDate) {
         this.merRegDate = merRegDate;
     }
-    @XmlJavaTypeAdapter(type=LocalDate.class, value = LocalDateXmlAdapter.class)
+
     public LocalDate getAccreditationDate() {
         return accreditationDate;
     }
@@ -527,7 +517,7 @@ public class CurriculumForm extends VersionedCommand {
     public void setAccreditationResolution(String accreditationResolution) {
         this.accreditationResolution = accreditationResolution;
     }
-    @XmlJavaTypeAdapter(type=LocalDate.class, value = LocalDateXmlAdapter.class)
+
     public LocalDate getAccreditationValidDate() {
         return accreditationValidDate;
     }
@@ -583,7 +573,7 @@ public class CurriculumForm extends VersionedCommand {
     public void setOptionalStudyCredits(BigDecimal optionalStudyCredits) {
         this.optionalStudyCredits = optionalStudyCredits;
     }
-    @XmlJavaTypeAdapter(type=LocalDate.class, value = LocalDateXmlAdapter.class)
+
     public LocalDate getValidFrom() {
         return validFrom;
     }
@@ -591,7 +581,7 @@ public class CurriculumForm extends VersionedCommand {
     public void setValidFrom(LocalDate validFrom) {
         this.validFrom = validFrom;
     }
-    @XmlJavaTypeAdapter(type=LocalDate.class, value = LocalDateXmlAdapter.class)
+
     public LocalDate getValidThru() {
         return validThru;
     }
@@ -663,8 +653,7 @@ public class CurriculumForm extends VersionedCommand {
     public void setDraft(String draft) {
         this.draft = draft;
     }
-    @XmlElementWrapper(name = "curriculumStudyLanguages")
-    @XmlElement(name="curriculumStudyLanguage")
+
     public Set<String> getStudyLanguages() {
         return studyLanguages;
     }

@@ -77,8 +77,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
         }
         return dto;
     }
-    @XmlElementWrapper(name = "curriculumSpecialities")
-    @XmlElement(name="curriculumSpecialityId")
+
     public Set<Long> getSpecialitiesReferenceNumbers() {
         return specialitiesReferenceNumbers != null ? specialitiesReferenceNumbers : (specialitiesReferenceNumbers = new HashSet<>());
     }
@@ -143,8 +142,6 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
         this.description = description;
     }
 
-    @XmlElementWrapper(name = "curriculumVersionHMmodules")
-    @XmlElement(name="curriculumVersionHMmodule")
     public Set<CurriculumVersionHigherModuleDto> getModules() {
         return modules != null ? modules : (modules = new HashSet<>());
     }
@@ -184,7 +181,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     public void setCurriculumStudyForm(String curriculumStudyForm) {
         this.curriculumStudyForm = curriculumStudyForm;
     }
-    @XmlJavaTypeAdapter(type=LocalDate.class, value = LocalDateXmlAdapter.class)
+
     public LocalDate getValidFrom() {
         return validFrom;
     }
@@ -192,7 +189,7 @@ public class CurriculumVersionDto extends InsertedChangedVersionDto {
     public void setValidFrom(LocalDate validFrom) {
         this.validFrom = validFrom;
     }
-    @XmlJavaTypeAdapter(type=LocalDate.class, value = LocalDateXmlAdapter.class)
+
     public LocalDate getValidThru() {
         return validThru;
     }

@@ -11,6 +11,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -43,13 +44,13 @@ import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.LessonPlanModuleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSaveForm;
@@ -77,8 +78,7 @@ public class ModuleProtocolService {
     public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, ModuleProtocolSearchCommand cmd,
             Pageable pageable) {
         JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from protocol p "
-                + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
-                + "inner join teacher t on t.id = pvd.teacher_id").sort(pageable);
+                + "inner join protocol_vdata pvd on pvd.protocol_id = p.id").sort(pageable);
 
         qb.filter("p.is_vocational = true");
         qb.requiredCriteria("p.school_id = :schoolId", "schoolId", user.getSchoolId());
@@ -87,13 +87,21 @@ public class ModuleProtocolService {
                 "studyYearId", cmd.getStudyYear());
         qb.optionalCriteria(
                 "exists (select protocol_id from protocol_student ps "
-                        + "inner join student s on s.id = ps.student_id where s.student_group_id = :studentGroupId)",
+                        + "inner join student s on s.id = ps.student_id "
+                        + "where ps.protocol_id = p.id "
+                        + "and s.student_group_id = :studentGroupId)",
                 "studentGroupId", cmd.getStudentGroup());
         qb.optionalCriteria(
-                "exists (select protocol_id from protocol_vdata pvd where pvd.curriculum_version_id = :curriculumVersionId)",
+                "exists (select protocol_id "
+                + "from protocol_vdata pvd "
+                + "where pvd.protocol_id = p.id "
+                + "and pvd.curriculum_version_id = :curriculumVersionId)",
                 "curriculumVersionId", cmd.getCurriculumVersion());
         qb.optionalCriteria(
-                "exists (select protocol_id from protocol_vdata pvd where pvd.curriculum_version_omodule_id in :module)",
+                "exists (select protocol_id "
+                + "from protocol_vdata pvd "
+                + "join curriculum_version_omodule omodule on pvd.curriculum_version_omodule_id = omodule.id "
+                + "where omodule.curriculum_module_id in :module)",
                 "module", cmd.getModule());
         qb.optionalCriteria("p.status_code = :statusCode", "statusCode", cmd.getStatus());
         qb.optionalCriteria("p.protocol_nr = :protocolNr", "protocolNr", cmd.getProtocolNr());
@@ -103,7 +111,7 @@ public class ModuleProtocolService {
         qb.optionalCriteria("p.confirm_date < :thru", "thru", cmd.getConfirmDateThru());
 
         if (user.isTeacher()) {
-            qb.requiredCriteria("t.person_id = :personId", "personId", user.getPersonId());
+            qb.requiredCriteria("pvd.teacher_id = :teacherId", "teacherId", user.getTeacherId());
         }
 
         Map<Long, ModuleProtocolSearchDto> dtoById = new HashMap<>();
@@ -304,11 +312,11 @@ public class ModuleProtocolService {
     }
 
     private static void assertRemovedStudents(List<ProtocolStudent> oldStudents, List<ProtocolStudent> newStudents) {
-        List<Long> newIds = StreamUtil.toMappedList(ProtocolStudent::getId, newStudents);
+        Set<Long> newIds = StreamUtil.toMappedSet(ProtocolStudent::getId, newStudents);
         List<ProtocolStudent> removedStudents = oldStudents.stream()
                 .filter(oldStudent -> !newIds.contains(oldStudent.getId())).collect(Collectors.toList());
         for (ProtocolStudent protocolStudent : removedStudents) {
-            if (!ClassifierUtil.equals(StudentStatus.OPPURSTAATUS_K, protocolStudent.getStudent().getStatus())) {
+            if (!StudentUtil.hasQuit(protocolStudent.getStudent())) {
                 throw new ValidationFailedException("moduleProtocol.messages.cantRemoveNonDismissedStudent");
             } else if (protocolStudent.getGrade() != null) {
                 throw new ValidationFailedException("moduleProtocol.messages.cantRemoveGradedStudent");
@@ -336,8 +344,7 @@ public class ModuleProtocolService {
     }
 
     public Protocol addStudents(Protocol protocol, ModuleProtocolSaveForm form) {
-        Map<Long, ProtocolStudent> existingStudents = protocol.getProtocolStudents().stream()
-                .collect(Collectors.toMap(it -> EntityUtil.getId(it.getStudent()), it -> it));
+        Map<Long, ProtocolStudent> existingStudents = StreamUtil.toMap(it -> EntityUtil.getId(it.getStudent()), protocol.getProtocolStudents());
 
         for (ModuleProtocolStudentSaveForm moduleProtocolStudentForm : form.getProtocolStudents()) {
             if (existingStudents.containsKey(moduleProtocolStudentForm.getStudentId())) {

@@ -73,7 +73,10 @@ public class DeclarationControllerStudentTests {
     public void getStudentsCurrentDeclaration() {
         basicTest(ENDPOINT + "/current");
     }
-
+    
+    /**
+     * FIXME: test fails because it pollutes the database
+     */
     @Test
     public void crud() {
         // create declaration

@@ -1,9 +1,12 @@
 package ee.hitsa.ois.report.certificate;
 
-import java.time.format.DateTimeFormatter;
+import java.time.LocalDate;
+import java.util.List;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.StudentUtil;
 
 public class CertificateReportStudent {
     
@@ -12,9 +15,12 @@ public class CertificateReportStudent {
     private String idCode;
     private String studyForm;
     private String studyLoad;
-    private CerfificateReportCurriculum curriculum;
     private String nominalStudyEnd;
-    
+    private String studyStart;
+    private String studyEnd;
+    private CerfificateReportCurriculum curriculum;
+    private List<CertificateStudentResult> results;
+    private boolean hasQuit;
     
     public static CertificateReportStudent of(Student student) {
         CertificateReportStudent reportStudent = new CertificateReportStudent();
@@ -23,7 +29,6 @@ public class CertificateReportStudent {
         reportStudent.setFirstname(person.getFirstname());
         reportStudent.setLastname(person.getLastname());
         reportStudent.setIdCode(student.getPerson().getIdcode());
-        reportStudent.setCurriculum(CerfificateReportCurriculum.of(student.getCurriculumVersion().getCurriculum()));
 
         if(student.getStudyForm() != null) {
             reportStudent.setStudyForm(student.getStudyForm().getNameEt().toLowerCase());
@@ -31,13 +36,40 @@ public class CertificateReportStudent {
         if(student.getStudyLoad() != null) {
             reportStudent.setStudyLoad(student.getStudyLoad().getNameEt().toLowerCase());
         }
-        if(student.getNominalStudyEnd() != null) {
-            reportStudent.setNominalStudyEnd(student.getNominalStudyEnd().format(DateTimeFormatter.ofPattern("dd.MM.yyyy")));
-        }
+        reportStudent.setNominalStudyEnd(DateUtils.nullableDate(student.getNominalStudyEnd()));
+        reportStudent.setStudyStart(DateUtils.nullableDate(student.getStudyStart()));        
+        reportStudent.setStudyEnd(DateUtils.nullableDate(
+                StudentUtil.isStudying(student) ? LocalDate.now() : student.getStudyEnd()));
+
+        reportStudent.setCurriculum(CerfificateReportCurriculum.of(student.getCurriculumVersion().getCurriculum()));
+        reportStudent.setHasQuit(StudentUtil.hasQuit(student));
         return reportStudent;
     }
     
-    
+    public boolean isHasQuit() {
+        return hasQuit;
+    }
+    public void setHasQuit(boolean hasQuit) {
+        this.hasQuit = hasQuit;
+    }
+    public List<CertificateStudentResult> getResults() {
+        return results;
+    }
+    public void setResults(List<CertificateStudentResult> results) {
+        this.results = results;
+    }
+    public String getStudyStart() {
+        return studyStart;
+    }
+    public void setStudyStart(String studyStart) {
+        this.studyStart = studyStart;
+    }
+    public String getStudyEnd() {
+        return studyEnd;
+    }
+    public void setStudyEnd(String studyEnd) {
+        this.studyEnd = studyEnd;
+    }
     public String getNominalStudyEnd() {
         return nominalStudyEnd;
     }

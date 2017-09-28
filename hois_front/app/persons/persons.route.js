@@ -14,7 +14,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         params: function() { return {order: 'p.lastname,p.firstname'}; },
         url: function () { return '/users'; }
       },
-      data: authorizedRoles
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASUTAJA]
+      }
     })
     .when('/persons/new', {
       templateUrl: 'persons/persons.edit.html',

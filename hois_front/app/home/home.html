@@ -1,6 +1,11 @@
 <div layout-padding>
   <div ng-if="state.currentUser" ng-controller="AuthenticatedHomeController as ctrl">
     <span>{{ 'home.greeting' | translate }}</span>
+    <br>
+    <br>
+    <a ng-href="/#/studentrepresentatives/applications/new?_menu">{{'home.represantiveApplication' | translate}}</a>
+    <br>
+    <br>
     <h3>{{'home.generalmessages' | translate}}</h3>
     <md-table-container>
       <table md-table md-progress="generalmessages.$promise">

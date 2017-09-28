@@ -34,6 +34,9 @@ public class Timetable extends BaseEntityWithId {
     @OneToMany(mappedBy = "timetable", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<TimetableObject> timetableObjects = new ArrayList<>();
 
+    public Timetable() {
+    }
+
     public School getSchool() {
         return school;
     }

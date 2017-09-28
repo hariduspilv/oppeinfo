@@ -7,6 +7,7 @@ import java.util.List;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
 public class PracticeJournalDto extends VersionedCommand {
@@ -36,6 +37,7 @@ public class PracticeJournalDto extends VersionedCommand {
     private List<PracticeJournalFileDto> practiceJournalFiles;
     private Boolean canDelete;
     private AutocompleteResult subject;
+    private Boolean isHigher;
 
     public static PracticeJournalDto of(PracticeJournal practiceJournal) {
         PracticeJournalDto dto = EntityUtil.bindToDto(practiceJournal, new PracticeJournalDto(), "contract",
@@ -47,6 +49,7 @@ public class PracticeJournalDto extends VersionedCommand {
                 StreamUtil.toMappedList(PracticeJournalFileDto::of, practiceJournal.getPracticeJournalFiles()));
         dto.setStudentCurriculumVersion(AutocompleteResult.of(practiceJournal.getStudent().getCurriculumVersion()));
         dto.setStudentStudyForm(EntityUtil.getCode(practiceJournal.getStudent().getStudyForm()));
+        dto.setIsHigher(StudentUtil.isHigher(practiceJournal.getStudent()));
         return dto;
     }
 
@@ -250,4 +253,11 @@ public class PracticeJournalDto extends VersionedCommand {
         this.subject = subject;
     }
 
+    public Boolean getIsHigher() {
+        return isHigher;
+    }
+
+    public void setIsHigher(Boolean isHigher) {
+        this.isHigher = isHigher;
+    }
 }

@@ -90,6 +90,6 @@
                          md-page="directivesCriteria.page" md-total="{{directives.totalElements}}" md-on-paginate="loadDirectives"
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
-    <md-button ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

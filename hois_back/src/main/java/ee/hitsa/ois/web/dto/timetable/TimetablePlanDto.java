@@ -4,21 +4,11 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class TimetablePlanDto {
-    private List<TimetableStudentGroupDto> studentGroups;
     private List<TimetableStudentGroupCapacityDto> studentGroupCapacities;
     private LocalDate startDate;
     private LocalDate endDate;
-    private List<TimetableJournalDto> journals;
     private List<TimetableEventDto> plannedLessons;
     private List<LessonTimeDto> lessonTimes;
-
-    public List<TimetableStudentGroupDto> getStudentGroups() {
-        return studentGroups;
-    }
-
-    public void setStudentGroups(List<TimetableStudentGroupDto> studentGroups) {
-        this.studentGroups = studentGroups;
-    }
 
     public List<TimetableStudentGroupCapacityDto> getStudentGroupCapacities() {
         return studentGroupCapacities;
@@ -42,14 +32,6 @@ public class TimetablePlanDto {
 
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
-    }
-
-    public List<TimetableJournalDto> getJournals() {
-        return journals;
-    }
-
-    public void setJournals(List<TimetableJournalDto> journals) {
-        this.journals = journals;
     }
 
     public List<TimetableEventDto> getPlannedLessons() {

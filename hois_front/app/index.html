@@ -1,351 +1,365 @@
 <!doctype html>
 <html>
-  <head>
-    <meta charset="utf-8">
-    <title></title>
-    <meta name="description" content="">
-    <meta name="viewport" content="width=device-width">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
-    <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
-    <!-- build:css(.) styles/vendor.css -->
-    <!-- bower:css -->
-    <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
-    <link rel="stylesheet" href="bower_components/angular-material-data-table/dist/md-data-table.css" />
-    <link rel="stylesheet" href="bower_components/lf-ng-md-file-input/dist/lf-ng-md-file-input.css" />
-    <!-- endbower -->
-    <!-- endbuild -->
-    <!-- build:css(.tmp) styles/main.css -->
-    <link rel="stylesheet" href="styles/main.css">
-    <link rel="stylesheet" href="styles/material-icons.css">
-    <!-- endbuild -->
-  </head>
-  <body ng-app="hitsaOis" layout="row" ng-controller="MainController" ng-cloak>
-    <div layout="column" tabIndex="-1" role="main" flex>
-      <md-toolbar class="md-whiteframe-glow-z1 hois_header" layout="row" layout-align="start center">
-	    <!--header class="nav-header" layout="column"-->
-        <div layout="row">
-		  <div layout="column" layout-align="center center">
-            <md-button ng-click="toggleLeft()" class="md-icon-button" aria-label="Toggle Menu">
-              <md-icon md-colors="{color: 'primary-800'}" style="margin-top: -2px">menu</md-icon>
+
+<head>
+  <meta charset="utf-8">
+  <title></title>
+  <meta name="description" content="">
+  <meta name="viewport" content="width=device-width">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700,400italic">
+  <!-- Place favicon.ico and apple-touch-icon.png in the root directory -->
+  <!-- build:css(.) styles/vendor.css -->
+  <!-- bower:css -->
+  <link rel="stylesheet" href="bower_components/angular-material/angular-material.css" />
+  <link rel="stylesheet" href="bower_components/angular-material-data-table/dist/md-data-table.css" />
+  <link rel="stylesheet" href="bower_components/lf-ng-md-file-input/dist/lf-ng-md-file-input.css" />
+  <!-- endbower -->
+  <!-- endbuild -->
+  <!-- build:css(.tmp) styles/main.css -->
+  <link rel="stylesheet" href="styles/main.css">
+  <link rel="stylesheet" href="styles/material-icons.css">
+  <!-- endbuild -->
+</head>
+
+<body ng-app="hitsaOis" layout="row" ng-controller="MainController" ng-cloak>
+  <div layout="column" tabIndex="-1" role="main" flex>
+    <md-toolbar class="md-whiteframe-glow-z1 hois_header" layout="row" layout-align="start center">
+      <!--header class="nav-header" layout="column"-->
+      <div layout="row">
+        <div layout="column" layout-align="center center">
+          <md-button ng-click="toggleLeft()" class="md-icon-button" aria-label="Toggle Menu">
+            <md-icon md-colors="{color: 'primary-800'}" style="margin-top: -2px">menu</md-icon>
+          </md-button>
+        </div>
+        <div layout="column" layout-align="none">
+          <a ng-href="#/"><img class="logo" ng-src="{{state.logo ? state.logo : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/></a>
+        </div>
+      </div>
+      <div class="docs-toolbar-tools" tabIndex="-1">
+        <div class="md-toolbar-tools fill-height" layout="row" flex>
+          <h1 md-colors="{color: 'background-900'}" style="margin-top: -2px" class="md-display-2">
+            <span ng-if="Menu.currentPage.name !== Menu.currentSection.name">
+                <span hide-sm hide-md>{{Menu.currentSection.name | translate}}</span>
+            <span class="docs-menu-separator-icon" hide-sm hide-md>
+                  <span class="md-visually-hidden">-</span>
+            <md-icon md-colors="{color: 'background-900'}" style="margin-top: -2px">chevron_right</md-icon>
+            </span>
+            </span>
+            <span class="md-breadcrumb-page">{{Menu.currentPage.name | translate}}</span>
+          </h1>
+        </div>
+      </div>
+
+      <div ng-controller="LoginController" md-is-locked-open="$mdMedia('gt-xs')" layout="row" flex>
+
+        <div layout-align="end" flex>
+          <div layout="row" layout-align="end center" flex>
+            <div ng-show="state.currentUser">
+                <md-button class="md-icon-button" ng-href="#/messages/received?_menu">
+                  <md-icon md-colors="{color: 'primary-800'}">email</md-icon>
+                </md-button>
+            </div>
+            <div id="lang-button" md-colors="{color: 'background-500'}">
+              <md-button ng-class="{'md-accent': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="language et">{{ 'main.language.et' | translate }}</md-button>
+              <md-button ng-class="{'md-accent': currentLanguage()=='en'}" ng-click="changeLanguage('en')"
+                aria-label="language en">{{ 'main.language.en' | translate }}</md-button>
+            </div>
+            <span ng-show="state.currentUser">{{ state.currentUser.fullname }}</span>
+            <md-button ng-show="!state.currentUser" ng-click="showLogin()">{{ 'main.logIn' | translate }}</md-button>
+            <md-button class="md-icon-button" ng-show="state.currentUser" ng-click="logout()" aria-label="log out">
+              <md-tooltip>
+                {{ 'main.logOut' | translate }}
+              </md-tooltip>
+              <md-icon md-colors="{color: 'primary-800'}">lock</md-icon>
             </md-button>
           </div>
-          <div layout="column" layout-align="none">
-            <a ng-href="#/"><img class="logo" ng-src="{{logo ? logo : 'images/HITSA_innov_logo_03.png'}}" on-error-src="images/HITSA_innov_logo_03.png"/></a>
-          </div>
-		  <!--div layout="column" layout-align="end">
-			<div layout="row" layout-align="end">
-				<a ng-href="#/" class="md-subhead">{{ 'main.applicationTitle' | translate }}</a>
-			</div>
-			<div layout="row" layout-align="space-around end">
-				<md-button ng-class="{'md-accent': currentLanguage()=='et'}" ng-click="changeLanguage('et')" aria-label="language et">{{ 'main.language.et' | translate }}</md-button>
-				<md-button ng-class="{'md-accent': currentLanguage()=='en'}" ng-click="changeLanguage('en')" aria-label="language en">{{ 'main.language.en' | translate }}</md-button>
-			</div>
-		  </div-->
-        </div>
-        <div class="docs-toolbar-tools" tabIndex="-1" >
-          <div class="md-toolbar-tools fill-height" layout="row" flex>
-            <h1 md-colors="{color: 'background-900'}" style="margin-top: -2px" class="md-display-2">
-              <span ng-if="Menu.currentPage.name !== Menu.currentSection.name">
-                <span hide-sm hide-md>{{Menu.currentSection.name | translate}}</span>
-                <span class="docs-menu-separator-icon" hide-sm hide-md>
-                  <span class="md-visually-hidden">-</span>
-                  <md-icon md-colors="{color: 'background-900'}" style="margin-top: -2px">chevron_right</md-icon>
-                </span>
-              </span>
-              <span class="md-breadcrumb-page">{{Menu.currentPage.name | translate}}</span>
-            </h1>
+          <div layout="row" layout-align="end" flex>
+            <md-select ng-show="state.currentUser" ng-model="state.userWorkplace" ng-change="changeUser();" aria-label="change user">
+              <md-option ng-repeat="user in state.currentUser.users" value="{{user.id}}" style="font-size: medium;">
+                {{currentLanguageNameField(user)}}
+              </md-option>
+            </md-select>
           </div>
         </div>
+      </div>
+    </md-toolbar>
+    <div style="height:2px">&nbsp;</div>
+    <!--div flex layout="row" class="height100"-->
+    <md-content layout="row" flex>
+      <md-sidenav md-colors="{background: 'background-100'}" class="site-sidenav" md-is-locked-open="isLeftOpen()" md-component-id="left"
+        md-whiteframe="1" md-is-open="shouldLeftBeOpen">
+        <md-content role="navigation" flex>
+          <ul class="docs-menu">
+            <li ng-repeat="section in Menu.sections" class="parent-list-item {{section.className || ''}}" ng-class="{'parentActive' : isSectionSelected(section)}">
+              <h2 class="menu-heading md-subhead" ng-if="section.type === 'heading'" id="heading_{{ section.name | nospace }}">
+                {{section.name}}
+              </h2>
+              <menu-link section="section" ng-if="section.type === 'link' && !section.hidden"></menu-link>
+              <menu-toggle section="section" ng-if="section.type === 'toggle' && !section.hidden" md-colors="{color: 'primary-900'}"></menu-toggle>
+              <ul ng-if="section.children" class="menu-nested-list">
+                <li ng-repeat="child in section.children" ng-class="{'childActive' : isSectionSelected(child)}">
+                  <menu-link section="child" ng-if="child.type === 'link'"></menu-link>
+                  <menu-toggle section="child" ng-if="child.type === 'toggle'"></menu-toggle>
+                </li>
+              </ul>
+            </li>
+          </ul>
 
-        <div ng-controller="LoginController" md-is-locked-open="$mdMedia('gt-xs')" layout="row" flex>
-          <div layout-align="end" flex>
-            <div layout="row" layout-align="end center" flex>
-              <span ng-show="state.currentUser" >{{ state.currentUser.fullname }}</span>
-              <md-button ng-show="!state.currentUser" ng-click="showLogin()">{{ 'main.logIn' | translate }}</md-button>
-              <md-button class="md-icon-button" ng-show="state.currentUser" ng-click="logout()" aria-label="log out">
-                <md-tooltip>
-                  {{ 'main.logOut' | translate }}
-                </md-tooltip>
-                <md-icon md-colors="{color: 'primary-800'}">lock</md-icon>
-              </md-button>
-            </div>
-            <div layout="row" layout-align="end" flex>
-              <md-select ng-show="state.currentUser" ng-model="state.userWorkplace" ng-change="changeUser();" aria-label="change user">
-                <md-option ng-repeat="user in state.currentUser.users" value="{{user.id}}" style="font-size: medium;">
-                  {{currentLanguageNameField(user)}}
-                </md-option>
-              </md-select>
-            </div>
-          </div>
-        </div>
-      </md-toolbar>
-	  <div style="height:2px">&nbsp;</div>
-	  <!--div flex layout="row" class="height100"-->
-	  <md-content layout="row" flex>
-			<md-sidenav md-colors="{background: 'background-100'}" class="site-sidenav" md-is-locked-open="isLeftOpen()" md-component-id="left" md-whiteframe="1" md-is-open="shouldLeftBeOpen" >
-			  <md-content role="navigation" flex>
-				<ul class="docs-menu">
-				  <li ng-repeat="section in Menu.sections" class="parent-list-item {{section.className || ''}}" ng-class="{'parentActive' : isSectionSelected(section)}">
-					<h2 class="menu-heading md-subhead" ng-if="section.type === 'heading'" id="heading_{{ section.name | nospace }}">
-					  {{section.name}}
-					</h2>
-					<menu-link section="section" ng-if="section.type === 'link' && !section.hidden"></menu-link>
-					<menu-toggle section="section" ng-if="section.type === 'toggle' && !section.hidden" md-colors="{color: 'primary-900'}"></menu-toggle>
-					<ul ng-if="section.children" class="menu-nested-list">
-					  <li ng-repeat="child in section.children" ng-class="{'childActive' : isSectionSelected(child)}">
-						<menu-link section="child" ng-if="child.type === 'link'"></menu-link>
-						<menu-toggle section="child" ng-if="child.type === 'toggle'" ></menu-toggle>
-					  </li>
-					</ul>
-				  </li>
-				</ul>
-				<div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="md-caption">Versioon 0.3.1/20170619</span></div>
-			  </md-content>
-			</md-sidenav>
-			<div layout="row" flex>
-				<md-content md-scroll-y flex>
-					<div ng-view=""></div>
-				</md-content>
-			</div>
-	   <!--/div-->
-	   </md-content>
-    </div>
+          <div flex layout="row" layout-align="center" md-colors="{color: 'background-400'}"><span class="md-caption">Versioon 0.4.0/20170928</span></div>
+        </md-content>
+      </md-sidenav>
+      <div layout="row" flex>
+        <md-content md-scroll-y flex>
+          <div ng-view=""></div>
+        </md-content>
+      </div>
+      <!--/div-->
+    </md-content>
+  </div>
 
 
-    <!-- build:js(.) scripts/vendor.js -->
-    <!-- bower:js -->
-    <script src="bower_components/angular/angular.js"></script>
-    <script src="bower_components/angular-animate/angular-animate.js"></script>
-    <script src="bower_components/angular-aria/angular-aria.js"></script>
-    <script src="bower_components/angular-messages/angular-messages.js"></script>
-    <script src="bower_components/angular-resource/angular-resource.js"></script>
-    <script src="bower_components/angular-route/angular-route.js"></script>
-    <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
-    <script src="bower_components/angular-material/angular-material.js"></script>
-    <script src="bower_components/angular-translate/angular-translate.js"></script>
-    <script src="bower_components/angular-translate-loader-static-files/angular-translate-loader-static-files.js"></script>
-    <script src="bower_components/angular-material-data-table/dist/md-data-table.js"></script>
-    <script src="bower_components/lf-ng-md-file-input/dist/lf-ng-md-file-input.js"></script>
-    <script src="bower_components/moment/moment.js"></script>
-    <script src="bower_components/ng-storage/ngStorage.js"></script>
-    <script src="bower_components/angular-cache/dist/angular-cache.js"></script>
-    <script src="bower_components/hwcrypto/hwcrypto.js"></script>
-    <script src="bower_components/hwcrypto/hwcrypto-legacy.js"></script>
-    <!-- endbower -->
-    <!-- endbuild -->
+  <!-- build:js(.) scripts/vendor.js -->
+  <!-- bower:js -->
+  <script src="bower_components/angular/angular.js"></script>
+  <script src="bower_components/angular-animate/angular-animate.js"></script>
+  <script src="bower_components/angular-aria/angular-aria.js"></script>
+  <script src="bower_components/angular-messages/angular-messages.js"></script>
+  <script src="bower_components/angular-resource/angular-resource.js"></script>
+  <script src="bower_components/angular-route/angular-route.js"></script>
+  <script src="bower_components/angular-sanitize/angular-sanitize.js"></script>
+  <script src="bower_components/angular-material/angular-material.js"></script>
+  <script src="bower_components/angular-translate/angular-translate.js"></script>
+  <script src="bower_components/angular-translate-loader-static-files/angular-translate-loader-static-files.js"></script>
+  <script src="bower_components/angular-material-data-table/dist/md-data-table.js"></script>
+  <script src="bower_components/lf-ng-md-file-input/dist/lf-ng-md-file-input.js"></script>
+  <script src="bower_components/moment/moment.js"></script>
+  <script src="bower_components/ng-storage/ngStorage.js"></script>
+  <script src="bower_components/angular-cache/dist/angular-cache.js"></script>
+  <script src="bower_components/hwcrypto/hwcrypto.js"></script>
+  <script src="bower_components/hwcrypto/hwcrypto-legacy.js"></script>
+  <!-- endbower -->
+  <!-- endbuild -->
 
-    <!-- build:js({.tmp,app}) scripts/scripts.js -->
-    <script src="app.js"></script>
-    <script src="common.js"></script>
-    <script src="main.js"></script>
+  <!-- build:js({.tmp,app}) scripts/scripts.js -->
+  <script src="app.js"></script>
+  <script src="common.js"></script>
+  <script src="main.js"></script>
 
-    <script src="application/application.js"></script>
-    <script src="application/application.route.js"></script>
-    <script src="application/student/application.student.js"></script>
-    <script src="application/student/application.student.list.js"></script>
-    <script src="application/student/application.student.route.js"></script>
+  <script src="application/application.js"></script>
+  <script src="application/application.route.js"></script>
+  <script src="application/student/application.student.js"></script>
+  <script src="application/student/application.student.list.js"></script>
+  <script src="application/student/application.student.route.js"></script>
 
-    <script src="building/building.js"></script>
-    <script src="building/building.route.js"></script>
+  <script src="academicCalendar/academic.calendar.js"></script>
+  <script src="academicCalendar/academic.calendar.route.js"></script>
 
-    <script src="home/home.js"></script>
-    <script src="home/home.route.js"></script>
+  <script src="building/building.js"></script>
+  <script src="building/building.route.js"></script>
 
-    <script src="login/login.js"></script>
+  <script src="home/home.js"></script>
+  <script src="home/home.route.js"></script>
 
-    <script src="certificate/certificate.js"></script>
-    <script src="certificate/certificate.route.js"></script>
+  <script src="login/login.js"></script>
 
-    <script src="classifier/classifier.js"></script>
-    <script src="classifier/classifier.autocomplete.js"></script>
-    <script src="classifier/classifier.connect.js"></script>
-    <script src="classifier/classifier.content.edit.js"></script>
-    <script src="classifier/classifier.content.list.js"></script>
-    <script src="classifier/classifier.route.js"></script>
+  <script src="certificate/certificate.js"></script>
+  <script src="certificate/certificate.route.js"></script>
 
-    <script src="saisClassifier/saisClassifier.list.js"></script>
-    <script src="saisClassifier/saisClassifier.route.js"></script>
+  <script src="classifier/classifier.js"></script>
+  <script src="classifier/classifier.autocomplete.js"></script>
+  <script src="classifier/classifier.connect.js"></script>
+  <script src="classifier/classifier.content.edit.js"></script>
+  <script src="classifier/classifier.content.list.js"></script>
+  <script src="classifier/classifier.route.js"></script>
 
-    <script src="committee/committee.route.js"></script>
-    <script src="committee/committee.search.js"></script>
-    <script src="committee/committee.edit.view.js"></script>
+  <script src="saisClassifier/saisClassifier.list.js"></script>
+  <script src="saisClassifier/saisClassifier.route.js"></script>
 
-    <script src="components/hois.drag.and.drop.js"></script>
-    <script src="components/error.source.attr.js"></script>
-    <script src="components/disallow.same.file.attr.js"></script>
-    <script src="components/unique.attr.js"></script>
-    <script src="components/hois.menu.js"></script>
-    <script src="components/hois.autocomplete.js"></script>
-    <script src="components/hois.created.modified.js"></script>
-    <script src="components/hois.classifier.autocomplete.js"></script>
-    <script src="components/hois.classifier.select.js"></script>
-    <script src="components/hois.classifier.value.js"></script>
-    <script src="components/hois.collapsable.js"></script>
-    <script src="components/hois.idcode.lookup.js"></script>
-    <script src="components/hois.input.file.js"></script>
-    <script src="components/hois.multi.text.js"></script>
-    <script src="components/hois.school.department.select.js"></script>
-    <script src="components/hois.select.js"></script>
-    <script src="components/hois.value.js"></script>
-    <script src="components/hois.time.js"></script>
-    <script src="components/hois.date.filter.js"></script>
+  <script src="committee/committee.route.js"></script>
+  <script src="committee/committee.search.js"></script>
+  <script src="committee/committee.edit.view.js"></script>
 
-    <script src="contract/contract.js"></script>
-    <script src="contract/contract.view.js"></script>
-    <script src="contract/contract.list.js"></script>
-    <script src="contract/contract.route.js"></script>
+  <script src="components/hois.drag.and.drop.js"></script>
+  <script src="components/error.source.attr.js"></script>
+  <script src="components/disallow.same.file.attr.js"></script>
+  <script src="components/unique.attr.js"></script>
+  <script src="components/hois.menu.js"></script>
+  <script src="components/hois.autocomplete.js"></script>
+  <script src="components/hois.created.modified.js"></script>
+  <script src="components/hois.classifier.autocomplete.js"></script>
+  <script src="components/hois.classifier.select.js"></script>
+  <script src="components/hois.classifier.value.js"></script>
+  <script src="components/hois.collapsable.js"></script>
+  <script src="components/hois.idcode.lookup.js"></script>
+  <script src="components/hois.input.file.js"></script>
+  <script src="components/hois.multi.text.js"></script>
+  <script src="components/hois.school.department.select.js"></script>
+  <script src="components/hois.select.js"></script>
+  <script src="components/hois.value.js"></script>
+  <script src="components/hois.time.js"></script>
+  <script src="components/hois.date.filter.js"></script>
 
-    <script src="curriculum/curriculum.js"></script>
-    <script src="curriculum/curriculum.list.js"></script>
-    <script src="curriculum/curriculum.route.js"></script>
+  <script src="contract/contract.js"></script>
+  <script src="contract/contract.view.js"></script>
+  <script src="contract/contract.list.js"></script>
+  <script src="contract/contract.route.js"></script>
 
-    <script src="declaration/declaration.js"></script>
-    <script src="declaration/declaration.route.js"></script>
+  <script src="curriculum/curriculum.js"></script>
+  <script src="curriculum/curriculum.list.js"></script>
+  <script src="curriculum/curriculum.route.js"></script>
 
-    <script src="directive/directive.js"></script>
-    <script src="directive/directive.coordinator.js"></script>
-    <script src="directive/directive.route.js"></script>
+  <script src="declaration/declaration.js"></script>
+  <script src="declaration/declaration.route.js"></script>
 
-    <script src="fakePages/fake.js"></script>
+  <script src="directive/directive.js"></script>
+  <script src="directive/directive.coordinator.js"></script>
+  <script src="directive/directive.route.js"></script>
 
-    <script src="generalMessage/general.message.js"></script>
-    <script src="generalMessage/general.message.route.js"></script>
+  <script src="fakePages/fake.js"></script>
 
-    <script src="higherCurriculum/higher.curriculum.js"></script>
-    <script src="higherCurriculum/higher.curriculum.route.js"></script>
-    <script src="higherCurriculum/higher.curriculum.version.js"></script>
+  <script src="generalMessage/general.message.js"></script>
+  <script src="generalMessage/general.message.route.js"></script>
 
-    <script src="higherProtocol/higher.protocol.route.js"></script>
-    <script src="higherProtocol/higher.protocol.search.js"></script>
-    <script src="higherProtocol/higher.protocol.edit.view.js"></script>
+  <script src="higherCurriculum/higher.curriculum.js"></script>
+  <script src="higherCurriculum/higher.curriculum.route.js"></script>
+  <script src="higherCurriculum/higher.curriculum.version.js"></script>
 
-    <script src="journal/journal.js"></script>
-    <script src="journal/journal.list.js"></script>
-    <script src="journal/journal.student.selection.js"></script>
-    <script src="journal/journal.edit.js"></script>
-    <script src="journal/journal.route.js"></script>
+  <script src="higherProtocol/higher.protocol.route.js"></script>
+  <script src="higherProtocol/higher.protocol.search.js"></script>
+  <script src="higherProtocol/higher.protocol.edit.view.js"></script>
 
-    <script src="lessonplan/lessonplan.js"></script>
-    <script src="lessonplan/lessonplan.journal.js"></script>
-    <script src="lessonplan/lessonplan.route.js"></script>
-    <script src="lessonplan/event.search.js"></script>
+  <script src="journal/journal.js"></script>
+  <script src="journal/journal.list.js"></script>
+  <script src="journal/journal.student.selection.js"></script>
+  <script src="journal/journal.edit.js"></script>
+  <script src="journal/journal.route.js"></script>
 
-    <script src="message/message.js"></script>
-    <script src="message/message.route.js"></script>
+  <script src="lessonplan/lessonplan.js"></script>
+  <script src="lessonplan/lessonplan.journal.js"></script>
+  <script src="lessonplan/lessonplan.route.js"></script>
+  <script src="lessonplan/event.search.js"></script>
 
-    <script src="messageTemplate/message.template.js"></script>
-    <script src="messageTemplate/message.template.route.js"></script>
+  <script src="message/message.js"></script>
+  <script src="message/message.route.js"></script>
 
-    <script src="midtermTask/midtermTask.js"></script>
-    <script src="midtermTask/midtermTask.util.js"></script>
-    <script src="midtermTask/midtermTask.route.js"></script>
+  <script src="messageTemplate/message.template.js"></script>
+  <script src="messageTemplate/message.template.route.js"></script>
 
-    <script src="protocol/module.protocol.js"></script>
-    <script src="protocol/module.protocol.list.js"></script>
-    <script src="protocol/module.protocol.new.js"></script>
-    <script src="protocol/protocol.route.js"></script>
+  <script src="midtermTask/midtermTask.js"></script>
+  <script src="midtermTask/midtermTask.util.js"></script>
+  <script src="midtermTask/midtermTask.route.js"></script>
 
-    <script src="practiceJournal/practice.journal.js"></script>
-    <script src="practiceJournal/practice.journal.list.js"></script>
-    <script src="practiceJournal/practice.journal.entry.js"></script>
-    <script src="practiceJournal/practice.journal.supervisor.entry.js"></script>
-    <script src="practiceJournal/practice.journal.route.js"></script>
+  <script src="protocol/module.protocol.js"></script>
+  <script src="protocol/module.protocol.list.js"></script>
+  <script src="protocol/module.protocol.new.js"></script>
+  <script src="protocol/protocol.route.js"></script>
 
-    <script src="room/room.js"></script>
-    <script src="room/room.route.js"></script>
+  <script src="practiceJournal/practice.journal.js"></script>
+  <script src="practiceJournal/practice.journal.list.js"></script>
+  <script src="practiceJournal/practice.journal.entry.js"></script>
+  <script src="practiceJournal/practice.journal.supervisor.entry.js"></script>
+  <script src="practiceJournal/practice.journal.route.js"></script>
 
-    <script src="reception/reception.saisAdmission.js"></script>
-    <script src="reception/reception.saisAdmission.import.js"></script>
-    <script src="reception/reception.saisApplication.js"></script>
-    <script src="reception/reception.saisApplication.import.js"></script>
-    <script src="reception/reception.saisApplication.list.js"></script>
-    <script src="reception/reception.route.js"></script>
+  <script src="room/room.js"></script>
+  <script src="room/room.route.js"></script>
 
-    <script src="report/report.js"></script>
-    <script src="report/report.route.js"></script>
+  <script src="reception/reception.saisAdmission.js"></script>
+  <script src="reception/reception.saisAdmission.import.js"></script>
+  <script src="reception/reception.saisApplication.js"></script>
+  <script src="reception/reception.saisApplication.import.js"></script>
+  <script src="reception/reception.saisApplication.list.js"></script>
+  <script src="reception/reception.route.js"></script>
 
-    <script src="services/array.utils.js"></script>
-    <script src="services/auth.js"></script>
-    <script src="services/data.utils.js"></script>
-    <script src="services/dialog.service.js"></script>
-    <script src="services/error.js"></script>
-    <script src="services/menu.js"></script>
-    <script src="services/message.js"></script>
-    <script src="services/ois.file.service.js"></script>
-    <script src="services/query.utils.js"></script>
-    <script src="services/ekis.service.js"></script>
+  <script src="report/report.js"></script>
+  <script src="report/report.route.js"></script>
 
-    <script src="school/school.js"></script>
-    <script src="school/school.department.js"></script>
-    <script src="school/school.edit.js"></script>
-    <script src="school/school.study.levels.js"></script>
-    <script src="school/school.route.js"></script>
-    <script src="school/school.view.js"></script>
+  <script src="services/array.utils.js"></script>
+  <script src="services/auth.js"></script>
+  <script src="services/data.utils.js"></script>
+  <script src="services/dialog.service.js"></script>
+  <script src="services/error.js"></script>
+  <script src="services/menu.js"></script>
+  <script src="services/message.js"></script>
+  <script src="services/ois.file.service.js"></script>
+  <script src="services/query.utils.js"></script>
+  <script src="services/ekis.service.js"></script>
 
-    <script src="studyYear/school.study.period.js"></script>
+  <script src="school/school.js"></script>
+  <script src="school/school.department.js"></script>
+  <script src="school/school.edit.js"></script>
+  <script src="school/school.study.levels.js"></script>
+  <script src="school/school.route.js"></script>
+  <script src="school/school.view.js"></script>
 
-    <script src="stateCurriculum/state.curriculum.js"></script>
-    <script src="stateCurriculum/state.curriculum.list.js"></script>
-    <script src="stateCurriculum/state.curriculum.route.js"></script>
+  <script src="studyYear/school.study.period.js"></script>
 
-    <script src="student/student.view.js"></script>
-    <script src="student/student.route.js"></script>
+  <script src="stateCurriculum/state.curriculum.js"></script>
+  <script src="stateCurriculum/state.curriculum.list.js"></script>
+  <script src="stateCurriculum/state.curriculum.route.js"></script>
 
-    <script src="studentGroup/student.group.js"></script>
-    <script src="studentGroup/student.group.route.js"></script>
+  <script src="student/student.js"></script>
+  <script src="student/student.view.js"></script>
+  <script src="student/student.route.js"></script>
+  <script src="student/vocational.grade.js"></script>
 
-    <script src="studentRepresentative/student.representative.application.js"></script>
-    <script src="studentRepresentative/student.representative.route.js"></script>
 
-    <script src="studyYearSchedule/study.year.schedule.js"></script>
-    <script src="studyYearSchedule/study.year.schedule.route.js"></script>
-    <script src="studyYearSchedule/study.year.schedule.legend.js"></script>
+  <script src="studentGroup/student.group.js"></script>
+  <script src="studentGroup/student.group.route.js"></script>
 
-    <script src="subject/subject.js"></script>
-    <script src="subject/subject.route.js"></script>
+  <script src="studentRepresentative/student.representative.application.js"></script>
+  <script src="studentRepresentative/student.representative.route.js"></script>
 
-    <script src="subjectStudyPeriod/subject.study.period.js"></script>
-    <script src="subjectStudyPeriod/subject.study.period.capacities.js"></script>
-    <script src="subjectStudyPeriod/subject.study.period.route.js"></script>
-    <script src="subjectStudyPeriod/subject.study.period.student.group.js"></script>
-    <script src="subjectStudyPeriod/subject.study.period.subject.js"></script>
-    <script src="subjectStudyPeriod/subject.study.period.teacher.js"></script>
+  <script src="studyYearSchedule/study.year.schedule.js"></script>
+  <script src="studyYearSchedule/study.year.schedule.route.js"></script>
+  <script src="studyYearSchedule/study.year.schedule.legend.js"></script>
 
-    <script src="subjectStudyPeriodPlan/subject.study.period.plan.js"></script>
-    <script src="subjectStudyPeriodPlan/subject.study.period.plan.route.js"></script>
+  <script src="subject/subject.js"></script>
+  <script src="subject/subject.route.js"></script>
 
-    <script src="timetable/timetable.route.js"></script>
-    <script src="timetable/timetable.lessonTime.js"></script>
-    <script src="timetable/timetable.lessonTime.list.js"></script>
-    <script src="timetable/timetable.timetableManagement.js"></script>
-    <script src="timetable/timetable.edit.js"></script>
-    <script src="timetable/timetable.createTimetablePlan.js"></script>
+  <script src="subjectStudyPeriod/subject.study.period.js"></script>
+  <script src="subjectStudyPeriod/subject.study.period.capacities.js"></script>
+  <script src="subjectStudyPeriod/subject.study.period.route.js"></script>
+  <script src="subjectStudyPeriod/subject.study.period.student.group.js"></script>
+  <script src="subjectStudyPeriod/subject.study.period.subject.js"></script>
+  <script src="subjectStudyPeriod/subject.study.period.teacher.js"></script>
 
-    <script src="teacher/teacher.js"></script>
-    <script src="teacher/teacher.occupation.js"></script>
-    <script src="teacher/teacher.route.js"></script>
+  <script src="subjectStudyPeriodPlan/subject.study.period.plan.js"></script>
+  <script src="subjectStudyPeriodPlan/subject.study.period.plan.route.js"></script>
 
-    <script src="persons/persons.js"></script>
-    <script src="persons/persons.route.js"></script>
-    <script src="persons/users.js"></script>
+  <script src="timetable/timetable.route.js"></script>
+  <script src="timetable/timetable.lessonTime.js"></script>
+  <script src="timetable/timetable.lessonTime.list.js"></script>
+  <script src="timetable/timetable.timetableManagement.js"></script>
+  <script src="timetable/timetable.edit.js"></script>
+  <script src="timetable/timetable.createVocationalPlan.js"></script>
+  <script src="timetable/timetable.createHigherPlan.js"></script>
+  <script src="timetable/timetable.generalTimetable.js"></script>
+  <script src="timetable/timetable.period.view.js"></script>
 
-    <script src="vocationalCurriculum/vocational.curriculum.js"></script>
-    <script src="vocationalCurriculum/vocational.curriculum.module.implementation.plan.js"></script>
-    <script src="vocationalCurriculum/vocational.curriculum.route.js"></script>
+  <script src="teacher/teacher.js"></script>
+  <script src="teacher/teacher.occupation.js"></script>
+  <script src="teacher/teacher.route.js"></script>
 
-    <script src="ehis/student.js"></script>
-    <script src="ehis/logs.js"></script>
-    <script src="ehis/teacher.export.js"></script>
-    <script src="ehis/ehis.route.js"></script>
-    <!-- endbuild -->
+  <script src="persons/persons.js"></script>
+  <script src="persons/persons.route.js"></script>
+  <script src="persons/users.js"></script>
 
-    <!-- build:remove:dist -->
-    <script src="test/test.controller.js"></script>
-    <script src="test/test.route.js"></script>
-    <!-- /build -->
+  <script src="vocationalCurriculum/vocational.curriculum.js"></script>
+  <script src="vocationalCurriculum/vocational.curriculum.module.implementation.plan.js"></script>
+  <script src="vocationalCurriculum/vocational.curriculum.route.js"></script>
 
-    <script src="config.js"></script>
+  <script src="ehis/student.js"></script>
+  <script src="ehis/logs.js"></script>
+  <script src="ehis/teacher.export.js"></script>
+  <script src="ehis/ehis.route.js"></script>
+  <!-- endbuild -->
+
+  <!-- build:remove:dist -->
+  <script src="test/test.controller.js"></script>
+  <script src="test/test.route.js"></script>
+  <!-- /build -->
+
+  <script src="config.js"></script>
 </body>
+
 </html>
-
-

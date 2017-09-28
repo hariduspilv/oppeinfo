@@ -2,9 +2,9 @@
   <div flex>
     <form ng-submit="loadData()" class="ois-form-layout nomargin" layout="column">
       <div layout="column" flex>
-        <md-input-container flex>
+        <md-input-container  ng-if="auth.isMainAdmin()" flex>
           <label>{{'school.label' | translate}}</label>
-          <hois-select ng-hide="!auth.isMainAdmin()" ng-model="criteria.school" type="school"></hois-select>
+          <hois-select ng-if="auth.isMainAdmin()" ng-model="criteria.school" type="school"></hois-select>
         </md-input-container>
         <md-input-container flex>
           <label>{{'person.name' | translate}}</label>

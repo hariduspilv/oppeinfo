@@ -1,26 +1,40 @@
 package ee.hitsa.ois.web.dto.timetable;
 
 import java.time.LocalDateTime;
+import java.util.List;
+
+import ee.hitsa.ois.web.dto.RoomDto;
 
 public class TimetableEventDto {
     private Long id;
     private LocalDateTime start;
     private LocalDateTime end;
     private Integer lessonNr;
-    private Long room;
+    private List<RoomDto> rooms;
     private Long journal;
     private Long studentGroup;
     private String capacityType;
+    private String subjectCode;
 
     public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, String capacityType,
-            Long room, Long journal, Long studentGroup) {
+            Long journal, Long studentGroup) {
         this.id = id;
         this.start = start;
         this.end = end;
         this.lessonNr = lessonNr;
         this.capacityType = capacityType;
-        this.room = room;
         this.journal = journal;
+        this.studentGroup = studentGroup;
+    }
+
+    public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, String capacityType,
+            String subjectCode, Long studentGroup) {
+        this.id = id;
+        this.start = start;
+        this.end = end;
+        this.lessonNr = lessonNr;
+        this.capacityType = capacityType;
+        this.subjectCode = subjectCode;
         this.studentGroup = studentGroup;
     }
 
@@ -56,12 +70,12 @@ public class TimetableEventDto {
         this.lessonNr = lessonNr;
     }
 
-    public Long getRoom() {
-        return room;
+    public List<RoomDto> getRooms() {
+        return rooms;
     }
 
-    public void setRoom(Long room) {
-        this.room = room;
+    public void setRooms(List<RoomDto> rooms) {
+        this.rooms = rooms;
     }
 
     public Long getJournal() {
@@ -86,6 +100,14 @@ public class TimetableEventDto {
 
     public void setCapacityType(String capacityType) {
         this.capacityType = capacityType;
+    }
+
+    public String getSubjectCode() {
+        return subjectCode;
+    }
+
+    public void setSubjectCode(String subjectCode) {
+        this.subjectCode = subjectCode;
     }
 
 }

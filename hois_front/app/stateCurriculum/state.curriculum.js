@@ -27,7 +27,6 @@ angular.module('hitsaOis')
 
     $scope.formState = {
       strictValidation: false,
-      waitingResponse: false,
       readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
       stateCurriculumPdfUrl: config.apiUrl + baseUrl + '/print/' + id + '/stateCurriculum.pdf'
     };
@@ -69,15 +68,11 @@ angular.module('hitsaOis')
         // ----------- save and delete
 
     $scope.delete = function() {
-      // if($scope.formState.waitingResponse) {
-      //   return;
-      // }
       if(!ArrayUtils.isEmpty($scope.stateCurriculum.curricula)) {
         message.error("stateCurriculum.error.hasCurricula");
         return;
       }
       dialogService.confirmDialog({prompt: 'stateCurriculum.deleteconfirm'}, function() {
-        $scope.formState.waitingResponse = true;
         $scope.stateCurriculum.$delete().then(function() {
           message.info('main.messages.delete.success');
           $location.path('/stateCurriculum');
@@ -86,9 +81,6 @@ angular.module('hitsaOis')
     };
 
     function validationPassed(messages) {
-      // if($scope.formState.waitingResponse) {
-      //   return false;
-      // }
       $scope.stateCurriculumForm.$setSubmitted();
       if (!stateCurriculumFormIsValid()) {
           message.error(messages.errorMessage);
@@ -111,12 +103,10 @@ angular.module('hitsaOis')
       if(!validationPassed(messages)) {
         return;
       }
-      $scope.formState.waitingResponse = true;
       $scope.stateCurriculum.$save().then(function(){
-          $scope.formState.waitingResponse = false;
           DataUtils.convertStringToDates($scope.stateCurriculum, ["validFrom", "validThru"]);
           message.info('main.messages.create.success');
-          $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit').search({_noback: true});
+          $location.url('/stateCurriculum/' + $scope.stateCurriculum.id + '/edit?_noback');
       });
     }
 
@@ -126,16 +116,14 @@ angular.module('hitsaOis')
         if(!validationPassed(messages)) {
           return;
         }
-        $scope.formState.waitingResponse = true;
         endpoint.$update().then(function(response){
-          $scope.formState.waitingResponse = false;
           message.info(messages.updateSuccess);
           $scope.stateCurriculum = response;
           setVariablesForExistingStateCurriculum();
           $scope.stateCurriculumForm.$setPristine();
 
           if(!$scope.formState.readOnly && $scope.stateCurriculum.status !== Curriculum.STATUS.ENTERING) {
-            $location.path('/stateCurriculum/' + $scope.stateCurriculum.id + '/view').search({_noback: true});
+            $location.url('/stateCurriculum/' + $scope.stateCurriculum.id + '/view?_noback');
           }
         });
       }, 0);
@@ -394,29 +382,39 @@ angular.module('hitsaOis')
     }
 
     $scope.removeOcupation = function(occupation) {
-        dialogService.confirmDialog({prompt: 'stateCurriculum.occupationdeleteconfirm'}, function() {
-            $scope.removeFromArray($scope.stateCurriculum.occupations, occupation);
-            var removedSubOccupations = $scope.subOccupations[occupation].map(function(o){return o.code;});
-            delete $scope.subOccupations[occupation];
-            $scope.getSubOccupationsAsList();
 
-            $scope.stateCurriculum.modules.forEach(function(m){
-                $scope.removeFromArray(m.moduleOccupations, occupation);
-                $scope.stateCurriculum.modules.forEach(function(m){
-                    deleteModuleWithNoOccupations(m);
-                });
-            });
-            removedSubOccupations.forEach(function(so){
-                $scope.stateCurriculum.modules.forEach(function(m){
-                    $scope.removeFromArray(m.moduleOccupations, so);
-                });
-                $scope.stateCurriculum.modules.forEach(function(m){
-                    deleteModuleWithNoOccupations(m);
-                });
-            });
-            $scope.stateCurriculumForm.$setDirty();
-        });
+      var prompt = occupationBoundWithModules(occupation) ?
+      'stateCurriculum.occupationWithModuleDeleteConfirm' : 'stateCurriculum.occupationdeleteconfirm';
+
+      dialogService.confirmDialog({prompt: prompt}, function() {
+          $scope.removeFromArray($scope.stateCurriculum.occupations, occupation);
+          var removedSubOccupations = $scope.subOccupations[occupation].map(function(o){return o.code;});
+          delete $scope.subOccupations[occupation];
+          $scope.getSubOccupationsAsList();
+
+          $scope.stateCurriculum.modules.forEach(function(m){
+              $scope.removeFromArray(m.moduleOccupations, occupation);
+          });
+          removedSubOccupations.forEach(function(so){
+              $scope.stateCurriculum.modules.forEach(function(m){
+                  $scope.removeFromArray(m.moduleOccupations, so);
+              });
+          });
+          deleteModulesWithNoOccupation();
+          $scope.stateCurriculumForm.$setDirty();
+      });
     };
+
+    function occupationBoundWithModules(occupation) {
+      var subOccupations = $scope.subOccupations[occupation].map(function(o){return o.code;});
+
+      return $scope.stateCurriculum.modules.some(function(m){
+        return ArrayUtils.includes(m.moduleOccupations, occupation) ||
+        ArrayUtils.intersect(subOccupations, m.moduleOccupations);
+      });
+    }
+
+
 
     $scope.filterSubOccupations = function(occupation, subOccupationType) {
         return function(subOccupation) {
@@ -440,10 +438,10 @@ angular.module('hitsaOis')
       };
     };
 
-    function deleteModuleWithNoOccupations(module1) {
-        if(!module1.moduleOccupations ||  module1.moduleOccupations.length === 0) {
-            $scope.removeFromArray($scope.stateCurriculum.modules, module1);
-        }
+    function deleteModulesWithNoOccupation() {
+      $scope.stateCurriculum.modules = $scope.stateCurriculum.modules.filter(function(module){
+        return !ArrayUtils.isEmpty(module.moduleOccupations);
+      });
     }
 
     $scope.openAddModuleDialog = function (editingModule) {

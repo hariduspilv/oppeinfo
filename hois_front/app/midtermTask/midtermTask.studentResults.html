@@ -45,7 +45,7 @@
                   aria-label="{{'midtermTask.pointsTxt' | translate}}" ng-disabled="!student.studentResultCanBeChanged">
                 </md-input-container>
                 <md-input-container ng-if="!result.isText">
-                  <input ng-model="result.points" type="number" min="0" max="{{result.maxPoints}}" pattern="^\d+(\.\d{2})?$"
+                  <input ng-model="result.points" type="number" min="0" max="{{result.maxPoints}}" pattern="^\d+(\.\d{1,2})?$"
                   aria-label="{{'midtermTask.points' | translate}}" ng-disabled="!student.studentResultCanBeChanged">
                 </md-input-container>
               </td>

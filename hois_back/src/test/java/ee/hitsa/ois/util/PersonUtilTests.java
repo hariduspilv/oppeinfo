@@ -61,10 +61,21 @@ public class PersonUtilTests {
 
     @Test
     public void stripIdcodeFromFullnameAndIdcode() {
+        Assert.assertNull(PersonUtil.stripIdcodeFromFullnameAndIdcode(null));
         String name = "First Last";
         String noIdcode = name + " (12345678901)";
         Assert.assertEquals(noIdcode, PersonUtil.stripIdcodeFromFullnameAndIdcode(noIdcode));
         String idcode = name + " (47101010033)";
         Assert.assertEquals(name, PersonUtil.stripIdcodeFromFullnameAndIdcode(idcode));
+    }
+
+    @Test
+    public void idcodeFromFullnameAndIdcode() {
+        Assert.assertNull(PersonUtil.idcodeFromFullnameAndIdcode(null));
+        String name = "First Last";
+        String idcode = "12345678901";
+        Assert.assertNull(PersonUtil.idcodeFromFullnameAndIdcode(name + " ("  + idcode + ")"));
+        idcode = "47101010033";
+        Assert.assertEquals(idcode, PersonUtil.idcodeFromFullnameAndIdcode(name + " ("  + idcode + ")"));
     }
 }

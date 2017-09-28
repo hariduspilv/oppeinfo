@@ -14,10 +14,10 @@ angular.module('hitsaOis').controller('ModuleProtocolListController', function (
     }
   });
 
-
-  $scope.$watchCollection("search.module", function(value) {
-    $scope.criteria.module = angular.isArray(value) ? value.map(function(it) {return it.id;}) : value;
-  });
+  $scope.$watch('criteria.moduleObject', function() {
+      $scope.criteria.module = $scope.criteria.moduleObject ? $scope.criteria.moduleObject.id : null;
+    }
+  );
 
   $scope.clearSearch = function () {
     $scope.clearCriteria();
@@ -26,9 +26,9 @@ angular.module('hitsaOis').controller('ModuleProtocolListController', function (
 
   $scope.curriculumVersionModule = function(row) {
     var result = '';
-    result += row.curriculumVersionOccupationModules.map(function(it) {return $scope.currentLanguageNameField(it);}).join('; ');
-    result += ', ';
     result += row.curriculumVersions.map(function(it) {return $scope.currentLanguageNameField(it);}).join('; ');
+    result += ', ';
+    result += row.curriculumVersionOccupationModules.map(function(it) {return $scope.currentLanguageNameField(it);}).join('; ');
     return result;
   };
 });

@@ -17,25 +17,31 @@ public class AuthenticatedUser implements Serializable {
     private final String name;
     private final Long user;
     private final Long student;
+    private final Long teacher;
     // rights?
     private String roleCode;
     private AuthenticatedSchool school;
+    // for student only two flags from curriculum
+    private Boolean vocational;
+    private Boolean higher;
     private String fullname;
     private Collection<GrantedAuthority> authorizedRoles;
     private List<UserProjection> users;
     private LoginMethod loginMethod;
     private Integer sessionTimeoutInSeconds;
 
-    public AuthenticatedUser(String name, Long user, String roleCode, Long student, Integer sessionTimeoutInSeconds) {
+    public AuthenticatedUser(String name, Long user, String roleCode, Long student, Long teacher, Integer sessionTimeoutInSeconds) {
         this.name = name;
         this.user = user;
         this.roleCode = roleCode;
         this.student = student;
+        this.teacher = teacher;
         this.sessionTimeoutInSeconds = sessionTimeoutInSeconds;
     }
 
     public AuthenticatedUser(User user, Integer sessionTimeoutInSeconds) {
-        this(user.getPerson().getIdcode(), user.getId(), EntityUtil.getCode(user.getRole()), EntityUtil.getNullableId(user.getStudent()),
+        this(user.getPerson().getIdcode(), user.getId(), EntityUtil.getCode(user.getRole()),
+                EntityUtil.getNullableId(user.getStudent()), EntityUtil.getNullableId(user.getTeacher()),
                 sessionTimeoutInSeconds);
     }
 
@@ -71,6 +77,22 @@ public class AuthenticatedUser implements Serializable {
         this.users = users;
     }
 
+    public Boolean getVocational() {
+        return vocational;
+    }
+
+    public void setVocational(Boolean vocational) {
+        this.vocational = vocational;
+    }
+
+    public Boolean getHigher() {
+        return higher;
+    }
+
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
+    }
+
     public String getFullname() {
         return fullname;
     }
@@ -89,6 +111,10 @@ public class AuthenticatedUser implements Serializable {
 
     public Long getStudent() {
         return student;
+    }
+
+    public Long getTeacher() {
+        return teacher;
     }
 
     public LoginMethod getLoginMethod() {

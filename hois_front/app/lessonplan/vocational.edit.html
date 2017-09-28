@@ -19,7 +19,7 @@
     <tr>
       <td>&nbsp;</td>
       <td colspan="2">{{'lessonplan.total' | translate}}</td>
-      <td colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods">{{currentLanguageNameField(sp)}}</td>
+      <td colspan="{{::sp.weekNrs.length}}" ng-repeat="sp in formState.studyPeriods">{{currentLanguageNameField(sp)}} ({{sp.startDate | hoisDayMonth}}-{{sp.endDate | hoisDayMonth}})</td>
     </tr>
     <tr>
       <td colspan="3">

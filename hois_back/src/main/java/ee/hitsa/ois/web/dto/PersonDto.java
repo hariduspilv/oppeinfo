@@ -19,6 +19,7 @@ public class PersonDto {
     private LocalDate birthdate;
     private String sex;
     private Long id;
+    private Long teacherId;
     private String schoolEmail;
 
     public String getFirstname() {
@@ -115,6 +116,14 @@ public class PersonDto {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getTeacherId() {
+        return teacherId;
+    }
+
+    public void setTeacherId(Long teacherId) {
+        this.teacherId = teacherId;
     }
 
     public String getSchoolEmail() {

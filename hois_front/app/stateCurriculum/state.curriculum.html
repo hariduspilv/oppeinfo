@@ -292,10 +292,17 @@
             <label>{{'stateCurriculum.enter.comment' | translate}}</label>
             <textarea ng-model="stateCurriculum.description" md-maxlength="20000" max-rows="10" ng-readonly="formState.readOnly"></textarea>
           </md-input-container>
-          <md-input-container flex>
+          <md-input-container flex ng-if="!formState.readOnly">
             <label>{{'stateCurriculum.enter.riigiteataja' | translate}}</label>
-            <input ng-model="stateCurriculum.riigiteatajaUrl" type="text" md-maxlength="4000" ng-readonly="formState.readOnly">
+            <input ng-model="stateCurriculum.riigiteatajaUrl" type="text" md-maxlength="4000">
           </md-input-container>
+          <div class="form-readonly" layout="column">
+            <br>
+            <md-input-container flex ng-if="formState.readOnly">
+              <label>{{'stateCurriculum.enter.riigiteataja' | translate}}</label>
+              <a href="{{stateCurriculum.riigiteatajaUrl}}" target="_blank">{{stateCurriculum.riigiteatajaUrl}}</a>
+            </md-input-container>
+          </div>
         </div>
       </fieldset>
 

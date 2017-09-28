@@ -40,7 +40,7 @@
 
       <fieldset flex="65">
         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'lessonplan.journal.capacity-type' | translate}}</legend>
-      
+
         <div layout="column" ng-repeat="capacityType in formState.capacityTypes" flex="70" flex-sm="100" flex-xs="100">
               <div layout="row" flex layout-align="start center">
                 <div flex="5">&nbsp;</div>
@@ -94,7 +94,7 @@
           </table>
         </md-table-container>
       </div>
-      
+
       <div layout="row" flex="70" flex-sm="100" flex-xs="100">
         <md-input-container class="md-block" flex>
           <label>{{'lessonplan.journal.group' | translate}}</label>
@@ -141,7 +141,7 @@
           </table>
         </md-table-container>
       </div>
-      
+
       <div layout="row">
         <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>

@@ -21,7 +21,7 @@
         </div>
       </div>
 
-      <div layout="row" layout-sm="column" layout-xs="column">
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.isStudent()">
         <div layout="column" flex="95" flex-sm="100">
           <div layout="column" flex>
             <md-input-container>
@@ -55,7 +55,7 @@
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="newPracticeJournal()">{{'practiceJournal.button.createWithoutContract' | translate}}</md-button>
+        <md-button ng-if="auth.isAdmin()" class="md-raised" ng-click="newPracticeJournal()">{{'practiceJournal.button.createWithoutContract' | translate}}</md-button>
       </div>
       <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
     </form>
@@ -75,7 +75,7 @@
             <th md-column>{{'enterprise.label' | translate}}</th>
             <th md-column>{{'enterprise.supervisor' | translate}}</th>
             <th md-column>{{'practiceJournal.practicePlace' | translate}}</th>
-            <th md-column ng-if="!auth.isTeacher()">{{'practiceJournal.schoolSupervisor' | translate}}</th>
+            <th md-column ng-if="auth.isAdmin()">{{'practiceJournal.schoolSupervisor' | translate}}</th>
             <th md-column>{{'practiceJournal.studentLastEntryDate' | translate}}</th>
             <th md-column></th>
           </tr>
@@ -90,12 +90,12 @@
             <td md-cell>{{row.enterpriseName}}</td>
             <td md-cell>{{row.enterpriseContactPersonName}}</td>
             <td md-cell>{{row.practicePlace}}</td>
-            <td md-cell ng-if="!auth.isTeacher()">{{currentLanguageNameField(row.teacher)}}</td>
+            <td md-cell ng-if="auth.isAdmin()">{{currentLanguageNameField(row.teacher)}}</td>
             <td md-cell>{{row.studentLastEntryDate | hoisDate}}</td>
             <td md-cell>
               <div layout="column">
                 <md-button ng-if="row.canEdit" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/entries/edit">{{'practiceJournal.button.fill' | translate}}</md-button>
-                <md-button ng-if="row.canEdit" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
+                <md-button ng-if="row.canEdit && (auth.isTeacher() || auth.isAdmin())" md-no-ink class="md-primary change-button" ng-href="#/practiceJournals/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
               </div>
             </td>
           </tr>

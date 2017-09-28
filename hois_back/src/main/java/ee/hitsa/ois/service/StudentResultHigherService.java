@@ -10,7 +10,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -40,6 +39,21 @@ public class StudentResultHigherService {
     @Autowired
     private StudyPeriodRepository studyPeriodRepository;
     
+    public List<StudentHigherSubjectResultDto> positiveHigherResults(Student student) {
+        List<CurriculumVersionHigherModule> modules = student.getCurriculumVersion().getModules()
+                .stream().filter(m -> Boolean.FALSE.equals(m.getMinorSpeciality())).collect(Collectors.toList());
+
+        List<StudentHigherSubjectResultDto> moduleSubjects = getModuleSubjects(modules);
+        List<StudentHigherSubjectResultDto> studentResults = getStudentResults(student);
+        List<StudentHigherSubjectResultDto> mergedList = mergeModuleSubjectsAndResults(moduleSubjects, studentResults);
+        return filterNegativeResults(mergedList);
+    }
+    
+    public List<StudentHigherSubjectResultDto> filterNegativeResults(List<StudentHigherSubjectResultDto> list) {
+        calculateIsOk(list);
+        return list.stream().filter(r -> Boolean.TRUE.equals(r.getIsOk())).collect(Collectors.toList());
+    }
+    
     public StudentHigherResultDto higherResults(Student student) {
         StudentHigherResultDto dto = new StudentHigherResultDto();
 
@@ -63,10 +77,10 @@ public class StudentResultHigherService {
     private static void setExtraCurriculumSubjects(StudentHigherResultDto dto) {
         List<StudentHigherSubjectResultDto> extraCurriculumSubjects = dto.getSubjectResults().stream()
                 .filter(s -> Boolean.TRUE.equals(s.getIsExtraCurriculum())).collect(Collectors.toList());
-        if(!CollectionUtils.isEmpty(extraCurriculumSubjects)) {
+        if(!extraCurriculumSubjects.isEmpty()) {
             List<StudentHigherModuleResultDto> freeModules = dto.getModules().stream()
                     .filter(m -> HigherModuleType.KORGMOODUL_V.name().equals(m.getType())).collect(Collectors.toList());
-            if(CollectionUtils.isEmpty(freeModules)) {
+            if(freeModules.isEmpty()) {
                 StudentHigherModuleResultDto freeModule = StudentHigherModuleResultDto.createFreeModule();
                 setSubjectsToModule(freeModule, extraCurriculumSubjects);
                 dto.getModules().add(freeModule);
@@ -234,7 +248,8 @@ public class StudentResultHigherService {
     }
 
     private static void calculateCurriculumCompletion(StudentHigherResultDto dto) {
-        boolean isOk = !CollectionUtils.isEmpty(dto.getModules()) && dto.getModules().stream().allMatch(m -> Boolean.TRUE.equals(m.getIsOk()));
+        List<StudentHigherModuleResultDto> modules = dto.getModules();
+        boolean isOk = modules != null && !modules.isEmpty() && modules.stream().allMatch(m -> Boolean.TRUE.equals(m.getIsOk()));
         dto.setIsCurriculumFulfilled(Boolean.valueOf(isOk));
     }
     
@@ -244,7 +259,7 @@ public class StudentResultHigherService {
                 .filter(r -> r.getLastGrade() != null && 
                 r.getLastGrade().getGradeValue() != null)
                 .collect(Collectors.toSet()));
-        if(!CollectionUtils.isEmpty(studyPeriodIds)) {
+        if(!studyPeriodIds.isEmpty()) {
             List<StudyPeriod> studyPeriods = studyPeriodRepository.findAll(studyPeriodIds);
             List<StudentHigherStudyPeriodResultDto> results = StreamUtil.toMappedList(StudentHigherStudyPeriodResultDto::of, studyPeriods);
             for(StudentHigherStudyPeriodResultDto result : results) {

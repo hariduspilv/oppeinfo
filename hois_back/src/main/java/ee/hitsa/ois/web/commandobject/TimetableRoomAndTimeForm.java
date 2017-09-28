@@ -1,13 +1,14 @@
 package ee.hitsa.ois.web.commandobject;
 
+import java.time.LocalTime;
 import java.util.List;
 
 import ee.hitsa.ois.web.dto.RoomDto;
 
 public class TimetableRoomAndTimeForm {
     private Long timetableEventId;
-    private String startTime;
-    private String endTime;
+    private LocalTime startTime;
+    private LocalTime endTime;
     private List<RoomDto> rooms;
 
     public Long getTimetableEventId() {
@@ -18,19 +19,19 @@ public class TimetableRoomAndTimeForm {
         this.timetableEventId = timetableEventId;
     }
 
-    public String getStartTime() {
+    public LocalTime getStartTime() {
         return startTime;
     }
 
-    public void setStartTime(String startTime) {
+    public void setStartTime(LocalTime startTime) {
         this.startTime = startTime;
     }
 
-    public String getEndTime() {
+    public LocalTime getEndTime() {
         return endTime;
     }
 
-    public void setEndTime(String endTime) {
+    public void setEndTime(LocalTime endTime) {
         this.endTime = endTime;
     }
 

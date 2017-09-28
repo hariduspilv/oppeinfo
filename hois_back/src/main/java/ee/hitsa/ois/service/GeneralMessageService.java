@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -38,9 +39,6 @@ import ee.hitsa.ois.web.dto.GeneralMessageDto;
 @Transactional
 @Service
 public class GeneralMessageService {
-    private static final String SHOW_MESSAGES_FROM = "from general_message g where g.school_id=:schoolId "+
-        "and (g.valid_from is null or g.valid_from <= now()) and (g.valid_thru is null or g.valid_thru >= cast(now() as date)) "+
-        "and g.id in (select gt.general_message_id from general_message_target gt where gt.role_code in (select u.role_code from user_ u where u.id=:userId))";
 
     @Autowired
     private EntityManager em;
@@ -51,9 +49,11 @@ public class GeneralMessageService {
             return new PageImpl<>(Collections.emptyList());
         }
 
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SHOW_MESSAGES_FROM).sort(pageable);
-        qb.parameter("schoolId", user.getSchoolId());
-        qb.parameter("userId", user.getUserId());
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from general_message g").sort(pageable);
+        qb.requiredCriteria("g.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.requiredCriteria("(g.valid_from is null or g.valid_from <= :now) and (g.valid_thru is null or g.valid_thru >= :now)", "now", LocalDate.now());
+        qb.requiredCriteria("g.id in (select gt.general_message_id from general_message_target gt where gt.role_code = :role)", "role", user.getRole());
+
         Page<Object[]> messages = JpaQueryUtil.pagingResult(qb, "g.id, g.title, g.content, g.inserted", em, pageable);
         return messages.map(d -> new GeneralMessageDto(resultAsLong(d, 0), resultAsString(d, 1), resultAsString(d, 2), resultAsLocalDateTime(d, 3)));
     }

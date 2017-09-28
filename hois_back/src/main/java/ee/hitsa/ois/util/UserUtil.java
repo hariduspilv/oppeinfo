@@ -103,6 +103,10 @@ public abstract class UserUtil {
     public static boolean isSchoolAdmin(HoisUserDetails user, School school) {
         return user.isSchoolAdmin() && EntityUtil.getId(school).equals(user.getSchoolId());
     }
+    
+    public static boolean isStudent(HoisUserDetails user, School school) {
+        return user.isStudent() && EntityUtil.getId(school).equals(user.getSchoolId());
+    }
 
     public static boolean isAdultStudent(HoisUserDetails user, Student student) {
         return isStudent(user, student) && StudentUtil.isAdultAndDoNotNeedRepresentative(student);
@@ -123,7 +127,7 @@ public abstract class UserUtil {
     public static boolean isStudentTeacher(HoisUserDetails user, Student student) {
         if(isTeacher(user, student.getSchool()) && student.getStudentGroup() != null) {
             Teacher teacher = student.getStudentGroup().getTeacher();
-            return user.getPersonId().equals(EntityUtil.getId(teacher.getPerson()));
+            return user.getTeacherId().equals(EntityUtil.getId(teacher));
         }
         return false;
     }
@@ -137,10 +141,18 @@ public abstract class UserUtil {
     public static boolean isTeacher(HoisUserDetails user, School school) {
         return user.isTeacher() && EntityUtil.getId(school).equals(user.getSchoolId());
     }
+    
+    public static boolean isSchoolAdminOrStudent(HoisUserDetails user, School school) {
+        return isSchoolAdmin(user, school) || isStudent(user, school);
+    }
 
     public static void assertSameSchool(HoisUserDetails user, School school) {
         Long schoolId = user.getSchoolId();
         AssertionFailedException.throwIf(schoolId == null || !schoolId.equals(EntityUtil.getNullableId(school)), "School mismatch");
+    }
+
+    public static void assertIsMainAdminOrSchoolAdmin(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isMainAdmin() && !user.isSchoolAdmin(), "User is not admin");
     }
 
     public static void assertIsSchoolAdmin(HoisUserDetails user) {
@@ -174,4 +186,23 @@ public abstract class UserUtil {
     public static void assertIsStudent(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isStudent(), "User is not school student");
     }
+
+    public static void assertIsSchoolAdminOrStudent(HoisUserDetails user, School school) {
+        AssertionFailedException.throwIf(!isSchoolAdminOrStudent(user, school), "User is not school admin or student in given school");        
+    }
+
+    public static void assertIsSchoolAdminOrStudent(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isStudent(), "User is not school admin or student");        
+    }
+
+    public static void assertIsSchoolAdminOrStudentOrRepresentative(HoisUserDetails user) {
+        AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isStudent() && !user.isRepresentative(), 
+                "User is not school admin, student, or student representative");                
+    }
+    
+    public static void assertCanViewStudent(HoisUserDetails user, Student student) {
+        AssertionFailedException.throwIf(!canViewStudent(user, student), 
+                "User is not allowed to see student's information");    
+    }
+
 }

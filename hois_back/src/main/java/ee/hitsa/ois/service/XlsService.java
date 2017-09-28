@@ -118,8 +118,6 @@ public class XlsService {
         // TODO parametrized language
         private final Language lang = Language.ET;
         private final ClassifierUtil.ClassifierCache classifierCache;
-        private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy");
-        private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd.MM.yyyy HH:mm:ss");
 
         public HoisFunctions(ClassifierRepository classifierRepository) {
             classifierCache = new ClassifierUtil.ClassifierCache(classifierRepository);
@@ -160,14 +158,5 @@ public class XlsService {
         public String joinAutocomplete(List<AutocompleteResult> elements) {
             return !CollectionUtils.isEmpty(elements) ? String.join(", ", elements.stream().map(this::name).collect(Collectors.toList())) : "-";
         }
-
-        public String date(LocalDate date) {
-            return date != null ? date.format(dateFormatter) : "-";
-        }
-
-        public String dateTime(LocalDateTime dateTime) {
-            return dateTime != null ? dateTime.format(dateTimeFormatter) : "-";
-        }
-
     }
 }

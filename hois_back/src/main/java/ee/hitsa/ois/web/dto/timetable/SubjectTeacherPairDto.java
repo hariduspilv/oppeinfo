@@ -3,17 +3,16 @@ package ee.hitsa.ois.web.dto.timetable;
 public class SubjectTeacherPairDto {
 
     private Long id;
-    private String nameEt;
-    private String nameEn;
-    private String subjectCode;
-    private String teacherName;
+    //subject code
+    private String code;
+    private String teacherNames;
+    private String teacherNamesShort;
 
-    public SubjectTeacherPairDto(Long id, String nameEt, String nameEn, String subjectCode, String teacherName) {
+    public SubjectTeacherPairDto(Long id, String code, String teacherNames, String teacherNamesShort) {
         this.id = id;
-        this.nameEt = nameEt;
-        this.nameEn = nameEn;
-        this.subjectCode = subjectCode;
-        this.teacherName = teacherName;
+        this.code = code;
+        this.teacherNames = teacherNames;
+        this.teacherNamesShort = teacherNamesShort;
     }
 
     public Long getId() {
@@ -24,35 +23,28 @@ public class SubjectTeacherPairDto {
         this.id = id;
     }
 
-    public String getNameEt() {
-        return nameEt;
+    public String getCode() {
+        return code;
     }
 
-    public void setNameEt(String nameEt) {
-        this.nameEt = nameEt;
+    public void setCode(String code) {
+        this.code = code;
     }
 
-    public String getNameEn() {
-        return nameEn;
+    public String getTeacherNames() {
+        return teacherNames;
     }
 
-    public void setNameEn(String nameEn) {
-        this.nameEn = nameEn;
+    public void setTeacherNames(String teacherNames) {
+        this.teacherNames = teacherNames;
     }
 
-    public String getSubjectCode() {
-        return subjectCode;
+    public String getTeacherNamesShort() {
+        return teacherNamesShort;
     }
 
-    public void setSubjectCode(String subjectCode) {
-        this.subjectCode = subjectCode;
+    public void setTeacherNamesShort(String teacherNamesShort) {
+        this.teacherNamesShort = teacherNamesShort;
     }
 
-    public String getTeacherName() {
-        return teacherName;
-    }
-
-    public void setTeacherName(String teacherName) {
-        this.teacherName = teacherName;
-    }
 }

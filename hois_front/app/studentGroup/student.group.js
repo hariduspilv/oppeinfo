@@ -130,6 +130,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     function afterLoad() {
       $scope.formState.students = clMapper.objectmapper($scope.record.members);
       $scope.formState.selectedStudents = angular.copy($scope.formState.students);
+      $scope.formState.readonly = $scope.record.id && $scope.formState.students && $scope.formState.students.length > 0;
       $scope.curriculumChanged();
     }
 
@@ -138,6 +139,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     } else {
       // new student group
       $scope.record = new Endpoint();
+      $scope.formState.readonly = false;
     }
 
     $scope.update = function() {

@@ -84,7 +84,9 @@
               {{'declaration.seePrerequisites' | translate}}</a>
             </span>
           </td>
-          <td md-cell><a class="remove nomargin" ng-click="removeSubject(subject)">&times;</a></td>
+          <td md-cell>
+            <a ng-if="!subject.isAssessed" class="remove nomargin" ng-click="removeSubject(subject)">&times;</a>
+          </td>
         </tr>
       </tbody>
     </table>

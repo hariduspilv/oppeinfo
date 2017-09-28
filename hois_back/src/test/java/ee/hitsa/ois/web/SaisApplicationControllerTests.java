@@ -2,6 +2,7 @@ package ee.hitsa.ois.web;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,7 @@ import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.test.context.support.WithUserDetails;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.transaction.PlatformTransactionManager;
 import org.springframework.transaction.TransactionDefinition;
@@ -50,6 +52,7 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 @Transactional
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class SaisApplicationControllerTests {
 
     private static final String ENDPOINT = "/saisApplications";
@@ -424,6 +427,14 @@ public class SaisApplicationControllerTests {
         ResponseEntity<?> response = restTemplate.getForEntity(ENDPOINT + "/classifiers.csv", Void.class);
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+    }
+
+    @Test
+    public void importSais() {
+        String uri = UriComponentsBuilder.fromUriString(ENDPOINT + "/importSais").build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri, Collections.emptyMap(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
     private void delete(SaisAdmission saisAdmission) {

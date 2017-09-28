@@ -14,7 +14,7 @@ angular.module('hitsaOis')
       template:'<div class="md-body-1 hois-value">' +
       '<a ng-if="hrefValue" ng-href="{{hrefValue}}">{{value}}</a>' +
       '<span ng-if="!hrefValue">' +
-        '<div ng-if="value.split" ng-repeat="row in value.split(\'\n\')">{{row}}</div>' +
+        '<div ng-if="value.split" ng-repeat="row in value.split(\'\n\') track by $index">{{row}}</div>' +
         '<div ng-if="!value.split">{{value}}</div>' +
       '</span>' +
       '</div>',

@@ -29,7 +29,7 @@
             <hois-value value="currentLanguageNameField(practiceJournal.theme)"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <label>{{'practiceJournal.credits' | translate}}</label>
+            <label>{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
             <hois-value value="practiceJournal.credits"></hois-value>
           </md-input-container>
           <md-input-container flex>
@@ -44,7 +44,7 @@
             <hois-value value="currentLanguageNameField(practiceJournal.subject)"></hois-value>
           </md-input-container>
           <md-input-container flex>
-            <label>{{'practiceJournal.credits' | translate}}</label>
+            <label>{{practiceJournal.isHigher ? 'practiceJournal.creditsEAP' : 'practiceJournal.creditsEKAP' | translate}}</label>
             <hois-value value="practiceJournal.credits"></hois-value>
           </md-input-container>
           <md-input-container flex>

@@ -99,7 +99,6 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     private Application application;
     @NotNull(groups = Immat.class)
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(updatable = false)
     private Person person;
     @ManyToOne(fetch = FetchType.LAZY)
     private StudentHistory studentHistory;

@@ -89,7 +89,7 @@ public class Classifier extends BaseEntity implements Translatable {
             return false;
         }
 
-        return code.equals(EntityUtil.getCode((Classifier) obj));
+        return obj instanceof Classifier && code.equals(EntityUtil.getCode((Classifier) obj));
     }
 
     public boolean isValid() {

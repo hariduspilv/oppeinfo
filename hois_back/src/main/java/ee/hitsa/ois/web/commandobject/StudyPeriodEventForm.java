@@ -7,13 +7,18 @@ import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
+
 import java.time.LocalDateTime;
 
 @DateTimeRange(from = "start", thru = "end")
 public class StudyPeriodEventForm extends VersionedCommand {
+
     private AutocompleteResult studyPeriod;
     @NotEmpty
+    @Size(max = 1000)
     private String descriptionEt;
+    @Size(max = 1000)
     private String descriptionEn;
     @NotEmpty
     @ClassifierRestriction(MainClassCode.SYNDMUS)

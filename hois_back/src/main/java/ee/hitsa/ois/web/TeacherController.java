@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.domain.teacher.TeacherContinuingEducation;
 import ee.hitsa.ois.domain.teacher.TeacherMobility;
 import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
@@ -31,7 +32,7 @@ import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
-import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.commandobject.teacher.TeacherContinuingEducationFormWrapper;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherForm;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherMobilityFormWrapper;
 import ee.hitsa.ois.web.commandobject.teacher.TeacherQualificationFromWrapper;
@@ -64,7 +65,7 @@ public class TeacherController {
         }
         return teacherService.search(command, pageable);
     }
-    
+
     /**
      * Options for search form
      */
@@ -81,11 +82,6 @@ public class TeacherController {
     public TeacherDto create(@Valid @RequestBody TeacherForm teacherForm, HoisUserDetails user) {
         return teacherService.create(user, teacherForm);
     }
-    
-    @GetMapping("/unique")
-    public boolean isUnique(HoisUserDetails user, UniqueCommand command) {
-        return teacherService.isUnique(user.getSchoolId(), command);
-    }
 
     @PutMapping("/{id:\\d+}")
     public TeacherDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Teacher teacher, @Valid @RequestBody TeacherForm teacherForm) {
@@ -99,6 +95,12 @@ public class TeacherController {
         teacherService.delete(teacher);
     }
 
+    @PutMapping("/{id:\\d+}/continuingEducations")
+    public TeacherDto saveContinuingEducations(HoisUserDetails user, @WithEntity(value = "id") Teacher teacher, @Valid @RequestBody TeacherContinuingEducationFormWrapper teacherContinuingEducationForms) {
+        UserUtil.assertSameSchool(user, teacher.getSchool());
+        return teacherService.saveContinuingEducations(teacher, teacherContinuingEducationForms.getContinuingEducations());
+    }
+
     @PutMapping("/{id:\\d+}/qualifications")
     public TeacherDto saveQualifications(HoisUserDetails user, @WithEntity(value = "id") Teacher teacher, @Valid @RequestBody TeacherQualificationFromWrapper teacherQualificationFroms) {
         UserUtil.assertSameSchool(user, teacher.getSchool());
@@ -109,6 +111,13 @@ public class TeacherController {
     public TeacherDto saveMobilities(HoisUserDetails user, @WithEntity(value = "id") Teacher teacher, @Valid @RequestBody TeacherMobilityFormWrapper mobilityForms) {
         UserUtil.assertSameSchool(user, teacher.getSchool());
         return teacherService.saveMobilities(teacher, mobilityForms.getMobilities());
+    }
+
+    @DeleteMapping("/{teacherId:\\d+}/continuingEducations/{id:\\d+}")
+    public void deleteContinuingEducation(HoisUserDetails user, @WithEntity(value = "teacherId") Teacher teacher, @WithEntity(value = "id") TeacherContinuingEducation continuingEducation) {
+        UserUtil.assertSameSchool(user, teacher.getSchool());
+        TeacherUtil.assertContinuingEducationBelongsToTeacher(continuingEducation, teacher);
+        teacherService.delete(continuingEducation);
     }
 
     @DeleteMapping("/{teacherId:\\d+}/qualifications/{id:\\d+}")
@@ -132,9 +141,15 @@ public class TeacherController {
         teacherService.delete(teacherPositionEhis);
     }
 
-    @PostMapping("/ehisTeacherExport")
-    public List<EhisTeacherExportResultDto> ehisTeacherExport(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
+    @PostMapping("/exportToEhis/higher")
+    public List<EhisTeacherExportResultDto> exportToEhisHigher(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
-        return ehisTeacherExportService.exportToEhis(user.getSchoolId(), form);
+        return ehisTeacherExportService.exportToEhis(user.getSchoolId(), true, form);
+    }
+
+    @PostMapping("/exportToEhis/vocational")
+    public List<EhisTeacherExportResultDto> exportToEhisVocational(@Valid @RequestBody EhisTeacherExportForm form, HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return ehisTeacherExportService.exportToEhis(user.getSchoolId(), false, form);
     }
 }

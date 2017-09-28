@@ -12,7 +12,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           url: function() { return '/classifier/heads'; }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_P]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KLASSIFIKAATOR]
         }
       })
       .when('/classifier/:code', {

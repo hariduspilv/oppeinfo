@@ -2,21 +2,17 @@ package ee.hitsa.ois.web.commandobject.timetable;
 
 import java.time.DayOfWeek;
 
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
+
 public class TimetableEventForm {
-    private Long journal;
     private Long lessonTime;
     private String selectedDay;
     private Long timetable;
     private Long oldEventId;
+    
+    @ClassifierRestriction(MainClassCode.MAHT)
     private String capacityType;
-
-    public Long getJournal() {
-        return journal;
-    }
-
-    public void setJournal(Long journal) {
-        this.journal = journal;
-    }
 
     public Long getLessonTime() {
         return lessonTime;

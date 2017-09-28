@@ -24,6 +24,7 @@ public class DeclarationSubjectDto extends VersionedCommand {
     private Set<AutocompleteResult> mandatoryPrerequisiteSubjects;
     private Set<AutocompleteResult> recommendedPrerequisiteSubjects;
     private Boolean isDeclaredRepeatedly;
+    private Boolean isAssessed;
 
     public static DeclarationSubjectDto of(DeclarationSubject declarationSubject) {
         DeclarationSubjectDto dto = new DeclarationSubjectDto();
@@ -63,6 +64,15 @@ public class DeclarationSubjectDto extends VersionedCommand {
         dto.setRecommendedPrerequisiteSubjects(recommendedPrerequisiteSubjects);
         
         return dto;
+    }
+    
+    
+    public Boolean getIsAssessed() {
+        return isAssessed;
+    }
+
+    public void setIsAssessed(Boolean isAssessed) {
+        this.isAssessed = isAssessed;
     }
 
     public Boolean getIsDeclaredRepeatedly() {

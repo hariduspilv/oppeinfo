@@ -8,6 +8,7 @@ import javax.validation.constraints.DecimalMin;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.validation.ContractValidation;
 import ee.hitsa.ois.validation.DateRange;
@@ -34,25 +35,34 @@ public class ContractForm extends VersionedCommand {
     @NotNull
     private LocalDate endDate;
     @NotNull
+    @Size(max = 255)
     private String practicePlace;
     @NotNull
     private Long enterprise;
     @NotNull
+    @Size(max = 100)
     private String contactPersonName;
+    @Size(max = 100)
     private String contactPersonPhone;
     @NotNull
+    @Size(max = 100)
     private String contactPersonEmail;
     @NotNull
+    @Size(max = 100)
     private String supervisorName;
+    @Size(max = 100)
     private String supervisorPhone;
     @NotNull
+    @Size(max = 100)
     private String supervisorEmail;
     @NotNull
     private Long teacher;
+    @Size(max = 255)
     private String otherSupervisor;
     @NotNull
     private Long contractCoordinator;
     @NotNull
+    @Size(max = 255)
     private String practicePlan;
     @NotNull(groups = ContractValidation.Higher.class)
     private Long subject;
@@ -225,5 +235,4 @@ public class ContractForm extends VersionedCommand {
     public void setIsHigher(Boolean isHigher) {
         this.isHigher = isHigher;
     }
-
 }

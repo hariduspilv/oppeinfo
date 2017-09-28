@@ -51,10 +51,25 @@ public class LogsControllerTests {
     }
 
     @Test
-    public void ehisLogTeachers() {
+    public void ehisLogTeachersHigher() {
         String url = "/logs/ehis";
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("messageType", "laeOppejoud");
+        uriBuilder.queryParam("from", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("thru", "2017-01-01T00:00:00.000Z");
+        uriBuilder.queryParam("errors", Boolean.TRUE);
+        uriBuilder.queryParam("teacher", Long.valueOf(1));
+
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void ehisLogTeachersVocational() {
+        String url = "/logs/ehis";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        uriBuilder.queryParam("messageType", "laePedagoogid");
         uriBuilder.queryParam("from", "2017-01-01T00:00:00.000Z");
         uriBuilder.queryParam("thru", "2017-01-01T00:00:00.000Z");
         uriBuilder.queryParam("errors", Boolean.TRUE);

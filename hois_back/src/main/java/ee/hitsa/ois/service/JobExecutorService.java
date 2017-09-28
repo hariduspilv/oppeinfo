@@ -1,11 +1,7 @@
 package ee.hitsa.ois.service;
 
 import java.lang.invoke.MethodHandles;
-import java.time.LocalDateTime;
-import java.util.List;
 import java.util.function.Consumer;
-
-import javax.persistence.EntityManager;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,14 +10,11 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnExpression;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Job;
-import ee.hitsa.ois.enums.JobStatus;
 import ee.hitsa.ois.enums.JobType;
-import ee.hitsa.ois.repository.JobRepository;
 import ee.hitsa.ois.service.ehis.EhisDirectiveStudentService;
+import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.EnumUtil;
 
 /**
  * job execution service
@@ -35,13 +28,22 @@ public class JobExecutorService {
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
 
     @Autowired
+    private ContractService contractService;
+    @Autowired
     private DirectiveConfirmService directiveConfirmService;
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
     @Autowired
-    private EntityManager em;
+    private EkisService ekisService;
     @Autowired
-    private JobRepository jobRepository;
+    private JobService jobService;
+
+    @Scheduled(cron = "${hois.jobs.contract.cron}")
+    public void contractJob() {
+        handleJobs(job -> {
+            contractService.endContract(job);
+        }, JobType.JOB_PRAKTIKALEPING_KEHTETU);
+    }
 
     @Scheduled(cron = "${hois.jobs.directive.cron}")
     public void directiveJob() {
@@ -57,35 +59,26 @@ public class JobExecutorService {
         }, JobType.JOB_EHIS);
     }
 
+    @Scheduled(cron = "${hois.jobs.ekis.cron}")
+    public void ekisJob() {
+        handleJobs(job -> {
+            if(job.getDirective() != null) {
+                ekisService.registerDirective(job.getDirective());
+            } else if(job.getContract() != null) {
+                ekisService.registerPracticeContract(job.getContract());
+            }
+        }, JobType.JOB_EKIS);
+    }
+
     private void handleJobs(Consumer<Job> handler, JobType... types) {
-        for(Job job : findExecutableJobs(types)) {
+        for(Job job : jobService.findExecutableJobs(types)) {
             try {
                 handler.accept(job);
-                jobDone(job);
+                jobService.jobDone(job);
             } catch(Throwable t) {
-                jobFailed(job, t);
+                log.error("Error while executing job with id {} :", job.getId(), t);
+                jobService.jobFailed(job);
             }
         }
-    }
-
-    private List<Job> findExecutableJobs(JobType... types) {
-        List<String> typeNames = EnumUtil.toNameList(types);
-        return jobRepository.executableJobs(JobStatus.JOB_STATUS_VALMIS.name(), typeNames, LocalDateTime.now());
-    }
-
-    private void jobFailed(Job job, Throwable t) {
-        log.error("Error while executing job with id {} :", job.getId(), t);
-
-        setJobStatus(job, JobStatus.JOB_STATUS_VIGA);
-        jobRepository.save(job);
-    }
-
-    private void jobDone(Job job) {
-        setJobStatus(job, JobStatus.JOB_STATUS_TAIDETUD);
-        jobRepository.save(job);
-    }
-
-    private void setJobStatus(Job job, JobStatus status) {
-        job.setStatus(em.getReference(Classifier.class, status.name()));
     }
 }

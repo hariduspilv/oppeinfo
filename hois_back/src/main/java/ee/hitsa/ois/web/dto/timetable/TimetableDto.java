@@ -18,6 +18,7 @@ public class TimetableDto {
     private List<SubjectTeacherPairDto> pairs;
     private String status;
     private List<String> roomCodes;
+    private Boolean higher;
 
     public Long getId() {
         return id;
@@ -105,6 +106,14 @@ public class TimetableDto {
 
     public void setRoomCodes(List<String> roomCodes) {
         this.roomCodes = roomCodes;
+    }
+
+    public Boolean getHigher() {
+        return higher;
+    }
+
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
     }
 
 }

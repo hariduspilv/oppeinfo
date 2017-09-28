@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web;
 
-import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -24,15 +23,13 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.enums.DeclarationStatus;
-import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.DeclarationRepository;
 import ee.hitsa.ois.service.DeclarationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.ClassifierUtil;
-import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.DeclarationUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
 import ee.hitsa.ois.web.commandobject.DeclarationSubjectForm;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
@@ -51,17 +48,27 @@ public class DeclarationController {
 
     @GetMapping("/{id:\\d+}")
     public DeclarationDto get(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+        UserUtil.assertCanViewStudent(user, declaration.getStudent());
         DeclarationDto dto = DeclarationDto.of(declaration);
         declarationService.setAreSubjectsDeclaredRepeatedy(dto.getSubjects(), declaration.getId());
-        dto.setCanBeChanged(Boolean.valueOf(canChangeDeclaration(user, declaration)));
-        dto.setCanBeSetUnconfirmed(Boolean.valueOf(canUnconfirmDeclaration(user, declaration)));
-        dto.setCanBeSetConfirmed(Boolean.valueOf(canConfirmDeclaration(user, declaration)));
+        dto.setCanBeChanged(Boolean.valueOf(DeclarationUtil.canChangeDeclaration(user, declaration)));
+        dto.setCanBeSetUnconfirmed(Boolean.valueOf(DeclarationUtil.canUnconfirmDeclaration(user, declaration)));
+        dto.setCanBeSetConfirmed(Boolean.valueOf(DeclarationUtil.canConfirmDeclaration(user, declaration)));
+        setSubjectsAreAssessed(dto);
         return dto;
     }
 
+    private void setSubjectsAreAssessed(DeclarationDto dto) {
+        Long studentId = dto.getStudent().getId();
+        for(DeclarationSubjectDto subject : dto.getSubjects()) {
+            subject.setIsAssessed(declarationRepository.subjectAssessed(studentId, subject.getSubjectStudyPeriod(), subject.getId()));
+        }
+    }
+
     @GetMapping
-    public Page<DeclarationDto> search(DeclarationSearchCommand criteria, Pageable pageable) {
-        return declarationService.search(criteria, pageable);
+    public Page<DeclarationDto> search(HoisUserDetails user, DeclarationSearchCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return declarationService.search(user, criteria, pageable);
     }
 
     @GetMapping("/hasPrevious")
@@ -89,17 +96,20 @@ public class DeclarationController {
     }
 
     @GetMapping("/modules/{id:\\d+}")
-    public List<AutocompleteResult> getModules(@WithEntity("id") Declaration declaration) {
+    public List<AutocompleteResult> getModules(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+        UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
         return declarationService.getModules(declaration);
     }
 
     @GetMapping("/subjects/{id:\\d+}")
-    public List<DeclarationSubjectDto> getCurriculumSubjectOptions(@WithEntity("id") Declaration declaration) {
+    public List<DeclarationSubjectDto> getCurriculumSubjectOptions(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+        UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
         return declarationService.getCurriculumSubjectOptions(declaration);
     }
 
     @GetMapping("/subjects/extracurriculum/{id:\\d+}")
-    public List<DeclarationSubjectDto> getExtraCurriculumSubjectOptions(@WithEntity("id") Declaration declaration) {
+    public List<DeclarationSubjectDto> getExtraCurriculumSubjectOptions(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
+        UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
         return declarationService.getExtraCurriculumSubjectsOptions(declaration);
     }
 
@@ -126,17 +136,13 @@ public class DeclarationController {
 
     @PutMapping("/confirm/{id:\\d+}")
     public DeclarationDto confirm(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
-        UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
-        AssertionFailedException.throwIf(!canConfirmDeclaration(user, declaration),
-                "You cannot confirm declaration!");
+        DeclarationUtil.assertCanConfirm(user, declaration);
         return get(user, declarationService.confirm(user.getUsername(), declaration));
     }
 
     @PutMapping("/confirm/all")
     public Map<String, ?> confirmAll(HoisUserDetails user) {
-        AssertionFailedException.throwIf(!user.isSchoolAdmin(),
-                "Only school admin can confirm all declarations!");
-        
+        UserUtil.assertIsSchoolAdmin(user);
         Integer numberOfNewlyConfirmedDeclarations = declarationService.confirmAll(user);
         Map<String, Object> response = new HashMap<>();
         response.put("numberOfNewlyConfirmedDeclarations", numberOfNewlyConfirmedDeclarations);
@@ -145,65 +151,43 @@ public class DeclarationController {
 
     @PutMapping("/removeConfirm/{id:\\d+}")
     public DeclarationDto removeConfirmation(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
-        UserUtil.assertSameSchool(user, declaration.getStudent().getSchool());
-        AssertionFailedException.throwIf(!canUnconfirmDeclaration(user, declaration),
-                "You cannot set declaration unconfirmed!");
+        DeclarationUtil.assertCanUnconfirmDeclaration(user, declaration);
         return get(user, declarationService.removeConfirmation(declaration));
     }
 
     @PostMapping("/subject")
     public DeclarationSubjectDto addSubject(HoisUserDetails user, @Valid @RequestBody DeclarationSubjectForm form) {
 
-        Declaration d = declarationRepository.getOne(form.getDeclaration());
-        UserUtil.assertSameSchool(user, d.getStudent().getSchool());
-        AssertionFailedException.throwIf(!canChangeDeclaration(user, d),
-                "You cannot add subjects to declaration!");
+        Declaration declaration = declarationRepository.getOne(form.getDeclaration());
+        DeclarationUtil.assertCanChangeDeclaration(user, declaration);
 
         DeclarationSubjectDto dto = DeclarationSubjectDto.of(declarationService.addSubject(user, form));
         declarationService.setAreSubjectsDeclaredRepeatedy(new HashSet<>(Arrays.asList(dto)), dto.getDeclaration());
-
         return dto;
     }
 
     @DeleteMapping("/subject/{id:\\d+}")
     private void deleteSubject(HoisUserDetails user, @WithEntity("id") DeclarationSubject subject) {
-        UserUtil.assertSameSchool(user, subject.getDeclaration().getStudent().getSchool());
-        AssertionFailedException.throwIf(!canChangeDeclaration(user, subject.getDeclaration()),
-                "You cannot change declaration!");
+        DeclarationUtil.assertCanChangeDeclaration(user, subject.getDeclaration());
+        assertSubjectNotAssessed(subject);
         declarationService.deleteSubject(subject);
+    }
+
+    private void assertSubjectNotAssessed(DeclarationSubject subject) {
+        if(declarationService.subjectAssessed(subject)) {
+            throw new ValidationFailedException("declaration.error.subjectDelete");
+        }
     }
 
     @GetMapping("/students")
     public Page<AutocompleteResult> getStudentsWithoutDeclaration(UsersSearchCommand command, 
             Pageable pageable, HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
         return declarationService.getStudentsWithoutDeclaration(command, pageable, user.getSchoolId());
     }
 
     @GetMapping("/currentStudyPeriod")
     public AutocompleteResult getCurrentStudyPeriod(HoisUserDetails user) {
         return declarationService.getCurrentStudyPeriod(user.getSchoolId());
-    }
-
-    public static boolean canConfirmDeclaration(HoisUserDetails user, Declaration declaration) {
-        return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_S, declaration.getStatus()) &&
-                (user.isSchoolAdmin() || (UserUtil.isStudent(user, declaration.getStudent())
-                && StudentUtil.isStudying(declaration.getStudent())));
-    }
-
-    /**
-     * For now even confirmed declarations can be changed by school admin
-     */
-    public static boolean canChangeDeclaration(HoisUserDetails user, Declaration declaration) {
-        return user.isSchoolAdmin() || (UserUtil.isStudent(user, declaration.getStudent())
-                && StudentUtil.isStudying(declaration.getStudent())
-                && ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_S, declaration.getStatus()));
-    }
-
-    public static boolean canUnconfirmDeclaration(HoisUserDetails user, Declaration declaration) {
-        if(user.isStudent() && !UserUtil.isStudent(user, declaration.getStudent())) {
-            return false;
-        }
-        return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_K, declaration.getStatus()) &&
-                LocalDate.now().isBefore(declaration.getStudyPeriod().getEndDate());
     }
 }

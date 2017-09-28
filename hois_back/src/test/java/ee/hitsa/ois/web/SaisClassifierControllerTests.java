@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import java.util.Collections;
+
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
@@ -11,6 +13,7 @@ import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.boot.test.web.client.TestRestTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
@@ -19,6 +22,7 @@ import ee.hitsa.ois.enums.Role;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@ActiveProfiles("test")
 public class SaisClassifierControllerTests {
     
     @Autowired
@@ -52,4 +56,11 @@ public class SaisClassifierControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
 
+    @Test
+    public void saisImport() {
+        String uri = UriComponentsBuilder.fromUriString("/saisClassifier/saisImport").build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri, Collections.emptyMap(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

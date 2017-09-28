@@ -13,7 +13,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         url: function() { return '/directives/coordinators'; }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_DOKALLKIRI]
       }
     })
     .when('/directives', {
@@ -26,7 +26,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         url: function() { return '/directives'; }
       },
       data: {
-        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_KASKKIRI]
       }
     })
     .when('/directives/new', {

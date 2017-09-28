@@ -106,12 +106,11 @@ public class JournalService {
                 searchByModuleCriteria(command, root, query, cb, filters);
             }
 
+            if (user.isTeacher()) {
+                command.setTeacher(user.getTeacherId());
+            }
             if (command.getTeacher() != null) {
                 searchByTeacherCriteria(command, root, query, cb, filters);
-            }
-
-            if (user.isTeacher()) {
-                searchByTeacherPersonCriteria(user, root, query, cb, filters);
             }
 
             if (command.getJournal() != null) {
@@ -128,16 +127,6 @@ public class JournalService {
 
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         }, pageable).map(JournalSearchDto::of);
-    }
-
-    private static void searchByTeacherPersonCriteria(HoisUserDetails user, Root<Journal> root, CriteriaQuery<?> query,
-            CriteriaBuilder cb, List<Predicate> filters) {
-        Subquery<Long> journalTeachersQuery = query.subquery(Long.class);
-        Root<Journal> journalRoot = journalTeachersQuery.from(Journal.class);
-        Join<Object, Object> journalTeachersJoin = journalRoot.join("journalTeachers");
-        journalTeachersQuery.select(journalRoot.get("id")).where(cb.and(cb.equal(journalRoot.get("id"), root.get("id")),
-                cb.equal(journalTeachersJoin.get("teacher").get("person").get("id"), user.getPersonId())));
-        filters.add(cb.exists(journalTeachersQuery));
     }
 
     private static void searchByTeacherCriteria(JournalSearchCommand command, Root<Journal> root,

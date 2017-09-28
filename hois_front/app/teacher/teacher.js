@@ -1,17 +1,25 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
-  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
+angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$route', '$translate', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
+  function ($location, $route, $translate, $scope, dialogService, message, DataUtils, QueryUtils) {
 
   var id = $route.current.params.id;
   var baseUrl = '/teachers';
   var Endpoint = QueryUtils.endpoint(baseUrl);
+  var TeacherContinuingEducationsEndpoint = QueryUtils.endpoint('/teachers/' + id + '/continuingEducations');
   var TeacherQualificationsEndpoint = QueryUtils.endpoint('/teachers/' + id + '/qualifications');
   var TeacherMobilityEndpoint = QueryUtils.endpoint('/teachers/' + id + '/mobilities');
   var TeacherPositionEhisEndpoint = QueryUtils.endpoint('/teachers/' + id + '/ehisPositions');
   var EmailGeneratorEndpoint = QueryUtils.endpoint('/school/generateEmail', {post: {method: 'POST'}});
 
   $scope.occupations = QueryUtils.endpoint('/school/teacheroccupations/all').query();
+
+  function updateContinuingEducations(teacher) {
+    if (teacher.teacherContinuingEducations) {
+      $scope.teacherContinuingEducations = new TeacherContinuingEducationsEndpoint({continuingEducations: teacher.teacherContinuingEducations});
+      teacher.teacherContinuingEducations = undefined;
+    }
+  }
 
   function updateQualifications(teacher) {
     if (teacher.teacherQualifications) {
@@ -29,7 +37,25 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
     }
   }
 
+  function setIsVocationalOrIsHigher() {
+    $scope.vocationalHigher = '';
+    var array = [];
+    if($scope.teacher.isVocational) {
+      array.push('teacher.isVocational');
+    }
+    if($scope.teacher.isHigher) {
+      array.push('teacher.isHigher');
+    }
+    $translate(array).then(function (value) {
+      $scope.vocationalHigher = Object.keys(value).map(function (key) {
+        return value[key];
+      }).join('; ');
+    });
+  }
+
   function afterLoad() {
+    setIsVocationalOrIsHigher();
+
     if ($scope.teacher.person.idcode && $scope.teacher.person.idcode.length === 11) {
       $scope.teacher.person.sex = DataUtils.sexFromIdcode($scope.teacher.person.idcode);
     }
@@ -39,6 +65,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
     DataUtils.convertStringToDates($scope.teacher.teacherPositionEhis, ['contractStart', 'contractEnd']);
     $scope.isHigher = $scope.teacher.isHigher;
     DataUtils.convertStringToDates($scope.teacher.person, ['birthdate']);
+    updateContinuingEducations($scope.teacher);
     updateQualifications($scope.teacher);
     updateMobilities($scope.teacher);
     $scope.displaySendEhis = ($scope.teacher.teacherPositionEhis.filter(function (it) {
@@ -52,6 +79,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
     $scope.formState = {person: false, id: true};
     $scope.teacher.person.sex = DataUtils.sexFromIdcode($scope.teacher.person.idcode);
     $scope.teacher.person.birthdate = DataUtils.birthdayFromIdcode($scope.teacher.person.idcode);
+    $scope.teacherForm.idcode.$setValidity('teacherIdCode', true);
   };
 
   if (id) {
@@ -62,6 +90,11 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
 
   if (!angular.isArray($scope.teacher.teacherPositionEhis)) {
     $scope.teacher.teacherPositionEhis = [];
+  }
+
+  if (!$scope.teacher.teacherContinuingEducations || !angular.isArray($scope.continuingEducations)) {
+    $scope.teacher.teacherContinuingEducations = [];
+    updateContinuingEducations($scope.teacher);
   }
 
   if (!$scope.teacher.teacherQualifications || !angular.isArray($scope.qualifications)) {
@@ -79,6 +112,10 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
       isVocational: true,
       language: 'EHIS_OPETAJA_KEEL_E'
     });
+  };
+
+  $scope.newTeacherContinuingEducation = function () {
+    $scope.teacherContinuingEducations.continuingEducations.push({});
   };
 
   $scope.newTeacherQualification = function () {
@@ -124,6 +161,7 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
     $scope.teacher.person.sex = response.sex;
     $scope.teacher.email = response.schoolEmail || undefined;
 
+    $scope.teacherForm.idcode.$setValidity('teacherIdCode', response.teacherId === null);
     afterLoad();
     $scope.generateEmail();
   };
@@ -151,6 +189,32 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
     } else {
         message.error('main.messages.form-has-errors');
     }
+  };
+
+  $scope.updateContinuingEducations = function () {
+    $scope.continuingEducationsForm.$setSubmitted();
+    if ($scope.continuingEducationsForm.$valid) {
+      $scope.teacherContinuingEducations.$update().then(function (response) {
+        message.updateSuccess();
+        updateContinuingEducations(response);
+      });
+    }
+  };
+
+  $scope.deleteContinuingEducation = function (continuingEducation) {
+    dialogService.confirmDialog({prompt: 'teacher.continuingEducation.deleteConfirm'}, function () {
+      if (continuingEducation.id) {
+        continuingEducation = new TeacherContinuingEducationsEndpoint(continuingEducation);
+        continuingEducation.$delete().then(function () {
+          message.info('main.messages.delete.success');
+          $scope.teacherContinuingEducations.continuingEducations = $scope.teacherContinuingEducations.continuingEducations.filter(function (it) {
+            return it.id !== continuingEducation.id;
+          });
+        });
+      } else {
+        $scope.removeFromCollection($scope.teacherContinuingEducations, 'continuingEducations', continuingEducation);
+      }
+    });
   };
 
   $scope.updateQualifications = function () {
@@ -205,7 +269,6 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
     });
   };
 
-
   $scope.deleteEhisPosition = function (ehisPosition) {
     dialogService.confirmDialog({prompt: 'teacher.teacherPositionEhis.deleteConfirm'}, function () {
       if (ehisPosition.id) {
@@ -220,6 +283,11 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
         $scope.removeFromCollection($scope.teacher, 'teacherPositionEhis', ehisPosition);
       }
     });
+  };
+
+  $scope.displayEHISAndDeleteButtons = true;
+  $scope.changeDisplayEHISAndDeleteButtons = function (displayButtons) {
+    $scope.displayEHISAndDeleteButtons = displayButtons;
   };
 
   var generatedEmail;
@@ -259,7 +327,12 @@ angular.module('hitsaOis').controller('TeacherEditController', ['$location', '$r
 
   $scope.loadData();
 }]).controller('TeacherViewController', ['$scope', '$route', '$translate', 'QueryUtils', function ($scope, $route, $translate, QueryUtils) {
-  var id = $route.current.params.id;
+  $scope.auth = $route.current.locals.auth;
+  var auth = $route.current.locals.auth;
+
+  var id = (auth.isTeacher() ? auth.teacher : $route.current.params.id);
+
+  //var id = $route.current.params.id;
   $scope.teacherId = id;
   var Endpoint = QueryUtils.endpoint('/teachers');
 

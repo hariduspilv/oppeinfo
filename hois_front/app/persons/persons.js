@@ -5,7 +5,7 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
     var id = $route.current.params.id;
     var baseUrl = '/persons';
     var Endpoint = QueryUtils.endpoint(baseUrl);
-    $scope.showSchool = $route.current.locals.auth.isMainAdmin();
+    $scope.auth = $route.current.locals.auth;
     $scope.maxDate = new Date();
 
     function afterLoad() {
@@ -59,7 +59,7 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
     };
 
     $scope.personBack = function () {
-      if (($scope.users && $scope.users.length > 0) || $scope.showSchool || !$scope.person.id) {
+      if (($scope.users && $scope.users.length > 0) || $scope.auth.isMainAdmin() || !$scope.person.id) {
         if (!$scope.person.id) {
           $location.search('_noback', null);
           $location.path(baseUrl);
@@ -92,7 +92,7 @@ angular.module('hitsaOis').controller('PersonsEditController', ['$location', '$r
 ]).controller('PersonsViewController', ['$scope', '$route', 'PersonService','QueryUtils', function ($scope, $route, PersonService, QueryUtils) {
     var id = $route.current.params.id;
     var Endpoint = QueryUtils.endpoint('/persons');
-    $scope.showSchool = $route.current.locals.auth.isMainAdmin();
+    $scope.auth = $route.current.locals.auth;
 
     var afterLoad = function () {
       PersonService.usersAfterLoad($scope.person.users);

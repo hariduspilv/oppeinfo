@@ -9,7 +9,9 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       controller: 'StudyYearsListController',
       controllerAs: 'controller',
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
-      data: authorizedRoles
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPEPERIOOD]
+      }
     })
     .when('/school/studyYears/:code/new', {
       templateUrl: 'studyYear/study.year.edit.html',
@@ -226,6 +228,12 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
                 message.error(error);
               });
             }
+          }
+
+          // kalendri-sündmuse algus (kellaaeg) peab olema varajasem kui lõpp (kellaaeg)
+          if ($scope.studyPeriodEvent.start && $scope.studyPeriodEvent.end && $scope.studyPeriodEvent.start.getTime() > $scope.studyPeriodEvent.end.getTime()) {
+            errors = true;
+            message.error('studyYear.studyPeriod.error.startDateLaterThanEndDate');
           }
 
           if ($scope.dialogForm.$valid && !errors) {

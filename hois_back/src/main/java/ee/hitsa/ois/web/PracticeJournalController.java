@@ -28,7 +28,6 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.enums.JournalStatus;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.ContractService;
 import ee.hitsa.ois.service.PracticeJournalService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -57,8 +56,6 @@ public class PracticeJournalController {
     private PracticeJournalService practiceJournalService;
     @Autowired
     private ContractService contractService;
-    @Autowired
-    private TeacherRepository teacherRepository;
 
     @GetMapping
     public Page<PracticeJournalSearchDto> search(HoisUserDetails user, PracticeJournalSearchCommand command,
@@ -66,8 +63,7 @@ public class PracticeJournalController {
         if (user.isStudent()) {
             command.setStudent(user.getStudentId());
         } else if (user.isTeacher()) {
-            command.setTeacher(EntityUtil.getNullableId(
-                    teacherRepository.findByPersonIdAndSchoolId(user.getPersonId(), user.getSchoolId())));
+            command.setTeacher(user.getTeacherId());
         }
         return practiceJournalService.search(user, command, pageable);
     }
@@ -82,7 +78,7 @@ public class PracticeJournalController {
     public PracticeJournalDto create(HoisUserDetails user,
             @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return get(user, practiceJournalService.create(user, practiceJournalForm));
+        return get(user, practiceJournalService.create(user.getSchoolId(), practiceJournalForm));
     }
 
     @PutMapping("/{id:\\d+}")

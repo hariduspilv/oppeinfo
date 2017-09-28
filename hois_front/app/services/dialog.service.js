@@ -42,7 +42,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils',
               submitted = true;
               $mdDialog.hide();
             } else {
-              console.log('dialog form invalid: ', $scope.dialogForm.$error);
+              // console.log('dialog form invalid: ', $scope.dialogForm.$error);
             }
           };
 

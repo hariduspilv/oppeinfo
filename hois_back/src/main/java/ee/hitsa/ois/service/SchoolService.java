@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -45,11 +46,24 @@ public class SchoolService {
     @Autowired
     private SchoolRepository schoolRepository;
 
-    public School create(SchoolForm schoolForm) {
+    public SchoolDto getWithLogo(Long schoolId) {
+        return EntityUtil.withEntity(schoolId, id -> em.find(School.class, id), school -> SchoolDto.ofWithLogo(school));
+    }
+
+    public byte[] getLogo(Long schoolId) {
+        List<OisFile> logo = em.createQuery("select s.logo from School s where s.id=?1",OisFile.class)
+                .setParameter(1, schoolId).getResultList();
+        if (logo.isEmpty()) {
+            throw new EntityNotFoundException();
+        }
+        return logo.get(0).getFdata();
+    }
+
+    public SchoolDto create(SchoolForm schoolForm) {
         return save(new School(), schoolForm);
     }
 
-    public School save(School school, SchoolForm schoolForm) {
+    public SchoolDto save(School school, SchoolForm schoolForm) {
         if(Boolean.TRUE.equals(schoolForm.getGenerateUserEmail())  && (schoolForm.getEmailDomain() == null || schoolForm.getEmailDomain().isEmpty())) {
             throw new ValidationFailedException("school.missing.emailDomain");
         }
@@ -58,7 +72,7 @@ public class SchoolService {
         OisFile logo = school.getLogo();
         if(Boolean.TRUE.equals(schoolForm.getDeleteCurrentLogo())) {
             if(logo != null) {
-                EntityUtil.deleteEntity(logo, em);
+                em.remove(logo);
                 school.setLogo(null);
             }
         } else if(schoolForm.getLogo() != null) {
@@ -75,7 +89,7 @@ public class SchoolService {
         }
         // XXX data duplication
         school.setNameEt(school.getEhisSchool().getNameEt());
-        return EntityUtil.save(school, em);
+        return SchoolDto.ofWithLogo(EntityUtil.save(school, em));
     }
 
     public Page<SchoolDto> search(SchoolSearchCommand searchCommand, Pageable pageable) {

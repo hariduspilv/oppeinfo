@@ -19,9 +19,6 @@ public class StudentGroupSearchCommand {
     private LocalDate validFrom;
     private LocalDate validThru;
 
-    // for MessageController.getStudentGroups
-    private Long teacherPerson;
-
     public List<Long> getTeachers() {
         return teachers;
     }
@@ -92,13 +89,5 @@ public class StudentGroupSearchCommand {
 
     public void setValidThru(LocalDate validThru) {
         this.validThru = validThru;
-    }
-
-    public Long getTeacherPerson() {
-        return teacherPerson;
-    }
-
-    public void setTeacherPerson(Long teacherPerson) {
-        this.teacherPerson = teacherPerson;
     }
 }

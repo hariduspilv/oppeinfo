@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -35,7 +34,6 @@ import ee.hitsa.ois.message.StudentRepresentativeApplicationCreated;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationRejectedMessage;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.StudentRepresentativeApplicationRepository;
 import ee.hitsa.ois.repository.StudentRepresentativeRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -65,8 +63,6 @@ public class StudentRepresentativeService {
     private EntityManager em;
     @Autowired
     private PersonRepository personRepository;
-    @Autowired
-    private StudentRepository studentRepository;
     @Autowired
     private StudentRepresentativeRepository studentRepresentativeRepository;
     @Autowired
@@ -115,7 +111,9 @@ public class StudentRepresentativeService {
             representative.setPerson(p);
         }
 
-        return EntityUtil.save(representative, em);
+        representative = EntityUtil.save(representative, em);
+        createUser(representative);
+        return representative;
     }
 
     public void delete(StudentRepresentative representative) {
@@ -152,22 +150,13 @@ public class StudentRepresentativeService {
 
     public void acceptApplication(StudentRepresentativeApplication application) {
         assertApplicationIsRequested(application);
-
-        if(StudentUtil.isAdultAndDoNotNeedRepresentative(application.getStudent())) {
-            throw new ValidationFailedException("representative.application.adult");
-        }
+        assertRepresentativeApplicationAllowed(application.getStudent());
 
         // create representative for student
         StudentRepresentative representative = EntityUtil.bindToEntity(application, new StudentRepresentative());
         representative.setIsStudentVisible(Boolean.TRUE);
-        representative = studentRepresentativeRepository.save(representative);
-        Person person = representative.getPerson();
-        School school = representative.getStudent().getSchool();
-        Long schoolId = EntityUtil.getId(school);
-        // if there is no user for given person with role of parent/representative for school of student, create it
-        if(!person.getUsers().stream().anyMatch(u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && ClassifierUtil.equals(Role.ROLL_L, u.getRole()))) {
-            userService.createUser(person, Role.ROLL_L, school);
-        }
+        representative = EntityUtil.save(representative, em);
+        createUser(representative);
         setApplicationStatus(application, AVALDUS_ESINDAJA_STAATUS_K);
         EntityUtil.save(application, em);
 
@@ -189,22 +178,16 @@ public class StudentRepresentativeService {
 
     public void createApplication(HoisUserDetails user, StudentRepresentativeApplicationForm form) {
         // find person submitting application
-        Person person = personRepository.findByUserId(user.getUserId());
-        if(person == null) {
-            // TODO create new person with data from user (idcode, lastname, firstname?)
-            throw new EntityNotFoundException();
-        }
+        // FIXME should create new person with data from user (idcode, lastname, firstname?)
+        Person person = EntityUtil.withEntity(user.getUserId(), id -> personRepository.findByUserId(id), p -> p);
 
         // find all students with given studentIdcode
-        List<Student> students = studentRepository.findAll((root, query, cb) -> {
-            // FIXME status of student?
-            return cb.equal(root.get("person").get("idcode"), form.getStudentIdcode());
-        });
-        AssertionFailedException.throwIf(students.isEmpty(), "Student representative application: student not found");
+        // FIXME status of student?
+        List<Student> students = em.createQuery("select s from Student s where s.person.idcode = ?1", Student.class)
+                .setParameter(1, form.getStudentIdcode()).getResultList();
 
-        if(StudentUtil.isAdultAndDoNotNeedRepresentative(students.get(0))) {
-            throw new ValidationFailedException("representative.application.adult");
-        }
+        AssertionFailedException.throwIf(students.isEmpty(), "Student representative application: student not found");
+        assertRepresentativeApplicationAllowed(students.get(0));
 
         // update person data
         person.setPhone(form.getPhone());
@@ -236,6 +219,16 @@ public class StudentRepresentativeService {
         }
     }
 
+    private void createUser(StudentRepresentative representative) {
+        // if there is no user for given person with role of parent/representative for school of student, create it
+        Person person = representative.getPerson();
+        Long schoolId = EntityUtil.getId(representative.getStudent().getSchool());
+
+        if(!StreamUtil.nullSafeSet(person.getUsers()).stream().anyMatch(u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && ClassifierUtil.equals(Role.ROLL_L, u.getRole()))) {
+            userService.createUser(representative);
+        }
+    }
+
     private void representativeCreatedMessage(StudentRepresentative representative) {
         // send message to new representative
         Student student = representative.getStudent();
@@ -249,5 +242,11 @@ public class StudentRepresentativeService {
 
     private static void assertApplicationIsRequested(StudentRepresentativeApplication application) {
         AssertionFailedException.throwIf(!ClassifierUtil.equals(AVALDUS_ESINDAJA_STAATUS_E, application.getStatus()), "Invalid student representative application status");
+    }
+
+    private static void assertRepresentativeApplicationAllowed(Student student) {
+        if(StudentUtil.isAdultAndDoNotNeedRepresentative(student)) {
+            throw new ValidationFailedException("student.representative.application.adult");
+        }
     }
 }

@@ -1,37 +1,44 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div>
     <form name="timetableForm" novalidate class="nomargin">
-    
-        <md-input-container layout="row" flex="50" flex-sm="100" flex-xs="100">
-            <label>{{'timetable.management.studyYear' | translate}}</label>
-            <hois-select required ng-model="timetable.studyYear" values="formState.studyYears"></hois-select>
+
+      <md-input-container layout="row" flex="50" flex-sm="100" flex-xs="100">
+        <label>{{'timetable.management.studyYear' | translate}}</label>
+        <hois-select required ng-model="timetable.studyYear" values="formState.studyYears" ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'"></hois-select>
+      </md-input-container>
+
+      <md-input-container layout="row" flex="50" flex-sm="100" flex-xs="100">
+        <label>{{'timetable.management.studyPeriod' | translate}}</label>
+        <hois-select required ng-model="timetable.studyPeriod" values="formState.studyPeriods" ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'"></hois-select>
+      </md-input-container>
+
+      <div layout="row">
+        <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
+          <md-datepicker required ng-model="timetable.startDate" md-min-date="studyPeriodStartDate"
+                         md-max-date="timetable.endDate ? timetable.endDate : studyPeriodEndDate"
+                         md-placeholder="{{'main.from' | translate}}"
+                         md-date-filter="blockedFromDatesPredicate"
+                         ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'"></md-datepicker>
         </md-input-container>
 
-        <md-input-container layout="row" flex="50" flex-sm="100" flex-xs="100">
-            <label>{{'timetable.management.studyPeriod' | translate}}</label>
-            <hois-select required ng-model="timetable.studyPeriod" values="formState.studyPeriods"></hois-select>
+        <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
+          <md-datepicker required ng-model="timetable.endDate"
+                         md-min-date="timetable.startDate ? timetable.startDate : studyPeriodStartDate"
+                         md-max-date="studyPeriodEndDate" md-placeholder="{{'main.thru' | translate}}"
+                         md-date-filter="blockedThruDatesPredicate"
+                         ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'"></md-datepicker>
         </md-input-container>
+      </div>
 
-        <div  layout="row">
-          <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
-            <md-datepicker required ng-model="timetable.startDate" md-min-date="studyPeriodStartDate" 
-              md-max-date="timetable.endDate ? timetable.endDate : studyPeriodEndDate" 
-              md-placeholder="{{'main.from' | translate}}" md-date-filter="blockedFromDatesPredicate"></md-datepicker>
-          </md-input-container>
-          
-          <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
-            <md-datepicker required ng-model="timetable.endDate" md-min-date="timetable.startDate ? timetable.startDate : studyPeriodStartDate" 
-              md-max-date="studyPeriodEndDate" md-placeholder="{{'main.thru' | translate}}" md-date-filter="blockedThruDatesPredicate"></md-datepicker>
-          </md-input-container>
-        </div>
-
-        <md-input-container layout="row" flex="50" flex-sm="100" flex-xs="100">
-            <label>{{'timetable.management.type' | translate}}</label>
-            <hois-classifier-select ng-model="timetable.code" model-value-attr="code" main-classifier-code="TUNNIPLAAN_LIIK" disabled></hois-classifier-select>
-        </md-input-container>
+      <md-input-container layout="row" flex="50" flex-sm="100" flex-xs="100">
+        <label>{{'timetable.management.type' | translate}}</label>
+        <hois-classifier-select ng-model="timetable.code" model-value-attr="code" main-classifier-code="TUNNIPLAAN_LIIK"
+                                disabled></hois-classifier-select>
+      </md-input-container>
     </form>
 
     <md-button ng-click="save()" class="md-raised md-primary">{{'main.button.save' | translate}}</md-button>
-    <md-button ng-href="#/timetable/timetableManagement" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    <md-button ng-href="#/timetable/timetableManagement" class="md-raised">{{'main.button.back' | translate}}
+    </md-button>
   </div>
 </div>

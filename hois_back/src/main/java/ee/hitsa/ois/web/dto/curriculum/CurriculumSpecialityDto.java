@@ -6,7 +6,6 @@ import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
-import javax.xml.bind.annotation.XmlTransient;
 
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -45,7 +44,7 @@ public class CurriculumSpecialityDto extends VersionedCommand {
         dto.setAddedToVersion(speciality.isAddedToVersion());
         return dto;
     }
-    @XmlTransient
+    
     public Long getReferenceNumber() {
         return referenceNumber;
     }
@@ -53,7 +52,7 @@ public class CurriculumSpecialityDto extends VersionedCommand {
     public void setReferenceNumber(Long referenceNumber) {
         this.referenceNumber = referenceNumber;
     }
-    @XmlTransient
+    
     public boolean isAddedToVersion() {
         return addedToVersion;
     }

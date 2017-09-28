@@ -13,11 +13,15 @@ public class CurriculumUtil {
         return isHigher(curriculum.getOrigStudyLevel());
     }
 
+    public static boolean isHigher(Classifier studyLevel) {
+        return isHigher(studyLevel.getValue());
+    }
+
     /**
      *  Magic value here is 500(also contains weird values such as 7R)
      */
-    public static boolean isHigher(Classifier studyLevel) {
-        return studyLevel.getValue().charAt(0) >= SCHOOL_STUDY_LEVEL;
+    public static boolean isHigher(String studyLevelValue) {
+        return studyLevelValue != null && studyLevelValue.length() >  0 && studyLevelValue.charAt(0) >= SCHOOL_STUDY_LEVEL;
     }
 
     public static boolean isVocational(Curriculum curriculum) {

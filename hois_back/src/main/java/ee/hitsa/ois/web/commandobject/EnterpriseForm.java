@@ -1,15 +1,22 @@
 package ee.hitsa.ois.web.commandobject;
 
+import javax.validation.constraints.Size;
+
 import ee.hitsa.ois.validation.NotEmpty;
 
-public class EnterpriseForm  extends VersionedCommand {
+public class EnterpriseForm extends VersionedCommand {
 
     @NotEmpty
+    @Size(max = 100)
     private String name;
     @NotEmpty
+    @Size(max = 20)
     private String regCode;
+    @Size(max = 100)
     private String contactPersonName;
+    @Size(max = 100)
     private String contactPersonPhone;
+    @Size(max = 100)
     private String contactPersonEmail;
 
     public String getName() {
@@ -51,5 +58,4 @@ public class EnterpriseForm  extends VersionedCommand {
     public void setContactPersonEmail(String contactPersonEmail) {
         this.contactPersonEmail = contactPersonEmail;
     }
-
 }

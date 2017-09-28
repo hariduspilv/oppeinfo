@@ -55,7 +55,6 @@ import ee.hitsa.ois.domain.BaseEntity;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
-import ee.hois.xroad.ehis.service.EhisXroadService;
 
 @EntityScan(basePackageClasses = { BaseEntity.class, Jsr310JpaConverters.class })
 @EnableScheduling
@@ -102,11 +101,6 @@ public class Application {
 
     @Bean CustomRequestMappingHandler requestMappingHandler() {
         return new CustomRequestMappingHandler();
-    }
-
-    @Bean
-    public EhisXroadService ehisXroadService() {
-        return new EhisXroadService();
     }
 
     @Bean
@@ -169,7 +163,8 @@ public class Application {
         };
     }
 
-    @Bean @Autowired
+    @Bean
+    @Autowired
     public DomainClassConverter<FormattingConversionService> domainClassConverter(FormattingConversionService conversionService) {
         return new DomainClassConverter<>(conversionService);
     }

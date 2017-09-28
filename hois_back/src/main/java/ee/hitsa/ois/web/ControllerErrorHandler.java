@@ -10,7 +10,9 @@ import java.util.Map;
 
 import javax.persistence.EntityNotFoundException;
 import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
 
+import org.hibernate.exception.ConstraintViolationException;
 import org.postgresql.util.PSQLException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,6 +50,10 @@ public class ControllerErrorHandler {
         HttpStatus status = null;
         ErrorInfo info = null;
 
+        if (e instanceof PersistenceException && e.getCause() instanceof Exception) {
+            e = (Exception)e.getCause();
+        }
+
         if (e instanceof EntityNotFoundException) {
             status = HttpStatus.NOT_FOUND;
         } else if (e instanceof IllegalArgumentException) {
@@ -72,11 +78,11 @@ public class ControllerErrorHandler {
             info = ErrorInfo.of(errorCode != null ? errorCode : "main.messages.record.referenced", (String)null);
             // FIXME better status code?
             status = HttpStatus.PRECONDITION_FAILED;
-        } else if (e instanceof DataIntegrityViolationException) {
+        } else if (e instanceof DataIntegrityViolationException || e instanceof ConstraintViolationException) {
             // if real cause is unique violation, report as "validation failed"
             // otherwise it's internal error - invalid data should not pass
             // validation
-            Throwable cause = ((DataIntegrityViolationException) e).getRootCause();
+            Throwable cause = e instanceof DataIntegrityViolationException ? ((DataIntegrityViolationException) e).getRootCause() : e.getCause();
             if (cause instanceof SQLException
                     && POSTGRESQL_UNIQUE_VIOLATION.equals(((SQLException) cause).getSQLState())) {
                 status = HttpStatus.PRECONDITION_FAILED;

@@ -10,9 +10,8 @@
       </div>
     </md-toolbar>
     <md-dialog-content>
-      <span flex></span>
-      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
-        <div layout="column">
+      <div class="ois-form-layout-padding nomargin" layout="column" ng-cloak>
+            <div flex>
           <fieldset tabindex="1">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
 				<div layout="column">
@@ -43,7 +42,8 @@
                     <input ng-model="occupationsValid" type="text" required>
                 </md-input-container>
                 <p ng-show="dialogForm.$submitted && !occupationsValid" class="invalid">{{'curriculum.error.moduleOccupations' | translate}}</p>
-			</fieldset>
+      </fieldset>
+      </div>
 			<div>&nbsp;</div>
 			<div layout="row" flex>
 			  <md-input-container flex="45">
@@ -83,8 +83,8 @@
             <label>{{'module.objectivesEn' | translate}}</label>
             <textarea ng-model="module.objectivesEn" md-maxlength="20000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
           </md-input-container>
-
-         <fieldset tabindex="1">
+          <div flex>
+         <fieldset tabindex="4">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}} *</legend>
 			<input style="display:none" type="number" readonly name="outcomesLength" ng-model="module.outcomes.length" min="1"  />
 			<div class="invalid" ng-if="dialogForm.$submitted" ng-messages="dialogForm.outcomesLength.$error">
@@ -93,11 +93,11 @@
 			<div layout="row" flex>
         <md-input-container flex="45">
           <label>{{'studyOutcome.nameEt' | translate}} *</label>
-          <textarea ng-model="outcomeEt" md-maxlength="20000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
+          <textarea ng-model="outcomeEt" md-maxlength="1000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
         </md-input-container>
         <md-input-container flex="40" flex-offset="5">
           <label>{{'studyOutcome.nameEn' | translate}}</label>
-          <textarea ng-model="outcomeEn" md-maxlength="20000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
+          <textarea ng-model="outcomeEn" md-maxlength="1000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
         </md-input-container>
         <md-button class="md-primary" ng-click="addOutcome()" ng-if="!formState.readOnly && !isEditingOutcome">{{'main.button.add' | translate}}</md-button>
         <md-button class="md-primary" ng-click="saveOutcome()" ng-if="!formState.readOnly && isEditingOutcome">{{'main.button.change' | translate}}</md-button>
@@ -106,15 +106,15 @@
         <div ng-repeat="item in module.outcomes track by $index" class="occupation-row align-center" layout="row" flex>
           <div flex="45">
             <a ng-if="!formState.readOnly" ng-click="editOutcome(item)">
-              <pre>{{item.outcomeEt}}</pre>
+              <pre class="moduleOutcomes">{{item.outcomeEt}}</pre>
             </a>
-            <pre ng-if="formState.readOnly">{{item.outcomeEt}}</pre>
+            <p class="moduleOutcomes" ng-if="formState.readOnly">{{item.outcomeEt}}</p>
           </div>
           <div flex="40" flex-offset="5">
             <a ng-if="!formState.readOnly" ng-click="editOutcome(item)">
-              <pre>{{item.outcomeEn}}</pre>
+              <p class="moduleOutcomes">{{item.outcomeEn}}</p>
             </a>
-            <pre ng-if="formState.readOnly">{{item.outcomeEn}}</pre>
+            <p class="moduleOutcomes" ng-if="formState.readOnly">{{item.outcomeEn}}</p>
           </div>
           <div>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</div>
           <div>
@@ -131,7 +131,9 @@
         </div>
       </div>
 
-		</fieldset>
+    </fieldset>
+    </div>
+    <div>&nbsp;</div>
           <md-input-container flex>
             <label>{{'module.competencesAquired' | translate}}</label>
             <md-select multiple="true" ng-model="module.competences" ng-disabled="module.module.code !== 'KUTSEMOODUL_P' || formState.readOnly || competences.length === 0">
@@ -144,7 +146,6 @@
             <md-checkbox ng-model="module.practice" ng-disabled="module.module.code === 'KUTSEMOODUL_L' || formState.readOnly">{{'module.practice' | translate}}</md-checkbox>
           </md-input-container>
         </div>
-      </div>
     </md-dialog-content>
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">
@@ -160,6 +161,11 @@
     }
     .link-disabled {
       color: #d7dde5;
+    }
+    .moduleOutcomes {
+      white-space: pre-wrap;
+      overflow-y: scroll;
+      max-height: 100px;
     }
   </style>
 </md-dialog>

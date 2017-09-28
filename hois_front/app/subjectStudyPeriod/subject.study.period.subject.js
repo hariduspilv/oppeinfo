@@ -34,20 +34,35 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectSearchController
         }
     );
 
-}]).controller('SubjectStudyPeriodSubjectEditController', ['$scope','QueryUtils', 'ArrayUtils', '$route', 'message', 'Classifier',  'SspCapacities', function ($scope, QueryUtils, ArrayUtils, $route, message, Classifier, SspCapacities) {
+}]).controller('SubjectStudyPeriodSubjectEditController', ['$scope','QueryUtils', 'ArrayUtils', '$route', 'message', 'Classifier',  'SspCapacities', 'DataUtils', function ($scope, QueryUtils, ArrayUtils, $route, message, Classifier, SspCapacities, DataUtils) {
 
-    var studyPeriodId = parseInt($route.current.params.studyPeriodId);
+    var studyPeriodId = $route.current.params.studyPeriodId ? parseInt($route.current.params.studyPeriodId) : null;
     var subject = $route.current.params.subjectId ? parseInt($route.current.params.subjectId) : null;
-    $scope.isNew = subject === null;
+    $scope.isNew = subject === null && studyPeriodId === null;
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/subjects/container');
+    $scope.record = {};
 
     Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
         $scope.capacityTypes = response;
     });
 
-    QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId}).$promise.then(function(response) {
+    function setCurrentStudyPeriod() {
+      if(!$scope.record.studyPeriod) {
+        $scope.record.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
+        studyPeriodId = $scope.record.studyPeriod;
+      }
+    }
+
+    if(studyPeriodId) {
+      QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId}).$promise.then(function(response) {
         $scope.studyPeriod = response;
-    });
+      });
+    } else {
+      QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
+        $scope.studyPeriods = response;
+        setCurrentStudyPeriod();
+      });
+    }
 
     if(subject) {
         $scope.record = Endpoint.search({studyPeriod: studyPeriodId, subject: subject, subjectStudyPeriodDtos: []});
@@ -57,12 +72,17 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectSearchController
         QueryUtils.endpoint('/subjectStudyPeriods/subject/' + subject).get(function(result) {
             $scope.subject = result;
         });
-    } else {
-        $scope.record = new Endpoint({studyPeriod: studyPeriodId, subjectStudyPeriodDtos: []});
-        QueryUtils.endpoint('/subjectStudyPeriods/subjects/list/limited/' + studyPeriodId).query(function(result) {
-            $scope.subjects = result;
-        });
     }
+
+    function loadSubjects() {
+      if($scope.record.studyPeriod) {
+        QueryUtils.endpoint('/subjectStudyPeriods/subjects/list/limited/' + $scope.record.studyPeriod).query(function(result) {
+          $scope.subjects = result;
+        });
+      }
+    }
+
+    $scope.$watch('record.studyPeriod', loadSubjects);
 
     $scope.save = function() {
         $scope.subjectStudyPeriodSubjectEditForm.$setSubmitted();
@@ -70,7 +90,6 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectSearchController
             message.error('subjectStudyPeriod.error.noDataForSaving');
             return;
         }
-        $scope.record.studyPeriod = studyPeriodId;
         $scope.capacitiesUtil.filterEmptyCapacities();
         $scope.record.$put().then(function(response){
             message.updateSuccess();

@@ -43,6 +43,36 @@
               <hois-value value="qualification.schoolOther"></hois-value>
             </md-input-container>
           </div>
+          <span ng-if="teacher.isVocational">
+              <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'teacher.qualification.diplomaNr' | translate}}</label>
+                  <hois-value value="qualification.diplomaNr"></hois-value>
+                </md-input-container>
+                <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'teacher.qualification.studyLevel' | translate}}</label>
+                  <hois-classifier-value ng-model="qualification.studyLevel" main-classifier-code="EHIS_EDUCATION_LEVEL"></hois-classifier-value>
+                </md-input-container>
+                <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'teacher.qualification.endDate' | translate}}</label>
+                  <hois-value value="qualification.endDate | hoisDate"></hois-value>
+                </md-input-container>
+              </div>
+              <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'teacher.qualification.specialty' | translate}}</label>
+                  <hois-value value="qualification.specialty"></hois-value>
+                </md-input-container>
+                <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'teacher.qualification.language' | translate}}</label>
+                  <hois-classifier-value ng-model="qualification.language" main-classifier-code="EHIS_OPETAJA_KEEL"></hois-classifier-value>
+                </md-input-container>
+                <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                  <label>{{'teacher.qualification.addInfo' | translate}}</label>
+                  <hois-value value="qualification.addInfo"></hois-value>
+                </md-input-container>
+              </div>
+          </span>
         </div>
       </hois-collapsable>
     </div>

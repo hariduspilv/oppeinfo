@@ -50,7 +50,7 @@ public class BdocService {
     private Configuration configuration;
 
     @PostConstruct
-    public void initialize() {
+    public void postConstruct() {
         if (Boolean.TRUE.equals(isTestMode)) {
             configuration = new Configuration(Configuration.Mode.TEST);
             configuration.setTslLocation("https://open-eid.github.io/test-TL/tl-mp-test-EE.xml");

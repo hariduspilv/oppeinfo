@@ -5,8 +5,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 
-import org.apache.commons.collections.CollectionUtils;
-
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModuleSubject;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
@@ -61,7 +59,7 @@ public class StudentHigherSubjectResultDto {
     }
 
     public void calculateIsOk() {
-        if(!CollectionUtils.isEmpty(grades)) {
+        if(grades != null && !grades.isEmpty()) {
             Collections.sort(grades, Comparator.comparing(StudentHigherSubjectResultGradeDto::getGradeDate));
             lastGrade = calculateLastGrade();
             isOk = Boolean.valueOf(lastGrade.getGrade() != null && HigherAssessment.isPositive(lastGrade.getGrade()));

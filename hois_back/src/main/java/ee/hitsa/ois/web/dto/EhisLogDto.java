@@ -12,7 +12,8 @@ public class EhisLogDto {
     private final String insertedBy;
     private final Boolean error;
     private final String logTxt;
-    private final AutocompleteResult directive;
+    private AutocompleteResult directive;
+    private AutocompleteResult teacher;
 
     public EhisLogDto(Long id, String wsName, LocalDateTime inserted, String insertedBy, Boolean error, String logTxt, AutocompleteResult directive) {
         this.id = id;
@@ -66,5 +67,17 @@ public class EhisLogDto {
 
     public AutocompleteResult getDirective() {
         return directive;
+    }
+
+    public void setDirective(AutocompleteResult directive) {
+        this.directive = directive;
+    }
+
+    public AutocompleteResult getTeacher() {
+        return teacher;
+    }
+
+    public void setTeacher(AutocompleteResult teacher) {
+        this.teacher = teacher;
     }
 }

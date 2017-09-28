@@ -192,7 +192,7 @@ public class StudentService {
     }
 
     public Page<StudentApplicationDto> applications(Long studentId, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from application a").sort(pageable);
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from application a join classifier type on type.code = a.type_code").sort(pageable);
 
         qb.requiredCriteria("a.student_id = :studentId", "studentId", studentId);
         return JpaQueryUtil.pagingResult(qb, "a.id, a.type_code, a.inserted, a.status_code, a.changed, a.submitted, a.reject_reason", em, pageable).map(r -> {

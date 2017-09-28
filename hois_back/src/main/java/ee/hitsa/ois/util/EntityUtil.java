@@ -16,7 +16,6 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.persistence.EntityManager;
@@ -212,7 +211,8 @@ public abstract class EntityUtil {
     }
 
     /**
-     * child collection binding when only id is required to set (typically classifier reference).
+     * Child collection binding with create and delete operations.
+     * Used when only id is required to set (for example classifier reference).
      *
      * @param storedValues
      * @param idExtractor
@@ -235,7 +235,8 @@ public abstract class EntityUtil {
     }
 
     /**
-     * child collection binding when you need to extract id from object and also have other parameters to set (typically holder object with multiple parameters).
+     * Child collection binding with create and delete operations.
+     * Used when you need to extract id from object and also have other property to set (typically holder object with multiple properties).
      *
      * @param storedValues
      * @param idExtractor
@@ -379,22 +380,6 @@ public abstract class EntityUtil {
             throw new EntityNotFoundException();
         }
         return function.apply(entity);
-    }
-
-    /**
-     * Apply supplied consumer to loaded entity.
-     *
-     * @param id entity id
-     * @param loader entity loader
-     * @param consumer
-     * @throws EntityNotFoundException if entity is not found
-     */
-    public static <E, ID> void withEntity(ID id, Function<ID, E> loader, Consumer<E> consumer) {
-        E entity = loader.apply(id);
-        if(entity == null) {
-            throw new EntityNotFoundException();
-        }
-        consumer.accept(entity);
     }
 
     /**
@@ -546,5 +531,5 @@ public abstract class EntityUtil {
     }
 
     private static final ConcurrentMap<String, ConcurrentMap<Language, String>> PROPERTY_NAME_CACHE = new ConcurrentHashMap<>();
-
+    
 }

@@ -9,6 +9,7 @@ import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.Permission;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 
@@ -55,8 +56,15 @@ public class ClassifierUtil {
     private static final Map<String, Comparator<ClassifierSelection>> CLASSIFIER_SORT = new HashMap<>();
     static {
         CLASSIFIER_SORT.put(MainClassCode.MAHT.name(), (a, b) -> {
-            return a.getCode().toUpperCase().compareTo(b.getCode().toUpperCase());
+            return String.CASE_INSENSITIVE_ORDER.compare(a.getCode(), b.getCode());
         });
+        CLASSIFIER_SORT.put(MainClassCode.OIGUS.name(), (a, b) -> {
+            return Permission.valueOf(a.getCode()).ordinal() - Permission.valueOf(b.getCode()).ordinal();
+        });
+    }
+    
+    public static String getNullableNameEt(Classifier classifier) {
+        return classifier != null ? classifier.getNameEt() : null;
     }
 
     public static class ClassifierCache {

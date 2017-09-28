@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import javax.persistence.EntityNotFoundException;
 import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyPeriodEvent;
 import ee.hitsa.ois.domain.StudyYear;
@@ -82,25 +80,27 @@ public class SchoolController {
     private StudyYearService studyYearService;
 
     @GetMapping
-    public Page<SchoolDto> search(@Valid SchoolSearchCommand schoolSearchCommand, Pageable pageable) {
+    public Page<SchoolDto> search(HoisUserDetails user, @Valid SchoolSearchCommand schoolSearchCommand, Pageable pageable) {
+        UserUtil.assertIsMainAdmin(user);
         return schoolService.search(schoolSearchCommand, pageable);
     }
 
     @GetMapping("/{id:\\d+}")
-    public SchoolDto get(@WithEntity("id") School school) {
-        return SchoolDto.ofWithLogo(school);
+    public SchoolDto get(HoisUserDetails user, @PathVariable("id") Long schoolId) {
+        UserUtil.assertIsMainAdmin(user);
+        return schoolService.getWithLogo(schoolId);
     }
 
     @PostMapping
     public SchoolDto create(HoisUserDetails user, @Valid @RequestBody SchoolForm schoolForm) {
         UserUtil.assertIsMainAdmin(user);
-        return get(schoolService.create(schoolForm));
+        return schoolService.create(schoolForm);
     }
 
     @PutMapping("/{id:\\d+}")
     public SchoolDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) School school, @Valid @RequestBody SchoolForm schoolForm) {
         UserUtil.assertIsMainAdmin(user);
-        return get(schoolService.save(school, schoolForm));
+        return schoolService.save(school, schoolForm);
     }
 
     @DeleteMapping("/{id:\\d+}")
@@ -110,16 +110,15 @@ public class SchoolController {
     }
 
     @GetMapping("/{id:\\d+}/logo")
-    public byte[] getLogo(@PathVariable("id") String schoolId) {
-        OisFile logo = schoolRepository.findSchoolLogo(Long.valueOf(schoolId));
-        if (logo == null) {
-            throw new EntityNotFoundException();
-        }
-        return logo.getFdata();
+    public byte[] getLogo(@PathVariable("id") Long schoolId) {
+        return schoolService.getLogo(schoolId);
     }
 
     @GetMapping("/studyLevels")
     public Map<String, ?> studyLevels(HoisUserDetails user) {
+        if(user.getSchoolId() == null) {
+            throw new AssertionFailedException("User is not related to school");
+        }
         School school = getSchool(user);
         Map<String, Object> response = new HashMap<>();
         response.put("id", school.getId());
@@ -141,12 +140,13 @@ public class SchoolController {
 
     @GetMapping("/departments")
     public Page<SchoolDepartmentDto> searchSchoolDepartment(HoisUserDetails user, @Valid SchoolDepartmentSearchCommand criteria, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
         return schoolDepartmentService.findAll(user.getSchoolId(), criteria, pageable);
     }
 
     @GetMapping("/departments/{id:\\d+}")
     public SchoolDepartmentDto getSchoolDepartment(HoisUserDetails user, @WithEntity("id") SchoolDepartment schoolDepartment) {
-        UserUtil.assertSameSchool(user, schoolDepartment.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, schoolDepartment.getSchool());
         return SchoolDepartmentDto.of(schoolDepartment);
     }
 

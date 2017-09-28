@@ -1,91 +1,134 @@
 package ee.hitsa.ois.service;
 
-import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import com.fasterxml.jackson.core.JsonParseException;
-import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.JsonMappingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
-
-import ee.hitsa.ois.domain.Certificate;
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.StudyPeriodEvent;
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.CertificateType;
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.enums.OccupationalGrade;
+import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.report.certificate.CertificateReport;
-import ee.hitsa.ois.repository.StudentRepository;
+import ee.hitsa.ois.report.certificate.CertificateReportSession;
+import ee.hitsa.ois.report.certificate.CertificateStudentResult;
+import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.CertificateContentCommand;
+import ee.hitsa.ois.web.dto.student.StudentHigherSubjectResultDto;
+import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
 
 @Service
 public class CertificateContentService {
-    
-    @Autowired
-    private StudentRepository studentRepository;
+
+    private static final String PATH = "certificates/";
+
     @Autowired
     private StudyYearService studyYearService;
     @Autowired
     private TemplateService templateService;
+    @Autowired
+    private StudentResultHigherService studentResultHigherService;
+    @Autowired 
+    private ProtocolService protocolService;
+    @Autowired 
+    private ClassifierRepository classifierRepository;
 
-    public String generate(CertificateContentCommand command) {
-        Student student = studentRepository.findOne(command.getStudent());
+    public String generate(Student student, CertificateType type) {
         CertificateReport report = CertificateReport.of(student);
-        report.setStudyYear(studyYearService.getCurrentStudyYear(student.getSchool()).getYear().getNameEt());
-        return templateService.evaluateTemplate(getTemplateName(command.getType()), Collections.singletonMap("content", report));
+        StudyYear studyYear = studyYearService.getCurrentStudyYear(EntityUtil.getId(student.getSchool()));
+        report.setStudyYear(studyYear.getYear().getNameEt());
+
+        setStudentResults(report, student, type);
+        setSessions(report, studyYear, type);
+        setLastSession(report, studyYear, type);
+
+        return templateService.evaluateTemplate(getTemplateName(StudentUtil.isHigher(student), type), 
+                Collections.singletonMap("content", report));
     }
 
-    private String getTemplateName(String type) {
-        // TODO Auto-generated method stub
-        return "TOEND_LIIK_OPI.xhtml";
+    private void setStudentResults(CertificateReport report, Student student, CertificateType type) {
+        if(CertificateType.TOEND_LIIK_SOOR.equals(type)) {
+            report.getStudent().setResults(StudentUtil.isHigher(student) ? getHigherResults(student) : getVocationalResults(student));
+        }
     }
 
-    public String generateFor(Certificate certificate) {
-        CertificateReport report = CertificateReport.of(certificate.getStudent());
-        report.setStudyYear(studyYearService.getCurrentStudyYear(certificate.getStudent().getSchool()).getYear().getNameEt());
-        
-        return reportToJson(report);
+    private List<CertificateStudentResult> getHigherResults(Student student) {
+        List<StudentHigherSubjectResultDto> list = studentResultHigherService.positiveHigherResults(student);
+        List<CertificateStudentResult> results = StreamUtil.toMappedList(CertificateStudentResult::of, list);
+        Collections.sort(results, Comparator.comparing(CertificateStudentResult::getDate));
+        return results;
+    }
+
+    private List<CertificateStudentResult> getVocationalResults(Student student) {
+        Stream<StudentVocationalResultModuleThemeDto> data = protocolService.vocationalResults(student)
+                .stream().filter(r -> OccupationalGrade.isPositive(r.getGrade()));
+        Map<String, Classifier> grades = getVocationalGrades();
+        List<CertificateStudentResult> results = StreamUtil.toMappedList(r -> CertificateStudentResult.of(r, grades), data);
+        Collections.sort(results, Comparator.comparing(CertificateStudentResult::getDate));
+        return results;
+    }
+
+    private static void setSessions(CertificateReport report, StudyYear studyYear, CertificateType type) {
+        if(CertificateType.TOEND_LIIK_SESS.equals(type)) {
+            report.setSessions(StreamUtil.toMappedList(CertificateReportSession::of, 
+                    currentStudyYearsSessions(studyYear)));
+        }
+    }
+
+    private static void setLastSession(CertificateReport report, StudyYear studyYear, CertificateType type) {
+        if(CertificateType.TOEND_LIIK_KONTAKT.equals(type)) {
+            List<StudyPeriodEvent> finishedSessions = 
+                    currentStudyYearsSessions(studyYear).stream()
+                    .filter(e -> hasFinished(e)).collect(Collectors.toList());
+            
+            if(!finishedSessions.isEmpty()) {
+                StudyPeriodEvent lastSession = finishedSessions.get(finishedSessions.size() - 1);
+                report.setLastSession(CertificateReportSession.of(lastSession));
+            }
+        }
     }
     
-    private String reportToJson(CertificateReport report) {
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonInString = null;
-        try {
-            jsonInString = mapper.writeValueAsString(report);
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }
-        return jsonInString;
+    private static List<StudyPeriodEvent> currentStudyYearsSessions(StudyYear studyYear) {
+        List<StudyPeriodEvent> sessions = studyYear.getStudyPeriodEvents()
+                .stream()
+                .filter(e -> isSession(e))
+                .collect(Collectors.toList());
+        Collections.sort(sessions, Comparator.comparing(StudyPeriodEvent::getEnd));
+        return sessions;
     }
 
-    public String retrieve(Certificate certificate) {
-        if(ClassifierUtil.equals(CertificateType.TOEND_LIIK_MUU, certificate.getType())) {
-            throw new ValidationFailedException("muu.type.not.allowed");
-        }
-        // TODO: If block below required for old data. Delete when database is cleared
-        if(!certificate.getContent().contains("{")) {
-            return certificate.getContent();
-        }
-        CertificateReport report = jsonToReport(certificate);
-        return templateService.evaluateTemplate(getTemplateName(EntityUtil.getCode(certificate.getType())), Collections.singletonMap("content", report));
+    private static boolean isSession(StudyPeriodEvent event) {
+        return ClassifierUtil.equals(StudyPeriodEventType.SYNDMUS_SESS, event.getEventType());
     }
 
-    private CertificateReport jsonToReport(Certificate certificate) {
-        ObjectMapper mapper = new ObjectMapper();
-        String jsonInString = certificate.getContent();
-        CertificateReport report = null;
-        try {
-            report = mapper.readValue(jsonInString, CertificateReport.class);
-        } catch (JsonParseException e) {
-            e.printStackTrace();
-        } catch (JsonMappingException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
-            e.printStackTrace();
+    private static boolean hasFinished(StudyPeriodEvent event) {
+        return event.getEnd().toLocalDate().isBefore(LocalDate.now());
+    }
+
+    private Map<String, Classifier> getVocationalGrades() {
+        List<Classifier> grades = classifierRepository.findAllByMainClassCode(MainClassCode.KUTSEHINDAMINE.name());
+        return StreamUtil.toMap(Classifier::getCode, grades);
+    }
+
+    private static String getTemplateName(boolean isHigher, CertificateType type) {
+        String fileName = isHigher ? type.getHigherCertificate() : type.getVocationalCertificate();
+        if(fileName == null) {
+            throw new ValidationFailedException("wrong.type");
         }
-        return report;
+        return PATH + fileName;
     }
 }

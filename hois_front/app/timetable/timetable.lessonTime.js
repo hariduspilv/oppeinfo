@@ -115,10 +115,10 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
       }
     }
   }
-  
+
   function eachBlockHasOneValidRow() {
     var valid = true;
-    console.log($scope.blocks.length);
+    //console.log($scope.blocks.length);
     for(var i = 0; $scope.blocks.length > i; i++) {
       var currentValid = false;
       for(var j = 0; $scope.blocks[i].lessonTimes.length > j; j++) {
@@ -253,7 +253,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
     } else if(!eachBlockHasOneValidRow()){
       message.error('timetable.lessonTime.oneRowRequired');
     } else {
-      console.log($scope.lessonTimeForm.$error);
+      //console.log($scope.lessonTimeForm.$error);
     }
   };
 });

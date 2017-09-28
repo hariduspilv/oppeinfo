@@ -6,6 +6,8 @@ angular.module('hitsaOis')
   function ($scope, Curriculum, Classifier, ClassifierConnect, QueryUtils, DataUtils, message, $location, $route, $q, dialogService, $routeParams, ArrayUtils, $rootScope, $http, config) {
     var curriculumEntity = $route.current.locals.curriculum;
     $scope.initializing = true;
+    $scope.auth = $route.current.locals.auth;
+
     var capacitiesData = [];
 
     var HOURS_PER_EKAP = 26;
@@ -239,6 +241,10 @@ angular.module('hitsaOis')
           };
 
           function validateTheme(submittedDialogScope) {
+            submittedDialogScope.dialogForm.$setSubmitted();
+            if(!submittedDialogScope.dialogForm.$valid) {
+              return false;
+            }
             if(submittedDialogScope.occupationModuleTheme.hours !==
               HOURS_PER_EKAP * submittedDialogScope.occupationModuleTheme.credits) {
               message.error('curriculum.error.themeCreditsAndHoursMismatch');
@@ -261,8 +267,8 @@ angular.module('hitsaOis')
             }, 0);
           }
 
-        }, function(){
-
+        }, function() {
+          // saved in dialogScope.saveTheme()
         });
       };
     };

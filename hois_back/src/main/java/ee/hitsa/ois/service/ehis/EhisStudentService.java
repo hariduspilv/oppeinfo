@@ -5,10 +5,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.persistence.EntityManager;
 import javax.persistence.TypedQuery;
 import javax.transaction.Transactional;
-import javax.xml.datatype.DatatypeConfigurationException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -25,50 +23,20 @@ import ee.hitsa.ois.web.dto.EhisStudentReport;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
 import ee.hois.xroad.ehis.generated.KhlOppekavaTaitmine;
-import ee.hois.xroad.helpers.XRoadHeaderV4;
 
 @Transactional
 @Service
 public class EhisStudentService extends EhisService {
 
     @Autowired
-    private EntityManager em;
-    @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
-
-    public WsEhisStudentLog curriculumFulfillment(Student student) throws DatatypeConfigurationException {
-        XRoadHeaderV4 xRoadHeaderV4 = getXroadHeader();
-
-        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
-
-        KhlOppekavaTaitmine oppekavaTaitmine = new KhlOppekavaTaitmine();
-        oppekavaTaitmine.setMuutusKp(getDate(LocalDate.now(), student));
-        // TODO currently no way to find
-        oppekavaTaitmine.setTaitmiseProtsent(new BigDecimal(100));
-        // TODO currently no way to find
-        oppekavaTaitmine.setAinepunkte(new BigDecimal(50));
-
-        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
-        khlKorgharidusMuuda.setOppekavaTaitmine(oppekavaTaitmine);
-        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
-
-        return makeRequest(student, xRoadHeaderV4, khlOppeasutusList);
-    }
-
-    private WsEhisStudentLog makeRequest(Student student, XRoadHeaderV4 xRoadHeaderV4, KhlOppeasutusList khlOppeasutusList) {
-        WsEhisStudentLog wsEhisStudentLog = new WsEhisStudentLog();
-        wsEhisStudentLog.setSchool(student.getSchool());
-
-        return laeKorgharidused(xRoadHeaderV4, khlOppeasutusList, wsEhisStudentLog);
-    }
 
     public EhisStudentReport exportStudents(Long schoolId, EhisStudentForm ehisStudentForm) {
         EhisStudentReport ehisStudentReport = new EhisStudentReport();
         switch (ehisStudentForm.getDataType()) {
         case CURRICULA_FULFILMENT:
-            List<Student> students = findStudents(schoolId);
-            List<EhisStudentReport.CurriculaFulfilment> fulfilment = new ArrayList<>(students.size());
-            for (Student student : students) {
+            List<EhisStudentReport.CurriculaFulfilment> fulfilment = new ArrayList<>();
+            for (Student student : findStudents(schoolId)) {
                 WsEhisStudentLog log;
                 try {
                     log = curriculumFulfillment(student);
@@ -83,13 +51,12 @@ public class EhisStudentService extends EhisService {
             throw new UnsupportedOperationException();
         case GRADUATION:
             List<EhisStudentReport.Graduation> graduations = new ArrayList<>();
-            List<Directive> directives = findDirectives(schoolId, ehisStudentForm);
-            for (Directive directive : directives) {
+            for (Directive directive : findDirectives(schoolId, ehisStudentForm)) {
                 for (DirectiveStudent directiveStudent : directive.getStudents()) {
                     // TODO check for printed status
                     WsEhisStudentLog log;
                     try {
-                        log = ehisDirectiveStudentService.graduation(directiveStudent, directive);
+                        log = ehisDirectiveStudentService.graduation(directiveStudent);
                     } catch (Exception e) {
                         log = bindingException(directive, e);
                     }
@@ -104,6 +71,30 @@ public class EhisStudentService extends EhisService {
             break;
         }
         return ehisStudentReport;
+    }
+
+    private WsEhisStudentLog curriculumFulfillment(Student student) {
+        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+
+        KhlOppekavaTaitmine oppekavaTaitmine = new KhlOppekavaTaitmine();
+        oppekavaTaitmine.setMuutusKp(date(LocalDate.now()));
+        // TODO currently no way to find
+        oppekavaTaitmine.setTaitmiseProtsent(new BigDecimal(100));
+        // TODO currently no way to find
+        oppekavaTaitmine.setAinepunkte(new BigDecimal(50));
+
+        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+        khlKorgharidusMuuda.setOppekavaTaitmine(oppekavaTaitmine);
+        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+
+        return makeRequest(student, khlOppeasutusList);
+    }
+
+    private WsEhisStudentLog makeRequest(Student student, KhlOppeasutusList khlOppeasutusList) {
+        WsEhisStudentLog wsEhisStudentLog = new WsEhisStudentLog();
+        wsEhisStudentLog.setSchool(student.getSchool());
+
+        return laeKorgharidused(khlOppeasutusList, wsEhisStudentLog);
     }
 
     private List<Student> findStudents(Long schoolId) {
@@ -126,9 +117,7 @@ public class EhisStudentService extends EhisService {
     }
 
     @Override
-    XRoadHeaderV4 getXroadHeader() {
-        XRoadHeaderV4 header = super.getXroadHeader();
-        header.getService().setServiceCode(LAE_KORGHARIDUS_SERVICE_CODE);
-        return header;
+    protected String getServiceCode() {
+        return LAE_KORGHARIDUS_SERVICE_CODE;
     }
 }

@@ -1,5 +1,5 @@
-<div class="ois-form-layout" layout="column" layout-margin ng-cloak ng-show="!showMainForm">
-  <form name="higherCurriculumVersionForm" layout="column">
+<div class="ois-form-layout-padding"  ng-cloak ng-show="!showMainForm">
+  <form name="higherCurriculumVersionForm" layout="column" class="nomargin" >
     <fieldset tabindex="1">
       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.versionMainData' | translate}}</legend>
       <div layout="column">
@@ -252,7 +252,7 @@
         <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
       </div>
-      <div ng-show="formState.readOnly">
+      <div ng-show="formState.readOnly && auth.isAdmin()">
         <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
         <md-button class="md-raised" ng-click="confirm()">{{'curriculum.statuschange.version.button.verify' | translate}}</md-button>
         <md-button class="md-raised" ng-click="setStatusClosed()">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
@@ -264,16 +264,18 @@
         <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
       </div>
       <div ng-show="formState.readOnly">
-        <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+        <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
         <md-button class="md-raised" ng-click="setStatusClosed()">{{'curriculum.statuschange.version.button.close' | translate}}</md-button>
-        <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
       </div>
     </div>
     <div ng-show="version.status === VERSION_STATUS.C">
-      <md-button class="md-raised md-default" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="copy()">{{'main.button.copy' | translate}}</md-button>
     </div>
 
     <a href="{{formState.curriculumPdfUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id">{{'main.button.print' | translate}}</a>
+    <a href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised" ng-if="version.id">XML</a>
+
     <md-button class="md-raised md-default" ng-click="back('#/higherCurriculum/' + version.curriculum + '/view')">{{'main.button.back' | translate}}</md-button>
   </div>
 </div>

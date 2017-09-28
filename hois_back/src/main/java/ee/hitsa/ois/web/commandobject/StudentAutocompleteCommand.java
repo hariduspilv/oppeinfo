@@ -3,6 +3,7 @@ package ee.hitsa.ois.web.commandobject;
 public class StudentAutocompleteCommand extends AutocompleteCommand {
 
     private Boolean active;
+    private Boolean finished;
     private Boolean studying;
     private Boolean academicLeave;
     private Boolean nominalStudy;
@@ -14,6 +15,14 @@ public class StudentAutocompleteCommand extends AutocompleteCommand {
 
     public void setActive(Boolean active) {
         this.active = active;
+    }
+    
+    public Boolean getFinished() {
+        return finished;
+    }
+
+    public void setFinished(Boolean finished) {
+        this.finished = finished;
     }
 
     public Boolean getStudying() {

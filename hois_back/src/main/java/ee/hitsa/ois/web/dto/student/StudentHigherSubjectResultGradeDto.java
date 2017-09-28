@@ -16,6 +16,8 @@ public class StudentHigherSubjectResultGradeDto {
     private List<String> teachers;
     private Long studyPeriod;
     private Short gradeMark;
+    private String gradeNameEt;
+    private String assessedBy;
 
     public static StudentHigherSubjectResultGradeDto of(ProtocolStudent protocolStudent) {
         StudentHigherSubjectResultGradeDto dto = new StudentHigherSubjectResultGradeDto();
@@ -24,11 +26,29 @@ public class StudentHigherSubjectResultGradeDto {
             dto.setGradeValue(protocolStudent.getGrade().getValue());
             dto.setGradeDate(protocolStudent.getGradeDate());
             dto.setGradeMark(protocolStudent.getGradeMark());
+            dto.setGradeNameEt(protocolStudent.getGrade().getNameEt());
         }
         SubjectStudyPeriod ssp = protocolStudent.getProtocol().getProtocolHdata().getSubjectStudyPeriod();
         dto.setTeachers(PersonUtil.sorted(ssp.getTeachers().stream().map(t -> t.getTeacher().getPerson())));
         dto.setStudyPeriod(EntityUtil.getId(ssp.getStudyPeriod()));
+        
         return dto;
+    }
+    
+    public String getGradeNameEt() {
+        return gradeNameEt;
+    }
+
+    public void setGradeNameEt(String gradeNameEt) {
+        this.gradeNameEt = gradeNameEt;
+    }
+    
+    public String getAssessedBy() {
+        return assessedBy;
+    }
+
+    public void setAssessedBy(String assessedBy) {
+        this.assessedBy = assessedBy;
     }
 
     public Short getGradeMark() {

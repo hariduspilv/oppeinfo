@@ -34,7 +34,7 @@ public class CertificateControllerTests {
     private static final String TEXT = "CertificateControllerTest";
     private static final String ID_CODE = "37810017107";
     private static final String TYPE = CertificateType.TOEND_LIIK_MUU.name();
-    private static final Long STUDENT_ID = Long.valueOf(2);
+    private static final Long STUDENT_ID = Long.valueOf(107);
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -43,7 +43,7 @@ public class CertificateControllerTests {
 
     @Before
     public void setUp() {
-        testConfigurationService.userToRole(Role.ROLL_P, restTemplate);
+        testConfigurationService.userToRole(Role.ROLL_A, restTemplate);
     }
 
     @After
@@ -179,7 +179,6 @@ public class CertificateControllerTests {
         form.setWhom(TEXT);
         form.setSignatoryIdcode(ID_CODE);
         form.setSignatoryName(TEXT);
-        form.setWdUrl(TEXT);
         form.setType(TYPE);
         form.setStudent(STUDENT_ID);
         return form;

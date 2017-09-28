@@ -178,7 +178,7 @@
 				</md-input-container>
 				<md-input-container flex="50" flex-offset="5" ng-show="curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK'">
 					<label>{{'curriculum.ehisRokClassifier' | translate}}</label>
-					<input ng-model="curriculum.stateCurrClass" type="text" disabled>
+          <hois-classifier-select ng-model="curriculum.stateCurrClass"  model-value-attr="code" main-classifier-code="EHIS_ROK" disabled></hois-classifier-select>
 				</md-input-container>
 			</div>
 			<div layout="row" flex>
@@ -204,7 +204,7 @@
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.structure' | translate}}{{getStar()}}</label>
-				<textarea ng-model="curriculum.structure" md-maxlength="4000" max-rows="10" md-select-on-focus ng-required="strictValidation()" ng-readonly="formState.readOnly"></textarea>
+				<textarea ng-model="curriculum.structure" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="strictValidation()" ng-readonly="formState.readOnly"></textarea>
 			</md-input-container>
 			<md-input-container flex>
 				<label>{{'curriculum.admissionRequirementsEt' | translate}}{{getStar()}}</label>
@@ -731,7 +731,7 @@
           <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         </div>
         <div ng-show="curriculum.id && formState.readOnly">
-          <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
         </div>
       </div>
       <div ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis">
@@ -740,7 +740,7 @@
           <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         </div>
         <div ng-show="formState.readOnly">
-          <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
           <md-button class="md-raised md-default" ng-click="sendToEhis()">{{'main.button.sendToEhis' | translate}}</md-button>
           <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
         </div>
@@ -753,7 +753,7 @@
           <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
         </div>
         <div ng-show="formState.readOnly">
-          <md-button class="md-raised md-primary" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
           <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
         </div>
       </div>

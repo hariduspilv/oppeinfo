@@ -4,6 +4,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -87,7 +88,8 @@ public class CommitteeService {
             String members = resultAsString(row, 1);
             dto.setChairman(resultAsString(row, 2));
             if(members != null) {
-                dto.setMembers(Arrays.asList(members.split(", ")));
+                dto.setMembers(new ArrayList<>());
+                dto.getMembers().addAll(Arrays.asList(members.split(", ")));
                 dto.getMembers().remove(dto.getChairman());
             }
             dto.setValidFrom(resultAsLocalDate(row, 3));

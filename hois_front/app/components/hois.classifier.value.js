@@ -9,7 +9,7 @@
  * This element must be inside md-input-container for label to properly work
  */
 angular.module('hitsaOis')
-  .directive('hoisClassifierValue', function (Classifier) {
+  .directive('hoisClassifierValue', function (Classifier, ArrayUtils) {
     return {
       template:'<div class="hois-classifier-value">{{value}}</div>',
       restrict: 'E',
@@ -27,6 +27,15 @@ angular.module('hitsaOis')
           if(angular.isObject(newVal)) {
             if (angular.isString(newVal[scope.$root.currentLanguageNameField()])) {
               scope.value = newVal[scope.$root.currentLanguageNameField()];
+            } else if(angular.isArray(newVal) && newVal.length > 0) {
+              if(angular.isString(newVal[0])) {
+                params = {codes: newVal};
+              } else {
+                var codes = newVal.map(function(el){
+                  return el.code;
+                });
+                params = {codes: codes};
+              }
             } else {
               params = { code: newVal.code};
             }
@@ -38,9 +47,18 @@ angular.module('hitsaOis')
 
           if(params !== null) {
             var setter = function(values) {
-              var selected = values.filter(function(i) { return i.code === params.code; });
+              var selected = values.filter(function(i) {
+                if(params.code) {
+                  return i.code === params.code;
+                } else if(params.codes) {
+                  return ArrayUtils.includes(params.codes, i.code);
+                } else {
+                  return false;
+                }
+              });
               if(selected.length > 0) {
-                scope.value = selected[0][scope.$root.currentLanguageNameField()];
+                var nameStrings = selected.map(scope.$root.currentLanguageNameField);
+                scope.value = nameStrings.join(', ');
               }
             };
 

@@ -1,5 +1,7 @@
 package ee.hitsa.ois.web;
 
+import javax.validation.Valid;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,12 +14,12 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.sais.SaisAdmission;
-import ee.hitsa.ois.service.SaisAdmissionService;
+import ee.hitsa.ois.service.sais.SaisAdmissionService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.SaisAdmissionImportForm;
+import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionImportForm;
 import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisAdmissionDto;
 import ee.hitsa.ois.web.dto.sais.SaisAdmissionSearchDto;
@@ -39,9 +41,10 @@ public class SaisAdmissionController {
         UserUtil.assertSameSchool(user, saisAdmission.getCurriculumVersion().getCurriculum().getSchool());
         return SaisAdmissionDto.of(saisAdmission);
     }
-    
+
     @PostMapping("/saisImport")
-    public Page<SaisAdmissionSearchDto> saisImport(@RequestBody SaisAdmissionImportForm form, HoisUserDetails user) {
+    public Page<SaisAdmissionSearchDto> saisImport(@Valid @RequestBody SaisAdmissionImportForm form, HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user);
         return saisAdmissionService.saisImport(form, user);
     }
 

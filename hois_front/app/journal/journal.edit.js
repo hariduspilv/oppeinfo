@@ -176,6 +176,11 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       newEntity.journalEntryStudents = submittedDialogScope.changedJournalEntryStudents;
       capacityTypesToArray(submittedDialogScope.selectedCapacityTypes, newEntity);
 
+      // this prevents an exception in back end - '' is sent if empty date is selected otherwise
+      if(!newEntity.entryDate) {
+        delete newEntity.entryDate;
+      }
+
       var journalEntry = new JournalEntryEndpoint(newEntity);
       if (angular.isDefined(newEntity.id)) {
         journalEntry.$update().then(function () {

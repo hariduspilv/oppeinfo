@@ -61,6 +61,8 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionHigherModuleSubjectDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionOccupationModuleDto;
+import ee.hitsa.ois.xml.curriculum.CurriculumVersionXml;
+import ee.hitsa.ois.xml.curriculum.CurriculumXml;
 
 @RestController
 @RequestMapping("curriculum")
@@ -83,10 +85,17 @@ public class CurriculumController {
     }
 
     @GetMapping("/xml/{id:\\d+}/curriculum.xml")
-    public void xml(@WithEntity("id") Curriculum curriculum, HttpServletResponse response)
+    public void curriculumXml(@WithEntity("id") Curriculum curriculum, HttpServletResponse response)
             throws IOException, JAXBException {
         HttpUtil.xml(response, curriculum.getCode() + ".xml",
-                xmlService.generateFromObject(CurriculumDto.of(curriculum)));
+                xmlService.generateFromObject(CurriculumXml.of(curriculum)));
+    }
+    
+    @GetMapping("/xml/{id:\\d+}/curriculum.version.xml")
+    public void curriculumVersionXml(@WithEntity("id") CurriculumVersion curriculumVersion, HttpServletResponse response)
+            throws IOException, JAXBException {
+        HttpUtil.xml(response, curriculumVersion.getCode() + ".xml",
+                xmlService.generateFromObject(CurriculumVersionXml.get(curriculumVersion)));
     }
 
     @GetMapping("/print/{id:\\d+}/curriculum.pdf")
