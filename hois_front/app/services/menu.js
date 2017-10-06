@@ -182,7 +182,7 @@ angular.module('hitsaOis')
             url: "/timetable/lessonTime/search?_menu"
           },
           {
-            name: 'Kutseõp. tunnijaotusplaan (peidame)',
+            name: 'Kutseõp. tunnijaotusplaan',
             id: 'timetableLessonTimeSearch',
             url: "/lessonplans/vocational?_menu"
           },
@@ -195,7 +195,10 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.studyPreparation.subjectStudyPeriods.label',
-            url: "/subjectStudyPeriods/studentGroups?_menu"
+            url: "/subjectStudyPeriods/studentGroups?_menu",
+            studyLevel: {
+              higher: true
+            }
           },
           {
             name: 'main.menu.studyPreparation.timetableManagement.label',
