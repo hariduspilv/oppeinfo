@@ -3,14 +3,14 @@ package ee.hitsa.ois.web.dto.timetable;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import ee.hitsa.ois.web.dto.RoomDto;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class TimetableEventDto {
     private Long id;
     private LocalDateTime start;
     private LocalDateTime end;
     private Integer lessonNr;
-    private List<RoomDto> rooms;
+    private List<AutocompleteResult> rooms;
     private Long journal;
     private Long studentGroup;
     private String capacityType;
@@ -70,11 +70,11 @@ public class TimetableEventDto {
         this.lessonNr = lessonNr;
     }
 
-    public List<RoomDto> getRooms() {
+    public List<AutocompleteResult> getRooms() {
         return rooms;
     }
 
-    public void setRooms(List<RoomDto> rooms) {
+    public void setRooms(List<AutocompleteResult> rooms) {
         this.rooms = rooms;
     }
 

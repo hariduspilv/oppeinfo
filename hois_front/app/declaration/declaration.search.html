@@ -97,7 +97,7 @@
         </thead>
         <tbody md-body>
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
-              <td md-cell class="noWrap"><a ng-href="#/declarations/{{row.id}}/view">{{::row.student.fullname}}</a></td>
+              <td md-cell class="one-row"><a ng-href="#/declarations/{{row.id}}/view">{{::row.student.fullname}}</a></td>
               <td md-cell>{{::row.student.idcode}}</td>
               <td md-cell>{{currentLanguageNameField(row.student.curriculumVersion)}}</td>
               <td md-cell>{{currentLanguageNameField(row.student.studentGroup)}}</td>
@@ -119,9 +119,3 @@
                           md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }"  md-page-select></md-table-pagination>
   </div>
 </div>
-
-<style>
-  .noWrap {
-    white-space: nowrap;
-  }
-</style>

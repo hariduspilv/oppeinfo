@@ -101,7 +101,8 @@ public abstract class EhisService {
         KhlOppeasutusList khlOppeasutusList = new KhlOppeasutusList();
         KhlOppeasutus khlOppeasutus = new KhlOppeasutus();
 
-        khlOppeasutus.setKoolId(new BigInteger(student.getSchool().getEhisSchool().getEhisValue()));
+        String koolId = ehisValue(student.getSchool().getEhisSchool());
+        khlOppeasutus.setKoolId(koolId != null ? new BigInteger(koolId) : null);
 
         khlOppeasutus.getOppur().add(getKhlOppurMuutmine(student, true));
         khlOppeasutusList.getOppeasutus().add(khlOppeasutus);
@@ -142,7 +143,7 @@ public abstract class EhisService {
             isikuandmedLisa.setSynniKp(date(person.getBirthdate()));
         }
         if (person.getSex() != null) {
-            isikuandmedLisa.setKlSugu(person.getSex().getEhisValue());
+            isikuandmedLisa.setKlSugu(ehisValue(person.getSex()));
         }
         if ((person.getFirstname() != null) && !person.getFirstname().isEmpty()) {
             isikuandmedLisa.setEesnimi(person.getFirstname());
@@ -156,7 +157,7 @@ public abstract class EhisService {
         }
 
         if (person.getResidenceCountry() != null) {
-            isikuandmedLisa.setKlElukohamaa(person.getCitizenship().getValue2());
+            isikuandmedLisa.setKlElukohamaa(value2(person.getCitizenship()));
         }
 
         lisamine.setIsikuandmed(isikuandmedLisa);

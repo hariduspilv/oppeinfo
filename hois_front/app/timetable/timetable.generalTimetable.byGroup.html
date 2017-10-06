@@ -6,35 +6,24 @@
 
 <div layout-padding>
   <div flex>
-    <md-table-container>
-      <table md-table ng-if="timetablesByCurriculums" md-progress="endpoint.$promise" class="secondary-table">
-        <thead md-head>
-          <tr md-row>
-            <th md-column width="20%">{{'generalTimetable.curriculum' | translate}}</th>
-            <th md-column>&nbsp;</th>
-          </tr>
-        </thead>
-        <tbody md-body>
-          <tr ng-repeat="row in timetablesByCurriculums.curriculums" md-row ng-class-odd="'odd'" ng-class-even="'even'">
-            <td>{{currentLanguage() == 'en' ? row.nameEn : row.nameEt}}</td>
-            <td>
-                <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="36px" flex>
-                    <md-grid-tile ng-repeat="group in row.groups" style="text-align: left;">
-                        <md-button class="md-raised md-primary" ng-href="#/timetable/group/{{::studyPeriodId}}/{{::group.id}}/{{::timetableId}}">{{group.code}}</md-button>
-                     </md-grid-tile>
-                  </md-grid-list>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </md-table-container>
+    <div ng-if="timetablesByCurriculums">
+      <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="36px" flex>
+        <md-grid-tile ng-repeat="row in timetablesByCurriculums" style="text-align: left;">
+          <md-button class="md-raised md-primary" ng-href="#/timetable/group/{{::studyPeriodId}}/{{::row.groupId}}/{{::timetableId}}">
+            {{row.groupCode}}
+          </md-button>
+        </md-grid-tile>
+      </md-grid-list>
+    </div>
   </div>
 </div>
 
 <div layout-padding>
   <div flex>
-    <div ng-repeat="row in timetables">
-      <a ng-click="showTimetablesByCurriculums(row.id, row.studyPeriodId)">{{currentLanguage() == 'en' ? row.nameEn : row.nameEt}} {{row.startDate | hoisDate}}-{{row.endDate | hoisDate}}</a>
+    <div ng-repeat="row in timetables track by $index">
+      <a ng-class="{shownPeriod: $index === shownPeriodIndex}" ng-click="showTimetablesByCurriculums(row.id, row.studyPeriodId)">
+                {{currentLanguageNameField(row)}} {{row.startDate | hoisDate}}-{{row.endDate | hoisDate}}
+      </a>
     </div>
   </div>
 </div>

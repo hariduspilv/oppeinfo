@@ -1,0 +1,45 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+
+    <div layout="column">
+      <div layout="row">
+          <span>{{'absence.absences' | translate}}</span>
+          &nbsp;
+          <a ng-click="showAll()">{{'absence.showAllAbsences' | translate}}</a>
+      </div>
+
+      <md-table-container ng-cloak layout-padding>
+        <table md-table md-progress="tabledata.$promise">
+          <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+            <tr md-row>
+              <th md-column md-order-by="p.lastname,p.firstname">{{'absence.student' | translate}}</th>
+              <th md-column md-order-by="sa.valid_from">{{'absence.absenceFrom' | translate}}</th>
+              <th md-column md-order-by="sa.valid_thru">{{'absence.absenceThru' | translate}}</th>
+              <th md-column md-order-by="sa.cause">{{'absence.absenceCause' | translate}}</th>
+              <th md-column md-order-by="sa.inserted_by">{{'absence.applicant' | translate}}</th>
+              <th md-column md-order-by="sa.is_accepted">{{'absence.isAccepted' | translate}}</th>
+              <th md-column md-order-by="sa.changed_by">{{'absence.absenceAcceptor' | translate}}</th>
+              <th md-column></th>
+            </tr>
+          </thead>
+          <tbody md-body>
+            <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+                <td md-cell class="one-row"><a ng-href="#/students/{{row.student.id}}/main">{{currentLanguageNameField(row.student)}}</a></td>
+                <td md-cell>{{row.validFrom | hoisDate}}</td>
+                <td md-cell>{{row.validThru | hoisDate}}</td>
+                <td md-cell>{{::row.cause}}</td>
+                <td md-cell>{{::row.applicant}}</td>
+                <td md-cell>{{row.isAccepted ? 'main.yes' : 'main.no' | translate}}</td>
+                <td md-cell>{{row.acceptor}}</td>
+                <td md-cell>
+                  <md-button ng-if="!row.isAccepted" md-no-ink class="md-primary change-button"
+                  ng-click="accept(row)">{{'absence.accept' | translate}}</md-button>
+                </td>
+            </tr>
+          </tbody>
+        </table>
+      </md-table-container>
+      <md-table-pagination  md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                            md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                            md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }"  md-page-select></md-table-pagination>
+    </div>
+  </div>

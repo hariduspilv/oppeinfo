@@ -43,7 +43,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       }).when('/subjectStudyPeriods/studentGroups', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.student.group.search.html',
+        templateUrl: 'subjectStudyPeriod/studentGroup/subject.study.period.student.group.search.html',
         controller: 'SubjectStudyPeriodStudentGroupSearchController',
         controllerAs: 'controller',
         resolve: {
@@ -53,7 +53,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIJAOTUSPLAAN]
         }
       }).when('/subjectStudyPeriods/studentGroups/new', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.student.group.edit.html',
+        templateUrl: 'subjectStudyPeriod/studentGroup/subject.study.period.student.group.edit.html',
         controller: 'SubjectStudyPeriodStudentGroupEditController',
         controllerAs: 'controller',
         resolve: {
@@ -63,7 +63,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       }).when('/subjectStudyPeriods/studentGroups/:studentGroupId/:studyPeriodId/edit', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.student.group.edit.html',
+        templateUrl: 'subjectStudyPeriod/studentGroup/subject.study.period.student.group.edit.html',
         controller: 'SubjectStudyPeriodStudentGroupEditController',
         controllerAs: 'controller',
         resolve: {
@@ -73,7 +73,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       }).when('/subjectStudyPeriods/studentGroups/:studentGroupId/:studyPeriodId/view', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.student.group.view.html',
+        templateUrl: 'subjectStudyPeriod/studentGroup/subject.study.period.student.group.view.html',
         controller: 'SubjectStudyPeriodStudentGroupViewController',
         controllerAs: 'controller',
         resolve: {
@@ -83,7 +83,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       }).when('/subjectStudyPeriods/teachers', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.teacher.search.html',
+        templateUrl: 'subjectStudyPeriod/teacher/subject.study.period.teacher.search.html',
         controller: 'SubjectStudyPeriodTeacherSearchController',
         controllerAs: 'controller',
         resolve: {
@@ -93,7 +93,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       }).when('/subjectStudyPeriods/teachers/new', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.teacher.edit.html',
+        templateUrl: 'subjectStudyPeriod/teacher/subject.study.period.teacher.edit.html',
         controller: 'SubjectStudyPeriodTeacherEditController',
         controllerAs: 'controller',
         resolve: {
@@ -103,7 +103,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       }).when('/subjectStudyPeriods/teachers/:teacherId/:studyPeriodId/edit', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.teacher.edit.html',
+        templateUrl: 'subjectStudyPeriod/teacher/subject.study.period.teacher.edit.html',
         controller: 'SubjectStudyPeriodTeacherEditController',
         controllerAs: 'controller',
         resolve: {
@@ -114,7 +114,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       })
       .when('/subjectStudyPeriods/teachers/:teacherId/:studyPeriodId/view', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.teacher.view.html',
+        templateUrl: 'subjectStudyPeriod/teacher/subject.study.period.teacher.view.html',
         controller: 'SubjectStudyPeriodTeacherViewController',
         controllerAs: 'controller',
         resolve: {
@@ -125,7 +125,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         }
       })
       .when('/subjectStudyPeriods/subjects', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.subject.search.html',
+        templateUrl: 'subjectStudyPeriod/subject/subject.study.period.subject.search.html',
         controller: 'SubjectStudyPeriodSubjectSearchController',
         controllerAs: 'controller',
         resolve: {
@@ -135,7 +135,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       }).when('/subjectStudyPeriods/subjects/new', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.subject.edit.html',
+        templateUrl: 'subjectStudyPeriod/subject/subject.study.period.subject.edit.html',
         controller: 'SubjectStudyPeriodSubjectEditController',
         controllerAs: 'controller',
         resolve: {
@@ -145,7 +145,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       }).when('/subjectStudyPeriods/subjects/:subjectId/:studyPeriodId/edit', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.subject.edit.html',
+        templateUrl: 'subjectStudyPeriod/subject/subject.study.period.subject.edit.html',
         controller: 'SubjectStudyPeriodSubjectEditController',
         controllerAs: 'controller',
         resolve: {
@@ -155,7 +155,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
         }
       }).when('/subjectStudyPeriods/subjects/:subjectId/:studyPeriodId/view', {
-        templateUrl: 'subjectStudyPeriod/subject.study.period.subject.view.html',
+        templateUrl: 'subjectStudyPeriod/subject/subject.study.period.subject.view.html',
         controller: 'SubjectStudyPeriodSubjectViewController',
         controllerAs: 'controller',
         resolve: {

@@ -10,6 +10,7 @@ import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -29,9 +30,13 @@ public class JournalDto {
     private String status;
     private LocalDate endDate;
     private Boolean hasJournalStudents;
+    private List<AutocompleteResult> journalRooms = new ArrayList<>();
+    
+    private Boolean canBeConfirmed;
+    private Boolean canBeUnconfirmed;
 
     public static JournalDto of(Journal journal) {
-        JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers", "journalStudents", "journalEntries");
+        JournalDto dto = EntityUtil.bindToDto(journal, new JournalDto(), "studyYear", "journalTeachers", "journalStudents", "journalEntries", "journalRooms");
         dto.setStudyYear(EntityUtil.getCode(journal.getStudyYear().getYear()));
         dto.setStudyYearEndDate(journal.getStudyYear().getEndDate());
         for (JournalOccupationModuleTheme theme : journal.getJournalOccupationModuleThemes()) {
@@ -44,6 +49,8 @@ public class JournalDto {
         for (JournalTeacher teacher : journal.getJournalTeachers()) {
             dto.getJournalTeachers().add(PersonUtil.fullname(teacher.getTeacher().getPerson()));
         }
+        dto.setJournalRooms(StreamUtil.toMappedList(r -> new AutocompleteResult(EntityUtil.getId(r.getRoom()),
+                r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
 
         dto.setHasJournalStudents(Boolean.valueOf(!journal.getJournalStudents().isEmpty()));
 
@@ -148,6 +155,14 @@ public class JournalDto {
         this.hasJournalStudents = hasJournalStudents;
     }
 
+    public List<AutocompleteResult> getJournalRooms() {
+        return journalRooms;
+    }
+
+    public void setJournalRooms(List<AutocompleteResult> journalRooms) {
+        this.journalRooms = journalRooms;
+    }
+
     public List<JournalModuleDescriptionDto> getModuleDescriptions() {
         return moduleDescriptions;
     }
@@ -156,7 +171,21 @@ public class JournalDto {
         this.moduleDescriptions = moduleDescriptions;
     }
 
+    public Boolean getCanBeConfirmed() {
+        return canBeConfirmed;
+    }
 
+    public void setCanBeConfirmed(Boolean canBeConfirmed) {
+        this.canBeConfirmed = canBeConfirmed;
+    }
+
+    public Boolean getCanBeUnconfirmed() {
+        return canBeUnconfirmed;
+    }
+
+    public void setCanBeUnconfirmed(Boolean canBeUnconfirmed) {
+        this.canBeUnconfirmed = canBeUnconfirmed;
+    }
 }
 
 

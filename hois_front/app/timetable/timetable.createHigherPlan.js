@@ -100,7 +100,7 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
 
     $scope.getRoomCodes = function (rooms) {
       return rooms.map(function (a) {
-        return a.code;
+        return a.nameEt;
       }).join("-");
     };
 
@@ -160,7 +160,6 @@ angular.module('hitsaOis').controller('HigherTimetablePlanController', ['$scope'
     $scope.changeEvent = function (currentEvent) {
       var currGroupId = currentEvent.studentGroup;
       dialogService.showDialog('timetable/timetable.event.change.dialog.html', function (dialogScope) {
-        console.log(currentEvent);
         dialogScope.lesson = currentEvent;
         dialogScope.lessonCapacityName = $scope.getCapacityTypeName(currentEvent.capacityType);
         dialogScope.lesson.startTime = new Date(currentEvent.start);

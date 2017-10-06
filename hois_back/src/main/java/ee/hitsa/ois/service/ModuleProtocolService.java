@@ -43,10 +43,12 @@ import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.LessonPlanModuleRepository;
+import ee.hitsa.ois.repository.ProtocolStudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.ModuleProtocolGradeUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -56,11 +58,13 @@ import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolStudentSaveForm;
+import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.ProtocolVdataForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ModuleProtocolOccupationalModuleDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolSearchDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolStudentSelectDto;
+import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 
 @Transactional
 @Service
@@ -74,6 +78,8 @@ public class ModuleProtocolService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private LessonPlanModuleRepository lessonPlanModuleRepository;
+    @Autowired
+    private ProtocolStudentRepository protocolStudentRepository;
 
     public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, ModuleProtocolSearchCommand cmd,
             Pageable pageable) {
@@ -393,6 +399,16 @@ public class ModuleProtocolService {
         qb.requiredCriteria("ps.grade_code in :positiveGrades", "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
         return !qb.select("true", em).getResultList().isEmpty();
+    }
+
+    public List<ProtocolStudentResultDto> calculateGrades(ProtocolCalculateCommand command) {
+        List<ProtocolStudentResultDto> calculatedResults = new ArrayList<>();
+        for(Long protocolStudentId : command.getProtocolStudents()) {
+            ProtocolStudent ps = protocolStudentRepository.getOne(protocolStudentId);
+            OccupationalGrade grade = ModuleProtocolGradeUtil.calculateGrade(ps);
+            calculatedResults.add(new ProtocolStudentResultDto(protocolStudentId, grade));
+        }
+        return calculatedResults;
     }
 
 }

@@ -11,19 +11,17 @@ public class TimetableEventSearchDto {
     private LocalDate date;
     private LocalTime timeStart;
     private LocalTime timeEnd;
-    private List<String> teachers;
-    private List<String> rooms;
-    private String studentGroup;
+    private List<TimetableEventSearchTeacherDto> teachers;
+    private List<TimetableEventSearchRoomDto> rooms;
+    private List<TimetableEventSearchGroupDto> studentGroups;
     private Boolean singleEvent;
 
-    public TimetableEventSearchDto(Long id, String name, LocalDate date, LocalTime timeStart, LocalTime timeEnd, String studentGroup,
-            Boolean singleEvent) {
+    public TimetableEventSearchDto(Long id, String name, LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean singleEvent) {
         this.id = id;
         this.name = name;
         this.date = date;
         this.timeStart = timeStart;
         this.timeEnd = timeEnd;
-        this.studentGroup = studentGroup;
         this.singleEvent = singleEvent;
     }
 
@@ -67,28 +65,28 @@ public class TimetableEventSearchDto {
         this.timeEnd = timeEnd;
     }
 
-    public List<String> getTeachers() {
+    public List<TimetableEventSearchTeacherDto> getTeachers() {
         return teachers;
     }
 
-    public void setTeachers(List<String> teachers) {
+    public void setTeachers(List<TimetableEventSearchTeacherDto> teachers) {
         this.teachers = teachers;
     }
 
-    public List<String> getRooms() {
+    public List<TimetableEventSearchRoomDto> getRooms() {
         return rooms;
     }
 
-    public void setRooms(List<String> rooms) {
+    public void setRooms(List<TimetableEventSearchRoomDto> rooms) {
         this.rooms = rooms;
     }
 
-    public String getStudentGroup() {
-        return studentGroup;
+    public List<TimetableEventSearchGroupDto> getStudentGroups() {
+        return studentGroups;
     }
 
-    public void setStudentGroup(String studentGroup) {
-        this.studentGroup = studentGroup;
+    public void setStudentGroups(List<TimetableEventSearchGroupDto> studentGroups) {
+        this.studentGroups = studentGroups;
     }
 
     public Boolean getSingleEvent() {

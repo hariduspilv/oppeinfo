@@ -27,7 +27,7 @@ import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.HigherProtocolCalculateCommand;
+import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
@@ -35,7 +35,7 @@ import ee.hitsa.ois.web.commandobject.HigherProtocolStudentSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.HigherProtocolDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
-import ee.hitsa.ois.web.dto.HigherProtocolStudentResultDto;
+import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 @RestController
@@ -122,8 +122,8 @@ public class HigherProtocolController {
     }
 
     @GetMapping("/{id:\\d+}/calculate")
-    public List<HigherProtocolStudentResultDto> calculateGrades(HoisUserDetails user,
-            @NotNull @Valid HigherProtocolCalculateCommand command, @WithEntity(value = "id") Protocol protocol) {
+    public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,
+            @NotNull @Valid ProtocolCalculateCommand command, @WithEntity(value = "id") Protocol protocol) {
         UserUtil.assertSameSchool(user, protocol.getSchool());
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return higherProtocolService.calculateGrades(command);

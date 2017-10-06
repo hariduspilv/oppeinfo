@@ -19,8 +19,8 @@ public class JournalEntryDto {
     private String entryType;
     private String nameEt;
     private LocalDate entryDate;
-    private Integer startLessonNr;
-    private Integer lessons;
+    private Long startLessonNr;
+    private Long lessons;
     private String content;
     private String homework;
     private LocalDate homeworkDuedate;
@@ -74,19 +74,19 @@ public class JournalEntryDto {
         this.entryDate = entryDate;
     }
 
-    public Integer getStartLessonNr() {
+    public Long getStartLessonNr() {
         return startLessonNr;
     }
 
-    public void setStartLessonNr(Integer startLessonNr) {
+    public void setStartLessonNr(Long startLessonNr) {
         this.startLessonNr = startLessonNr;
     }
 
-    public Integer getLessons() {
+    public Long getLessons() {
         return lessons;
     }
 
-    public void setLessons(Integer lessons) {
+    public void setLessons(Long lessons) {
         this.lessons = lessons;
     }
 

@@ -22,6 +22,7 @@ angular.module('hitsaOis').controller('JournalController', function ($scope, $ro
   $scope.saveEndDate = function() {
     QueryUtils.endpoint('/journals/' + entity.id + '/saveEndDate').save({endDate: $scope.journal.endDate}, function() {
       message.info('main.messages.create.success');
+      $scope.journalForm.$setPristine();
     });
   };
 });

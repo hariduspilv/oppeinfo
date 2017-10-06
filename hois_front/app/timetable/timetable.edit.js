@@ -145,7 +145,6 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
 
     $scope.save = function () {
       $scope.timetableForm.$setSubmitted();
-      console.log($scope.timetableForm);
       /*if (!$scope.timetableForm.$valid) {
         message.error('main.messages.form-has-errors');
         return;

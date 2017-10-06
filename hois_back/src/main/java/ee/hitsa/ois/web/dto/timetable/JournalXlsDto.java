@@ -40,6 +40,11 @@ public class JournalXlsDto extends JournalDto {
                     journalEntryByDateDto.getJournalStudentAbsence().put(journalEntryStudent.getJournalStudent().getId(),
                             journalEntryStudent.getAbsence().getValue());
                 }
+                
+                if(journalEntryStudent.getAddInfo() != null) {
+                    journalEntryByDateDto.getJournalStudentAddInfo().put(journalEntryStudent.getJournalStudent().getId(), 
+                            journalEntryStudent.getAddInfo());
+                }
             }
             dto.getJournalEntriesByDate().add(journalEntryByDateDto);
         }

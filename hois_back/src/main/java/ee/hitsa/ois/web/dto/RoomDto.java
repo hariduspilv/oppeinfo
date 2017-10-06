@@ -22,20 +22,12 @@ public class RoomDto extends RoomForm {
     public static RoomDto of(Room room) {
         return fill(room, room.getRoomEquipment(), new RoomDto());
     }
-    
-    public RoomDto() {
-        
-    }
-    
-    public RoomDto(Long id, Long buildingId, String code) {
-        this.id = id;
-        this.setBuilding(buildingId);
-        this.setCode(code);
-    }
 
     protected static <DTO extends RoomDto> DTO fill(Room room, Collection<RoomEquipment> equipment, DTO dto) {
         EntityUtil.bindToDto(room, dto, "roomEquipment");
-        dto.setRoomEquipment(StreamUtil.toMappedList(re -> EntityUtil.bindToDto(re, new RoomEquipmentCommand()), equipment));
+        dto.setRoomEquipment(
+                StreamUtil.toMappedList(re -> EntityUtil.bindToDto(re, new RoomEquipmentCommand()), equipment));
         return dto;
     }
+
 }

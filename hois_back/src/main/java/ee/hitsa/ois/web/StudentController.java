@@ -31,6 +31,7 @@ import ee.hitsa.ois.service.ehis.EhisStudentService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.StudentAbsenceValidationUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -88,19 +89,19 @@ public class StudentController {
 
     @PostMapping("/{studentId:\\d+}/absences")
     public void createAbsence(HoisUserDetails user, @WithEntity(value = "studentId") Student student, @Valid @RequestBody StudentAbsenceForm form) {
-        assertCanCreateAbsence(user, student);
+        StudentAbsenceValidationUtil.assertCanCreate(user, student);
         studentService.create(user, student, form);
     }
 
     @PutMapping("/{studentId:\\d+}/absences/{id:\\d+}")
     public void updateAbsence(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentAbsence absence, @Valid @RequestBody StudentAbsenceForm form) {
-        assertCanEditAbsence(user, absence);
+        StudentAbsenceValidationUtil.assertCanEdit(user, absence);
         studentService.save(absence, form);
     }
 
     @DeleteMapping("/{studentId:\\d+}/absences/{id:\\d+}")
     public void deleteAbsence(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudentAbsence absence, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        assertCanEditAbsence(user, absence);
+        StudentAbsenceValidationUtil.assertCanEdit(user, absence);
         studentService.delete(absence);
     }
 
@@ -149,14 +150,6 @@ public class StudentController {
 
     private static void assertCanView(HoisUserDetails user, Student student) {
         AssertionFailedException.throwIf(!UserUtil.canViewStudent(user, student), "User cannot view student data");
-    }
-
-    private static void assertCanCreateAbsence(HoisUserDetails user, Student student) {
-        AssertionFailedException.throwIf(!UserUtil.canAddStudentAbsence(user, student), "User cannot add student absence");
-    }
-
-    private static void assertCanEditAbsence(HoisUserDetails user, StudentAbsence absence) {
-        AssertionFailedException.throwIf(!UserUtil.canEditStudentAbsence(user, absence), "User cannot edit student absence");
     }
 
     @GetMapping("/{id:\\d+}/vocationalResults")

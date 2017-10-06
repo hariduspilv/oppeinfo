@@ -1,0 +1,37 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'subjectStudyPeriod.label.options' | translate}}">
+    <md-nav-item md-nav-href="#/students/journals" name="journals">{{'student.journal.journals' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/students/study" name="study">{{'student.journal.study.label' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/students/tasks" name="tasks">{{'student.journal.tasks.label' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<div layout-padding>
+        <div layout-row style="text-align: center">
+            <md-button class="md-icon-button md-primary" ng-href=""> <!-- ng-if="" -->
+                <md-icon>arrow_back</md-icon>
+            </md-button>
+            <h2 style="display:inline-block">{{shownStudyPeriod.startDate | hoisDate}} - {{shownStudyPeriod.endDate | hoisDate}}</h2>
+            <md-button class="md-icon-button md-primary" ng-href=""> <!-- ng-if="" -->
+                <md-icon>arrow_forward</md-icon>
+            </md-button>
+        </div>
+    
+        <md-table-container>
+            <table md-table>
+                <!-- md-progress="endpoint.$promise" -->
+                <thead md-head>
+                    <tr md-row>
+                        <th md-column>{{'student.journal.study.date' | translate}}</th>
+                        <th md-column>{{'student.journal.study.journal' | translate}}</th>
+                        <th md-column>{{'student.journal.study.content' | translate}}</th>
+                    </tr>
+                </thead>
+                <tbody md-body>
+                    <tr md-row> <!-- ng-repeat="row in studyPeriodStudy" -->
+                        <td>{{row.entryDate | hoisDate}}</td>
+                        <td>{{currentLanguageNameField(row)}}</td>
+                        <td>{{content}}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </md-table-container>
+    </div>

@@ -50,9 +50,6 @@
       </div>
 
     </form>
-    <md-button ng-href="#/timetable/{{timetable.id}}/edit" class="md-raised md-primary">{{'main.button.edit' |
-      translate}}
-    </md-button>
     <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_S'" ng-href="#/timetable/{{timetable.id}}/confirm"
                class="md-raised">{{'main.button.confirm' | translate}}
     </md-button>

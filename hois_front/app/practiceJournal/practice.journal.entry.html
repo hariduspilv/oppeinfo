@@ -85,7 +85,7 @@
 
       <div flex>
         <div layout="row" flex>
-          <md-button class="md-primary" ng-click="addNewEntryRow()">{{'main.button.addNewRow' | translate}}</md-button>
+          <md-button class="md-primary" ng-click="addNewEntryRow()" ng-if="auth.isStudent()">{{'main.button.addNewRow' | translate}}</md-button>
         </div>
         <md-table-container>
           <table md-table md-progress="entries.$promise">

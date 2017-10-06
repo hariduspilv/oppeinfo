@@ -29,11 +29,11 @@ public class TimetableEventTime extends BaseEntityWithId {
     private String otherRoom;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "timetable_event_time_id")
+    @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
     private List<TimetableEventTeacher> timetableEventTeachers = new ArrayList<>();
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "timetable_event_time_id")
+    @JoinColumn(name = "timetable_event_time_id", nullable = false, updatable = false)
     private List<TimetableEventRoom> timetableEventRooms = new ArrayList<>();
 
     public TimetableEvent getTimetableEvent() {

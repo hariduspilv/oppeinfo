@@ -15,7 +15,7 @@ public class TimetableEventRoom extends BaseEntityWithId {
     @JoinColumn(nullable = false, updatable = false)
     private Room room;
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
+    @JoinColumn(nullable = false, updatable = false, insertable = false)
     private TimetableEventTime timetableEventTime;
 
     public Room getRoom() {

@@ -1,6 +1,9 @@
 package ee.hois.xroad.helpers;
 
+import ee.hois.soap.LogContext;
+
 public class XRoadHeader {
+    public static final String XROAD_HEADER = "xRoadHeader";
 
     private String consumer;
     private String producer;
@@ -57,4 +60,7 @@ public class XRoadHeader {
         this.endpoint = endpoint;
     }
 
+    public LogContext logContext() {
+        return new LogContext(getId(), getService());
+    }
 }

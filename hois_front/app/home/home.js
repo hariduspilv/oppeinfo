@@ -49,6 +49,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
     function afterAuthentication() {
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
+      chechIfHasUnacceptedAbsences();
     }
 
     if (AuthService.isAuthenticated()) {
@@ -56,5 +57,11 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
     }
     $scope.$on(AUTH_EVENTS.loginSuccess, afterAuthentication);
     $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
+
+    function chechIfHasUnacceptedAbsences() {
+      QueryUtils.endpoint('/absences/hasUnaccepted').search().$promise.then(function(response){
+        $scope.hasUnaccepdedAbsences = response.hasUnaccepted;
+      });
+    }
   }
 ]);

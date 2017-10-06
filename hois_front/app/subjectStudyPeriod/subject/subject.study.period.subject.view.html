@@ -1,0 +1,77 @@
+<div layout="column" layout-padding>
+    <form name="subjectStudyPeriodSubjectEditForm">
+        <p class="md-body-1">
+            <span ng-repeat="capacity in capacityTypes">
+                <span ng-if="$index !== 0">|</span>
+                {{capacity.value.toUpperCase()}} - {{currentLanguageNameField(capacity)}}
+            </span>
+        </p>
+        <br>
+        <div layout="column" class="form-readonly">
+            <div layout="row" layout-sm="column" layout-xs="column">
+                <md-input-container flex="25" flex-sm="100" flex-xs="100">
+                    <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
+                    <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
+                </md-input-container>
+                 <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                    <label>{{'subjectStudyPeriod.subject' | translate}}</label>
+                    <hois-value value="subject.nameEt"></hois-value>
+                </md-input-container>
+            </div>
+            <br>
+            <md-table-container>
+                <table class="subject-study-period">
+                    <thead>
+                    <tr>
+                        <th>
+                            <span>{{'subjectStudyPeriod.teachers' | translate}}</span>
+                        </th>
+                        <th ng-repeat="capacityType in capacityTypes">{{capacityType.value.toUpperCase()}}</th>
+                        <th>{{'subjectStudyPeriod.overall' | translate}}</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        <tr ng-repeat="ssp in record.subjectStudyPeriodDtos | filter:{ subject: subject.id }">
+                            <td>
+                                <span ng-repeat="teacher in ssp.teachers" ng-class="{'invalid': !capacitiesUtil.teachersLoadOk(ssp)}">
+                                    <span ng-if="$index > 0">, </span>
+                                    {{teacher.name}}
+                                </span>
+                                <span ng-show="ssp.studentGroupObjects && ssp.studentGroupObjects.length > 0">
+                                    (
+                                    <span ng-repeat="sg in ssp.studentGroupObjects">
+                                        <span ng-if="$index > 0">, </span>
+                                        {{sg.nameEt}}
+                                    </span>
+                                    )
+                                </span>
+                                <span ng-if="ssp.groupProportion !== 'PAEVIK_GRUPI_JAOTUS_1'">
+                                    <span class="subject-study-period-proportion">{{'subjectStudyPeriod.proportion' | translate | lowercase}}:
+                                        <hois-classifier-value ng-model="ssp.groupProportion" main-classifier-code="PAEVIK_GRUPI_JAOTUS"></hois-classifier-value>
+                                    </span>
+                                </span>
+                            </td>
+                            <td ng-repeat="type in capacityTypes">
+                                <span ng-repeat="capacity in ssp.capacities | filter:{ capacityType: type.code }">
+                                    <span>{{capacity.hours}}</span>
+                                </span>
+                            </td>
+                            <td>{{capacitiesUtil.capacitiesSumBySsp(ssp)}}</td>
+                        </tr>
+                    </tbody>
+                    <tr class="bold" md-colors="{background: 'background-200'}">
+                        <td>{{'subjectStudyPeriod.overall' | translate | uppercase}}</td>
+                        <td ng-repeat="type in capacityTypes">{{capacitiesUtil.capacitiesSumByType(type.code)}}</td>
+                        <td>{{capacitiesUtil.capacitiesSumOverall()}}</td>
+                    </tr>
+                </table>
+            </md-table-container>
+            <br>
+        </div>
+        <div layout="row">
+            <md-button ng-if="!readOnly" class="md-raised md-primary" ng-href="#/subjectStudyPeriods/subjects/{{subject.id}}/{{studyPeriod.id}}/edit?_noback">{{'main.button.change' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/subjects')">{{'main.button.back' | translate}}</md-button>
+        </div>
+    </form>
+</div>
+

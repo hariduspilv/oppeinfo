@@ -2,9 +2,11 @@ package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -38,6 +40,7 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
@@ -363,10 +366,13 @@ public class AutocompleteService {
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "code", lookup.getCode());
         qb.optionalCriteria("is_practice = :isPractice", "isPractice", lookup.getPractice());
 
-        List<?> data = qb.select("s.id, s.name_et, s.name_en", em).getResultList();
+        List<?> data = qb.select("s.id, s.name_et, s.name_en, s.code, s.credits", em).getResultList();
         return StreamUtil.toMappedList(r -> {
-            AutocompleteResult dto = new AutocompleteResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2));
-            return dto;
+            String code = resultAsString(r, 3);
+            BigDecimal credits = resultAsDecimal(r, 4);
+            String nameEt = SubjectUtil.subjectName(code, resultAsString(r, 1), credits);
+            String nameEn = SubjectUtil.subjectName(code, resultAsString(r, 2), credits);
+            return new AutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
         }, data);
     }
 

@@ -201,7 +201,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         };
 
         $scope.submit = function () {
-          // kalendri-sündmus peab olema unikaalne õppeperioodis
+          // kalendri-sündmus peab olema unikaalne õppeperioodis või õppeaastas
           $scope.dialogForm.$setSubmitted();
 
           var errors = false;
@@ -212,28 +212,63 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
               $scope.studyPeriodEvent.studyPeriod = null;
             }
 
-            var inSamePeriod = parentScope.studyPeriodEvents.filter(function (it) {
-              if ($scope.studyPeriodEvent.studyPeriod === it.studyPeriod &&
-                  $scope.studyPeriodEvent.id !== it.id &&
-                  it.eventType === $scope.studyPeriodEvent.eventType) {
-                return true;
-              }
-            });
-            if (inSamePeriod.length > 0) {
-              errors = true;
-
-              $translate('studyYear.studyPeriodEvent.uniqueInPeriod').then(function (text) {
-                var error = text;
-                error = '"' + parentScope.currentLanguageNameField(events.objectmapper({eventType: $scope.studyPeriodEvent.eventType}).eventType) + '" ' + error;
-                message.error(error);
+            if ($scope.studyPeriodEvent.studyPeriod) {
+              var inSamePeriod = parentScope.studyPeriodEvents.filter(function (it) {
+                if (it.studyPeriod && $scope.studyPeriodEvent.studyPeriod.id === it.studyPeriod.id &&
+                    $scope.studyPeriodEvent.id !== it.id &&
+                    it.eventType === $scope.studyPeriodEvent.eventType) {
+                  return true;
+                }
               });
+              if (inSamePeriod.length > 0) {
+                errors = true;
+                message.error('studyYear.studyPeriodEvent.error.uniqueInPeriod');
+              }
+            } else {
+              var inSameYear = parentScope.studyPeriodEvents.filter(function (it) {
+                if ($scope.studyPeriodEvent.id !== it.id && it.eventType === $scope.studyPeriodEvent.eventType) {
+                  return true;
+                }
+              });
+              if (inSameYear.length > 0) {
+                errors = true;
+                message.error('studyYear.studyPeriodEvent.error.uniqueInPeriod');
+              }
             }
           }
+
+
 
           // kalendri-sündmuse algus (kellaaeg) peab olema varajasem kui lõpp (kellaaeg)
           if ($scope.studyPeriodEvent.start && $scope.studyPeriodEvent.end && $scope.studyPeriodEvent.start.getTime() > $scope.studyPeriodEvent.end.getTime()) {
             errors = true;
             message.error('studyYear.studyPeriod.error.startDateLaterThanEndDate');
+          }
+
+
+          // kalendri-sündmus peab kuuluma õppeperioodi sisesele ajale
+          if ($scope.studyPeriodEvent.studyPeriod) {
+            var studyPeriodEventStart, studyPeriodEventEnd, studyPeriodStart, studyPeriodEnd;
+            if ($scope.studyPeriodEvent.start && $scope.studyPeriodEvent.end) {
+              studyPeriodEventStart = $scope.studyPeriodEvent.start.setHours(0, 0, 0);
+              studyPeriodEventEnd = $scope.studyPeriodEvent.end.setHours(0, 0, 0);
+              studyPeriodStart = $scope.studyPeriodEvent.studyPeriod.startDate.setHours(0, 0, 0);
+              studyPeriodEnd = $scope.studyPeriodEvent.studyPeriod.endDate.setHours(0, 0, 0);
+
+              if (!(studyPeriodEventStart >= studyPeriodStart && studyPeriodEventEnd <= studyPeriodEnd)) {
+                errors = true;
+                message.error('studyYear.studyPeriod.error.outsideStudyPeriod');
+              }
+            } else if ($scope.studyPeriodEvent.start) {
+              studyPeriodEventStart = $scope.studyPeriodEvent.start.setHours(0, 0, 0);
+              studyPeriodStart = $scope.studyPeriodEvent.studyPeriod.startDate.setHours(0, 0, 0);
+              studyPeriodEnd = $scope.studyPeriodEvent.studyPeriod.endDate.setHours(0, 0, 0);
+
+              if (studyPeriodEventStart < studyPeriodStart || studyPeriodEventStart > studyPeriodEnd) {
+                errors = true;
+                message.error('studyYear.studyPeriod.error.outsideStudyPeriod');
+              }
+            }
           }
 
           if ($scope.dialogForm.$valid && !errors) {

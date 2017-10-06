@@ -1,9 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableManagementController', ['$scope', 'message', 'QueryUtils', 'DataUtils', 'Classifier',
-  function ($scope, message, QueryUtils, DataUtils, Classifier) {
-    $scope.formState = {};
+angular.module('hitsaOis').controller('TimetableManagementController', ['$scope', 'message', 'QueryUtils', 'DataUtils', 'Classifier', '$location', 'dialogService', '$filter',
+  function ($scope, message, QueryUtils, DataUtils, Classifier, $location, dialogService, $filter) {
     var baseUrl = '/timetables';
+    $scope.formState = {xlsUrl: baseUrl + '/timetableDifference.xls'};
 
     QueryUtils.endpoint(baseUrl + '/managementSearchFormData').search().$promise.then(function (result) {
       $scope.formState.studyYears = result.studyYears;
@@ -35,8 +35,34 @@ angular.module('hitsaOis').controller('TimetableManagementController', ['$scope'
     });
 
     $scope.copyTimetable = function(rowId) {
-      QueryUtils.endpoint(baseUrl + '/copyTimetable').search({id: rowId}).$promise.then(function () {
-        message.info('main.messages.create.success');
+      QueryUtils.endpoint(baseUrl + '/getPossibleTargetsForCopy').query({id : rowId}).$promise.then(function (possibleTargets) {
+        possibleTargets.forEach(function(element) {
+          element.formattedStart = new Date(element.start);
+        });
+        dialogService.showDialog('timetable/timetable.timetableManagement.copyTimetable.html', function (dialogScope) {
+          dialogScope.copyTargets = possibleTargets;
+        }, function (submittedDialogScope) {
+          QueryUtils.endpoint(baseUrl + '/copyTimetable').search({start: submittedDialogScope.copyTarget.start
+            , higher: submittedDialogScope.copyTarget.isHigher
+            , id: submittedDialogScope.copyTarget.id
+            , originalTimetable: rowId
+            , studyPeriod: submittedDialogScope.copyTarget.studyPeriod}).$promise.then(function () {
+            message.info('main.messages.create.success');
+            $scope.loadData();
+          });
+        });
+      });
+    };
+
+    $scope.createEvent = function (row) {
+      var Endpoint = QueryUtils.endpoint(baseUrl);
+      var timetable = new Endpoint();
+      timetable.code = row.isHigher ? 'TUNNIPLAAN_LIIK_H' : 'TUNNIPLAAN_LIIK_V';
+      timetable.studyPeriod = row.studyPeriod;
+      timetable.startDate = row.start;
+      timetable.endDate = row.end;
+      timetable.$save().then(function (result) {
+        $location.url('/timetable/' + result.id + '/view');
       });
     };
 

@@ -1,0 +1,103 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+    <md-nav-item md-nav-href="#/teachers/{{::teacher.id}}/edit" name="teacher.data">
+        {{'teacher.data' | translate}}</md-nav-item>
+    <md-nav-item ng-if="teacher.id && teacher.isVocational" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation" name="teacher.continuingEducation">
+        {{'teacher.continuingEducation.label' | translate}}</md-nav-item>
+    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/qualification" name="teacher.qualification">
+        {{'teacher.qualification.qualification' | translate}}</md-nav-item>
+    <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility" name="teacher.mobility">
+        {{'teacher.mobility.mobility' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<md-content class="md-padding">
+    <form name="qualificationsForm" class="nomargin">
+        <md-button ng-click="newTeacherQualification()" class="md-raised">{{'teacher.qualification.add' | translate}}
+        </md-button>
+        <div ng-repeat="qualification in teacherQualifications.qualifications | orderBy: '-id'">
+            <hois-collapsable label="('teacher.qualification.qualification' | translate)">
+                <div layout="column" flex>
+                    <div layout="row" layout-sm="column" layout-xs="column">
+                        <md-input-container flex="50" flex-sm="100">
+                            <label>{{'teacher.qualification.qualification' | translate}}</label>
+                            <hois-classifier-select ng-model="qualification.qualification" main-classifier-code="EHIS_KVALIFIKATSIOON" model-value-attr="code"
+                                required></hois-classifier-select>
+                        </md-input-container>
+                        <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                            <label>{{'teacher.qualification.qualificationName' | translate}}</label>
+                            <hois-classifier-select ng-model="qualification.qualificationName" main-classifier-code="EHIS_KVALIFIKATSIOON_NIMI" model-value-attr="code"
+                                required></hois-classifier-select>
+                        </md-input-container>
+                    </div>
+                    <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
+                        <md-input-container flex="25" flex-sm="100">
+                            <label>{{'teacher.qualification.state' | translate}}</label>
+                            <hois-classifier-select ng-model="qualification.state" main-classifier-code="RIIK" model-value-attr="code" ng-change="(qualification.state === 'RIIK_EST') && (qualification.schoolOther = '')"
+                                required></hois-classifier-select>
+                        </md-input-container>
+                        <md-input-container flex="20" flex-offset="5" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                            <label>{{'teacher.qualification.year' | translate}}</label>
+                            <input ng-model="qualification.year" type="number" required>
+                        </md-input-container>
+                        <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                            <label>{{'teacher.qualification.qualificationOther' | translate}}</label>
+                            <textarea ng-model="qualification.qualificationOther" md-maxlength="255" max-rows="2" md-select-on-focus></textarea>
+                        </md-input-container>
+                    </div>
+                    <div layout="row" layout-sm="column" layout-xs="column">
+                        <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                            <label>{{'teacher.qualification.school' | translate}}</label>
+                            <hois-classifier-select ng-model="qualification.school" main-classifier-code="EHIS_EESTI_OPPEASUTUS" model-value-attr="code"
+                                ng-required="qualification.state === 'RIIK_EST'"></hois-classifier-select>
+                        </md-input-container>
+                        <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                            <label>{{'teacher.qualification.exSchool' | translate}}</label>
+                            <hois-classifier-select ng-model="qualification.exSchool" main-classifier-code="EHIS_EESTI_OPPEASUTUS_ENDINE" model-value-attr="code"></hois-classifier-select>
+                        </md-input-container>
+                        <md-input-container flex="25" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                            <label>{{'teacher.qualification.schoolOther' | translate}}</label>
+                            <textarea ng-model="qualification.schoolOther" md-maxlength="255" max-rows="2" md-select-on-focus ng-disabled="qualification.state === 'RIIK_EST'"></textarea>
+                        </md-input-container>
+                    </div>
+                    <span ng-if="teacher.isVocational">
+                  <div layout="row" layout-sm="column" layout-xs="column">
+                    <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                      <label>{{'teacher.qualification.diplomaNr' | translate}}</label>
+                      <textarea ng-model="qualification.diplomaNr" md-maxlength="100" md-select-on-focus></textarea>
+                    </md-input-container>
+                    <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                      <label>{{'teacher.qualification.studyLevel' | translate}}</label>
+                      <hois-classifier-select ng-model="qualification.studyLevel"
+                                              main-classifier-code="EHIS_EDUCATION_LEVEL" model-value-attr="code"></hois-classifier-select>
+                    </md-input-container>
+                    <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                      <label>{{'teacher.qualification.endDate' | translate}}</label>
+                      <md-datepicker ng-model="qualification.endDate" md-open-on-focus></md-datepicker>
+                    </md-input-container>
+                  </div>
+                  <div layout="row" layout-sm="column" layout-xs="column">
+                    <md-input-container flex="25" flex-sm="100" flex-offset-xs="0" flex-offset-sm="0">
+                        <label>{{'teacher.qualification.specialty' | translate}}</label>
+                        <textarea ng-model="qualification.specialty" md-maxlength="255" max-rows="2" md-select-on-focus></textarea>
+                    </md-input-container>
+                    <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                      <label>{{'teacher.qualification.language' | translate}}</label>
+                      <hois-classifier-select ng-model="qualification.language"
+                                              main-classifier-code="EHIS_OPETAJA_KEEL" model-value-attr="code"></hois-classifier-select>
+                    </md-input-container>
+                    <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+                      <label>{{'teacher.qualification.addInfo' | translate}}</label>
+                      <textarea ng-model="qualification.addInfo" md-maxlength="4000" max-rows="2" md-select-on-focus></textarea>
+                    </md-input-container>
+                  </div>
+                </span>
+                </div>
+                <md-button ng-click="deleteQualification(qualification)" class="md-raised">{{'main.button.delete' | translate}}</md-button>
+            </hois-collapsable>
+        </div>
+        <md-button ng-click="updateQualifications()" class="md-raised md-primary" ng-if="teacherQualifications.qualifications.length > 0">
+            {{'main.button.save' | translate}}
+        </md-button>
+    </form>
+</md-content>
+
+<md-button ng-href="#/teachers" class="md-raised">{{'main.button.back' | translate}}</md-button>

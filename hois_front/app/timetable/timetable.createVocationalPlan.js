@@ -1,7 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService',
-  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService) {
+angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier', 'dialogService', 'ArrayUtils',
+  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier, dialogService, ArrayUtils) {
     $scope.journalColors = ['#ffff00', '#9fff80', '#ff99cc', '#E8DAEF', '#85C1E9', '#D1F2EB', '#ABEBC6', '#F9E79F', '#FAD7A0', '#EDBB99', '#D5DBDB', '#D5D8DC'];
     $scope.plan = {};
     $scope.timetableId = $route.current.params.id;
@@ -133,11 +133,10 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       return result !== null ? result.value.toUpperCase() : "";
     };
 
-    $scope.getCapacityTypeName = function (code) {
-      var result = $scope.capacityTypes.find(function (it) {
+    $scope.getCapacityType = function (code) {
+      return $scope.capacityTypes.find(function (it) {
         return it.code === code;
       });
-      return result !== null ? result.nameEt.toUpperCase() : "";
     };
 
     $scope.getCountForCapacity = function (capacity) {
@@ -147,7 +146,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
 
     $scope.getRoomCodes = function (rooms) {
       return rooms.map(function (a) {
-        return a.code;
+        return a.nameEt;
       }).join("-");
     };
 
@@ -193,14 +192,26 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       return null;
     };
 
+    $scope.removeFromArray = ArrayUtils.remove;
+
     $scope.changeEvent = function (currentEvent) {
       var currGroupId = $scope.plan.selectedGroup;
       dialogService.showDialog('timetable/timetable.event.change.dialog.html', function (dialogScope) {
         dialogScope.lesson = currentEvent;
-        dialogScope.lessonCapacityName = $scope.getCapacityTypeName(currentEvent.capacityType);
+        dialogScope.lessonCapacityName = $scope.getCapacityType(currentEvent.capacityType);
         dialogScope.lesson.startTime = new Date(currentEvent.start);
         dialogScope.lesson.endTime = new Date(currentEvent.end);
-        dialogScope.lesson.eventRooms = currentEvent.rooms;
+        if(currentEvent.rooms) {
+          dialogScope.lesson.eventRooms = currentEvent.rooms;
+        } else {
+          dialogScope.lesson.eventRooms = [];
+        }
+        dialogScope.$watch('lesson.eventRoom', function () {
+          if (angular.isDefined(dialogScope.lesson.eventRoom) && dialogScope.lesson.eventRoom !== null) {
+            dialogScope.lesson.eventRooms.push(dialogScope.lesson.eventRoom);
+            dialogScope.lesson.eventRoom = null;
+          }
+        });
         dialogScope.deleteEvent = function (toDelete) {
           QueryUtils.endpoint(baseUrl + '/deleteVocationalEvent').save({timetableEventId: toDelete}).$promise.then(function (result) {
             initializeData(result, currGroupId);

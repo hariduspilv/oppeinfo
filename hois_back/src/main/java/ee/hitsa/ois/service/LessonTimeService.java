@@ -78,10 +78,20 @@ public class LessonTimeService {
 
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
             if (criteria.getFrom() != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("lessonTimeBuildingGroup").get("validFrom"), criteria.getFrom().toLocalDate()));
+                filters.add(cb.and(
+                        cb.lessThanOrEqualTo(root.get("lessonTimeBuildingGroup").get("validFrom"),
+                                criteria.getFrom().toLocalDate()),
+                        cb.or(cb.greaterThanOrEqualTo(root.get("lessonTimeBuildingGroup").get("validThru"),
+                                criteria.getFrom().toLocalDate()),
+                                cb.isNull(root.get("lessonTimeBuildingGroup").get("validThru")))));
             }
             if (criteria.getThru() != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("lessonTimeBuildingGroup").get("validThru"), criteria.getThru().toLocalDate()));
+                filters.add(cb.and(
+                        cb.or(cb.greaterThanOrEqualTo(root.get("lessonTimeBuildingGroup").get("validThru"),
+                                criteria.getThru().toLocalDate()),
+                                cb.isNull(root.get("lessonTimeBuildingGroup").get("validThru"))),
+                        cb.lessThanOrEqualTo(root.get("lessonTimeBuildingGroup").get("validFrom"),
+                                criteria.getThru().toLocalDate())));
             }
             if (!CollectionUtils.isEmpty(criteria.getDay())) {
                 List<Predicate> days = StreamUtil.toMappedList(day -> cb.equal(root.get(getDayProperty(day)), Boolean.TRUE), criteria.getDay());

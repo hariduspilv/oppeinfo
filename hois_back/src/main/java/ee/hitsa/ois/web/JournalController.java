@@ -1,15 +1,17 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
+import java.util.Map;
+import java.util.Set;
 
 import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.util.CollectionUtils;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -20,14 +22,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.timetable.Journal;
-import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.service.JournalService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.JournalUtil;
+import ee.hitsa.ois.util.JournalValidationUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
-import ee.hitsa.ois.validation.ValidationFailedException;
+import ee.hitsa.ois.web.commandobject.JournalStudentHasAbsenceCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEndDateCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalEntryForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
@@ -40,6 +42,8 @@ import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
+import ee.hitsa.ois.web.dto.timetable.StudentJournalDto;
+import ee.hitsa.ois.web.dto.timetable.StudentJournalEntryDto;
 
 @RestController
 @RequestMapping("/journals")
@@ -57,13 +61,28 @@ public class JournalController {
     @GetMapping("/{id:\\d+}")
     public JournalDto get(HoisUserDetails user, @WithEntity("id") Journal journal) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return journalService.get(journal);
+        JournalDto dto = JournalDto.of(journal);
+        dto.setCanBeConfirmed(JournalUtil.canBeConfirmed(user, journal));
+        dto.setCanBeUnconfirmed(JournalUtil.canBeUnconfirmed(user, journal));
+        return dto;
+    }
+
+    @PutMapping("/confirm/{id:\\d+}")
+    public JournalDto confirm(HoisUserDetails user, @WithEntity("id") Journal journal) {
+        JournalValidationUtil.asssertCanBeConfirmed(user, journal);
+        return get(user, journalService.confirm(journal));
+    }
+    
+    @PutMapping("/unconfirm/{id:\\d+}")
+    public JournalDto unconfirm(HoisUserDetails user, @WithEntity("id") Journal journal) {
+        JournalValidationUtil.asssertCanBeUnconfirmed(user, journal);
+        return get(user, journalService.unconfirm(journal));
     }
 
     @PostMapping("/{id:\\d+}/saveEndDate")
     public void saveEndDate(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalEndDateCommand command) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        assertIsConfirmer(user, journal);
+        JournalValidationUtil.assertIsConfirmer(user, journal);
         journalService.saveEndDate(journal, command);
     }
 
@@ -94,14 +113,14 @@ public class JournalController {
     @PostMapping("/{id:\\d+}/addStudentsToJournal")
     public void addStudentsToJournal(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalStudentsCommand command) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        assertAddStudentsToJournal(user, journal);
+        JournalValidationUtil.assertAddStudentsToJournal(user, journal);
         journalService.addStudentsToJournal(journal, command);
     }
 
     @PostMapping("/{id:\\d+}/removeStudentsFromJournal")
     public void removeStudentsFromJournal(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestBody JournalStudentsCommand command) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        assertRemoveStudentsFromJournal(user, journal);
+        JournalValidationUtil.assertRemoveStudentsFromJournal(user, journal);
         journalService.removeStudentsFromJournal(journal, command);
     }
 
@@ -140,26 +159,30 @@ public class JournalController {
         UserUtil.assertIsSchoolAdmin(user);
         HttpUtil.xls(response, "journal.xls", journalService.journalAsExcel(journal));
     }
-
-    private static void assertIsConfirmer(HoisUserDetails user, Journal journal) {
-        if (user.isTeacher()) {
-            Optional<JournalTeacher> teacher =
-                    journal.getJournalTeachers().stream().filter(it -> EntityUtil.getId(it.getTeacher()).equals(user.getTeacherId())).findFirst();
-            if (!teacher.isPresent() || !Boolean.TRUE.equals(teacher.get().getIsConfirmer())) {
-                throw new ValidationFailedException("journal.messages.teacherNotAllowedToChangeEndDate");
-            }
-        }
+    
+    @GetMapping("/{id:\\d+}/hasFinalEntry")
+    public Map<String, Boolean> hasFinalEntry(HoisUserDetails user, @WithEntity("id") Journal journal)  {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return Collections.singletonMap("hasFinalEntry", JournalUtil.hasFinalEntry(journal));
+    }
+    
+    @GetMapping("/{id:\\d+}/studentsWithAcceptedAbsence")
+    public Set<Long> journalStudentsWithAcceptedAbsence(HoisUserDetails user, @WithEntity("id") Journal journal, 
+            @Valid JournalStudentHasAbsenceCommand command)  {
+        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        return journalService.journalStudentsWithAcceptedAbsence(journal, command.getEntryDate());
     }
 
-    private static void assertAddStudentsToJournal(HoisUserDetails user, Journal journal) {
-        if (user.isTeacher() && !CollectionUtils.isEmpty(journal.getJournalEntries())) {
-            throw new ValidationFailedException("journal.messages.addingStudentIsNotAllowed");
-        }
+    @GetMapping("/studentJournals")
+    public List<StudentJournalDto> studentJournals(HoisUserDetails user,  @RequestParam("studentId") Long studentId) {
+        //TODO: user rights control
+        return journalService.getStudentJournals(studentId);
+    }
+    
+    @GetMapping("/{id:\\d+}/studentJournal")
+    public StudentJournalDto studentJournals(HoisUserDetails user, @PathVariable("id") Long journalId, @RequestParam("studentId") Long studentId) {
+        //TODO: user rights control
+        return journalService.getStudentJournal(studentId, journalId);
     }
 
-    private static void assertRemoveStudentsFromJournal(HoisUserDetails user, Journal journal) {
-        if (user.isTeacher() && !CollectionUtils.isEmpty(journal.getJournalEntries())) {
-            throw new ValidationFailedException("journal.messages.removingStudentIsNotAllowed");
-        }
-    }
 }

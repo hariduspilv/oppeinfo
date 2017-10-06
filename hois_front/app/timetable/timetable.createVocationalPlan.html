@@ -5,6 +5,12 @@
             <label class="textInput">{{'timetable.timetablePlan.timetablePeriod' | translate}}</label>
             <hois-value value="(plan.startDate | hoisDate) + '-'+(plan.endDate | hoisDate)"/>
         </md-input-container>
+        <div flex layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
+        <span ng-repeat="c in capacityTypes">
+            <span ng-if="!$first">|</span>
+            {{::c.value.toUpperCase()}} - {{currentLanguageNameField(c)}}
+          </span>
+        </div>
     </div>
   <div flex>
       <fieldset tabindex="1">
@@ -39,7 +45,7 @@
     <table md-table class="secondary-table">
       <thead md-head>
       <tr md-row>
-        <th md-column ng-repeat="journal in plan.currentJournals"
+        <th title="{{journal.name}}" md-column ng-repeat="journal in plan.currentJournals"
             ng-if="getByJournal(journal, 'thisPlannedLessons') > 0">
           {{journal.name.substring(0, 4)}} <br>{{getByJournal(journal,
           'thisPlannedLessons')}}/{{getByJournal(journal,
@@ -55,6 +61,7 @@
         <td md-cell ng-repeat="capacity in plan.currentCapacitiesGrouped track by $index" id="timetable-planned-column">
           <div ng-repeat="current in capacity" id="timetable-planned-capacity">
             <div ng-repeat="count in range(current.lessonsLeft)"
+                 title="{{getByCapacity(current, 'name')}}"
                  style="background-color: {{getByCapacity(current, 'color')}}"
                  id="{{current.journal}}-{{count}}" ois-drag journal-id="{{current.journal}}"
                  capacity-type="{{current.capacityType}}"
@@ -102,7 +109,8 @@
                  ois-drag id="{{currentEvent.journalObject.id + '-' + $index + group.id}}"
                  journal-id="{{currentEvent.journal}}"
                  class="timetable-drag" style="background-color:{{currentEvent.journalObject.color}}"
-                 old-event-id="{{currentEvent.id}}">
+                 old-event-id="{{currentEvent.id}}"
+                 title="{{currentEvent.journalObject.name}}/{{currentLanguageNameField(getCapacityType(currentEvent.capacityType))}}">
               <span>{{currentEvent.journalObject.name.substr(0, 4)}}/{{getCapacityTypeValue(currentEvent.capacityType)}}</span>
               <br><span style=";{{currentEvent.rooms ? '' : 'color:red;font-weight: bold;'}}">{{currentEvent.rooms ? getRoomCodes(currentEvent.rooms) : "?"}}</span>
             </div>

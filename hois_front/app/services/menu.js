@@ -57,7 +57,7 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.student.absences',
-            url: '/absences',
+            url: '/absences?_menu',
             studyLevel: {
               vocational: true
             }
@@ -435,7 +435,7 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.study.absences',
-            url: "/absences"
+            url: "/absences?_menu"
           },
           {
             name: 'main.menu.study.journal.label',
@@ -572,7 +572,7 @@ angular.module('hitsaOis')
         pages: [
           {
             name: 'main.menu.myStudyInformation.journal',
-            url: '/fakeJournal'
+            url: '/students/journals'
           },
           {
             name: 'main.menu.myStudyInformation.practiceJournal',

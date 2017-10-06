@@ -163,14 +163,6 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         data: {
           authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR]
         }
-      }).when('/fakeJournal', {
-        templateUrl: 'fakePages/fake.html',
-        controller: 'fakeController',
-        controllerAs: 'controller',
-        resolve: { translationLoaDed: function($translate) { return $translate.onReady(); } },
-        data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]
-        }
       });
 }]).controller('fakeController', ['$scope', 'QueryUtils', function ($scope, QueryUtils) {
     QueryUtils.endpoint("/fake/get505Error").search();

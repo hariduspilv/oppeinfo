@@ -159,4 +159,11 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
 
   $scope.getMidtermTaskHeader = midtermTaskUtil.getMidtermTaskHeader;
 
+  /**
+   * form.$dirty is required for $rootScope.back() function called on Back button click
+   */
+  $scope.setFormDirty = function() {
+    $scope.higherProtocolStudentForm.$setDirty();
+  };
+
 }]);

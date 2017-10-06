@@ -92,9 +92,7 @@ public class TeacherService {
         bindTeacherPositionEhisForm(teacher, teacherForm);
         if (!Boolean.TRUE.equals(teacher.getIsHigher())) {
             // remove possible leftovers of higher teacher
-            bindTeacherContinuingEducationForm(teacher, Collections.emptyList());
             bindTeacherMobilityForm(teacher, Collections.emptySet());
-            bindTeacherQualificationForm(teacher, Collections.emptySet());
         }
 
         teacher = EntityUtil.save(teacher, em);
