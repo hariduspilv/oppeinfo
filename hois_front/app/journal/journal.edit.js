@@ -135,11 +135,51 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     }
   }
 
+
+  function setForbiddenTypes(dialogScope, journalEntry) {
+    QueryUtils.endpoint('/journals/' + entity.id + '/hasFinalEntry').search().$promise.then(function(response){
+      if(response.hasFinalEntry) {
+        if(journalEntry) {
+          if(journalEntry.entryType !== 'SISSEKANNE_L') {
+            dialogScope.forbiddenEntryTypes.push('SISSEKANNE_L');
+          }
+        } else {
+          dialogScope.forbiddenEntryTypes.push('SISSEKANNE_L');
+        }
+      }
+    });
+  }
+
   function showEntryDialog(editEntity) {
     dialogService.showDialog('journal/journal.addEntry.dialog.html', function (dialogScope) {
+
+      dialogScope.$watch('journalEntry.entryDate', function(){
+        if(!dialogScope.journalEntry.entryDate) {
+          setHasAcceptedAbsence(null);
+          return;
+        }
+        QueryUtils.endpoint('/journals/' + entity.id + '/studentsWithAcceptedAbsence')
+        .query({entryDate: dialogScope.journalEntry.entryDate}).$promise.then(function(response){
+          setHasAcceptedAbsence(response);
+        });
+      });
+
+      function setHasAcceptedAbsence(absences) {
+
+        dialogScope.journalStudents.forEach(function(js){
+          js.hasAcceptedAbsence = absences != null && ArrayUtils.contains(absences, js.id);
+        });
+      }
+
+      dialogScope.hasAcceptedAbsence = function(row) {
+        var js = dialogScope.journalEntryStudents[row.id];
+        return js && js.absence === 'PUUDUMINE_V' || row.hasAcceptedAbsence;
+      }
+
       dialogScope.journalEntry = {};
       dialogScope.selectedCapacityTypes = {};
       dialogScope.journalEntryStudents = {};
+      dialogScope.forbiddenEntryTypes = [];
 
       loadJournalEntryDialogInitialData(dialogScope);
       if (angular.isDefined(editEntity)) {
@@ -154,6 +194,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           dialogScope.selectedCapacityTypes[it] = true;
         });
       }
+
+      setForbiddenTypes(dialogScope, editEntity);
 
       dialogScope.changedJournalEntryStudents = [];
       dialogScope.journalEntryStudentChanged = function (journalEntryStudents, row) {
@@ -217,4 +259,29 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
   $scope.showAllStudents = function (show) {
     loadJournalStudents(show);
   };
+
+  var ConfirmEndpoint = QueryUtils.endpoint('/journals/confirm/');
+  var UnconfirmEndpoint = QueryUtils.endpoint('/journals/unconfirm/');
+
+    $scope.confirm = function() {
+      dialogService.confirmDialog({ prompt: 'journal.prompt.confirm' }, function () {
+        new ConfirmEndpoint($scope.journal).$update().then(function (response) {
+          message.info('journal.messages.confirmed');
+          $scope.journal.canBeConfirmed = response.canBeConfirmed;
+          $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;
+          $scope.$parent.journal.status = response.status;
+        });
+      });
+    }
+
+    $scope.unconfirm = function() {
+      dialogService.confirmDialog({ prompt: 'journal.prompt.unconfirm' }, function () {
+        new UnconfirmEndpoint($scope.journal).$update().then(function (response) {
+          message.info('journal.messages.unconfirmed');
+          $scope.journal.canBeConfirmed = response.canBeConfirmed;
+          $scope.journal.canBeUnconfirmed = response.canBeUnconfirmed;
+          $scope.$parent.journal.status = response.status;
+        });
+      });
+    }
 });

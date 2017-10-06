@@ -76,13 +76,13 @@
     <div layout="row">
       <md-button class="md-raised md-primary" ng-click="addNewEntry()">{{'journal.addNewEntry' | translate}}</md-button>
       <md-button class="md-raised" ng-click="searchStudent()">{{'journal.addStudents' | translate}}</md-button>
-      <!--        <md-button class="md-raised" >{{'journal.confirmJournal' | translate}}</md-button>-->
+      <md-button class="md-raised" ng-click="confirm()" ng-if="journal.canBeConfirmed">{{'journal.confirmJournal' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="unconfirm()" ng-if="journal.canBeUnconfirmed">{{'journal.button.unconfirm' | translate}}</md-button>
       <md-button class="md-raised" ng-click="back('#/journals/', journalForm)">{{'main.button.back' | translate}}</md-button>
       <a ng-href="{{excel(formState.xlsUrl)}}" target="_blank" class="md-button md-raised">{{'report.excel' | translate}}</a>
     </div>
   </div>
 </div>
-
 <div layout-padding>
   <div flex>
     <div layout="row">

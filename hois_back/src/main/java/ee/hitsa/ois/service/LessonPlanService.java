@@ -24,6 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
@@ -34,6 +35,7 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalCapacityType;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
+import ee.hitsa.ois.domain.timetable.JournalRoom;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
@@ -297,7 +299,7 @@ public class LessonPlanService {
     }
 
     public Journal saveJournal(Journal journal, LessonPlanJournalForm form, HoisUserDetails user) {
-        EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers", "journalOccupationModuleThemes", "groups");
+        EntityUtil.bindToEntity(form, journal, classifierRepository, "journalCapacityTypes", "journalTeachers", "journalOccupationModuleThemes", "groups", "journalRooms");
 
         List<JournalCapacityType> capacityTypes = journal.getJournalCapacityTypes();
         if(capacityTypes == null) {
@@ -309,7 +311,18 @@ public class LessonPlanService {
             jct.setCapacityType(EntityUtil.validateClassifier(em.getReference(Classifier.class, ct), MainClassCode.MAHT));
             return jct;
         });
-
+        
+        List<JournalRoom> journalRooms = journal.getJournalRooms();
+        if(journalRooms == null) {
+            journal.setJournalRooms(journalRooms = new ArrayList<>());
+        }
+        EntityUtil.bindEntityCollection(journalRooms, r -> EntityUtil.getId(r.getRoom()), form.getJournalRooms(), jr -> jr.getId(), jrf -> {
+            JournalRoom jr = new JournalRoom();
+            jr.setJournal(journal);
+            jr.setRoom(em.getReference(Room.class, jrf.getId()));
+            return jr;
+        });
+        
         List<JournalTeacher> teachers = journal.getJournalTeachers();
         if(teachers == null) {
             journal.setJournalTeachers(teachers = new ArrayList<>());

@@ -6,6 +6,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDateTime;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -15,6 +16,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Join;
@@ -47,6 +49,7 @@ import ee.hitsa.ois.domain.timetable.JournalEntryStudentHistory;
 import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.enums.JournalEntryType;
+import ee.hitsa.ois.enums.JournalStatus;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -57,6 +60,7 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.validation.JournalEntryValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -66,7 +70,6 @@ import ee.hitsa.ois.web.commandobject.timetable.JournalEntryStudentForm;
 import ee.hitsa.ois.web.commandobject.timetable.JournalSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.JournalStudentsCommand;
 import ee.hitsa.ois.web.commandobject.timetable.StudentNameSearchCommand;
-import ee.hitsa.ois.web.dto.timetable.JournalDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryByDateDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
@@ -75,6 +78,8 @@ import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
 import ee.hitsa.ois.web.dto.timetable.JournalXlsDto;
+import ee.hitsa.ois.web.dto.timetable.StudentJournalDto;
+import ee.hitsa.ois.web.dto.timetable.StudentJournalEntryDto;
 
 @Transactional
 @Service
@@ -164,18 +169,23 @@ public class JournalService {
                                 .get("id"), command.getStudentGroup())));
         filters.add(cb.exists(studentGroupsQuery));
     }
-
-    public JournalDto get(Journal journal) {
-        // TODO: refactor to use native query
-        return JournalDto.of(journal);
+    
+    public Journal confirm(Journal journal) {
+        journal.setStatus(classifierRepository.getOne(JournalStatus.PAEVIK_STAATUS_K.name()));
+        return EntityUtil.save(journal, em);
+    }
+    
+    public Journal unconfirm(Journal journal) {
+        journal.setStatus(classifierRepository.getOne(JournalStatus.PAEVIK_STAATUS_T.name()));
+        return EntityUtil.save(journal, em);
     }
 
     public Page<JournalStudentDto> otherStudents(HoisUserDetails user, Long journalId, StudentNameSearchCommand command,
             Pageable pageable) {
         return studentRepository.findAll((root, query, cb) -> {
-            root.fetch("person", JoinType.INNER);
-            root.fetch("studentGroup", JoinType.LEFT);
-            root.fetch("curriculumVersion", JoinType.INNER).fetch("curriculum", JoinType.INNER);
+            root.join("person", JoinType.INNER);
+            root.join("studentGroup", JoinType.LEFT);
+            root.join("curriculumVersion", JoinType.INNER).join("curriculum", JoinType.INNER);
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
@@ -219,9 +229,9 @@ public class JournalService {
 
     public List<JournalStudentDto> suitedStudents(HoisUserDetails user, Long journalId) {
         return studentRepository.findAll((root, query, cb) -> {
-            root.fetch("person", JoinType.INNER);
-            root.fetch("studentGroup", JoinType.LEFT);
-            root.fetch("curriculumVersion", JoinType.INNER).fetch("curriculum", JoinType.INNER);
+            root.join("person", JoinType.INNER);
+            root.join("studentGroup", JoinType.LEFT);
+            root.join("curriculumVersion", JoinType.INNER).join("curriculum", JoinType.INNER);
 
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), user.getSchoolId()));
@@ -474,4 +484,79 @@ public class JournalService {
         return xlsService.generate("journal.xls", Collections.singletonMap("journal", JournalXlsDto.of(journal)));
     }
 
+    public Set<Long> journalStudentsWithAcceptedAbsence(Journal journal, LocalDate entryDate) {
+        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(" from journal_student js ");
+        qb.requiredCriteria("js.journal_id = :journalId", "journalId", EntityUtil.getId(journal));
+        qb.requiredCriteria(
+                "exists("
+                + "select sa.id "
+                + "from student_absence sa "
+                + "where sa.is_accepted "
+                + "and sa.student_id = js.student_id "
+                + "and sa.valid_from <= :entryDate "
+                + "and case "
+                    +   "when sa.valid_thru is null "
+                        +  "then sa.valid_from = :entryDate "
+                    +  "else "
+                        + "sa.valid_thru >= :entryDate "
+                +  "end ) ", "entryDate", entryDate);
+        List<?> result = qb.select("js.id", em).getResultList();
+        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
+    }
+
+    public List<StudentJournalDto> getStudentJournals(Long studentId) {
+        Query q = em.createNativeQuery("select j.id, j.name_et, j.study_year_id, sy.year_code,"
+                + " count(case jes.absence_code when 'PUUDUMINE_H' then 1 else null end) as puudumine_h,"
+                + " count(case jes.absence_code when 'PUUDUMINE_P' then 1 else null end) as puudumine_p,"
+                + " count(case jes.absence_code when 'PUUDUMINE_V' then 1 else null end) as puudumine_v from journal j"
+                + " inner join journal_student js on j.id=js.journal_id"
+                + " inner join student s on js.student_id=s.id"
+                + " inner join study_year sy on j.study_year_id=sy.id"
+                + " inner join journal_entry je on je.journal_id=j.id"
+                + " inner join journal_entry_student jes on jes.journal_entry_id=je.id"
+                + " where s.id=?1 group by j.id, sy.year_code");
+        q.setParameter(1, studentId);
+
+        List<?> data = q.getResultList();
+        return StreamUtil.toMappedList(r -> new StudentJournalDto((Object[])r), data);
+    }
+    
+    public StudentJournalDto getStudentJournal(Long studentId, Long journalId) {
+        Query q = em.createNativeQuery("select j.id, j.name_et, j.study_year_id, sy.year_code,"
+                + " count(case jes.absence_code when 'PUUDUMINE_H' then 1 else null end) as puudumine_h,"
+                + " count(case jes.absence_code when 'PUUDUMINE_P' then 1 else null end) as puudumine_p,"
+                + " count(case jes.absence_code when 'PUUDUMINE_V' then 1 else null end) as puudumine_v from journal j"
+                + " inner join journal_student js on j.id=js.journal_id"
+                + " inner join student s on js.student_id=s.id"
+                + " inner join study_year sy on j.study_year_id=sy.id"
+                + " inner join journal_entry je on je.journal_id=j.id"
+                + " inner join journal_entry_student jes on jes.journal_entry_id=je.id"
+                + " where s.id=?1 and j.id=?2 group by j.id, sy.year_code");
+        q.setParameter(1, studentId);
+        q.setParameter(2, journalId);
+        Object studentJournal = q.getSingleResult();
+        
+        List<StudentJournalEntryDto> journalEntries = getStudentJournalEntries(studentId, journalId);
+        return new StudentJournalDto((Object[]) studentJournal, journalEntries);
+    }
+
+    private List<StudentJournalEntryDto> getStudentJournalEntries(Long studentId, Long journalId) {
+        Query q = em.createNativeQuery("select je.id, je.entry_type_code, je.entry_date, je.content,"
+                + " (select value from classifier where code=jes.grade_code), jes.grade_inserted, jes.add_info,"
+                + " (select string_agg((select value from classifier where code=jesh.grade_code)||'/'||jesh.grade_inserted,',')"
+                + " from journal_entry_student_history jesh where jesh.journal_entry_student_id=jes.id) as previous_results,"
+                + " je.homework, je.homework_duedate from journal j"
+                + " inner join journal_entry je on j.id=je.journal_id"
+                + " inner join journal_student js on j.id=js.journal_id"
+                + " inner join journal_entry_student jes on je.id=jes.journal_entry_id and jes.journal_student_id=js.id"
+                + " inner join student s on js.student_id=s.id where j.id=?1 and s.id=?2"
+                + " order by je.entry_date is null, je.entry_date desc");
+        q.setParameter(1, journalId);
+        q.setParameter(2, studentId);
+        
+        List<?> data = q.getResultList();
+        return StreamUtil.toMappedList(r -> new StudentJournalEntryDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsLocalDate(r, 2), 
+                resultAsString(r, 3), resultAsString(r, 4), resultAsLocalDateTime(r, 5), resultAsString(r, 6), resultAsString(r, 7), resultAsString(r, 8),
+                resultAsLocalDate(r, 9)), data);
+    }
 }

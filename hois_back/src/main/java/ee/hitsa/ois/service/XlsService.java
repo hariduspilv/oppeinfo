@@ -5,10 +5,10 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -89,6 +89,9 @@ public class XlsService {
                         Sheet sheet = workbook.getSheetAt(0);
                         List<CellData> list = transformer.getCommentedCells();
                         for (CellData cellData : list) {
+                            /**
+                             * FIXME: hois:autoheight comments are left in output file
+                             */
                             if (cellData.getCellComment().contains("hois:autoheight")) {
                                 Row row = sheet.getRow(cellData.getRow());
                                 if (row != null) {
@@ -157,6 +160,13 @@ public class XlsService {
 
         public String joinAutocomplete(List<AutocompleteResult> elements) {
             return !CollectionUtils.isEmpty(elements) ? String.join(", ", elements.stream().map(this::name).collect(Collectors.toList())) : "-";
+        }
+        
+        public Date date(LocalDate localDate) {
+            if(localDate == null) {
+                return null;
+            }
+            return Date.from(localDate.atStartOfDay().atZone(ZoneId.systemDefault()).toInstant());
         }
     }
 }

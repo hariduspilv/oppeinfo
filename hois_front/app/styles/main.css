@@ -1134,6 +1134,73 @@ td.bordered[md-cell] {
 	border: 1px solid #E0E0E0;
 }
 
+.subject-study-period {
+	font-size: 13px;
+	border-collapse: collapse;
+  width: 100%;
+  border: 1px solid #ccc;
+}
+
+.subject-study-period td{
+	border: 1px solid #ccc;
+  padding: 3px;
+  min-width: 30px;
+}
+
+.subject-study-period thead tr th {
+	border: 1px solid #ccc;
+}
+
+.subject-study-period td:not(:first-child){
+  text-align: center;
+}
+
+.subject-study-period td:first-child{
+  min-width: 120px;
+  max-width: 350px;
+}
+
+.subject-study-period td:last-child{
+  min-width: 120px;
+}
+
+.subject-study-period th span {
+  float: left;
+}
+
+.subject-study-period a {
+  float: right;
+}
+
+.subject-study-period input[type="number"] {
+	width: 30px;
+	text-align: center;
+	border: 1px solid #E0E0E0;
+}
+
+.subject-study-period input[type="number"].ng-invalid.ng-touched {
+  border: 1px solid #FA787E;
+}
+
+.subject-study-period-proportion {
+  font-size: 12px;
+  margin-left: 30px;
+  color: grey;
+}
+
+.subject-study-period-proportion .hois-classifier-value {
+  display: inline-block;
+  font-size: 12px !important;
+}
+
+/*
+* Hides arrows from number input
+*/
+.subject-study-period input::-webkit-outer-spin-button,
+.subject-study-period input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+}
+
 .bold
 {
 	font-weight: 700;
@@ -1269,4 +1336,20 @@ md-grid-tile {
 .timetableEvent > div:not(:nth-child(1))
 {
   font-size:10px!important;
+}
+
+.md-nav-bar li a {
+  text-transform: uppercase;
+}
+
+.md-nav-bar li a.md-active{
+  color: rgb(13,71,161);
+}
+
+.shownPeriod {
+  color: grey;
+  font-weight: 500;
+}
+.one-row {
+  white-space: nowrap;
 }

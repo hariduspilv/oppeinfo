@@ -15,18 +15,16 @@
       <div layout="row">
         <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
           <md-datepicker required ng-model="timetable.startDate" md-min-date="studyPeriodStartDate"
-                         md-max-date="timetable.endDate ? timetable.endDate : studyPeriodEndDate"
                          md-placeholder="{{'main.from' | translate}}"
                          md-date-filter="blockedFromDatesPredicate"
-                         ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'"></md-datepicker>
+                         ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V' || !timetable.studyPeriod"></md-datepicker>
         </md-input-container>
 
         <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
           <md-datepicker required ng-model="timetable.endDate"
-                         md-min-date="timetable.startDate ? timetable.startDate : studyPeriodStartDate"
-                         md-max-date="studyPeriodEndDate" md-placeholder="{{'main.thru' | translate}}"
+                         md-min-date="studyPeriodStartDate" md-placeholder="{{'main.thru' | translate}}"
                          md-date-filter="blockedThruDatesPredicate"
-                         ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V'"></md-datepicker>
+                         ng-disabled="timetable.code === 'TUNNIPLAAN_LIIK_V' || !timetable.studyPeriod"></md-datepicker>
         </md-input-container>
       </div>
 

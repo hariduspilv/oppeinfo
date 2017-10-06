@@ -258,7 +258,7 @@ public class SubjectStudyPeriodService {
             StudentGroupSearchDto dto = new StudentGroupSearchDto();
             dto.setId(EntityUtil.getId(sg));
             dto.setCode(sg.getCode());
-            dto.setCurriculum(AutocompleteResult.of(sg.getCurriculum()));
+            dto.setCurriculum(curriculum(sg.getCurriculum()));
             List<SubjectStudyPeriod> ssps = filterSsps
                     (StreamUtil.toMappedList(sspSg -> sspSg.getSubjectStudyPeriod(), sg.getSubjectStudyPeriods()), 
                             criteria.getStudyPeriod());
@@ -266,6 +266,12 @@ public class SubjectStudyPeriodService {
 
             return dto;
         });
+    }
+    
+    private AutocompleteResult curriculum(Curriculum curriculum) {
+        String nameEt = curriculum.getCode() + " - " + curriculum.getNameEt();
+        String nameEn = curriculum.getCode() + " - " + curriculum.getNameEn();
+        return new AutocompleteResult(EntityUtil.getId(curriculum), nameEt, nameEn);
     }
 
     public void setSubjectStudyPeriodsToStudentGroupsContainer(Long schoolId,
@@ -428,6 +434,7 @@ public class SubjectStudyPeriodService {
             dto.setId(c.getId());
             dto.setNameEt(c.getNameEt());
             dto.setNameEn(c.getNameEn());
+            dto.setCode(c.getCode());
             dto.setDepartments(StreamUtil.toMappedList(d -> EntityUtil.getId(d.getSchoolDepartment()), c.getDepartments()));
             return dto;
         }, curriculums);
@@ -644,15 +651,5 @@ public class SubjectStudyPeriodService {
             String nameEn = SubjectUtil.subjectName(code, resultAsString(r, 3), credits);
             return new AutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
         }, data);
-    }
-    
-    public List<Long> getSubjectStudyPeriodsForSchoolAndPeriod(Long schoolId, Long studyPeriodId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period ssp inner join subject s on ssp.subject_id = s.id");
-
-        qb.requiredCriteria("ssp.study_period_id = :studyPeriodId", "studyPeriodId", studyPeriodId);
-        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        
-        List<?> data = qb.select("ssp.id", em).getResultList();
-        return StreamUtil.toMappedList(r -> (resultAsLong(r, 0)), data);
     }
 }

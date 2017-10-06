@@ -3,16 +3,16 @@ package ee.hitsa.ois.report;
 import static ee.hitsa.ois.util.TranslateUtil.name;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
+import java.util.stream.Collectors;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.util.PersonUtil;
-import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 
 public class HigherProtocolReport {
@@ -28,7 +28,7 @@ public class HigherProtocolReport {
     private final String confirmer;
     private final LocalDate confirmDate;
     private final List<String> teachers;
-    private final Set<HigherProtocolStudentReport> protocolStudents;
+    private final List<ProtocolStudentReport> protocolStudents;
 
     public HigherProtocolReport(Protocol protocol) {
         this(protocol, Language.ET);
@@ -47,12 +47,14 @@ public class HigherProtocolReport {
         confirmer = protocol.getConfirmer();
         confirmDate = protocol.getConfirmDate();
         teachers = PersonUtil.sorted(ssp.getTeachers().stream().map(t -> t.getTeacher().getPerson()));
-        // TODO change type to List and sort students using name
-        protocolStudents = StreamUtil.toMappedSet(ps -> new HigherProtocolStudentReport(ps), 
-                protocol.getProtocolStudents());
+        this.protocolStudents = protocol.getProtocolStudents().stream()
+                .sorted(Comparator.comparing(ps -> ps.getStudent().getPerson().getFirstname(), 
+                        String.CASE_INSENSITIVE_ORDER))
+                .map(ps -> new ProtocolStudentReport(ps))
+                .collect(Collectors.toList());
     }
 
-    public Set<HigherProtocolStudentReport> getProtocolStudents() {
+    public List<ProtocolStudentReport> getProtocolStudents() {
         return protocolStudents;
     }
 

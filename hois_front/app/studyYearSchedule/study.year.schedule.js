@@ -5,7 +5,7 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
     $scope.criteria = {
         schoolDepartments: [],
         studyYear: null,
-        studyPeriods: [], 
+        studyPeriods: [],
         studentGroups: []
     };
 
@@ -25,7 +25,24 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
         }
     });
 
-    QueryUtils.endpoint('/studyYearSchedule/studentGroups').query().$promise.then(function(response){
+    $scope.legends = QueryUtils.endpoint('/school/studyYearScheduleLegends').search();
+
+    $scope.legends.$promise.then(function (response) {
+      if (!response || !response.legends || response.legends.length === 0) {
+        $scope.legends = [
+          {code: "E", nameEt: "Eksam", color: "#FF0000"},
+          {code: "Pr", nameEt: "Praktika ettevõtes", color: "#790FFC"},
+          {code: "P", nameEt: "Praktika koolis", color: "#1FF47C"},
+          {code: "V", nameEt: "Vaheaeg", color: "#E6E6E6"},
+          {code: "X", nameEt: "ei osale õppetöös", color: "#8C8C8C"}
+        ];
+      } else {
+        $scope.legends = response.legends;
+      }
+    });
+
+
+  QueryUtils.endpoint('/studyYearSchedule/studentGroups').query().$promise.then(function(response){
         $scope.studentGroups = response;
     });
 

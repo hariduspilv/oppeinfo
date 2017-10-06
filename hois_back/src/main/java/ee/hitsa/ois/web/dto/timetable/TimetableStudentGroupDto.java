@@ -5,9 +5,6 @@ public class TimetableStudentGroupDto {
     protected String code;
     protected Long curriculumId;
 
-    public TimetableStudentGroupDto() {
-    }
-
     public TimetableStudentGroupDto(Long id, String code, Long curriculumId) {
         this.id = id;
         this.code = code;

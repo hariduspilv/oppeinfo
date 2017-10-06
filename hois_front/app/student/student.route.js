@@ -24,10 +24,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       data: authorizedRoles,
       resolve: {
         translationLoaded: function($translate) { return $translate.onReady(); } ,
-        auth: function (AuthResolver) { return AuthResolver.resolve(); },
-        student: function(QueryUtils, $route) {
-          return QueryUtils.endpoint('/students').get({id: $route.current.params.id}).$promise;
-        }
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
       }
     }).when('/students/:id/documents', {
       templateUrl: 'student/view.documents.html',
@@ -95,6 +92,48 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
       resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); } ,
           auth: function (AuthResolver) { return AuthResolver.resolve(); },
+      }
+    }).when('/students/journals', {
+      templateUrl: 'student/student.journal.list.html',
+      controller: 'StudentJournalListController',
+      controllerAs: 'StudentJournalListController',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK
+        ]
+      }
+    }).when('/students/study', {
+      templateUrl: 'student/student.journal.study.html',
+      controller: 'StudentJournalStudyController',
+      controllerAs: 'StudentJournalStudyController',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK
+        ]
+      }
+    }).when('/students/tasks', {
+      templateUrl: 'student/student.journal.tasks.html',
+      controller: 'StudentJournalTasksController',
+      controllerAs: 'StudentJournalTasksController',
+      resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); } ,
+        auth: function (AuthResolver) { return AuthResolver.resolve(); }
+      },
+      data: {
+        authorizedRoles: [
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPUR,
+          USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK
+        ]
       }
     });
 });

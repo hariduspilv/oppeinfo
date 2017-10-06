@@ -2,14 +2,12 @@
   <div flex>
     <form name="journalForm" class="nomargin">
       <div layout="row" flex="100" flex-sm="100" flex-xs="100">
+        <span class="common-label">{{'lessonplan.studentGroup' | translate}} {{record.studentGroupCode}}</span>
+      </div>
+      <div layout="row" flex="100" flex-sm="100" flex-xs="100">
         <md-input-container flex>
           <label class="textInput">{{'lessonplan.journal.theme' | translate}}</label>
           <hois-select ng-model="formState.theme" values="formState.themes"></hois-select>
-        </md-input-container>
-          <md-input-container flex="5">
-          <md-button ng-show="formState.theme" ng-click="addTheme()" class="md-icon-button">
-            <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">add</md-icon>
-          </md-button>
         </md-input-container>
 
         <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
@@ -55,11 +53,6 @@
 
       <div layout="row" flex="70" flex-sm="100" flex-xs="100">
         <hois-autocomplete label="lessonplan.journal.teacher" ng-model="formState.teacher" method="teachers" flex></hois-autocomplete>
-        <md-input-container flex="5">
-          <md-button ng-if="formState.teacher" ng-show="formState.teacher" ng-click="addTeacher()" class="md-icon-button">
-            <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">add</md-icon>
-          </md-button>
-        </md-input-container>
       </div>
 
       <div layout="row">
@@ -95,15 +88,21 @@
         </md-table-container>
       </div>
 
+      <div layout="row" flex="70">
+        <hois-autocomplete flex ng-model="formState.room" method="rooms" label="lessonplan.room"></hois-autocomplete>
+      </div>
+      <div layout="column" class="common-label" flex="65" ng-repeat="room in record.journalRooms">
+        <div layout="row" flex layout-align="start center">
+          <div flex="5">&nbsp;</div>
+          <div flex="50">{{room.nameEt}}</div>
+          <div><a ng-click="deleteRoom(room)" class="remove">&times;</a></div>
+        </div>
+      </div>
+
       <div layout="row" flex="70" flex-sm="100" flex-xs="100">
         <md-input-container class="md-block" flex>
           <label>{{'lessonplan.journal.group' | translate}}</label>
           <hois-select ng-model="formState.group" values="formState.studentGroups" flex></hois-select>
-        </md-input-container>
-        <md-input-container flex="5" style="padding-top:5px">
-          <md-button ng-if="formState.group" ng-show="formState.group" ng-click="addGroup()" class="md-icon-button">
-            <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">add</md-icon>
-          </md-button>
         </md-input-container>
       </div>
 

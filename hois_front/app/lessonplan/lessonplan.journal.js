@@ -7,17 +7,27 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
     var baseUrl = '/lessonplans/journals';
     $scope.formState = {capacityTypes: Classifier.queryForDropdown({mainClassCode: 'MAHT', vocational: true})};
     $scope.record = QueryUtils.endpoint(baseUrl).get({id: id || 'new', lessonPlanModule: lessonPlanModule});
-    $scope.formState.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').query({valid: true, higher: false});
-    $scope.record.$promise.then(function(result) {
-      $scope.formState.capacityTypes.$promise.then(function() {
+    $scope.record.$promise.then(function (result) {
+      $scope.formState.capacityTypes.$promise.then(function () {
         Classifier.setSelectedCodes($scope.formState.capacityTypes, $scope.record.journalCapacityTypes);
+      });
+      QueryUtils.endpoint('/autocomplete/studentgroups').query({
+        valid: true,
+        higher: false
+      }).$promise.then(function (groups) {
+        $scope.formState.studentGroups = groups.filter(function (group) {
+          return group.id !== result.studentGroupId;
+        })
       });
 
       $scope.formState.themes = result.themes;
       delete result.themes;
-      $scope.formState.themeMap = $scope.formState.themes.reduce(function(acc, item) { acc[item.id] = item; return acc; }, {});
+      $scope.formState.themeMap = $scope.formState.themes.reduce(function (acc, item) {
+        acc[item.id] = item;
+        return acc;
+      }, {});
 
-      for(var i = 0; result.groups.length > i; i++) {
+      for (var i = 0; result.groups.length > i; i++) {
         result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: result.groups[i].curriculumVersion});
         result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule});
       }
@@ -27,56 +37,56 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
 
     function formIsValid() {
       $scope.journalForm.$setSubmitted();
-      if(!$scope.journalForm.$valid) {
+      if (!$scope.journalForm.$valid) {
         message.error('main.messages.form-has-errors');
         return false;
       }
       return true;
     }
 
-    $scope.update = function() {
-      if(!formIsValid()) {
+    $scope.update = function () {
+      if (!formIsValid()) {
         return;
       }
 
       $scope.record.journalCapacityTypes = Classifier.getSelectedCodes($scope.formState.capacityTypes);
-      if($scope.record.id) {
-        $scope.record.$update().then( function(result) {
+      if ($scope.record.id) {
+        $scope.record.$update().then(function (result) {
           message.updateSuccess();
-          for(var i = 0; result.groups.length > i; i++) {
+          for (var i = 0; result.groups.length > i; i++) {
             result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: result.groups[i].curriculumVersion});
             result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule});
           }
         });
-      }else{
-        $scope.record.$save().then(function() {
+      } else {
+        $scope.record.$save().then(function () {
           message.info('main.messages.create.success');
-          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback&lessonPlanModule='+lessonPlanModule);
+          $location.url(baseUrl + '/' + $scope.record.id + '/edit?_noback&lessonPlanModule=' + lessonPlanModule);
         });
       }
     };
 
-    $scope.filter = function(key, array) {
-      return array.filter( function(obj) {
+    $scope.filter = function (key, array) {
+      return array.filter(function (obj) {
         return obj.id === key;
       })[0];
     };
 
-    $scope.delete = function() {
-      dialogService.confirmDialog({prompt: 'journal.deleteconfirm'}, function() {
-        $scope.record.$delete().then(function() {
+    $scope.delete = function () {
+      dialogService.confirmDialog({prompt: 'journal.deleteconfirm'}, function () {
+        $scope.record.$delete().then(function () {
           message.info('main.messages.delete.success');
-          $location.url('/lessonplans/vocational/'+$scope.record.lessonPlan+'/edit');
+          $location.url('/lessonplans/vocational/' + $scope.record.lessonPlan + '/edit');
         });
       });
     };
 
-    $scope.addTheme = function() {
+    $scope.addTheme = function () {
       var themeId = $scope.formState.theme;
-      if($scope.record.journalOccupationModuleThemes === null) {
+      if ($scope.record.journalOccupationModuleThemes === null) {
         $scope.record.journalOccupationModuleThemes = [];
       }
-      if($scope.record.journalOccupationModuleThemes.indexOf(themeId) !== -1) {
+      if ($scope.record.journalOccupationModuleThemes.indexOf(themeId) !== -1) {
         message.error('lessonplan.journal.duplicatetheme');
         return;
       }
@@ -84,18 +94,27 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
       $scope.formState.theme = null;
     };
 
-    $scope.deleteTheme = function(themeId) {
+    $scope.deleteTheme = function (themeId) {
       var index = $scope.record.journalOccupationModuleThemes.indexOf(themeId);
-      if(index !== -1) {
+      if (index !== -1) {
         $scope.record.journalOccupationModuleThemes.splice(index, 1);
       }
     };
 
-    $scope.addTeacher = function() {
-      if($scope.record.journalTeachers === null) {
+    $scope.deleteRoom = function (room) {
+      var index = $scope.record.journalRooms.indexOf(room);
+      if (index !== -1) {
+        $scope.record.journalRooms.splice(index, 1);
+      }
+    };
+
+    $scope.addTeacher = function () {
+      if ($scope.record.journalTeachers === null) {
         $scope.record.journalTeachers = [];
       }
-      if($scope.record.journalTeachers.some(function(e) { return e.teacher.id === $scope.formState.teacher.id; })) {
+      if ($scope.record.journalTeachers.some(function (e) {
+          return e.teacher.id === $scope.formState.teacher.id;
+        })) {
         message.error('lessonplan.journal.duplicateteacher');
         return;
       }
@@ -103,38 +122,65 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
       $scope.formState.teacher = undefined;
     };
 
-    $scope.deleteTeacher = function(teacher) {
+    $scope.deleteTeacher = function (teacher) {
       var teacherIndex = -1;
-      $scope.record.journalTeachers.forEach(function(item, index) {
-        if(item.id === teacher.id) {
+      $scope.record.journalTeachers.forEach(function (item, index) {
+        if (item.id === teacher.id) {
           teacherIndex = index;
         }
       });
-      if(teacherIndex !== -1) {
+      if (teacherIndex !== -1) {
         $scope.record.journalTeachers.splice(teacherIndex, 1);
       }
     };
 
-    $scope.addGroup = function() {
+    $scope.addGroup = function () {
       var group = JSON.parse(JSON.stringify($scope.filter($scope.formState.group, $scope.formState.studentGroups)));
-      if($scope.record.groups === null || typeof $scope.record.groups === 'undefined') {
+      if ($scope.record.groups === null || typeof $scope.record.groups === 'undefined') {
         $scope.record.groups = [];
       }
-      if($scope.record.groups.some(function(e) { return e.group.id === $scope.formState.group; })) {
+      if ($scope.record.groups.some(function (e) {
+          return e.group.id === $scope.formState.group;
+        })) {
         message.error('lessonplan.journal.duplicategroup');
         return;
       }
-      QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: group.curriculumVersion}).$promise.then( function(response) {
+      QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: group.curriculumVersion}).$promise.then(function (response) {
         group.modules = response;
         $scope.record.groups.push({group: group, studentGroup: group.id});
       });
       $scope.formState.group = undefined;
     };
 
-    $scope.newSelectedModule = function(moduleTheme) {
-      if(moduleTheme.curriculumVersionOccupationModule !== null && moduleTheme.curriculumVersionOccupationModule !== "") {
+    $scope.$watch('formState.room', function () {
+      if (angular.isDefined($scope.formState.room) && $scope.formState.room !== null) {
+        $scope.record.journalRooms.push($scope.formState.room);
+        $scope.formState.room = null;
+      }
+    });
+
+    $scope.$watch('formState.theme', function () {
+      if (angular.isDefined($scope.formState.theme) && $scope.formState.theme !== null) {
+        $scope.addTheme();
+      }
+    });
+
+    $scope.$watch('formState.teacher', function () {
+      if (angular.isDefined($scope.formState.teacher) && $scope.formState.teacher !== null) {
+        $scope.addTeacher();
+      }
+    })
+
+    $scope.$watch('formState.group', function () {
+      if (angular.isDefined($scope.formState.group) && $scope.formState.group !== null) {
+        $scope.addGroup();
+      }
+    })
+
+    $scope.newSelectedModule = function (moduleTheme) {
+      if (moduleTheme.curriculumVersionOccupationModule !== null && moduleTheme.curriculumVersionOccupationModule !== "") {
         moduleTheme.curriculumVersionOccupationModuleThemes = null;
-        QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: moduleTheme.curriculumVersionOccupationModule}).$promise.then( function(response) {
+        QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: moduleTheme.curriculumVersionOccupationModule}).$promise.then(function (response) {
           moduleTheme.group.themes = response;
         });
       } else {
@@ -142,14 +188,14 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
       }
     };
 
-    $scope.deleteGroup = function(group) {
+    $scope.deleteGroup = function (group) {
       var groupIndex = -1;
-      $scope.record.groups.forEach(function(item, index) {
-        if(item.id === group.id) {
+      $scope.record.groups.forEach(function (item, index) {
+        if (item.id === group.id) {
           groupIndex = index;
         }
       });
-      if(groupIndex !== -1) {
+      if (groupIndex !== -1) {
         $scope.record.groups.splice(groupIndex, 1);
       }
     };

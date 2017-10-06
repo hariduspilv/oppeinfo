@@ -1,0 +1,34 @@
+<md-dialog aria-label="add enterprise dialog" flex="30">
+  <form name="dialogForm" ng-submit="dialogForm.$valid && submit()" novalidate ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2 flex>{{'timetable.management.selectCopyTarget' | translate}}</h2>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="column">
+          <div flex="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+            <div layout="row" flex="70">
+              <md-input-container flex="100" flex-sm="100" flex-xs="100">
+                <md-select ng-model="copyTarget" placeholder="{{'timetable.management.period' | translate}}">
+                  <md-option ng-value="target" ng-repeat="target in copyTargets">{{ target.start | hoisDate }}-{{ target.end | hoisDate }}</md-option>
+                </md-select>
+              </md-input-container>
+            </div>
+          </div>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <md-dialog-actions layout="row" layout-align="start start">
+      <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="deleteEvent(lesson.id)">{{"main.button.delete" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

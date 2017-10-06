@@ -12,10 +12,8 @@ angular.module('hitsaOis')
     $scope.myEhisSchool = Session.school ? Session.school.ehisSchool : null;
     $scope.ehisSchools = $scope.curriculum.jointPartners.map(function (p) { return p.ehisSchool; });
     $scope.ehisSchools.push($scope.myEhisSchool);
-    // var SpecialityEndpoint = QueryUtils.endpoint(baseUrl + '/speciality');
     var SpecialityEndpoint = QueryUtils.endpoint('/curriculum/' + $scope.curriculum.id + '/speciality');
     $scope.auth = $route.current.locals.auth;
-
 
     var entity = { curriculum: $scope.curriculum.id, modules: [] };
 

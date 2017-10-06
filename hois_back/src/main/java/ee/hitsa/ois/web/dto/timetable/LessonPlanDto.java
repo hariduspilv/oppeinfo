@@ -29,16 +29,20 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class LessonPlanDto extends LessonPlanForm {
 
     private Long id;
+    private String studentGroupCode;
     private List<StudyPeriodDto> studyPeriods;
     private List<Short> weekNrs;
+    private List<LocalDate> weekBeginningDates;
     private List<LessonPlanLegendDto> legends;
 
     public static LessonPlanDto of(LessonPlan lessonPlan, Map<Long, Long> weekNrsLegends) {
         LessonPlanDto dto = EntityUtil.bindToDto(lessonPlan, new LessonPlanDto());
+        dto.setStudentGroupCode(lessonPlan.getStudentGroup().getCode());
         dto.setStudyPeriods(lessonPlan.getStudyYear().getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList()));
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(lessonPlan.getStudyYear());
         dto.setModules(lessonPlan.getLessonPlanModules().stream().map(r -> LessonPlanModuleDto.of(r, capacityMapper)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
         dto.setWeekNrs(dto.getStudyPeriods().stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList()));
+        dto.setWeekBeginningDates(dto.getStudyPeriods().stream().flatMap(r -> r.getWeekBeginningDates().stream()).collect(Collectors.toList()));
 
         Map<Long, String> colors = StreamUtil.toMap(StudyYearScheduleLegend::getId, StudyYearScheduleLegend::getColor, lessonPlan.getSchool().getStudyYearScheduleLegends());
         dto.setLegends(StreamUtil.toMappedList(e -> new LessonPlanLegendDto(e.getKey(), colors.get(e.getValue())), weekNrsLegends.entrySet()));
@@ -51,6 +55,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public String getStudentGroupCode() {
+        return studentGroupCode;
+    }
+
+    public void setStudentGroupCode(String studentGroupCode) {
+        this.studentGroupCode = studentGroupCode;
     }
 
     public List<StudyPeriodDto> getStudyPeriods() {
@@ -67,6 +79,14 @@ public class LessonPlanDto extends LessonPlanForm {
 
     public void setWeekNrs(List<Short> weekNrs) {
         this.weekNrs = weekNrs;
+    }
+
+    public List<LocalDate> getWeekBeginningDates() {
+        return weekBeginningDates;
+    }
+
+    public void setWeekBeginningDates(List<LocalDate> weekBeginningDates) {
+        this.weekBeginningDates = weekBeginningDates;
     }
 
     public List<LessonPlanLegendDto> getLegends() {
@@ -261,12 +281,14 @@ public class LessonPlanDto extends LessonPlanForm {
         private LocalDate endDate;
         
         private final List<Short> weekNrs;
+        private final List<LocalDate> weekBeginningDates;
 
         public StudyPeriodDto(StudyPeriod studyPeriod) {
             id = studyPeriod.getId();
             nameEt = studyPeriod.getNameEt();
             nameEn = studyPeriod.getNameEn();
             weekNrs = studyPeriod.getWeekNrs();
+            weekBeginningDates = studyPeriod.getWeekBeginningDates();
             startDate = studyPeriod.getStartDate();
             endDate = studyPeriod.getEndDate();
         }
@@ -293,6 +315,10 @@ public class LessonPlanDto extends LessonPlanForm {
 
         public List<Short> getWeekNrs() {
             return weekNrs;
+        }
+        
+        public List<LocalDate> getWeekBeginningDates() {
+            return weekBeginningDates;
         }
     }
 

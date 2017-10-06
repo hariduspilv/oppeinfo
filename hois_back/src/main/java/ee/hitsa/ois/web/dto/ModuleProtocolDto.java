@@ -23,6 +23,7 @@ public class ModuleProtocolDto extends VersionedCommand {
     private List<ModuleProtocolStudentDto> protocolStudents = new ArrayList<>();
     private ProtocolVdataDto protocolVdata;
     private OisFileViewDto oisFile;
+    private boolean canBeEdited;
 
     public static ModuleProtocolDto of(Protocol protocol) {
         ModuleProtocolDto dto = EntityUtil.bindToDto(protocol, new ModuleProtocolDto(), "protocolStudents", "protocolVdata");
@@ -116,4 +117,11 @@ public class ModuleProtocolDto extends VersionedCommand {
         this.oisFile = oisFile;
     }
 
+    public boolean isCanBeEdited() {
+        return canBeEdited;
+    }
+
+    public void setCanBeEdited(boolean canBeEdited) {
+        this.canBeEdited = canBeEdited;
+    }
 }

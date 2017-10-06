@@ -38,6 +38,10 @@ public class Journal extends BaseEntityWithId {
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "journal_id", nullable = false, updatable = false)
     private List<JournalTeacher> journalTeachers;
+    
+    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "journal_id", nullable = false, updatable = false)
+    private List<JournalRoom> journalRooms;
 
     // cannot delete journal when there are students
     @OneToMany(cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH}, orphanRemoval = true)
@@ -125,6 +129,14 @@ public class Journal extends BaseEntityWithId {
         this.journalTeachers = journalTeachers;
     }
 
+    public List<JournalRoom> getJournalRooms() {
+        return journalRooms;
+    }
+
+    public void setJournalRooms(List<JournalRoom> journalRooms) {
+        this.journalRooms = journalRooms;
+    }
+
     public Set<JournalStudent> getJournalStudents() {
         return journalStudents;
     }
@@ -158,7 +170,7 @@ public class Journal extends BaseEntityWithId {
     }
 
     public Set<JournalEntry> getJournalEntries() {
-        return journalEntries;
+        return journalEntries != null ? journalEntries : (journalEntries = new HashSet<>());
     }
 
     public void setJournalEntries(Set<JournalEntry> journalEntries) {

@@ -6,6 +6,7 @@ import java.util.stream.Collectors;
 
 import javax.validation.Valid;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.timetable.JournalOccupationModuleTheme;
@@ -27,6 +28,7 @@ public class LessonPlanJournalForm extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMISVIIS)
     private String assessment;
     @NotEmpty
+    @Size(max = 255)
     private String nameEt;
     @NotEmpty
     @ClassifierRestriction(MainClassCode.PAEVIK_GRUPI_JAOTUS)
@@ -38,8 +40,10 @@ public class LessonPlanJournalForm extends VersionedCommand {
     private List<LessonPlanJournalTeacherForm> journalTeachers;
     @NotEmpty
     private List<Long> journalOccupationModuleThemes;
-    
+    @Valid
     private List<LessonPlanGroupForm> groups;
+    
+    private List<AutocompleteResult> journalRooms;
 
     public Long getLessonPlanModuleId() {
         return lessonPlanModuleId;
@@ -104,6 +108,14 @@ public class LessonPlanJournalForm extends VersionedCommand {
 
     public void setGroups(List<LessonPlanGroupForm> groups) {
         this.groups = groups;
+    }
+
+    public List<AutocompleteResult> getJournalRooms() {
+        return journalRooms;
+    }
+
+    public void setJournalRooms(List<AutocompleteResult> journalRooms) {
+        this.journalRooms = journalRooms;
     }
 
     public static class LessonPlanGroupForm {

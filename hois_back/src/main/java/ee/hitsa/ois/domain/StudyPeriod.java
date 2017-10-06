@@ -2,6 +2,7 @@ package ee.hitsa.ois.domain;
 
 import java.time.DayOfWeek;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -125,6 +126,21 @@ public class StudyPeriod extends BaseEntityWithId implements Translatable {
             spStart = spStart.plusDays(7);
         }
         return weekNrs;
+    }
+    
+    /**
+     * @return
+     * returns all the week beginning dates in this study period
+     */
+    @Transient
+    public List<LocalDate> getWeekBeginningDates() {
+        firstWeekNr();
+        List<LocalDate> weekBeginnings = new ArrayList<>();
+        while (endDate.isAfter(spStart) || endDate.isEqual(spStart)) {
+            weekBeginnings.add(spStart);
+            spStart = spStart.plusDays(7);
+        }
+        return weekBeginnings;
     }
 
     public Integer getWeekNrForDate(LocalDate date) {

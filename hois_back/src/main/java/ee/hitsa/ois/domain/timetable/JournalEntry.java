@@ -25,8 +25,8 @@ public class JournalEntry extends BaseEntityWithId {
     private Classifier entryType;
     private String nameEt;
     private LocalDate entryDate;
-    private Short startLessonNr;
-    private Short lessons;
+    private Long startLessonNr;
+    private Long lessons;
     private String content;
     private String homework;
     private LocalDate homeworkDuedate;
@@ -63,16 +63,16 @@ public class JournalEntry extends BaseEntityWithId {
     public void setEntryDate(LocalDate entryDate) {
         this.entryDate = entryDate;
     }
-    public Short getStartLessonNr() {
+    public Long getStartLessonNr() {
         return startLessonNr;
     }
-    public void setStartLessonNr(Short startLessonNr) {
+    public void setStartLessonNr(Long startLessonNr) {
         this.startLessonNr = startLessonNr;
     }
-    public Short getLessons() {
+    public Long getLessons() {
         return lessons;
     }
-    public void setLessons(Short lessons) {
+    public void setLessons(Long lessons) {
         this.lessons = lessons;
     }
     public String getContent() {

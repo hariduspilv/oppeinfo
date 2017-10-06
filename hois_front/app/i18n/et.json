@@ -412,9 +412,11 @@
   "academicCalendar": {
     "studyYear": "Õppeaasta",
     "date": "Kuupäev",
+    "type": "Tüüp",
     "description": "Kirjeldus",
     "beginning": "Algus",
     "end": "Lõpp",
+    "studyPeriod": "Õppeperiood",
     "notFound": "Akadeemilise kalendri sündmusi ei leitud"
   },
   "generalTimetable": {
@@ -564,6 +566,33 @@
         "required": "Kohustuslik",
         "electiveModulesCompleted": "Täidetud"
 
+      }
+    },
+    "journal": {
+      "journals": "Päevikud",
+      "studyYear": "Õppeaasta",
+      "absences": "puudumisi",
+      "includingAbsencesWithoutReason": "sh põhjuseta puudumisi",
+      "lateForClass": "hilinemisi",
+      "entry": {
+        "date": "Sissekande kp",
+        "content": "Sisu",
+        "grade": "Hinne",
+        "gradeAddInfo": "Hinde selgitus",
+        "homework": "Kodutöö",
+        "homeworkDuedate": "Kodutöö tähtaeg"
+      },
+      "study": {
+        "label": "Õppetöö",
+        "date": "Kuupäev",
+        "journal": "Päevik",
+        "content": "Sisu"
+      },
+      "tasks": {
+        "label": "Ülesanded",
+        "date": "Kuupäev",
+        "journal": "Päevik",
+        "content": "Sisu"
       }
     }
   },
@@ -825,6 +854,7 @@
     "total": "Kokku",
     "isConfirmer": "olen kinnitaja",
     "isFiller": "olen täitja ",
+    "room": "Ruumid",
     "journal": {
       "assessment": "Hindamisviis",
       "deleteconfirm": "Kas oled kindel, et soovid päeviku kustutada?",
@@ -1435,7 +1465,7 @@
       "isAbroad": "Täiendkoolitus toimus välisriigis",
       "abroadDescription": "Välisriigi koolituse sisu",
       "delete": "Kustuta täiendkoolitus",
-      "deleteConfirm": "Kas oled kindel, et soovid õpetaja kvalifikatsiooni kustutada?"
+      "deleteConfirm": "Kas oled kindel, et soovid õpetaja täiendkoolituse kustutada?"
     }
   },
   "user": {
@@ -1592,7 +1622,8 @@
       "error": {
         "notInsideStudyYear": "Õppeaastasse sisestatud õppeperiood peab olema õppeaasta sees",
         "overlapWithOtherStudyPeriod": "Õppeaastasse sisestatud õppeperioodi kuupäevad ei tohi kattuda teiste õppeperioodidega",
-        "startDateLaterThanEndDate": "Lõppkuupäev ja kellaaeg peab olema hilisem kui alguskuupäev ja kellaaeg"
+        "startDateLaterThanEndDate": "Lõppkuupäev ja kellaaeg peab olema hilisem kui alguskuupäev ja kellaaeg",
+        "outsideStudyPeriod": "Kalendri-sündmus peab kuuluma õppeperioodi sisesele ajale"
       }
     },
     "studyPeriodEvent": {
@@ -1608,7 +1639,9 @@
       "endDate": "Lõppkuupäev",
       "startTime": "Alguse kellaaeg",
       "endTime": "Lõpu kellaaeg",
-      "uniqueInPeriod": "kalendri-sündmus peab olema unikaalne õppeperioodis"
+      "error": {
+        "uniqueInPeriod": "Sellist tüüpi sündmus juba eksisteerib käesolevas õppeaastas või õppeperioodis"
+      }
     }
   },
   "subjectStudyPeriod": {
@@ -1903,7 +1936,9 @@
       "status": "Staatus",
       "studyYear": "Õppeaasta",
       "studyPeriod": "Õppeperiood",
-      "type": "Tunniplaani liik"
+      "type": "Tunniplaani liik",
+      "selectCopyTarget": "Tunniplaan millesse tunnid lisada",
+      "difference": "Erinevus XLS"
     },
     "view": {
       "publicize": "Avalikusta"
@@ -1980,7 +2015,16 @@
       "studentSuccesfullyRemoved": "Õppur edukalt kustutatud",
       "dublicateJournalStudentInJournalEntry": "Õppur on juba päevikusse lisatud",
       "addingStudentIsNotAllowed": "Õppuri lisamine päevikuse ei ole võimalik",
-      "removingStudentIsNotAllowed": "Õppuri kustutamine päevikust ei ole võimalik"
+      "removingStudentIsNotAllowed": "Õppuri kustutamine päevikust ei ole võimalik",
+      "confirmed": "Päevik on kinnitatud",
+      "unconfirmed": "Kinnitus on võetud maha"
+    },
+    "prompt": {
+      "confirm": "Kas oled kindel, et soovid päeviku kinnitada?",
+      "unconfirm": "Kas oled kindel, et soovid päeviku kinnitust maha võtta?"
+    },
+    "button": {
+      "unconfirm": "Tühista kinnitus"
     }
   },
   "moduleProtocol": {
@@ -2016,7 +2060,8 @@
       "confirmed": "Mooduli protokoll edukalt kinnitatud",
       "gradeNotSelectedForAllStudents": "Mooduli protokoll kinnitamine ebaõnnestus - vähemalt ühel õpilasel on hinne määramata",
       "cantRemoveNonDismissedStudent": "Mitte eksmatrikuleeritud õppuri eemaldamine ei ole lubatud",
-      "cantRemoveGradedStudent": "Hinnatud õppuri eemaldamine ei ole lubatud"
+      "cantRemoveGradedStudent": "Hinnatud õppuri eemaldamine ei ole lubatud",
+      "calculated": "Mooduli hinne on arvutatud"
     }
   },
   "higherProtocol": {
@@ -2108,6 +2153,20 @@
       "message": "Teade",
       "response": "Tulemus:"
     }
+  },
+  "absence": {
+    "absenceAcceptor": "Tõendi aktsepteerija",
+    "absenceCause": "Puudumise põhjus",
+    "absences": "Puudumistõendid",
+    "absenceFrom": "Puudumine alates",
+    "absenceThru" : "Puudumine kuni",
+    "accept": "Aktsepteeri",
+    "accepted": "Tõend aktsepteeritud",
+    "applicant": "Puudumistõendi esitaja",
+    "isAccepted": "Aktsepteeritud",
+    "showAllAbsences": "Näita kõiki puudumistõendeid",
+    "student": "Õppur",
+    "youHaveUnacceptedAbsences": "Teil on aktsepteerimata puudumistõendeid."
   },
   "declaration": {
     "myDeclaration": "Minu õpingukava",

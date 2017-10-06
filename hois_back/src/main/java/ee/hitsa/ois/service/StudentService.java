@@ -37,6 +37,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.util.StudentAbsenceUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.student.StudentAbsenceForm;
@@ -155,7 +156,8 @@ public class StudentService {
             dto.setValidThru(resultAsLocalDate(r, 3));
             dto.setCause(resultAsString(r, 4));
             dto.setVersion(resultAsLong(r, 5));
-            dto.setUserCanEdit(Boolean.valueOf(UserUtil.canEditStudentAbsence(user, absence)));
+            absence.setIsAccepted(dto.getIsAccepted()); // for validation
+            dto.setUserCanEdit(Boolean.valueOf(StudentAbsenceUtil.canEdit(user, absence)));
             return dto;
         });
 
@@ -165,7 +167,7 @@ public class StudentService {
         Object studentData = qb.select("p.firstname, p.lastname, sg.code", em).getSingleResult();
         String studentName = PersonUtil.fullname(resultAsString(studentData, 0), resultAsString(studentData, 1));
         String studentGroup = resultAsString(studentData, 2);
-        boolean canAddAbsence = UserUtil.canAddStudentAbsence(user, student);
+        boolean canAddAbsence = StudentAbsenceUtil.canCreate(user, student);
 
         return new StudentAbsenceSearchDto(data.getContent(), pageable, data.getTotalElements(), studentName, studentGroup, canAddAbsence);
     }

@@ -1,0 +1,52 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" nav-bar-aria-label="main selection" ng-cloak>
+    <md-nav-item md-nav-href="#/teachers/{{::teacher.id}}/edit" name="teacher.data">
+        {{'teacher.data' | translate}}</md-nav-item>
+    <md-nav-item ng-if="teacher.id && teacher.isVocational" md-nav-href="#/teachers/{{::teacher.id}}/continuingEducation" name="teacher.continuingEducation">
+        {{'teacher.continuingEducation.label' | translate}}</md-nav-item>
+    <md-nav-item ng-if="teacher.id" md-nav-href="#/teachers/{{::teacher.id}}/qualification" name="teacher.qualification">
+        {{'teacher.qualification.qualification' | translate}}</md-nav-item>
+    <md-nav-item ng-if="teacher.id && teacher.isHigher && isHigher" md-nav-href="#/teachers/{{::teacher.id}}/mobility" name="teacher.mobility">
+        {{'teacher.mobility.mobility' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<md-content class="md-padding">
+    <form name="mobilityForm" class="nomargin">
+        <md-button ng-click="newTeacherMobility()" class="md-raised">{{'teacher.mobility.add' | translate}}</md-button>
+        <div ng-repeat="mobility in teacherMobility.mobilities  | orderBy: '-id'">
+            <hois-collapsable label="('teacher.mobility.mobility' | translate)">
+                <div layout="column">
+                    <div layout="row" layout-sm="column" layout-xs="column">
+                        <md-input-container flex="25" flex-sm="100" flex-offset-sm="0">
+                            <label>{{'teacher.mobility.start' | translate}}</label>
+                            <md-datepicker ng-model="mobility.start" md-max-date="mobility.end" required md-open-on-focus></md-datepicker>
+                        </md-input-container>
+                        <md-input-container flex="20" flex-sm="100" flex-offset="5" flex-offset-sm="0">
+                            <label>{{'teacher.mobility.end' | translate}}</label>
+                            <md-datepicker ng-model="mobility.end" md-min-date="mobility.start" required md-open-on-focus></md-datepicker>
+                        </md-input-container>
+                        <md-input-container flex="45" flex-sm="100" flex-offset="5" flex-offset-sm="0">
+                            <label>{{'teacher.mobility.state' | translate}}</label>
+                            <hois-classifier-select ng-model="mobility.state" main-classifier-code="RIIK" required model-value-attr="code"></hois-classifier-select>
+                        </md-input-container>
+                    </div>
+                    <div layout="row" layout-sm="column" layout-xs="column">
+                        <md-input-container flex="25" flex-sm="100" flex-offset-sm="0">
+                            <label>{{'teacher.mobility.target' | translate}}</label>
+                            <hois-classifier-select ng-model="mobility.target" main-classifier-code="EHIS_MOBIILSUS" required model-value-attr="code"></hois-classifier-select>
+                        </md-input-container>
+                        <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-sm="0">
+                            <label>{{'teacher.mobility.school' | translate}}</label>
+                            <textarea ng-model="mobility.school" md-maxlength="255" max-rows="2" md-select-on-focus required></textarea>
+                        </md-input-container>
+                        <md-button ng-click="deleteMobility(mobility)" class="md-raised" flex-sm="100" flex-offset="5" flex-offset-sm="0">{{'main.button.delete' | translate}}
+                        </md-button>
+                    </div>
+                </div>
+            </hois-collapsable>
+        </div>
+        <md-button ng-click="updateTeacherMobility()" class="md-raised md-primary" ng-if="teacherMobility.mobilities.length > 0">{{'main.button.save' | translate}}
+        </md-button>
+    </form>
+</md-content>
+
+<md-button ng-href="#/teachers" class="md-raised">{{'main.button.back' | translate}}</md-button>

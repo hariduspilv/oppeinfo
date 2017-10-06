@@ -19,10 +19,10 @@
       </tr>
       <tr>
         <td colspan="3">
-          <md-checkbox ng-model="formState.showWeeks">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
+          <md-checkbox disabled ng-model="formState.showWeeks">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
           <md-checkbox ng-model="formState.showCapacityTypes">{{'lessonplan.showCapacityTypes' | translate}}</md-checkbox>
         </td>
-        <td ng-repeat="w in formState.weekNrs track by $index" class="center" ng-style="{background: 'white'}">{{w}}</td>
+        <td ng-repeat="w in formState.weekNrs track by $index" class="center" ng-style="{background: 'white'}" title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w}}</td>
       </tr>
     </tbody>
     <!-- journals -->
@@ -93,7 +93,7 @@
     </tbody>
   </table>
   <br>
-  <table class="lessonplan">
+  <table class="lessonplan" ng-if="record.subjects.length > 0">
     <!-- table header -->
     <tbody>
       <tr>

@@ -48,8 +48,7 @@
           <td md-cell ng-if="!row.id">{{row.start | hoisDate}} - {{row.end | hoisDate}}</td>
           <td md-cell>{{currentLanguageNameField(row.status)}}</td>
           <td md-cell>
-            <md-button ng-if="!row.id" md-no-ink class="md-primary change-button"
-                       ng-href="#/timetable/new?type={{criteria.type}}&from={{row.start}}&thru={{row.end}}">
+            <md-button ng-if="!row.id" md-no-ink class="md-primary change-button" ng-click="createEvent(row)">
               {{'main.button.create' | translate}}
             </md-button>
             <md-button ng-if="row.id && row.isHigher" md-no-ink class="md-primary change-button"
@@ -58,6 +57,11 @@
             <md-button ng-if="row.id && !row.isHigher" md-no-ink class="md-primary change-button"
                        ng-href="#/timetable/{{::row.id}}/view">{{'main.button.change' | translate}}
             </md-button>
+            <md-button ng-if="row.id && !row.isHigher" md-no-ink class="md-primary change-button"
+                       ng-click="copyTimetable(row.id)">{{'main.button.copy' | translate}}
+            </md-button>
+            <!--md-button ng-if="row.id && !row.isHigher" ng-href="{{excel(formState.xlsUrl, {id: row.id})}}" target="_blank" class="md-primary change-button">{{'timetable.management.difference' | translate}}
+            </md-button-->
           </td>
         </tr>
         </tbody>

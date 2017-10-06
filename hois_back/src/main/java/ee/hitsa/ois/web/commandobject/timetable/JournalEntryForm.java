@@ -3,7 +3,10 @@ package ee.hitsa.ois.web.commandobject.timetable;
 import java.time.LocalDate;
 import java.util.List;
 
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
@@ -16,17 +19,25 @@ public class JournalEntryForm {
     @NotEmpty
     @ClassifierRestriction(MainClassCode.SISSEKANNE)
     private String entryType;
+    @Size(max=100)
     private String nameEt;
 
     @NotNull(groups = {Lesson.class})
     private LocalDate entryDate;
+
     @NotNull(groups = {Lesson.class})
-    private Integer startLessonNr;
+    @Min(1)
+    @Max(100)
+    private Long startLessonNr;
+
     @NotNull(groups = {Lesson.class})
-    private Integer lessons;
+    @Min(1)
+    @Max(100)
+    private Long lessons;
+    @Size(max=10000)
     private String content;
 
-
+    @Size(max=10000)
     private String homework;
     @NotNull(groups = {Homework.class})
     private LocalDate homeworkDuedate;
@@ -51,16 +62,16 @@ public class JournalEntryForm {
     public void setEntryDate(LocalDate entryDate) {
         this.entryDate = entryDate;
     }
-    public Integer getStartLessonNr() {
+    public Long getStartLessonNr() {
         return startLessonNr;
     }
-    public void setStartLessonNr(Integer startLessonNr) {
+    public void setStartLessonNr(Long startLessonNr) {
         this.startLessonNr = startLessonNr;
     }
-    public Integer getLessons() {
+    public Long getLessons() {
         return lessons;
     }
-    public void setLessons(Integer lessons) {
+    public void setLessons(Long lessons) {
         this.lessons = lessons;
     }
     public String getContent() {

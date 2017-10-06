@@ -1,6 +1,5 @@
 package ee.hitsa.ois.web;
 
-import java.util.List;
 import java.util.Map;
 
 import javax.validation.Valid;
@@ -18,6 +17,8 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventSearchCommand;
 import ee.hitsa.ois.web.dto.timetable.TimetableByGroupDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableByRoomDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableByTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchDto;
 
 @RestController
@@ -45,7 +46,22 @@ public class TimetableEventController {
             @RequestParam("studyperiodId") Long studyperiodId, @RequestParam("studentGroupId") Long studentGroupId, 
             @RequestParam("timetableId") Long timetableId) {
         //UserUtil.assertIsSchoolAdmin(user);
-        return timetableEventService.getTimetableForWeek(studyperiodId, studentGroupId, timetableId);
+        return timetableEventService.getGroupTimetableForWeek(studyperiodId, studentGroupId, timetableId);
     }
 
+    @GetMapping("/timetableByTeacher")
+    public TimetableByTeacherDto timetableByTeacher(HoisUserDetails user,
+            @RequestParam("studyperiodId") Long studyperiodId, @RequestParam("teacherId") Long teacherId, 
+            @RequestParam("timetableId") Long timetableId) {
+        //UserUtil.assertIsSchoolAdmin(user);
+        return timetableEventService.getTeacherTimetableForWeek(studyperiodId, teacherId, timetableId);
+    }
+    
+    @GetMapping("/timetableByRoom")
+    public TimetableByRoomDto timetableByRoom(HoisUserDetails user,
+            @RequestParam("studyperiodId") Long studyperiodId, @RequestParam("roomId") Long roomId, 
+            @RequestParam("timetableId") Long timetableId) {
+        //UserUtil.assertIsSchoolAdmin(user);
+        return timetableEventService.getRoomTimetableForWeek(studyperiodId, roomId, timetableId);
+    }
 }

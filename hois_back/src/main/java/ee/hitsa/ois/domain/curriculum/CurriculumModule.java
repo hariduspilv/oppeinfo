@@ -14,9 +14,10 @@ import javax.persistence.OneToMany;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.util.Translatable;
 
 @Entity
-public class CurriculumModule extends BaseEntityWithId {
+public class CurriculumModule extends BaseEntityWithId implements Translatable {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false, insertable = false)

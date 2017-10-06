@@ -1,3 +1,24 @@
+<!--FIXME: type color is not supported in IE 11-->
+<table md-table class="secondary-table">
+  <thead md-head>
+  <tr md-row>
+    <th md-column>{{'studyYearScheduleLegend.code' | translate}}</th>
+    <th md-column>{{'studyYearScheduleLegend.nameEt' | translate}}</th>
+    <th md-column>{{'studyYearScheduleLegend.nameEn' | translate}}</th>
+    <th md-column>{{'studyYearScheduleLegend.color' | translate}}</th>
+  </tr>
+  </thead>
+  <tbody md-body>
+  <tr md-row ng-repeat="item in legends" ng-class-odd="'odd'" ng-class-even="'even'">
+    <td md-cell>{{item.code}}</td>
+    <td md-cell>{{item.nameEt}}</td>
+    <td md-cell>{{item.nameEn}}</td>
+    <td md-cell><input ng-model="item.color" type="color"></td>
+  </tr>
+  </tbody>
+</table>
+
+
 <!--FIXME: this form is slow in IE-->
 <div layout="column" layout-padding>
   <form name="studyYearScheduleForm">
@@ -18,25 +39,25 @@
       </div>
       <br>
       <md-table-container ng-cloak layout-padding>
-        <table>
+        <table class="schedule">
           <thead>
-            <tr>
-              <th class="studentGroup"></th>
-              <th ng-repeat="studyPeriod in criteria.studyYear.studyPeriods" colspan="{{studyPeriod.weeks}}">
+            <tr class="schedule">
+              <th class="studentGroup schedule"></th>
+              <th class="schedule" ng-repeat="studyPeriod in criteria.studyYear.studyPeriods" colspan="{{studyPeriod.weeks}}">
                 {{currentLanguageNameField(studyPeriod)}}
               </th>
             </tr>
             <tr>
-              <th class="studentGroup"></th>
-              <th class="weekCell weekNr" ng-repeat="week in weeks">{{$index + 1}}</th>
+              <th class="schedule studentGroup"></th>
+              <th class="schedule weekCell weekNr" ng-repeat="week in weeks">{{$index + 1}}</th>
             </tr>
           </thead>
           <tbody ng-repeat="department in schoolDepartments | filter: filterSchoolDepartments">
             <tr>
-              <td colspan="{{weeks.length + 1}}" class="schoolDepartment">{{currentLanguageNameField(department)}}</td>
+              <td colspan="{{weeks.length + 1}}" class="schedule schoolDepartment">{{currentLanguageNameField(department)}}</td>
             </tr>
             <tr ng-repeat="sg in studentGroups | filter: filterStudentGroups(department)">
-              <td class="studentGroup">{{sg.code}}</td>
+              <td class="schedule studentGroup">{{sg.code}}</td>
               <!--
                                 style="background: { getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color}"
                                 Was not used insted of ng-style as VS code marked curly braces as error(css property expected),
@@ -44,11 +65,11 @@
 
                                 ng-if="!isPastStudyYear" was used, because in case of past study year, it should not become bold when clicked
                             -->
-              <td ng-if="!isPastStudyYear" class="weekCell" ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
+              <td ng-if="!isPastStudyYear" class="schedule weekCell" ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
                 ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }">
                 {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
               </td>
-              <td ng-if="isPastStudyYear" class="weekCell" ng-repeat="week in weeks"
+              <td ng-if="isPastStudyYear" class="schedule weekCell" ng-repeat="week in weeks"
                 ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }">
                 {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
               </td>
@@ -64,9 +85,9 @@
 </div>
 
 <style>
-  table,
-  th,
-  td {
+  table.schedule,
+  th.schedule,
+  td.schedule {
     border: 1px solid #1cb3ff;
     border-collapse: collapse;
   }

@@ -64,7 +64,7 @@ public class StateCurriculumController {
 
     @GetMapping("/print/{id:\\d+}/stateCurriculum.pdf")
     public void print(@WithEntity("id") StateCurriculum stateCurriculum, HttpServletResponse response) throws IOException {
-        HttpUtil.pdf(response, stateCurriculum.getNameEt() + ".pdf", pdfService.generate(StateCurriculumReport.TEMPLATE_NAME, new StateCurriculumReport(stateCurriculum)));
+        HttpUtil.pdf(response, EntityUtil.getId(stateCurriculum) + ".pdf", pdfService.generate(StateCurriculumReport.TEMPLATE_NAME, new StateCurriculumReport(stateCurriculum)));
     }
 
     @PostMapping

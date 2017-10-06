@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.time.LocalDate;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -21,10 +22,12 @@ public class LessonPlanByTeacherDto {
     private final List<Short> weekNrs;
     private final List<LessonPlanModuleJournalDto> journals;
     private final List<LessonPlanByTeacherSubjectDto> subjects;
+    private final List<LocalDate> weekBeginningDates;
 
     public LessonPlanByTeacherDto(StudyYear studyYear, List<Journal> journals, List<LessonPlanByTeacherSubjectDto> subjects, Teacher teacher) {
         studyPeriods = studyYear.getStudyPeriods().stream().sorted(Comparator.comparing(StudyPeriod::getStartDate)).map(StudyPeriodDto::new).collect(Collectors.toList());
         weekNrs = studyPeriods.stream().flatMap(r -> r.getWeekNrs().stream()).collect(Collectors.toList());
+        weekBeginningDates = studyPeriods.stream().flatMap(r -> r.getWeekBeginningDates().stream()).collect(Collectors.toList());
 
         LessonPlanCapacityMapper capacityMapper = LessonPlanUtil.capacityMapper(studyYear);
         this.journals = journals.stream().map(r -> LessonPlanModuleJournalForTeacherDto.of(r, capacityMapper, teacher)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
@@ -45,6 +48,10 @@ public class LessonPlanByTeacherDto {
 
     public List<LessonPlanByTeacherSubjectDto> getSubjects() {
         return subjects;
+    }
+    
+    public List<LocalDate> getWeekBeginningDates() {
+        return weekBeginningDates;
     }
 
     public static class LessonPlanByTeacherSubjectDto {

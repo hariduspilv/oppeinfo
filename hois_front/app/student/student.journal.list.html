@@ -1,0 +1,23 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'subjectStudyPeriod.label.options' | translate}}">
+    <md-nav-item md-nav-href="#/students/journals" name="journals">{{'student.journal.journals' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/students/study" name="study">{{'student.journal.study.label' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/students/tasks" name="tasks">{{'student.journal.tasks.label' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<div layout-padding>
+    <div flex>
+        <ul ng-repeat="year in journalsByYears">
+            <h2 class="md-title">
+                <hois-classifier-value ng-model="year.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value> {{'student.journal.studyYear' | translate}}
+            </h2>
+            <li ng-repeat="journal in year.journals">
+                <a ng-click="showJournal(journal.id)">{{journal.nameEt}}</a>
+                <span>
+                    {{'student.journal.absences' | translate}}: {{journal.absenceH}},
+                    {{'student.journal.includingAbsencesWithoutReason' | translate}}: {{journal.absenceP}},
+                    {{'student.journal.lateForClass' | translate}}: {{journal.absenceV}}
+                </span>
+            </li>
+        </ul>
+    </div>
+</div>

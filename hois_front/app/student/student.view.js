@@ -100,40 +100,13 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       });
     };
   }
-]).controller('StudentViewResultsController', ['$q', '$route', '$scope', 'QueryUtils', function ($q, $route, $scope, QueryUtils) {
+]).controller('StudentViewResultsController', ['$route', '$scope', 'QueryUtils', function ($route, $scope, QueryUtils) {
   $scope.auth = $route.current.locals.auth;
-  var auth = $route.current.locals.auth;
 
-  var studentId = (auth.isStudent() ? auth.student : $route.current.params.id);
-
-  console.log(studentId);
-
-  if (auth.isStudent() && !$route.current.locals.student) {
-    var Endpoint = QueryUtils.endpoint('/students');
-
-    $scope.studentId = studentId;
-    $scope.currentNavItem = 'student.main';
-
-    Endpoint.get({ id: studentId }, function (result) {
-      $scope.student = result;
-      /*if ($scope.student.photo) {
-        $scope.student.imageUrl = oisFileService.getUrl($scope.student.photo);
-      } else {
-        $scope.student.imageUrl = '?' + new Date().getTime();
-      }*/
-    });
-
-  } else {
-    $scope.studentId = studentId;
-    $scope.student = $route.current.locals.student;
-  }
-
+  $scope.studentId = ($scope.auth.isStudent() ? $scope.auth.student : $route.current.params.id);
+  $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
   $scope.currentNavItem = 'student.results';
   $scope.resultsCurrentNavItem = 'student.curriculumFulfillment';
-  //$scope.auth = $route.current.locals.auth;
-
-  //$scope.student = $route.current.locals.student;
-  //$scope.studentId = $route.current.params.id;  //used in links in html files
 
   $scope.isStudentCurriculumFulfilled = function (student) {
     return student && angular.isNumber(student.credits) && student.credits >= student.curriculumCredits;

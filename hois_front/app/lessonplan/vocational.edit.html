@@ -1,10 +1,15 @@
 <div ng-cloak class="ois-form-layout-padding" style="overflow: scroll">
   <div layout="column">
     <div flex layout="row">
-      <div flex="30" layout="row" layout-align="start center" >
-        <md-checkbox ng-model="record.isUsable">
-          {{'lessonplan.isUsable' | translate}}
-        </md-checkbox>
+      <div flex="50" layout="row" layout-align="start center" >
+        <div flex="15">
+          <span class="common-label">{{'lessonplan.studentGroup' | translate}} {{record.studentGroupCode}}</span>
+        </div>
+        <div flex="20">
+          <md-checkbox ng-model="record.isUsable">
+            {{'lessonplan.isUsable' | translate}}
+          </md-checkbox>
+        </div>
       </div>
       <div flex="70" layout="row" layout-align="end start" class="common-label" md-colors="{color: 'background-400'}">
 	    <span ng-repeat="c in formState.capacityTypes">
@@ -23,10 +28,10 @@
     </tr>
     <tr>
       <td colspan="3">
-        <md-checkbox ng-model="record.showWeeks">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
+        <md-checkbox disabled ng-model="formState.showWeeks">{{'lessonplan.showWeeks' | translate}}</md-checkbox>
         <md-checkbox ng-model="formState.showTotals">{{'lessonplan.showTotals' | translate}}</md-checkbox>
       </td>
-      <td ng-repeat="w in formState.weekNrs track by $index" class="center" ng-style="{ background: true ? getLegendByWeek(w) : 'white' }">{{w}}</td>
+      <td ng-repeat="w in formState.weekNrs track by $index" class="center" ng-style="{ background: true ? getLegendByWeek(w) : 'white' }" title="{{formState.weekBeginningDates[$index] | hoisDate}}">{{w}}</td>
     </tr>
     <!-- modules -->
     <tbody ng-repeat="module in record.modules">

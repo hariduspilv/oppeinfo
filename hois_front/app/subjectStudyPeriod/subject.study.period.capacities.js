@@ -6,6 +6,15 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
 
         var self = this;
 
+        this.addEmptyCapacities = function(types) {
+          for(var i = 0; i < types.length; i++) {
+            var ssps = container.subjectStudyPeriodDtos;
+            for(var j = 0; j < ssps.length; j++) {
+              this.getCapacity(ssps[j], types[i].code);
+            }
+          }
+        }
+
         function getSubjectStudyPeriods() {
             return !container || !container.subjectStudyPeriodDtos ? [] : container.subjectStudyPeriodDtos;
         }
@@ -120,16 +129,6 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
                 ssp.capacities.push(capacity);
             }
             return capacity;
-        };
-
-        this.setCapacityEditable = function(ssp, type) {
-            var capacity = self.getCapacity(ssp, type);
-            capacity.editable = true;
-        };
-
-        this.unsetCapacityEditable = function(ssp, type) {
-            var capacity = self.getCapacity(ssp, type);
-            capacity.editable = false;
         };
 
         this.filterEmptyCapacities = function() {

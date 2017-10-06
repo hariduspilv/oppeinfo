@@ -144,7 +144,7 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
   function ($location, $mdDialog, $route, $scope, message, Classifier, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/lessonplans';
-    $scope.formState = {capacityTypes: Classifier.queryForDropdown({mainClassCode: 'MAHT'})};
+    $scope.formState = {capacityTypes: Classifier.queryForDropdown({mainClassCode: 'MAHT'}), showWeeks: true};
     $scope.keys = Object.keys;
 
     $scope.getCapacityTypes = function(hours) {
@@ -182,9 +182,11 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
       $scope.formState.studyPeriods = result.studyPeriods;
       //console.log($scope.formState.studyPeriods);
       $scope.formState.weekNrs = result.weekNrs;
+      $scope.formState.weekBeginningDates = result.weekBeginningDates;
       $scope.formState.legends = result.legends.reduce(function(acc, item) { acc[item.weekNr] = item.color; return acc; }, {});
       delete result.studyPeriods;
       delete result.weekNrs;
+      delete result.weekBeginningDates;
       delete result.legends;
       $scope.formState.moduleMap = {};
       $scope.formState.rowTotals = {};
@@ -290,6 +292,7 @@ angular.module('hitsaOis').controller('LessonplanSearchController', ['$location'
     QueryUtils.endpoint(baseUrl + '/:id/:studyYear').search({id: id, studyYear: studyYearId}).$promise.then(function(result) {
       $scope.formState.studyPeriods = result.studyPeriods;
       $scope.formState.weekNrs = result.weekNrs;
+      $scope.formState.weekBeginningDates = result.weekBeginningDates;
       $scope.formState.rowTotals = {};
       $scope.formState.journalTotals = {};
       $scope.formState.grandTotals = {_: {_: createTotalsRow($scope)}};

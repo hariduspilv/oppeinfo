@@ -36,10 +36,14 @@ public class StateCurriculumModuleDto extends VersionedCommand {
     @Max(999)
     private BigDecimal credits;
     @NotBlank
+    @Size(max=20000)
     private String objectivesEt;
+    @Size(max=20000)
     private String objectivesEn;
     @NotBlank
+    @Size(max=20000)
     private String assessmentsEt;
+    @Size(max=20000)
     private String assessmentsEn;
     
     @NotEmpty

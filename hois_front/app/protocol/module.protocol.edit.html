@@ -5,7 +5,7 @@
       <div>
         <div flex>
           <md-table-container>
-            <table md-table md-progress="protocol.$promise">
+            <table md-table md-progress="protocol.$promise" md-row-select="protocol.canBeEdited" multiple="true" ng-model="calculateGrades.protocolStudents">
               <thead md-head>
                 <tr md-row>
                   <th md-column>{{'student.label' | translate}}</th>
@@ -23,17 +23,18 @@
                 </tr>
               </thead>
               <tbody md-body>
-                <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'">
+                <tr md-row ng-repeat="row in protocol.protocolStudents | orderBy: 'fullname'" ng-class-odd="'odd'" ng-class-even="'even'"
+                md-select="row.id" md-select-id="row.id">
                   <td md-cell>{{row.fullname}}</td>
                   <td md-cell>{{row.idcode}}</td>
                   <td md-cell ng-repeat="journal in journals | orderBy: 'nameEt'">
                     {{journalResultsView(journal.id, row)}}
                   </td>
                   <td md-cell>
-                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code" aria-label="grade" ng-change="gradeChanged()"></hois-select>
+                    <hois-select style="margin:0px;width:2em;" ng-model="row.grade" values="grades" show-property="value" value-property="code" aria-label="grade" ng-change="gradeChanged()" ng-disabled="!protocol.canBeEdited"></hois-select>
                   </td>
                   <td md-cell>
-                    <a ng-if="row.status==='OPPURSTAATUS_K' && !row.grade" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
+                    <a ng-if="row.status==='OPPURSTAATUS_K' && !row.grade && protocol.canBeEdited" ng-click="deleteProtocolStudent(row)" class="remove">&times;</a>
                   </td>
                 </tr>
               </tbody>
@@ -42,11 +43,14 @@
         </div>
       </div>
       <br>
+      <div layout="row">
+        <md-button class="md-raised" ng-click="calculate()" ng-if="protocol.canBeEdited" ng-disabled="calculateGrades.protocolStudents.length === 0">{{'higherProtocol.calculate' | translate}}</md-button>
+      </div>
+      <br>
       <div>
-        <md-button class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
-        <md-button class="md-raised" ng-click="addProtocolStudents()">{{'moduleProtocol.addStudents' | translate}}</md-button>
+        <md-button class="md-raised md-primary" type="submit" ng-if="protocol.canBeEdited">{{'main.button.save' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="addProtocolStudents()" ng-if="protocol.canBeEdited">{{'moduleProtocol.addStudents' | translate}}</md-button>
         <md-button ng-show="formState.canConfirm===true" class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
-        <!--TODO: <md-button class="md-raised" ng-click="calculate()">{{'main.button.calculate' | translate}}</md-button>-->
         <md-button class="md-raised" ng-href="#/moduleProtocols">{{'main.button.back' | translate}}</md-button>
 
         <a ng-show="formState.protocolPdfUrl" ng-href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>

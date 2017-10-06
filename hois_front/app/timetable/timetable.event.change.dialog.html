@@ -2,7 +2,7 @@
   <form name="dialogForm" ng-submit="dialogForm.$valid && submit()" novalidate ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2 flex>{{lesson.journalObject.name}}, {{lesson.journalObject.teacherNames.join(", ")}}, {{lessonCapacityName}}</h2>
+        <h2 flex>{{lesson.journalObject.name}}, {{lesson.journalObject.teacherNames.join(", ")}}, {{currentLanguageNameField(lessonCapacityName)}}</h2>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
         </md-button>
@@ -12,16 +12,24 @@
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
         <div layout="column">
-          <div layout="row" flex="100">
-            <hois-autocomplete flex ng-model="lesson.eventRooms" method="rooms" additional-query-params="{buildingIds: lesson.buildingIds}" 
-            name="student" label="lessonplan.event.room" code="lesson.buildingIds.join(',')" multiple></hois-autocomplete>
+          <div flex="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+            <div layout="row" flex="70">
+              <hois-autocomplete flex ng-model="lesson.eventRoom" method="rooms" label="lessonplan.event.room" additional-query-params="{buildingIds: lesson.buildingIds}"></hois-autocomplete>
+            </div>
+            <div layout="column" class="common-label" flex="65" ng-repeat="room in lesson.eventRooms">
+              <div layout="row" flex layout-align="start center">
+                <div flex="5">&nbsp;</div>
+                <div flex="50">{{room.nameEt}}</div>
+                <div><a ng-click="removeFromArray(lesson.eventRooms, room)" class="remove">&times;</a></div>
+              </div>
+            </div>
           </div>
           <div layout="row" flex="100">
-            <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="30" flex-sm="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'main.start' | translate}}</label>
               <hois-time ng-model="lesson.startTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
             </md-input-container>
-            <md-input-container flex="30" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+            <md-input-container flex="30" flex-sm="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
               <label>{{'main.end' | translate}}</label>
               <hois-time ng-model="lesson.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
             </md-input-container>

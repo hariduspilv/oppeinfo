@@ -8,8 +8,9 @@
             <table md-table md-progress="endpoint.$promise">
                 <thead md-head>
                     <tr md-row>
-                        <th md-column>{{'academicCalendar.date' | translate}}</th>
-                        <th md-column width="85%">{{'academicCalendar.description' | translate}}</th>
+                        <th md-column width="20%">{{'academicCalendar.date' | translate}}</th>
+                        <th md-column width="20%">{{'academicCalendar.description' | translate}}</th>
+                        <th md-column width="60%">{{'academicCalendar.type' | translate}}</th>
                     </tr>
                 </thead>
                 <tbody md-body>
@@ -17,15 +18,19 @@
                         <td md-cell ng-if="!row.endDate">{{row.startDate | hoisTimestamp}}</td>
                         <td md-cell ng-if="row.endDate">{{row.startDate | hoisTimestamp}} - {{row.endDate | hoisTimestamp}}</td>
                         <td md-cell>
-                            <span  ng-if="!row.eventType">{{currentLanguage() == 'en' ? row.descriptionEn : row.descriptionEt}}</span>
-                            <span  ng-if="row.eventType">
-                                <span  ng-if="row.eventType == 1">
-                                    {{currentLanguage() == 'en' ? row.descriptionEn : row.descriptionEt}} ({{'academicCalendar.beginning' | translate}})
+                            <span ng-if="!row.eventType">{{currentLanguageNameField(row)}}</span>
+                            <span ng-if="row.eventType">
+                                <span ng-if="row.eventType == 1">
+                                    {{currentLanguageNameField(row)}} ({{'academicCalendar.beginning' | translate}})
                                 </span>
-                                <span  ng-if="row.eventType == 2">
-                                    {{currentLanguage() == 'en' ? row.descriptionEn : row.descriptionEt}} ({{'academicCalendar.end' | translate}})
+                                <span ng-if="row.eventType == 2">
+                                    {{currentLanguageNameField(row)}} ({{'academicCalendar.end' | translate}})
                                 </span>
                             </span>
+                        </td>
+                        <td md-cell>
+                            <hois-classifier-value ng-if="!row.eventType" ng-model="row.eventTypeCode" main-classifier-code="SYNDMUS"></hois-classifier-value>
+                            <span ng-if="row.eventType">{{'academicCalendar.studyPeriod' | translate}}</span>
                         </td>
                     </tr>
                 </tbody>

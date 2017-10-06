@@ -51,7 +51,7 @@ import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.HigherProtocolCalculateCommand;
+import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
@@ -60,7 +60,7 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.HigherProtocolDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
 import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
-import ee.hitsa.ois.web.dto.HigherProtocolStudentResultDto;
+import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 import ee.hitsa.ois.web.dto.student.StudentSearchDto;
 
 @Transactional
@@ -326,12 +326,12 @@ public class HigherProtocolService {
         }, result);
     }
 
-    public List<HigherProtocolStudentResultDto> calculateGrades(HigherProtocolCalculateCommand command) {
-        List<HigherProtocolStudentResultDto> calculatedResults = new ArrayList<>();
+    public List<ProtocolStudentResultDto> calculateGrades(ProtocolCalculateCommand command) {
+        List<ProtocolStudentResultDto> calculatedResults = new ArrayList<>();
         for(Long protocolStudentId : command.getProtocolStudents()) {
             ProtocolStudent ps = protocolStudentRepository.getOne(protocolStudentId);
             HigherAssessment grade = HigherProtocolGradeUtil.calculateGrade(ps);
-            calculatedResults.add(new HigherProtocolStudentResultDto(protocolStudentId, grade));
+            calculatedResults.add(new ProtocolStudentResultDto(protocolStudentId, grade));
         }
         return calculatedResults;
     }

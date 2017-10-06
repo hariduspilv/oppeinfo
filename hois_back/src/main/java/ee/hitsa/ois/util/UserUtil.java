@@ -6,7 +6,6 @@ import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.domain.student.StudentAbsence;
 import ee.hitsa.ois.domain.student.StudentRepresentative;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ApplicationStatus;
@@ -55,15 +54,6 @@ public abstract class UserUtil {
 
     public static boolean canEditStudent(HoisUserDetails user, Student student) {
         return isSchoolAdmin(user, student.getSchool()) || isAdultStudent(user, student)|| isStudentRepresentative(user, student);
-    }
-
-    public static boolean canAddStudentAbsence(HoisUserDetails user, Student student) {
-        return isAdultStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentTeacher(user, student) || isStudentRepresentative(user, student);
-    }
-
-    public static boolean canEditStudentAbsence(HoisUserDetails user, StudentAbsence absence) {
-        Student student = absence.getStudent();
-        return isAdultStudent(user, student) || isSchoolAdmin(user, student.getSchool()) || isStudentTeacher(user, student) || isStudentRepresentative(user, student);
     }
 
     /**
@@ -115,6 +105,10 @@ public abstract class UserUtil {
     public static boolean isSame(HoisUserDetails user, Student student) {
         return user.getPersonId().equals(EntityUtil.getId(student.getPerson()));
     }
+    
+    public static boolean isSamePerson(HoisUserDetails user, Person person) {
+        return user.getPersonId().equals(EntityUtil.getId(person));
+    }
 
     public static boolean isStudent(HoisUserDetails user, Student student) {
         return user.isStudent() && user.getStudentId().equals(EntityUtil.getId(student));
@@ -124,7 +118,7 @@ public abstract class UserUtil {
         return user.isRepresentative() && student.getRepresentatives().stream().anyMatch(r -> EntityUtil.getId(r.getPerson()).equals(user.getPersonId()));
     }
 
-    public static boolean isStudentTeacher(HoisUserDetails user, Student student) {
+    public static boolean isStudentGroupTeacher(HoisUserDetails user, Student student) {
         if(isTeacher(user, student.getSchool()) && student.getStudentGroup() != null) {
             Teacher teacher = student.getStudentGroup().getTeacher();
             return user.getTeacherId().equals(EntityUtil.getId(teacher));
@@ -170,6 +164,10 @@ public abstract class UserUtil {
     public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin() && !user.isTeacher(), "User is not school admin or teacher");
     }
+    
+    public static void assertIsSchoolAdminOrTeacher(HoisUserDetails user, School school) {
+        AssertionFailedException.throwIf(!isSchoolAdmin(user, school) && !isTeacher(user, school), "User is not school admin or teacher in given school");
+    }
 
     public static void assertCanUpdateUser(String role) {
         AssertionFailedException.throwIf(role.equals(Role.ROLL_T.name()) || role.equals(Role.ROLL_L.name()),"Invalid role");
@@ -204,5 +202,4 @@ public abstract class UserUtil {
         AssertionFailedException.throwIf(!canViewStudent(user, student), 
                 "User is not allowed to see student's information");    
     }
-
 }

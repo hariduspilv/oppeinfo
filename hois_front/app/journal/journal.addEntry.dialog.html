@@ -16,7 +16,7 @@
             <div layout="row" layout-sm="column" layout-xs="column">
               <md-input-container flex="45">
                 <label>{{'journal.entry.type' | translate}}</label>
-                <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required ng-change="setJournalEntryDefaultName(journalEntry.entryType)"></hois-classifier-select>
+                <hois-classifier-select ng-model="journalEntry.entryType" model-value-attr="code" main-classifier-code="SISSEKANNE" required ng-change="setJournalEntryDefaultName(journalEntry.entryType)" filter-values="forbiddenEntryTypes"></hois-classifier-select>
               </md-input-container>
               <md-input-container flex="45" flex-offset="10">
                 <label>{{'journal.entry.name' | translate}}</label>
@@ -92,10 +92,13 @@
                     </td>
                     <td md-cell>
                       <md-input-container>
-                        <div ng-if="journalEntryStudents[row.id].absence === 'PUUDUMINE_V'">
-                          {{absenceOptions["PUUDUMINE_V"].value}}
+                        <div ng-if="hasAcceptedAbsence(row)">
+                          <md-radio-group ng-model="journalEntryStudents[row.id].absence" layout="row" aria-label="absence"
+                          ng-change="journalEntryStudentChanged(journalEntryStudents, row)">
+                          <md-radio-button value="PUUDUMINE_V" aria-label="PUUDUMINE_H">{{absenceOptions["PUUDUMINE_V"].value}}</md-radio-button>
+                        </md-radio-group>
                         </div>
-                        <md-radio-group ng-if="journalEntryStudents[row.id].absence !== 'PUUDUMINE_V'" ng-model="journalEntryStudents[row.id].absence" layout="row" aria-label="absence"
+                        <md-radio-group ng-if="!hasAcceptedAbsence(row)" ng-model="journalEntryStudents[row.id].absence" layout="row" aria-label="absence"
                           ng-change="journalEntryStudentChanged(journalEntryStudents, row)">
                           <md-radio-button value="PUUDUMINE_H" aria-label="PUUDUMINE_H">{{absenceOptions["PUUDUMINE_H"].value}}</md-radio-button>
                           <md-radio-button value="PUUDUMINE_P" aria-label="PUUDUMINE_P">{{absenceOptions["PUUDUMINE_P"].value}}</md-radio-button>

@@ -9,7 +9,9 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
   var allGrades = Classifier.queryForDropdown({ mainClassCode: 'KUTSEHINDAMINE' });
   $scope.formState = {};
 
-
+  $scope.calculateGrades = {
+    protocolStudents: []
+  };
 
   function loadGradesSelect() {
     allGrades.$promise.then(function (result) {
@@ -172,14 +174,34 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
     } else {
       signBeforeConfirm();
     }
-};
+  };
 
-var ModuleProtocolEndpoint = QueryUtils.endpoint('/moduleProtocols');
-$scope.save = function () {
-  new ModuleProtocolEndpoint({ id: $scope.protocol.id, version: $scope.protocol.version, protocolStudents: $scope.protocol.protocolStudents })
-    .$update().then(function (result) {
-      message.info('main.messages.create.success');
-      entityToDto(result);
+  var ModuleProtocolEndpoint = QueryUtils.endpoint('/moduleProtocols');
+  $scope.save = function () {
+    new ModuleProtocolEndpoint({ id: $scope.protocol.id, version: $scope.protocol.version, protocolStudents: $scope.protocol.protocolStudents })
+      .$update().then(function (result) {
+        message.info('main.messages.create.success');
+        entityToDto(result);
+      });
+  };
+
+  function setCalculatedGrade(calculatedGrade) {
+    var student = $scope.protocol.protocolStudents.find(function(s){
+      return s.id === calculatedGrade.protocolStudent;
     });
-};
+    student.grade = calculatedGrade.grade;
+  }
+
+  function setCalculatedGrades(listOfResults) {
+    listOfResults.forEach(setCalculatedGrade);
+    $scope.gradeChanged();
+  }
+
+  $scope.calculate = function() {
+    QueryUtils.endpoint("/moduleProtocols/" + $scope.protocol.id + "/calculate").query($scope.calculateGrades).$promise.then(function(response){
+      $scope.calculateGrades.protocolStudents = [];
+      setCalculatedGrades(response);
+      message.info('moduleProtocol.messages.calculated');
+    });
+  };
 });

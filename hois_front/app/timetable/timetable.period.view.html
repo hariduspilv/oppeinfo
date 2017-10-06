@@ -1,39 +1,68 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
-    <h2 style="text-align: center">{{currentLanguage() == 'en' ? timetable.nameEn : timetable.nameEt}}. {{timetable.startDate | hoisDate}} - {{timetable.endDate | hoisDate}}</h2>
+    <div layout-row>
+        <span ng-if="shownTimetableCurriculum">{{shownTimetableCurriculum.studentGroupCode}}, {{currentLanguageNameField(shownTimetableCurriculum)}}</span>
+        <span ng-if="shownTeacher">{{shownTeacher.lastname}}, {{shownTeacher.firstname}}</span>
+        <span ng-if="shownRoom">{{shownRoom.buildingCode}}, {{shownRoom.roomCode}}</span>
+    </div>
+    <div layout-row style="text-align: center">
+        <md-button ng-if="previousTimetableId" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::studyperiodId}}/{{::typeId}}/{{::previousTimetableId}}">
+            <md-icon>arrow_back</md-icon>
+        </md-button>
+        <h2 style="display:inline-block">{{currentLanguageNameField(shownTimetable)}}. {{shownTimetable.startDate | hoisDate}} - {{shownTimetable.endDate
+            | hoisDate}}</h2>
+        <md-button ng-if="nextTimetableId" class="md-icon-button md-primary" ng-href="#/timetable/{{timetableType}}/{{::studyperiodId}}/{{::typeId}}/{{::nextTimetableId}}">
+            <md-icon>arrow_forward</md-icon>
+        </md-button>
+    </div>
 
     <div layout="column" flex="90" style="border: 1px solid #ccc; margin-left: auto; margin-right: auto;" id="vTimetable">
         <div layout="row" style="position:relative">
             <div layout="column" flex style="position:absolute;width:100%;">
-               <div style="height:20px;text-align:center" >&nbsp;</div>
-               <div ng-repeat="time in timeColumn track by $index" style="height:15px;border-bottom:1px dotted #ccc;border-collapse: collapse" ng-show="$index > 0">&nbsp;</div>
+                <div style="height:20px;text-align:center">&nbsp;</div>
+                <div ng-repeat="time in timeColumn track by $index" style="height:15px;border-bottom:1px dotted #ccc;border-collapse: collapse"
+                    ng-show="$index > 0">&nbsp;</div>
+            </div>
+            <div flex="10" layout="column">
+                <div style="height:20px;text-align:center">&nbsp;</div>
+                <div ng-repeat="time in timeColumn" style="height:16px;">
+                    <span ng-show="($index % 2 != 0)">{{time}}</span>
                 </div>
-                <div flex="10" layout="column">
-                  <div style="height:20px;text-align:center" >&nbsp;</div>
-                  <div ng-repeat="time in timeColumn" style="height:16px;"><span ng-show="($index % 2 != 0)">{{time}}</span></div>
-                </div>
+            </div>
             <div ng-repeat="day in weekColumns" flex="20" layout="column" style="position:relative; border-left: 1px solid #ccc;border-collapse: collapse">
-                <div style="height:32px;text-align:center" md-colors="day.today==1 ?  {background: 'accent-400'}:{}">{{day.name}}<br>{{day.date | hoisDate}}</div>
+                <div style="height:32px;text-align:center" md-colors="day.today==1 ?  {background: 'accent-400'}:{}">{{'timetable.timetablePlan.' + day.name | translate}}<br>{{day.date | hoisDate}}</div>
                 <div layout="row">
-                    <div flex ng-repeat="event in day.events track by $index"
-                        ng-style="{'height': event.rowHeight + 'px', 'top': event.top + 'px', 'z-index': $index}"
-                        style="border: 1px solid; position:absolute; overflow: hidden;width:calc(100% - 10px);" md-colors="{background: 'primary-100-0.8','border-color': 'primary-500'}" class="timetableEvent">
+                    <div flex ng-repeat="event in day.events track by $index" ng-style="{'height': event.rowHeight + 'px', 'top': event.top + 'px', 'z-index': $index}"
+                        style="padding: 0; border: 1px solid; position:absolute; overflow: hidden;width:calc(100% - 10px);" md-colors="{background: 'primary-100-0.8','border-color': 'primary-500'}"
+                        class="timetableEvent">
                         <md-tooltip md-direction="bottom" style="margin: -18px; height: auto;">
                             <div>{{event.timeStart}}-{{event.timeEnd}} {{event.name}}</div>
-                            <div ng-repeat="room in event.rooms track by $index">{{room}} </div>
-                            <div ng-repeat="teacher in event.teachers track by $index">{{teacher}} </div>
+                            <div ng-repeat="room in event.rooms track by $index">{{room.code}}</div>
+                            <div ng-repeat="teacher in event.teachers track by $index">{{teacher.name}}</div>
+                            <div ng-repeat="studentGroup in event.studentGroups track by $index">{{studentGroup.code}}</div>
                             <div>{{event.studentGroup}}</div>
                         </md-tooltip>
                         <div><span>{{event.timeStart}}-{{event.timeEnd}}</span><span> {{event.name}}</span></div>
-                        <div><span ng-repeat="room in event.rooms track by $index">{{room}}</span></div>
-                        <div><span ng-repeat="teacher in event.teachers track by $index">{{teacher}} </span></div>
-                        <div>{{event.studentGroup}}</div>
+                        <div>
+                            <span ng-repeat="room in event.rooms track by $index">
+                                <a ng-href="/#/timetable/room/{{::studyperiodId}}/{{::room.id}}/{{::timetableId}}">{{room.code}}
+                                {{$last ? '' : ', '}}</a>
+                            </span></div>
+                        <div>
+                            <span ng-repeat="teacher in event.teachers track by $index">
+                                <a ng-href="/#/timetable/teacher/{{::studyperiodId}}/{{::teacher.id}}/{{::timetableId}}">{{teacher.name}}</a>
+                                {{$last ? '' : ', '}}
+                            </span>
+                        </div>
+                        <div>
+                            <span ng-repeat="studentGroup in event.studentGroups track by $index">
+                                <a ng-href="/#/timetable/group/{{::studyperiodId}}/{{::studentGroup.id}}/{{::timetableId}}">{{studentGroup.code}}</a>
+                                {{$last ? '' : ', '}}
+                            </span>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
     <md-button ng-href="#/timetable/generalTimetableByGroup" class="md-raised">{{'main.button.back' | translate}}</md-button>
-
 </div>

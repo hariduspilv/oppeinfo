@@ -17,11 +17,15 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 public class LessonPlanJournalDto extends LessonPlanJournalForm {
 
     private Long id;
+    private Long studentGroupId;
+    private String studentGroupCode;
     private Long lessonPlan;
     private List<AutocompleteResult> themes;
 
     public static LessonPlanJournalDto of(Journal journal, LessonPlanModule lessonPlanModule) {
-        LessonPlanJournalDto dto = EntityUtil.bindToDto(journal, new LessonPlanJournalDto());
+        LessonPlanJournalDto dto = EntityUtil.bindToDto(journal, new LessonPlanJournalDto(), "journalRooms");
+        dto.setStudentGroupCode(lessonPlanModule.getLessonPlan().getStudentGroup().getCode());
+        dto.setStudentGroupId(EntityUtil.getId(lessonPlanModule.getLessonPlan().getStudentGroup()));
         Long lessonPlanModuleId = EntityUtil.getId(lessonPlanModule);
         dto.setLessonPlanModuleId(lessonPlanModuleId);
         dto.setJournalCapacityTypes(StreamUtil.toMappedList(r -> EntityUtil.getCode(r.getCapacityType()), journal.getJournalCapacityTypes()));
@@ -39,6 +43,7 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
         dto.setJournalTeachers(StreamUtil.nullSafeList(journal.getJournalTeachers()).stream().map(LessonPlanJournalForm.LessonPlanJournalTeacherForm::of).sorted(Comparator.comparing(r -> ((AutocompleteResult)r.getTeacher()).getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
         dto.setLessonPlan(EntityUtil.getId(lessonPlanModule.getLessonPlan()));
         dto.setThemes(lessonPlanModule.getCurriculumVersionOccupationModule().getThemes().stream().map(AutocompleteResult::of).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+        dto.setJournalRooms(StreamUtil.toMappedList(r -> new AutocompleteResult(EntityUtil.getId(r.getRoom()), r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
         return dto;
     }
 
@@ -48,6 +53,22 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
 
     public void setId(Long id) {
         this.id = id;
+    }
+
+    public Long getStudentGroupId() {
+        return studentGroupId;
+    }
+
+    public void setStudentGroupId(Long studentGroupId) {
+        this.studentGroupId = studentGroupId;
+    }
+
+    public String getStudentGroupCode() {
+        return studentGroupCode;
+    }
+
+    public void setStudentGroupCode(String studentGroupCode) {
+        this.studentGroupCode = studentGroupCode;
     }
 
     public Long getLessonPlan() {
