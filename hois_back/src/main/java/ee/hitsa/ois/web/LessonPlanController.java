@@ -79,13 +79,13 @@ public class LessonPlanController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public LessonPlanDto update(HoisUserDetails user, @WithEntity("id") @WithVersionedEntity(value = "id", versionRequestBody = true) LessonPlan lessonPlan, @Valid @RequestBody LessonPlanForm form) {
+    public LessonPlanDto save(HoisUserDetails user, @WithEntity("id") @WithVersionedEntity(value = "id", versionRequestBody = true) LessonPlan lessonPlan, @Valid @RequestBody LessonPlanForm form) {
         UserUtil.assertIsSchoolAdmin(user, lessonPlan.getSchool());
         return get(user, lessonPlanService.save(lessonPlan, form));
     }
 
     @GetMapping("/searchFormData")
-    public Map<String, ?> studentgroupsForLessonPlan(HoisUserDetails user) {
+    public Map<String, ?> searchFormData(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return lessonPlanService.searchFormData(user.getSchoolId());
     }
@@ -102,19 +102,19 @@ public class LessonPlanController {
     }
 
     @GetMapping("/journals/{id:\\d+}")
-    public LessonPlanJournalDto get(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestParam("lessonPlanModule") Long lessonPlanModuleId) {
+    public LessonPlanJournalDto getJournal(HoisUserDetails user, @WithEntity("id") Journal journal, @RequestParam("lessonPlanModule") Long lessonPlanModuleId) {
         UserUtil.assertSameSchool(user, journal.getSchool());
         return lessonPlanService.getJournal(journal, lessonPlanModuleId);
     }
 
     @PutMapping("/journals/{id:\\d+}")
-    public LessonPlanJournalDto update(HoisUserDetails user, @WithEntity("id") Journal journal, @Valid @RequestBody LessonPlanJournalForm form) {
+    public LessonPlanJournalDto saveJournal(HoisUserDetails user, @WithEntity("id") Journal journal, @Valid @RequestBody LessonPlanJournalForm form) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
-        return get(user, lessonPlanService.saveJournal(journal, form, user), form.getLessonPlanModuleId());
+        return getJournal(user, lessonPlanService.saveJournal(journal, form, user), form.getLessonPlanModuleId());
     }
 
     @DeleteMapping("/journals/{id:\\d+}")
-    public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Journal journal, @SuppressWarnings("unused") @RequestParam("version") Long version) {
+    public void deleteJournal(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Journal journal, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
         lessonPlanService.deleteJournal(journal);
     }

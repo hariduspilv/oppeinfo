@@ -16,7 +16,7 @@
                 <label>{{'timetable.buildings' | translate}}</label>
               </md-input-container>
               <md-input-container layout="row" layout-align="start center">
-                <md-checkbox ng-model="block.selectedBuildings[building.id]" ng-disabled="isBuildingDisabled(building, block)" ng-change="buildingChanged(building, block)" ng-repeat="building in buildings | orderBy: currentLanguageNameField()">{{ building[currentLanguageNameField()] }}</md-checkbox>
+                <md-checkbox ng-model="block.selectedBuildings[building.id]" ng-disabled="isBuildingDisabled(building, block)" ng-change="buildingChanged(building, block)" ng-repeat="building in buildings | orderBy: currentLanguageNameField()">{{ currentLanguageNameField(building) }}</md-checkbox>
               </md-input-container>
             </div>
 

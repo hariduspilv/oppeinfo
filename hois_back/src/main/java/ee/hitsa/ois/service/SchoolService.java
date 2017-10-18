@@ -1,14 +1,11 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 
 import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityNotFoundException;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,8 +21,9 @@ import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.SchoolForm;
@@ -43,18 +41,16 @@ public class SchoolService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private EntityManager em;
-    @Autowired
-    private SchoolRepository schoolRepository;
 
     public SchoolDto getWithLogo(Long schoolId) {
         return EntityUtil.withEntity(schoolId, id -> em.find(School.class, id), school -> SchoolDto.ofWithLogo(school));
     }
 
     public byte[] getLogo(Long schoolId) {
-        List<OisFile> logo = em.createQuery("select s.logo from School s where s.id=?1",OisFile.class)
+        List<OisFile> logo = em.createQuery("select s.logo from School s where s.id=?1", OisFile.class)
                 .setParameter(1, schoolId).getResultList();
         if (logo.isEmpty()) {
-            throw new EntityNotFoundException();
+            return null;
         }
         return logo.get(0).getFdata();
     }
@@ -93,14 +89,11 @@ public class SchoolService {
     }
 
     public Page<SchoolDto> search(SchoolSearchCommand searchCommand, Pageable pageable) {
-        return schoolRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
+        JpaQueryBuilder<School> qb = new JpaQueryBuilder<>(School.class, "s").sort(pageable);
+        String nameField = Language.EN.equals(searchCommand.getLang()) ? "nameEn" : "nameEt";
+        qb.optionalContains("s." + nameField, "name", searchCommand.getName());
 
-            String nameField = Language.EN.equals(searchCommand.getLang()) ? "nameEn" : "nameEt";
-            propertyContains(() -> root.get(nameField), cb, searchCommand.getName(), filters::add);
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(SchoolDto::of);
+        return JpaQueryUtil.pagingResult(qb, em, pageable).map(SchoolDto::of);
     }
 
     public void delete(School school) {
@@ -133,7 +126,7 @@ public class SchoolService {
     }
 
     public SchoolType schoolType(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("");
         qb.parameter("school", schoolId);
         Object type = qb.select(
             "case when exists(select 1 from classifier c inner join school_study_level ssl on ssl.school_id = :school and ssl.study_level_code = c.code and c.value ~ '^[5-9].*$') " +

@@ -55,7 +55,7 @@ import ee.hitsa.ois.message.StudentDirectiveCreated;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -385,7 +385,7 @@ public class DirectiveConfirmService {
             return Collections.emptyMap();
         }
 
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_student ds "+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds "+
                 "inner join directive d on ds.directive_id = d.id and ds.canceled = false "+
                 "left outer join study_period sps on ds.study_period_start_id = sps.id "+
                 "left outer join study_period spe on ds.study_period_end_id = spe.id").sort(new Sort(Direction.DESC, "d.id"));

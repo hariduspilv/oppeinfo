@@ -49,7 +49,7 @@ public class PracticeJournalDto extends VersionedCommand {
                 StreamUtil.toMappedList(PracticeJournalFileDto::of, practiceJournal.getPracticeJournalFiles()));
         dto.setStudentCurriculumVersion(AutocompleteResult.of(practiceJournal.getStudent().getCurriculumVersion()));
         dto.setStudentStudyForm(EntityUtil.getCode(practiceJournal.getStudent().getStudyForm()));
-        dto.setIsHigher(StudentUtil.isHigher(practiceJournal.getStudent()));
+        dto.setIsHigher(Boolean.valueOf(StudentUtil.isHigher(practiceJournal.getStudent())));
         return dto;
     }
 

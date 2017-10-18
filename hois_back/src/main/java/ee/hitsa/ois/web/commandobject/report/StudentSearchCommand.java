@@ -24,6 +24,7 @@ public class StudentSearchCommand {
     private String studyForm;
     private String status;
     private String fin;
+    private String finSpecific;
     private String language;
 
     public String getName() {
@@ -128,6 +129,14 @@ public class StudentSearchCommand {
 
     public void setFin(String fin) {
         this.fin = fin;
+    }
+
+    public String getFinSpecific() {
+        return finSpecific;
+    }
+
+    public void setFinSpecific(String finSpecific) {
+        this.finSpecific = finSpecific;
     }
 
     public String getLanguage() {

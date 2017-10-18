@@ -1,6 +1,6 @@
 package ee.hitsa.ois.enums;
 
-import java.util.List;
+import java.util.Set;
 
 import ee.hitsa.ois.util.EnumUtil;
 
@@ -13,7 +13,7 @@ public enum CertificateType {
     TOEND_LIIK_LOPET("TOEND_LIIK_LOPET_higher.xhtml", "TOEND_LIIK_LOPET_vocational.xhtml"),
     TOEND_LIIK_MUU(null, null);
     
-    private static final List<String> CERTIFICATE_EDITABLE_FOR_ADMIN = EnumUtil.toNameList(TOEND_LIIK_KONTAKT, TOEND_LIIK_SESS, TOEND_LIIK_MUU);
+    private static final Set<String> CERTIFICATE_EDITABLE_FOR_ADMIN = EnumUtil.toNameSet(TOEND_LIIK_KONTAKT, TOEND_LIIK_SESS, TOEND_LIIK_MUU);
 
     private final String higherCertificate;
     private final String vocationalCertificate;
@@ -34,9 +34,8 @@ public enum CertificateType {
     public static boolean isOther(String code) {
         return CertificateType.TOEND_LIIK_MUU.name().equals(code);
     }
-    
+
     public static boolean schoolAdminCanEdit(String typeCode) {
         return CERTIFICATE_EDITABLE_FOR_ADMIN.contains(typeCode);
     }
-
 }

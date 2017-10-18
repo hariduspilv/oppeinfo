@@ -2,12 +2,23 @@ package ee.hitsa.ois.web.commandobject.timetable;
 
 import java.time.LocalDate;
 
+import javax.validation.constraints.NotNull;
+
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.NotEmpty;
+
 public class TimetableEditForm {
 
     private Long studyYear;
+    @NotNull
     private Long studyPeriod;
+    @NotNull
     private LocalDate startDate;
+    @NotNull
     private LocalDate endDate;
+    @NotEmpty
+    @ClassifierRestriction(MainClassCode.TUNNIPLAAN_LIIK)
     private String code;
 
     public Long getStudyYear() {

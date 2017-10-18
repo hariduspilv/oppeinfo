@@ -6,6 +6,7 @@ import java.util.Set;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.springframework.util.CollectionUtils;
 
@@ -26,7 +27,9 @@ public class CurriculumModuleDto extends VersionedCommand {
     private String module;
 
     @NotNull
+    @Size(max=255)
     private String nameEt;
+    @Size(max=255)
     private String nameEn;
 
     @NotNull
@@ -35,7 +38,9 @@ public class CurriculumModuleDto extends VersionedCommand {
     private BigDecimal credits;
 
     @NotNull
+    @Size(max=10000)
     private String objectivesEt;
+    @Size(max=10000)
     private String objectivesEn;
 
     @NotNull

@@ -27,9 +27,7 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.util.CollectionUtils;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
-import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ApplicationStatus;
@@ -38,7 +36,6 @@ import ee.hitsa.ois.enums.ExmatriculationReason;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.ApplicationForm;
 import ee.hitsa.ois.web.dto.ApplicationDto;
@@ -57,8 +54,6 @@ public class ApplicationControllerTests {
     @Autowired
     private StudentRepository studentRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private TestConfigurationService testConfigurationService;
 
     private Student student;
@@ -69,14 +64,7 @@ public class ApplicationControllerTests {
     public void setUp() {
         Role role = Role.ROLL_A;
         if(student == null) {
-            userSchools = userRepository.findAll((root, query, cb) -> {
-                List<Predicate> filters = new ArrayList<>();
-                filters.add(cb.isNotNull(root.get("school").get("id")));
-                filters.add(cb.equal(root.get("role").get("code"), role.name()));
-                filters.add(cb.equal(root.get("person").get("idcode"), TestConfiguration.USER_ID));
-                return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).stream().map(User::getSchool).collect(Collectors.toList());
-
+            userSchools = testConfigurationService.personSchools(role);
             Assert.assertFalse(userSchools.isEmpty());
 
             student = studentRepository.findAll((root, query, cb) -> {
@@ -160,7 +148,7 @@ public class ApplicationControllerTests {
 
     @SuppressWarnings("unchecked")
     @Test
-    public void applicable() {
+    public void applicableApplicationTypes() {
         List<Student> allNotStudyingStudents = studentRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(root.get("school").in(userSchools));

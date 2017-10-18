@@ -1,6 +1,6 @@
 @page {
     size: A4;
-    margin: 0;
+    margin: 70px;
 }
 
 html {
@@ -38,3 +38,30 @@ ul {
 li > ul{
     padding-left: 2em;
 }
+
+.long-text {
+	max-width: 700px;
+	white-space: pre-wrap;
+}
+.align-top {
+	vertical-align: top;
+}
+.state-curriculum-module-column1 {
+	width: 25%;
+}
+.state-curriculum-module-column2 {
+	width: 25%;
+}
+.state-curriculum-module-column3 {
+	width: 50%;
+}
+.center {
+	text-align: center;
+}
+.state-curriculum-very-long-text {
+	white-space: pre-wrap;
+	max-width: 950px;
+}
+
+
+

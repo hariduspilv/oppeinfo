@@ -7,10 +7,11 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controller: 'SubjectStudyPeriodSearchController',
         controllerAs: 'controller',
         resolve: {
-            translationLoaded: function($translate) { return $translate.onReady(); }
+            translationLoaded: function($translate) { return $translate.onReady(); },
+            auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_AINEOPPETAJA, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]
         }
       }).when('/subjectStudyPeriod/:id/edit', {
         templateUrl: 'subjectStudyPeriod/subject.study.period.edit.html',
@@ -20,7 +21,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]
         }
       }).when('/subjectStudyPeriod/:id/view', {
         templateUrl: 'subjectStudyPeriod/subject.study.period.view.html',
@@ -30,7 +31,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A, USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PAEVIK]
         }
       }).when('/subjectStudyPeriod/new', {
         templateUrl: 'subjectStudyPeriod/subject.study.period.edit.html',

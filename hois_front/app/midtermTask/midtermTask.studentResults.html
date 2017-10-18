@@ -32,7 +32,7 @@
             </th>
             <th md-column>{{'midtermTask.finalGrade' | translate}}</th>
             <th md-column>{{'midtermTask.protocols' | translate}}</th>
-            <th md-column>{{'midtermTask.notes' | translate}}</th>
+            <th md-column class="one-row">{{'midtermTask.notes' | translate}}</th>
           </tr>
         </thead>
         <tbody md-body>
@@ -62,22 +62,16 @@
                   </tr>
                 </table>
               </td>
-              <td md-cell>
+              <td md-cell colspan="2">
                 <table>
                   <tr ng-repeat="protocol in record.protocols | orderBy: 'protocolNr' | filter: filterProtocols(student)">
-                    <td>
+                    <td class="protocol">
                       <a ng-href="#/higherProtocols/{{::protocol.id}}/view">
                         <span>{{protocol.protocolNr}}</span>
                         <hois-classifier-value class="inline" ng-model="protocol.protocolType" main-classifier-code="PROTOKOLLI_LIIK">
                         </hois-classifier-value>
                       </a>
                     </td>
-                  </tr>
-                </table>
-              </td>
-              <td md-cell>
-                <table>
-                  <tr ng-repeat="protocol in record.protocols | orderBy: 'protocolNr' | filter: filterProtocols(student)">
                     <td>
                       <table>
                         <tr ng-repeat="protocolStudent in protocol.protocolStudents | filter: filterStudentProtocols(student)">
@@ -110,5 +104,9 @@
 <style>
   .inline {
     display: inline;
+  }
+  .protocol {
+    min-width: 150px;
+    padding-right: 50px;
   }
 </style>

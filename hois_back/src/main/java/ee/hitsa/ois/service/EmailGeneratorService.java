@@ -57,7 +57,7 @@ public class EmailGeneratorService {
      *
      * @param school
      * @param person
-     * @return
+     * @return null if no email was found
      */
     public String lookupSchoolEmail(School school, Person person) {
         Query q = em.createNativeQuery("select email from (select email, changed from teacher t where t.person_id = :personId and t.school_id = :schoolId " +

@@ -68,12 +68,14 @@ import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SaisApplicationRepository;
 import ee.hitsa.ois.service.AutocompleteService;
+import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
@@ -127,6 +129,8 @@ public class SaisApplicationService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
+    private ClassifierService classifierService;
+    @Autowired
     private CurriculumVersionRepository curriculumVersionRepository;
     @Autowired
     private EntityManager em;
@@ -156,7 +160,7 @@ public class SaisApplicationService {
 
     public Page<SaisApplicationSearchDto> search(HoisUserDetails user, SaisApplicationSearchCommand criteria,
             Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SAIS_APPLICATION_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SAIS_APPLICATION_FROM).sort(pageable);
 
         qb.requiredCriteria("school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("sais_admission_code in (:code)", "code", criteria.getCode());
@@ -197,7 +201,7 @@ public class SaisApplicationService {
         SaisApplicationImportResultDto dto = new SaisApplicationImportResultDto();
         EstonianIdCodeValidator idCodeValidator = new EstonianIdCodeValidator();
         List<SaisApplicationImportedRowDto> failed = dto.getFailed();
-        ClassifierCache classifiers = new ClassifierCache(classifierRepository);
+        ClassifierCache classifiers = new ClassifierCache(classifierService);
 
         String fileContent = getContent(fileData);
 
@@ -471,7 +475,7 @@ public class SaisApplicationService {
 
     }
 
-    public String getSampleCsvFile() {
+    public String sampleCsvFile() {
         return "KonkursiKood;AvalduseNr;Eesnimi;Perekonnanimi;Isikukood;Kodakondsus;Elukohariik;Finantseerimisallikas;AvalduseMuutmiseKp;AvalduseStaatus;OppekavaVersioon/RakenduskavaKood;Oppekoormus;Oppevorm;Oppekeel;OppuriEelnevOppetase;KonkursiAlgusKp;KonkursiLõppKp\r\n"+
                "FIL12/12;Nr123;Mari;Maasikas;49011112345;EST;EST;RE;1.01.2012;T;FIL12/12;TAIS;P;E;411;1.12.2011;1.02.2012\r\n"+
                "MAT15/16;Nr456;Tõnu;Kuut;39311112312;FIN;EST;REV;3.03.2012;T;MAT15/16;OSA;P;I;411;1.01.2012;3.04.2012\r\n"+
@@ -495,7 +499,7 @@ public class SaisApplicationService {
 
     public SaisApplicationImportResultDto importFromSais(SaisApplicationImportForm form, HoisUserDetails user) {
         SaisApplicationImportResultDto dto = new SaisApplicationImportResultDto();
-        ClassifierCache classifiers = new ClassifierCache(classifierRepository);
+        ClassifierCache classifiers = new ClassifierCache(classifierService);
         XRoadHeader xRoadHeader = getXroadHeader(user);
 
         Long schoolId = user.getSchoolId();
@@ -643,7 +647,7 @@ public class SaisApplicationService {
     }
 
     private Map<Long, Long> directiveStudentsWithSaisApplication(List<Long> saisApplicationIds) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_student ds");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds");
         qb.requiredCriteria("ds.sais_application_id in (:saisApplicationIds)", "saisApplicationIds", saisApplicationIds);
 
         List<?> data = qb.select("ds.sais_application_id, ds.id", em).getResultList();

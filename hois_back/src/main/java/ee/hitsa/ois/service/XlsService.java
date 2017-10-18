@@ -32,7 +32,6 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.BadConfigurationException;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.util.TranslateUtil;
@@ -47,7 +46,7 @@ public class XlsService {
     private static final String XLS_TEMPLATE_PATH = "/templates/";
 
     @Autowired
-    private ClassifierRepository classifierRepository;
+    private ClassifierService classifierService;
 
     public byte[] generate(String templateName, Map<String, Object> data) {
         try {
@@ -60,7 +59,7 @@ public class XlsService {
                     JxlsHelper jxlsHelper = JxlsHelper.getInstance();
                     Transformer transformer = jxlsHelper.createTransformer(is, os);
                     JexlExpressionEvaluator evaluator = ((JexlExpressionEvaluator) transformer.getTransformationConfig().getExpressionEvaluator());
-                    evaluator.getJexlEngine().setFunctions(Collections.singletonMap("hois", new HoisFunctions(classifierRepository)));
+                    evaluator.getJexlEngine().setFunctions(Collections.singletonMap("hois", new HoisFunctions(classifierService)));
                     // TODO make silent for production
                     // evaluator.getJexlEngine().setSilent(true);
 
@@ -122,8 +121,8 @@ public class XlsService {
         private final Language lang = Language.ET;
         private final ClassifierUtil.ClassifierCache classifierCache;
 
-        public HoisFunctions(ClassifierRepository classifierRepository) {
-            classifierCache = new ClassifierUtil.ClassifierCache(classifierRepository);
+        public HoisFunctions(ClassifierService classifierService) {
+            classifierCache = new ClassifierUtil.ClassifierCache(classifierService);
         }
 
         public String classifierName(String code, String mainClassCode) {

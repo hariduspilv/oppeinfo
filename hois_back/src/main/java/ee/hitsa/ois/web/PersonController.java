@@ -46,7 +46,7 @@ public class PersonController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public PersonWithUsersDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Person person, @Valid @RequestBody PersonForm personForm) {
+    public PersonWithUsersDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Person person, @Valid @RequestBody PersonForm personForm) {
         UserUtil.assertIsMainAdminOrSchoolAdmin(user);
         return get(user, personService.save(personForm, person));
     }
@@ -71,7 +71,7 @@ public class PersonController {
     }
 
     @GetMapping("/{person:\\d+}/users")
-    public UserDto getPersonAsUser(HoisUserDetails user, @WithEntity("person") Person person) {
+    public UserDto initialValueForUser(HoisUserDetails user, @WithEntity("person") Person person) {
         UserUtil.assertIsMainAdminOrSchoolAdmin(user);
         return personService.initialValueForUser(user, person);
     }
@@ -87,7 +87,7 @@ public class PersonController {
     }
 
     @PutMapping("/{person:\\d+}/users/{id:\\d+}")
-    public UserDto updateUser(HoisUserDetails userDetails, @WithEntity("person") Person person, @WithEntity("id") User user, @Valid @RequestBody UserForm userForm) {
+    public UserDto saveUser(HoisUserDetails userDetails, @WithEntity("person") Person person, @WithEntity("id") User user, @Valid @RequestBody UserForm userForm) {
         UserUtil.assertIsMainAdminOrSchoolAdmin(userDetails);
         UserUtil.assertUserBelongsToPerson(user, person);
         UserUtil.assertCanUpdateUser(userForm.getRole());

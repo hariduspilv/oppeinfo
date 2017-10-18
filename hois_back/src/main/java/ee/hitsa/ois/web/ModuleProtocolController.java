@@ -25,35 +25,34 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.bdoc.UnsignedBdocContainer;
 import ee.hitsa.ois.domain.protocol.Protocol;
-import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.report.ModuleProtocolReport;
-import ee.hitsa.ois.repository.TeacherRepository;
 import ee.hitsa.ois.service.AutocompleteService;
 import ee.hitsa.ois.service.BdocService;
 import ee.hitsa.ois.service.ModuleProtocolService;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.ModuleProtocolUtil;
+import ee.hitsa.ois.util.ModuleProtocolValidationUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
 import ee.hitsa.ois.validation.NotEmpty;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.ModuleProtocolSignForm;
+import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EntitySignDto;
-import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolOccupationalModuleDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolSearchDto;
 import ee.hitsa.ois.web.dto.ModuleProtocolStudentSelectDto;
+import ee.hitsa.ois.web.dto.ProtocolStudentResultDto;
 
 
 @RestController
@@ -66,8 +65,6 @@ public class ModuleProtocolController {
     private ModuleProtocolService moduleProtocolService;
     @Autowired
     private AutocompleteService autocompleteService;
-    @Autowired
-    private TeacherRepository teacherRepository;
     @Autowired
     private BdocService bdocService;
     @Autowired
@@ -82,17 +79,17 @@ public class ModuleProtocolController {
 
     @GetMapping("/{id:\\d+}")
     public ModuleProtocolDto get(HoisUserDetails user, @WithEntity("id") Protocol protocol) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        UserUtil.assertSameSchool(user, protocol.getSchool());
+        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         ModuleProtocolDto dto = ModuleProtocolDto.of(protocol);
-        dto.setCanBeEdited(canEdit(user, protocol));
+        dto.setCanBeEdited(ModuleProtocolUtil.canEdit(user, protocol));
+        dto.setCanBeDeleted(ModuleProtocolUtil.canDelete(user, protocol));
         return dto;
     }
 
     @PostMapping
     public ModuleProtocolDto create(HoisUserDetails user,
             @Valid @RequestBody ModuleProtocolCreateForm moduleProtocolCreateForm) {
-        assertIsSchoolAdminOrTeacherResponsible(user, moduleProtocolCreateForm.getProtocolVdata().getTeacher());
+        ModuleProtocolValidationUtil.assertIsSchoolAdminOrTeacherResponsible(user, moduleProtocolCreateForm.getProtocolVdata().getTeacher());
         return get(user, moduleProtocolService.create(user, moduleProtocolCreateForm));
     }
 
@@ -100,7 +97,7 @@ public class ModuleProtocolController {
     public ModuleProtocolDto save(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        assertCanEdit(user, protocol);
+        ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
         return get(user, moduleProtocolService.save(protocol, moduleProtocolSaveForm));
     }
 
@@ -108,7 +105,7 @@ public class ModuleProtocolController {
     public void delete(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestParam = "version") Protocol protocol,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdmin(user, protocol.getSchool());
+        ModuleProtocolValidationUtil.assertCanDelete(user, protocol);
         moduleProtocolService.delete(protocol);
     }
 
@@ -142,7 +139,7 @@ public class ModuleProtocolController {
     public ModuleProtocolDto addStudents(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        assertCanEdit(user, protocol);
+        ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
         return get(user, moduleProtocolService.addStudents(protocol, moduleProtocolSaveForm));
     }
 
@@ -152,7 +149,7 @@ public class ModuleProtocolController {
             @Valid @RequestBody ModuleProtocolSignForm moduleProtocolSignForm, HttpSession httpSession) {
         //Administratiivne töötaja saab moodulite protokolle kinnitada ilma digiallkirjata, õpetaja peab mooduli protokollid kinnitama digiallkirjaga.
 
-        assertCanEdit(user, protocol);
+        ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
 
         Protocol savedProtocol = moduleProtocolService.save(protocol, moduleProtocolSignForm);
 
@@ -165,56 +162,30 @@ public class ModuleProtocolController {
         return EntitySignDto.of(savedProtocol, unsignedBdocContainer);
     }
 
-
     @PostMapping("/{id:\\d+}/signToConfirmFinalize")
     public ModuleProtocolDto signToConfirmFinalize(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody SignatureCommand signatureCommand, HttpSession httpSession) {
-        
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        UserUtil.assertSameSchool(user, protocol.getSchool());
-        
+
+        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
+
         UnsignedBdocContainer unsignedBdocContainer = (UnsignedBdocContainer) httpSession.getAttribute(BDOC_TO_SIGN);
         protocol.setOisFile(bdocService.getSignedBdoc(unsignedBdocContainer, signatureCommand.getSignature(), "protokoll"));
         httpSession.removeAttribute(BDOC_TO_SIGN);
         return get(user, moduleProtocolService.confirm(user, protocol, null));
     }
 
-
     @PostMapping("/{id:\\d+}/confirm")
     public ModuleProtocolDto confirm(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Protocol protocol,
             @Valid @RequestBody ModuleProtocolSaveForm moduleProtocolSaveForm) {
-        assertCanEdit(user, protocol);
+        ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
         return get(user, moduleProtocolService.confirm(user, protocol, moduleProtocolSaveForm));
-    }
-
-    private void assertIsSchoolAdminOrTeacherResponsible(HoisUserDetails user, Long teacherId) {
-        if (!user.isSchoolAdmin()) {
-            UserUtil.assertIsPerson(user, teacherRepository.getOne(teacherId).getPerson());
-        }
-    }
-    
-    private void assertCanEdit(HoisUserDetails user, Protocol protocol) {
-        if(!canEdit(user, protocol)) {
-            throw new ValidationFailedException("no rights to edit protocol");
-        }
-    }
-    
-    private boolean canEdit(HoisUserDetails user, Protocol protocol) {
-        if(UserUtil.isSchoolAdmin(user, protocol.getSchool())) {
-            return true;
-        } else if(UserUtil.isTeacher(user, protocol.getSchool())) {
-            return UserUtil.isSamePerson(user, protocol.getProtocolVdata().getTeacher().getPerson()) && 
-                    ClassifierUtil.equals(ProtocolStatus.PROTOKOLL_STAATUS_S, protocol.getStatus());
-        }
-        return false;
     }
 
     @GetMapping("/{id:\\d+}/print/protocol.pdf")
     public void print(HoisUserDetails user, @WithEntity("id") Protocol protocol, HttpServletResponse response)
             throws IOException {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        UserUtil.assertSameSchool(user, protocol.getSchool());
+        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
                 pdfService.generate(ModuleProtocolReport.TEMPLATE_NAME, new ModuleProtocolReport(protocol)));
     }
@@ -222,7 +193,7 @@ public class ModuleProtocolController {
     @GetMapping("/{id:\\d+}/calculate")
     public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,
             @NotNull @Valid ProtocolCalculateCommand command, @WithEntity(value = "id") Protocol protocol) {
-        assertCanEdit(user, protocol);
+        ModuleProtocolValidationUtil.assertCanEdit(user, protocol);
         if(!Boolean.TRUE.equals(protocol.getIsVocational())) {
             throw new ValidationFailedException("not vocational protocol");
         }
@@ -242,5 +213,4 @@ class SignatureCommand extends VersionedCommand {
     public void setSignature(String signature) {
         this.signature = signature;
     }
-
 }

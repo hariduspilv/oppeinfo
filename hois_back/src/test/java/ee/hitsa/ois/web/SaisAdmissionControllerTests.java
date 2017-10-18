@@ -53,7 +53,7 @@ public class SaisAdmissionControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/saisAdmissions");
-        uriBuilder.queryParam("type", "test");
+        uriBuilder.queryParam("code", "test");
         uriBuilder.queryParam("curriculumVersion", Long.valueOf(1));
         uriBuilder.queryParam("studyForm", "OPPEVORM_M");
         uriBuilder.queryParam("fin", FinSource.FINALLIKAS_RE.name());

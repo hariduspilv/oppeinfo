@@ -9,6 +9,7 @@ import javax.transaction.Transactional;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.curriculum.CurriculumGrade;
 import ee.hitsa.ois.domain.directive.Directive;
@@ -16,11 +17,14 @@ import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentHistory;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.JobType;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hois.xroad.ehis.generated.KhlAkadPuhkusAlgus;
 import ee.hois.xroad.ehis.generated.KhlEnnistamine;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusLisa;
 import ee.hois.xroad.ehis.generated.KhlKorgharidusMuuda;
+import ee.hois.xroad.ehis.generated.KhlLyhiajaliseltValismaal;
 import ee.hois.xroad.ehis.generated.KhlOppeasutus;
 import ee.hois.xroad.ehis.generated.KhlOppeasutuseLopetamine;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
@@ -33,19 +37,18 @@ import ee.hois.xroad.ehis.generated.KhlOppur;
 @Service
 public class EhisDirectiveStudentService extends EhisService {
 
+    private static final String SUBJECT_POINTS = "0";
+
     public void updateStudents(Long directiveId) {
         Directive directive = em.getReference(Directive.class, directiveId);
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
 
         for (DirectiveStudent directiveStudent : directive.getStudents()) {
+            if(Boolean.TRUE.equals(directiveStudent.getCanceled())) {
+                continue;
+            }
             try {
                 switch (directiveType) {
-                case KASKKIRI_AKAD:
-                    startAcademicLeave(directiveStudent);
-                    break;
-                case KASKKIRI_AKADK:
-                    endAcademicLeave(directiveStudent);
-                    break;
                 case KASKKIRI_EKSMAT:
                     exmatriculation(directiveStudent);
                     break;
@@ -80,6 +83,34 @@ public class EhisDirectiveStudentService extends EhisService {
         }
     }
 
+    public void updateStudentStatus(Job job) {
+        JobType jobType = JobType.valueOf(EntityUtil.getCode(job.getType()));
+        Directive directive = job.getDirective();
+
+        for (DirectiveStudent directiveStudent : directive.getStudents()) {
+            if(Boolean.TRUE.equals(directiveStudent.getCanceled())) {
+                continue;
+            }
+            try {
+                switch(jobType) {
+                case JOB_AKAD_MINEK:
+                    startAcademicLeave(directiveStudent);
+                    break;
+                case JOB_AKAD_TULEK:
+                    endAcademicLeave(directiveStudent, false);
+                    break;
+                case JOB_AKAD_KATK:
+                    endAcademicLeave(directiveStudent, true);
+                    break;
+                default:
+                    break;
+                }
+            } catch (Exception e) {
+                bindingException(directive, e);
+            }
+        }
+    }
+
     private void changeStudyLoad(DirectiveStudent directiveStudent) {
         Student student = directiveStudent.getStudent();
         Directive directive = directiveStudent.getDirective();
@@ -88,8 +119,8 @@ public class EhisDirectiveStudentService extends EhisService {
 
         KhlOppevormiMuutus khlOppevormiMuutus = new KhlOppevormiMuutus();
         khlOppevormiMuutus.setMuutusKp(date(directive.getConfirmDate()));
-        khlOppevormiMuutus.setKlOppevorm(student.getStudyForm().getEhisValue());
-        khlOppevormiMuutus.setKlOppekoormus(directiveStudent.getStudyLoad().getEhisValue());
+        khlOppevormiMuutus.setKlOppevorm(ehisValue(student.getStudyForm()));
+        khlOppevormiMuutus.setKlOppekoormus(ehisValue(directiveStudent.getStudyLoad()));
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setOppevormiMuutus(khlOppevormiMuutus);
@@ -108,7 +139,7 @@ public class EhisDirectiveStudentService extends EhisService {
 
             KhlOppevormiMuutus khlOppevormiMuutus = new KhlOppevormiMuutus();
             khlOppevormiMuutus.setMuutusKp(date(directive.getConfirmDate()));
-            khlOppevormiMuutus.setKlOppevorm(directiveStudent.getStudyForm().getEhisValue());
+            khlOppevormiMuutus.setKlOppevorm(ehisValue(directiveStudent.getStudyForm()));
 
             KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
             khlKorgharidusMuuda.setOppevormiMuutus(khlOppevormiMuutus);
@@ -128,8 +159,8 @@ public class EhisDirectiveStudentService extends EhisService {
         KhlOppevormiMuutus khlOppevormiMuutus = new KhlOppevormiMuutus();
         khlOppevormiMuutus.setMuutusKp(date(directive.getConfirmDate()));
         // TODO is this correct
-        khlOppevormiMuutus.setKlOppevorm(student.getStudyForm().getEhisValue());
-        khlOppevormiMuutus.setKlRahastAllikas(directiveStudent.getFinSpecific().getEhisValue());
+        khlOppevormiMuutus.setKlOppevorm(ehisValue(student.getStudyForm()));
+        khlOppevormiMuutus.setKlRahastAllikas(ehisValue(directiveStudent.getFinSpecific()));
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setOppevormiMuutus(khlOppevormiMuutus);
@@ -146,11 +177,11 @@ public class EhisDirectiveStudentService extends EhisService {
         KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine()
-                .setOppekava(getCurriculum(directiveStudent.getStudentHistory().getCurriculumVersion()));
+                .setOppekava(curriculumCode(directiveStudent.getStudentHistory().getCurriculumVersion().getCurriculum()));
 
         KhlOppekavaMuutus khlOppekavaMuutus = new KhlOppekavaMuutus();
         khlOppekavaMuutus.setMuutusKp(date(directive.getConfirmDate()));
-        khlOppekavaMuutus.setUusOppekava(getCurriculum(directiveStudent.getCurriculumVersion()));
+        khlOppekavaMuutus.setUusOppekava(curriculumCode(directiveStudent.getCurriculumVersion().getCurriculum()));
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setOppekavaMuutus(khlOppekavaMuutus);
@@ -163,7 +194,7 @@ public class EhisDirectiveStudentService extends EhisService {
             KhlKorgharidusMuuda korgharidusMuuda = new KhlKorgharidusMuuda();
             KhlOppevormiMuutus khlOppevormiMuutus = new KhlOppevormiMuutus();
             khlOppevormiMuutus.setMuutusKp(khlOppekavaMuutus.getMuutusKp());
-            khlOppevormiMuutus.setKlOppevorm(directiveStudent.getStudyForm().getEhisValue());
+            khlOppevormiMuutus.setKlOppevorm(ehisValue(directiveStudent.getStudyForm()));
 
             korgharidusMuuda.setOppevormiMuutus(khlOppevormiMuutus);
             khlOppur.getMuutmine().setKorgharidus(korgharidusMuuda);
@@ -182,7 +213,7 @@ public class EhisDirectiveStudentService extends EhisService {
 
         KhlOppeasutusestValjaarvamine khlOppeasutusestValjaarvamine = new KhlOppeasutusestValjaarvamine();
         khlOppeasutusestValjaarvamine.setMuutusKp(date(directive.getConfirmDate()));
-        khlOppeasutusestValjaarvamine.setPohjus(directiveStudent.getReason().getEhisValue());
+        khlOppeasutusestValjaarvamine.setPohjus(ehisValue(directiveStudent.getReason()));
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setOppeasutusestValjaarvamine(khlOppeasutusestValjaarvamine);
@@ -193,25 +224,29 @@ public class EhisDirectiveStudentService extends EhisService {
     }
 
     WsEhisStudentLog graduation(DirectiveStudent directiveStudent) {
-        Student student = directiveStudent.getStudent();
-        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+        try {
+            Student student = directiveStudent.getStudent();
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
-        KhlOppeasutuseLopetamine oppeasutuseLopetamine = new KhlOppeasutuseLopetamine();
-        oppeasutuseLopetamine.setMuutusKp(date(LocalDate.now()));
-        // TODO Fix when actually we have a way to get value
-        oppeasutuseLopetamine.setLopudokumendiNr("FIXME000001");
-        oppeasutuseLopetamine.setCumLaude(yesNo(directiveStudent.getIsCumLaude()));
+            KhlOppeasutuseLopetamine oppeasutuseLopetamine = new KhlOppeasutuseLopetamine();
+            oppeasutuseLopetamine.setMuutusKp(date(LocalDate.now()));
+            // TODO Fix when actually we have a way to get value
+            oppeasutuseLopetamine.setLopudokumendiNr("FIXME000001");
+            oppeasutuseLopetamine.setCumLaude(yesNo(directiveStudent.getIsCumLaude()));
 
-        Optional.ofNullable(directiveStudent.getCurriculumGrade())
-                .map(CurriculumGrade::getEhisGrade)
-                .map(Classifier::getEhisValue)
-                .ifPresent(oppeasutuseLopetamine::setKlAkadKraad);
+            Optional.ofNullable(directiveStudent.getCurriculumGrade())
+                    .map(CurriculumGrade::getEhisGrade)
+                    .map(Classifier::getEhisValue)
+                    .ifPresent(oppeasutuseLopetamine::setKlAkadKraad);
 
-        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
-        khlKorgharidusMuuda.setOppeasutuseLopetamine(oppeasutuseLopetamine);
-        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+            khlKorgharidusMuuda.setOppeasutuseLopetamine(oppeasutuseLopetamine);
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
-        return makeRequest(directiveStudent.getDirective(), khlOppeasutusList);
+            return makeRequest(directiveStudent.getDirective(), khlOppeasutusList);
+        } catch (Exception e) {
+            return bindingException(directiveStudent.getDirective(), e);
+        }
     }
 
     private void reinstatement(DirectiveStudent directiveStudent) {
@@ -244,9 +279,9 @@ public class EhisDirectiveStudentService extends EhisService {
 
             // todo: only add changed
             khlOppevormiMuutus.setMuutusKp(date(directive.getConfirmDate()));
-            khlOppevormiMuutus.setKlOppevorm(student.getStudyForm().getEhisValue());
-            khlOppevormiMuutus.setKlOppekoormus(student.getStudyLoad().getEhisValue());
-            khlOppevormiMuutus.setKlRahastAllikas(student.getFinSpecific().getEhisValue());
+            khlOppevormiMuutus.setKlOppevorm(ehisValue(student.getStudyForm()));
+            khlOppevormiMuutus.setKlOppekoormus(ehisValue(student.getStudyLoad()));
+            khlOppevormiMuutus.setKlRahastAllikas(ehisValue(student.getFinSpecific()));
 
             khlOppeasutus.getOppur().add(khlOppurVormiMuutus);
         }
@@ -262,9 +297,9 @@ public class EhisDirectiveStudentService extends EhisService {
         KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
         KhlAkadPuhkusAlgus khlAkadPuhkusAlgus = new KhlAkadPuhkusAlgus();
-        khlAkadPuhkusAlgus.setMuutusKp(date(directive.getConfirmDate()));
-        khlAkadPuhkusAlgus.setEeldatavLoppKuupaev(date(directiveStudent.getEndDate()));
-        khlAkadPuhkusAlgus.setPohjus(directiveStudent.getReason().getEhisValue());
+        khlAkadPuhkusAlgus.setMuutusKp(date(DateUtils.periodStart(directiveStudent)));
+        khlAkadPuhkusAlgus.setEeldatavLoppKuupaev(date(DateUtils.periodEnd(directiveStudent)));
+        khlAkadPuhkusAlgus.setPohjus(ehisValue(directiveStudent.getReason()));
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
         khlKorgharidusMuuda.setAkadPuhkusAlgus(khlAkadPuhkusAlgus);
@@ -274,14 +309,14 @@ public class EhisDirectiveStudentService extends EhisService {
         makeRequest(directive, khlOppeasutusList);
     }
 
-    private void endAcademicLeave(DirectiveStudent directiveStudent) {
+    private void endAcademicLeave(DirectiveStudent directiveStudent, boolean cancel) {
         Student student = directiveStudent.getStudent();
         Directive directive = directiveStudent.getDirective();
 
         KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
         KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
-        khlKorgharidusMuuda.setAkadPuhkusLopp(date(directiveStudent.getStartDate()));
+        khlKorgharidusMuuda.setAkadPuhkusLopp(date(cancel ? directiveStudent.getStartDate() : DateUtils.periodEnd(directiveStudent)));
 
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
@@ -300,19 +335,48 @@ public class EhisDirectiveStudentService extends EhisService {
         KhlKorgharidusLisa khlKorgharidusLisa = new KhlKorgharidusLisa();
 
         khlKorgharidusLisa.setOppimaAsumKp(date(student.getStudyStart()));
-        khlKorgharidusLisa.setKursus(BigInteger.valueOf(student.getStudentGroup().getCourse().longValue()));
-        khlKorgharidusLisa.setOppekava(getCurriculum(student.getCurriculumVersion()));
-        khlKorgharidusLisa.setKlOppekeel(student.getLanguage().getEhisValue());
-        khlKorgharidusLisa.setKlOppevorm(student.getStudyForm().getEhisValue());
-        khlKorgharidusLisa.setKlOppekoormus(student.getStudyLoad().getEhisValue());
-        khlKorgharidusLisa.setKlRahastAllikas(student.getFinSpecific().getEhisValue());
+        Short course = student.getStudentGroup().getCourse();
+        khlKorgharidusLisa.setKursus(course != null ? BigInteger.valueOf(course.longValue()) : null);
+        khlKorgharidusLisa.setOppekava(curriculumCode(student.getCurriculumVersion().getCurriculum()));
+        khlKorgharidusLisa.setKlOppekeel(ehisValue(student.getLanguage()));
+        khlKorgharidusLisa.setKlOppevorm(ehisValue(student.getStudyForm()));
+        khlKorgharidusLisa.setKlOppekoormus(ehisValue(student.getStudyLoad()));
+        khlKorgharidusLisa.setKlRahastAllikas(ehisValue(student.getFinSpecific()));
 
-        khlKorgharidusLisa.setKlEelnevHaridus(student.getPreviousStudyLevel().getEhisValue());
+        khlKorgharidusLisa.setKlEelnevHaridus(ehisValue(student.getPreviousStudyLevel()));
 
         khlOppur.getLisamine().setKorgharidus(khlKorgharidusLisa);
         khlOppeasutusList.getOppeasutus().get(0).getOppur().add(khlOppur);
 
         makeRequest(directive, khlOppeasutusList);
+    }
+
+    public WsEhisStudentLog foreignStudy(DirectiveStudent directiveStudent) {
+        try {
+            Student student = directiveStudent.getStudent();
+            Directive directive = directiveStudent.getDirective();
+
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+            KhlLyhiajaliseltValismaal khlLyhiajaliseltValismaal = new KhlLyhiajaliseltValismaal();
+            khlLyhiajaliseltValismaal.setMuutusKp(date(directive.getConfirmDate()));
+            khlLyhiajaliseltValismaal.setPerioodAlates(date(directiveStudent.getStartDate()));
+            khlLyhiajaliseltValismaal.setPerioodKuni(date(directiveStudent.getEndDate()));
+            khlLyhiajaliseltValismaal.setKlEesmark(ehisValue(directiveStudent.getAbroadPurpose()));
+            // TODO replace with real data
+            khlLyhiajaliseltValismaal.setAinepunkte(SUBJECT_POINTS);
+            khlLyhiajaliseltValismaal.setNominaalajaPikendamine(BigInteger.ZERO);
+            khlLyhiajaliseltValismaal.setOppeasutuseNimi(Boolean.TRUE.equals(directiveStudent.getIsAbroad()) ? directiveStudent.getAbroadSchool() : ehisValue(directiveStudent.getEhisSchool()));
+            khlLyhiajaliseltValismaal.setKlSihtriik(ehisValue(directiveStudent.getCountry()));
+            khlLyhiajaliseltValismaal.setKlProgramm(ehisValue(directiveStudent.getAbroadProgramme()));
+
+            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+            khlKorgharidusMuuda.setLyhiajaliseltValismaal(khlLyhiajaliseltValismaal);
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+
+            return makeRequest(directive, khlOppeasutusList);
+        } catch(Exception e) {
+            return bindingException(directiveStudent.getDirective(), e);
+        }
     }
 
     private WsEhisStudentLog makeRequest(Directive directive, KhlOppeasutusList khlOppeasutusList) {

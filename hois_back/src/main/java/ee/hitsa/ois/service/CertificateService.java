@@ -3,12 +3,10 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,10 +22,11 @@ import ee.hitsa.ois.enums.CertificateStatus;
 import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -45,8 +44,6 @@ public class CertificateService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private EntityManager em;
-    @Autowired
-    private StudentRepository studentRepository;
     @Autowired
     private PersonRepository personRepository;
     @Autowired
@@ -68,7 +65,7 @@ public class CertificateService {
             + "end as sortablename, c.status_code ";
 
     public Page<CertificateSearchDto> search(HoisUserDetails user, CertificateSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(CERTIFICATE_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(CERTIFICATE_FROM).sort(pageable);
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("s.id = :studentId", "studentId", user.getStudentId());
         qb.optionalContains("c.headline", "headline", criteria.getHeadline());
@@ -110,17 +107,12 @@ public class CertificateService {
         EntityUtil.bindToEntity(form, certificate, classifierRepository, 
                 "student", "otherName", "otherIdcode");
         certificate.setSchool(em.getReference(School.class, user.getSchoolId()));
-        certificate.setStatus(classifierRepository.getOne(CertificateStatus.TOEND_STAATUS_T.name()));
+        setCertificateStatus(certificate, CertificateStatus.TOEND_STAATUS_T);
 
-        if(CertificateType.isOther(form.getType())) {
-            if(form.getStudent() != null) {
-                certificate.setStudent(studentRepository.getOne(form.getStudent()));
-            } else {
-                certificate.setOtherName(form.getOtherName());
-                certificate.setOtherIdcode(form.getOtherIdcode());
-            }
-        } else {
-            certificate.setStudent(studentRepository.getOne(form.getStudent()));
+        certificate.setStudent(EntityUtil.getOptionalOne(Student.class, form.getStudent(), em));
+        if(CertificateType.isOther(form.getType()) && form.getStudent() == null) {
+            certificate.setOtherName(form.getOtherName());
+            certificate.setOtherIdcode(form.getOtherIdcode());
         }
         if(!certificateValidationService.canEditContent(user, EntityUtil.getCode(certificate.getType()))) {
             certificate.setContent(certificateContentService.generate(certificate.getStudent(), CertificateType.valueOf(form.getType())));
@@ -145,23 +137,17 @@ public class CertificateService {
         EntityUtil.deleteEntity(certificate, em);
     }
 
-    public StudentSearchDto getOtherPerson(Long schoolId, String idcode) {
+    public StudentSearchDto otherStudent(Long schoolId, String idcode) {
         Person person = personRepository.findByIdcode(idcode);
         if(person == null) {
             return null;
         }
 
-        // TODO refactor as only first result is used
-        List<Student> students = studentRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
+        JpaQueryBuilder<Student> qb = new JpaQueryBuilder<>(Student.class, "s");
+        qb.optionalCriteria("s.school.id = :schoolId", "schoolId", schoolId);
+        qb.requiredCriteria("s.person.id = :personId", "personId", person.getId());
 
-            if (schoolId != null) {
-                filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            }
-            filters.add(cb.equal(root.get("person").get("id"), person.getId()));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        });
-
+        List<Student> students = qb.select(em).setMaxResults(1).getResultList();
         if(!students.isEmpty()) {
             return StudentSearchDto.of(students.get(0));
         }
@@ -173,7 +159,7 @@ public class CertificateService {
     }
 
     public void setSignatory(CertificateForm form, Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator").sort("id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_coordinator").sort("id");
         qb.requiredCriteria("school_id = :schoolId", "schoolId", schoolId);
         qb.filter("is_certificate_default = true");
 
@@ -186,12 +172,12 @@ public class CertificateService {
     }
 
     public Certificate prepare(Certificate certificate) {
-        certificate.setStatus(classifierRepository.getOne(CertificateStatus.TOEND_STAATUS_V.name()));
+        setCertificateStatus(certificate, CertificateStatus.TOEND_STAATUS_V);
         return EntityUtil.save(certificate, em);
     }
 
     public List<DirectiveCoordinatorDto> signatories(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator").sort("name");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_coordinator").sort("name");
         qb.requiredCriteria("school_id = :schoolId", "schoolId", schoolId);
         qb.filter("is_certificate = true");
 
@@ -205,5 +191,9 @@ public class CertificateService {
             dto.setIdcode(resultAsString(d, 1));
             return dto;
         }, data);
+    }
+
+    private void setCertificateStatus(Certificate certificate, CertificateStatus status) {
+        certificate.setStatus(classifierRepository.getOne(status.name()));
     }
 }

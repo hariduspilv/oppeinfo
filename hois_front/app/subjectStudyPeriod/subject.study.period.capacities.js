@@ -13,7 +13,7 @@ angular.module('hitsaOis').factory('SspCapacities', [function () {
               this.getCapacity(ssps[j], types[i].code);
             }
           }
-        }
+        };
 
         function getSubjectStudyPeriods() {
             return !container || !container.subjectStudyPeriodDtos ? [] : container.subjectStudyPeriodDtos;

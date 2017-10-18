@@ -1,0 +1,114 @@
+<hois-collapsable expanded="true" ng-if="tasks.todayTasks.length > 0 || tasks.tomorrowTasks.length > 0 || tasks.laterTasks.length > 0">
+    <hois-collapsable-header>
+        <h2 class="md-title">{{'home.student.homeworkAndTests' | translate}}</h2>
+    </hois-collapsable-header>
+
+    <div style="margin:1%" layout="column">
+        <div ng-if="tasks.todayTasks.length > 0" layout="row" layout-xs="column" flex>
+            <div flex="20" flex-sm="100" flex-xs="100" flex-gt-lg="10">{{'home.student.today' | translate}} ({{todaysDate | hoisDayMonth}}):</div>
+            <div layout="column" flex="80" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" style="font-size:13px">
+                <div ng-repeat="task in tasks.todayTasks">
+                    <span style="font-weight:bold">{{task.journalName}}: </span>
+                    <span ng-if="testTaskTypes.indexOf(task.entryType) !== -1">{{'home.student.test' | translate}} - </span>
+                    <span ng-if="testTaskTypes.indexOf(task.entryType) === -1">{{'home.student.homework' | translate}} - </span>
+                    <span>{{task.taskContent}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div layout="row" layout-xs="column" ng-if="tasks.tomorrowTasks.length > 0" style="margin-top:1%" flex="100">
+            <div flex="20" flex-sm="100" flex-xs="100" flex-gt-lg="10">{{'home.student.tomorrow' | translate}} ({{tomorrowsDate | hoisDayMonth}}):</div>
+            <div layout="column" flex="80" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" style="font-size:13px">
+                <div ng-repeat="task in tasks.tomorrowTasks">
+                    <span style="font-weight:bold">{{task.journalName}}: </span>
+                    <span ng-if="testTaskTypes.indexOf(task.entryType) !== -1">{{'home.student.test' | translate}} - </span>
+                    <span ng-if="testTaskTypes.indexOf(task.entryType) === -1">{{'home.student.homework' | translate}} - </span>
+                    <span>{{task.taskContent}}</span>
+                </div>
+            </div>
+        </div>
+
+        <div layout="row" layout-xs="column" ng-if="tasks.laterTasks.length > 0" style="margin-top:1%" flex="100">
+            <div flex="20" flex-sm="100" flex-xs="100" flex-gt-lg="10">{{'home.student.later' | translate}}:</div>
+            <div layout="column" flex="80" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" style="font-size:13px">
+                <div ng-repeat="task in tasks.laterTasks">
+                    <span>{{task.date | hoisDayMonth}}</span>
+                    <span style="font-weight:bold">{{task.journalName}}: </span>
+                    <span ng-if="testTaskTypes.indexOf(task.entryType) !== -1">{{'home.student.test' | translate}} - </span>
+                    <span ng-if="testTaskTypes.indexOf(task.entryType) === -1">{{'home.student.homework' | translate}} - </span>
+                    <span>{{task.taskContent}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</hois-collapsable>
+
+<hois-collapsable expanded="false" ng-if="studentAbsences.length > 0">
+    <hois-collapsable-header>
+        <h2 class="md-title">{{'home.student.absences' | translate}}</h2>
+    </hois-collapsable-header>
+
+    <div style="margin:1%">
+        <div ng-repeat="absence in studentAbsences" style="font-size:13px">
+            <div layout="row" flex>
+                <span>{{absence.entryDate | hoisDayMonth}}</span>
+            <span>{{absence.startLessonNr}}. {{'home.student.lesson' | translate}} &nbsp;</span>
+                <span style="font-weight: 500">{{absence.journalName}} &nbsp;</span>
+                <span>{{absence.teachers}}</span>
+            </div>
+        </div>
+    </div>
+</hois-collapsable>
+
+<hois-collapsable expanded="true" ng-if="lastResults.length > 0">
+    <hois-collapsable-header>
+        <h2 class="md-title">{{'home.student.lastResults' | translate}}</h2>
+    </hois-collapsable-header>
+
+    <div layout="column" ng-repeat="result in lastResults" style="margin-top:1%">
+        <div layout="row" ng-if="result.entryCode">
+            <div layout="column" flex="5" flex-xs="10" layout-align="center center" layout-align-xs="start center" 
+                style="font-size:13px; font-weight:bold">{{result.grade}}</div>
+            <div layout="column" flex="95" flex-xs="90">
+                <div layout="row" layout-xs="column">
+                    <div style="font-size:13px; font-weight:bold">{{result.nameEt}}</div>
+                    <div ng-if="result.content" style="font-size:13px;">
+                        <span hide-xs>&nbsp</span>
+                        <span>({{result.content}})</span>
+                    </div>
+                    <div style="font-size:13px; color:grey; font-style: italic;">
+                        <span hide-xs>&nbsp</span>
+                        <span>{{'home.student.gradeInserted' | translate}} {{result.gradeInserted | hoisDayMonthTimeMin}}</span>
+                    </div>
+                </div>
+                <div layout="row" layout-xs="column" style="font-size:13px;">{{result.addInfo}}</div>
+            </div>
+        </div>
+
+        <div layout="row" ng-if="!result.entryCode">
+            <div layout="column" flex="5" flex-xs="10" layout-align="center center" layout-align-xs="start center" style="font-weight:bold;" 
+                ng-class="{goodGrade: result.grade === '5', badGrade: result.grade === '2'}">{{result.grade}}</div>
+            <div layout="row" layout-xs="column" flex="95" flex-xs="90">
+                <div style="font-size:18px; font-weight:bold">{{currentLanguageNameField(result)}}</div>
+                <div style="font-size:13px; color:grey; font-style: italic;">
+                    <span hide-xs>&nbsp</span>
+                    <span>{{'home.student.gradeInserted' | translate}} {{result.gradeInserted | hoisDayMonthTimeMin}}</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</hois-collapsable>
+
+<style>
+    .goodGrade {
+        color: green;
+        font-weight: 500;
+        font-size: 18px;
+    }
+
+    .badGrade {
+        color: red;
+        font-weight: 500;
+        font-size: 18px;
+    }
+</style>

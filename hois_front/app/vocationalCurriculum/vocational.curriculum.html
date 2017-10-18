@@ -296,11 +296,11 @@
 					<tr md-row ng-repeat="item in curriculum.occupations | orderBy: 'occupation.nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
 						<td md-cell>{{$index + 1}}</td>
 						<td md-cell><!--md-button class="md-primary" ng-click="curriculum.occupation ? openOccupationDialog(item) : openPartOccupationsDialog(item)">
-                {{item.occupation[currentLanguageNameField()]}}</md-button-->
-				<a href="" ng-click="curriculum.occupation ? openOccupationDialog(item) : openPartOccupationsDialog(item)">{{item.occupation[currentLanguageNameField()]}}</a></td>
-						<td md-cell><span ng-hide="!curriculum.occupation" ng-repeat="partOccupation in item.partOccupations">{{partOccupation[currentLanguageNameField()]}}{{$last ? '' : ', '}}</span></td>
+                {{currentLanguageNameField(item.occupation)}}</md-button-->
+				<a href="" ng-click="curriculum.occupation ? openOccupationDialog(item) : openPartOccupationsDialog(item)">{{currentLanguageNameField(item.occupation)}}</a></td>
+						<td md-cell><span ng-hide="!curriculum.occupation" ng-repeat="partOccupation in item.partOccupations">{{currentLanguageNameField(partOccupation)}}{{$last ? '' : ', '}}</span></td>
 						<td md-cell><span ng-hide="!curriculum.occupation || !item.specialities || item.specialities.length == 0" ng-repeat="speciality in item.specialities track by $index">
-                  {{speciality[currentLanguageNameField()]}}{{$last ? '' : ', '}}</span></td>
+                  {{currentLanguageNameField(speciality)}}{{$last ? '' : ', '}}</span></td>
 						<td md-cell><span ng-hide="!curriculum.occupation || !item.occupationGrant">{{'occupation.hasOccupationGrant' | translate}}</span></td>
 						<td md-cell ><a class="remove" ng-click="removeOccupation(item)" ng-if="!formState.readOnly && !formState.notEditableBasicData && occupationCanBeChanged()">&times;</a></td>
 					</tr>
@@ -312,7 +312,7 @@
 		<div>&nbsp;</div>
 		<fieldset tabindex="6">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !modulesValid()}">{{'curriculum.modulesTought' | translate}}</legend>
-			<md-button class="md-raised" ng-click="openAddModuleDialog()" ng-if="!formState.readOnly">{{'curriculum.addModule' | translate}}</md-button>
+			<md-button class="md-raised" ng-click="openAddModuleDialog()" ng-if="!formState.readOnly && curriculum.id">{{'main.button.create' | translate}}</md-button>
 
             <!--<div ng-if="strictValidation()">
                 <input style="display:none" type="number" readonly name="mainModuleCount" ng-model="validation.mainModuleCount" min="1"  />
@@ -325,10 +325,10 @@
 			<!--<div class="occupation-header align-center">{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}</div>-->
 			<!--<div layout="row" flex="100" class="occupation-row align-center border-bottom odd" ng-repeat="(moduleTypeCode, moduleTypeModules) in modulesWithOutOccupation track by moduleTypeCode">
 				<div flex="5">&nbsp;</div>
-				<div flex="20">{{moduleTypeModules.moduleType[currentLanguageNameField()]}}</div>
+				<div flex="20">{{currentLanguageNameField(moduleTypeModules.moduleType)}}</div>
 				<div layout="column" flex="75">
 					<div flex="100" ng-repeat="module in moduleTypeModules.modules track by $index" layout="row" class="align-center">
-						<a flex="40" class="md-primary" ng-click="openAddModuleDialog(module)"><span>{{module[currentLanguageNameField()]}}</span></a>
+						<a flex="40" class="md-primary" ng-click="openAddModuleDialog(module)"><span>{{currentLanguageNameField(module)}}</span></a>
 						<span flex="15">{{module.credits}} EKAP</span>
 					</div>
 				</div>
@@ -339,7 +339,7 @@
 				<div flex="20">{{currentLanguageNameField(type)}}</div>
 				<div layout="column" flex="75">
 					<div flex="100" ng-repeat="module in curriculum.modules | filter: filterEmptyModulesByType(type.code)" layout="row" class="align-center">
-						<a flex="40" class="md-primary" ng-click="openAddModuleDialog(module)"><span>{{module[currentLanguageNameField()]}}</span></a>
+						<a flex="40" class="md-primary" ng-click="openAddModuleDialog(module)"><span>{{currentLanguageNameField(module)}}</span></a>
 						<span flex="15">{{module.credits}} EKAP</span>
 					</div>
 				</div>
@@ -347,15 +347,15 @@
 
 			<!--<div ng-repeat="(occupationCode, occupationModuleTypes) in occupationModuleTypesModules track by occupationCode" layout="column">
 				<div class="occupation-header align-center">
-				  {{occupationModuleTypes.occupation[currentLanguageNameField()]}}
+				  {{currentLanguageNameField(occupationModuleTypes.occupation)}}
 				</div>
 				<div layout="column">
 					<div layout="row" flex="100" class="occupation-row align-center border-bottom odd" ng-repeat="(moduleTypeCode, moduleTypeModules) in occupationModuleTypes.moduleTypes track by moduleTypeCode">
 						<div flex="5">&nbsp;</div>
-						<div flex="20">{{moduleTypeModules.moduleType[currentLanguageNameField()]}}</div>
+						<div flex="20">{{currentLanguageNameField(moduleTypeModules.moduleType)}}</div>
 						<div layout="column" flex="75">
 							<div flex="100" ng-repeat="module in moduleTypeModules.modules track by $index" layout="row" class="align-center">
-								<a flex="40" ng-click="openAddModuleDialog(module)"><span>{{module[currentLanguageNameField()]}}</span></a>
+								<a flex="40" ng-click="openAddModuleDialog(module)"><span>{{currentLanguageNameField(module)}}</span></a>
 								<span flex="15">{{module.credits}} EKAP</span>
 							</div>
 						</div>
@@ -517,7 +517,7 @@
 				<div layout="column" flex ng-show="curriculum.joint" class="common-label">
 					<div layout="row" ng-repeat="item in curriculum.jointPartners | filter: filterEmptyJointPartners | orderBy: ['ehisSchool', 'nameEt']" class="align-center">
 						<div flex="5">&nbsp;</div>
-						<div ng-if="item.abroad">{{item[currentLanguageNameField()]}}</div>
+						<div ng-if="item.abroad">{{currentLanguageNameField(item)}}</div>
 						<div ng-if="!item.abroad"> <hois-classifier-value ng-model="item.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value></div>
 						<div flex="5">&nbsp;</div>
 						<div flex="5"><a class="remove nomargin" ng-click="removejointPartner(item)" ng-if="!formState.readOnly && !formState.notEditableBasicData">&times;</a></div>
@@ -757,7 +757,7 @@
           <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
         </div>
       </div>
-      <md-button class="md-raised md-default" ng-click="back('#/curriculum')">{{'main.button.back' | translate}}</md-button>
+      <md-button class="md-raised md-default" ng-click="back('#/curriculum', vocationalCurriculumForm)">{{'main.button.back' | translate}}</md-button>
     </div>
 </div>
 

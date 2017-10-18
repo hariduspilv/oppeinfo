@@ -5,8 +5,6 @@ import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.util.CollectionUtils;
-
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.MidtermTask;
@@ -34,7 +32,7 @@ public abstract class MidtermTaskUtil {
 
     private static boolean studentHasConfirmedProtocol(DeclarationSubject declarationSubject) {
         return declarationSubject.getSubjectStudyPeriod().getProtocols()
-                .stream().anyMatch(p -> HigherProtocolUtil.isConfirmed(p.getProtocol()) &&
+                .stream().anyMatch(p -> ProtocolUtil.confirmed(p.getProtocol()) &&
                         protocolIncludesStudent(p, declarationSubject));
     }
     
@@ -68,7 +66,7 @@ public abstract class MidtermTaskUtil {
     }
 
     public static Boolean midtermTaskCanBeDeleted(MidtermTask midtermTask) {
-        return  Boolean.valueOf(CollectionUtils.isEmpty(midtermTask.getStudentResults()));
+        return  Boolean.valueOf(midtermTask.getStudentResults().isEmpty());
     }
 
     public static void checkIfMidtermTasksCanBeEdited(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod){

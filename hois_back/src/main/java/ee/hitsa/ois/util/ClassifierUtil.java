@@ -10,7 +10,7 @@ import org.springframework.util.StringUtils;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.Permission;
-import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 
 /**
@@ -68,13 +68,13 @@ public class ClassifierUtil {
     }
 
     public static class ClassifierCache {
-        private final ClassifierRepository repository;
+        private final ClassifierService repository;
         private final Map<MainClassCode, List<Classifier>> classifiers = new HashMap<>();
         private final Map<MainClassCode, Map<String, Classifier>> byCode = new HashMap<>();
         private final Map<MainClassCode, Map<String, Classifier>> byEhisValue = new HashMap<>();
         private final Map<MainClassCode, Map<String, Classifier>> byValue = new HashMap<>();
 
-        public ClassifierCache(ClassifierRepository repository) {
+        public ClassifierCache(ClassifierService repository) {
             this.repository = repository;
         }
 
@@ -106,7 +106,7 @@ public class ClassifierUtil {
                 return;
             }
 
-            List<Classifier> records = repository.findAllByMainClassCode(mainClassCode.name());
+            List<Classifier> records = repository.findAllByMainClassCode(mainClassCode);
             // FIXME sorting?
             classifiers.put(mainClassCode, records);
 

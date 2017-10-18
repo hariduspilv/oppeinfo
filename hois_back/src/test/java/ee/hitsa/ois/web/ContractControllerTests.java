@@ -4,8 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
@@ -26,22 +26,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.PracticeJournal;
-import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.ContractStatus;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
-import ee.hitsa.ois.repository.DirectiveCoordinatorRepository;
-import ee.hitsa.ois.repository.EnterpriseRepository;
 import ee.hitsa.ois.repository.PracticeJournalRepository;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
-import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.ContractForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -64,13 +61,9 @@ public class ContractControllerTests {
     @Autowired
     private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
     @Autowired
-    private EnterpriseRepository enterpriseRepository;
-    @Autowired
     private TeacherRepository teacherRepository;
     @Autowired
-    private DirectiveCoordinatorRepository directiveCoordinatorRepository;
-    @Autowired
-    private UserRepository userRepository;
+    private EntityManager em;
     @Autowired
     private PracticeJournalRepository practiceJournalRepository;
 
@@ -82,14 +75,7 @@ public class ContractControllerTests {
     public void setUp() {
         Role role = Role.ROLL_A;
         if(student == null) {
-            List<School> userSchools = userRepository.findAll((root, query, cb) -> {
-                List<Predicate> filters = new ArrayList<>();
-                filters.add(cb.isNotNull(root.get("school").get("id")));
-                filters.add(cb.equal(root.get("role").get("code"), role.name()));
-                filters.add(cb.equal(root.get("person").get("idcode"), TestConfiguration.USER_ID));
-                return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).stream().map(User::getSchool).collect(Collectors.toList());
-
+            List<School> userSchools = testConfigurationService.personSchools(role);
             Assert.assertFalse(userSchools.isEmpty());
 
             student = studentRepository.findAll((root, query, cb) -> {
@@ -239,15 +225,22 @@ public class ContractControllerTests {
         form.setStartDate(LocalDate.now());
         form.setEndDate(LocalDate.now().plusDays(1));
         form.setPracticePlace("place");
-        form.setEnterprise(enterpriseRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
+        form.setEnterprise(enterprise().getId());
         form.setContactPersonName("person name");
         form.setContactPersonEmail("test@test.ee");
         form.setSupervisorName("supervisor");
         form.setSupervisorEmail("test@test.ee");
         form.setTeacher(teacherRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
-        form.setContractCoordinator(directiveCoordinatorRepository.findAll(SINGLE_RESULT).getContent().get(0).getId());
+        form.setContractCoordinator(directiveCoordinator().getId());
         form.setPracticePlan("plan");
         return form;
     }
 
+    private DirectiveCoordinator directiveCoordinator() {
+        return em.createQuery("select dc from DirectiveCoordinator dc", DirectiveCoordinator.class).setMaxResults(1).getResultList().get(0);
+    }
+
+    private Enterprise enterprise() {
+        return em.createQuery("select e from Enterprise e", Enterprise.class).setMaxResults(1).getResultList().get(0);
+    }
 }

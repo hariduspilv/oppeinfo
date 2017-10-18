@@ -6,7 +6,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     $scope.auth = $route.current.locals.auth;
     var auth = $route.current.locals.auth;
 
-    var studentId = (auth.isStudent() ? auth.student : $route.current.params.id);
+    var studentId = (auth.isStudent() || auth.isParent() ? auth.student : $route.current.params.id);
 
     var Endpoint = QueryUtils.endpoint('/students');
 
@@ -103,7 +103,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
 ]).controller('StudentViewResultsController', ['$route', '$scope', 'QueryUtils', function ($route, $scope, QueryUtils) {
   $scope.auth = $route.current.locals.auth;
 
-  $scope.studentId = ($scope.auth.isStudent() ? $scope.auth.student : $route.current.params.id);
+  $scope.studentId = ($scope.auth.isStudent() || $scope.auth.isParent() ? $scope.auth.student : $route.current.params.id);
   $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
   $scope.currentNavItem = 'student.results';
   $scope.resultsCurrentNavItem = 'student.curriculumFulfillment';
@@ -251,18 +251,14 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
   function ($q, $route, $scope, Classifier, QueryUtils, $rootScope) {
     var auth = $route.current.locals.auth;
 
-    function getHigherResults() {
-      if (!angular.isDefined($scope.higherResults)) {
-        var id =(auth.isStudent() ? auth.student : $route.current.params.id);
-        QueryUtils.endpoint('/students/' + id + '/higherResults').get().$promise.then(function (response) {
-          $scope.higherResults = response;
-          $scope.student.higherResults = $scope.higherResults;
-          $scope.student.higherResults.modules.sort(moduleComparator);
-        });
-      }
+    if (!angular.isDefined($scope.higherResults)) {
+      var id = (auth.isStudent() ? auth.student : $route.current.params.id);
+      QueryUtils.endpoint('/students/' + id + '/higherResults').get().$promise.then(function (response) {
+        $scope.higherResults = response;
+        $scope.student.higherResults = $scope.higherResults;
+        $scope.student.higherResults.modules.sort(moduleComparator);
+      });
     }
-
-    getHigherResults();
 
     $scope.hasMandatorySubjects = function (module) {
       return $scope.higherResults.subjectResults.some(function (s) {
@@ -324,11 +320,9 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
     };
 
     if(!$scope.auth.isTeacher() && !$scope.auth.isParent()) {
-      var StudentApplicableApplicationsEndpoint = QueryUtils.endpoint('/applications/student/' + $scope.studentId + '/applicable');
-      StudentApplicableApplicationsEndpoint.search(function (result) {
-        $scope.applicationTypesApplicable = result;
-        $scope.applicationTypes = Classifier.queryForDropdown({ mainClassCode: 'AVALDUS_LIIK' });
-      });
+      var Endpoint = QueryUtils.endpoint('/applications/student/' + $scope.studentId + '/applicable');
+      $scope.applicationTypesApplicable = Endpoint.search();
+      $scope.applicationTypes = Classifier.queryForDropdown({ mainClassCode: 'AVALDUS_LIIK' });
     }
 
     $scope.directivesCriteria = { order: 'headline', studentId: $scope.studentId };

@@ -1,11 +1,11 @@
 <div layout="column" layout-padding>
     <form name="subjectStudyPeriodSubjectEditForm">
-        <p class="md-body-1">
+      <div flex layout="row" layout-align="start start" class="common-label" md-colors="{color: 'background-400'}">
             <span ng-repeat="capacity in capacityTypes">
                 <span ng-if="$index !== 0">|</span>
                 {{capacity.value.toUpperCase()}} - {{currentLanguageNameField(capacity)}}
             </span>
-        </p>
+      </div>
         <br>
         <div layout="column" class="form-readonly">
             <div layout="row" layout-sm="column" layout-xs="column">
@@ -81,7 +81,7 @@
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/subjects')">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/subjects', subjectStudyPeriodSubjectEditForm)">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>

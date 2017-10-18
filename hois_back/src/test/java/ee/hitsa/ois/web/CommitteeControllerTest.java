@@ -74,7 +74,7 @@ public class CommitteeControllerTest {
     public void search() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT);
         uriBuilder.queryParam("memberName", "random name");
-        uriBuilder.queryParam("teacher", 1);
+        uriBuilder.queryParam("teacher", Long.valueOf(1));
         uriBuilder.queryParam("showInvalid", Boolean.FALSE);
         uriBuilder.queryParam("validFrom", "2016-10-31T22:00:00.000Z");
         uriBuilder.queryParam("validThru", "2016-12-31T22:00:00.000Z");

@@ -9,7 +9,6 @@ import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.Query;
 import javax.transaction.Transactional;
 
 import org.apache.commons.collections.CollectionUtils;
@@ -23,6 +22,7 @@ import ee.hitsa.ois.enums.Absence;
 import ee.hitsa.ois.repository.JournalEntryStudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -33,27 +33,26 @@ import ee.hitsa.ois.web.dto.student.StudentAbsenceDto;
 @Transactional
 @Service
 public class StudentAbsenceService {
-    
+
     @Autowired
     private EntityManager em;
     @Autowired 
     private JournalEntryStudentRepository journalEntryStudentRepository;
-    
-    private static String SELECT = "sa.id as absenceId, s.id as studentId, p.firstname, p.lastname, sa.valid_from, "
+
+    private static final String SELECT = "sa.id as absenceId, s.id as studentId, p.firstname, p.lastname, sa.valid_from, "
             + "sa.valid_thru, sa.is_accepted, sa.cause, sa.inserted_by, sa.changed_by ";
-    private static String FROM = 
+    private static final String FROM =
               "from student_absence sa "
             + "join student s on s.id = sa.student_id "
             + "join person p on p.id = s.person_id ";
-    
-    private static String ABSENCE_ENTRY_SELECT = "jes.id ";
-    private static String ABSENCE_ENTRY_FROM = "from journal_entry_student jes "
+
+    private static final String ABSENCE_ENTRY_FROM = "from journal_entry_student jes "
             + "join journal_student js on js.id = jes.journal_student_id "
             + "join journal_entry je on je.id = jes.journal_entry_id";
 
     public Page<StudentAbsenceDto> search(HoisUserDetails user, StudentAbsenceSearchCommand criteria,
             Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(FROM).sort(pageable);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         if(!Boolean.TRUE.equals(criteria.getShowAll())) {
             qb.filter(" sa.is_accepted = false ");
@@ -77,7 +76,7 @@ public class StudentAbsenceService {
         }
         return dto;
     }
-    
+
     public StudentAbsence accept(StudentAbsence studentAbsence) {
         updateJournalEntryStudents(studentAbsence);
         studentAbsence.setIsAccepted(Boolean.TRUE);
@@ -90,43 +89,29 @@ public class StudentAbsenceService {
             journalEntryStudentRepository.acceptAbsences(Absence.PUUDUMINE_V.name(), absences);
         }
     }
-    
+
     private Set<Long> getAbsenceEntries(StudentAbsence studentAbsence) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(ABSENCE_ENTRY_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(ABSENCE_ENTRY_FROM);
         qb.requiredCriteria("js.student_id = :studentId", "studentId", EntityUtil.getId(studentAbsence.getStudent()));
-        qb.requiredCriteria("jes.absence_code = :noReason", "noReason", Absence.PUUDUMINE_P.name());
+        qb.requiredCriteria("jes.absence_code = :noReason", "noReason", Absence.PUUDUMINE_P);
         if(studentAbsence.getValidThru() != null) {
             qb.requiredCriteria("je.entry_date >= :absenceFrom", "absenceFrom", studentAbsence.getValidFrom());
             qb.requiredCriteria("je.entry_date <= :absenceThru", "absenceThru", studentAbsence.getValidThru());   
         } else {
             qb.requiredCriteria("je.entry_date = :absenceFrom", "absenceFrom", studentAbsence.getValidFrom());
         }
-        List<?> result = qb.select(ABSENCE_ENTRY_SELECT, em).getResultList();
+        List<?> result = qb.select("jes.id", em).getResultList();
         return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
     }
 
     public boolean hasUnaccepted(HoisUserDetails user) {
-        Query q = em.createNativeQuery(unacceptedQuery(user));
-        q.setParameter("schoolId", user.getSchoolId());
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_absence sa join student s on s.id = sa.student_id");
+        qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
+        qb.filter("sa.is_accepted = false");
         if(user.isTeacher()) {
-            q.setParameter("teacherId", user.getTeacherId());
+            qb.requiredCriteria("s.student_group_id in (select sg.id from student_group sg where sg.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
         }
-        List<?> data = q.getResultList();        
-        return resultAsBoolean(data.get(0), 0);
-    }
-    
-    private String unacceptedQuery(HoisUserDetails user) {
-        StringBuilder sql = new StringBuilder(
-                "select exists( "
-                + "select sa.id "
-                + "from student_absence sa "
-                + "join student s on s.id = sa.student_id "
-                + "where s.school_id = :schoolId "
-                + "and sa.is_accepted = false ");
-        if(user.isTeacher()) {
-            sql.append(" and s.student_group_id in (select sg.id from student_group sg where sg.teacher_id = :teacherId) ");
-        }
-        sql.append(")");
-        return sql.toString();
+        List<?> data = qb.select("sa.id", em).setMaxResults(1).getResultList();
+        return !data.isEmpty();
     }
 }

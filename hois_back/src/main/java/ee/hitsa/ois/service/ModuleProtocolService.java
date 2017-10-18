@@ -27,6 +27,7 @@ import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
@@ -43,10 +44,10 @@ import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.LessonPlanModuleRepository;
-import ee.hitsa.ois.repository.ProtocolStudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.ModuleProtocolGradeUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -78,12 +79,10 @@ public class ModuleProtocolService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private LessonPlanModuleRepository lessonPlanModuleRepository;
-    @Autowired
-    private ProtocolStudentRepository protocolStudentRepository;
 
     public Page<ModuleProtocolSearchDto> search(HoisUserDetails user, ModuleProtocolSearchCommand cmd,
             Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from protocol p "
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol p "
                 + "inner join protocol_vdata pvd on pvd.protocol_id = p.id").sort(pageable);
 
         qb.filter("p.is_vocational = true");
@@ -136,7 +135,7 @@ public class ModuleProtocolService {
                 });
 
         if (!dtoById.isEmpty()) {
-            JpaQueryUtil.NativeQueryBuilder pvdQb = new JpaQueryUtil.NativeQueryBuilder(
+            JpaNativeQueryBuilder pvdQb = new JpaNativeQueryBuilder(
                     "from protocol_vdata pvd " + "left join curriculum_version cv on cv.id = pvd.curriculum_version_id "
                             + "left join curriculum c on c.id = cv.curriculum_id "
                             + "left join curriculum_version_omodule cvo on cvo.id = pvd.curriculum_version_omodule_id "
@@ -158,7 +157,7 @@ public class ModuleProtocolService {
                 dto.getCurriculumVersionOccupationModules().add(curriculumVersionOccupationModule);
             }
 
-            JpaQueryUtil.NativeQueryBuilder psQb = new JpaQueryUtil.NativeQueryBuilder(
+            JpaNativeQueryBuilder psQb = new JpaNativeQueryBuilder(
                     "from protocol_student ps " + "inner join student s on s.id = ps.student_id "
                             + "inner join student_group sg on sg.id = s.student_group_id");
             psQb.requiredCriteria("ps.protocol_id in :protocolIds", "protocolIds", dtoById.keySet());
@@ -180,7 +179,7 @@ public class ModuleProtocolService {
                 + "inner join curriculum_version cv on cv.id = cvo.curriculum_version_id "
                 + "inner join curriculum c on c.id = cv.curriculum_id";
 
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
                 curriculumVersionId);
@@ -200,19 +199,28 @@ public class ModuleProtocolService {
     public Collection<ModuleProtocolStudentSelectDto> occupationModuleStudents(HoisUserDetails user,
             Long occupationalModuleId) {
         Map<Long, ModuleProtocolStudentSelectDto> result = studentsForSelection(user, occupationalModuleId);
-        addJournalResults(result);
+        addJournalResults(result, occupationalModuleId);
         return result.values();
     }
 
-    private void addJournalResults(Map<Long, ModuleProtocolStudentSelectDto> result) {
+    private static final String FILTER_BY_OCCUPATIONAL_MODULE = "exists("
+            + "select * "
+            + "from journal_omodule_theme jot "
+            + "join curriculum_version_omodule_theme t on t.id = jot.curriculum_version_omodule_theme_id "
+            + "where jot.journal_id = js.journal_id "
+            + "and t.curriculum_version_omodule_id = :occupationalModule)";
+
+    private void addJournalResults(Map<Long, ModuleProtocolStudentSelectDto> result, Long occupationalModule) {
         if (!result.isEmpty()) {
-            JpaQueryUtil.NativeQueryBuilder gradeQb = new JpaQueryUtil.NativeQueryBuilder(
+            JpaNativeQueryBuilder gradeQb = new JpaNativeQueryBuilder(
                     "from journal_entry_student jes "
                             + "inner join journal_student js on js.id = jes.journal_student_id "
                             + "inner join journal_entry je on je.id = jes.journal_entry_id");
             gradeQb.requiredCriteria("js.student_id in :studentsId", "studentsId", result.keySet());
-            // Mooduliga seotud päevikute lõpptulemused
+
             gradeQb.requiredCriteria("je.entry_type_code = :entryType", "entryType", JournalEntryType.SISSEKANNE_L);
+            
+            gradeQb.requiredCriteria(FILTER_BY_OCCUPATIONAL_MODULE, "occupationalModule", occupationalModule);
 
             List<?> grades = gradeQb.select("js.student_id, jes.grade_code", em).getResultList();
             grades.stream().filter(r -> StringUtils.hasText(resultAsString(r, 1))).forEach(r -> {
@@ -225,10 +233,19 @@ public class ModuleProtocolService {
             Long occupationalModuleId) {
         return studentsForSelection(user, occupationalModuleId, null);
     }
+    
+    private static final String HAS_NO_POSITIVE_RESULT_IN_THIS_MODULE = "js.student_id not in (select ps.student_id from protocol_student ps "
+            + "inner join protocol p on p.id = ps.protocol_id "
+            + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
+            + "where p.is_vocational = true and "
+            + "grade_code in :positiveGrades and pvd.curriculum_version_omodule_id = cvo.id)";
+    
+    private static final String NOT_ADDED_TO_PROTOCOL = "js.student_id not in (" + "select ps.student_id from protocol_student ps "
+            + "where ps.protocol_id = :protocolId )";
 
     private Map<Long, ModuleProtocolStudentSelectDto> studentsForSelection(HoisUserDetails user,
             Long occupationalModuleId, Long notInProtocolId) {
-        JpaQueryUtil.NativeQueryBuilder studentsQb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder studentsQb = new JpaNativeQueryBuilder(
                 "from journal_omodule_theme jot " + "inner join journal j on j.id = jot.journal_id "
                         + "inner join journal_student js on js.journal_id = j.id "
                         + "inner join student s on s.id = js.student_id " + "inner join person p on p.id = s.person_id "
@@ -241,20 +258,10 @@ public class ModuleProtocolService {
         studentsQb.requiredCriteria("s.status_code in :activeStatuses", "activeStatuses",
                 StudentStatus.STUDENT_STATUS_ACTIVE);
 
-        // kellel puudub positiivne õppetulemus vastavas moodulis
-        studentsQb.requiredCriteria(
-                "js.student_id not in (select ps.student_id from protocol_student ps "
-                        + "inner join protocol p on p.id = ps.protocol_id "
-                        + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
-                        + "where p.is_vocational = true and "
-                        + "grade_code in :positiveGrades and pvd.curriculum_version_omodule_id = cvo.id)",
+        studentsQb.requiredCriteria(HAS_NO_POSITIVE_RESULT_IN_THIS_MODULE,
                 "positiveGrades", OccupationalGrade.OCCUPATIONAL_GRADE_POSITIVE);
 
-        // kelle andmeid ei ole veel protokollile lisatud
-        if (notInProtocolId != null) {
-            studentsQb.requiredCriteria("js.student_id not in (" + "select ps.student_id from protocol_student ps "
-                    + "where ps.protocol_id = :protocolId )", "protocolId", notInProtocolId);
-        }
+        studentsQb.optionalCriteria(NOT_ADDED_TO_PROTOCOL, "protocolId", notInProtocolId);
 
         List<?> students = studentsQb.select("distinct s.id, p.firstname, p.lastname, p.idcode, s.status_code", em)
                 .getResultList();
@@ -305,16 +312,23 @@ public class ModuleProtocolService {
                     ps.setStudent(em.getReference(Student.class, dto.getStudentId()));
                     return ps;
                 }, (dto, ps) -> {
-                    if (dto.getGrade() != null && !dto.getGrade().equals(EntityUtil.getNullableCode(ps.getGrade()))) {
-                        ps.setGrade(classifierRepository.getOne(dto.getGrade()));
-                    } else if (dto.getGrade() == null) {
-                        ps.setGrade(null);
+                    if (ProtocolUtil.gradeChangedButNotRemoved(dto, ps)) {
+                        ProtocolUtil.addHistory(ps);
+                        Classifier grade = em.getReference(Classifier.class, dto.getGrade());
+                        Short mark = getMark(EntityUtil.getCode(grade));
+                        ProtocolUtil.gradeStudent(ps, grade, mark);
+                    } else if (ProtocolUtil.gradeRemoved(dto, ps)) {
+                        ProtocolUtil.addHistory(ps);
+                        ProtocolUtil.removeGrade(ps);
                     }
                 });
-
         assertRemovedStudents(storedStudents, protocol.getProtocolStudents());
 
         return EntityUtil.save(protocol, em);
+    }
+    
+    private static Short getMark(String grade) {
+        return Short.valueOf((short) OccupationalGrade.valueOf(grade).getMark());
     }
 
     private static void assertRemovedStudents(List<ProtocolStudent> oldStudents, List<ProtocolStudent> newStudents) {
@@ -333,7 +347,8 @@ public class ModuleProtocolService {
     public Collection<ModuleProtocolStudentSelectDto> otherStudents(HoisUserDetails user, Protocol protocol) {
         Map<Long, ModuleProtocolStudentSelectDto> result = studentsForSelection(user,
                 EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersionOccupationModule()), protocol.getId());
-        addJournalResults(result);
+        Long occupationalModule = EntityUtil.getId(protocol.getProtocolVdata().getCurriculumVersionOccupationModule());
+        addJournalResults(result, occupationalModule);
         return result.values();
     }
 
@@ -388,7 +403,7 @@ public class ModuleProtocolService {
     }
 
     public boolean hasStudentPositiveGradeInModule(Student student, CurriculumVersionOccupationModule module) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from protocol_student ps "
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from protocol_student ps "
                 + "inner join protocol p on p.id = ps.protocol_id "
                 + "inner join protocol_vdata pvd on pvd.protocol_id = p.id ");
 
@@ -404,7 +419,7 @@ public class ModuleProtocolService {
     public List<ProtocolStudentResultDto> calculateGrades(ProtocolCalculateCommand command) {
         List<ProtocolStudentResultDto> calculatedResults = new ArrayList<>();
         for(Long protocolStudentId : command.getProtocolStudents()) {
-            ProtocolStudent ps = protocolStudentRepository.getOne(protocolStudentId);
+            ProtocolStudent ps = em.getReference(ProtocolStudent.class, protocolStudentId);
             OccupationalGrade grade = ModuleProtocolGradeUtil.calculateGrade(ps);
             calculatedResults.add(new ProtocolStudentResultDto(protocolStudentId, grade));
         }

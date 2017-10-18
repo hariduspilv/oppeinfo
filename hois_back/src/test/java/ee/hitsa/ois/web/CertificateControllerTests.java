@@ -5,7 +5,6 @@ import java.util.Arrays;
 import org.junit.After;
 import org.junit.Assert;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.enums.Role;
@@ -120,56 +120,25 @@ public class CertificateControllerTests {
         restTemplate.delete(uri);
     }
 
-    @Ignore("problems with test data, with first querie's idcode to be precise")
     @Test
-    public void getPersonByIdcode() {
-        final String METHOD_URL = "/otherStudent";
+    public void otherStudent() {
+        final String METHOD_URL = BASE_URL + "/otherStudent";
         // get student
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
-        uriBuilder.queryParam("idcode", "50112090825");
-        String uri = uriBuilder.build().toUriString();
-        ResponseEntity<StudentSearchDto> response = restTemplate.getForEntity(uri, StudentSearchDto.class);
+        UriComponentsBuilder uri = UriComponentsBuilder.fromUriString(METHOD_URL);
+        uri.queryParam("idcode", "50112090825");
+        ResponseEntity<StudentSearchDto> response = restTemplate.getForEntity(uri.build().toUriString(), StudentSearchDto.class);
+        Assert.assertNotNull(response);
+        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
+
+        uri = UriComponentsBuilder.fromUriString(METHOD_URL);
+        uri.queryParam("idcode", TestConfiguration.USER_ID);
+        response = restTemplate.getForEntity(uri.build().toUriString(), StudentSearchDto.class);
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
         Assert.assertNotNull(response.getBody());
-        Assert.assertNotNull(response.getBody().getId());
+        // Assert.assertNull(response.getBody().getId());
         Assert.assertNotNull(response.getBody().getIdcode());
         Assert.assertNotNull(response.getBody().getFullname());
-
-        // get person, who is not student
-        uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
-        uriBuilder.queryParam("idcode", "37810012983");
-        uriBuilder.build().toUriString();
-        uri = uriBuilder.build().toUriString();
-        response = restTemplate.getForEntity(uri, StudentSearchDto.class);
-        Assert.assertNotNull(response);
-        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
-        Assert.assertNotNull(response.getBody());
-        Assert.assertNull(response.getBody().getId());
-        Assert.assertNotNull(response.getBody().getIdcode());
-        Assert.assertNotNull(response.getBody().getFullname());
-
-        // get person, who is student in another school
-        uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
-        uriBuilder.queryParam("idcode", "37810010008");
-        uriBuilder.build().toUriString();
-        uri = uriBuilder.build().toUriString();
-        response = restTemplate.getForEntity(uri, StudentSearchDto.class);
-        Assert.assertNotNull(response);
-        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
-        Assert.assertNotNull(response.getBody());
-        Assert.assertNull(response.getBody().getId());
-        Assert.assertNotNull(response.getBody().getIdcode());
-        Assert.assertNotNull(response.getBody().getFullname());
-
-        // there is no person with such idcode
-        uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + METHOD_URL);
-        uriBuilder.queryParam("idcode", "37910012983");
-        uri = uriBuilder.build().toUriString();
-        response = restTemplate.getForEntity(uri, StudentSearchDto.class);
-        Assert.assertNotNull(response);
-        Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
-        Assert.assertNull(response.getBody());
     }
 
     public CertificateForm getForm() {

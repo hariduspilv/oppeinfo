@@ -55,6 +55,7 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -91,6 +92,8 @@ public class ApplicationService {
     @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
+    private ClassifierService classifierService;
+    @Autowired
     private EntityManager em;
     @Autowired
     private Validator validator;
@@ -104,7 +107,7 @@ public class ApplicationService {
      * @return
      */
     public Page<ApplicationSearchDto> search(HoisUserDetails user, ApplicationSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(APPLICATION_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(APPLICATION_FROM).sort(pageable);
 
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.optionalCriteria("a.type_code in (:type)", "type", criteria.getType());
@@ -319,7 +322,7 @@ public class ApplicationService {
     }
 
     private void rulesByApplicationClassifier(boolean isHigher, Map<ApplicationType, ApplicationApplicableDto> result) {
-        List<Classifier> allowedApplicationTypes = classifierRepository.findAllByMainClassCode(MainClassCode.AVALDUS_LIIK.name());
+        List<Classifier> allowedApplicationTypes = classifierService.findAllByMainClassCode(MainClassCode.AVALDUS_LIIK);
         for (Classifier allowedApplicationType : allowedApplicationTypes) {
             if ((isHigher && !allowedApplicationType.isHigher()) || (!isHigher && !allowedApplicationType.isVocational())) {
                 result.remove(ApplicationType.valueOf(allowedApplicationType.getCode()));
@@ -330,8 +333,6 @@ public class ApplicationService {
     private void rulesByApplicationType(Student student, List<ApplicationType> existingApplications, boolean isHigher,
             Map<ApplicationType, ApplicationApplicableDto> result) {
         boolean isActive = StudentUtil.isActive(student);
-        boolean isNominalStudy = StudentUtil.isNominalStudy(student);
-        boolean isOnAcademicLeave = StudentUtil.isOnAcademicLeave(student);
         boolean isStudying = StudentUtil.isStudying(student);
 
         for (ApplicationType type : ApplicationType.values()) {
@@ -341,13 +342,13 @@ public class ApplicationService {
                 if (ApplicationType.AVALDUS_LIIK_AKAD.equals(type)) {
                     if (!isActive) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
-                    } else if (!isNominalStudy) {
+                    } else if (!StudentUtil.isNominalStudy(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotNominalStudy"));
                     }
                 } else if (ApplicationType.AVALDUS_LIIK_AKADK.equals(type)) {
                     if (!isActive) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotActive"));
-                    } else if (!isOnAcademicLeave) {
+                    } else if (!StudentUtil.isOnAcademicLeave(student)) {
                         result.put(type, new ApplicationApplicableDto("application.messages.studentNotOnAcademicLeave"));
                     } else {
                         Application academicLeaveApplication = findLastValidAcademicLeaveWithoutRevocation(EntityUtil.getId(student));

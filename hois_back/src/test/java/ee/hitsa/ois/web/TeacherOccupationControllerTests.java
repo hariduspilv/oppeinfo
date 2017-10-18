@@ -131,4 +131,11 @@ public class TeacherOccupationControllerTests {
         uri = uriBuilder.build().toUriString();
         restTemplate.delete(uri);
     }
+
+    @Test
+    public void teacherOccupations() {
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/teacheroccupations/all", Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

@@ -15,7 +15,6 @@ import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotBlank;
-import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -53,7 +52,7 @@ public class CurriculumSpeciality extends BaseEntityWithId implements Translatab
 
     @Transient
     public boolean isAddedToVersion() {
-        return !CollectionUtils.isEmpty(getCurriculumVersionSpecialities());
+        return !getCurriculumVersionSpecialities().isEmpty();
     }
 
     public Set<CurriculumVersionSpeciality> getCurriculumVersionSpecialities() {

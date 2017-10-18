@@ -58,6 +58,9 @@ angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', '
             continue;
           }
 
+          if(params.filterValues !== undefined && params.filterValues.indexOf(data[i].code) !== -1) {
+            continue;
+          }
 
           result.push(angular.copy(data[i]));
         }

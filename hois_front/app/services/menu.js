@@ -53,7 +53,7 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.student.studentGroups',
-            url: 'studentgroups?_menu'
+            url: '/studentgroups?_menu'
           },
           {
             name: 'main.menu.student.absences',
@@ -117,13 +117,6 @@ angular.module('hitsaOis')
             }
           },
           {
-            name: 'main.menu.study.journal.journalsHigher',
-            url: "/journals?_menu",
-            studyLevel: {
-              higher: true
-            }
-          },
-          {
             name: 'main.menu.study.practiceJournal.label',
             url: "/practiceJournals?_menu"
           },
@@ -164,14 +157,14 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.studyPreparation.studyYearSchedule.legend',
-            url: "/studyYearScheduleLegend",
+            url: "/studyYearScheduleLegend?_menu",
             studyLevel: {
               vocational: true
             }
           },
           {
             name: 'main.menu.studyPreparation.studyYearSchedule.edit',
-            url: "/studyYearSchedule",
+            url: "/studyYearSchedule?_menu",
             studyLevel: {
               vocational: true
             }
@@ -182,9 +175,12 @@ angular.module('hitsaOis')
             url: "/timetable/lessonTime/search?_menu"
           },
           {
-            name: 'Kutseõp. tunnijaotusplaan',
+            name: 'main.menu.studyPreparation.lessonplans.vocational',
             id: 'timetableLessonTimeSearch',
-            url: "/lessonplans/vocational?_menu"
+            url: "/lessonplans/vocational?_menu",
+            studyLevel: {
+              vocational: true
+            }
           },
           {
             name: 'main.menu.studyPreparation.subjectStudyPeriods.plans',
@@ -441,10 +437,17 @@ angular.module('hitsaOis')
             url: "/absences?_menu"
           },
           {
-            name: 'main.menu.study.journal.label',
+            name: 'main.menu.study.journal.journalsVocational',
             url: "/journals?_menu",
             studyLevel: {
               vocational: true
+            }
+          },
+          {
+            name: 'main.menu.study.journal.journalsHigher',
+            url: "/subjectStudyPeriods?_menu",
+            studyLevel: {
+              higher: true
             }
           },
           {
@@ -554,7 +557,7 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
-        url: '/timetable/generalTimetableByGroup?_menu'
+        url: '/timetable/generalTimetableByStudent?_menu'
       });
 
       sections.push({
@@ -651,13 +654,19 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
-        url: '/timetable/generalTimetableByGroup?_menu'
+        url: '/timetable/generalTimetableByStudent?_menu'
       });
 
       sections.push({
         name: 'main.menu.studentRepresentative.label',
         type: 'link',
-        url: '/studentRepresentative'
+        url: '/students/myData'
+      });
+
+      sections.push({
+        name: 'main.menu.academicCalendar.label',
+        type: 'link',
+        url: "/academicCalendar"
       });
 
       sections.push({
@@ -666,7 +675,7 @@ angular.module('hitsaOis')
         pages: [
           {
             name: 'main.menu.studentStudyInformation.journal',
-            url: "/journal?_menu",
+            url: '/students/journals',
             studyLevel: {
               vocational: true
             }
@@ -677,7 +686,7 @@ angular.module('hitsaOis')
           },
           {
             name: 'main.menu.studentStudyInformation.results',
-            url: '/results'
+            url: '/students/myResults'
           }
         ]
       });
@@ -688,7 +697,7 @@ angular.module('hitsaOis')
         pages: [
           {
             name: 'main.menu.documents.applications',
-            url: "/applications?_menu",
+            url: "/applications/student?_menu",
           },
           {
             name: 'main.menu.documents.certificates',
@@ -710,7 +719,7 @@ angular.module('hitsaOis')
         return;
       }
       var matchPage = function(section, page) {
-        if (page.url.replace(/(\?_menu)$/, '').indexOf(path) === 0) {
+        if (page.url.replace(/(\?_menu)$/, '') === path) {
           //console.log("matched path ", path, " to page url ", page.url);
           self.selectSection(section);
           self.selectPage(section, page);

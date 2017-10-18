@@ -89,6 +89,19 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       setCapacities();
     });
 
+    $scope.$watch('plan.selectAll', function () {
+      if (angular.isDefined($scope.plan.selectAll)) {
+        if ($scope.plan.selectAll) {
+          Classifier.setSelectedCodes($scope.plan.studentGroups, $scope.plan.studentGroups.map(function (obj) {
+            return obj.code;
+          }));
+        } else {
+          Classifier.setSelectedCodes($scope.plan.studentGroups, []);
+        }
+        $scope.updateGroups();
+      }
+    });
+
     function setCapacities() {
       if (angular.isDefined($scope.plan.selectedGroup)) {
         $scope.plan.currentCapacities = $scope.plan.studentGroupCapacities.filter(function (t) {
@@ -117,6 +130,17 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         return it.journal === journal.id;
       });
       return capacity[param];
+    };
+
+    $scope.getTotalsByJournal = function (journal, param) {
+      var allCapacities = $scope.plan.currentCapacities.filter(function (it) {
+        return it.journal === journal.id;
+      });
+      var result = 0;
+      allCapacities.forEach(function(it) {
+        result += it[param];
+      });
+      return result;
     };
 
     $scope.getByCapacity = function (capacity, param) {
@@ -198,6 +222,7 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
       var currGroupId = $scope.plan.selectedGroup;
       dialogService.showDialog('timetable/timetable.event.change.dialog.html', function (dialogScope) {
         dialogScope.lesson = currentEvent;
+        dialogScope.lessonHeader = currentEvent.journalObject.name + ", "  + currentEvent.journalObject.teacherNames.join(", ");
         dialogScope.lessonCapacityName = $scope.getCapacityType(currentEvent.capacityType);
         dialogScope.lesson.startTime = new Date(currentEvent.start);
         dialogScope.lesson.endTime = new Date(currentEvent.end);
@@ -208,6 +233,13 @@ angular.module('hitsaOis').controller('VocationalTimetablePlanController', ['$sc
         }
         dialogScope.$watch('lesson.eventRoom', function () {
           if (angular.isDefined(dialogScope.lesson.eventRoom) && dialogScope.lesson.eventRoom !== null) {
+            if (dialogScope.lesson.eventRooms.some(function (e) {
+                return e.id === dialogScope.lesson.eventRoom.id;
+              })) {
+              message.error('timetable.timetablePlan.duplicateroom');
+              dialogScope.lesson.eventRoom = undefined;
+              return;
+            }
             dialogScope.lesson.eventRooms.push(dialogScope.lesson.eventRoom);
             dialogScope.lesson.eventRoom = null;
           }

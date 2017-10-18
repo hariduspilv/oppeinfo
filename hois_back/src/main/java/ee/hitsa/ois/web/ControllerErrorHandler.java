@@ -2,7 +2,6 @@ package ee.hitsa.ois.web;
 
 import java.lang.invoke.MethodHandles;
 import java.sql.SQLException;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -85,8 +84,8 @@ public class ControllerErrorHandler {
             Throwable cause = e instanceof DataIntegrityViolationException ? ((DataIntegrityViolationException) e).getRootCause() : e.getCause();
             if (cause instanceof SQLException
                     && POSTGRESQL_UNIQUE_VIOLATION.equals(((SQLException) cause).getSQLState())) {
-                status = HttpStatus.PRECONDITION_FAILED;
                 info = uniqueViolation((SQLException) cause);
+                status = HttpStatus.PRECONDITION_FAILED;
             }
 
             if (status == null) {
@@ -108,7 +107,6 @@ public class ControllerErrorHandler {
             log.error("Error occured during request handling:", e);
         }
 
-        log.error(Arrays.toString(e.getStackTrace()));
         return new ResponseEntity<>(info, status);
     }
 

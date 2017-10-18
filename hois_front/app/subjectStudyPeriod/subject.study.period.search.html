@@ -1,21 +1,28 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <form ng-submit="loadData()" layout="column" novalidate>
-    <div layout="row" layout-sm="column" layout-xs="column" ng-if="!auth.school">
+    <div layout="row" layout-sm="column" layout-xs="column">
       <md-input-container flex="45" flex-sm="100" flex-xs="100">
         <label class="textInput">{{'subjectStudyPeriod.nameCode' | translate}}</label>
         <input ng-model="criteria.subjectNameAndCode" type="text">
       </md-input-container>
-      <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+      <md-input-container flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+      ng-if="auth.isAdmin()">
         <label class="textInput">{{'subjectStudyPeriod.teachersFullname' | translate}}</label>
         <input ng-model="criteria.teachersFullname" type="text">
       </md-input-container>
+      <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+      ng-if="auth.isTeacher()">
+        <hois-autocomplete ng-model="criteria.studentObject" method="students" name="student"
+          label="student.label"></hois-autocomplete>
+      </div>
     </div>
     <div layout="row" layout-sm="column" layout-xs="column">
       <md-input-container flex="45" flex-sm="100" flex-xs="100">
         <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
         <hois-select ng-model="criteria.studyPeriods" values="studyPeriods" required></hois-select>
       </md-input-container>
-      <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+      <div flex="50" flex-sm="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0"
+      ng-if="auth.isAdmin()">
         <hois-autocomplete ng-model="criteria.studentObject" method="students" name="student"
           label="student.label"></hois-autocomplete>
       </div>

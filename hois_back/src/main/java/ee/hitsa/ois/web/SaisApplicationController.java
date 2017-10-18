@@ -53,14 +53,14 @@ public class SaisApplicationController {
     }
 
     @PostMapping("importSais")
-    public SaisApplicationImportResultDto importSais(@Valid @RequestBody SaisApplicationImportForm form, HoisUserDetails user) {
+    public SaisApplicationImportResultDto importFromSais(@Valid @RequestBody SaisApplicationImportForm form, HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return saisApplicationService.importFromSais(form,  user);
     }
 
     @GetMapping("sample.csv")
     public void csvSampleFile(HttpServletResponse response) throws IOException {
-        HttpUtil.csvUtf8WithBom(response, "sample.csv", saisApplicationService.getSampleCsvFile());
+        HttpUtil.csvUtf8WithBom(response, "sample.csv", saisApplicationService.sampleCsvFile());
     }
 
     @GetMapping("classifiers.csv")

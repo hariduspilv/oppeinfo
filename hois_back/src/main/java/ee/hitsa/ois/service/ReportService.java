@@ -26,6 +26,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
@@ -51,7 +52,7 @@ public class ReportService {
     private XlsService xlsService;
 
     public Page<StudentSearchDto> students(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id " +
                 "inner join curriculum c on cv.curriculum_id = c.id "+
                 "left join student_group sg on s.student_group_id = sg.id").sort(pageable);
@@ -70,6 +71,7 @@ public class ReportService {
         qb.optionalCriteria("s.study_form_code = :studyForm", "studyForm", criteria.getStudyForm());
         qb.optionalCriteria("s.status_code = :status", "status", criteria.getStatus());
         qb.optionalCriteria("s.fin_code = :fin", "fin", criteria.getFin());
+        qb.optionalCriteria("s.fin_specific_code = :fin", "fin", criteria.getFinSpecific());
         qb.optionalCriteria("s.language_code = :language", "language", criteria.getLanguage());
 
         // TODO ainepunktid (last value of select)
@@ -144,7 +146,7 @@ public class ReportService {
 
             Map<Long, StudentStatisticsDto> cs = StreamUtil.toMap(StudentStatisticsDto::getId, result.getContent());
 
-            JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_student ds " +
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds " +
                     "inner join directive d on ds.directive_id = d.id " +
                     "inner join student_history sh on ds.student_history_id = sh.id " +
                     "inner join curriculum_version cv on sh.curriculum_version_id = cv.id")
@@ -175,7 +177,7 @@ public class ReportService {
     }
 
     public Page<CurriculumCompletionDto> curriculumCompletion(Long schoolId, CurriculumCompletionCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s inner join person p on s.person_id = p.id " +
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id " +
                 "inner join curriculum c on cv.curriculum_id = c.id "+
                 "left join student_group sg on s.student_group_id = sg.id").sort(pageable);
@@ -207,7 +209,7 @@ public class ReportService {
     }
 
     private Page<TeacherLoadDto> teacherLoad(Long schoolId, TeacherLoadCommand criteria, Pageable pageable, boolean higher) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from journal_teacher jt inner join journal j on j.id = jt.journal_id " +
                 "inner join study_year sy on j.study_year_id = sy.id " +
                 "inner join classifier syc on sy.year_code = syc.code " +
@@ -238,7 +240,7 @@ public class ReportService {
 
             if(higher) {
                 // higher: select subjects by teacher and study period id: starting from SubjectStudyPeriodTeacher table
-                qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period_teacher sspt " +
+                qb = new JpaNativeQueryBuilder("from subject_study_period_teacher sspt " +
                         "inner join subject_study_period ssp on sspt.subject_study_period_id = ssp.id "+
                         "inner join subject s on ssp.subject_id = s.id");
 
@@ -249,7 +251,7 @@ public class ReportService {
                 subjects.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 3), () -> subjectRecords, Collectors.groupingBy(r -> resultAsLong(r, 4))));
             } else {
                 // vocational: select modules by teacher and study period id
-                qb = new JpaQueryUtil.NativeQueryBuilder("from journal_teacher jt " +
+                qb = new JpaNativeQueryBuilder("from journal_teacher jt " +
                         "inner join journal j on jt.journal_id = j.id " +
                         "inner join study_year sy on j.study_year_id = sy.id " +
                         "inner join study_period sp on sp.study_year_id = sy.id " +
@@ -269,7 +271,7 @@ public class ReportService {
             }
 
             // actual load
-            qb = new JpaQueryUtil.NativeQueryBuilder("from timetable_object tto " +
+            qb = new JpaNativeQueryBuilder("from timetable_object tto " +
                     "inner join timetable t on tto.timetable_id = t.id " +
                     "inner join timetable_event te on te.timetable_object_id = tto.id " +
                     "inner join timetable_event_time tet on tet.timetable_event_id = te.id " +
@@ -291,7 +293,7 @@ public class ReportService {
     }
 
     private Page<StudentStatisticsDto> loadCurriculums(Long schoolId, List<EntityConnectionCommand> curriculumIds, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum c").sort("c.name_et");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c").sort("c.name_et");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("c.id in (:curriculum)", "curriculum", StreamUtil.toMappedList(r -> r.getId(), curriculumIds));
@@ -300,7 +302,7 @@ public class ReportService {
     }
 
     private void loadStudentStatistics(Map<Long, StudentStatisticsDto> curriculums, String groupingField, StudentStatisticsCommand criteria, boolean filterResult) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student_history sh inner join curriculum_version cv on sh.curriculum_version_id = cv.id")
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_history sh inner join curriculum_version cv on sh.curriculum_version_id = cv.id")
                 .groupBy(String.format("cv.curriculum_id, %s", groupingField));
         qb.requiredCriteria("cv.curriculum_id in (:curriculum)", "curriculum", curriculums.keySet());
         qb.requiredCriteria("sh.status_code in (:status)", "status", StudentStatus.STUDENT_STATUS_ACTIVE);

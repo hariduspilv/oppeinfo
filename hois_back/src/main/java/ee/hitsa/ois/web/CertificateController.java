@@ -101,7 +101,7 @@ public class CertificateController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public CertificateDto update(HoisUserDetails user, 
+    public CertificateDto save(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Certificate certificate, 
             @Valid @RequestBody CertificateForm form) {
         certificateValidationService.assertCanChange(user, certificate);
@@ -135,8 +135,8 @@ public class CertificateController {
     }
 
     @GetMapping("/otherStudent")
-    public StudentSearchDto getOtherPerson(HoisUserDetails user, String idcode) {
+    public StudentSearchDto otherStudent(HoisUserDetails user, String idcode) {
         UserUtil.assertIsSchoolAdmin(user);
-        return certificateService.getOtherPerson(user.getSchoolId(), idcode);
+        return certificateService.otherStudent(user.getSchoolId(), idcode);
     }
 }

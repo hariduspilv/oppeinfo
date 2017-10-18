@@ -29,6 +29,9 @@ angular.module('hitsaOis')
     };
 
     factory.getUrl = function(file) {
+      if(!file) {
+        return;
+      }
       if (file && file.oisFile) {
         return file.id ? config.apiUrl + '/oisfile/get/' + file.oisFile.id : factory.getFileUrl(file.oisFile);
       } else {

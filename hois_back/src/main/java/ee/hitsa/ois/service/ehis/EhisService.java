@@ -3,7 +3,7 @@ package ee.hitsa.ois.service.ehis;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
-import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.exception.BadConfigurationException;
@@ -40,7 +40,7 @@ public abstract class EhisService {
 
     static final String LAE_KORGHARIDUS_SERVICE_CODE = "laeKorgharidus";
     public static final String LAE_KORGHARIDUS_SERVICE = "ehis."+ LAE_KORGHARIDUS_SERVICE_CODE + ".v1";
-    private static final String birthDateEntered = "SS";
+    private static final String BIRTH_DATE_ENTERED = "SS";
 
     private DatatypeFactory datatypeFactory;
     @Autowired
@@ -118,11 +118,11 @@ public abstract class EhisService {
         muutmine.setIsikukood(personId);
 
         if (person.getIdcode() == null) {
-            muutmine.setKlIsikukoodRiik(birthDateEntered);
+            muutmine.setKlIsikukoodRiik(BIRTH_DATE_ENTERED);
         }
 
         if (setOppekava) {
-            muutmine.setOppekava(getCurriculum(student.getCurriculumVersion()));
+            muutmine.setOppekava(curriculumCode(student.getCurriculumVersion().getCurriculum()));
         }
         khlOppur.setMuutmine(muutmine);
         return khlOppur;
@@ -137,7 +137,7 @@ public abstract class EhisService {
         isikuandmedLisa.setIsikukood(getPersonId(person));
 
         if (person.getIdcode() == null) {
-            isikuandmedLisa.setKlIsikukoodRiik(birthDateEntered);
+            isikuandmedLisa.setKlIsikukoodRiik(BIRTH_DATE_ENTERED);
         }
         if (isikuandmedLisa.getIsikukood() == null) {
             isikuandmedLisa.setSynniKp(date(person.getBirthdate()));
@@ -193,8 +193,8 @@ public abstract class EhisService {
         return Boolean.TRUE.equals(value) ? "jah" : "ei";
     }
 
-    protected static BigInteger getCurriculum(CurriculumVersion curriculumVersion) {
-        String merCode = curriculumVersion.getCurriculum().getMerCode();
+    protected static BigInteger curriculumCode(Curriculum curriculum) {
+        String merCode = curriculum.getMerCode();
         return merCode != null ? new BigInteger(merCode) : null;
     }
 

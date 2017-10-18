@@ -36,8 +36,8 @@ public class SaisClassifierController {
     }
 
     @PostMapping("/saisImport")
-    public Page<SaisClassifierSearchDto> saisImport(SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
+    public Page<SaisClassifierSearchDto> importFromSais(SaisClassifierSearchCommand command, Pageable pageable, HoisUserDetails user) {
         UserUtil.assertIsMainAdmin(user);
-        return saisClassifierService.importClassifiers(command, pageable, user);
+        return saisClassifierService.importFromSais(command, pageable, user);
     }
 }

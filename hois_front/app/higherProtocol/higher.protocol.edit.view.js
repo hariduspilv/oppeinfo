@@ -118,15 +118,7 @@ angular.module('hitsaOis').controller('HigherProtocolEditViewController', ['$sco
     });
   }
 
-  function getGrades() {
-    Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' }, function (response) {
-      $scope.grades = response;
-      filterGrades();
-    });
-  }
-
-  getGrades();
-
+  $scope.grades = Classifier.queryForDropdown({ mainClassCode: 'KORGHINDAMINE' }, filterGrades);
 
   $scope.calculate = function() {
     QueryUtils.endpoint(baseUrl + "/" + $scope.record.id + "/calculate").query($scope.calculateGrades).$promise.then(function(response){

@@ -42,8 +42,10 @@ public class SaisClassifierControllerTests {
 
     @Test
     public void search() {
-        String uri = UriComponentsBuilder.fromUriString("/saisClassifier/asdasdasd").build().toUriString();
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        UriComponentsBuilder uri = UriComponentsBuilder.fromUriString("/saisClassifier/asdasdasd");
+        uri.queryParam("value", "value");
+        uri.queryParam("name", "Name");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

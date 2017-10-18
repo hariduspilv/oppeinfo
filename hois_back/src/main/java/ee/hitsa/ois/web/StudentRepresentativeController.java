@@ -67,7 +67,7 @@ public class StudentRepresentativeController {
     }
 
     @PutMapping("/{studentId:\\d+}/{id:\\d+}")
-    public StudentRepresentativeDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentRepresentative representative, @Valid @RequestBody StudentRepresentativeForm form) {
+    public StudentRepresentativeDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentRepresentative representative, @Valid @RequestBody StudentRepresentativeForm form) {
         if(!UserUtil.canEditStudentRepresentative(user, representative)) {
             throw new AssertionFailedException("User cannot edit student representative");
         }

@@ -18,6 +18,7 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventSearchCommand;
 import ee.hitsa.ois.web.dto.timetable.TimetableByGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByRoomDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableByStudentDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByTeacherDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchDto;
 
@@ -42,26 +43,28 @@ public class TimetableEventController {
     }
 
     @GetMapping("/timetableByGroup")
-    public TimetableByGroupDto timetableByGroup(HoisUserDetails user,
-            @RequestParam("studyperiodId") Long studyperiodId, @RequestParam("studentGroupId") Long studentGroupId, 
-            @RequestParam("timetableId") Long timetableId) {
-        //UserUtil.assertIsSchoolAdmin(user);
-        return timetableEventService.getGroupTimetableForWeek(studyperiodId, studentGroupId, timetableId);
+    public TimetableByGroupDto groupTimetableForWeek(HoisUserDetails user,
+            @RequestParam("studentGroupId") Long studentGroupId, @RequestParam("timetableId") Long timetableId) {
+        return timetableEventService.groupTimetableForWeek(studentGroupId, timetableId);
     }
 
     @GetMapping("/timetableByTeacher")
-    public TimetableByTeacherDto timetableByTeacher(HoisUserDetails user,
-            @RequestParam("studyperiodId") Long studyperiodId, @RequestParam("teacherId") Long teacherId, 
+    public TimetableByTeacherDto teacherTimetableForWeek(HoisUserDetails user, @RequestParam("teacherId") Long teacherId,
             @RequestParam("timetableId") Long timetableId) {
-        //UserUtil.assertIsSchoolAdmin(user);
-        return timetableEventService.getTeacherTimetableForWeek(studyperiodId, teacherId, timetableId);
+        return timetableEventService.teacherTimetableForWeek(teacherId, timetableId);
+    }
+    
+    @GetMapping("/timetableByStudent")
+    public TimetableByStudentDto studentTimetableForWeek(HoisUserDetails user, @RequestParam("studentId") Long studentId,
+            @RequestParam("timetableId") Long timetableId) {
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return timetableEventService.studentTimetableForWeek(studentId, timetableId);
     }
     
     @GetMapping("/timetableByRoom")
-    public TimetableByRoomDto timetableByRoom(HoisUserDetails user,
-            @RequestParam("studyperiodId") Long studyperiodId, @RequestParam("roomId") Long roomId, 
+    public TimetableByRoomDto roomTimetableForWeek(HoisUserDetails user, @RequestParam("roomId") Long roomId,
             @RequestParam("timetableId") Long timetableId) {
-        //UserUtil.assertIsSchoolAdmin(user);
-        return timetableEventService.getRoomTimetableForWeek(studyperiodId, roomId, timetableId);
+        return timetableEventService.roomTimetableForWeek(roomId, timetableId);
     }
+    
 }

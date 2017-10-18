@@ -54,7 +54,6 @@ import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.enums.SaisApplicationStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
-import ee.hitsa.ois.repository.ApplicationRepository;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisApplicationRepository;
@@ -64,6 +63,7 @@ import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -118,8 +118,6 @@ public class DirectiveService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private ApplicationRepository applicationRepository;
-    @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private PersonRepository personRepository;
@@ -155,7 +153,7 @@ public class DirectiveService {
             filtered = Collections.singleton(user.getStudentId());
         } else if(user.isRepresentative()) {
             // for representative all represented students of same school
-            JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student s inner join student_representative sr on sr.student_id=s.id");
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student s inner join student_representative sr on sr.student_id=s.id");
             qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
             qb.requiredCriteria("sr.person_id = :personId", "personId", user.getPersonId());
             List<?> data = qb.select("s.id", em).getResultList();
@@ -167,7 +165,7 @@ public class DirectiveService {
            && ClassifierUtil.oneOf(directive.getStatus(), DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD,  DirectiveStatus.KASKKIRI_STAATUS_TYHISTATUD)
            && UserUtil.isSchoolAdmin(user, directive.getSchool())) {
             // look for optional canceling directives
-            JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(DIRECTIVE_LIST_FROM).sort(new Sort(Direction.DESC, "d.inserted"));
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(DIRECTIVE_LIST_FROM).sort(new Sort(Direction.DESC, "d.inserted"));
             qb.requiredCriteria("d.school_id = :schoolId", "schoolId", EntityUtil.getId(directive.getSchool()));
             qb.requiredCriteria("d.canceled_directive_id = :canceledDirectiveId", "canceledDirectiveId", directive.getId());
 
@@ -207,7 +205,7 @@ public class DirectiveService {
      * @return
      */
     public Page<DirectiveSearchDto> search(Long schoolId, DirectiveSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(DIRECTIVE_LIST_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(DIRECTIVE_LIST_FROM).sort(pageable);
 
         qb.requiredCriteria("d.school_id = :schoolId", "schoolId", schoolId);
 
@@ -432,15 +430,14 @@ public class DirectiveService {
         }
 
         ApplicationType applicationType = applicationType(directiveType);
-        Map<Long, Application> applications = applicationType != null ? applicationRepository.findAll((root, query, cb) -> {
-                List<Predicate> filters = new ArrayList<>();
-                filters.add(cb.equal(root.get("student").get("school").get("id"), schoolId));
-                filters.add(root.get("student").get("id").in(studentIds));
-                // matching application type
-                filters.add(cb.equal(root.get("type").get("code"), applicationType.name()));
-                filters.add(root.get("status").get("code").in(APPLICATION_STATUS_FOR_DIRECTIVE));
-                return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).stream().collect(Collectors.toMap(r -> EntityUtil.getId(r.getStudent()), r -> r, (o, n) -> o)) : Collections.emptyMap();
+        Map<Long, Application> applications = applicationType != null ? em.createQuery(
+                "select a from Application a where a.student.school.id = ?1 and a.student.id in (?2) and a.type.code = ?3 and a.status.code in (?4)", Application.class)
+            .setParameter(1, schoolId)
+            .setParameter(2, studentIds)
+            .setParameter(3, applicationType.name())
+            .setParameter(4, APPLICATION_STATUS_FOR_DIRECTIVE)
+            .getResultList()
+            .stream().collect(Collectors.toMap(r -> EntityUtil.getId(r.getStudent()), r -> r, (o, n) -> o)) : Collections.emptyMap();
 
         List<Student> students = em.createQuery("select s from Student s where s.school.id = ?1 and s.id in (?2)", Student.class)
                 .setParameter(1, schoolId).setParameter(2, studentIds).getResultList();
@@ -468,7 +465,7 @@ public class DirectiveService {
             return Collections.emptyList();
         }
 
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from student s inner join person person on s.person_id = person.id "+
                 "inner join curriculum_version cv on s.curriculum_version_id = cv.id inner join curriculum c on cv.curriculum_id = c.id "+
                 "left outer join student_group sg on s.student_group_id = sg.id").sort("sg.code", "person.lastname", "person.firstname");
@@ -591,8 +588,8 @@ public class DirectiveService {
      * @param pageable
      * @return
      */
-    public Page<DirectiveCoordinatorDto> search(Long schoolId, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator dc").sort(pageable);
+    public Page<DirectiveCoordinatorDto> searchCoordinators(Long schoolId, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_coordinator dc").sort(pageable);
         qb.requiredCriteria("dc.school_id = :schoolId", "schoolId", schoolId);
 
         return JpaQueryUtil.pagingResult(qb, "dc.id, dc.name, dc.idcode, dc.version, dc.is_directive, dc.is_certificate, dc.is_certificate_default", em, pageable).map(r -> {
@@ -657,17 +654,17 @@ public class DirectiveService {
         return StreamUtil.toMappedList(r -> Long.valueOf(((Number)r).longValue()), data);
     }
 
-    private void setApplication(Long studentId, Long applicationId, DirectiveStudent student) {
+    private void setApplication(Long studentId, Long applicationId, DirectiveStudent directiveStudent) {
         if(applicationId != null) {
             // verify application to be linked
-            String directiveType = EntityUtil.getCode(student.getDirective().getType());
+            String directiveType = EntityUtil.getCode(directiveStudent.getDirective().getType());
             Application app = em.getReference(Application.class, applicationId);
             ApplicationType applicationType = ApplicationType.valueOf(EntityUtil.getCode(app.getType()));
             // should be from same student and of matching type
             if(!EntityUtil.getId(app.getStudent()).equals(studentId) || !applicationType.directiveType().name().equals(directiveType)) {
                 throw new AssertionFailedException("Student and/or directive type mismatch");
             }
-            student.setApplication(app);
+            directiveStudent.setApplication(app);
 
             if(!ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_KINNITAM, app.getType())) {
                 // student with application is included in directive
@@ -678,7 +675,7 @@ public class DirectiveService {
         }
     }
 
-    private void setPerson(DirectiveFormStudent formStudent, DirectiveStudent student) {
+    private void setPerson(DirectiveFormStudent formStudent, DirectiveStudent directiveStudent) {
         String idcode = formStudent.getIdcode();
         if(StringUtils.hasText(idcode)) {
             // add new person if person idcode is not known
@@ -687,7 +684,7 @@ public class DirectiveService {
             if(person == null) {
                 person = new Person();
                 person.setIdcode(idcode);
-                SaisApplication sais = student.getSaisApplication();
+                SaisApplication sais = directiveStudent.getSaisApplication();
                 if(sais != null) {
                     // copy fields from sais application
                     person.setFirstname(sais.getFirstname());
@@ -708,7 +705,7 @@ public class DirectiveService {
                 }
                 person = EntityUtil.save(person, em);
             }
-            student.setPerson(person);
+            directiveStudent.setPerson(person);
         }
     }
 
@@ -736,8 +733,8 @@ public class DirectiveService {
         return directiveStudent;
     }
 
-    private void studentRemovedFromDirective(DirectiveStudent student) {
-        Application app = student.getApplication();
+    private void studentRemovedFromDirective(DirectiveStudent directiveStudent) {
+        Application app = directiveStudent.getApplication();
         if(app != null && !ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_YLEVAAT, app.getType())) {
             // student with application is removed from directive
             // update application status to AVALDUS_STAATUS_YLEVAAT
@@ -752,11 +749,11 @@ public class DirectiveService {
                 .setParameter(1, schoolId).setParameter(2, now).getResultList();
     }
 
-    private static StudentGroup findStudentGroup(DirectiveStudentDto student, List<StudentGroup> groups, Map<Long, Integer> addedCount) {
+    private static StudentGroup findStudentGroup(DirectiveStudentDto directiveStudent, List<StudentGroup> groups, Map<Long, Integer> addedCount) {
         if(groups != null && !groups.isEmpty()) {
             // first try to use student group with limit of students
             for(StudentGroup sg : groups) {
-                if(sg.getPlaces() != null && studentGroupMatches(student, sg)) {
+                if(sg.getPlaces() != null && studentGroupMatches(directiveStudent, sg)) {
                     // check maximum number of students
                     int added = addedCount.getOrDefault(sg.getId(), Integer.valueOf(0)).intValue();
                     if(sg.getStudents().size() + added < sg.getPlaces().intValue()) {
@@ -768,7 +765,7 @@ public class DirectiveService {
 
             // try to use student group without limit
             for(StudentGroup sg : groups) {
-                if(sg.getPlaces() == null && studentGroupMatches(student, sg)) {
+                if(sg.getPlaces() == null && studentGroupMatches(directiveStudent, sg)) {
                     return sg;
                 }
             }
@@ -781,13 +778,13 @@ public class DirectiveService {
                Objects.equals(student.getLanguage(), EntityUtil.getCode(group.getLanguage()));
     }
 
-    private static void adjustPeriod(DirectiveStudent student) {
-        if(Boolean.TRUE.equals(student.getIsPeriod())) {
-            student.setStartDate(null);
-            student.setEndDate(null);
+    private static void adjustPeriod(DirectiveStudent directiveStudent) {
+        if(Boolean.TRUE.equals(directiveStudent.getIsPeriod())) {
+            directiveStudent.setStartDate(null);
+            directiveStudent.setEndDate(null);
         } else {
-            student.setStudyPeriodStart(null);
-            student.setStudyPeriodEnd(null);
+            directiveStudent.setStudyPeriodStart(null);
+            directiveStudent.setStudyPeriodEnd(null);
         }
     }
 

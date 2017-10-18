@@ -17,6 +17,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
@@ -43,8 +44,12 @@ public class TeacherControllerTests {
 
     @Test
     public void search() {
-        String uri = UriComponentsBuilder.fromUriString("/teachers").build().toUriString();
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        UriComponentsBuilder uri = UriComponentsBuilder.fromUriString("/teachers");
+        uri.queryParam("idcode", TestConfiguration.USER_ID);
+        uri.queryParam("name", "Name");
+        uri.queryParam("schoolDepartment", Long.valueOf(1));
+        uri.queryParam("teacherOccupation", Long.valueOf(1));
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

@@ -34,6 +34,7 @@ import ee.hitsa.ois.repository.CurriculumVersionOccupationModuleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -79,7 +80,7 @@ public class StudentService {
     private CurriculumVersionOccupationModuleRepository curriculumVersionOccupationModuleRepository;
 
     public Page<StudentSearchDto> search(Long schoolId, StudentSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_LIST_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_LIST_FROM).sort(pageable);
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("person.idcode = :idcode", "idcode", criteria.getIdcode());
@@ -141,7 +142,7 @@ public class StudentService {
 
     public StudentAbsenceSearchDto absences(HoisUserDetails user, Student student, Pageable pageable) {
         Long studentId = EntityUtil.getId(student);
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from student_absence sa").sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_absence sa").sort(pageable);
         qb.requiredCriteria("sa.student_id = :studentId", "studentId", studentId);
 
         // absence object for checking rights. So far only student is used
@@ -162,7 +163,7 @@ public class StudentService {
         });
 
         // fetch student-related data
-        qb = new JpaQueryUtil.NativeQueryBuilder("from student s inner join person p on s.person_id = p.id left outer join student_group sg on s.student_group_id = sg.id");
+        qb = new JpaNativeQueryBuilder("from student s inner join person p on s.person_id = p.id left outer join student_group sg on s.student_group_id = sg.id");
         qb.requiredCriteria("s.id = :studentId", "studentId", studentId);
         Object studentData = qb.select("p.firstname, p.lastname, sg.code", em).getSingleResult();
         String studentName = PersonUtil.fullname(resultAsString(studentData, 0), resultAsString(studentData, 1));
@@ -194,7 +195,7 @@ public class StudentService {
     }
 
     public Page<StudentApplicationDto> applications(Long studentId, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from application a join classifier type on type.code = a.type_code").sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from application a join classifier type on type.code = a.type_code").sort(pageable);
 
         qb.requiredCriteria("a.student_id = :studentId", "studentId", studentId);
         return JpaQueryUtil.pagingResult(qb, "a.id, a.type_code, a.inserted, a.status_code, a.changed, a.submitted, a.reject_reason", em, pageable).map(r -> {
@@ -213,7 +214,7 @@ public class StudentService {
     }
 
     public Page<StudentDirectiveDto> directives(HoisUserDetails user, Student student, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive d").sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive d").sort(pageable);
 
         String showCanceled = "";
         if(!UserUtil.isSchoolAdmin(user, student.getSchool())) {
@@ -238,7 +239,7 @@ public class StudentService {
     }
 
     public List<AutocompleteResult> subjects(Student student) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject s "
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s "
                 + "inner join curriculum_version_hmodule_subject cvhms on cvhms.subject_id = s.id "
                 + "inner join curriculum_version_hmodule cvh on cvh.id = cvhms.curriculum_version_hmodule_id");
         qb.requiredCriteria("cvh.curriculum_version_id = :curriculumVersionId", "curriculumVersionId", EntityUtil.getId(student.getCurriculumVersion()));

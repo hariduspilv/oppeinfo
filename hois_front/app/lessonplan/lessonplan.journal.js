@@ -17,7 +17,7 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
       }).$promise.then(function (groups) {
         $scope.formState.studentGroups = groups.filter(function (group) {
           return group.id !== result.studentGroupId;
-        })
+        });
       });
 
       $scope.formState.themes = result.themes;
@@ -154,8 +154,15 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
 
     $scope.$watch('formState.room', function () {
       if (angular.isDefined($scope.formState.room) && $scope.formState.room !== null) {
+        if ($scope.record.journalRooms.some(function (e) {
+            return e.id === $scope.formState.room.id;
+          })) {
+          message.error('lessonplan.journal.duplicateroom');
+          $scope.formState.room = undefined;
+          return;
+        }
         $scope.record.journalRooms.push($scope.formState.room);
-        $scope.formState.room = null;
+        $scope.formState.room = undefined;
       }
     });
 
@@ -169,13 +176,13 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
       if (angular.isDefined($scope.formState.teacher) && $scope.formState.teacher !== null) {
         $scope.addTeacher();
       }
-    })
+    });
 
     $scope.$watch('formState.group', function () {
       if (angular.isDefined($scope.formState.group) && $scope.formState.group !== null) {
         $scope.addGroup();
       }
-    })
+    });
 
     $scope.newSelectedModule = function (moduleTheme) {
       if (moduleTheme.curriculumVersionOccupationModule !== null && moduleTheme.curriculumVersionOccupationModule !== "") {

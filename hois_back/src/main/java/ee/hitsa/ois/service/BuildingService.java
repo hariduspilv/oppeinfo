@@ -81,7 +81,7 @@ public class BuildingService {
     }
 
     @SuppressWarnings("unchecked")
-    public Page<RoomSearchDto> findAllRooms(Long schoolId, RoomSearchCommand criteria, Pageable pageable) {
+    public Page<RoomSearchDto> searchRooms(Long schoolId, RoomSearchCommand criteria, Pageable pageable) {
         Page<Object[]> data = JpaQueryUtil.query(Object[].class, Building.class, (root, query, cb) -> {
             Join<Object, Object> rooms = root.join("rooms", JoinType.LEFT);
             ((CriteriaQuery<Object[]>)query).select(cb.array(root, rooms));

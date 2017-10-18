@@ -84,12 +84,12 @@ public class AutocompleteController {
     }
 
     @GetMapping("/curriculumversionomodules")
-    public List<AutocompleteResult> curriculumVersionOmodules(@RequestParam("curriculumVersionId") Long curriculumVersionId) {
+    public List<AutocompleteResult> curriculumVersionOccupationModules(@RequestParam("curriculumVersionId") Long curriculumVersionId) {
         return autocompleteService.curriculumVersionOccupationModules(curriculumVersionId);
     }
 
     @GetMapping("/curriculumversionomodulethemes")
-    public List<AutocompleteResult> curriculumVersionOmoduleThemes(@RequestParam("curriculumVersionOmoduleId") Long curriculumVersionOmoduleId) {
+    public List<AutocompleteResult> curriculumVersionOccupationModuleThemes(@RequestParam("curriculumVersionOmoduleId") Long curriculumVersionOmoduleId) {
         return autocompleteService.curriculumVersionOccupationModuleThemes(curriculumVersionOmoduleId);
     }
 
@@ -126,7 +126,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/subjectsList")
-    public List<AutocompleteResult> subjectsList(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
+    public List<AutocompleteResult> subjectsAsList(HoisUserDetails user, @Valid SubjectAutocompleteCommand lookup) {
         return autocompleteService.subjects(user.getSchoolId(), lookup);
     }
 
@@ -136,7 +136,7 @@ public class AutocompleteController {
     }
 
     @GetMapping("/teachersList")
-    public List<AutocompleteResult> teachersList(HoisUserDetails user, @Valid TeacherAutocompleteCommand lookup) {
+    public List<AutocompleteResult> teachersAsList(HoisUserDetails user, @Valid TeacherAutocompleteCommand lookup) {
         return autocompleteService.teachers(user.getSchoolId(), lookup);
     }
 

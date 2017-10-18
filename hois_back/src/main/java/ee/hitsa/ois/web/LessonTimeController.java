@@ -64,7 +64,7 @@ public class LessonTimeController {
     }
 
     @GetMapping("currentPeriod")
-    public Map<String, LocalDate> currentPeriod(HoisUserDetails user) {
+    public Map<String, LocalDate> currentPeriodStartDate(HoisUserDetails user) {
         return Collections.singletonMap("periodStart", lessonTimeService.currentPeriodStartDate(user.getSchoolId()));
     }
 
@@ -72,5 +72,4 @@ public class LessonTimeController {
     public Map<String, LocalDate> minValidFrom(@RequestParam Set<Long> buildings, @RequestParam(required = false) Long lessonTimeId) {
         return Collections.singletonMap("minValidFrom", lessonTimeService.minValidFrom(buildings, lessonTimeId));
     }
-
 }

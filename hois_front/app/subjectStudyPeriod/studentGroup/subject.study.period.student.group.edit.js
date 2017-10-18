@@ -7,6 +7,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
     $scope.isEditing = studentGroup === null && studyPeriodId === null;
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/container');
 
+    $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true});
+
     $scope.record = {};
 
     function setCurrentStudyPeriod() {
@@ -17,47 +19,34 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
     }
 
     if(!studyPeriodId) {
-      QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
-        $scope.studyPeriods = response;
-        setCurrentStudyPeriod();
-      });
+      $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(setCurrentStudyPeriod);
     }
 
     if(studentGroup) {
         $scope.record = Endpoint.search({studyPeriod: studyPeriodId, studentGroup: studentGroup, subjectStudyPeriodDtos: []});
         $scope.record.$promise.then(function(response){
             $scope.capacitiesUtil = new SspCapacities(response);
-            Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
-              $scope.capacityTypes = response;
+            $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function() {
               $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
             });
         });
-        QueryUtils.endpoint('/studentgroups/' + studentGroup).get(function(response) {
-            $scope.studentGroup = response;
+        $scope.studentGroup = QueryUtils.endpoint('/studentgroups/' + studentGroup).get(function(response) {
             $scope.studentGroup.nameEt = response.code;
             $scope.course = $scope.studentGroup.course.toString();
             getCurriculum();
-            Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
-              $scope.capacityTypes = response;
-            });
         });
     }
 
     function loadStudentGroups() {
       if($scope.record.studyPeriod) {
-        QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list/limited/' + $scope.record.studyPeriod).query(function(response) {
-          $scope.studentGroups = response;
-        });
+        $scope.studentGroups = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list/limited/' + $scope.record.studyPeriod).query();
       }
     }
 
     $scope.$watch('record.studyPeriod', loadStudentGroups);
 
     function getCurriculum() {
-        QueryUtils.endpoint('/subjectStudyPeriods/curriculum/' +  $scope.studentGroup.curriculum.id).get(function(response) {
-            $scope.curriculum = response;
-            getCurriculumStudyPeriod();
-        });
+      $scope.curriculum = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/curriculum/' +  $scope.studentGroup.curriculum.id).get(getCurriculumStudyPeriod);
     }
 
     function getCurriculumStudyPeriod() {
@@ -70,22 +59,21 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
 
     function selectStudentGroup() {
         $scope.studentGroup = $scope.studentGroups.find(function(el){
-            return el.id === $scope.record.studentGroup;
+          return el.id === $scope.record.studentGroup;
         });
         if($scope.studentGroup) {
-            $scope.course = $scope.studentGroup.course.toString();
-            getCurriculum();
+          // $scope.studentGroup = sg;
+          $scope.course = $scope.studentGroup.course.toString();
+          getCurriculum();
         }
     }
 
     if(!$scope.isEditing) {
-      QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId}).$promise.then(function(response) {
-          $scope.studyPeriod = response;
-      });
+      $scope.studyPeriod = QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId});
     }
 
     $scope.$watch('record.studentGroup', function() {
-            if($scope.studentGroups && $scope.record.studentGroup) {
+            if(!ArrayUtils.isEmpty($scope.studentGroups) && $scope.record.studentGroup) {
                 selectStudentGroup();
             }
         }
@@ -119,8 +107,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
     };
 
     $scope.save = function() {
-      $scope.subjectStudyPeriodPlanStudentGroupEditForm.$setSubmitted();
-      if(!$scope.subjectStudyPeriodPlanStudentGroupEditForm.$valid) {
+      $scope.subjectStudyPeriodStudentGroupEditForm.$setSubmitted();
+      if(!$scope.subjectStudyPeriodStudentGroupEditForm.$valid) {
         message.error('main.messages.form-has-errors');
         return;
       }
@@ -152,6 +140,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupEditControl
             message.updateSuccess();
             $scope.record = response;
             $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
+            $scope.subjectStudyPeriodStudentGroupEditForm.$setPristine();
         });
     }
 

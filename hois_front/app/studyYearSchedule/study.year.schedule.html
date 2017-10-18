@@ -13,7 +13,7 @@
     <td md-cell>{{item.code}}</td>
     <td md-cell>{{item.nameEt}}</td>
     <td md-cell>{{item.nameEn}}</td>
-    <td md-cell><input ng-model="item.color" type="color"></td>
+    <td md-cell><input ng-model="item.color" type="color" disabled></td>
   </tr>
   </tbody>
 </table>
@@ -49,7 +49,12 @@
             </tr>
             <tr>
               <th class="schedule studentGroup"></th>
-              <th class="schedule weekCell weekNr" ng-repeat="week in weeks">{{$index + 1}}</th>
+              <th class="schedule weekCell weekNr" ng-repeat="week in weeks">
+                {{$index + 1}}
+                <md-tooltip>
+                    {{week.start | hoisDate}} - {{week.end | hoisDate}}
+                </md-tooltip>
+              </th>
             </tr>
           </thead>
           <tbody ng-repeat="department in schoolDepartments | filter: filterSchoolDepartments">

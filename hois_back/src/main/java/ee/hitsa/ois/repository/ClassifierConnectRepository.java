@@ -16,9 +16,6 @@ public interface ClassifierConnectRepository extends JpaRepository<ClassifierCon
 
     List<ClassifierConnect> findAllByClassifierCode(String classifierCode);
 
-    // TODO remove if not used
-    void removeAllByClassifierCodeOrConnectClassifierCode(String classifierCode,String connectClassifierCode);
-
     void removeAllByClassifierCode(String classifierCode);
 
     @Modifying

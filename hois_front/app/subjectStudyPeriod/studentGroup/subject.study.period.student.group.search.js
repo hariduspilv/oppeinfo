@@ -13,21 +13,16 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupSearchContr
         $scope.loadData();
     }
 
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
-        $scope.studyPeriods = response;
-        setCurrentStudyPeriod();
-    });
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(setCurrentStudyPeriod);
 
     $scope.$watch('criteria.studyPeriod', function() {
-            if($scope.studyPeriods && !$scope.criteria.studyPeriod) {
+            if(!ArrayUtils.isEmpty($scope.studyPeriods) && !$scope.criteria.studyPeriod) {
                 setCurrentStudyPeriod();
             }
         }
     );
 
-    QueryUtils.endpoint('/subjectStudyPeriods/curricula').query().$promise.then(function(response){
-        $scope.curricula = response;
-    });
+    $scope.curricula = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/curricula').query();
 
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
         $scope.studentGroups = result.map(function(el){

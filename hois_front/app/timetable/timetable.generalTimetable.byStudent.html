@@ -1,0 +1,22 @@
+<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'timetable.options' | translate}}">
+    <md-nav-item ng-if="auth.isStudent()" md-nav-href="#/timetable/generalTimetableByStudent?_menu" name="student">
+        {{'timetable.myTimetable' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isParent()" md-nav-href="#/timetable/generalTimetableByStudent?_menu" name="student">
+        {{'timetable.parentTimetable' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/timetable/generalTimetableByGroup?_menu" name="studentGroup">{{'timetable.studentGroups' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/timetable/generalTimetableByTeacher?_menu" name="teacher">{{'timetable.teachers' | translate}}</md-nav-item>
+    <md-nav-item md-nav-href="#/timetable/generalTimetableByRoom?_menu" name="room">{{'timetable.rooms' | translate}}</md-nav-item>
+</md-nav-bar>
+
+<div ng-controller="StudentTimetableViewController">
+    <div ng-include="'timetable/timetable.period.view.html'"></div>
+</div>
+
+<div layout-padding>
+    <div flex>
+        <div ng-repeat="row in timetables track by $index">
+            <a ng-class="{shownTimetable: $index === shownTimetableIndex}" ng-click="showTimetable(row.id, row.studyPeriodId, $index)">
+                {{currentLanguageNameField(row)}} {{row.startDate | hoisDate}}-{{row.endDate | hoisDate}}</a>
+        </div>
+    </div>
+</div>

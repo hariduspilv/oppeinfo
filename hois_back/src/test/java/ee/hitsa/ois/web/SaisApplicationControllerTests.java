@@ -41,7 +41,6 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.DirectiveRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.repository.SaisApplicationRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
 import ee.hitsa.ois.web.commandobject.OisFileCommand;
 import ee.hitsa.ois.web.commandobject.sais.SaisApplicationImportCsvCommand;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationDto;
@@ -72,8 +71,6 @@ public class SaisApplicationControllerTests {
     @Autowired
     private DirectiveRepository directiveRepository;
     @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
     private ClassifierRepository classifierRepository;
     @Autowired
     private PlatformTransactionManager txManager;
@@ -92,7 +89,7 @@ public class SaisApplicationControllerTests {
         }
         SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
         if (saisAdmission != null) {
-            delete(saisAdmission);
+            saisAdmissionRepository.delete(saisAdmission);
         }
         testConfigurationService.setSessionCookie(null);
     }
@@ -130,6 +127,7 @@ public class SaisApplicationControllerTests {
                 restTemplate.postForEntity(ENDPOINT_IMPORT_CSV, cmd, SaisApplicationImportResultDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+        Assert.assertEquals(1, responseEntity.getBody().getSuccessful().size());
 
         SaisAdmission saisAdmission = saisAdmissionRepository.findByCode(ADMISSION_CODE);
         Long saisApplicationId = saisAdmission.getApplications().stream().findFirst().get().getId();
@@ -390,7 +388,7 @@ public class SaisApplicationControllerTests {
             directiveStudent.setSaisApplication(saisApplicationRepository.findOne(saisApplicationId));
 
             Directive newDirective = new Directive();
-            newDirective.setSchool(schoolRepository.getOne(testConfigurationService.getHoisUserDetails().getSchoolId()));
+            newDirective.setSchool(testConfigurationService.getCurrentUser().getSchool());
             newDirective.setType(classifierRepository.getOne(DirectiveType.KASKKIRI_IMMAT.name()));
             newDirective.setStatus(classifierRepository.getOne(DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name()));
             newDirective.setHeadline("test - importCsvApplicationTryUpdateWhenAddedToDirective");
@@ -435,14 +433,6 @@ public class SaisApplicationControllerTests {
         ResponseEntity<Object> responseEntity = restTemplate.postForEntity(uri, Collections.emptyMap(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-
-    private void delete(SaisAdmission saisAdmission) {
-        Long id = saisAdmission.getId();
-        Long version = saisAdmission.getVersion();
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/saisAdmissions").pathSegment(id.toString());
-        uriBuilder.queryParam("version", version);
-        restTemplate.delete(uriBuilder.toUriString());
     }
 
     private static SaisApplicationImportCsvCommand csvCmdForRows(String...rows) {

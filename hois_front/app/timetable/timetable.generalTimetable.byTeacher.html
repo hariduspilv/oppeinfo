@@ -1,4 +1,8 @@
-<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'subjectStudyPeriod.label.options' | translate}}">
+<md-nav-bar md-selected-nav-item="currentNavItem" aria-label="{{'timetable.options' | translate}}">
+    <md-nav-item ng-if="auth.isStudent()" md-nav-href="#/timetable/generalTimetableByStudent?_menu" name="student">
+        {{'timetable.myTimetable' | translate}}</md-nav-item>
+    <md-nav-item ng-if="auth.isParent()" md-nav-href="#/timetable/generalTimetableByStudent?_menu" name="student">
+        {{'timetable.parentTimetable' | translate}}</md-nav-item>
     <md-nav-item md-nav-href="#/timetable/generalTimetableByGroup?_menu" name="studentGroup">{{'timetable.studentGroups' | translate}}</md-nav-item>
     <md-nav-item md-nav-href="#/timetable/generalTimetableByTeacher?_menu" name="teacher">{{'timetable.teachers' | translate}}</md-nav-item>
     <md-nav-item md-nav-href="#/timetable/generalTimetableByRoom?_menu" name="room">{{'timetable.rooms' | translate}}</md-nav-item>
@@ -9,7 +13,7 @@
         <div ng-if="timetablesByTeachers">
             <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="36px" flex>
                 <md-grid-tile ng-repeat="row in timetablesByTeachers" style="text-align: left;">
-                    <md-button class="md-raised md-primary" ng-href="#/timetable/teacher/{{::studyPeriodId}}/{{::row.teacherId}}/{{::timetableId}}">
+                    <md-button class="md-raised md-primary" ng-click="showTeacherTimetable(shownStudyPeriodId, row.teacherId, shownTimetableId)">
                         {{row.lastname}}, {{row.firstname}}
                     </md-button>
                 </md-grid-tile>
@@ -18,10 +22,14 @@
     </div>
 </div>
 
+<div ng-controller="TeacherTimetableViewController">
+    <div ng-include="'timetable/timetable.period.view.html'"></div>
+</div>
+
 <div layout-padding>
     <div flex>
         <div ng-repeat="row in timetables track by $index">
-            <a ng-class="{shownPeriod: $index === shownPeriodIndex}" ng-click="showTimetablesByCurriculums(row.id, row.studyPeriodId)">
+            <a ng-class="{shownTimetable: $index === shownTimetableIndex}" ng-click="showTimetablesByCurriculums(row.id, row.studyPeriodId)">
                     {{currentLanguageNameField(row)}} {{row.startDate | hoisDate}}-{{row.endDate | hoisDate}}
             </a>
         </div>

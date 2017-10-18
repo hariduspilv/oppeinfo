@@ -47,10 +47,6 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
       });
     }
 
-    $scope.$watch('timetable.studyPeriod', function () {
-      setBlockedDateRange();
-    });
-
     $scope.$watch('timetable.startDate', function () {
       var startDate = $scope.timetable.startDate;
       if (startDate === undefined) {
@@ -110,9 +106,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
         if (id !== undefined) {
           params += '&currentTimetable=' + id;
         }
-        QueryUtils.endpoint(baseUrl + '/blockedDatesForPeriod?' + params).query().$promise.then(function (result) {
-          setBlockedDates(result);
-        });
+        QueryUtils.endpoint(baseUrl + '/blockedDatesForPeriod?' + params).query(setBlockedDates);
         var currentStudyPeriod = getCurrentStudyPeriod();
         firstDateForCurrentRange = new Date(currentStudyPeriod.startDate);
         lastDateForCurrentRange = new Date(currentStudyPeriod.endDate);
@@ -120,6 +114,8 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
         $scope.studyPeriodEndDate = new Date(currentStudyPeriod.endDate);
       }
     }
+
+    $scope.$watch('timetable.studyPeriod', setBlockedDateRange);
 
     $scope.blockedFromDatesPredicate = function (date) {
       if (blockedDates.length !== 0 && blockedDates.indexOf(date.getTime()) !== -1 || date.getTime() < firstDateForCurrentRange) {
@@ -162,12 +158,28 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
       }
     };
   }
-]).controller('TimetableViewController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope',
-  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope) {
+]).controller('TimetableViewController', ['$scope', 'message', 'QueryUtils', 'DataUtils', '$route', '$location', '$rootScope', 'Classifier',
+  function ($scope, message, QueryUtils, DataUtils, $route, $location, $rootScope, Classifier) {
     $scope.timetableId = $route.current.params.id;
-    var baseUrl = '/timetables';
     $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
-    $scope.timetable = QueryUtils.endpoint(baseUrl + '/:id/view').search({id: $scope.timetableId});
+    var clMapper = Classifier.valuemapper({curriculumStudyLevelCode: 'OPPEASTE'});
+    QueryUtils.endpoint('/timetables/:id/view').search({id: $scope.timetableId}, function (result) {
+      clMapper.objectmapper(result.curriculums);
+      $scope.timetable = result;
+      $scope.timetable.endDate = new Date($scope.timetable.endDate);
+      $scope.timetable.startDate = new Date($scope.timetable.startDate);
+    });
 
+    $scope.confirm = function() {
+      QueryUtils.endpoint('/timetables/' + $scope.timetableId + '/confirm').put({}, function(result) {
+        $route.reload();    
+      });
+    };
+
+    $scope.publicize = function() {
+      QueryUtils.endpoint('/timetables/' + $scope.timetableId + '/publicize').put({}, function(result) {
+        $route.reload();    
+      });
+    };
   }
 ]);

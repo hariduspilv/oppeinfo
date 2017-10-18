@@ -48,75 +48,99 @@ public class DeclarationDto {
         dto.setStudent(student);
         return dto;
     }
+
     public Boolean getCanBeSetConfirmed() {
         return canBeSetConfirmed;
     }
+
     public void setCanBeSetConfirmed(Boolean canBeSetConfirmed) {
         this.canBeSetConfirmed = canBeSetConfirmed;
     }
+
     public Boolean getCanBeChanged() {
         return canBeChanged;
     }
+
     public void setCanBeChanged(Boolean canBeChanged) {
         this.canBeChanged = canBeChanged;
     }
+
     public Boolean getCanBeSetUnconfirmed() {
         return canBeSetUnconfirmed;
     }
+
     public void setCanBeSetUnconfirmed(Boolean canBeSetUnconfirmed) {
         this.canBeSetUnconfirmed = canBeSetUnconfirmed;
     }
+
     public Short getCourse() {
         return course;
     }
+
     public void setCourse(Short course) {
         this.course = course;
     }
+
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
+
     public AutocompleteResult getStudyPeriod() {
         return studyPeriod;
     }
+
     public void setStudyPeriod(AutocompleteResult studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
+
     public StudentSearchDto getStudent() {
         return student;
     }
+
     public void setStudent(StudentSearchDto student) {
         this.student = student;
     }
+
     public String getStatus() {
         return status;
     }
+
     public void setStatus(String status) {
         this.status = status;
     }
+
     public LocalDateTime getInserted() {
         return inserted;
     }
+
     public void setInserted(LocalDateTime inserted) {
         this.inserted = inserted;
     }
+
     public LocalDate getConfirmDate() {
         return confirmDate;
     }
+
     public void setConfirmDate(LocalDate confirmDate) {
         this.confirmDate = confirmDate;
     }
+
     public String getConfirmer() {
         return confirmer;
     }
+
     public void setConfirmer(String confirmer) {
         this.confirmer = confirmer;
     }
+
     public Set<DeclarationSubjectDto> getSubjects() {
         return subjects;
     }
+
     public void setSubjects(Set<DeclarationSubjectDto> subjects) {
         this.subjects = subjects;
     }

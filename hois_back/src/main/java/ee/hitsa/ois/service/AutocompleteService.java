@@ -1,6 +1,5 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsDecimal;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
@@ -8,12 +7,10 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,18 +22,19 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.StudyPeriod;
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.enums.SubjectStatus;
-import ee.hitsa.ois.repository.ClassifierRepository;
-import ee.hitsa.ois.repository.CurriculumModuleRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -71,18 +69,14 @@ public class AutocompleteService {
     @Autowired
     private EntityManager em;
     @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
     private EmailGeneratorService emailGeneratorService;
     @Autowired
     private PersonRepository personRepository;
     @Autowired
     private SaisAdmissionRepository saisAdmissionRepository;
-    @Autowired
-    private CurriculumModuleRepository curriculumModuleRepository;
 
     public List<AutocompleteResult> buildings(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from building b");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from building b");
 
         qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
 
@@ -94,13 +88,15 @@ public class AutocompleteService {
     }
 
     public List<AutocompleteResult> rooms(Long schoolId, RoomsAutocompleteCommand lookup) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from room r inner join building b on b.id = r.building_id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from room r inner join building b on b.id = r.building_id");
 
         qb.requiredCriteria("b.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains("r.code",  "code", lookup.getName());
         qb.optionalCriteria("b.id in (:buildingIds)", "buildingIds", lookup.getBuildingIds());
+        qb.sort("r.code");
 
         List<?> data = qb.select("r.id, r.code", em).getResultList();
+        /*Comparator.comparing(LessonPlanByTeacherSubjectDto::getNameEt, String.CASE_INSENSITIVE_ORDER)*/
         return StreamUtil.toMappedList(r -> {
             String name = resultAsString(r, 1);
             return new AutocompleteResult(resultAsLong(r, 0), name, name);
@@ -109,17 +105,16 @@ public class AutocompleteService {
 
     public List<Classifier> classifierForAutocomplete(ClassifierSearchCommand classifierSearchCommand) {
         String nameField = Language.EN.equals(classifierSearchCommand.getLang()) ? "nameEn" : "nameEt";
-        return classifierRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("mainClassCode"), classifierSearchCommand.getMainClassCode()));
-            propertyContains(() -> root.get(nameField), cb, classifierSearchCommand.getName(), filters::add);
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, sortAndLimit(nameField)).getContent();
-    }
+        JpaQueryBuilder<Classifier> qb = new JpaQueryBuilder<>(Classifier.class, "c").sort(nameField);
+        qb.requiredCriteria("c.mainClassCode = :mainClassCode", "mainClassCode", classifierSearchCommand.getMainClassCode());
+        qb.optionalContains("c." + nameField, "name", classifierSearchCommand.getName());
+
+        return qb.select(em).setMaxResults(MAX_ITEM_COUNT).getResultList();
+     }
 
     public List<ClassifierSelection> classifiers(List<String> mainClassCodes) {
         // ClassifierSelection includes attributes for filtering in frontend
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from classifier c");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from classifier c");
 
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
@@ -136,7 +131,7 @@ public class AutocompleteService {
      * Get list of classifiers with parents (bound via ClassifierConnect) for filtering in front-end
      */
     public List<ClassifierSelection> classifiersWithParents(List<String> mainClassCodes) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from classifier c left join (select array_agg(cc.connect_classifier_code) as parent, cc.classifier_code from classifier_connect cc group by cc.classifier_code) parents on c.code = parents.classifier_code");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from classifier c left join (select array_agg(cc.connect_classifier_code) as parent, cc.classifier_code from classifier_connect cc group by cc.classifier_code) parents on c.code = parents.classifier_code");
 
         qb.requiredCriteria("c.main_class_code in (:mainClassCodes)", "mainClassCodes", mainClassCodes);
 
@@ -157,7 +152,7 @@ public class AutocompleteService {
     }
 
     public List<AutocompleteResult> curriculums(Long schoolId, AutocompleteCommand term) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from curriculum c");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum c");
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains(Language.EN.equals(term.getLang()) ? "c.name_en" : "c.name_et", "name", term.getName());
@@ -171,7 +166,7 @@ public class AutocompleteService {
             "inner join classifier sl on c.orig_study_level_code = sl.code "+
             "left outer join curriculum_study_form sf on cv.curriculum_study_form_id = sf.id";
 
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         if(Boolean.TRUE.equals(lookup.getValid())) {
@@ -196,7 +191,7 @@ public class AutocompleteService {
     public List<AutocompleteResult> curriculumVersionOccupationModules(Long curriculumVersionId) {
         String from = "from curriculum_version_omodule cvo inner join curriculum_module cm on cvo.curriculum_module_id = cm.id";
 
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("cvo.curriculum_version_id = :curriculumVersionId", "curriculumVersionId",
                 curriculumVersionId);
@@ -210,7 +205,7 @@ public class AutocompleteService {
     public List<AutocompleteResult> curriculumVersionOccupationModuleThemes(Long curriculumVersionOmoduleId) {
         String from = "from curriculum_version_omodule_theme cvot";
 
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("cvot.curriculum_version_omodule_id = :curriculum_version_omodule_id",
                 "curriculum_version_omodule_id", curriculumVersionOmoduleId);
@@ -223,7 +218,7 @@ public class AutocompleteService {
     }
 
     public List<AutocompleteResult> directiveCoordinators(Long schoolId, DirectiveCoordinatorAutocompleteCommand lookup) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from directive_coordinator dc");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_coordinator dc");
 
         qb.requiredCriteria("dc.school_id = :schoolId", "schoolId", schoolId);
         if(Boolean.TRUE.equals(lookup.getIsDirective())) {
@@ -282,7 +277,7 @@ public class AutocompleteService {
      * @return
      */
     public List<SchoolDepartmentResult> schoolDepartments(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from school_department sd inner join school s on s.id = sd.school_id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from school_department sd inner join school s on s.id = sd.school_id");
 
         qb.requiredCriteria("sd.school_id = :schoolId", "schoolId", schoolId);
 
@@ -292,7 +287,7 @@ public class AutocompleteService {
     }
 
     public List<StudentGroupResult> studentGroups(Long schoolId, Boolean valid, Boolean higher) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from student_group sg inner join curriculum c on sg.curriculum_id = c.id " +
                 "left outer join curriculum_version cv on sg.curriculum_version_id = cv.id");
 
@@ -315,7 +310,7 @@ public class AutocompleteService {
     }
 
     public List<AutocompleteResult> students(Long schoolId, StudentAutocompleteCommand lookup) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from student s inner join person p on s.person_id = p.id").sort("p.lastname", "p.firstname");
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
@@ -359,7 +354,7 @@ public class AutocompleteService {
      * SubjectService.search() is not used as it does not enable to search by both code and name using autocomplete
      */
     public List<AutocompleteResult> subjects(Long schoolId, SubjectAutocompleteCommand lookup) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject s");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s");
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
         qb.requiredCriteria("s.status_code = :statusCode", "statusCode", SubjectStatus.AINESTAATUS_K);
         qb.optionalContains(Language.EN.equals(lookup.getLang()) ? "s.name_en" : "s.name_et", "name", lookup.getName());
@@ -377,7 +372,7 @@ public class AutocompleteService {
     }
 
     public List<AutocompleteResult> teachers(Long schoolId, TeacherAutocompleteCommand lookup) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from teacher t inner join person p on t.person_id = p.id").sort("p.lastname", "p.firstname");
 
         qb.requiredCriteria("t.school_id = :schoolId", "schoolId", schoolId);
@@ -403,7 +398,7 @@ public class AutocompleteService {
     }
 
     public List<StudyYearSearchDto> studyYears(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from study_year sy inner join classifier c on sy.year_code = c.code").sort("c.code desc");
         qb.requiredCriteria("sy.school_id = :schoolId", "schoolId", schoolId);
         List<?> data = qb.select("c.code, c.name_et, c.name_en, sy.id, sy.start_date, sy.end_date, 0 as count", em).getResultList();
@@ -416,7 +411,7 @@ public class AutocompleteService {
     }
 
     public List<SaisClassifierSearchDto> saisClassifiers(String parentCode) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from sais_classifier c");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from sais_classifier c");
         qb.requiredCriteria("c.parent_code = :parentCode", "parentCode", parentCode);
 
         List<?> data = qb.select("c.code, c.name_et, c.name_en", em).getResultList();
@@ -431,18 +426,17 @@ public class AutocompleteService {
 
     public Page<AutocompleteResult> vocationalModules(Long schoolId, AutocompleteCommand lookup) {
         String nameField = Language.EN.equals(lookup.getLang()) ? "nameEn" : "nameEt";
-        return curriculumModuleRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("curriculum").get("school").get("id"), schoolId));
-            // FIXME use curriculum.higher = false?
-            cb.lessThan(cb.substring(root.get("curriculum").get("origStudyLevel").get("value"), 0, 1), "5");
-            propertyContains(() -> root.get(nameField), cb, lookup.getName(), filters::add);
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, sortAndLimit(nameField)).map(AutocompleteResult::of);
+        PageRequest pageable = sortAndLimit(nameField);
+        JpaQueryBuilder<CurriculumModule> qb = new JpaQueryBuilder<>(CurriculumModule.class, "cm").sort(pageable);
+        qb.requiredCriteria("cm.curriculum.school.id = :schoolId", "schoolId", schoolId);
+        qb.filter("cm.curriculum.higher = false");
+        qb.optionalContains("cm." + nameField, "name", lookup.getName());
+
+        return JpaQueryUtil.pagingResult(qb, em, pageable).map(AutocompleteResult::of);
     }
 
     public List<AutocompleteResult> journals(HoisUserDetails user, Long studyYear) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from journal j");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j");
         qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
         if (user.isTeacher()) {
             qb.requiredCriteria("j.id in (select jt.journal_id from journal_teacher jt where jt.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
@@ -461,7 +455,7 @@ public class AutocompleteService {
     }
 
     public List<EnterpriseResult> enterprises() {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from enterprise e");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from enterprise e");
 
         List<?> data = qb.select("e.id, e.name, e.contact_person_name, e.contact_person_email, e.contact_person_phone", em)
                 .getResultList();

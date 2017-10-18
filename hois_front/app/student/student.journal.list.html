@@ -6,18 +6,27 @@
 
 <div layout-padding>
     <div flex>
-        <ul ng-repeat="year in journalsByYears">
-            <h2 class="md-title">
-                <hois-classifier-value ng-model="year.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value> {{'student.journal.studyYear' | translate}}
-            </h2>
-            <li ng-repeat="journal in year.journals">
-                <a ng-click="showJournal(journal.id)">{{journal.nameEt}}</a>
-                <span>
-                    {{'student.journal.absences' | translate}}: {{journal.absenceH}},
-                    {{'student.journal.includingAbsencesWithoutReason' | translate}}: {{journal.absenceP}},
-                    {{'student.journal.lateForClass' | translate}}: {{journal.absenceV}}
-                </span>
-            </li>
-        </ul>
+        <hois-collapsable ng-repeat="year in journalsByYears track by $index" expanded="year.collapsableOpen">
+            <hois-collapsable-header>
+                <h2 class="md-title">
+                    <hois-classifier-value ng-model="year.yearCode" main-classifier-code="OPPEAASTA"></hois-classifier-value>
+                    <span>{{'student.journal.studyYear' | translate}}</span>
+                </h2>
+            </hois-collapsable-header>
+            <md-table-container>
+                <table md-table>
+                    <tbody md-body>
+                        <tr md-row ng-repeat="journal in year.journals" ng-class-odd="'odd'" ng-class-even="'even'">
+                            <td md-cell width="20%"><a ng-click="showJournal(journal.id)">{{journal.nameEt}}</a></td>
+                            <td md-cell width="20%">
+                                <span>{{'student.journal.absences' | translate}}: {{journal.absenceH}}, </span>
+                                <span>{{'student.journal.includingAbsencesWithoutReason' | translate}}: {{journal.absenceP}}</span>
+                            </td>
+                            <td md-cell>{{'student.journal.lateForClass' | translate}}: {{journal.absenceV}}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </md-table-container>
+        </hois-collapsable>
     </div>
 </div>

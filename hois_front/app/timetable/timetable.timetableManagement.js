@@ -1,9 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('TimetableManagementController', ['$scope', 'message', 'QueryUtils', 'DataUtils', 'Classifier', '$location', 'dialogService', '$filter',
-  function ($scope, message, QueryUtils, DataUtils, Classifier, $location, dialogService, $filter) {
+angular.module('hitsaOis').controller('TimetableManagementController', ['$scope', 'message', 'QueryUtils', 'DataUtils', 'Classifier', '$location', 'dialogService',
+  function ($scope, message, QueryUtils, DataUtils, Classifier, $location, dialogService) {
     var baseUrl = '/timetables';
-    $scope.formState = {xlsUrl: baseUrl + '/timetableDifference.xls'};
+    $scope.formState = {xlsUrl: 'timetables/timetableDifference.xls'};
 
     QueryUtils.endpoint(baseUrl + '/managementSearchFormData').search().$promise.then(function (result) {
       $scope.formState.studyYears = result.studyYears;
@@ -34,19 +34,22 @@ angular.module('hitsaOis').controller('TimetableManagementController', ['$scope'
       }
     });
 
-    $scope.copyTimetable = function(rowId) {
-      QueryUtils.endpoint(baseUrl + '/getPossibleTargetsForCopy').query({id : rowId}).$promise.then(function (possibleTargets) {
-        possibleTargets.forEach(function(element) {
+    $scope.copyTimetable = function (rowId) {
+      QueryUtils.endpoint(baseUrl + '/getPossibleTargetsForCopy').query({id: rowId}).$promise.then(function (possibleTargets) {
+        possibleTargets.forEach(function (element) {
           element.formattedStart = new Date(element.start);
         });
         dialogService.showDialog('timetable/timetable.timetableManagement.copyTimetable.html', function (dialogScope) {
           dialogScope.copyTargets = possibleTargets;
         }, function (submittedDialogScope) {
-          QueryUtils.endpoint(baseUrl + '/copyTimetable').search({start: submittedDialogScope.copyTarget.start
-            , higher: submittedDialogScope.copyTarget.isHigher
-            , id: submittedDialogScope.copyTarget.id
-            , originalTimetable: rowId
-            , studyPeriod: submittedDialogScope.copyTarget.studyPeriod}).$promise.then(function () {
+          var query = {
+            start: submittedDialogScope.copyTarget.start,
+            higher: submittedDialogScope.copyTarget.isHigher,
+            id: submittedDialogScope.copyTarget.id,
+            originalTimetable: rowId,
+            studyPeriod: submittedDialogScope.copyTarget.studyPeriod
+          };
+          QueryUtils.endpoint(baseUrl + '/copyTimetable').search(query).$promise.then(function () {
             message.info('main.messages.create.success');
             $scope.loadData();
           });

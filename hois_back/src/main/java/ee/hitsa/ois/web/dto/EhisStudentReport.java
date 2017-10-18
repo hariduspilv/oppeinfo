@@ -10,8 +10,8 @@ import java.util.List;
 public class EhisStudentReport {
 
     private List<Graduation> graduations;
-
     private List<CurriculaFulfilment> fulfilments;
+    private List<ForeignStudy> foreignStudies;
 
     public List<Graduation> getGraduations() {
         return graduations;
@@ -29,67 +29,27 @@ public class EhisStudentReport {
         this.fulfilments = fulfilments;
     }
 
-    public static class Graduation {
-        private Long studentId;
-        private String name;
-        private String idcode;
-        private String curriculum;
+    public List<ForeignStudy> getForeignStudies() {
+        return foreignStudies;
+    }
+
+    public void setForeignStudies(List<ForeignStudy> foreignStudies) {
+        this.foreignStudies = foreignStudies;
+    }
+
+    public static class Graduation extends StudentReport {
         private String docNr;
         private Boolean cumLaude;
         private String academicNr;
 
-        private Boolean error;
-        private String message;
-
-        public static Graduation of(DirectiveStudent directiveStudent, WsEhisStudentLog wsEhisStudentLog) {
+        public static Graduation of(DirectiveStudent directiveStudent, WsEhisStudentLog log) {
             Graduation graduation = new Graduation();
-            graduation.setStudentId(directiveStudent.getStudent().getId());
-            graduation.setName(directiveStudent.getStudent().getPerson().getFullname());
-            graduation.setIdcode(directiveStudent.getStudent().getPerson().getIdcode());
-
-            graduation.setCurriculum(directiveStudent.getStudent().getCurriculumVersion().getCurriculum().getCode());
+            graduation.fill(directiveStudent.getStudent(), log);
             //graduation.setDocNr();
             graduation.setCumLaude(directiveStudent.getIsCumLaude());
             //graduation.setAcademicNr();
 
-            graduation.setError(Boolean.valueOf(Boolean.TRUE.equals(wsEhisStudentLog.getHasOtherErrors())
-                    || Boolean.TRUE.equals(wsEhisStudentLog.getHasXteeErrors())));
-
-            graduation.setMessage(wsEhisStudentLog.getLogTxt());
-
             return graduation;
-        }
-
-        public Long getStudentId() {
-            return studentId;
-        }
-
-        public void setStudentId(Long studentId) {
-            this.studentId = studentId;
-        }
-
-        public String getName() {
-            return name;
-        }
-
-        public void setName(String name) {
-            this.name = name;
-        }
-
-        public String getIdcode() {
-            return idcode;
-        }
-
-        public void setIdcode(String idcode) {
-            this.idcode = idcode;
-        }
-
-        public String getCurriculum() {
-            return curriculum;
-        }
-
-        public void setCurriculum(String curriculum) {
-            this.curriculum = curriculum;
         }
 
         public String getDocNr() {
@@ -115,53 +75,69 @@ public class EhisStudentReport {
         public void setAcademicNr(String academicNr) {
             this.academicNr = academicNr;
         }
-
-        public Boolean getError() {
-            return error;
-        }
-
-        public void setError(Boolean error) {
-            this.error = error;
-        }
-
-        public String getMessage() {
-            return message;
-        }
-
-        public void setMessage(String message) {
-            this.message = message;
-        }
     }
 
-    public static class CurriculaFulfilment {
-        private Long studentId;
-        private String name;
-        private String idcode;
-        private String curriculum;
+    public static class CurriculaFulfilment extends StudentReport {
         private BigDecimal percentage;
         private BigDecimal points;
 
-        private Boolean error;
-        private String message;
-
-        public static CurriculaFulfilment of(Student student, WsEhisStudentLog wsEhisStudentLog) {
+        public static CurriculaFulfilment of(Student student, WsEhisStudentLog log) {
             CurriculaFulfilment fulfilment = new CurriculaFulfilment();
-            fulfilment.setStudentId(student.getId());
-            fulfilment.setName(student.getPerson().getFullname());
-            fulfilment.setIdcode(student.getPerson().getIdcode());
-
-            fulfilment.setCurriculum(student.getCurriculumVersion().getCurriculum().getCode());
+            fulfilment.fill(student, log);
 
             // TODO currently no way to find
             fulfilment.setPercentage(new BigDecimal(100));
             // TODO currently no way to find
             fulfilment.setPoints(new BigDecimal(50));
-
-            fulfilment.setError(Boolean.valueOf(Boolean.TRUE.equals(wsEhisStudentLog.getHasOtherErrors())
-                    || Boolean.TRUE.equals(wsEhisStudentLog.getHasXteeErrors())));
-
-            fulfilment.setMessage(wsEhisStudentLog.getLogTxt());
             return fulfilment;
+        }
+
+        public BigDecimal getPercentage() {
+            return percentage;
+        }
+
+        public void setPercentage(BigDecimal percentage) {
+            this.percentage = percentage;
+        }
+
+        public BigDecimal getPoints() {
+            return points;
+        }
+
+        public void setPoints(BigDecimal points) {
+            this.points = points;
+        }
+    }
+
+    public static class ForeignStudy extends StudentReport {
+        public static ForeignStudy of(Student student, WsEhisStudentLog log) {
+            ForeignStudy foreignStudy = new ForeignStudy();
+            foreignStudy.fill(student, log);
+
+            foreignStudy.setError(Boolean.valueOf(Boolean.TRUE.equals(log.getHasOtherErrors()) || Boolean.TRUE.equals(log.getHasXteeErrors())));
+            foreignStudy.setMessage(log.getLogTxt());
+
+            return foreignStudy;
+        }
+    }
+
+    protected static class StudentReport {
+        private Long studentId;
+        private String name;
+        private String idcode;
+        private String curriculum;
+
+        private Boolean error;
+        private String message;
+
+        protected void fill(Student student, WsEhisStudentLog log) {
+            setStudentId(student.getId());
+            setName(student.getPerson().getFullname());
+            setIdcode(student.getPerson().getIdcode());
+            setCurriculum(student.getCurriculumVersion().getCurriculum().getCode());
+
+            setError(Boolean.valueOf(Boolean.TRUE.equals(log.getHasOtherErrors()) || Boolean.TRUE.equals(log.getHasXteeErrors())));
+            setMessage(log.getLogTxt());
         }
 
         public Long getStudentId() {
@@ -194,22 +170,6 @@ public class EhisStudentReport {
 
         public void setCurriculum(String curriculum) {
             this.curriculum = curriculum;
-        }
-
-        public BigDecimal getPercentage() {
-            return percentage;
-        }
-
-        public void setPercentage(BigDecimal percentage) {
-            this.percentage = percentage;
-        }
-
-        public BigDecimal getPoints() {
-            return points;
-        }
-
-        public void setPoints(BigDecimal points) {
-            this.points = points;
         }
 
         public Boolean getError() {

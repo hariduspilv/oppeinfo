@@ -6,6 +6,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'studentAbsence/absences.html',
       controller: 'StudentAbsenceController',
       controllerAs: 'controller',
+      data: {
+        authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_PUUDUMINE]
+      },
       resolve: { translationLoaded: function($translate) { return $translate.onReady(); }}
     });
 }]);

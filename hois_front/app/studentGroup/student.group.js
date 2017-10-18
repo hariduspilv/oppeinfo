@@ -18,21 +18,24 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
       $scope.formState.curriculumVersionLabel = 'studentGroup.curriculumVersionVocational';
     }
 
-    $scope.curriculumChanged = function() {
+    $scope.$watch('criteria.curriculum', function() {
       var curriculumId = $scope.criteria.curriculum ? $scope.criteria.curriculum.id : null;
-      // store current values
+      // store current selected value
       $scope.formState.studyForm = $scope.criteria.studyForm;
 
       function afterCurriculumChange(result) {
         if(curriculumId) {
           $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions.filter(function(cv) { return cv.curriculum === curriculumId;});
+          $scope.criteria.curriculumVersion = null;
         } else {
           // all versions allowed
           $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions;
         }
         $scope.formState.studyForms = result.studyForms || [];
-        // try to restore values
+        // try to restore selected value
         $scope.criteria.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
+
+        $scope.curriculumVersionChanged();
       }
 
       if(curriculumId) {
@@ -41,26 +44,27 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         // curriculum cleared
         afterCurriculumChange({});
       }
-    };
+    });
+
+    function hiddenStudyForms() {
+      return $scope.formState.studyForms.length > 0 ? $scope.formState.allStudyForms.filter(function(it) { return $scope.formState.studyForms.indexOf(it.code) === -1; }) : undefined;
+    }
 
     $scope.curriculumVersionChanged = function() {
       if(!$scope.criteria.curriculumVersion || $scope.criteria.curriculumVersion.length === 0) {
-        $scope.formState.hiddenStudyForms = undefined;
+        $scope.formState.hiddenStudyForms = hiddenStudyForms();
       } else {
         var sf = $scope.formState.curriculumVersions.reduce(function(acc, item) { acc[item.id] = item.studyForm; return acc; }, {});
         sf = $scope.criteria.curriculumVersion.map(function(it) { return sf[it];});
         if(sf.indexOf(null) !== -1) {
-          // curriculum version without study form, let user select from all values
-          $scope.formState.hiddenStudyForms = undefined;
+          // curriculum version without study form, let user select from all values (optionally filtered by curriculum)
+          $scope.formState.hiddenStudyForms = hiddenStudyForms();
         } else {
           // allow selection of study forms specified by curriculum versions
           $scope.formState.hiddenStudyForms = $scope.formState.allStudyForms.filter(function(it) { return sf.indexOf(it.code) === -1; });
         }
       }
     };
-
-    $scope.curriculumChanged();
-    $scope.curriculumVersionChanged();
 
     $q.all(clMapper.promises).then($scope.loadData);
   }

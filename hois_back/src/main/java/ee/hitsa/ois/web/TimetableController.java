@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 
@@ -19,7 +18,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.service.TimetableService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -62,7 +60,7 @@ public class TimetableController {
     	/* IKE TODO */
         return timetableService.getForView(timetable);
     }
-
+ 
     @GetMapping("/{id:\\d+}/createVocationalPlan")
     public VocationalTimetablePlanDto createVocationalPlan(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
@@ -76,13 +74,13 @@ public class TimetableController {
     }
 
     @GetMapping("/managementSearchFormData")
-    public Map<String, ?> timetableManagement(HoisUserDetails user) {
+    public Map<String, ?> managementSearchFormData(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdmin(user);
         return timetableService.managementSearchFormData(user.getSchoolId());
     }
 
     @GetMapping("/searchTimetableForManagement")
-    public Page<TimetableManagementSearchDto> timetableForManagement(HoisUserDetails user,
+    public Page<TimetableManagementSearchDto> searchTimetableForManagement(HoisUserDetails user,
             @Valid TimetableManagementSearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
         return timetableService.searchTimetableForManagement(criteria, pageable, user);
@@ -93,7 +91,7 @@ public class TimetableController {
             @RequestParam("studyPeriod") Long studyPeriod, @RequestParam("code") String code,
             @RequestParam(name = "currentTimetable", required = false) Long currentTimetable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return timetableService.getBlockedDatesForPeriod(user, studyPeriod, code, currentTimetable);
+        return timetableService.blockedDatesForPeriod(user, studyPeriod, code, currentTimetable);
     }
 
     @PostMapping
@@ -140,7 +138,7 @@ public class TimetableController {
     }
 
     @GetMapping("/copyTimetable")
-    public TimetableDto copyTimetable(HoisUserDetails user, @Valid TimetableCopyForm form) {
+    public TimetableDto cloneTimetable(HoisUserDetails user, @Valid TimetableCopyForm form) {
         UserUtil.assertIsSchoolAdmin(user);
         return get(user, timetableService.cloneTimetable(user, form));
     }
@@ -160,37 +158,45 @@ public class TimetableController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public TimetableDto update(HoisUserDetails user, @Valid @RequestBody TimetableEditForm form,
+    public TimetableDto save(HoisUserDetails user, @Valid @RequestBody TimetableEditForm form,
             @WithEntity("id") Timetable timetable) {
         UserUtil.assertIsSchoolAdmin(user);
         return get(user, timetableService.save(user, form, timetable));
     }
     
+    @PutMapping("/{id:\\d+}/confirm")
+    public TimetableDto confirm(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return get(user, timetableService.confirm(timetable));
+    }
+    
+    @PutMapping("/{id:\\d+}/publicize")
+    public TimetableDto publicize(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return get(user, timetableService.publicize(timetable));
+    }
+    
     @GetMapping("/generalTimetables")
     public List<GeneralTimetableDto> generalTimetables(HoisUserDetails user) {
-        // TODO: user rights control 
-        return timetableService.getGeneralTimetables(user.getSchoolId());
+        return timetableService.generalTimetables(user.getSchoolId());
     }
     
     @GetMapping("/groupPeriodTimetables")
     public List<GroupTimetableDto> groupPeriodTimetables(HoisUserDetails user, @RequestParam("studyPeriodId") Long studyPeriodId,  
             @RequestParam("timetableId") Long timetableId) {
-        // TODO: user rights control 
-        return timetableService.getGroupPeriodTimetables(user.getSchoolId(), studyPeriodId, timetableId);
+        return timetableService.groupPeriodTimetables(user.getSchoolId(), studyPeriodId, timetableId);
     }
     
     @GetMapping("/teacherPeriodTimetables")
     public List<TeacherTimetableDto> teacherPeriodTimetables(HoisUserDetails user, @RequestParam("studyPeriodId") Long studyPeriodId, 
             @RequestParam("timetableId") Long timetableId) {
-     // TODO: user rights control 
-        return timetableService.getTeacherPeriodTimetables(user.getSchoolId(), studyPeriodId, timetableId);
+        return timetableService.teacherPeriodTimetables(user.getSchoolId(), studyPeriodId, timetableId);
     }
     
     @GetMapping("/roomPeriodTimetables")
     public List<RoomTimetableDto> roomPeriodTimetables(HoisUserDetails user, @RequestParam("studyPeriodId") Long studyPeriodId, 
             @RequestParam("timetableId") Long timetableId) {
-     // TODO: user rights control 
-        return timetableService.getRoomPeriodTimetables(user.getSchoolId(), studyPeriodId, timetableId);
+        return timetableService.roomPeriodTimetables(user.getSchoolId(), studyPeriodId, timetableId);
     }
     
     @GetMapping("/timetableDifference.xls")

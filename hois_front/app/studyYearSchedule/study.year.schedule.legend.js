@@ -12,9 +12,7 @@ angular.module('hitsaOis').controller('studyYearScheduleLegendController', ['$sc
     
     $scope.newLegend = {};
 
-    $scope.record = QueryUtils.endpoint('/school/studyYearScheduleLegends').search();
-    
-    $scope.record.$promise.then(function(response){
+    $scope.record = QueryUtils.endpoint('/school/studyYearScheduleLegends').search(function(response) {
         if(!response || !response.legends || response.legends.length === 0) {
             $scope.legends = DEFAULT_VALUES;
         } else {

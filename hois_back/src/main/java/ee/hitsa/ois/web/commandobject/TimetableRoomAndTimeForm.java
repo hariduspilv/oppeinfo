@@ -3,9 +3,12 @@ package ee.hitsa.ois.web.commandobject;
 import java.time.LocalTime;
 import java.util.List;
 
+import javax.validation.constraints.NotNull;
+
 import ee.hitsa.ois.web.dto.RoomDto;
 
 public class TimetableRoomAndTimeForm {
+    @NotNull
     private Long timetableEventId;
     private LocalTime startTime;
     private LocalTime endTime;

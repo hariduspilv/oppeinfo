@@ -17,12 +17,9 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
   }
 
   if(id) {
-      $scope.declaration = QueryUtils.endpoint('/declarations').get({id: id}, function(){
-    });
+    $scope.declaration = QueryUtils.endpoint('/declarations').get({id: id});
   } else {
-    QueryUtils.endpoint('/declarations/current').get().$promise.then(function(response){
-      $scope.declaration = response;
-    });
+    $scope.declaration = QueryUtils.endpoint('/declarations/current').get();
   }
 
   $scope.confirm = function() {
@@ -54,13 +51,8 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
   $scope.openAddCurriculumSubject = function () {
     var DialogController = function (scope) {
 
-      QueryUtils.endpoint('/declarations/subjects/' + $scope.declaration.id).query().$promise.then(function(response){
-        scope.subjects = response;
-      });
-
-      QueryUtils.endpoint('/declarations/modules/' + $scope.declaration.id).query().$promise.then(function(response){
-        scope.modules = response;
-      });
+      scope.subjects = QueryUtils.endpoint('/declarations/subjects/' + $scope.declaration.id).query();
+      scope.modules = QueryUtils.endpoint('/declarations/modules/' + $scope.declaration.id).query();
 
       scope.filterSubjectsByModule = function(moduleId) {
         return function(subject) {
@@ -98,9 +90,7 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
       var DialogController = function (scope) {
 
         function getSubjects() {
-          QueryUtils.endpoint('/declarations/subjects/extracurriculum/' + $scope.declaration.id).query().$promise.then(function(response){
-            scope.subjects = response;
-          });
+          scope.subjects = QueryUtils.endpoint('/declarations/subjects/extracurriculum/' + $scope.declaration.id).query();
         }
         getSubjects();
 
@@ -223,7 +213,8 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
       });
   };
 
-}]).controller('DeclarationSearchController', ['$scope', '$sessionStorage', 'Classifier', 'DataUtils', 'QueryUtils', '$q', 'message', 'dialogService', function ($scope, $sessionStorage, Classifier, DataUtils, QueryUtils, $q, message, dialogService) {
+}]).controller('DeclarationSearchController', ['$scope', '$sessionStorage', 'ArrayUtils', 'Classifier', 'DataUtils', 'QueryUtils', '$q', 'message', 'dialogService',
+  function ($scope, $sessionStorage, ArrayUtils, Classifier, DataUtils, QueryUtils, $q, message, dialogService) {
 
     var clMapper = Classifier.valuemapper({status: 'OPINGUKAVA_STAATUS'});
     QueryUtils.createQueryForm($scope, '/declarations', {order: 'dId'}, clMapper.objectmapper);
@@ -237,29 +228,22 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
     }
 
     var promises = clMapper.promises;
-    var studyPeriodsPromise = QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise;
-    promises.push(studyPeriodsPromise);
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
+    promises.push($scope.studyPeriods.$promise);
 
-    $q.all(promises).then(function(responses) {
-      $scope.studyPeriods = responses[1];
+    $q.all(promises).then(function() {
       setCurrentStudyPeriod();
       $scope.loadData();
     });
 
     $scope.$watch('criteria.studyPeriod', function() {
-            if($scope.studyPeriods && !$scope.criteria.studyPeriod) {
-                setCurrentStudyPeriod();
-            }
-        }
-    );
-
-    QueryUtils.endpoint('/autocomplete/curriculumversions').query({higher: true, valid: true}).$promise.then(function(response){
-        $scope.curriculumVersions = response;
+      if(!ArrayUtils.isEmpty($scope.studyPeriods) && !$scope.criteria.studyPeriod) {
+        setCurrentStudyPeriod();
+      }
     });
 
-    QueryUtils.endpoint('/autocomplete/studentgroups').query().$promise.then(function(response){
-        $scope.studentGroups = response;
-    });
+    $scope.curriculumVersions = QueryUtils.endpoint('/autocomplete/curriculumversions').query({higher: true, valid: true});
+    $scope.studentGroups = QueryUtils.endpoint('/autocomplete/studentgroups').query();
 
     $scope.confirmAll = function() {
       dialogService.confirmDialog({prompt: 'declaration.prompt.confirmAll'}, function() {
@@ -269,30 +253,31 @@ angular.module('hitsaOis').controller('DeclarationEditController', ['$scope', 'd
         });
       });
     };
-
-}]).controller('DeclarationStudentSearchController', ['$scope', '$sessionStorage', 'Classifier', 'QueryUtils', '$q', function ($scope, $sessionStorage, Classifier, QueryUtils, $q) {
+  }
+]).controller('DeclarationStudentSearchController', ['$scope', '$sessionStorage', 'Classifier', 'QueryUtils', '$q',
+  function ($scope, $sessionStorage, Classifier, QueryUtils, $q) {
 
     $scope.currentNavItem = 'previous';
     var clMapper = Classifier.valuemapper({status: 'OPINGUKAVA_STAATUS'});
     QueryUtils.createQueryForm($scope, '/declarations/previous', {order: 'dId'}, clMapper.objectmapper);
 
     $q.all(clMapper.promises).then($scope.loadData);
+  }
+]).controller('DeclarationNewController', ['$scope', 'QueryUtils', 'message', '$location',
+  function ($scope, QueryUtils, message, $location) {
 
-}]).controller('DeclarationNewController', ['$scope', 'QueryUtils', 'message', '$location', function ($scope, QueryUtils, message, $location) {
+    $scope.studyPeriod = QueryUtils.endpoint('/declarations/currentStudyPeriod').search();
 
-  QueryUtils.endpoint('/declarations/currentStudyPeriod').search().$promise.then(function(response){
-    $scope.studyPeriod = response;
-  });
-
-  $scope.save = function() {
-    $scope.declarationNewForm.$setSubmitted();
-    if(!$scope.declarationNewForm.$valid) {
-      return;
-    }
-    var Endpoint = QueryUtils.endpoint('/declarations/create/' + $scope.student.id);
-    new Endpoint().$save().then(function(response){
-      message.info('main.messages.create.success');
-      $location.url("/declarations/" + response.id + "/edit?_noback");
-    });
-  };
-}]);
+    $scope.save = function() {
+      $scope.declarationNewForm.$setSubmitted();
+      if(!$scope.declarationNewForm.$valid) {
+        return;
+      }
+      var Endpoint = QueryUtils.endpoint('/declarations/create/' + $scope.student.id);
+      new Endpoint().$save().then(function(response){
+        message.info('main.messages.create.success');
+        $location.url("/declarations/" + response.id + "/edit?_noback");
+      });
+    };
+  }
+]);

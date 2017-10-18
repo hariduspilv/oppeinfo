@@ -29,6 +29,7 @@ import ee.hitsa.ois.domain.timetable.JournalEntry;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.JournalEntryRepository;
 import ee.hitsa.ois.repository.JournalRepository;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 
 @Transactional
@@ -37,6 +38,7 @@ import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 public class JournalControllerTests {
 
     private static final String ENDPOINT = "/journals";
+    private static final Long STUDENT_ID = Long.valueOf(189L); 
 
     @Autowired
     private TestRestTemplate restTemplate;
@@ -166,6 +168,84 @@ public class JournalControllerTests {
     public void getJournalLessonInfo() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
                 .pathSegment(journal.getId().toString(), "journalEntry", "lessonInfo");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void studentJournals() {
+        testConfigurationService.userToRole(Role.ROLL_T, restTemplate);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment("studentJournals");
+        uriBuilder.queryParam("studentId", STUDENT_ID);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    public void studentJournal() {
+        testConfigurationService.userToRole(Role.ROLL_T, restTemplate);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT)
+                .pathSegment(journal.getId().toString(), "studentJournal");
+        uriBuilder.queryParam("studentId", STUDENT_ID);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void studentJournalTasks() {
+        testConfigurationService.userToRole(Role.ROLL_T, restTemplate);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("studentJournalTasks");
+        uriBuilder.queryParam("studentId", STUDENT_ID);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void studentJournalStudy() {
+        testConfigurationService.userToRole(Role.ROLL_T, restTemplate);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("studentJournalStudy");
+        uriBuilder.queryParam("studentId", STUDENT_ID);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void studentAbsences() {
+        testConfigurationService.userToRole(Role.ROLL_T, restTemplate);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("studentJournalAbsences");
+        uriBuilder.queryParam("studentId", STUDENT_ID);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void studentLastResults() {
+        testConfigurationService.userToRole(Role.ROLL_T, restTemplate);
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT).pathSegment("studentJournalLastResults");
+        uriBuilder.queryParam("studentId", STUDENT_ID);
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+    
+    @Test
+    public void excel() {
+        String url = ENDPOINT + "/" + EntityUtil.getId(journal) + "/journal.xls";
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
+        ResponseEntity<?> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Void.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void unconfirmedJournals() {
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(ENDPOINT + "/unconfirmedJournalsInfo");
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

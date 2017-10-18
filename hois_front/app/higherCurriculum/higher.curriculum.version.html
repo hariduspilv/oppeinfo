@@ -31,7 +31,7 @@
             <label>{{'curriculum.specialty.specialties' | translate}}</label>
             <md-select multiple ng-model="version.specialitiesReferenceNumbers" required ng-disabled="formState.readOnly">
               <md-option ng-repeat="speciality in curriculum.specialities | orderBy: currentLanguageNameField()" ng-value="speciality.referenceNumber">
-                {{speciality[currentLanguageNameField()]}}
+                {{currentLanguageNameField(speciality)}}
               </md-option>
             </md-select>
           </md-input-container>
@@ -61,7 +61,7 @@
         <div layout="column" flex ng-repeat="module in version.modules | filter: {minorSpeciality: false} | filter: filterModulesBySpeciality(spectiality) | orderBy: currentLanguageNameField()">
           <div layout="row" flex class="occupation-header" layout-align="start center">
             <a href="" ng-click="openAddModuleDialog(module)" flex="70" ng-class="{invalid: higherCurriculumVersionForm.$submitted && !moduleHasSubjects(module) && strictValidation()}">
-                                {{'curriculum.module' | translate}} {{module[currentLanguageNameField()]}} {{module.totalCredits}} EAP
+                                {{'curriculum.module' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP
                                 <!--<span ng-if="module.type !== 'KORGMOODUL_M'">(<hois-classifier-value ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value>)</span>-->
                                 <span ng-if="module.type === 'KORGMOODUL_M'">({{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}})</span>
                             </a>
@@ -74,7 +74,7 @@
           <div ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()" layout="row"
             flex class="secondary-table-row" layout-align="start center">
             <div flex="5">&nbsp;</div>
-            <div flex="35">{{subject[currentLanguageNameField()]}}</div>
+            <div flex="35">{{currentLanguageNameField(subject)}}</div>
             <div flex="10">{{subject.code}}</div>
             <div flex="20">{{subject.credits}}</div>
             <div>
@@ -97,7 +97,7 @@
                         filter: {optional: true} | filter: {electiveModule: '!'} | orderBy: currentLanguageNameField()"
             layout="row" flex class="secondary-table-row" layout-align="start center">
             <div flex="5">&nbsp;</div>
-            <div flex="35">{{subject[currentLanguageNameField()]}}</div>
+            <div flex="35">{{currentLanguageNameField(subject)}}</div>
             <div flex="10">{{subject.code}}</div>
             <div flex="20">{{subject.credits}}</div>
             <div>
@@ -111,13 +111,13 @@
           <div ng-repeat="electiveModule in module.electiveModules | orderBy: currentLanguageNameField()" layout-align="start center"
             flex>
             <div class="sub-header2" layout-align="start center" layout="row">
-              <div>{{'module.optional' | translate}}: {{electiveModule[currentLanguageNameField()]}}</div>
+              <div>{{'module.optional' | translate}}: {{currentLanguageNameField(electiveModule)}}</div>
             </div>
             <div ng-repeat="subject in module.subjects | filter: {optional: true} |
                                 filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()"
               layout="row" flex class="secondary-table-row" layout-align="start center">
               <div flex="5">&nbsp;</div>
-              <div flex="35">{{subject[currentLanguageNameField()]}}</div>
+              <div flex="35">{{currentLanguageNameField(subject)}}</div>
               <div flex="10">{{subject.code}}</div>
               <div flex="20">{{subject.credits}}</div>
               <div>
@@ -146,7 +146,7 @@
       <div layout="column" flex ng-repeat="module in version.modules | filter: {minorSpeciality: true} | orderBy: currentLanguageNameField()">
         <div layout="row" flex class="occupation-header" layout-align="start center">
           <a href="" ng-click="openAddMinorSpecialtyDialog(module)" flex="70" ng-class="{invalid: higherCurriculumVersionForm.$submitted && !moduleHasSubjects(module) && strictValidation()}">
-                                <span>{{'curriculum.minorSpecialty.minorSpecialty' | translate}} {{module[currentLanguageNameField()]}} {{module.totalCredits}} EAP</span>
+                                <span>{{'curriculum.minorSpecialty.minorSpecialty' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP</span>
                      </a>
           <!--<a class="remove nomargin" ng-click="removeModule(version.modules, module)" ng-if="!formState.readOnly">&times;</a>-->
         </div>
@@ -157,7 +157,7 @@
         <div ng-repeat="subject in module.subjects | filter: {optional: false} | orderBy: currentLanguageNameField()" layout="row"
           flex class="secondary-table-row" layout-align="start center">
           <div flex="5">&nbsp;</div>
-          <div flex="35">{{subject[currentLanguageNameField()]}}</div>
+          <div flex="35">{{currentLanguageNameField(subject)}}</div>
           <div flex="10">{{subject.code}}</div>
           <div flex="20">{{subject.credits}}</div>
           <div>
@@ -180,7 +180,7 @@
                         filter: {optional: true} | filter: {electiveModule: '!'} | orderBy: currentLanguageNameField()"
           layout="row" flex class="secondary-table-row" layout-align="start center">
           <div flex="5">&nbsp;</div>
-          <div flex="35">{{subject[currentLanguageNameField()]}}</div>
+          <div flex="35">{{currentLanguageNameField(subject)}}</div>
           <div flex="10">{{subject.code}}</div>
           <div flex="20">{{subject.credits}}</div>
           <div>
@@ -193,13 +193,13 @@
         <div ng-repeat="electiveModule in module.electiveModules | orderBy: currentLanguageNameField()" layout-align="start center"
           flex>
           <div class="sub-header2" layout-align="start center" layout="row">
-            <div>{{'module.optional' | translate}}: {{electiveModule[currentLanguageNameField()]}}</div>
+            <div>{{'module.optional' | translate}}: {{currentLanguageNameField(electiveModule)}}</div>
           </div>
           <div ng-repeat="subject in module.subjects | filter: {optional: true} |
                                 filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()"
             layout="row" flex class="secondary-table-row" layout-align="start center">
             <div flex="5">&nbsp;</div>
-            <div flex="35">{{subject[currentLanguageNameField()]}}</div>
+            <div flex="35">{{currentLanguageNameField(subject)}}</div>
             <div flex="10">{{subject.code}}</div>
             <div flex="20">{{subject.credits}}</div>
             <div>

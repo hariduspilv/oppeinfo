@@ -34,7 +34,7 @@ import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DataUtil;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -136,7 +136,7 @@ public class AutomaticMessageService {
     }
 
     private List<Person> getStudentRepresentativePersons(Student student, HoisUserDetails initiator) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from person p "
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from person p "
                 + "inner join student_representative sr on sr.person_id = p.id");
 
         qb.requiredCriteria("sr.student_id = :studentId", "studentId", EntityUtil.getId(student));
@@ -149,7 +149,7 @@ public class AutomaticMessageService {
     }
 
     private List<Person> getPersonsWithRole(School school, Role role) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from person p "
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from person p "
                 + "inner join user_ u on u.person_id = p.id");
 
         qb.requiredCriteria("u.school_id = :schoolId", "schoolId", EntityUtil.getId(school));

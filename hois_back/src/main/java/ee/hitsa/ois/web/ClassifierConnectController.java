@@ -41,7 +41,7 @@ public class ClassifierConnectController {
      * Or @Id for both variables of composite primary key is enough?
      */
     @PostMapping("/changeParents/{code}")
-    public boolean changeListOfParents(HoisUserDetails user, @PathVariable("code") String code, @Valid @RequestBody List<Classifier> parents) {
+    public boolean updateParents(HoisUserDetails user, @PathVariable("code") String code, @Valid @RequestBody List<Classifier> parents) {
         UserUtil.assertIsMainAdmin(user);
         service.updateParents(code, parents);
         return true;

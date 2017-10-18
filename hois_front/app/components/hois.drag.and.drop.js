@@ -56,3 +56,39 @@ angular.module('hitsaOis').directive('oisDrop', function() {
     }
   };
 });
+
+angular.module('hitsaOis').directive('oisHigherDrop', function() {
+  return {
+    restrict : 'A',
+    scope : { dropFn: '&', param2: '&', index: '&', oldEventId: '&' },
+    link : function(scope, element, attrs) {
+      element.on('dragover', function(event) {
+        if(attrs.oisHigherDrop === "true" && this.childElementCount === 0) {
+          event.preventDefault();
+        }
+      });
+      element.on('drop', function(event) {
+        if(attrs.oisHigherDrop === "true") {
+          event.preventDefault();
+          var data = {};
+          data.id = event.dataTransfer.getData("elementId");
+          data.journalId = event.dataTransfer.getData("journalId");
+          data.oldEventId = event.dataTransfer.getData("oldEventId");
+          data.capacityType = event.dataTransfer.getData("capacityType");
+          if(event.target.attributes.getNamedItem('index-value') !== null) {
+            data.index = event.target.attributes.getNamedItem('index-value').value;
+          }
+          event.target.appendChild(document.getElementById(data.id).cloneNode(true));
+          scope.dropFn({data: data});
+        }
+      });
+      element.bind('error', function() {
+        if (attrs.onErrorSrc === '') {
+          attrs.ngHide = true;
+        } else if (attrs.src !== attrs.onErrorSrc) {
+          attrs.$set('src', attrs.onErrorSrc);
+        }
+      });
+    }
+  };
+});

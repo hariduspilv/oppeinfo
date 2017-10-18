@@ -46,6 +46,7 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.validation.ContractValidation;
@@ -115,7 +116,7 @@ public class ContractService {
             + "subject.credits as subject_credits";
 
     public Page<ContractSearchDto> search(HoisUserDetails user, ContractSearchCommand command, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SEARCH_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SEARCH_FROM).sort(pageable);
         qb.requiredCriteria("student.school_id = :schoolId", "schoolId", user.getSchoolId());
 
         qb.optionalCriteria("contract.start_date >= :startFrom", "startFrom", command.getStartFrom());
@@ -155,7 +156,7 @@ public class ContractService {
     }
 
     public Collection<ContractStudentModuleDto> studentPracticeModules(HoisUserDetails user, Long studentId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(MODULES_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(MODULES_FROM);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("s.id = :studentId", "studentId", studentId);
         qb.filter("cm.is_practice = true");
@@ -197,7 +198,7 @@ public class ContractService {
     }
 
     public Collection<ContractStudentHigherModuleDto> studentPracticeHigherModules(HoisUserDetails user, Long studentId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(SUBJECTS_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(SUBJECTS_FROM);
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("s.id = :studentId", "studentId", studentId);
         qb.filter("subject.is_practice = true");

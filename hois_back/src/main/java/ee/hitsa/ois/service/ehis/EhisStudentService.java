@@ -37,29 +37,25 @@ public class EhisStudentService extends EhisService {
         case CURRICULA_FULFILMENT:
             List<EhisStudentReport.CurriculaFulfilment> fulfilment = new ArrayList<>();
             for (Student student : findStudents(schoolId)) {
-                WsEhisStudentLog log;
-                try {
-                    log = curriculumFulfillment(student);
-                } catch (Exception e) {
-                    log = bindingException(student, e);
-                }
+                WsEhisStudentLog log = curriculumFulfillment(student);
                 fulfilment.add(EhisStudentReport.CurriculaFulfilment.of(student, log));
             }
             ehisStudentReport.setFulfilments(fulfilment);
             break;
         case FOREIGN_STUDY:
-            throw new UnsupportedOperationException();
+            List<EhisStudentReport.ForeignStudy> foreignStudies = new ArrayList<>();
+            for (DirectiveStudent directiveStudent : findForeignStudents(schoolId, ehisStudentForm)) {
+                WsEhisStudentLog log = ehisDirectiveStudentService.foreignStudy(directiveStudent);
+                foreignStudies.add(EhisStudentReport.ForeignStudy.of(directiveStudent.getStudent(), log));
+            }
+            ehisStudentReport.setForeignStudies(foreignStudies);
+            break;
         case GRADUATION:
             List<EhisStudentReport.Graduation> graduations = new ArrayList<>();
             for (Directive directive : findDirectives(schoolId, ehisStudentForm)) {
                 for (DirectiveStudent directiveStudent : directive.getStudents()) {
                     // TODO check for printed status
-                    WsEhisStudentLog log;
-                    try {
-                        log = ehisDirectiveStudentService.graduation(directiveStudent);
-                    } catch (Exception e) {
-                        log = bindingException(directive, e);
-                    }
+                    WsEhisStudentLog log = ehisDirectiveStudentService.graduation(directiveStudent);
                     graduations.add(EhisStudentReport.Graduation.of(directiveStudent, log));
                 }
             }
@@ -74,20 +70,24 @@ public class EhisStudentService extends EhisService {
     }
 
     private WsEhisStudentLog curriculumFulfillment(Student student) {
-        KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+        try {
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
 
-        KhlOppekavaTaitmine oppekavaTaitmine = new KhlOppekavaTaitmine();
-        oppekavaTaitmine.setMuutusKp(date(LocalDate.now()));
-        // TODO currently no way to find
-        oppekavaTaitmine.setTaitmiseProtsent(new BigDecimal(100));
-        // TODO currently no way to find
-        oppekavaTaitmine.setAinepunkte(new BigDecimal(50));
+            KhlOppekavaTaitmine oppekavaTaitmine = new KhlOppekavaTaitmine();
+            oppekavaTaitmine.setMuutusKp(date(LocalDate.now()));
+            // TODO currently no way to find
+            oppekavaTaitmine.setTaitmiseProtsent(new BigDecimal(100));
+            // TODO currently no way to find
+            oppekavaTaitmine.setAinepunkte(new BigDecimal(50));
 
-        KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
-        khlKorgharidusMuuda.setOppekavaTaitmine(oppekavaTaitmine);
-        khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
+            KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();
+            khlKorgharidusMuuda.setOppekavaTaitmine(oppekavaTaitmine);
+            khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
-        return makeRequest(student, khlOppeasutusList);
+            return makeRequest(student, khlOppeasutusList);
+        } catch (Exception e) {
+            return bindingException(student, e);
+        }
     }
 
     private WsEhisStudentLog makeRequest(Student student, KhlOppeasutusList khlOppeasutusList) {
@@ -101,6 +101,20 @@ public class EhisStudentService extends EhisService {
         TypedQuery<Student> q = em.createQuery("select s from Student s where s.school.id = ?1 and s.status.code = ?2", Student.class);
         q.setParameter(1, schoolId);
         q.setParameter(2, StudentStatus.OPPURSTAATUS_O.name());
+
+        return q.getResultList();
+    }
+
+    private List<DirectiveStudent> findForeignStudents(Long schoolId, EhisStudentForm criteria) {
+        TypedQuery<DirectiveStudent> q = em.createQuery(
+                "select ds from DirectiveStudent ds left join ds.studyPeriodEnd where ds.canceled = false and ds.directive.school.id = ?1 and ds.directive.type.code = ?2 and ds.directive.status.code = ?3 and ((ds.isPeriod = false and ds.endDate >= ?4 and ds.endDate <= ?5) or (ds.isPeriod = true and ds.studyPeriodEnd.endDate >= ?6 and ds.studyPeriodEnd.endDate <= ?7))", DirectiveStudent.class);
+        q.setParameter(1, schoolId);
+        q.setParameter(2, DirectiveType.KASKKIRI_VALIS.name());
+        q.setParameter(3, DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD.name());
+        q.setParameter(4, criteria.getFrom());
+        q.setParameter(5, criteria.getThru());
+        q.setParameter(6, criteria.getFrom());
+        q.setParameter(7, criteria.getThru());
 
         return q.getResultList();
     }

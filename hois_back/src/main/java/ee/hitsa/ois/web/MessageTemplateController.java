@@ -52,7 +52,7 @@ public class MessageTemplateController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public MessageTemplateDto update(HoisUserDetails user, 
+    public MessageTemplateDto save(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) MessageTemplate messageTemplate, 
             @Valid @RequestBody MessageTemplateForm form) {
         UserUtil.assertIsSchoolAdmin(user, messageTemplate.getSchool());

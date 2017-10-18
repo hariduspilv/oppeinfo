@@ -73,6 +73,7 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
         this.module = module;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -81,6 +82,7 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

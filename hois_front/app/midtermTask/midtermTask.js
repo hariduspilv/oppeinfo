@@ -101,10 +101,7 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
     }
   }
 
-  Endpoint.get({id: $scope.subjectStudyPeriodId}).$promise.then(function(response){
-    $scope.record = response;
-    afterload();
-  });
+  $scope.record = Endpoint.get({id: $scope.subjectStudyPeriodId}, afterload);
 
   $scope.addRow = function() {
     $scope.record.midtermTasks.push({maxPoints: 0, canBeDeleted: true});
@@ -185,7 +182,7 @@ angular.module('hitsaOis').controller('MidtermTaskStudentResultsController', ['$
       }
 
       scope.$watch('criteria.studyPeriod', function() {
-              if(scope.studyPeriods && !scope.criteria.studyPeriod) {
+              if(!ArrayUtils.isEmpty(scope.studyPeriods) && !scope.criteria.studyPeriod) {
                   setCurrentStudyPeriod();
               }
           }

@@ -23,6 +23,8 @@ import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import ee.hitsa.ois.TestConfigurationService;
+import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.enums.DirectiveType;
@@ -191,8 +193,15 @@ public class DirectiveControllerTests {
         // create
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(baseUrl);
         DirectiveForm form = new DirectiveForm();
-        form.setType(DirectiveType.KASKKIRI_AKADK.name());
-        form.setHeadline("Akad katkestamise käskkiri");
+        form.setType(DirectiveType.KASKKIRI_IMMAT.name());
+        form.setHeadline("Test - Immatrikuleerimise käskkiri");
+        DirectiveForm.DirectiveFormStudent directiveStudent = new DirectiveForm.DirectiveFormStudent();
+        User user = testConfigurationService.getCurrentUser();
+        Person person = user.getPerson();
+        directiveStudent.setIdcode(person.getIdcode());
+        directiveStudent.setFirstname(person.getFirstname());
+        directiveStudent.setLastname(person.getLastname());
+        form.setStudents(Arrays.asList(directiveStudent));
         ResponseEntity<DirectiveDto> responseEntity = restTemplate.postForEntity(uriBuilder.build().toUriString(), form, DirectiveDto.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.CREATED, responseEntity.getStatusCode());

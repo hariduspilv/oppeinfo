@@ -1,6 +1,25 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div flex>
-    <form name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
+    <form ng-if="auth.isStudent() || auth.isParent()" name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate
+      class="nomargin">
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <div flex="100" flex-sm="100" flex-xs="100">
+          <div layout="column" flex>
+            <md-input-container>
+              <label class="textInput">{{'studyYear.label' | translate}}</label>
+              <hois-select ng-model="criteria.studyYear" type="studyyear" select-current-study-year required autofocus></hois-select>
+            </md-input-container>
+          </div>
+        </div>
+      </div>
+
+      <div layout="row">
+          <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+      </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
+    </form>
+
+    <form ng-if="!auth.isStudent() && !auth.isParent()" name="searchForm" ng-submit="searchForm.$valid && loadData()" novalidate class="nomargin">
       <div layout="row" layout-sm="column" layout-xs="column">
         <div flex="45" flex-sm="100" flex-xs="100">
           <div layout="column" flex>

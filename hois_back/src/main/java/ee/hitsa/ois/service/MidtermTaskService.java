@@ -7,6 +7,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
 import javax.persistence.criteria.Subquery;
@@ -22,7 +23,6 @@ import ee.hitsa.ois.domain.MidtermTask;
 import ee.hitsa.ois.domain.MidtermTaskStudentResult;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
-import ee.hitsa.ois.repository.DeclarationSubjectRepository;
 import ee.hitsa.ois.repository.MidtermTaskRepository;
 import ee.hitsa.ois.repository.MidtermTaskStudentResultRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
@@ -41,22 +41,22 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodSearchDto;
 @Transactional
 @Service
 public class MidtermTaskService {
-    
+
+    @Autowired
+    private EntityManager em;
     @Autowired
     private SubjectStudyPeriodRepository subjectStudyPeriodRepository;
     @Autowired
     private MidtermTaskStudentResultRepository midtermTaskStudentResultRepository;
     @Autowired
     private MidtermTaskRepository midtermTaskRepository;
-    @Autowired
-    private DeclarationSubjectRepository declarationSubjectRepository;
 
     public void updateMidtermTasks(SubjectStudyPeriod subjectStudyPeriod, MidtermTaskUpdateForm form) {
         EntityUtil.bindEntityCollection(subjectStudyPeriod.getMidtermTasks(), MidtermTask::getId, 
                 form.getMidtermTasks(), MidtermTaskDto::getId, 
                 dto -> createMidtermTask(dto, subjectStudyPeriod), 
                 this::updateMidtermTask);
-        subjectStudyPeriodRepository.save(subjectStudyPeriod);
+        EntityUtil.save(subjectStudyPeriod, em);
     }
     
     public MidtermTask createMidtermTask(MidtermTaskDto dto, SubjectStudyPeriod subjectStudyPeriod) {
@@ -174,19 +174,18 @@ public class MidtermTaskService {
 
     public MidtermTaskStudentResult createStudentResult(MidtermTaskStudentResultDto dto) {
         MidtermTaskStudentResult studentResult = new MidtermTaskStudentResult();
-        studentResult.setMidtermTask(midtermTaskRepository.getOne(dto.getMidtermTask()));
-        DeclarationSubject declarationSubject = declarationSubjectRepository.getOne(dto.getDeclarationSubject());
+        studentResult.setMidtermTask(em.getReference(MidtermTask.class, dto.getMidtermTask()));
+        DeclarationSubject declarationSubject = em.getReference(DeclarationSubject.class, dto.getDeclarationSubject());
         studentResult.setDeclarationSubject(declarationSubject);
         updateStudentResult(dto, studentResult);
         declarationSubject.getMidtermTaskStudentResults().add(studentResult);
-        
+
         MidtermTaskUtil.checkIfStudentResultCanBeChanged(studentResult.getDeclarationSubject());
-        
+
         return studentResult;
     }
 
     public void updateStudentResult(MidtermTaskStudentResultDto dto, MidtermTaskStudentResult studentResult) {
-
         if(!MidtermTaskUtil.studentResultCanBeChanged(studentResult.getDeclarationSubject())) {
             return;
         }

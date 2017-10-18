@@ -6,12 +6,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -33,12 +29,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.domain.Sort.NullHandling;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.util.StringUtils;
-
-import ee.hitsa.ois.exception.AssertionFailedException;
-import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 
 public abstract class JpaQueryUtil {
 
@@ -71,8 +63,12 @@ public abstract class JpaQueryUtil {
         return pagingResult(tq, pageable, () -> countQuery(entityClass, entityManager, filter));
     }
 
-    public static <T> Page<T> pagingResult(NativeQueryBuilder qb, String select, EntityManager em, Pageable pageable) {
+    public static <T> Page<T> pagingResult(JpaNativeQueryBuilder qb, String select, EntityManager em, Pageable pageable) {
         return pagingResult(qb.select(select, em), pageable, () -> qb.count(em));
+    }
+
+    public static <T> Page<T> pagingResult(JpaQueryBuilder<T> qb, EntityManager em, Pageable pageable) {
+        return pagingResult(qb.select(em), pageable, () -> qb.count(em));
     }
 
     public static <T> Page<T> pagingResult(Query query, Pageable pageable, Supplier<Number> countSupplier) {
@@ -135,260 +131,6 @@ public abstract class JpaQueryUtil {
 
     public static String toContains(String value) {
         return "%" + value.trim().toUpperCase() + "%";
-    }
-
-    public static class NativeQueryBuilder {
-        private final String from;
-        private Sort sort;
-        private final Map<String, Object> parameters = new HashMap<>();
-        private final StringBuilder where = new StringBuilder();
-        private String groupBy;
-
-        public NativeQueryBuilder(String from) {
-            this.from = Objects.requireNonNull(from);
-        }
-
-        public NativeQueryBuilder sort(Sort sortFields) {
-            this.sort = sortFields;
-            return this;
-        }
-
-        public NativeQueryBuilder sort(String... sortFields) {
-            return sort(new Sort(sortFields));
-        }
-
-        public NativeQueryBuilder sort(Pageable pageable) {
-            return sort(pageable != null ? pageable.getSort() : null);
-        }
-
-        public NativeQueryBuilder groupBy(String groupByFields) {
-            this.groupBy = groupByFields;
-            return this;
-        }
-
-        public void optionalCriteria(String criteria, String name, Collection<?> value) {
-            if(value != null && !value.isEmpty()) {
-                filter(criteria, name, value);
-            }
-        }
-
-        public void optionalCriteria(String criteria, String name, String value) {
-            if(StringUtils.hasText(value)) {
-                filter(criteria, name, value);
-            }
-        }
-
-        public void optionalCriteria(String criteria, String name, Boolean value) {
-            if(value != null) {
-                filter(criteria, name, value);
-            }
-
-        }
-
-        public void optionalCriteria(String criteria, String name, String value, Function<String, String> adjuster) {
-            if(StringUtils.hasText(value)) {
-                filter(criteria, name, adjuster.apply(value));
-            }
-        }
-
-        public void optionalCriteria(String criteria, String name, EntityConnectionCommand value) {
-            if(value != null && value.getId() != null) {
-                filter(criteria, name, value.getId());
-            }
-        }
-
-        public void optionalCriteria(String criteria, String name, Enum<?> value) {
-            if(value != null) {
-                filter(criteria, name, value.name());
-            }
-        }
-
-        public void optionalCriteria(String criteria, String name, LocalDate value) {
-            if(value != null) {
-                filter(criteria, name, parameterAsTimestamp(value));
-            }
-        }
-
-        public void optionalCriteria(String criteria, String name, LocalDate value, Function<LocalDate, LocalDateTime> adjuster) {
-            if(value != null) {
-                filter(criteria, name, parameterAsTimestamp(adjuster.apply(value)));
-            }
-        }
-
-        public void optionalCriteria(String criteria, String name, LocalDateTime value) {
-            if(value != null) {
-                filter(criteria, name, parameterAsTimestamp(value));
-            }
-        }
-
-        public void optionalCriteria(String criteria, String name, Long value) {
-            if(value != null) {
-                filter(criteria, name, value);
-            }
-        }
-
-        public void optionalContains(List<String> fields, String name, String value) {
-            if(value != null && !value.isEmpty()) {
-                StringBuilder sb = new StringBuilder(fields.size() > 1 ? "(" : "");
-                for(String field : fields) {
-                    if(sb.length() > 1) {
-                        sb.append(" or ");
-                    }
-                    sb.append(String.format("upper(%s) like :%s", field, name));
-                }
-                if(fields.size() > 1) {
-                    sb.append(")");
-                }
-
-                filter(sb.toString(), name, toContains(value));
-            }
-        }
-
-        public void optionalContains(String field, String name, String value) {
-            if(StringUtils.hasText(value)) {
-                optionalContains(Collections.singletonList(field), name, value);
-            }
-        }
-
-        public void requiredCriteria(String criteria, String name, Collection<?> value) {
-            filter(criteria, name, value != null && !value.isEmpty() ? value : null);
-        }
-
-        public void requiredCriteria(String criteria, String name, EntityConnectionCommand value) {
-            filter(criteria, name, value != null ? value.getId() : null);
-        }
-
-        public void requiredCriteria(String criteria, String name, Enum<?> value) {
-            filter(criteria, name, value != null ? value.name() : null);
-        }
-
-        public void requiredCriteria(String criteria, String name, LocalDate value) {
-            filter(criteria, name, value != null ? parameterAsTimestamp(value) : null);
-        }
-
-        public void requiredCriteria(String criteria, String name, LocalDateTime value) {
-            filter(criteria, name, value != null ? parameterAsTimestamp(value) : null);
-        }
-
-        public void requiredCriteria(String criteria, String name, Long value) {
-            filter(criteria, name, value);
-        }
-
-        public void requiredCriteria(String criteria, String name, String value) {
-            filter(criteria, name, StringUtils.hasText(value) ? value : null);
-        }
-
-        public void parameter(String name, Object value) {
-            if(value == null) {
-                throw new AssertionFailedException("Parameter value is missing");
-            }
-            parameters.put(Objects.requireNonNull(name, "Parameter name is missing"), value);
-        }
-
-        public void filter(String filter) {
-            if(where.length() > 0) {
-                where.append(" and ");
-            }
-            where.append(Objects.requireNonNull(filter));
-        }
-
-        private void filter(String filter, String name, Object value) {
-            parameter(name, value);
-            filter(filter);
-        }
-
-        public Query select(String projection, EntityManager em) {
-            return select(projection, em, null);
-        }
-
-        public Query select(String projection, EntityManager em, Map<String, Object> additionalParameters) {
-            return buildQuery(projection, em, true, additionalParameters);
-        }
-
-        public Number count(EntityManager em) {
-            return count("count(*)", em);
-        }
-
-        public Number count(String expression, EntityManager em) {
-            return (Number)buildQuery(expression, em, false, null).getSingleResult();
-        }
-
-        private Query buildQuery(String projection, EntityManager em, boolean ordered, Map<String, Object> additionalParameters) {
-            Query q = em.createNativeQuery(querySql(projection, ordered));
-
-            for(Map.Entry<String, Object> me : parameters.entrySet()) {
-                q.setParameter(me.getKey(), me.getValue());
-            }
-            if(additionalParameters != null) {
-                for(Map.Entry<String, Object> me : additionalParameters.entrySet()) {
-                    q.setParameter(me.getKey(), me.getValue());
-                }
-            }
-
-            return q;
-        }
-
-        public String querySql(String projection, boolean ordered) {
-            StringBuilder sql = new StringBuilder("select ");
-            sql.append(Objects.requireNonNull(projection));
-            sql.append(' ');
-            sql.append(from);
-            if(where.length() > 0) {
-                sql.append(" where ");
-                sql.append(where);
-            }
-
-            if(StringUtils.hasText(groupBy)) {
-                sql.append(" group by ");
-                sql.append(groupBy);
-            }
-
-            if(sort != null && ordered) {
-                StringBuilder orderBy = new StringBuilder();
-                for(Sort.Order order : sort) {
-                    if(orderBy.length() > 0) {
-                        orderBy.append(", ");
-                    }
-                    orderBy.append(camelCaseToUnderScore(order.getProperty()));
-                    orderBy.append(order.isAscending() ? "" : " desc");
-                    NullHandling nullhandling = order.getNullHandling();
-                    if(NullHandling.NULLS_FIRST.equals(nullhandling)) {
-                        orderBy.append(" NULLS FIRST");
-                    } else if(NullHandling.NULLS_LAST.equals(nullhandling)) {
-                        orderBy.append(" NULLS LAST");
-                    }
-                }
-                if(orderBy.length() > 0) {
-                    sql.append(" order by ");
-                    sql.append(orderBy);
-                }
-            }
-            return sql.toString();
-        }
-
-        public Map<String, Object> queryParameters() {
-            return Collections.unmodifiableMap(parameters);
-        }
-
-        private static String camelCaseToUnderScore(String value) {
-            StringBuilder sb = new StringBuilder();
-            for(int i = 0, cnt = value.length(); i < cnt; i++) {
-                char ch = value.charAt(i);
-                if(Character.isUpperCase(ch)) {
-                    sb.append('_');
-                    sb.append(Character.toLowerCase(ch));
-                } else {
-                    sb.append(ch);
-                }
-            }
-            return sb.toString();
-        }
-
-        public void validNowCriteria(String fromField, String thruField) {
-            LocalDate now = LocalDate.now();
-            requiredCriteria(fromField + " <= :now", "now", now);
-            filter("(" + thruField + " is null or " + thruField + " >= :now)");
-        }
     }
 
     public static Timestamp parameterAsTimestamp(LocalDate value) {

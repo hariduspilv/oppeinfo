@@ -1,10 +1,8 @@
 package ee.hois.xroad.ehis.service;
 
-import java.math.BigInteger;
 import java.util.Map;
 
 import javax.xml.ws.BindingProvider;
-import javax.xml.ws.Holder;
 
 import ee.hois.soap.LogContext;
 import ee.hois.soap.SoapHandler;
@@ -12,9 +10,16 @@ import ee.hois.soap.SoapUtil;
 import ee.hois.xroad.ehis.generated.EhisPortType;
 import ee.hois.xroad.ehis.generated.EhisService;
 import ee.hois.xroad.ehis.generated.KhlOppeasutusList;
+import ee.hois.xroad.ehis.generated.LaeKorgharidus;
+import ee.hois.xroad.ehis.generated.LaeKorgharidusResponse;
+import ee.hois.xroad.ehis.generated.LaeOppejoud;
+import ee.hois.xroad.ehis.generated.LaeOppejoudResponse;
+import ee.hois.xroad.ehis.generated.LaePedagoogid;
+import ee.hois.xroad.ehis.generated.LaePedagoogidResponse;
+import ee.hois.xroad.ehis.generated.OisOppekava;
+import ee.hois.xroad.ehis.generated.OisResponse;
 import ee.hois.xroad.ehis.generated.OppeasutusList;
 import ee.hois.xroad.ehis.generated.OppejoudList;
-import ee.hois.xroad.ehis.generated.StrArray;
 import ee.hois.xroad.helpers.XRoadHeaderV4;
 
 public class EhisClient {
@@ -26,12 +31,10 @@ public class EhisClient {
         LogContext ctx = ctx(port);
 
         EhisLaeKorgharidusedResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
-            Holder<String> teade = new Holder<>();
-            Holder<BigInteger> kood = new Holder<>();
-            Holder<StrArray> data = new Holder<>();
-
-            port.laeKorgharidus(laeKorgharidus, teade, kood, data);
-            return new EhisLaeKorgharidusedResponse(ctx, data.value.getItem(), teade.value, kood.value);
+            LaeKorgharidus req = new LaeKorgharidus();
+            req.setData(laeKorgharidus);
+            LaeKorgharidusResponse resp = port.laeKorgharidus(req);
+            return new EhisLaeKorgharidusedResponse(ctx, resp.getData().getValue().getItem(), resp.getTeade().getValue(), resp.getKood().getValue());
         });
         return result != null ? result: new EhisLaeKorgharidusedResponse(ctx, null, null, null);
     }
@@ -41,12 +44,10 @@ public class EhisClient {
         LogContext ctx = ctx(port);
 
         EhisLaeOppejoudResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
-            Holder<String> teade = new Holder<>();
-            Holder<BigInteger> kood = new Holder<>();
-            Holder<StrArray> data = new Holder<>();
-
-            port.laeOppejoud(oppejoudList, teade, kood, data);
-            return new EhisLaeOppejoudResponse(ctx, data.value.getItem(), teade.value, kood.value);
+            LaeOppejoud req = new LaeOppejoud();
+            req.setData(oppejoudList);
+            LaeOppejoudResponse resp = port.laeOppejoud(req);
+            return new EhisLaeOppejoudResponse(ctx, resp.getData().getValue().getItem(), resp.getTeade().getValue(), resp.getKood().getValue());
         });
         return result != null ? result : new EhisLaeOppejoudResponse(ctx, null, null, null);
     }
@@ -56,14 +57,23 @@ public class EhisClient {
         LogContext ctx = ctx(port);
 
         EhisLaePedagoogidResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
-            Holder<String> teade = new Holder<>();
-            Holder<BigInteger> kood = new Holder<>();
-            Holder<StrArray> data = new Holder<>();
-
-            port.laePedagoogid(oppeasutusList, teade, kood, data);
-            return new EhisLaePedagoogidResponse(ctx, data.value.getItem(), teade.value, kood.value);
+            LaePedagoogid req = new LaePedagoogid();
+            req.setData(oppeasutusList);
+            LaePedagoogidResponse resp = port.laePedagoogid(req);
+            return new EhisLaePedagoogidResponse(ctx, resp.getData().getValue().getItem(), resp.getTeade().getValue(), resp.getKood().getValue());
         });
         return result != null ? result : new EhisLaePedagoogidResponse(ctx, null, null, null);
+    }
+
+    public EhisOisOppekavaResponse oisOppekava(XRoadHeaderV4 header, OisOppekava oisOppekava) {
+        EhisPortType port = initializePort(header);
+        LogContext ctx = ctx(port);
+
+        EhisOisOppekavaResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
+            OisResponse resp = port.oisOppekava(oisOppekava);
+            return new EhisOisOppekavaResponse(ctx, resp.getInfoteated().getInfoteade());
+        });
+        return result != null ? result : new EhisOisOppekavaResponse(ctx, null);
     }
 
     private EhisPortType initializePort(XRoadHeaderV4 header) {

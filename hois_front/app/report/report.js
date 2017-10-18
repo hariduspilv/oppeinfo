@@ -12,13 +12,15 @@ angular.module('hitsaOis').controller('ReportStudentController', ['$q', '$scope'
   }
 ]).controller('ReportStudentStatisticsController', ['$scope', 'Classifier', 'QueryUtils',
   function ($scope, Classifier, QueryUtils) {
-    $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatistics.xls'};
+    $scope.formState = {xlsUrl: 'reports/students/statistics/studentstatistics.xls',
+                        filterValues: {OPPURSTAATUS: ['OPPURSTAATUS_K', 'OPPURSTAATUS_L']}};
 
     QueryUtils.createQueryForm($scope, '/reports/students/statistics', {result: 'OPPEVORM'}, function() {
       var resultType = $scope.criteria.result;
       if($scope.formState.resultType !== resultType) {
         $scope.formState.resultType = resultType;
-        $scope.formState.resultDef = Classifier.queryForDropdown({mainClassCode: resultType});
+        var filterValues = $scope.formState.filterValues[resultType];
+        $scope.formState.resultDef = Classifier.queryForDropdown({mainClassCode: resultType, filterValues: filterValues});
         if(resultType === 'FINALLIKAS') {
           Classifier.queryForDropdown({mainClassCode: 'FINTAPSUSTUS'}, function(result) {
             $scope.formState.resultDef.$promise.then(function() {

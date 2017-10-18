@@ -43,7 +43,7 @@ public class AcademicCalendarService {
         return StreamUtil.toMappedList(r -> new AcademicCalendarEventDto((Object[])r), data);
     }
 
-    public AcademicCalendarDto getAcademicCalendar(Long schoolId) {
+    public AcademicCalendarDto academicCalendar(Long schoolId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
         if (studyYear != null) {
             String yearCode = EntityUtil.getCode(studyYear.getYear());

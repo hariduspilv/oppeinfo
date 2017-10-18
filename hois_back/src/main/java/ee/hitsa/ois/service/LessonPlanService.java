@@ -48,6 +48,7 @@ import ee.hitsa.ois.repository.JournalRepository;
 import ee.hitsa.ois.repository.LessonPlanModuleRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -151,7 +152,7 @@ public class LessonPlanService {
     }
 
     public Page<LessonPlanSearchDto> search(Long schoolId, LessonPlanSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from lesson_plan lp inner join student_group sg on lp.student_group_id = sg.id " +
                 "inner join curriculum_version cv on lp.curriculum_version_id = cv.id").sort(pageable);
 
@@ -167,7 +168,7 @@ public class LessonPlanService {
     }
 
     public Page<LessonPlanSearchTeacherDto> search(HoisUserDetails user, LessonPlanSearchTeacherCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from journal_teacher jt inner join journal j on j.id = jt.journal_id "
                 + "inner join teacher t on jt.teacher_id = t.id inner join person p on t.person_id = p.id "
                 + "inner join journal_capacity jc on j.id = jc.journal_id").sort(pageable);
@@ -212,7 +213,7 @@ public class LessonPlanService {
         });
 
         // subjects summary
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from subject_study_period ssp "+
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp "+
                 "inner join study_period sp on ssp.study_period_id = sp.id " +
                 "inner join subject_study_period_teacher sspt on ssp.id = sspt.subject_study_period_id " +
                 "inner join subject s on ssp.subject_id = s.id " +
@@ -403,17 +404,17 @@ public class LessonPlanService {
     }
 
     private Map<Long, Long> findLessonPlanByStudyYearAndStudentGroup(StudyYear studyYear, List<Long> studentGroup) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from lesson_plan lp");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from lesson_plan lp");
 
         qb.requiredCriteria("lp.study_year_id = :studyYear", "studyYear", EntityUtil.getId(studyYear));
         qb.requiredCriteria("lp.student_group_id in (:studentGroup)", "studentGroup", studentGroup);
-        
+
         List<?> result = qb.select("lp.student_group_id, lp.id", em).getResultList();
         return StreamUtil.toMap(r -> resultAsLong(r, 0),  r -> resultAsLong(r, 1), result);
     }
 
     private Map<Long, List<Long>> studentgroupsWithLessonPlans(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from study_year sy inner join lesson_plan lp on sy.id = lp.study_year_id inner join student_group sg on lp.student_group_id = sg.id");
 
         qb.requiredCriteria("sg.school_id = :schoolId and sy.school_id = :schoolId", "schoolId", schoolId);
@@ -423,11 +424,9 @@ public class LessonPlanService {
     }
 
     private Map<Long, Long> scheduleLegends(LessonPlan lessonPlan) {
-        String from = "from lesson_plan lp inner join study_year sy on lp.study_year_id = sy.id"
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from lesson_plan lp inner join study_year sy on lp.study_year_id = sy.id"
                 + " inner join study_period sp on sy.id = sp.study_year_id"
-                + " inner join study_year_schedule sys on sp.id = sys.study_period_id";
-
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+                + " inner join study_year_schedule sys on sp.id = sys.study_period_id");
 
         qb.requiredCriteria("lp.id = :lessonPlanId", "lessonPlanId", lessonPlan.getId());
         qb.requiredCriteria("sys.school_id = :schoolId", "schoolId", EntityUtil.getId(lessonPlan.getSchool()));

@@ -18,7 +18,7 @@
               <label>{{'curriculum.specialty.specialty' | translate}}</label>
               <md-select multiple ng-model="data.specialitiesReferenceNumbers" required ng-disabled="readOnly" ng-change="filterSubjects()">
                 <md-option ng-repeat="speciality in specialities | orderBy: 'nameEt'" ng-value="speciality.referenceNumber">
-                  {{speciality[currentLanguageNameField()]}}
+                  {{currentLanguageNameField(speciality)}}
                 </md-option>
               </md-select>
             </md-input-container>
@@ -28,10 +28,10 @@
               <label>{{'module.type' | translate}}</label>
               <md-select ng-model="data.typeObject" required ng-disabled="readOnly">
                 <md-option ng-repeat="type in moduleTypes | filter: {'code': 'KORGMOODUL_M'}" ng-value="type">
-                  {{type[currentLanguageNameField()]}}
+                  {{currentLanguageNameField(type)}}
                 </md-option>
                 <md-option ng-repeat="type in moduleTypes | filter: {'code': '!KORGMOODUL_M'} | orderBy: 'nameEt'" ng-value="type">
-                  {{type[currentLanguageNameField()]}}
+                  {{currentLanguageNameField(type)}}
                 </md-option>
               </md-select>
             </md-input-container>
@@ -93,8 +93,13 @@
               </md-button>
             </div>
             <div ng-repeat="electiveModule in data.electiveModules | orderBy: 'nameEt'" class="secondary-table-row" flex layout="row">
-              <div flex="70"><a href="" ng-click="editElectiveModule(electiveModule)">{{electiveModule[currentLanguageNameField()]}}</a></div>
-              <div><a flex="20" class="remove nomargin" ng-click="deleteElectiveModule(electiveModule)" ng-if="!readOnly">&times;</a></div>
+              <div flex="95">
+                <a ng-if="!readOnly" href="" ng-click="editElectiveModule(electiveModule)">{{currentLanguageNameField(electiveModule)}}</a>
+                <p ng-if="readOnly">{{currentLanguageNameField(electiveModule)}}</p>
+              </div>
+              <div>
+                <a ng-if="!readOnly" flex="5" class="remove nomargin" ng-click="deleteElectiveModule(electiveModule)">&times;</a>
+              </div>
             </div>
           </fieldset>
           </div>
@@ -134,7 +139,7 @@
                 <!--TODO: required, multiple-->
                 <md-select ng-model="data.selectedSubject" ng-change="addSubject()" ng-disabled="readOnly">
                   <md-option ng-repeat="option in subjects | orderBy: 'code'" ng-value="option">
-                    {{option.code}} - {{option[currentLanguageNameField()]}}
+                    {{option.code}} - {{currentLanguageNameField(option)}}
                     <!--<span ng-if="myEhisSchool !== option.ehisSchoolCode">{{option.schoolCode}}</span>-->
                   </md-option>
                 </md-select>
@@ -152,7 +157,7 @@
               </thead>
               <tbody md-body>
                 <tr md-row ng-repeat="subject in data.subjects | orderBy: 'code'">
-                  <td md-cell>{{subject.code}} - {{subject[currentLanguageNameField()]}}</td>
+                  <td md-cell>{{subject.code}} - {{currentLanguageNameField(subject)}}</td>
                   <td md-cell>{{subject.credits}}</td>
                   <td md-cell>
                     <md-checkbox ng-model="subject.optional" aria-label="subject is mandatory" ng-change="setCompulsoryStudyCredits(subject)"
@@ -166,7 +171,7 @@
                           <md-option ng-value="null">
                           </md-option>
                           <md-option ng-repeat="option in data.electiveModules | orderBy: 'nameEt'" ng-value="option.referenceNumber">
-                            {{option[currentLanguageNameField()]}}
+                            {{currentLanguageNameField(option)}}
                           </md-option>
                         </md-select>
                       </md-input-container>

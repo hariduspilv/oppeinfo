@@ -1,7 +1,6 @@
 package ee.hitsa.ois.service;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Set;
 
 import javax.validation.Validator;
 
@@ -15,6 +14,7 @@ import ee.hitsa.ois.enums.CertificateType;
 import ee.hitsa.ois.repository.StudentRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.validation.CertificateValidator;
@@ -56,15 +56,12 @@ public class CertificateValidationService {
 
     private void validateStudentAndTypeMatch(Long studentId, String type) {
         Student student = studentRepository.getOne(studentId);
-        List<String> onlyActive = 
-                Arrays.asList(CertificateType.TOEND_LIIK_OPI.name(), 
-                        CertificateType.TOEND_LIIK_KONTAKT.name());
-        List<String> onlyFinished = Arrays.asList(CertificateType.TOEND_LIIK_LOPET.name());
-        
+        Set<String> onlyActive = EnumUtil.toNameSet(CertificateType.TOEND_LIIK_OPI, CertificateType.TOEND_LIIK_KONTAKT);
+
         if(onlyActive.contains(type) && !StudentUtil.isActive(student)) {
             throw new ValidationFailedException("certificate.error.studentNotActive");
         }
-        if(onlyFinished.contains(type) && !StudentUtil.hasFinished(student)) {
+        if(CertificateType.TOEND_LIIK_LOPET.name().equals(type) && !StudentUtil.hasFinished(student)) {
             throw new ValidationFailedException("certificate.error.studentNotFinished");
         }
     }

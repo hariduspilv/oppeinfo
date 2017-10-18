@@ -21,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Message;
@@ -34,6 +33,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -102,7 +102,7 @@ public class MessageService {
     
 
     public Page<MessageSearchDto> show(HoisUserDetails user, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(RECEIVED_MESSAGES_FROM).sort(pageable);
         qb.requiredCriteria("mr.person_id = :personId", "personId", user.getPersonId());
         /**
          * Usually users can only view messages sent by others from the same school.
@@ -118,7 +118,7 @@ public class MessageService {
     }
 
     public Page<MessageSearchDto> searchSent(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from message m").sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from message m").sort(pageable);
 
         qb.requiredCriteria("m.person_id = :senderId", "senderId", user.getPersonId());
         if(!user.isMainAdmin()) {
@@ -132,7 +132,7 @@ public class MessageService {
     }
 
     public Page<MessageSearchDto> searchSentAutomatic(Long schoolId, MessageSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from message m").sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from message m").sort(pageable);
 
         qb.requiredCriteria("m.person_id = :senderId", "senderId", PersonUtil.AUTOMATIC_SENDER_ID);
         qb.requiredCriteria("m.school_id = :schoolId", "schoolId", schoolId);
@@ -143,7 +143,7 @@ public class MessageService {
         return fetchSent(qb, pageable);
     }
 
-    private Page<MessageSearchDto> fetchSent(JpaQueryUtil.NativeQueryBuilder qb, Pageable pageable) {
+    private Page<MessageSearchDto> fetchSent(JpaNativeQueryBuilder qb, Pageable pageable) {
         Page<MessageSearchDto> messages = JpaQueryUtil.pagingResult(qb, "m.id, m.subject, m.inserted, m.person_id", em, pageable).map(r -> {
             return new MessageSearchDto(resultAsLong(r, 0), resultAsString(r, 1), null, resultAsLocalDateTime(r, 2), null, null, resultAsLong(r, 3));
         });
@@ -162,7 +162,7 @@ public class MessageService {
     }
 
     public Page<MessageSearchDto> searchReceived(HoisUserDetails user, MessageSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(RECEIVED_MESSAGES_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(RECEIVED_MESSAGES_FROM).sort(pageable);
         qb.requiredCriteria("mr.person_id = :personId", "personId", user.getPersonId());
         /**
          * Usually users can only view messages sent by others from the same school.
@@ -221,7 +221,7 @@ public class MessageService {
     }
 
     public List<MessageReceiverDto> getStudentRepresentatives(StudentSearchCommand criteria) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PARENTS_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PARENTS_FROM);
         qb.optionalCriteria("sg.id in (:group)", "group", criteria.getStudentGroupId());
         qb.filter("sr.is_student_visible = true");
         List<?> result = qb.select(STUDENT_PARENTS_SELECT, em).getResultList();
@@ -261,7 +261,7 @@ public class MessageService {
      * is that this one does not require wanted person to have school_id
      */
     public List<MessageReceiverDto> searchAllUsers(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(PERSON_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(PERSON_FROM);
         qb.optionalContains(Arrays.asList("p.firstname", "p.lastname", "p.firstname || ' ' || p.lastname"), "name", criteria.getName());
         if(criteria.getRole() != null && !Role.ROLL_P.name().equals(criteria.getRole()) ) {
             qb.requiredCriteria("s.id = :schoolId", "schoolId", user.getSchoolId());
@@ -280,7 +280,7 @@ public class MessageService {
     }
 
     private List<MessageReceiverDto> searchParentsTeachers(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
         qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname", "p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
 
@@ -303,7 +303,7 @@ public class MessageService {
     }
 
     private List<MessageReceiverDto> searchStudentsTeachers(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
         qb.optionalContains(Arrays.asList("p3.firstname", "p3.lastname", "p3.firstname || ' ' || p3.lastname"), "name", criteria.getName());
 
         qb.requiredCriteria("t.id in (select sg.teacher_id from student_group sg "
@@ -324,7 +324,7 @@ public class MessageService {
     }
 
     private List<MessageReceiverDto> searchTeachersStudents(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
         qb.optionalContains(Arrays.asList("p1.firstname", "p1.lastname", "p1.firstname || ' ' || p1.lastname"), "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
 
@@ -358,7 +358,7 @@ public class MessageService {
     }
 
     private List<MessageReceiverDto> searchTeachersParents(HoisUserDetails user, UsersSearchCommand criteria) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PERSON_TEACHER_FROM);
         qb.optionalContains(Arrays.asList("p2.firstname", "p2.lastname", "p2.firstname || ' ' || p2.lastname"), "name", criteria.getName());
         qb.requiredCriteria("s.school_id = :studentsSchoolId", "studentsSchoolId", user.getSchoolId());
         
@@ -409,8 +409,8 @@ public class MessageService {
                 .map(MessageReceiverDto::of).getContent();
         List<Long> studentIds = StreamUtil.toMappedList(MessageReceiverDto::getId, students);
         if(!studentIds.isEmpty()) {
-            List<MessageReceiverDto> parents = getStudentRepresentatives(studentIds);
-            if(!CollectionUtils.isEmpty(parents)) {
+            List<MessageReceiverDto> parents = studentRepresentatives(studentIds);
+            if(!parents.isEmpty()) {
                 students = new ArrayList<>(students);
                 students.addAll(parents);
             }
@@ -418,8 +418,8 @@ public class MessageService {
         return students;
     }
 
-    private List<MessageReceiverDto> getStudentRepresentatives(List<Long> studentIds) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_PARENTS_FROM);
+    private List<MessageReceiverDto> studentRepresentatives(List<Long> studentIds) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_PARENTS_FROM);
         qb.optionalCriteria("sr.student_id in (:studentIds)", "studentIds", studentIds);
         qb.filter("sr.is_student_visible is true");
         List<?> result = qb.select(STUDENT_PARENTS_SELECT, em).getResultList();

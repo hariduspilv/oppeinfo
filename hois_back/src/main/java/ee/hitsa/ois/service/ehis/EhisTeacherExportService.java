@@ -23,6 +23,10 @@ import org.springframework.util.StringUtils;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.WsEhisTeacherLog;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumStudyLanguage;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleCapacity;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherContinuingEducation;
@@ -31,7 +35,7 @@ import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
 import ee.hitsa.ois.service.StudyYearService;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
 import ee.hitsa.ois.web.dto.EhisTeacherExportResultDto;
@@ -46,6 +50,7 @@ import ee.hois.xroad.ehis.generated.OppejoudKvalifikatsioon;
 import ee.hois.xroad.ehis.generated.OppejoudList;
 import ee.hois.xroad.ehis.generated.OppejoudLyhiajalineMobiilsus;
 import ee.hois.xroad.ehis.generated.Pedagoog;
+import ee.hois.xroad.ehis.generated.PedagoogAine;
 import ee.hois.xroad.ehis.generated.PedagoogAmetikohtType;
 import ee.hois.xroad.ehis.generated.PedagoogTaiendkoolitus;
 import ee.hois.xroad.ehis.generated.PedagoogTasemekoolitus;
@@ -114,17 +119,19 @@ public class EhisTeacherExportService extends EhisService {
         }
 
         List<Long> periods = new ArrayList<>();
-        Long periodId = studyYearService.getCurrentStudyPeriod(schoolId);
-        if(periodId != null) {
-            periods.add(periodId);
-        }
-        periodId = studyYearService.getPreviousStudyPeriod(schoolId);
-        if(periodId != null) {
-            periods.add(periodId);
+        if(higher && form.isSubjectData()) {
+            Long periodId = studyYearService.getCurrentStudyPeriod(schoolId);
+            if(periodId != null) {
+                periods.add(periodId);
+            }
+            periodId = studyYearService.getPreviousStudyPeriod(schoolId);
+            if(periodId != null) {
+                periods.add(periodId);
+            }
         }
 
-        List<TeacherWithSubject> subjects = form.isSubjectData() && !periods.isEmpty() ? getSubjectStudyPeriods(schoolTeachers, periods) : Collections.emptyList();
-        Map<Long, List<TeacherWithSubject>> subjectByTeacher = subjects.stream().collect(Collectors.groupingBy(TeacherWithSubject::getTeacherId));
+        List<TeacherSubject> subjects = higher ? teacherSubjects(schoolTeachers, periods) : teacherModules(schoolTeachers);
+        Map<Long, List<TeacherSubject>> subjectByTeacher = subjects.stream().collect(Collectors.groupingBy(TeacherSubject::getTeacherId));
 
         List<Teacher> teachers = em.createQuery("select t from Teacher t where t.id in ?1", Teacher.class)
                 .setParameter(1,  schoolTeachers).getResultList();
@@ -133,12 +140,12 @@ public class EhisTeacherExportService extends EhisService {
             try {
                 RequestObject request;
                 if(higher) {
-                    Oppejoud oppejoud = createOppejoud(teacher, subjectByTeacher.getOrDefault(EntityUtil.getId(teacher), Collections.emptyList()));
+                    Oppejoud oppejoud = createOppejoud(teacher, subjectByTeacher.get(EntityUtil.getId(teacher)));
                     OppejoudList oppejoudList = new OppejoudList();
                     oppejoudList.getItem().add(oppejoud);
                     request = new RequestObject(teacher, oppejoudList);
                 } else {
-                    Oppeasutus oppeasutus = createOppeasutus(teacher, subjectByTeacher.getOrDefault(EntityUtil.getId(teacher), Collections.emptyList()));
+                    Oppeasutus oppeasutus = createOppeasutus(teacher, subjectByTeacher.get(EntityUtil.getId(teacher)));
                     OppeasutusList oppeasutusList = new OppeasutusList();
                     oppeasutusList.getItem().add(oppeasutus);
                     request = new RequestObject(teacher, oppeasutusList);
@@ -152,7 +159,7 @@ public class EhisTeacherExportService extends EhisService {
         return result;
     }
 
-    private Oppejoud createOppejoud(Teacher teacher, List<TeacherWithSubject> subjects) {
+    private Oppejoud createOppejoud(Teacher teacher, List<TeacherSubject> subjects) {
         Oppejoud oppejoud = new Oppejoud();
         String koolId = ehisValue(teacher.getSchool().getEhisSchool());
         // FIXME strings are allowed values too
@@ -180,7 +187,7 @@ public class EhisTeacherExportService extends EhisService {
         return oppejoud;
     }
 
-    private void addPositionEhis(List<OppejoudAmetikoht> resultList, Teacher teacher, List<TeacherWithSubject> subjectStudyPeriodTeacher) {
+    private void addPositionEhis(List<OppejoudAmetikoht> resultList, Teacher teacher, List<TeacherSubject> teacherSubjects) {
         for (TeacherPositionEhis positionEhis : teacher.getTeacherPositionEhis()) {
             if (Boolean.TRUE.equals(positionEhis.getIsVocational())) {
                 continue;
@@ -210,8 +217,8 @@ public class EhisTeacherExportService extends EhisService {
             resultList.add(ametikoht);
 
             // group curriculums by subject id
-            Map<Long, List<Long>> subjects = subjectStudyPeriodTeacher.stream().collect(
-                    Collectors.groupingBy(TeacherWithSubject::getSubjectId, Collectors.mapping(TeacherWithSubject::getCurriculumId, Collectors.toList())));
+            Map<Long, List<Long>> subjects = StreamUtil.nullSafeList(teacherSubjects).stream().collect(
+                    Collectors.groupingBy(TeacherSubject::getSubjectId, Collectors.mapping(TeacherSubject::getCurriculumId, Collectors.toList())));
 
             for (Map.Entry<Long, List<Long>> tws : subjects.entrySet()) {
                 Oppeaine oppeaine = new Oppeaine();
@@ -221,8 +228,11 @@ public class EhisTeacherExportService extends EhisService {
                 oppeaine.setAineKood(subject.getCode());
                 for(Long curriculumId : tws.getValue()) {
                     Curriculum curriculum = em.getReference(Curriculum.class, curriculumId);
-                    // FIXME strings are allowed values too
-                    oppeaine.getOkKood().add(StringUtils.hasText(curriculum.getMerCode()) ? new BigInteger(curriculum.getMerCode()) : null);
+                    String merCode = curriculum.getMerCode();
+                    if(StringUtils.hasText(merCode)) {
+                        // FIXME strings are allowed values too
+                        oppeaine.getOkKood().add(new BigInteger(curriculum.getMerCode()));
+                    }
                 }
                 oppeaine.setMaht(subject.getCredits().toString());
                 ametikoht.getOppeained().add(oppeaine);
@@ -259,7 +269,7 @@ public class EhisTeacherExportService extends EhisService {
         }
     }
 
-    private Oppeasutus createOppeasutus(Teacher teacher, List<TeacherWithSubject> subjects) {
+    private Oppeasutus createOppeasutus(Teacher teacher, List<TeacherSubject> modules) {
         Oppeasutus oppeasutus = new Oppeasutus();
         oppeasutus.setKoolId(ehisValue(teacher.getSchool().getEhisSchool()));
 
@@ -285,8 +295,25 @@ public class EhisTeacherExportService extends EhisService {
             ametikoht.setVastavusKval(yesNo(position.getMeetsQualification()));
             ametikoht.setKlassiJuhataja(yesNo(position.getIsClassTeacher()));
 
-            for(TeacherWithSubject subject : subjects) {
-                // TODO
+            for(TeacherSubject module : StreamUtil.nullSafeList(modules)) {
+                CurriculumVersionOccupationModule omodule = em.getReference(CurriculumVersionOccupationModule.class, module.getCurriculumVersionOmoduleId());
+                PedagoogAine aine = new PedagoogAine();
+                CurriculumModule cm = omodule.getCurriculumModule();
+                aine.setAineNimetus(cm.getNameEt());
+                Curriculum c = cm.getCurriculum();
+                String merCode = c.getMerCode();
+                if(StringUtils.hasText(merCode)) {
+                    // FIXME strings are allowed values too
+                    aine.getOppekavaKood().add(new BigInteger(merCode));
+                }
+                long hours = StreamUtil.nullSafeSet(omodule.getCapacities()).stream().filter(r -> Boolean.TRUE.equals(r.getContact())).mapToLong(CurriculumVersionOccupationModuleCapacity::getHours).sum();
+                aine.setTunde(hours);
+                CurriculumStudyLanguage studyLang = c.getStudyLanguages().stream().findFirst().orElse(null);
+                if(studyLang != null) {
+                    aine.setKlKeel(ehisValue(studyLang.getStudyLang()));
+                }
+                aine.setTunnidErivajadus(yesNo(Boolean.FALSE));
+                ametikoht.getAine().add(aine);
             }
 
             pedagoog.getAmetikoht().add(ametikoht);
@@ -327,11 +354,11 @@ public class EhisTeacherExportService extends EhisService {
     }
 
     private Set<Long> getTeacherIds(Long schoolId, boolean higher, EhisTeacherExportForm form) {
-        JpaQueryUtil.NativeQueryBuilder qb;
+        JpaNativeQueryBuilder qb;
         if (form.isAllDates()) {
-            qb = new JpaQueryUtil.NativeQueryBuilder("from teacher t");
+            qb = new JpaNativeQueryBuilder("from teacher t");
         } else {
-            qb = new JpaQueryUtil.NativeQueryBuilder(
+            qb = new JpaNativeQueryBuilder(
                     "from teacher t left join teacher_mobility tm on tm.teacher_id = t.id"
                             + " left join teacher_position_ehis tpe on tpe.teacher_id = t.id"
                             + " left join teacher_qualification tq on tq.teacher_id = t.id");
@@ -357,35 +384,56 @@ public class EhisTeacherExportService extends EhisService {
         return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
     }
 
-    private List<TeacherWithSubject> getSubjectStudyPeriods(Set<Long> teachers, List<Long> periods) {
+    private List<TeacherSubject> teacherSubjects(Set<Long> teachers, List<Long> periods) {
+        if(periods.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         String from = "from subject_study_period_teacher sspt inner join subject_study_period ssp on ssp.id = sspt.subject_study_period_id "
                 + "inner join curriculum_version_hmodule_subject cvhs on cvhs.subject_id = ssp.subject_id "
                 + "inner join curriculum_version_hmodule cvh on cvh.id = cvhs.curriculum_version_hmodule_id "
                 + "inner join curriculum_version cv on cv.id = cvh.curriculum_version_id "
                 + "inner join curriculum c on c.id = cv.curriculum_id";
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("sspt.teacher_id in (:teachers)", "teachers", teachers);
         qb.requiredCriteria("ssp.study_period_id in (:periods)", "periods", periods);
 
         List<?> result = qb.select("ssp.subject_id, sspt.teacher_id, c.id", em).getResultList();
         return StreamUtil.toMappedList(
-                r -> new TeacherWithSubject(resultAsLong(r, 0), resultAsLong(r, 1), resultAsLong(r, 2)), result);
+                r -> new TeacherSubject(resultAsLong(r, 0), null, resultAsLong(r, 1), resultAsLong(r, 2)), result);
     }
 
-    private static class TeacherWithSubject {
+    private List<TeacherSubject> teacherModules(Set<Long> teachers) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_teacher jt inner join journal j on jt.journal_id = j.id "
+                + "inner join journal_omodule_theme jot on jot.journal_id = j.id "
+                + "inner join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id");
+
+        qb.requiredCriteria("jt.teacher_id in (:teachers)", "teachers", teachers);
+        List<?> result = qb.select("cvot.curriculum_version_omodule_id, jt.teacher_id", em).getResultList();
+        return StreamUtil.toMappedList(
+                r -> new TeacherSubject(null, resultAsLong(r, 0), resultAsLong(r, 1), null), result);
+    }
+
+    private static class TeacherSubject {
         private final Long subjectId;
+        private final Long curriculumVersionOmoduleId;
         private final Long teacherId;
         private final Long curriculumId;
 
-        public TeacherWithSubject(Long subjectId, Long teacherId, Long curriculumId) {
+        public TeacherSubject(Long subjectId, Long curriculumVersionOmoduleId, Long teacherId, Long curriculumId) {
             this.subjectId = subjectId;
+            this.curriculumVersionOmoduleId = curriculumVersionOmoduleId;
             this.teacherId = teacherId;
             this.curriculumId = curriculumId;
         }
 
         public Long getSubjectId() {
             return subjectId;
+        }
+
+        public Long getCurriculumVersionOmoduleId() {
+            return curriculumVersionOmoduleId;
         }
 
         public Long getTeacherId() {

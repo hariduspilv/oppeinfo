@@ -1,6 +1,5 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
@@ -14,20 +13,13 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Subquery;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.Classifier;
-import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumDepartment;
@@ -65,7 +57,6 @@ import ee.hitsa.ois.enums.CurriculumEhisStatus;
 import ee.hitsa.ois.enums.CurriculumStatus;
 import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.HigherModuleType;
-import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.SubjectStatus;
 import ee.hitsa.ois.repository.ClassifierRepository;
@@ -73,15 +64,15 @@ import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.CurriculumVersionSpecialityRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
+import ee.hitsa.ois.service.ehis.EhisCurriculumService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.CurriculumFileForm;
 import ee.hitsa.ois.web.commandobject.CurriculumForm;
 import ee.hitsa.ois.web.commandobject.CurriculumModuleForm;
-import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.CurriculumVersionHigherModuleForm;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
@@ -92,7 +83,6 @@ import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleOutcomeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumOccupationDto;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumSpecialityDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionElectiveModuleDto;
@@ -118,123 +108,11 @@ public class CurriculumService {
     @Autowired
     private CurriculumVersionRepository curriculumVersionRepository;
     @Autowired
+    private EhisCurriculumService ehisCurriculumService;
+    @Autowired
     private SubjectRepository subjectRepository;
     @Autowired
     private CurriculumVersionSpecialityRepository curriculumVersionSpecialityRepository;
-
-    @SuppressWarnings("unchecked")
-    public Page<CurriculumSearchDto> search(Long schoolId, CurriculumSearchCommand criteria, Pageable pageable) {
-        return JpaQueryUtil.query(CurriculumSearchDto.class, Curriculum.class, (root, query, cb) -> {
-            ((CriteriaQuery<CurriculumSearchDto>)query).select(cb.construct(CurriculumSearchDto.class,
-                root.get("id"), root.get("nameEt"), root.get("nameEn"),
-                root.get("credits"), root.get("validFrom"), root.get("validThru"), root.get("higher"),
-                root.get("status").get("code"), root.get("origStudyLevel").get("code"),
-                root.get("school").get("id"), root.get("school").get("nameEt"), root.get("school").get("nameEn"), 
-                root.get("ehisStatus").get("code"), root.get("code"), root.get("merCode")));
-
-            List<Predicate> filters = new ArrayList<>();
-
-            String nameField = Language.EN.equals(criteria.getLang()) ? "nameEn" : "nameEt";
-            propertyContains(() -> root.get(nameField), cb, criteria.getName(), filters::add);
-            if(criteria.getValidFrom() != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("validFrom"), criteria.getValidFrom()));
-            }
-            if(criteria.getValidThru() != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("validThru"), criteria.getValidThru()));
-            }
-            if(criteria.getCreditsMin() != null) {
-                filters.add(cb.greaterThanOrEqualTo(root.get("credits"), criteria.getCreditsMin()));
-            }
-            if(criteria.getCreditsMax() != null) {
-                filters.add(cb.lessThanOrEqualTo(root.get("credits"), criteria.getCreditsMax()));
-            }
-            if(Boolean.TRUE.equals(criteria.getIsJoint())) {
-                filters.add(cb.equal(root.get("joint"), Boolean.TRUE));
-            }
-            if (Boolean.TRUE.equals(criteria.getIsVocational())) {
-                filters.add(cb.equal(cb.substring(root.get("origStudyLevel").get("value"), 1, 1), "4"));
-            } else if (Boolean.FALSE.equals(criteria.getIsVocational())) {
-                filters.add(cb.notEqual(cb.substring(root.get("origStudyLevel").get("value"), 1, 1), "4"));
-            }
-
-            propertyContains(() -> root.get("code"), cb, criteria.getCode(), filters::add);
-            propertyContains(() -> root.get("merCode"), cb, criteria.getMerCode(), filters::add);
-
-            if(schoolId != null) {
-                filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            }
-            else if(!CollectionUtils.isEmpty(criteria.getSchool())) {
-                filters.add(root.get("school").get("id").in(criteria.getSchool()));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getStatus())) {
-                filters.add(root.get("status").get("code").in(criteria.getStatus()));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getEhisStatus())) {
-                filters.add(root.get("ehisStatus").get("code").in(criteria.getEhisStatus()));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getIscedClassCode())) {
-                filters.add(root.get("iscedClass").get("code").in(criteria.getIscedClassCode()));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getStudyLevel())) {
-                filters.add(root.get("origStudyLevel").get("code").in(criteria.getStudyLevel()));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getCurriculumGroup())) {
-                filters.add(root.get("group").get("code").in(criteria.getCurriculumGroup()));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getEkrLevel())) {
-                Subquery<String> targetQuery = query.subquery(String.class);
-                Root<ClassifierConnect> targetRoot = targetQuery.from(ClassifierConnect.class);
-                targetQuery = targetQuery.select(targetRoot.get("classifier").get("code")).where(targetRoot.get("connectClassifier").get("code").in(criteria.getEkrLevel()));
-                filters.add(root.get("origStudyLevel").get("code").in(targetQuery));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getIscedSuun())) {
-                Subquery<String> targetQuery = query.subquery(String.class);
-                Root<ClassifierConnect> targetRoot = targetQuery.from(ClassifierConnect.class);
-                targetQuery = targetQuery.select(targetRoot.get("classifier").get("code")).where(targetRoot.get("connectClassifier").get("code").in(criteria.getIscedSuun()));
-                /*In case ISCED_RYHM classifier is saved in isced_class_code column (vocational curriculum)*/
-                Predicate forVocational = root.get("iscedClass").get("code").in(targetQuery);
-                /*In case ISCED_SUUN classifier is saved in isced_class_code column (higher curriculum)*/
-                Predicate forHigher = root.get("iscedClass").get("code").in(criteria.getIscedSuun());
-                filters.add(cb.or(forVocational, forHigher));
-            }
-
-            if(criteria.getIscedVald() != null) {
-                // get ISCED_SUUN classifier from isced_class (vocational curriculum)
-                // or ISCED_VALD (higher curriculum)
-                Subquery<String> getIscedSuun = query.subquery(String.class);
-                Root<ClassifierConnect> iscedSuun = getIscedSuun.from(ClassifierConnect.class);
-                getIscedSuun = getIscedSuun.select(iscedSuun.get("classifier")
-                        .get("code")).where(cb.equal(iscedSuun.get("connectClassifier").get("code"), criteria.getIscedVald()));
-
-                // get ISCED_RYHM classifier from ISCED_SUUN (vocational curriculum)
-                Subquery<String> getIscedRyhm = getIscedSuun.subquery(String.class);
-                Root<ClassifierConnect> iscedRyhm = getIscedRyhm.from(ClassifierConnect.class);
-                getIscedRyhm = getIscedRyhm.select(iscedRyhm.get("classifier")
-                        .get("code")).where(iscedRyhm.get("connectClassifier").get("code").in(getIscedSuun));
-                /*In case ISCED_RYHM classifier is saved in isced_class_code column (vocational curriculum)*/
-                Predicate forVocational = root.get("iscedClass").get("code").in(getIscedRyhm);
-                /*In case ISCED_VALD classifier is saved in isced_class_code column (higher curriculum)*/
-                Predicate forHigher1 = cb.equal(root.get("iscedClass").get("code"), criteria.getIscedVald());
-                /*In case ISCED_SUUN classifier is saved in isced_class_code column (higher curriculum)*/
-                Predicate forHigher2 = root.get("iscedClass").get("code").in(getIscedSuun);
-                filters.add(cb.or(forVocational, forHigher1, forHigher2));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getStudyLanguage())) {
-                Subquery<Long> targetQuery = query.subquery(Long.class);
-                Root<CurriculumStudyLanguage> targetRoot = targetQuery.from(CurriculumStudyLanguage.class);
-                targetQuery = targetQuery.select(targetRoot.get("curriculum").get("id")).where(targetRoot.get("studyLang").get("code").in(criteria.getStudyLanguage()));
-                filters.add(root.get("id").in(targetQuery));
-            }
-            if(!CollectionUtils.isEmpty(criteria.getDepartment())) {
-                Subquery<Long> targetQuery = query.subquery(Long.class);
-                Root<CurriculumDepartment> targetRoot = targetQuery.from(CurriculumDepartment.class);
-                targetQuery = targetQuery.select(targetRoot.get("curriculum").get("id")).where(targetRoot.get("schoolDepartment").get("id").in(criteria.getDepartment()));
-                filters.add(root.get("id").in(targetQuery));
-            }
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable, em);
-    }
 
     public void delete(Curriculum curriculum) {
         EntityUtil.deleteEntity(curriculum, em);
@@ -548,6 +426,7 @@ public class CurriculumService {
         EntityUtil.bindEntityCollection(curriculum.getJointPartners(), CurriculumJointPartner::getId, 
                 jointPartners, CurriculumJointPartnerDto::getId, dto -> {
             CurriculumJointPartner jointPartner = new CurriculumJointPartner();
+            jointPartner.setCurriculum(curriculum);
             updateJointPartner(dto, jointPartner);
             return jointPartner;
         }, this::updateJointPartner);
@@ -653,7 +532,7 @@ public class CurriculumService {
         List<Subject> subjects = subjectRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
 
-            if(!CollectionUtils.isEmpty(pointPartnersEhisSchools)) {
+            if(!pointPartnersEhisSchools.isEmpty()) {
                 filters.add(
                         cb.or(root.get("school").get("ehisSchool").get("code").in(pointPartnersEhisSchools), 
                         cb.equal(root.get("school").get("id"), schoolId) ));
@@ -679,10 +558,9 @@ public class CurriculumService {
     }
 
     public List<ClassifierSelection> getCurriculumVersionHmoduleTypes(Long schoolId) {
-        final String FROM = "from curriculum_version_hmodule cvm "
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from curriculum_version_hmodule cvm "
                 + "join curriculum_version cv on cv.id = cvm.curriculum_version_id "
-                + "join curriculum c on c.id = cv.curriculum_id";
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM);
+                + "join curriculum c on c.id = cv.curriculum_id");
 
         qb.requiredCriteria("cvm.type_code = :typeCode", "typeCode", HigherModuleType.KORGMOODUL_M);
         qb.filter("cvm.type_name_et is not null");
@@ -715,7 +593,7 @@ public class CurriculumService {
 
     public Curriculum closeCurriculum(Curriculum curriculum) {
         setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_C);
-        if(!CollectionUtils.isEmpty(curriculum.getVersions())) {
+        if(!curriculum.getVersions().isEmpty()) {
             Classifier statusClosed = classifierRepository.findOne(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C.name());
             for(CurriculumVersion version : curriculum.getVersions()) {
                 version.setStatus(statusClosed);
@@ -724,7 +602,9 @@ public class CurriculumService {
         return EntityUtil.save(curriculum, em);
     }
     
-    public Curriculum sendToEhis(Curriculum curriculum) {
+    public Curriculum sendToEhis(HoisUserDetails user, Curriculum curriculum) {
+        // TODO enable when ehis sending is working
+        // ehisCurriculumService.sendToEhis(user, curriculum);
         curriculum.setEhisStatus(classifierRepository.findOne(CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_A.name()));
         curriculum.setEhisChanged(LocalDate.now());
         return EntityUtil.save(curriculum, em);
@@ -878,9 +758,14 @@ public class CurriculumService {
             CurriculumVersionOccupationModule occupationModule, CurriculumVersionOccupationModuleDto dto) {
         return EntityUtil.save(updateOccupationModule(dto, occupationModule), em);
     }
-    
-    public CurriculumVersion setStatus(CurriculumVersion curriculumVersion, CurriculumVersionStatus status) {
-        setCurriculumVersionStatus(curriculumVersion, status);
+
+    public CurriculumVersion closeVersion(CurriculumVersion curriculumVersion) {
+        setCurriculumVersionStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C);
+        return EntityUtil.save(curriculumVersion, em);
+    }
+
+    public CurriculumVersion confirmVersion(CurriculumVersion curriculumVersion) {
+        setCurriculumVersionStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K);
         return EntityUtil.save(curriculumVersion, em);
     }
 

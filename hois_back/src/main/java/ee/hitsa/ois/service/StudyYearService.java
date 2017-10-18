@@ -23,7 +23,7 @@ import ee.hitsa.ois.repository.StudyPeriodEventRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
-import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.StudyPeriodValidation;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -126,7 +126,7 @@ public class StudyYearService {
 
     public Long getPreviousStudyPeriod(Long schoolId) {
         String from = "from study_period ss inner join study_year yy on ss.study_year_id = yy.id";
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("yy.school_id = :school_id", "school_id", schoolId);
         qb.requiredCriteria(
@@ -142,7 +142,7 @@ public class StudyYearService {
 
     public Long getCurrentStudyPeriod(Long schoolId) {
         String from = "from study_period ss inner join study_year yy on ss.study_year_id = yy.id";
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(from);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("yy.school_id = :school_id", "school_id", schoolId);
         qb.requiredCriteria(
