@@ -4,19 +4,10 @@ import java.time.LocalDate;
 import java.util.List;
 
 public class TimetablePlanDto {
-    private List<TimetableStudentGroupCapacityDto> studentGroupCapacities;
     private LocalDate startDate;
     private LocalDate endDate;
     private List<TimetableEventDto> plannedLessons;
     private List<LessonTimeDto> lessonTimes;
-
-    public List<TimetableStudentGroupCapacityDto> getStudentGroupCapacities() {
-        return studentGroupCapacities;
-    }
-
-    public void setStudentGroupCapacities(List<TimetableStudentGroupCapacityDto> studentGroupCapacities) {
-        this.studentGroupCapacities = studentGroupCapacities;
-    }
 
     public LocalDate getStartDate() {
         return startDate;

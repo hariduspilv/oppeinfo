@@ -1,6 +1,6 @@
 <div class="ois-form-layout-padding" layout="column" ng-cloak>
 <div layout-padding id="groupSelection">
-    <div layout="row"  class="form-readonly">
+    <div layout="row" class="form-readonly">
         <md-input-container flex>
             <label class="textInput">{{'timetable.timetablePlan.timetablePeriod' | translate}}</label>
             <hois-value value="(plan.startDate | hoisDate) + '-'+(plan.endDate | hoisDate)"/>
@@ -47,11 +47,11 @@
       <tr md-row>
         <th title="{{journal.name}}" md-column ng-repeat="journal in plan.currentJournals"
             ng-if="getByJournal(journal, 'thisPlannedLessons') > 0">
-          {{journal.name.substring(0, 4)}} <br>{{getByJournal(journal,
-          'thisPlannedLessons')}}/{{getByJournal(journal,
-          'thisPlannedLessons') - getByJournal(journal,
-          'lessonsLeft')}} ({{getByJournal(journal,
-          'totalPlannedLessons')}}/{{getByJournal(journal,
+          {{journal.name.substring(0, 4)}} <br>{{getTotalsByJournal(journal,
+          'thisPlannedLessons')}}/{{getTotalsByJournal(journal,
+          'thisPlannedLessons') - getTotalsByJournal(journal,
+          'lessonsLeft')}} ({{getTotalsByJournal(journal,
+          'totalPlannedLessons')}}/{{getTotalsByJournal(journal,
           'totalAllocatedLessons')}})
         </th>
       </tr>

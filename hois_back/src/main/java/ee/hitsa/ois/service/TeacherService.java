@@ -104,6 +104,88 @@ public class TeacherService {
         return TeacherDto.of(teacher);
     }
 
+    public Page<TeacherSearchDto> search(TeacherSearchCommand criteria, Pageable pageable) {
+        return teacherRepository.findAll((root, query, cb) -> {
+            List<Predicate> filters = new ArrayList<>();
+
+            if (criteria.getSchool() != null) {
+                filters.add(cb.equal(root.get("school").get("id"), criteria.getSchool()));
+            }
+
+            if(!StringUtils.isEmpty(criteria.getIdcode())) {
+                filters.add(cb.equal(root.get("person").get("idcode"), criteria.getIdcode()));
+            }
+
+            if(criteria.getIsHigher() != null) {
+                filters.add(cb.equal(root.get("isHigher"), criteria.getIsHigher()));
+            }
+
+            if(Boolean.TRUE.equals(criteria.getIsActive())) {
+                filters.add(cb.equal(root.get("isActive"), Boolean.TRUE));
+            }
+
+            if(criteria.getSchoolDepartment() != null) {
+                Subquery<Long> teacherPositionSubquery = query.subquery(Long.class);
+                Root<TeacherPositionEhis> teacherPositionEhisRoot = teacherPositionSubquery.from(TeacherPositionEhis.class);
+                teacherPositionSubquery = teacherPositionSubquery
+                        .select(teacherPositionEhisRoot.get("teacher").get("id"))
+                        .where(cb.equal(teacherPositionEhisRoot.get("schoolDepartment").get("id"), criteria.getSchoolDepartment()));
+                filters.add(root.get("id").in(teacherPositionSubquery));
+            }
+
+            if(criteria.getTeacherOccupation() != null) {
+                filters.add(cb.equal(root.get("teacherOccupation").get("id"), criteria.getTeacherOccupation()));
+            }
+
+            if(!StringUtils.isEmpty(criteria.getName())) {
+                List<Predicate> name = new ArrayList<>();
+                propertyContains(() -> root.get("person").get("firstname"), cb, criteria.getName(), name::add);
+                propertyContains(() -> root.get("person").get("lastname"), cb, criteria.getName(), name::add);
+                name.add(cb.like(cb.concat(cb.upper(root.get("person").get("firstname")), cb.concat(" ", cb.upper(root.get("person").get("lastname")))), JpaQueryUtil.toContains(criteria.getName())));
+                if(!name.isEmpty()) {
+                    filters.add(cb.or(name.toArray(new Predicate[name.size()])));
+                }
+            }
+
+            return cb.and(filters.toArray(new Predicate[filters.size()]));
+        }, pageable).map(TeacherSearchDto::of);
+    }
+
+    public void delete(Teacher teacher) {
+        EntityUtil.deleteEntity(teacher, em);
+    }
+
+    public TeacherDto saveMobilities(Teacher teacher, Set<TeacherMobilityForm> mobilityForms) {
+        bindTeacherMobilityForm(teacher, mobilityForms);
+        return TeacherDto.of(EntityUtil.save(teacher, em));
+    }
+
+    public TeacherDto saveContinuingEducations(Teacher teacher, List<TeacherContinuingEducationForm> teacherContinuingEducationForms) {
+        bindTeacherContinuingEducationForm(teacher, teacherContinuingEducationForms);
+        return TeacherDto.of(EntityUtil.save(teacher, em));
+    }
+
+    public void delete(TeacherContinuingEducation continuingEducation) {
+        EntityUtil.deleteEntity(continuingEducation, em);
+    }
+
+    public TeacherDto saveQualifications(Teacher teacher, Set<TeacherQualificationForm> teacherQualificationFroms) {
+        bindTeacherQualificationForm(teacher, teacherQualificationFroms);
+        return TeacherDto.of(EntityUtil.save(teacher, em));
+    }
+
+    public void delete(TeacherQualification qualification) {
+        EntityUtil.deleteEntity(qualification, em);
+    }
+
+    public void delete(TeacherMobility teacherMobility) {
+        EntityUtil.deleteEntity(teacherMobility, em);
+    }
+
+    public void delete(TeacherPositionEhis teacherPositionEhis) {
+        EntityUtil.deleteEntity(teacherPositionEhis, em);
+    }
+
     private void bindOldPerson(TeacherForm teacherForm, Person person) {
         TeacherForm.TeacherPersonForm personForm = teacherForm.getPerson();
         person.setEmail(personForm.getEmail());
@@ -143,7 +225,7 @@ public class TeacherService {
         teacherMobility.setTeacher(teacher);
         return teacherMobility;
     }
-    
+
     private void bindTeacherContinuingEducationForm(Teacher teacher, List<TeacherContinuingEducationForm> continuingEducationForms) {
         List<TeacherContinuingEducation> teacherContinuingEducations = teacher.getTeacherContinuingEducation();
         if (Boolean.TRUE.equals(teacher.getIsVocational())) {
@@ -213,87 +295,5 @@ public class TeacherService {
             positionEhis.setIsChildCare(Boolean.FALSE);
             positionEhis.setIsClassTeacher(Boolean.FALSE);
         }
-    }
-
-    public Page<TeacherSearchDto> search(TeacherSearchCommand criteria, Pageable pageable) {
-        return teacherRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-
-            if (criteria.getSchool() != null) {
-                filters.add(cb.equal(root.get("school").get("id"), criteria.getSchool()));
-            }
-
-            if(!StringUtils.isEmpty(criteria.getIdcode())) {
-                filters.add(cb.equal(root.get("person").get("idcode"), criteria.getIdcode()));
-            }
-            
-            if(criteria.getIsHigher() != null) {
-                filters.add(cb.equal(root.get("isHigher"), criteria.getIsHigher()));
-            }
-            
-            if(Boolean.TRUE.equals(criteria.getIsActive())) {
-                filters.add(cb.equal(root.get("isActive"), Boolean.TRUE));
-            }
-            
-            if(criteria.getSchoolDepartment() != null) {
-                Subquery<Long> teacherPositionSubquery = query.subquery(Long.class);
-                Root<TeacherPositionEhis> teacherPositionEhisRoot = teacherPositionSubquery.from(TeacherPositionEhis.class);
-                teacherPositionSubquery = teacherPositionSubquery
-                        .select(teacherPositionEhisRoot.get("teacher").get("id"))
-                        .where(cb.equal(teacherPositionEhisRoot.get("schoolDepartment").get("id"), criteria.getSchoolDepartment()));
-                filters.add(root.get("id").in(teacherPositionSubquery));                
-            }
-            
-            if(criteria.getTeacherOccupation() != null) {
-                filters.add(cb.equal(root.get("teacherOccupation").get("id"), criteria.getTeacherOccupation()));
-            }
-
-            if(!StringUtils.isEmpty(criteria.getName())) {
-                List<Predicate> name = new ArrayList<>();
-                propertyContains(() -> root.get("person").get("firstname"), cb, criteria.getName(), name::add);
-                propertyContains(() -> root.get("person").get("lastname"), cb, criteria.getName(), name::add);
-                name.add(cb.like(cb.concat(cb.upper(root.get("person").get("firstname")), cb.concat(" ", cb.upper(root.get("person").get("lastname")))), JpaQueryUtil.toContains(criteria.getName())));
-                if(!name.isEmpty()) {
-                    filters.add(cb.or(name.toArray(new Predicate[name.size()])));
-                }
-            }
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(TeacherSearchDto::of);
-    }
-
-    public void delete(Teacher teacher) {
-        EntityUtil.deleteEntity(teacher, em);
-    }
-
-    public TeacherDto saveMobilities(Teacher teacher, Set<TeacherMobilityForm> mobilityForms) {
-        bindTeacherMobilityForm(teacher, mobilityForms);
-        return TeacherDto.of(EntityUtil.save(teacher, em));
-    }
-    
-    public TeacherDto saveContinuingEducations(Teacher teacher, List<TeacherContinuingEducationForm> teacherContinuingEducationForms) {
-        bindTeacherContinuingEducationForm(teacher, teacherContinuingEducationForms);
-        return TeacherDto.of(EntityUtil.save(teacher, em));
-    }
-
-    public void delete(TeacherContinuingEducation continuingEducation) {
-        EntityUtil.deleteEntity(continuingEducation, em);
-    }
-
-    public TeacherDto saveQualifications(Teacher teacher, Set<TeacherQualificationForm> teacherQualificationFroms) {
-        bindTeacherQualificationForm(teacher, teacherQualificationFroms);
-        return TeacherDto.of(EntityUtil.save(teacher, em));
-    }
-
-    public void delete(TeacherQualification qualification) {
-        EntityUtil.deleteEntity(qualification, em);
-    }
-
-    public void delete(TeacherMobility teacherMobility) {
-        EntityUtil.deleteEntity(teacherMobility, em);
-    }
-
-    public void delete(TeacherPositionEhis teacherPositionEhis) {
-        EntityUtil.deleteEntity(teacherPositionEhis, em);
     }
 }

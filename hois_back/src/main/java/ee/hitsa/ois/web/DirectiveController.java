@@ -75,7 +75,7 @@ public class DirectiveController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public DirectiveDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Directive directive, @Valid @RequestBody DirectiveForm form) {
+    public DirectiveDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Directive directive, @Valid @RequestBody DirectiveForm form) {
         assertCanEditDirective(user, directive);
         return get(user, directiveService.save(directive, form));
     }
@@ -116,7 +116,7 @@ public class DirectiveController {
     @GetMapping("/coordinators")
     public Page<DirectiveCoordinatorDto> searchCoordinators(HoisUserDetails user, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return directiveService.search(user.getSchoolId(), pageable);
+        return directiveService.searchCoordinators(user.getSchoolId(), pageable);
     }
 
     @GetMapping("/coordinators/{id:\\d+}")
@@ -132,7 +132,7 @@ public class DirectiveController {
     }
 
     @PutMapping("/coordinators/{id:\\d+}")
-    public DirectiveCoordinatorDto updateCoordinator(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) DirectiveCoordinator coordinator, @Valid @RequestBody DirectiveCoordinatorForm form) {
+    public DirectiveCoordinatorDto saveCoordinator(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) DirectiveCoordinator coordinator, @Valid @RequestBody DirectiveCoordinatorForm form) {
         UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
         return getCoordinator(user, directiveService.save(coordinator, form));
     }

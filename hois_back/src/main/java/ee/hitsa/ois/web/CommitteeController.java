@@ -44,8 +44,7 @@ public class CommitteeController {
 
     @GetMapping("/{id:\\d+}")
     public CommitteeDto get(HoisUserDetails user, @WithEntity("id") Committee committee) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        UserUtil.assertSameSchool(user, committee.getSchool());
+        UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
         return committeeService.get(committee);
     }
 
@@ -59,8 +58,7 @@ public class CommitteeController {
     public CommitteeDto save(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Committee committee,
             @NotNull @Valid @RequestBody CommitteeDto dto) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        UserUtil.assertSameSchool(user, committee.getSchool());
+        UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
         return committeeService.save(committee, dto);
     }
 
@@ -72,7 +70,7 @@ public class CommitteeController {
         UserUtil.assertSameSchool(user, committee.getSchool());
         committeeService.delete(committee);
     }
-    
+
     @GetMapping("/members")
     public Set<AutocompleteResult> getMembers(HoisUserDetails user) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);

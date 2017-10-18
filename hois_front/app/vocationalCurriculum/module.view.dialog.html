@@ -2,8 +2,7 @@
   <form ng-cloak name="dialogForm">
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{"module.viewToughtModule" | translate}}</h2>
-        <span flex></span>
+        <h2 flex>{{"module.viewToughtModule" | translate}}</h2>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
         </md-button>
@@ -13,34 +12,43 @@
       <span flex></span>
       <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
 		  <fieldset tabindex="1">
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
+        <div layout="column">
+          <br>
+          <md-input-container>
+              <label>{{'stateCurriculum.enter.module.occupation' | translate}}</label>
+              <hois-classifier-select ng-model="module.occupations" main-classifier-codes="KUTSE,OSAKUTSE,SPETSKUTSE"
+                multiple model-value-attr="code" disabled>
+              </hois-classifier-select>
+            </md-input-container>
+        </div>
+
+        <!-- <div layout="column">
+          <div ng-repeat="speciality in item.specialities"  layout="row">
+          <div flex="5">&nbsp;</div>
+            <md-checkbox ng-model="specialitiesSelected[speciality.code]" aria-label="{{currentLanguageNameField(speciality)}}" disabled>
+              {{currentLanguageNameField(speciality)}}
+            </md-checkbox>
+          </div>
+        </div>
 				<div layout="column">
 				  <div ng-repeat="item in occupations | orderBy: 'occupation.' + currentLanguageNameField()">
-					<md-checkbox ng-model="occupationsSelected[item.occupation.code]" aria-label="{{item.occupation[currentLanguageNameField()]}}" disabled>
-					  {{item.occupation[currentLanguageNameField()]}}
+					<md-checkbox ng-model="occupationsSelected[item.occupation.code]" aria-label="{{currentLanguageNameField(item.occupation)}}" disabled>
+					  {{currentLanguageNameField(item.occupation)}}
 					</md-checkbox>
 					<div layout="column">
 						<div ng-repeat="partOccupation in item.partOccupations" flex layout="row">
 							<div flex="5">&nbsp;</div>
-							<md-checkbox ng-model="occupationsSelected[partOccupation.code]" aria-label="{{partOccupation[currentLanguageNameField()]}}" disabled>
-							  {{partOccupation[currentLanguageNameField()]}}
+							<md-checkbox ng-model="occupationsSelected[partOccupation.code]" aria-label="{{currentLanguageNameField(partOccupation)}}" disabled>
+							  {{currentLanguageNameField(partOccupation)}}
 							</md-checkbox>
 						 </div>
 					</div>
-
-					<div layout="column">
-					  <div ng-repeat="speciality in item.specialities"  layout="row">
-						<div flex="5">&nbsp;</div>
-							<md-checkbox ng-model="specialitiesSelected[speciality.code]" aria-label="{{speciality[currentLanguageNameField()]}}" disabled>
-							  {{speciality[currentLanguageNameField()]}}
-							</md-checkbox>
-						</div>
-					</div>
 				  </div>
-				</div>
-			</fieldset>
-			<div>&nbsp;</div>
+				</div> -->
+      </fieldset>
 
+			<div>&nbsp;</div>
 			<div layout="row" flex>
 			  <md-input-container flex="45">
 				<label>{{'module.type' | translate}}</label>
@@ -70,26 +78,19 @@
 
 
 		  <fieldset tabindex="1">
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}} *</legend>
-			<div layout="column">
-            <!--md-list flex-->
-              <div ng-repeat="item in module.outcomes | orderBy: 'orderNr'" class="occupation-row align-center" layout="row" flex>
-                <div flex="45"><pre>{{item.outcomeEt}}</pre></div>
-				        <div flex="50" flex-offset="5"><pre>{{item.outcomeEn}}</pre></div>
-              </div>
-            <!--/md-list-->
+        <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.studyOutcome' | translate}} *</legend>
+        <div layout="column">
+          <div ng-repeat="item in module.outcomes | orderBy: 'orderNr'" class="occupation-row align-center" layout="row" flex>
+            <div flex="45"><pre>{{item.outcomeEt}}</pre></div>
+            <div flex="50" flex-offset="5"><pre>{{item.outcomeEn}}</pre></div>
           </div>
-
-		</fieldset>
-		<div>&nbsp;</div>
-
-
-
-
-          <md-input-container flex>
-            <md-checkbox ng-model="module.practice" disabled>{{'module.practice' | translate}}</md-checkbox>
-          </md-input-container>
         </div>
+		  </fieldset>
+		  <div>&nbsp;</div>
+        <md-input-container flex>
+          <md-checkbox ng-model="module.practice" disabled>{{'module.practice' | translate}}</md-checkbox>
+        </md-input-container>
+      </div>
     </md-dialog-content>
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">

@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('SubjectEditController',
-    function ($scope, $rootScope, $route, $resource, $location, $translate, $q, config, dialogService, message, QueryUtils) {
+    function ($scope, $rootScope, $route, $location, $translate, $q, dialogService, message, QueryUtils) {
       var id = $route.current.params.id;
 
       var backUrl = $route.current.params.backUrl;
@@ -15,8 +15,7 @@ angular.module('hitsaOis')
         url: '/subject/unique/code'
       };
 
-      // $resource.search() caused an error
-      $resource(config.apiUrl + '/subject/initEditFormData').get().$promise.then(function (result) {
+      QueryUtils.endpoint('/subject/initEditFormData').search(function (result) {
         angular.extend($scope, result.toJSON());
       });
 
@@ -111,19 +110,13 @@ angular.module('hitsaOis')
       };
     })
   .controller('SubjectViewController',
-    function ($scope, $route, $q, QueryUtils) {
-      $scope.auth = $route.current.locals.auth;
-
+    function ($scope, $route, QueryUtils) {
       var id = $route.current.params.id;
-
       var backUrl = $route.current.params.backUrl;
-      $scope.formState = {
-        backUrl: backUrl ? '#/' + backUrl : '#/subject'
-      };
 
-      var Endpoint = QueryUtils.endpoint('/subject');
-
-      $scope.subject = Endpoint.get({id: id});
+      $scope.auth = $route.current.locals.auth;
+      $scope.formState = {backUrl: backUrl ? '#/' + backUrl : '#/subject'};
+      $scope.subject = QueryUtils.endpoint('/subject').get({id: id});
   })
   .controller('SubjectListController', ['$q', '$scope', 'Classifier', 'QueryUtils','$route',
     function ($q, $scope, Classifier, QueryUtils, $route) {

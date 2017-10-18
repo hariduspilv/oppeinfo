@@ -11,22 +11,21 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.web.dto.DeclarationDto;
 
 public abstract class DeclarationUtil {
-    
+
     public static boolean canChangeDeclarationFromSearchForm(HoisUserDetails user, DeclarationDto dto) {
         return user.isSchoolAdmin() && DeclarationStatus.OPINGUKAVA_STAATUS_S.name().equals(dto.getStatus());
     }
-    
+
     public static boolean canChangeDeclaration(HoisUserDetails user, Declaration declaration) {
         return canEditOrChangeStatus(user, declaration.getStudent()) && 
                 ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_S, declaration.getStatus());
     }
-    
+
     public static boolean declarationConfirmed(Declaration declaration) {
         return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_K, declaration.getStatus());
     }
 
     public static boolean canUnconfirmDeclaration(HoisUserDetails user, Declaration declaration) {
-        
         if(!declarationConfirmed(declaration)) {
             return false;
         }
@@ -39,11 +38,11 @@ public abstract class DeclarationUtil {
         }
         return false;
     }
-    
+
     private static boolean studyPeriodFinished(StudyPeriod studyPeriod) {
         return  LocalDate.now().isAfter(studyPeriod.getEndDate());
     }
-    
+
     public static void assertCanConfirm(HoisUserDetails user, Declaration declaration) {
         AssertionFailedException.throwIf(!canConfirmDeclaration(user, declaration),
                 "You cannot confirm declaration!");
@@ -53,17 +52,17 @@ public abstract class DeclarationUtil {
         AssertionFailedException.throwIf(!canUnconfirmDeclaration(user, declaration),
                 "You cannot set declaration unconfirmed!");
     }
-    
+
     public static void assertCanChangeDeclaration(HoisUserDetails user, Declaration declaration) {
         AssertionFailedException.throwIf(!canChangeDeclaration(user, declaration),
                 "You cannot change declaration!");
     }
-    
+
     public static boolean canConfirmDeclaration(HoisUserDetails user, Declaration declaration) {
         return ClassifierUtil.equals(DeclarationStatus.OPINGUKAVA_STAATUS_S, declaration.getStatus()) &&
                 canEditOrChangeStatus(user, declaration.getStudent());
     }
-    
+
     public static boolean canEditOrChangeStatus(HoisUserDetails user, Student student) {
         return UserUtil.isSchoolAdmin(user, student.getSchool())  || 
                 (UserUtil.isStudent(user, student) && StudentUtil.isStudying(student));

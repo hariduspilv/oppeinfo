@@ -1,18 +1,28 @@
 package ee.hitsa.ois.web.dto.timetable;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class SubjectTeacherPairDto {
 
+    // subject study period id
     private Long id;
-    //subject code
+    // subject code
     private String code;
+    // subject names
+    private String nameEt;
+    private String nameEn;
     private String teacherNames;
     private String teacherNamesShort;
+    private List<TimetableEventDto> lessons = new ArrayList<>();
 
-    public SubjectTeacherPairDto(Long id, String code, String teacherNames, String teacherNamesShort) {
+    public SubjectTeacherPairDto(Long id, String code, String teacherNames, String teacherNamesShort, String nameEt, String nameEn) {
         this.id = id;
         this.code = code;
         this.teacherNames = teacherNames;
         this.teacherNamesShort = teacherNamesShort;
+        this.nameEn = nameEn;
+        this.nameEt = nameEt;
     }
 
     public Long getId() {
@@ -31,6 +41,22 @@ public class SubjectTeacherPairDto {
         this.code = code;
     }
 
+    public String getNameEt() {
+        return nameEt;
+    }
+
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
+    }
+
+    public String getNameEn() {
+        return nameEn;
+    }
+
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
+    }
+
     public String getTeacherNames() {
         return teacherNames;
     }
@@ -45,6 +71,14 @@ public class SubjectTeacherPairDto {
 
     public void setTeacherNamesShort(String teacherNamesShort) {
         this.teacherNamesShort = teacherNamesShort;
+    }
+
+    public List<TimetableEventDto> getLessons() {
+        return lessons;
+    }
+
+    public void setLessons(List<TimetableEventDto> lessons) {
+        this.lessons = lessons;
     }
 
 }

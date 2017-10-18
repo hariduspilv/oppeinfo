@@ -4,7 +4,7 @@
           <tr md-row>
             <td md-cell colspan="7" ng-click="module.clicked = !module.clicked" class="header">
               <span class="md-title header">
-                {{'curriculum.module' | translate}} {{module[currentLanguageNameField()]}} {{module.totalCredits}} EAP
+                {{'curriculum.module' | translate}} {{currentLanguageNameField(module)}} {{module.totalCredits}} EAP
                 &nbsp;(<span ng-if="module.type !== 'KORGMOODUL_M'"><hois-classifier-value class="inline" ng-model="module.type" main-classifier-code="KORGMOODUL"></hois-classifier-value></span>
                 <span ng-if="module.type === 'KORGMOODUL_M'">{{currentLanguage()=='et' ? module.typeNameEt : module.typeNameEn}}</span>)
                 <b ng-if="!module.isOk" class="red">&nbsp;{{ module.totalDifference }}</b>
@@ -29,7 +29,7 @@
           </tr>
           <tr md-row ng-hide="module.clicked" class="hideable"
           ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) | filter: {isOptional: false} | orderBy: currentLanguageNameField()">
-            <td md-cell>{{subjectResult.subject[currentLanguageNameField()]}}</td>
+            <td md-cell>{{currentLanguageNameField(subjectResult.subject)}}</td>
             <td md-cell>{{subjectResult.subject.code}}</td>
             <td md-cell>{{subjectResult.subject.credits}}</td>
             <td md-cell>
@@ -78,7 +78,7 @@
           <tr ng-hide="module.clicked" class="hideable" md-row ng-repeat="subjectResult in higherResults.subjectResults
           | filter: filterSubjectResultsByModule(module) | filter: {isOptional: true} | filter: {electiveModule: '!'}
           | orderBy: currentLanguageNameField()">
-            <td md-cell>{{subjectResult.subject[currentLanguageNameField()]}}</td>
+            <td md-cell>{{currentLanguageNameField(subjectResult.subject)}}</td>
             <td md-cell>{{subjectResult.subject.code}}</td>
             <td md-cell>{{subjectResult.subject.credits}}</td>
             <td md-cell>
@@ -111,14 +111,14 @@
           </tr>
           <tr ng-hide="module.clicked" class="hideable" md-row ng-repeat-start="electiveModule in module.electiveModulesResults | orderBy: currentLanguageNameField()">
             <td md-cell colspan="7" class="sub-header2">
-              {{'module.optional' | translate}}: {{electiveModule[currentLanguageNameField()]}}
+              {{'module.optional' | translate}}: {{currentLanguageNameField(electiveModule)}}
               <i class="material-icons green" ng-if="electiveModule.isOk">done</i>
             </td>
           </tr>
 
           <tr ng-hide="module.clicked" class="hideable" md-row ng-repeat="subjectResult in higherResults.subjectResults | filter: filterSubjectResultsByModule(module) | filter: {isOptional: true} |
                                 filter: {electiveModule: electiveModule.referenceNumber} | orderBy: currentLanguageNameField()">
-            <td md-cell>{{subjectResult.subject[currentLanguageNameField()]}}</td>
+            <td md-cell>{{currentLanguageNameField(subjectResult.subject)}}</td>
             <td md-cell>{{subjectResult.subject.code}}</td>
             <td md-cell>{{subjectResult.subject.credits}}</td>
             <td md-cell>

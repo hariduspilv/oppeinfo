@@ -11,17 +11,13 @@ angular.module('hitsaOis').controller('CommitteeSearchController', ['$scope', 'Q
     savedMember = $scope.criteria.member;
   }
 
-  function getMembersOptions() {
-    QueryUtils.endpoint(baseUrl + '/members').query().$promise.then(function(response){
-      $scope.members = response;
-      if(savedMember) {
-        $scope.criteria.member = $scope.members.find(function(m){
-          return m.id === savedMember.id && m.nameEt === savedMember.nameEt;
-        });
-      }
-    });
-  }
-  getMembersOptions();
+  $scope.members = QueryUtils.endpoint(baseUrl + '/members').query(function() {
+    if(savedMember) {
+      $scope.criteria.member = $scope.members.find(function(m){
+        return m.id === savedMember.id && m.nameEt === savedMember.nameEt;
+      });
+    }
+  });
 
   $scope.$watch('criteria.member', function(){
     if($scope.criteria.member) {

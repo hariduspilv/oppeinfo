@@ -73,7 +73,7 @@ public class TeacherController {
     public List<AutocompleteResult> teacherOccupations(HoisUserDetails user) {
         TeacherOccupationSearchCommand command = new TeacherOccupationSearchCommand();
         command.setIsValid(Boolean.TRUE);
-        return teacherOccupationService.findAll(user.getSchoolId(), command, new PageRequest(0, Integer.MAX_VALUE)).map(r -> {
+        return teacherOccupationService.search(user.getSchoolId(), command, new PageRequest(0, Integer.MAX_VALUE)).map(r -> {
             return new AutocompleteResult(r.getId(), r.getOccupationEt(), r.getOccupationEn());
         }).getContent();
     }

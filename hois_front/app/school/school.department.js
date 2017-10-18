@@ -1,17 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'DataUtils', 'QueryUtils',
+angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$location', '$route', '$scope', 'dialogService', 'message', 'QueryUtils',
 
-  function ($location, $route, $scope, dialogService, message, DataUtils, QueryUtils) {
+  function ($location, $route, $scope, dialogService, message, QueryUtils) {
     var id = $route.current.params.id;
     var baseUrl = '/school/departments';
-    function afterLoad() {
-      DataUtils.convertStringToDates($scope.schoolDepartment, ['validFrom', 'validThru']);
-    }
     var Endpoint = QueryUtils.endpoint(baseUrl);
     if(id) {
       $scope.schoolDepartment = Endpoint.get({id: id});
-      $scope.schoolDepartment.$promise.then(afterLoad);
     } else {
       // new department
       var now = new Date();
@@ -27,7 +23,7 @@ angular.module('hitsaOis').controller('SchoolDepartmentEditController', ['$locat
       }
 
       if($scope.schoolDepartment.id) {
-        $scope.schoolDepartment.$update().then(afterLoad).then(message.updateSuccess);
+        $scope.schoolDepartment.$update().then(message.updateSuccess);
       } else {
         $scope.schoolDepartment.$save().then(function() {
           message.info('main.messages.create.success');

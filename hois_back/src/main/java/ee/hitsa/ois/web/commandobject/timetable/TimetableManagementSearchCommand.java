@@ -1,9 +1,17 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
+import javax.validation.constraints.NotNull;
+
+import ee.hitsa.ois.enums.MainClassCode;
+import ee.hitsa.ois.validation.ClassifierRestriction;
+
 public class TimetableManagementSearchCommand {
 
+    @NotNull
     private Long studyYear;
+    @NotNull
     private Long studyPeriod;
+    @ClassifierRestriction(MainClassCode.TUNNIPLAAN_LIIK)
     private String type;
 
     public Long getStudyYear() {

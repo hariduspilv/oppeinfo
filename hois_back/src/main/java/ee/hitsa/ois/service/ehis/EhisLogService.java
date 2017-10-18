@@ -25,6 +25,7 @@ import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.WsEhisTeacherLog;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.UserUtil;
@@ -93,7 +94,7 @@ public class EhisLogService {
      * @return
      */
     public Page<EhisLogDto> search(Long schoolId, EhisLogCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb;
+        JpaNativeQueryBuilder qb;
         String messageType = criteria.getMessageType();
         List<String> from = new ArrayList<>();
         Map<String, Object> parameters = new HashMap<>();
@@ -113,7 +114,7 @@ public class EhisLogService {
             parameters.putAll(qb.queryParameters());
         }
 
-        qb = new JpaQueryUtil.NativeQueryBuilder("from (" + String.join(" union all ", from) + ") logs").sort(pageable);
+        qb = new JpaNativeQueryBuilder("from (" + String.join(" union all ", from) + ") logs").sort(pageable);
         for(Map.Entry<String, Object> me : parameters.entrySet()) {
             qb.parameter(me.getKey(), me.getValue());
         }
@@ -142,8 +143,8 @@ public class EhisLogService {
         return wsEhisTeacherLog;
     }
 
-    private static JpaQueryUtil.NativeQueryBuilder laeOppejoudQuery(Long schoolId, boolean higher, EhisLogCommand command) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from ws_ehis_teacher_log tl");
+    private static JpaNativeQueryBuilder laeOppejoudQuery(Long schoolId, boolean higher, EhisLogCommand command) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_ehis_teacher_log tl");
 
         qb.requiredCriteria("tl.ws_name = :teacherWsName", "teacherWsName", higher ?
                 EhisTeacherExportService.LAE_OPPEJOUD_SERVICE : EhisTeacherExportService.LAE_PEDAGOOGID_SERVICE);
@@ -159,8 +160,8 @@ public class EhisLogService {
         return qb;
     }
 
-    private static JpaQueryUtil.NativeQueryBuilder laeKorgharidusQuery(Long schoolId, EhisLogCommand command) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from ws_ehis_student_log sl " +
+    private static JpaNativeQueryBuilder laeKorgharidusQuery(Long schoolId, EhisLogCommand command) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_ehis_student_log sl " +
                 "left outer join directive d on sl.directive_id = d.id " +
                 "left outer join classifier c on d.type_code = c.code");
 

@@ -7,7 +7,8 @@ import java.util.List;
 public class TimetableEventSearchDto {
 
     private Long id;
-    private String name;
+    private String nameEt;
+    private String nameEn;
     private LocalDate date;
     private LocalTime timeStart;
     private LocalTime timeEnd;
@@ -16,9 +17,10 @@ public class TimetableEventSearchDto {
     private List<TimetableEventSearchGroupDto> studentGroups;
     private Boolean singleEvent;
 
-    public TimetableEventSearchDto(Long id, String name, LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean singleEvent) {
+    public TimetableEventSearchDto(Long id, String nameEt, String nameEn, LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean singleEvent) {
         this.id = id;
-        this.name = name;
+        this.nameEt = nameEt;
+        this.nameEn = nameEn;
         this.date = date;
         this.timeStart = timeStart;
         this.timeEnd = timeEnd;
@@ -33,12 +35,20 @@ public class TimetableEventSearchDto {
         this.id = id;
     }
 
-    public String getName() {
-        return name;
+    public String getNameEt() {
+        return nameEt;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
+    }
+    
+    public String getNameEn() {
+        return nameEn;
+    }
+
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
     }
 
     public LocalDate getDate() {

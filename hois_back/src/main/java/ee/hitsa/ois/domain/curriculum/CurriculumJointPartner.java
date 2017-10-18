@@ -3,8 +3,11 @@ package ee.hitsa.ois.domain.curriculum;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
+import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
 import ee.hitsa.ois.domain.Classifier;
@@ -24,6 +27,10 @@ public class CurriculumJointPartner extends BaseEntityWithId implements Translat
 	private String nameEn;
 	@ManyToOne(fetch = FetchType.LAZY)
 	private Classifier ehisSchool;
+    @JsonIgnore
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(nullable = false, updatable = false)
+	private Curriculum curriculum;
 
 	public boolean isAbroad() {
 		return abroad;
@@ -82,4 +89,12 @@ public class CurriculumJointPartner extends BaseEntityWithId implements Translat
 	public void setEhisSchool(Classifier ehisSchool) {
 		this.ehisSchool = ehisSchool;
 	}
+
+    public Curriculum getCurriculum() {
+        return curriculum;
+    }
+
+    public void setCurriculum(Curriculum curriculum) {
+        this.curriculum = curriculum;
+    }
 }

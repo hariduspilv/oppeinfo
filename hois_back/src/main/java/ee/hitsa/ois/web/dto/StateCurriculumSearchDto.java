@@ -2,9 +2,6 @@ package ee.hitsa.ois.web.dto;
 
 import java.time.LocalDate;
 
-import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
-import ee.hitsa.ois.util.EntityUtil;
-
 public class StateCurriculumSearchDto {
     private Long id;
     private String nameEt;
@@ -15,27 +12,7 @@ public class StateCurriculumSearchDto {
     private String status;
     private String iscedClass;
     private String ekrLevel;
-
-    public StateCurriculumSearchDto() {}
-    
-    public StateCurriculumSearchDto(Long id, String nameEt, String nameEn, LocalDate validFrom,
-            LocalDate validThru, Long credits, String status, String iscedClass) {
-        this.id = id;
-        this.nameEt = nameEt;
-        this.nameEn = nameEn;
-        this.validFrom = validFrom;
-        this.validThru = validThru;
-        this.credits = credits;
-        this.status = status;
-        this.iscedClass = iscedClass;
-    }
-    
-    public static StateCurriculumSearchDto of (StateCurriculum stateCurriculum) {
-        StateCurriculumSearchDto dto = new StateCurriculumSearchDto();
-        EntityUtil.bindToDto(stateCurriculum, dto, "status", "iscedClass");
-        dto.setStatus(EntityUtil.getNullableCode(stateCurriculum.getStatus()));
-        return dto;
-    }
+    private Boolean canChange;
     
     public String getEkrLevel() {
         return ekrLevel;
@@ -107,5 +84,13 @@ public class StateCurriculumSearchDto {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public Boolean getCanChange() {
+        return canChange;
+    }
+
+    public void setCanChange(Boolean canChange) {
+        this.canChange = canChange;
     }
 }

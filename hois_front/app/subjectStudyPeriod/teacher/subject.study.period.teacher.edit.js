@@ -15,16 +15,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
     }
 
     if(studyPeriodId) {
-      QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId}).$promise.then(function(response) {
-        $scope.studyPeriod = response;
-      });
+      $scope.studyPeriod = QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId});
     } else {
-      QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
-        $scope.studyPeriods = response;
-        setCurrentStudyPeriod();
-      });
+      $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(setCurrentStudyPeriod);
     }
-
 
     if(teacher) {
         $scope.record = Endpoint.search({studyPeriod: studyPeriodId, teacher: teacher, subjectStudyPeriodDtos: []});
@@ -35,19 +29,12 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
               $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
             });
         });
-        QueryUtils.endpoint('/subjectStudyPeriods/teacher/' + teacher).get(function(result) {
-            $scope.teacher = result;
-        });
-        Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
-          $scope.capacityTypes = response;
-        });
+        $scope.teacher = QueryUtils.endpoint('/subjectStudyPeriods/teacher/' + teacher).get();
     }
 
     function loadTeachers() {
       if($scope.record.studyPeriod) {
-        QueryUtils.endpoint('/subjectStudyPeriods/teachers/list/limited/' + $scope.record.studyPeriod).query(function(result) {
-            $scope.teachers = result;
-        });
+        $scope.teachers = QueryUtils.endpoint('/subjectStudyPeriods/teachers/list/limited/' + $scope.record.studyPeriod).query();
       }
     }
 
@@ -76,6 +63,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherEditController',
             message.updateSuccess();
             $scope.record = response;
             $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
+            $scope.subjectStudyPeriodTeacherEditForm.$setPristine();
         });
     };
 }]);

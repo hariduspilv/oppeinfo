@@ -1,15 +1,15 @@
-<div layout="column" layout-padding>
-    <form name="subjectStudyPeriodPlanStudentGroupEditForm">
-        <p class="md-body-1">
+<div class="ois-form-layout-padding" ng-cloak>
+    <form name="subjectStudyPeriodStudentGroupEditForm">
+      <div flex layout="row" layout-align="start start" class="common-label" md-colors="{color: 'background-400'}">
             <span ng-repeat="capacity in capacityTypes">
                 <span ng-if="$index !== 0">|</span>
                 {{capacity.value.toUpperCase()}} - {{currentLanguageNameField(capacity)}}
             </span>
-        </p>
-        <br>
-        <div layout="column" class="form-readonly">
+        </div>
+
+        <div layout="column">
             <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container ng-if="!isEditing" flex="25" flex-sm="100" flex-xs="100">
+                <md-input-container ng-if="!isEditing" flex="25" flex-sm="100" flex-xs="100"  class="readonly top-margin" >
                     <label>{{'subjectStudyPeriod.studyPeriod' | translate}}</label>
                     <hois-value value="currentLanguageNameField(studyPeriod)"></hois-value>
                 </md-input-container>
@@ -25,17 +25,19 @@
                      </md-option>
                     </md-select>
                 </md-input-container>
-                <md-input-container ng-if="!isEditing" flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                <md-input-container ng-if="!isEditing" flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5"  class="readonly top-margin" >
                     <label>{{'subjectStudyPeriod.studentGroup' | translate}}</label>
                     <hois-value value="studentGroup.code"></hois-value>
                 </md-input-container>
-                <md-input-container flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+
+                <md-input-container  class="readonly top-margin"  flex="25" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
                     <label>{{'subjectStudyPeriod.course' | translate}}</label>
                     <hois-value value="course"></hois-value>
                 </md-input-container>
+
             </div>
-            <div layout="row" layout-sm="column" layout-xs="column">
-                <md-input-container flex="25" flex-sm="100" flex-xs="100">
+            <div layout="row" layout-sm="column" layout-xs="column" class="form-readonly">
+                <md-input-container flex="25" flex-sm="100" flex-xs="100" >
                     <label>{{'subjectStudyPeriod.curriculum' | translate}}</label>
                     <hois-value value="currentLanguageNameField(curriculum)"></hois-value>
                 </md-input-container>
@@ -44,7 +46,7 @@
                     <hois-value value="'subjectStudyPeriod.curriculumStudyPeriod.value' | translate:curriculumStudyPeriod"></hois-value>
                 </md-input-container>
             </div>
-            <br>
+
             <md-table-container>
                 <table class="subject-study-period">
                     <thead>
@@ -104,7 +106,7 @@
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/studentGroups')">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back('#/subjectStudyPeriods/studentGroups', subjectStudyPeriodStudentGroupEditForm)">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>

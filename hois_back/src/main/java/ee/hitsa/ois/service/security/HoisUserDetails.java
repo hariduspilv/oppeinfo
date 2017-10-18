@@ -65,7 +65,7 @@ public class HoisUserDetails extends org.springframework.security.core.userdetai
     }
 
     public boolean isTeacher() {
-        return Role.ROLL_O.name().equals(role);
+        return Role.ROLL_O.name().equals(role) && teacherId != null;
     }
 
     public Long getUserId() {

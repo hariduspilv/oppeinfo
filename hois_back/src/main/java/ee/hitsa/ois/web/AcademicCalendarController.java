@@ -15,10 +15,9 @@ public class AcademicCalendarController {
 
     @Autowired
     private AcademicCalendarService academicCalendarService;
-    
+
     @GetMapping
     public AcademicCalendarDto academicCalendar(HoisUserDetails user) {
-        return academicCalendarService.getAcademicCalendar(user.getSchoolId());
+        return academicCalendarService.academicCalendar(user.getSchoolId());
     }
-
 }

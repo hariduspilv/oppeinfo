@@ -159,15 +159,16 @@ angular.module('hitsaOis')
           if (angular.isDefined(curriculumModule)) {
             angular.extend(dialogScope.module, curriculumModule);
             if (angular.isArray(curriculumModule.occupations)) {
-              curriculumModule.occupations.forEach(function(occupation) {
-                if (angular.isDefined(occupation.code)) {
-                  if(occupation.code.indexOf('KUTSE') === 0 || occupation.code.indexOf('OSAKUTSE') === 0) {
-                    dialogScope.occupationsSelected[occupation.code] = true;
-                  } else if(occupation.code.indexOf('SPETSKUTSE') === 0) {
-                    dialogScope.specialitiesSelected[occupation.code] = true;
-                  }
-                }
-              });
+              dialogScope.module.occupations = curriculumModule.occupations;
+              // curriculumModule.occupations.forEach(function(occupation) {
+              //   if (angular.isDefined(occupation.code)) {
+              //     if(occupation.code.indexOf('KUTSE') === 0 || occupation.code.indexOf('OSAKUTSE') === 0) {
+              //       dialogScope.occupationsSelected[occupation.code] = true;
+              //     } else if(occupation.code.indexOf('SPETSKUTSE') === 0) {
+              //       dialogScope.specialitiesSelected[occupation.code] = true;
+              //     }
+              //   }
+              // });
             }
           }
       },
@@ -178,7 +179,7 @@ angular.module('hitsaOis')
         return capacities.map(function(el){
           return el.inputData;
         }).filter(function(el){
-          return angular.isDefined(el.hours);
+          return el.hours;
         });
     }
 
@@ -203,7 +204,7 @@ angular.module('hitsaOis')
           if (!angular.isDefined(occupationModuleTheme)) {
             dialogScope.occupationModuleTheme = {capacities: [], assessment: 'KUTSEHINDAMISVIIS_E'};
           } else {
-            dialogScope.occupationModuleTheme = occupationModuleTheme;
+            dialogScope.occupationModuleTheme = angular.copy(occupationModuleTheme);
           }
           dialogScope.outcomes = curriculumModule.outcomes;
           dialogScope.setDefaultHours = function() {
@@ -230,13 +231,21 @@ angular.module('hitsaOis')
           dialogScope.saveTheme = function() {
             var submittedDialogScope = dialogScope;
             if(!validateTheme(submittedDialogScope)) {
+              message.error('main.messages.form-has-errors');
               return;
             }
             submittedDialogScope.occupationModuleTheme.capacities = capacitiesToDto(submittedDialogScope.capacities);
 
-            if (!angular.isDefined(occupationModuleTheme)) {
-              occupationModule.themes.push(submittedDialogScope.occupationModuleTheme);
+            if (angular.isDefined(occupationModuleTheme)) {
+              ArrayUtils.remove(occupationModule.themes, occupationModuleTheme);
             }
+            occupationModule.themes.push(submittedDialogScope.occupationModuleTheme);
+
+            $scope.openAddModuleDataDialog(curriculumModule, occupationModule);
+          };
+
+          dialogScope.close = function() {
+            dialogScope.cancel();
             $scope.openAddModuleDataDialog(curriculumModule, occupationModule);
           };
 
@@ -273,36 +282,54 @@ angular.module('hitsaOis')
       };
     };
 
+    function getYearCapacity(yearCapacities, studyYear) {
+      if(!angular.isArray(yearCapacities) || !studyYear) {
+          console.error("cannot get year capacity");
+      }
+      return yearCapacities.find(function(yc){
+        return yc.studyYearNumber === studyYear;
+      });
+    }
+
+    function addEmptyYearCapacities(yearCapacities) {
+      if(ArrayUtils.isEmpty(yearCapacities)) {
+        yearCapacities = [];
+      }
+      if(yearCapacities.length !== 3) {
+        for(var i = 1; i <= 3; i++) {
+          if(!getYearCapacity(yearCapacities, i)) {
+            yearCapacities.push({credits: 0, studyYearNumber: i});
+          }
+        }
+      }
+    }
+
+    function calculateYearCapacity(themes, yearCapacity) {
+      var yearsThemes = themes.filter(function(theme){
+        return theme.studyYearNumber === yearCapacity.studyYearNumber;
+      });
+      if(!ArrayUtils.isEmpty(yearsThemes)) {
+        yearCapacity.credits = yearsThemes.reduce(function(sum, theme){
+          return sum + theme.credits;
+        }, 0);
+      } else {
+        yearCapacity.credits = 0;
+      }
+    }
+
 
     var calculateYearCapacities = function(themes, yearCapacities) {
-      var creditsPerYearNumber = [];
-      if (angular.isArray(themes)) {
-        themes.forEach(function(theme) {
-          if (angular.isNumber(theme.studyYearNumber)) {
-            if (!angular.isDefined(creditsPerYearNumber[theme.studyYearNumber])) {
-              creditsPerYearNumber[theme.studyYearNumber] = 0;
-            }
-            creditsPerYearNumber[theme.studyYearNumber] += theme.credits;
-          }
-        });
+      addEmptyYearCapacities(yearCapacities);
+
+      // set theme capacities to year capacities
+      if (angular.isArray(themes) && themes.length !== 0) {
+        for(var i = 0; i < yearCapacities.length; i++) {
+          calculateYearCapacity(themes, yearCapacities[i]);
+        }
       }
-      if (yearCapacities.length === 0) {
-        creditsPerYearNumber.forEach(function(credits, studyYearNumber) {
-          var index = studyYearNumber-1;
-          var capacity = {credits: credits, studyYearNumber: studyYearNumber};
-          yearCapacities[index] = capacity;
-        });
-      } else {
-        yearCapacities.forEach(function(it) {
-          if (angular.isDefined(it.studyYearNumber)) {
-            if(!angular.isDefined(creditsPerYearNumber[it.studyYearNumber])) {
-              it.credits = 0;
-            } else {
-              it.credits = creditsPerYearNumber[it.studyYearNumber];
-            }
-          }
-        });
-      }
+      yearCapacities.sort(function(a, b){
+        return a.studyYearNumber - b.studyYearNumber;
+      });
     };
 
     function getModulesOccupationModule(curriculumModule) {
@@ -323,11 +350,17 @@ angular.module('hitsaOis')
 
         dialogScope.curriculumModule = curriculumModule;
 
+        // FIXME
+        // dialogScope.curriculumModule.type = $scope.moduleTypes.find(function(el){
+        //   return el.code = dialogScope.curriculumModule.module;
+        // });
+
         var occupationModule = getModulesOccupationModule(curriculumModule);
         if (angular.isDefined(occupationModule)) {
 
           if(angular.isDefined(moduleData)) {
             dialogScope.occupationModule = moduleData;
+            calculateYearCapacities(dialogScope.occupationModule.themes, dialogScope.occupationModule.yearCapacities);
           } else {
             dialogScope.occupationModule = angular.copy(occupationModule);
           }

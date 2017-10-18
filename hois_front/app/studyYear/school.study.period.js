@@ -121,9 +121,7 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
             period.$save().then(afterSave);
           }
         };
-        $scope.cancel = function() {
-          $mdDialog.hide();
-        };
+        $scope.cancel = $mdDialog.hide;
 
         function formValid() {
           scope.dialogForm.$setSubmitted();
@@ -183,6 +181,19 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
         }
 
         $scope.studyPeriods = parentScope.studyPeriods;
+
+        $scope.uniqueInStudyPeriod = false;
+        $scope.$watch("studyPeriodEvent", function () {
+          if (uniqueEvent.indexOf($scope.studyPeriodEvent.eventType) !== -1) {
+            $scope.uniqueInStudyPeriod = true;
+            if (!$scope.studyPeriodEvent.studyPeriod) {
+              $scope.studyPeriodEvent.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods);
+            }
+          } else {
+            $scope.uniqueInStudyPeriod = false;
+          }
+        }, true);
+
         $scope.delete = function () {
           dialogService.confirmDialog({prompt: 'studyYear.studyPeriodEvent.deleteconfirm'}, function() {
             $scope.studyPeriodEvent.$delete().then(function() {
@@ -196,12 +207,10 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
           });
         };
 
-        $scope.cancel = function() {
-          $mdDialog.hide();
-        };
+        $scope.cancel = $mdDialog.hide;
 
         $scope.submit = function () {
-          // kalendri-sündmus peab olema unikaalne õppeperioodis või õppeaastas
+          // calendar event must be unique in study period if it's type is ”Avalduse esitamine”, ”Deklareerimisperiood”, ”VÕTA taotluse vastuvõtmine” 
           $scope.dialogForm.$setSubmitted();
 
           var errors = false;
@@ -224,29 +233,16 @@ angular.module('hitsaOis').config(function ($routeProvider, USER_ROLES) {
                 errors = true;
                 message.error('studyYear.studyPeriodEvent.error.uniqueInPeriod');
               }
-            } else {
-              var inSameYear = parentScope.studyPeriodEvents.filter(function (it) {
-                if ($scope.studyPeriodEvent.id !== it.id && it.eventType === $scope.studyPeriodEvent.eventType) {
-                  return true;
-                }
-              });
-              if (inSameYear.length > 0) {
-                errors = true;
-                message.error('studyYear.studyPeriodEvent.error.uniqueInPeriod');
-              }
             }
           }
 
-
-
-          // kalendri-sündmuse algus (kellaaeg) peab olema varajasem kui lõpp (kellaaeg)
+          // calendar event start time must be earlier than end time
           if ($scope.studyPeriodEvent.start && $scope.studyPeriodEvent.end && $scope.studyPeriodEvent.start.getTime() > $scope.studyPeriodEvent.end.getTime()) {
             errors = true;
             message.error('studyYear.studyPeriod.error.startDateLaterThanEndDate');
           }
 
-
-          // kalendri-sündmus peab kuuluma õppeperioodi sisesele ajale
+          // calendar event date must be between study period's start and end date
           if ($scope.studyPeriodEvent.studyPeriod) {
             var studyPeriodEventStart, studyPeriodEventEnd, studyPeriodStart, studyPeriodEnd;
             if ($scope.studyPeriodEvent.start && $scope.studyPeriodEvent.end) {

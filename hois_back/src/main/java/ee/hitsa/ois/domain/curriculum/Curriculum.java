@@ -135,8 +135,7 @@ public class Curriculum extends BaseEntityWithId implements Translatable {
     private Set<CurriculumGrade> grades = new HashSet<>();
 
     @NotEmpty(groups = {Joint.class})
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
-    @JoinColumn(name = "curriculum_id", nullable = false, updatable = false)
+    @OneToMany(mappedBy = "curriculum", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<CurriculumJointPartner> jointPartners = new HashSet<>();
 
     @NotEmpty(groups = {ConfirmedHigher.class})

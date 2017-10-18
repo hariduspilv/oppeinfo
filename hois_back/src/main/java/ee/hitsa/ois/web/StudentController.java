@@ -55,10 +55,8 @@ public class StudentController {
 
     @Autowired
     private StudentService studentService;
-
     @Autowired
     private EhisStudentService ehisStudentService;
-
     @Autowired
     private StudentResultHigherService studentResultHigherService;
 
@@ -74,7 +72,7 @@ public class StudentController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public StudentViewDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Student student, @Valid @RequestBody StudentForm form) {
+    public StudentViewDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Student student, @Valid @RequestBody StudentForm form) {
         if(!UserUtil.canEditStudent(user, student)) {
             throw new AssertionFailedException("User cannot edit student data");
         }
@@ -94,7 +92,7 @@ public class StudentController {
     }
 
     @PutMapping("/{studentId:\\d+}/absences/{id:\\d+}")
-    public void updateAbsence(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentAbsence absence, @Valid @RequestBody StudentAbsenceForm form) {
+    public void saveAbsence(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentAbsence absence, @Valid @RequestBody StudentAbsenceForm form) {
         StudentAbsenceValidationUtil.assertCanEdit(user, absence);
         studentService.save(absence, form);
     }
@@ -119,7 +117,6 @@ public class StudentController {
         // TODO correct sorting
         result.put("applications", applications(user, student, new PageRequest(0, pagesize, null, "inserted")));
         result.put("directives", directives(user, student, new PageRequest(0, pagesize, null, "headline")));
-        // TODO more data
         result.put("student", Collections.singletonMap("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum()))));
         return result;
     }
@@ -143,13 +140,9 @@ public class StudentController {
     }
 
     @PostMapping("/ehisStudentExport")
-    public EhisStudentReport ehisStudentExport(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
+    public EhisStudentReport ehisExportStudents(HoisUserDetails user, @Valid @RequestBody EhisStudentForm ehisStudentForm) {
         assertIsSchoolAdmin(user);
         return ehisStudentService.exportStudents(user.getSchoolId(), ehisStudentForm);
-    }
-
-    private static void assertCanView(HoisUserDetails user, Student student) {
-        AssertionFailedException.throwIf(!UserUtil.canViewStudent(user, student), "User cannot view student data");
     }
 
     @GetMapping("/{id:\\d+}/vocationalResults")
@@ -164,4 +157,7 @@ public class StudentController {
         return studentResultHigherService.higherResults(student);
     }
 
+    private static void assertCanView(HoisUserDetails user, Student student) {
+        AssertionFailedException.throwIf(!UserUtil.canViewStudent(user, student), "User cannot view student data");
+    }
 }

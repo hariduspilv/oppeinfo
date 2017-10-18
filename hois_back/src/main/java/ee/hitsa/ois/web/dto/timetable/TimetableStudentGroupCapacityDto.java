@@ -10,9 +10,6 @@ public class TimetableStudentGroupCapacityDto {
     // setter
     private Long totalAllocatedLessons = Long.valueOf(0);
     private String capacityType;
-    // used for higher timetables
-    private String subjectCode;
-    private Long subjectStudyPeriod;
 
     public TimetableStudentGroupCapacityDto(Long studentGroup, Long journal, Long totalPlannedLessons,
             Long thisPlannedLessons, String capacityType) {
@@ -26,13 +23,10 @@ public class TimetableStudentGroupCapacityDto {
         this.capacityType = capacityType;
     }
 
-    public TimetableStudentGroupCapacityDto(Long studentGroup, Long totalPlannedLessons, String capacityType,
-            String subjectCode, Long subjectStudyPeriod) {
+    public TimetableStudentGroupCapacityDto(Long studentGroup, Long totalPlannedLessons, String capacityType) {
         this.studentGroup = studentGroup;
         this.totalPlannedLessons = totalPlannedLessons;
         this.capacityType = capacityType;
-        this.subjectCode = subjectCode;
-        this.subjectStudyPeriod = subjectStudyPeriod;
     }
 
     public Long getStudentGroup() {
@@ -90,23 +84,5 @@ public class TimetableStudentGroupCapacityDto {
     public void setCapacityType(String capacityType) {
         this.capacityType = capacityType;
     }
-
-    public String getSubjectCode() {
-        return subjectCode;
-    }
-
-    public void setSubjectCode(String subjectCode) {
-        this.subjectCode = subjectCode;
-    }
-
-    public Long getSubjectStudyPeriod() {
-        return subjectStudyPeriod;
-    }
-
-    public void setSubjectStudyPeriod(Long subjectStudyPeriod) {
-        this.subjectStudyPeriod = subjectStudyPeriod;
-    }
-    
-    
 
 }

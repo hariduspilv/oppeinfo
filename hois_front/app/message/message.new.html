@@ -105,7 +105,7 @@
         </div>
         <div layout="row">
             <md-button class="md-raised md-primary" ng-click="send()">{{'main.button.send' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="{{::formState.backUrl}}">{{'main.button.back' | translate}}</md-button>
+            <md-button class="md-raised" ng-click="back(formState.backUrl, messageNewForm, 'message.confirmClose')">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>

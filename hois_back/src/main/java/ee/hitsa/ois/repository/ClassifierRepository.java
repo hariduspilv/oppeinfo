@@ -3,12 +3,11 @@ package ee.hitsa.ois.repository;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 
 import ee.hitsa.ois.domain.Classifier;
 
-public interface ClassifierRepository extends JpaRepository<Classifier, String>, JpaSpecificationExecutor<Classifier> {
+public interface ClassifierRepository extends JpaRepository<Classifier, String> {
 
 	@Query(value = "select * from classifier as c inner join classifier_connect as cc on c.code = cc.connect_classifier_code where cc.classifier_code = ?1", nativeQuery = true)
 	List<Classifier> findParents(String code);
@@ -26,8 +25,6 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String>,
 	                + "(select classifier_code from classifier_connect where connect_classifier_code = ?1)))"
 	        + " and a.main_class_code = 'ISCED_VALD' and is_higher", nativeQuery = true)
 	List<Classifier> findAreasOfStudyByGroupOfStudy(String code);
-
-    List<Classifier> findAllByMainClassCode(String mainClassCode);
 
     Classifier findByValueAndMainClassCode(String value, String mainClassCode);
 }

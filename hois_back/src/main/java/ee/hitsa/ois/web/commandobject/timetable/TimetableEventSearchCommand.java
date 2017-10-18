@@ -16,6 +16,7 @@ public class TimetableEventSearchCommand {
     private String otherTeacher;
     private String otherRoom;
     private Long timetable;
+    private Long student;
 
     public String getName() {
         return name;
@@ -103,6 +104,14 @@ public class TimetableEventSearchCommand {
 
     public void setTimetable(Long timetable) {
         this.timetable = timetable;
+    }
+    
+    public Long getStudent() {
+        return student;
+    }
+
+    public void setStudent(Long student) {
+        this.student = student;
     }
 
 }

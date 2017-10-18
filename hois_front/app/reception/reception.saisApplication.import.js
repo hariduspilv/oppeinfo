@@ -1,10 +1,9 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController', function ($scope, Classifier, QueryUtils, $mdDialog, $q, message) {
+angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController', function ($scope, Classifier, QueryUtils, $mdDialog, message) {
   $scope.statusList = Classifier.queryForDropdown({mainClassCode: 'SAIS_AVALDUSESTAATUS', order: 'code'});
-  
-  $q.all([$scope.statusList.$promise, $scope.statusList.$promise]).then(function() {
-    Classifier.setSelectedCodes($scope.statusList, ["SAIS_AVALDUSESTAATUS_T"]);
+  $scope.statusList.$promise.then(function() {
+    Classifier.setSelectedCodes($scope.statusList, ['SAIS_AVALDUSESTAATUS_T']);
   });
 
   var clMapper = Classifier.valuemapper({applicationStatus: 'SAIS_AVALDUSESTAATUS'});

@@ -6,12 +6,9 @@ import ee.hitsa.ois.validation.ClassifierRestriction;
 public class SaisAdmissionSearchCommand {
 
     private String code;
-
     private Long curriculumVersion;
-
     @ClassifierRestriction(MainClassCode.OPPEVORM)
     private String studyForm;
-
     @ClassifierRestriction(MainClassCode.FINALLIKAS)
     private String fin;
 
@@ -46,5 +43,4 @@ public class SaisAdmissionSearchCommand {
     public void setFin(String fin) {
         this.fin = fin;
     }
-
 }

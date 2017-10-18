@@ -56,6 +56,7 @@ public class ReportControllerTests {
         uriBuilder.queryParam("studyForm", "OPPEVORM_P");
         uriBuilder.queryParam("status", "OPPURSTAATUS_A");
         uriBuilder.queryParam("fin", "FINALLIKAS_RE");
+        uriBuilder.queryParam("finSpecific", "FINTAPSUSTUS_Y");
         uriBuilder.queryParam("language", "OPPEKEEL_E");
 
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);

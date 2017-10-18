@@ -18,6 +18,7 @@ public class StateCurriculumDto extends StateCurriculumForm {
     private String changedBy;
     private Set<CurriculumSearchDto> curricula;
     private String status;
+    private Boolean canChange;
 
     public static StateCurriculumDto of(StateCurriculum stateCurriculum) {
         StateCurriculumDto dto = EntityUtil.bindToDto(stateCurriculum, new StateCurriculumDto(), "modules", "occupations");
@@ -93,5 +94,13 @@ public class StateCurriculumDto extends StateCurriculumForm {
 
     public void setChangedBy(String changedBy) {
         this.changedBy = changedBy;
+    }
+
+    public Boolean getCanChange() {
+        return canChange;
+    }
+
+    public void setCanChange(Boolean canChange) {
+        this.canChange = canChange;
     }
 }

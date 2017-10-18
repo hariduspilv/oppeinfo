@@ -17,8 +17,8 @@ public class CerfificateReportCurriculum {
         CerfificateReportCurriculum curriculumReport = new CerfificateReportCurriculum();
         curriculumReport.setName(curriculum.getNameEt());
         curriculumReport.setCode(curriculum.getCode());
-        curriculumReport.setNominalStudyYears(curriculum.getStudyPeriod() / MONTHS_IN_YEAR);
-        curriculumReport.setNominalStudyMonths(curriculum.getStudyPeriod() % MONTHS_IN_YEAR);
+        curriculumReport.setNominalStudyYears(curriculum.getStudyPeriod().intValue() / MONTHS_IN_YEAR);
+        curriculumReport.setNominalStudyMonths(curriculum.getStudyPeriod().intValue() % MONTHS_IN_YEAR);
         curriculumReport.setStudyLevel(curriculum.getOrigStudyLevel().getNameEt());
         return curriculumReport;
     }

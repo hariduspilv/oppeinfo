@@ -31,7 +31,7 @@ import ee.hitsa.ois.web.dto.SubjectStudyPeriodTeacherDto;
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
 public class SubjectStudyPeriodControllerTests {
-    
+
     private static final String BASE_URL = "/subjectStudyPeriods";
 
     @Autowired
@@ -60,44 +60,39 @@ public class SubjectStudyPeriodControllerTests {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void getTeacherOptions() {
         testSearchWithoutParams(BASE_URL + "/teachers/page");
     }
-    
+
     @Test
     public void getStudentGroupsForSearchForm() {
         testSearchWithoutParams(BASE_URL + "/studentGroups/list");
     }
-    
+
     @Test
     public void getStudentGroupsForEditForm() {
         testSearchWithoutParams(BASE_URL + "/studentGroups/list/limited/16");
     }
-    
-    @Test
-    public void subjects() {
-        testSearchWithoutParams(BASE_URL + "/subjects");
-    }
-    
+
     @Test
     public void searchByTeachers() {
         testSearchWithoutParams(BASE_URL + "/teachers");
     }
-    
+
     @Test
     public void getTeacherOptionsForEditForm() {
         testSearchWithoutParams(BASE_URL + "/teachers/list/limited/16");
     }
-    
-    public void testSearchWithoutParams(String methodUrl) {
+
+    private void testSearchWithoutParams(String methodUrl) {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(methodUrl);
         String url = uriBuilder.build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }
-    
+
     @Test
     public void getStudentGroupsSspContainer() {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/studentGroups/container");
@@ -192,7 +187,7 @@ public class SubjectStudyPeriodControllerTests {
     
     @Test
     public void curricula() {
-        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/curricula");
+        UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(BASE_URL + "/studentGroups/curricula");
         String url = uriBuilder.build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(url, Object.class);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

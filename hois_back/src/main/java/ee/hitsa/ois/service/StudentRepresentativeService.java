@@ -3,21 +3,18 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_E;
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_K;
 import static ee.hitsa.ois.enums.StudentRepresentativeApplicationStatus.AVALDUS_ESINDAJA_STAATUS_T;
-import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
@@ -34,11 +31,10 @@ import ee.hitsa.ois.message.StudentRepresentativeApplicationCreated;
 import ee.hitsa.ois.message.StudentRepresentativeApplicationRejectedMessage;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.StudentRepresentativeApplicationRepository;
-import ee.hitsa.ois.repository.StudentRepresentativeRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.StudentUtil;
@@ -64,14 +60,13 @@ public class StudentRepresentativeService {
     @Autowired
     private PersonRepository personRepository;
     @Autowired
-    private StudentRepresentativeRepository studentRepresentativeRepository;
-    @Autowired
-    private StudentRepresentativeApplicationRepository studentRepresentativeApplicationRepository;
-    @Autowired
     private UserService userService;
 
     public Page<StudentRepresentativeDto> search(HoisUserDetails user, Long studentId, Pageable pageable) {
-        return studentRepresentativeRepository.findAllByStudent_id(studentId, pageable).map(r -> StudentRepresentativeDto.of(r, user));
+        JpaQueryBuilder<StudentRepresentative> qb = new JpaQueryBuilder<>(StudentRepresentative.class, "sr").sort(pageable);
+        qb.requiredCriteria("sr.student.id = :studentId", "studentId", studentId);
+
+        return JpaQueryUtil.pagingResult(qb, em, pageable).map(r -> StudentRepresentativeDto.of(r, user));
     }
 
     public StudentRepresentative create(Student student, StudentRepresentativeForm form) {
@@ -118,34 +113,19 @@ public class StudentRepresentativeService {
 
     public void delete(StudentRepresentative representative) {
         // TODO if there is StudentRepresentativeApplication, change it's status too?
+        userService.deleteUser(representative);
         EntityUtil.deleteEntity(representative, em);
     }
 
     public Page<StudentRepresentativeApplicationDto> searchApplications(Long schoolId, StudentRepresentativeApplicationSearchCommand criteria, Pageable pageable) {
-        return studentRepresentativeApplicationRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
+        JpaQueryBuilder<StudentRepresentativeApplication> qb = new JpaQueryBuilder<>(StudentRepresentativeApplication.class, "sra").sort(pageable);
 
-            filters.add(cb.equal(root.get("student").get("school").get("id"), schoolId));
-            if(!StringUtils.isEmpty(criteria.getIdcode())) {
-                filters.add(cb.equal(root.get("person").get("idcode"), criteria.getIdcode()));
-            }
+        qb.requiredCriteria("sra.student.school.id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("sra.person.idcode = :idcode", "idcode", criteria.getIdcode());
+        qb.optionalContains(Arrays.asList("sra.person.firstname", "sra.person.lastname", "concat(sra.person.firstname, ' ', sra.person.lastname)"), "name", criteria.getName());
+        qb.optionalCriteria("sra.status.code = :status", "status", criteria.getStatus());
 
-            if(!StringUtils.isEmpty(criteria.getName())) {
-                List<Predicate> name = new ArrayList<>();
-                propertyContains(() -> root.get("person").get("firstname"), cb, criteria.getName(), name::add);
-                propertyContains(() -> root.get("person").get("lastname"), cb, criteria.getName(), name::add);
-                name.add(cb.like(cb.concat(cb.upper(root.get("person").get("firstname")), cb.concat(" ", cb.upper(root.get("person").get("lastname")))), JpaQueryUtil.toContains(criteria.getName())));
-                if(!name.isEmpty()) {
-                    filters.add(cb.or(name.toArray(new Predicate[name.size()])));
-                }
-            }
-
-            if(StringUtils.hasText(criteria.getStatus())) {
-                filters.add(cb.equal(root.get("status").get("code"), criteria.getStatus()));
-            }
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(StudentRepresentativeApplicationDto::of);
+        return JpaQueryUtil.pagingResult(qb, em, pageable).map(StudentRepresentativeApplicationDto::of);
     }
 
     public void acceptApplication(StudentRepresentativeApplication application) {
@@ -223,8 +203,10 @@ public class StudentRepresentativeService {
         // if there is no user for given person with role of parent/representative for school of student, create it
         Person person = representative.getPerson();
         Long schoolId = EntityUtil.getId(representative.getStudent().getSchool());
+        Long studentId =  EntityUtil.getId(representative.getStudent());
 
-        if(!StreamUtil.nullSafeSet(person.getUsers()).stream().anyMatch(u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && ClassifierUtil.equals(Role.ROLL_L, u.getRole()))) {
+        if(!StreamUtil.nullSafeSet(person.getUsers()).stream().anyMatch(
+                u -> schoolId.equals(EntityUtil.getNullableId(u.getSchool())) && ClassifierUtil.equals(Role.ROLL_L, u.getRole()) && studentId.equals(EntityUtil.getNullableId(u.getStudent())))) {
             userService.createUser(representative);
         }
     }

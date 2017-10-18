@@ -58,12 +58,12 @@
         <tbody md-body>
         <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
           <td md-cell><a ng-href="#/reception/saisAdmission/{{::row.id}}/view">{{::row.code}}</a></td>
-          <td md-cell>{{row.curriculumVersion[currentLanguageNameField()]}}</td>
+          <td md-cell>{{currentLanguageNameField(row.curriculumVersion)}}</td>
           <td md-cell>{{::row.places}}</td>
-          <td md-cell>{{row.language[currentLanguageNameField()]}}</td>
+          <td md-cell>{{currentLanguageNameField(row.language)}}</td>
           <td md-cell>{{row.periodStart | hoisDate}}</td>
           <td md-cell>{{row.periodEnd | hoisDate}}</td>
-          <td md-cell>{{row.studyForm[currentLanguageNameField()]}}</td>
+          <td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
         </tr>
         </tbody>
       </table>

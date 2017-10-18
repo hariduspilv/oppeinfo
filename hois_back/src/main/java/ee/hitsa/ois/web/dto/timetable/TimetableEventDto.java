@@ -12,10 +12,13 @@ public class TimetableEventDto {
     private Integer lessonNr;
     private List<AutocompleteResult> rooms;
     private Long journal;
+    private Long subjectStudyPeriod;
     private Long studentGroup;
     private String capacityType;
     private String subjectCode;
+    private String subjectName;
 
+    // TODO: make different classes with different cosntructors
     public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, String capacityType,
             Long journal, Long studentGroup) {
         this.id = id;
@@ -28,7 +31,7 @@ public class TimetableEventDto {
     }
 
     public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, String capacityType,
-            String subjectCode, Long studentGroup) {
+            String subjectCode, Long studentGroup, String subjectName, Long subjectStudyPeriod) {
         this.id = id;
         this.start = start;
         this.end = end;
@@ -36,6 +39,20 @@ public class TimetableEventDto {
         this.capacityType = capacityType;
         this.subjectCode = subjectCode;
         this.studentGroup = studentGroup;
+        this.subjectName = subjectName;
+        this.subjectStudyPeriod = subjectStudyPeriod;
+    }
+
+    public TimetableEventDto(Long id, LocalDateTime start, LocalDateTime end, Integer lessonNr, String capacityType,
+            String subjectCode, String subjectName, Long subjectStudyPeriod) {
+        this.id = id;
+        this.start = start;
+        this.end = end;
+        this.lessonNr = lessonNr;
+        this.capacityType = capacityType;
+        this.subjectCode = subjectCode;
+        this.subjectStudyPeriod = subjectStudyPeriod;
+        this.subjectName = subjectName;
     }
 
     public Long getId() {
@@ -86,6 +103,14 @@ public class TimetableEventDto {
         this.journal = journal;
     }
 
+    public Long getSubjectStudyPeriod() {
+        return subjectStudyPeriod;
+    }
+
+    public void setSubjectStudyPeriod(Long subjectStudyPeriod) {
+        this.subjectStudyPeriod = subjectStudyPeriod;
+    }
+
     public Long getStudentGroup() {
         return studentGroup;
     }
@@ -108,6 +133,14 @@ public class TimetableEventDto {
 
     public void setSubjectCode(String subjectCode) {
         this.subjectCode = subjectCode;
+    }
+
+    public String getSubjectName() {
+        return subjectName;
+    }
+
+    public void setSubjectName(String subjectName) {
+        this.subjectName = subjectName;
     }
 
 }

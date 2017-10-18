@@ -47,7 +47,7 @@ public class SubjectStudyPeriodPlanController {
     public Page<SubjectStudyPeriodPlanSearchDtoContainer> search(HoisUserDetails user, SubjectStudyPeriodPlanSearchCommand criteria, Pageable pageable) {
         return subjectStudyPeriodPlanService.search(user.getSchoolId(), criteria, pageable);
     }
-    
+
     @GetMapping("/{id:\\d+}")
     public SubjectStudyPeriodPlanDto get(@WithEntity("id") SubjectStudyPeriodPlan plan) {
         return SubjectStudyPeriodPlanDto.of(plan);
@@ -61,7 +61,7 @@ public class SubjectStudyPeriodPlanController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public SubjectStudyPeriodPlanDto update(HoisUserDetails user, 
+    public SubjectStudyPeriodPlanDto save(HoisUserDetails user, 
             @WithVersionedEntity(value = "id", versionRequestBody = true) SubjectStudyPeriodPlan subjectStudyPeriod, 
             @Valid @RequestBody SubjectStudyPeriodPlanDto form) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
@@ -75,27 +75,27 @@ public class SubjectStudyPeriodPlanController {
                 "Only school administrator can delete subjectStudyPeriodPlan");  
         subjectStudyPeriodPlanService.delete(user.getSchoolId(), plan);
     }
-    
+
     @GetMapping("/exists")
     public Map<String, ?> exists(@Valid SubjectStudyPeriodPlanUniqueCommand form) {
         return Collections.singletonMap("exists", subjectStudyPeriodPlanService.exists(form));
     }
-    
+
     @GetMapping("/curriculums")
     public List<AutocompleteResult> curriculums(HoisUserDetails user, CurriculumSearchCommand criteria) {
         return subjectStudyPeriodPlanService.curriculums(user.getSchoolId(), criteria);
     }
-    
+
     @GetMapping("/studyPeriod/{id:\\d+}")
     public StudyPeriodDto studyPeriod(@WithEntity("id") StudyPeriod studyPeriod) {
         return EntityUtil.bindToDto(studyPeriod, new StudyPeriodDto());
     }
-    
+
     @GetMapping("/subject/{id:\\d+}")
     public AutocompleteResult subject(@WithEntity("id") Subject subject) {
         return AutocompleteResult.of(subject);
     }
-    
+
     @GetMapping("/subjects")
     public Page<AutocompleteResult> getSubjectsOptions(SubjectSearchCommand subjectSearchCommand, HoisUserDetails user, Pageable pageable) {
         return subjectStudyPeriodPlanService.getSubjectsOptions(user.getSchoolId(), subjectSearchCommand, pageable);

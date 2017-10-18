@@ -1,12 +1,8 @@
 package ee.hitsa.ois.service;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
-
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,9 +12,10 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
-import ee.hitsa.ois.repository.TeacherOccupationRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationForm;
 import ee.hitsa.ois.web.commandobject.TeacherOccupationSearchCommand;
@@ -30,25 +27,23 @@ public class TeacherOccupationService {
 
     @Autowired
     private EntityManager em;
-    @Autowired
-    private TeacherOccupationRepository teacherOccupationRepository;
 
-    public Page<TeacherOccupationDto> findAll(Long schoolId, TeacherOccupationSearchCommand criteria, Pageable pageable) {
-        return teacherOccupationRepository.findAll((root, query, cb) -> {
-            List<Predicate> filter = new ArrayList<>();
-            filter.add(cb.equal(root.get("school").get("id"), schoolId));
-            propertyContains(() -> root.get("occupationEt"), cb, criteria.getOccupationEt(), filter::add);
-            propertyContains(() -> root.get("occupationEn"), cb, criteria.getOccupationEn(), filter::add);
-            if(Boolean.TRUE.equals(criteria.getIsValid())) {
-                filter.add(cb.equal(root.get("isValid"), Boolean.TRUE));
-            }
-            return cb.and(filter.toArray(new Predicate[filter.size()]));
-        }, pageable).map(TeacherOccupationDto::of);
+    public Page<TeacherOccupationDto> search(Long schoolId, TeacherOccupationSearchCommand criteria, Pageable pageable) {
+        JpaQueryBuilder<TeacherOccupation> qb = new JpaQueryBuilder<>(TeacherOccupation.class, "t").sort(pageable);
+        qb.requiredCriteria("t.school.id = :schoolId", "schoolId", schoolId);
+        qb.optionalContains("t.occupationEt", "occupationEt", criteria.getOccupationEt());
+        qb.optionalContains("t.occupationEn", "occupationEn", criteria.getOccupationEn());
+        if(Boolean.TRUE.equals(criteria.getIsValid())) {
+            qb.filter("t.isValid = true");
+        }
+
+        return JpaQueryUtil.pagingResult(qb, em, pageable).map(TeacherOccupationDto::of);
     }
 
     public List<TeacherOccupationDto> listAll(Long schoolId) {
-        return StreamUtil.toMappedList(TeacherOccupationDto::of,
-                teacherOccupationRepository.findAll((root, query, cb) -> cb.equal(root.get("school").get("id"), schoolId)));
+        List<TeacherOccupation> occupations = em.createQuery("select t from TeacherOccupation t where t.school.id = ?1", TeacherOccupation.class)
+                .setParameter(1, schoolId).getResultList();
+        return StreamUtil.toMappedList(TeacherOccupationDto::of, occupations);
     }
 
     public TeacherOccupation create(HoisUserDetails user, TeacherOccupationForm form) {

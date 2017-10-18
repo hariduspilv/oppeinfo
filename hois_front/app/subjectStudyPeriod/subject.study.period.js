@@ -1,10 +1,13 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', function ($scope, $sessionStorage, QueryUtils, DataUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$scope', 'QueryUtils', 'DataUtils', '$route', 'ArrayUtils',
+  function ($scope, QueryUtils, DataUtils, $route, ArrayUtils) {
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods', {order: 's.' + $scope.currentLanguageNameField()});
 
+    $scope.auth = $route.current.locals.auth;
+
     function setCurrentStudyPeriod() {
-        if($scope.criteria && $scope.studyPeriods && !$scope.criteria.studyPeriods) {
+        if($scope.criteria && !ArrayUtils.isEmpty($scope.studyPeriods) && !$scope.criteria.studyPeriods) {
             $scope.criteria.studyPeriods = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
         }
     }
@@ -37,8 +40,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         }
         return name;
     };
-
-}]).controller('SubjectStudyPeriodEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$q', '$rootScope', 'DeclarationType', function ($scope, QueryUtils, ArrayUtils, $route, dialogService, message, $q, $rootScope, DeclarationType) {
+  }
+]).controller('SubjectStudyPeriodEditController', ['$scope', 'QueryUtils', 'ArrayUtils', '$route', 'dialogService', 'message', '$q', '$rootScope', 'DeclarationType',
+  function ($scope, QueryUtils, ArrayUtils, $route, dialogService, message, $q, $rootScope, DeclarationType) {
 
     var baseUrl = '/subjectStudyPeriods';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -53,9 +57,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     $scope.obligatoryTeacher = teacherId;
 
     if(studentGroupId) {
-        QueryUtils.endpoint('/studentgroups').get({id: studentGroupId}).$promise.then(function(response){
-            $scope.studentGroup = response;
-        });
+      $scope.studentGroup = QueryUtils.endpoint('/studentgroups').get({id: studentGroupId});
     }
 
     if(id) {
@@ -86,9 +88,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         }
     }
 
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query(function(result) {
-        $scope.studyPeriods = result;
-    });
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
 
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
         $scope.studentGroups = result.filter(function(el){
@@ -101,9 +101,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         });
     });
 
-    QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query(function(result) {
-        $scope.subjects = result;
-    });
+    $scope.subjects = QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query();
 
     $scope.addTeacher = function(teacher) {
         if(teacher && !isTeacherAdded(teacher)) {
@@ -119,8 +117,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     };
 
     $scope.querySearch = function (text) {
-        var url = '/subjectStudyPeriods/teachers/page';
-        var lookup = QueryUtils.endpoint(url);
+        var lookup = QueryUtils.endpoint('/subjectStudyPeriods/teachers/page');
         var deferred = $q.defer();
         lookup.search({
             name: text
@@ -182,9 +179,8 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
     function afterCreate() {
       message.updateSuccess();
       replaceLastUrl();
+      $scope.subjectStudyPeriodEditForm.$setPristine();
     }
-
-
 
     function save() {
       if(!formValid()) {
@@ -193,7 +189,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
       prepareDtoForSaving();
 
       if($scope.record.id) {
-          $scope.record.$update().then(message.updateSuccess);
+          $scope.record.$update().then(function(){
+            message.updateSuccess();
+            $scope.subjectStudyPeriodEditForm.$setPristine();
+          });
       } else {
           $scope.record.$save().then(afterCreate);
       }
@@ -215,18 +214,15 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
          });
       });
     };
-}]).controller('SubjectStudyPeriodViewController', ['$scope', 'QueryUtils', '$route', function ($scope, QueryUtils, $route) {
+  }
+]).controller('SubjectStudyPeriodViewController', ['$scope', 'QueryUtils', '$route',
+  function ($scope, QueryUtils, $route) {
 
     var Endpoint = QueryUtils.endpoint('/subjectStudyPeriods');
     var id = $route.current.params.id;
 
-    Endpoint.get({id: id}).$promise.then(function(response){
-        $scope.record = response;
-    });
-
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query(function(result) {
-        $scope.studyPeriods = result;
-    });
+    $scope.record = Endpoint.get({id: id});
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query();
 
     QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/list').query(function(result) {
         $scope.studentGroups = result.map(function(el){
@@ -237,11 +233,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSearchController', ['$s
         });
     });
 
-    QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query(function(result) {
-        $scope.subjects = result;
-    });
-
-}]).constant('DeclarationType', {
+    $scope.subjects = QueryUtils.endpoint('/subjectStudyPeriods/subjects/list').query();
+  }
+]).constant('DeclarationType', {
   'DEKLARATSIOON_EI': 'DEKLARATSIOON_EI',
   'DEKLARATSIOON_KOIK' : 'DEKLARATSIOON_KOIK',
   'DEKLARATSIOON_LISA': 'DEKLARATSIOON_LISA'

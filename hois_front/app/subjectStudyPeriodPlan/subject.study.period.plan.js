@@ -1,8 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController',
-['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', 'Classifier', '$q', '$translate',
-function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier) {
+angular.module('hitsaOis').controller('subjectStudyPeriodPlanSearchController', ['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', 'Classifier', '$q', '$translate',
+  function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier) {
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriodPlans', {order: 'id'});
 
@@ -20,13 +19,8 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier) {
         setCurrentStudyPeriod();
     });
 
-    QueryUtils.endpoint('/subjectStudyPeriodPlans/curriculums').query().$promise.then(function(response){
-        $scope.curriculums = response;
-    });
-
-    Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true}, function(response){
-        $scope.capacityTypes = response;
-    });
+    $scope.curriculums = QueryUtils.endpoint('/subjectStudyPeriodPlans/curriculums').query();
+    $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT', higher: true});
 
     $scope.$watch('criteria.subjectObject', function() {
             $scope.criteria.subject = $scope.criteria.subjectObject ? $scope.criteria.subjectObject.id : null;
@@ -69,9 +63,8 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, Classifier) {
         }
     );
 
-}]).controller('subjectStudyPeriodPlanNewController',
-['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', '$mdDialog', 'dialogService', '$route', 'Classifier', '$location',
-function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService, $route, Classifier, $location) {
+}]).controller('subjectStudyPeriodPlanNewController', ['$scope', 'QueryUtils', 'ArrayUtils', 'message', 'DataUtils', '$mdDialog', 'dialogService', '$route', 'Classifier', '$location',
+  function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogService, $route, Classifier, $location) {
 
     var id = $route.current.params.id;
     var baseUrl = '/subjectStudyPeriodPlans';
@@ -99,11 +92,7 @@ function ($scope, QueryUtils, ArrayUtils, message, DataUtils, $mdDialog, dialogS
     }
 
     function getStudySubject(subjectId) {
-        QueryUtils.endpoint(baseUrl + "/subject/" + subjectId).get().$promise.then(
-            function(response) {
-                $scope.subject = response;
-            }
-        );
+      $scope.subject = QueryUtils.endpoint(baseUrl + "/subject/" + subjectId).get();
     }
 
     function getCurriculums() {

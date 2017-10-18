@@ -1,6 +1,5 @@
 'use strict';
 
-
 angular.module('hitsaOis').controller('ApplicationStudentListController', function ($scope, $location, $route, $q, QueryUtils, Classifier) {
   $scope.auth = $route.current.locals.auth;
   var studentId = $route.current.locals.auth.student;
@@ -9,10 +8,7 @@ angular.module('hitsaOis').controller('ApplicationStudentListController', functi
   $q.all(applicationsMapper.promises).then($scope.loadData);
 
   if (!$scope.auth.isParent()) {
-    var StudentApplicableApplicationsEndpoint = QueryUtils.endpoint('/applications/student/'+studentId+'/applicable');
-    StudentApplicableApplicationsEndpoint.search(function(result) {
-      $scope.applicationTypesApplicable = result;
-      $scope.applicationTypes = Classifier.queryForDropdown({mainClassCode: 'AVALDUS_LIIK'});
-    });
+    $scope.applicationTypesApplicable = QueryUtils.endpoint('/applications/student/'+studentId+'/applicable').search();
+    $scope.applicationTypes = Classifier.queryForDropdown({mainClassCode: 'AVALDUS_LIIK'});
   }
 });

@@ -35,6 +35,7 @@ import ee.hitsa.ois.repository.LessonTimeBuildingRepository;
 import ee.hitsa.ois.repository.LessonTimeRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -109,7 +110,7 @@ public class LessonTimeService {
     }
 
     public LocalDate currentPeriodStartDate(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from lesson_time_building_group ltbg "
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from lesson_time_building_group ltbg "
                 + "inner join lesson_time lt on lt.lesson_time_building_group_id = ltbg.id").sort(new Sort(Direction.DESC, "valid_from"));
 
         qb.requiredCriteria("valid_from <= :validFrom", "validFrom", LocalDate.now());
@@ -178,7 +179,7 @@ public class LessonTimeService {
     public LocalDate minValidFrom(Set<Long> buildings, Long lessonTimeId) {
         if (lessonTimeId != null) {
             LessonTime lessonTime = em.getReference(LessonTime.class, lessonTimeId);
-            Set<LessonTimeBuildingGroup> groups = getLessonTimeBuildingGroups(lessonTime.getLessonTimeBuildingGroup().getValidFrom(),
+            Set<LessonTimeBuildingGroup> groups = lessonTimeBuildingGroups(lessonTime.getLessonTimeBuildingGroup().getValidFrom(),
                     EntityUtil.getId(lessonTime.getSchool()));
 
             Set<Long> savedBuildings = groups.stream()
@@ -221,7 +222,7 @@ public class LessonTimeService {
 
         // TODO: try to get rid of array comparison
         String buildingIds = buildings.stream().map(ltb -> EntityUtil.getId(ltb.getBuilding()).toString()).collect(Collectors.joining(","));
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from (select * from (select ltbg.id, ltbg.valid_from, array_agg(DISTINCT building_id) as buildings from lesson_time_building_group ltbg "+
                 "inner join lesson_time_building ltb on ltb.lesson_time_building_group_id = ltbg.id "+
                 "inner join lesson_time lt on lt.lesson_time_building_group_id = ltbg.id "+
@@ -241,7 +242,7 @@ public class LessonTimeService {
     }
 
     private void deleteGroups(LessonTimeGroupsDto newLessonTimeGroupsDto, LocalDate validFrom, Long schoolId) {
-        Set<LessonTimeBuildingGroup> storedLessonTimeGroupsDto = getLessonTimeBuildingGroups(validFrom, schoolId);
+        Set<LessonTimeBuildingGroup> storedLessonTimeGroupsDto = lessonTimeBuildingGroups(validFrom, schoolId);
         Set<Long> ids = StreamUtil.toMappedSet(LessonTimeBuildingGroupDto::getId, newLessonTimeGroupsDto.getLessonTimeBuildingGroups());
         List<LessonTimeBuildingGroup> deleted = storedLessonTimeGroupsDto.stream().filter(it -> !ids.contains(it.getId()))
                 .collect(Collectors.toList());
@@ -289,17 +290,14 @@ public class LessonTimeService {
                 }, (updated, stored) -> EntityUtil.bindToEntity(updated, stored));
     }
 
-    public Set<LessonTimeBuildingGroup> getLessonTimeBuildingGroups(LocalDate validFrom, Long schoolId) {
-        return lessonTimeRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            filters.add(cb.equal(root.get("lessonTimeBuildingGroup").get("validFrom"), validFrom));
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }).stream().map(LessonTime::getLessonTimeBuildingGroup).collect(Collectors.toSet());
+    private Set<LessonTimeBuildingGroup> lessonTimeBuildingGroups(LocalDate validFrom, Long schoolId) {
+        return em.createQuery("select lt from LessonTime lt where lt.school.id = ?1 and lt.lessonTimeBuildingGroup.validFrom = ?2", LessonTime.class)
+                .setParameter(1, schoolId).setParameter(2, validFrom).getResultList()
+                .stream().map(LessonTime::getLessonTimeBuildingGroup).collect(Collectors.toSet());
     }
 
     public LessonTimeGroupsDto getLessonTimeBuildingGroupsDto(LocalDate validFrom, Long schoolId) {
-        Set<LessonTimeBuildingGroup> groups = getLessonTimeBuildingGroups(validFrom, schoolId);
+        Set<LessonTimeBuildingGroup> groups = lessonTimeBuildingGroups(validFrom, schoolId);
         return LessonTimeGroupsDto.of(groups);
     }
 

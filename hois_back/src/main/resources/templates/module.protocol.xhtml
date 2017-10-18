@@ -8,5 +8,72 @@
     </style>
   </head>
   <body>
+    <table class="reporttable">
+      <tr>
+        <td class="reporttableheader" colspan="2">{{ "report.module.protocol.protocol" | translate }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.protocolNr" | translate }}</td>
+        <td>{{ content.protocolNr }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.status" | translate }}</td>
+        <td>{{ content.status }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.studyYear" | translate }}</td>
+        <td>{{ content.studyYear }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.inserted" | translate }}</td>
+        <td>{{ content.inserted }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.confirmDate" | translate }}</td>
+        <td>{{ content.confirmDate }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.confirmer" | translate }}</td>
+        <td>{{ content.confirmer }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.curriculum.version" | translate }}</td>
+        <td>{{ content.curriculumVersion }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.module" | translate }}</td>
+        <td>{{ content.curriculumModule }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.module.credits" | translate }}</td>
+        <td>{{ content.credits }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.module.assessment" | translate }}</td>
+        <td>{{ content.assessmentType }}</td>
+      </tr>
+      <tr>
+        <td class="label">{{ "report.module.protocol.teacher" | translate }}</td>
+        <td>{{ content.teacher }}</td>
+      </tr>
+
+      <tr>
+        <td colspan="2">
+			<table class="reporttable reportsubtable">
+		        <tr>
+					<td class="label">{{ "report.module.protocol.student" | translate }}</td>
+					<td class="label">{{ "report.module.protocol.module.grade" | translate }}</td>
+				</tr>
+				{% for student in content.protocolStudents %}
+				<tr>
+					<td>{{ student.fullname }}</td>
+					<td>{{ student.grade }}</td>
+				</tr>
+				{% endfor %}
+				<br/>
+			</table>
+        </td>
+      </tr>
+    </table>
   </body>
 </html>

@@ -35,4 +35,3 @@ public class SubjectStudyPeriodPlanStudyForm extends BaseEntityWithId {
         this.studyForm = studyForm;
     }
 }
-  

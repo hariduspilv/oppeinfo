@@ -1,4 +1,4 @@
-VERSIOON: 0.4.1/20171006
+VERSIOON: 0.4.2/20171018
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -218,7 +218,7 @@ Tallinna Tervishoiu Kõrgkoolis on olemas üks kõrgharidusõppe õppekava
 NB! Automaatteadete saatmiseks ÕISi on tekitatud kasutaja Hõis Automaatteade, palume seda mitte kustutada
 	   
 
-EELDUS: ver. 0.4.0/20171006
+EELDUS: ver. 0.4.1/20171006
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x
@@ -247,26 +247,8 @@ EELDUS: ver. 0.4.0/20171006
 
 ANDMEBAASI INSTALLEERIMINE:
 ------------------------------------------------------
-KIRJELDUS: olemasoleva andmebaasi "hois" lisatakse vajalikud tabelid. Andmebaasi skriptid asuvad "db" kaustas.
 
-EELDUS: kasutaja teab andmebaasi asukohta ja andmebaasi kasutaja salasõna, oskab kasutada "psql" käsku. Nginx serveris on seadistatud SSL
-
-OLULINE MUUDATUS: frontendi html failid peaks kopeerima nginx'ist sõltumata asukohta, nt teha kaust /opt/hois/html (proxy_backend.conf failis on vastav näide olemas), sest serveri tarkvara uuendamisel võidakse vajalikud kaustad üle kirjutada/kustutada
-
-
-
-Andmebaasi installeerimiseks:
-1. käivitada install.sql skript, nt
-   
-   psql -h devhois -f install.sql 2>&1 | tee log.txt
-   
-   , kus
-   
-   -h devhois - andmebaasi host, kus devhois on vastava serveri/hosti nimi, selle asemel võib panna ka IP aadressi. NB! kui skripti käivitamine toimub andmebaasi lokaalses masinas, siis -h parameetrit võib ära jätta
-   -f install.sql - install faili nimi, install.sql ja db_data.sql peavad asuma samas kaustas, install.sql fail kasutab db_data.sql faili
-   log.txt - andmebaasi installeerimise logi fail
-   
-   Installeerimise käigus küsitakse andmebaasi kasutaja salasõna ja lisatakse vajalikud tabelid
+Antud versiooniga andmebaasi muudatusi ei tule, seega antud samm tuleb vahele jätta
 
 
 RAKENDUSE INSTALLEERIMINE:
@@ -488,7 +470,7 @@ NB! XXX - frontendi server, nt devhoisfront
 		1. Navigeerida hois_front kausta ja kopeerida /opt/hois/frontend.config.js > app/config.js faili, nt
 		   cp /opt/hois/frontend.config.js app/config.js
 		2. Käivitada käsk "npm install"
-		3. Käivitada käsk "bower install"
+		3. Käivitada käsk "bower install" või "bower install --force"
 		4. Käivitada käsk "grunt build"
 		5. Käivitada käsk "rm -Rf /opt/hois/html/*" (nginxist vana seisu tühjendamiseks)
 		6. Käivitada käsk "cp -r dist/. /opt/hois/html/" (kopeeritakse frontendi uus seis /opt/hois/html kausta)

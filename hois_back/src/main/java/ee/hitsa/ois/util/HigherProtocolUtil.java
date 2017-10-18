@@ -3,7 +3,6 @@ package ee.hitsa.ois.util;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.protocol.Protocol;
-import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -14,11 +13,11 @@ import ee.hitsa.ois.web.dto.HigherProtocolStudentDto;
 public abstract class HigherProtocolUtil {
     
     public static boolean canChange(HoisUserDetails user, Protocol protocol) {
-        return user.isTeacher() && !isConfirmed(protocol) || user.isSchoolAdmin();
+        return user.isTeacher() && !ProtocolUtil.confirmed(protocol) || user.isSchoolAdmin();
     }
     
     public static boolean canConfirm(HoisUserDetails user, Protocol protocol) {
-        if(isConfirmed(protocol)) {
+        if(ProtocolUtil.confirmed(protocol)) {
             return false;
         }
         if(user.isSchoolAdmin()) {
@@ -32,8 +31,7 @@ public abstract class HigherProtocolUtil {
     }
     
     public static void assertCanChange(HoisUserDetails user, Protocol protocol) {
-        UserUtil.assertSameSchool(user, protocol.getSchool());
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
 
         if(!canChange(user, protocol)) {
             throw new ValidationFailedException("higherProtocol.error.noRightsToChange");
@@ -41,8 +39,7 @@ public abstract class HigherProtocolUtil {
     }
     
     public static void assertCanConfirm(HoisUserDetails user, Protocol protocol) {
-        UserUtil.assertSameSchool(user, protocol.getSchool());
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
 
         if(!canConfirm(user, protocol)) {
             throw new ValidationFailedException("higherProtocol.error.noRightsToConfirm");
@@ -69,13 +66,9 @@ public abstract class HigherProtocolUtil {
     }
     
     public static void assertHasAddInfoIfProtocolConfirmed(HigherProtocolStudentDto dto, Protocol protocol) {
-        if(isConfirmed(protocol) && addInfoMissing(dto)) {
+        if(ProtocolUtil.confirmed(protocol) && addInfoMissing(dto)) {
             throw new ValidationFailedException("higherProtocol.error.addInfoRequired");
         }
-    }
-    
-    public static boolean isConfirmed(Protocol protocol) {
-        return ClassifierUtil.equals(ProtocolStatus.PROTOKOLL_STAATUS_K, protocol.getStatus());
     }
     
     private static boolean addInfoMissing(HigherProtocolStudentDto dto) {

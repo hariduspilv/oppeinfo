@@ -26,15 +26,12 @@ public class StudyYearScheduleController {
     private StudyYearScheduleService studyYearScheduleService;
 
     @GetMapping
-    public StudyYearScheduleDtoContainer getStudyYearSchedules(HoisUserDetails user, StudyYearScheduleDtoContainer container) {
-        /*
-         * user can select school department with no student groups, and it should not cause an error
-         */
-        if(CollectionUtils.isEmpty(container.getStudyPeriods())) {
-            return container;
+    public StudyYearScheduleDtoContainer getStudyYearSchedules(HoisUserDetails user, StudyYearScheduleDtoContainer schedulesCmd) {
+        // user can select school department with no student groups, and it should not cause an error
+        if(!CollectionUtils.isEmpty(schedulesCmd.getStudyPeriods())) {
+            schedulesCmd.setStudyYearSchedules(studyYearScheduleService.getSet(user.getSchoolId(), schedulesCmd));
         }
-        container.setStudyYearSchedules(studyYearScheduleService.getSet(user.getSchoolId(), container));
-        return container;
+        return schedulesCmd;
     }
 
     @PutMapping
@@ -45,10 +42,11 @@ public class StudyYearScheduleController {
          * This code prevents changes to database and errors
          */
         if(!CollectionUtils.isEmpty(schedulesCmd.getStudyPeriods())) {
-            studyYearScheduleService.update(schedulesCmd, user.getSchoolId());
+            studyYearScheduleService.update(user.getSchoolId(), schedulesCmd);
         }
         return getStudyYearSchedules(user, schedulesCmd);
     }
+
     /**
      * This method is used because student groups 
      * should be filtered by school departments in front end
@@ -57,7 +55,7 @@ public class StudyYearScheduleController {
     public List<StudentGroupSearchDto> getStudentGroups(HoisUserDetails user) {
         return studyYearScheduleService.getStudentGroups(user.getSchoolId());
     }
-    
+
     @GetMapping("/studyYears")
     public List<StudyYearDto> getStudyYearsWithStudyPeriods(HoisUserDetails user) {
         return studyYearScheduleService.getStudyYearsWithStudyPeriods(user.getSchoolId());

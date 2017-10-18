@@ -1,21 +1,21 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentEhisController', function ($scope, message, QueryUtils, $mdDialog) {
+angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'message', 'QueryUtils', '$mdDialog', function ($scope, message, QueryUtils, $mdDialog) {
 
   var CURRICULA_FULFILMENT = 'CURRICULA_FULFILMENT';
-  //var FOREIGN_STUDY = 'FOREIGN_STUDY';
+  var FOREIGN_STUDY = 'FOREIGN_STUDY';
   var GRADUATION = 'GRADUATION';
   //var VOTA = 'VOTA';
 
   $scope.dataTypes = [
     CURRICULA_FULFILMENT,
-    //FOREIGN_STUDY,
+    FOREIGN_STUDY,
     GRADUATION/*,
     VOTA*/
   ];
 
   $scope.displayDates = [
-    //FOREIGN_STUDY,
+    FOREIGN_STUDY,
     GRADUATION/*,
     VOTA*/
   ];
@@ -32,7 +32,6 @@ angular.module('hitsaOis').controller('StudentEhisController', function ($scope,
         $mdDialog.hide();
         $scope.result = result;
       }).catch($mdDialog.hide);
-
     } else {
       message.error('main.messages.form-has-errors');
     }
@@ -42,4 +41,5 @@ angular.module('hitsaOis').controller('StudentEhisController', function ($scope,
       templateUrl: 'ehis/progress.dialog.html'
     });
   };
-});
+}
+]);

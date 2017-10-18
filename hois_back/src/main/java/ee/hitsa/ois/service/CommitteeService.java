@@ -22,6 +22,7 @@ import ee.hitsa.ois.domain.CommitteeMember;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.CommitteeSearchCommand;
@@ -67,7 +68,7 @@ public class CommitteeService {
 
     public Page<CommitteeSearchDto> search(Long schoolId, CommitteeSearchCommand criteria, Pageable pageable) {
         // TODO refactor using two queries - committee list and members
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(COMMITTEE_FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(COMMITTEE_FROM).sort(pageable);
 
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("c.valid_from >= :from", "from", criteria.getValidFrom());
@@ -141,7 +142,7 @@ public class CommitteeService {
     }
 
     public Set<AutocompleteResult> getMembers(Long schoolId) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(MEMBER_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(MEMBER_FROM);
         qb.requiredCriteria("c.school_id = :schoolId", "schoolId", schoolId);
         List<?> members = qb.select(MEMBER_SELECT, em).getResultList();
         return StreamUtil.toMappedSet(r -> {

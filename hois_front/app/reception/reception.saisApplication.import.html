@@ -101,7 +101,7 @@
               <td md-cell>{{::row.firstName}}</td>
               <td md-cell>{{::row.lastName}}</td>
               <td md-cell>{{::row.admissionCode}}</td>
-              <td md-cell>{{row.applicationStatus[currentLanguageNameField()]}}</td>
+              <td md-cell>{{currentLanguageNameField(row.applicationStatus)}}</td>
             </tr>
           </tbody>
         </table>

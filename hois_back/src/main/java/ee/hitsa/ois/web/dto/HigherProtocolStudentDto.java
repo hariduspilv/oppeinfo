@@ -9,9 +9,10 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.web.commandobject.ProtocolStudentForm;
 import ee.hitsa.ois.web.commandobject.VersionedCommand;
 
-public class HigherProtocolStudentDto extends VersionedCommand {
+public class HigherProtocolStudentDto extends VersionedCommand implements ProtocolStudentForm {
 
     @NotNull
     private Long id;
@@ -56,6 +57,7 @@ public class HigherProtocolStudentDto extends VersionedCommand {
         this.id = id;
     }
 
+    @Override
     public String getGrade() {
         return grade;
     }

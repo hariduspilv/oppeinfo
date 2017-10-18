@@ -30,6 +30,7 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.GeneralMessageForm;
@@ -49,7 +50,7 @@ public class GeneralMessageService {
             return new PageImpl<>(Collections.emptyList());
         }
 
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from general_message g").sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from general_message g").sort(pageable);
         qb.requiredCriteria("g.school_id = :schoolId", "schoolId", user.getSchoolId());
         qb.requiredCriteria("(g.valid_from is null or g.valid_from <= :now) and (g.valid_thru is null or g.valid_thru >= :now)", "now", LocalDate.now());
         qb.requiredCriteria("g.id in (select gt.general_message_id from general_message_target gt where gt.role_code = :role)", "role", user.getRole());
@@ -59,7 +60,7 @@ public class GeneralMessageService {
     }
 
     public Page<GeneralMessageDto> search(Long schoolId, GeneralMessageSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from general_message g").sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from general_message g").sort(pageable);
 
         qb.requiredCriteria("g.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalContains("g.title", "title", criteria.getTitle());

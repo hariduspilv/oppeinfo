@@ -1,0 +1,5 @@
+<catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog" prefer="system">
+    <system systemId="http://www.w3.org/2009/01/xml.xsd" uri="classpath:schemas/xml.xsd"/>
+    <system systemId="http://x-road.eu/xsd/xroad.xsd" uri="classpath:schemas/xroad.xsd"/>
+    <system systemId="http://x-road.eu/xsd/identifiers.xsd" uri="classpath:schemas/identifiers.xsd"/>
+</catalog>

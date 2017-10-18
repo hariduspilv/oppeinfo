@@ -55,8 +55,7 @@ public class HigherProtocolController {
 
     @GetMapping("/{id:\\d+}")
     public HigherProtocolDto get(HoisUserDetails user, @WithEntity("id") Protocol protocol) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        UserUtil.assertSameSchool(user, protocol.getSchool());
+        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         HigherProtocolDto dto = HigherProtocolDto.ofWithUserRights(user, protocol);
         higherProtocolService.setStudentsPracticeResults(dto);
         return dto;
@@ -65,8 +64,7 @@ public class HigherProtocolController {
     @GetMapping("/print/{id:\\d+}/protocol.pdf")
     public void print(HoisUserDetails user, @WithEntity("id") Protocol protocol, HttpServletResponse response)
             throws IOException {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        UserUtil.assertSameSchool(user, protocol.getSchool());
+        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         HttpUtil.pdf(response, protocol.getProtocolNr() + ".pdf",
                 pdfService.generate(HigherProtocolReport.TEMPLATE_NAME, new HigherProtocolReport(protocol)));
     }
@@ -124,8 +122,7 @@ public class HigherProtocolController {
     @GetMapping("/{id:\\d+}/calculate")
     public List<ProtocolStudentResultDto> calculateGrades(HoisUserDetails user,
             @NotNull @Valid ProtocolCalculateCommand command, @WithEntity(value = "id") Protocol protocol) {
-        UserUtil.assertSameSchool(user, protocol.getSchool());
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
+        UserUtil.assertIsSchoolAdminOrTeacher(user, protocol.getSchool());
         return higherProtocolService.calculateGrades(command);
     }
 }

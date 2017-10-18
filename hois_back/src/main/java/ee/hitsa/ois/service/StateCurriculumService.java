@@ -6,8 +6,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -33,13 +31,15 @@ import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.StateCurriculumRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.StateCurriculumUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumModuleForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
-import ee.hitsa.ois.web.commandobject.UniqueCommand;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
 import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
 
@@ -71,8 +71,8 @@ public class StateCurriculumService {
      * With this solution StateCurriculumSpecification will not be required anymore.
      * StateCurriculumSearchDto can also be simplified: iscedClass and large constructor can be removed
      */
-    public Page<StateCurriculumSearchDto> search(StateCurriculumSearchCommand criteria, Pageable pageable) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM).sort(pageable);
+    public Page<StateCurriculumSearchDto> search(HoisUserDetails user, StateCurriculumSearchCommand criteria, Pageable pageable) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(FROM).sort(pageable);
 
         String fieldName = Language.EN.equals(criteria.getLang()) ? "sc.name_en" : "sc.name_et";
         qb.optionalContains(fieldName, "name", criteria.getName());
@@ -120,28 +120,9 @@ public class StateCurriculumService {
             dto.setCredits(resultAsLong(r, 5));
             dto.setStatus(resultAsString(r, 6));
             dto.setEkrLevel(resultAsString(r, 7));
+            dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, dto.getStatus())));
             return dto;
         });
-    }
-
-    public boolean isUnique(UniqueCommand command) {
-        // TODO use existsBy
-        
-        return stateCurriculumRepository.count((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            if(command.getId() != null) {
-                filters.add(cb.notEqual(root.get("id"), command.getId()));
-            }
-            final Set<String> ALLOWED_PROPERTIES = new HashSet<>(Arrays.asList("nameEt", "nameEn"));
-            if(ALLOWED_PROPERTIES.contains(command.getParamName())) {
-                filters.add(cb.equal(root.get(command.getParamName()), command.getParamValue()));
-            }
-            LocalDate now = LocalDate.now();
-            filters.add(cb.or(cb.lessThanOrEqualTo(root.get("validFrom"), now), cb.isNull(root.get("validFrom"))));
-            filters.add(cb.or(cb.greaterThanOrEqualTo(root.get("validThru"), now), cb.isNull(root.get("validThru"))));
-            
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }) == 0;
     }
 
     public void delete(StateCurriculum curriculum) {

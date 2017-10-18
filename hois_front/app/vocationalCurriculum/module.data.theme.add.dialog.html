@@ -89,11 +89,11 @@
               <div flex="40" layout="row">{{'module.contactStudy' | translate}}</div>
             </div>
             <div ng-repeat="item in capacities track by item.code" layout="row" class="secondary-table-row">
-              <div flex="30">{{item[currentLanguageNameField()]}}</div>
+              <div flex="30">{{currentLanguageNameField(item)}}</div>
               <div flex="30">
                 <md-input-container flex>
                   <input ng-model="item.inputData.hours" type="number" min="0" max="999" pattern="^\d+$" aria-label="capacity hours" class="small-input"
-                    ng-required="item.inputData.contact!==undefined" ng-readonly="formState.readOnly">
+                   ng-readonly="formState.readOnly">
                 </md-input-container>
               </div>
               <div flex="40" layout="row">
@@ -171,7 +171,7 @@
     <span flex></span>
     <md-dialog-actions layout="row" layout-align="start center">
       <md-button class="md-raised md-primary" ng-click="saveTheme()" ng-if="!formState.readOnly">{{"main.button.save" | translate}}</md-button>
-      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="close()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>
 </md-dialog>

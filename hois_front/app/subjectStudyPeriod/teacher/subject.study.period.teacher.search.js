@@ -1,6 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController', ['$scope', '$sessionStorage', 'QueryUtils', 'DataUtils', function ($scope, $sessionStorage, QueryUtils, DataUtils) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController', ['$scope', 'QueryUtils', 'DataUtils', 'ArrayUtils',
+  function ($scope, QueryUtils, DataUtils, ArrayUtils) {
     $scope.currentNavItem = 'teachers';
 
     QueryUtils.createQueryForm($scope, '/subjectStudyPeriods/teachers', {order: 'id'});
@@ -12,13 +13,10 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController
         $scope.loadData();
     }
 
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
-        $scope.studyPeriods = response;
-        setCurrentStudyPeriod();
-    });
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(setCurrentStudyPeriod);
 
     $scope.$watch('criteria.studyPeriod', function() {
-            if($scope.studyPeriods && !$scope.criteria.studyPeriod) {
+            if(!ArrayUtils.isEmpty($scope.studyPeriods) && !$scope.criteria.studyPeriod) {
                 setCurrentStudyPeriod();
             }
         }
@@ -28,5 +26,5 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodTeacherSearchController
             $scope.criteria.teacher = $scope.criteria.teacherObject ? $scope.criteria.teacherObject.id : null;
         }
     );
-
-}]);
+  }
+]);

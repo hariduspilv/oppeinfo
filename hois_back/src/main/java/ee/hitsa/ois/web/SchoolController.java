@@ -98,7 +98,7 @@ public class SchoolController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public SchoolDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) School school, @Valid @RequestBody SchoolForm schoolForm) {
+    public SchoolDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) School school, @Valid @RequestBody SchoolForm schoolForm) {
         UserUtil.assertIsMainAdmin(user);
         return schoolService.save(school, schoolForm);
     }
@@ -141,7 +141,7 @@ public class SchoolController {
     @GetMapping("/departments")
     public Page<SchoolDepartmentDto> searchSchoolDepartment(HoisUserDetails user, @Valid SchoolDepartmentSearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return schoolDepartmentService.findAll(user.getSchoolId(), criteria, pageable);
+        return schoolDepartmentService.search(user.getSchoolId(), criteria, pageable);
     }
 
     @GetMapping("/departments/{id:\\d+}")
@@ -157,7 +157,7 @@ public class SchoolController {
     }
 
     @PutMapping("/departments/{id:\\d+}")
-    public SchoolDepartmentDto updateSchoolDepartment(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) SchoolDepartment schoolDepartment, @Valid @RequestBody SchoolDepartmentForm form) {
+    public SchoolDepartmentDto saveSchoolDepartment(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) SchoolDepartment schoolDepartment, @Valid @RequestBody SchoolDepartmentForm form) {
         UserUtil.assertIsSchoolAdmin(user, schoolDepartment.getSchool());
         return getSchoolDepartment(user, schoolDepartmentService.save(schoolDepartment, form));
     }
@@ -170,7 +170,7 @@ public class SchoolController {
 
     @GetMapping("/teacheroccupations")
     public Page<TeacherOccupationDto> searchTeacherOccupation(HoisUserDetails user, @Valid TeacherOccupationSearchCommand criteria, Pageable pageable) {
-        return teacherOccupationService.findAll(user.getSchoolId(), criteria, pageable);
+        return teacherOccupationService.search(user.getSchoolId(), criteria, pageable);
     }
 
     @GetMapping("/teacheroccupations/{id:\\d+}")
@@ -180,7 +180,7 @@ public class SchoolController {
     }
 
     @GetMapping("/teacheroccupations/all")
-    public List<TeacherOccupationDto> getAllTeacherOccupations(HoisUserDetails user) {
+    public List<TeacherOccupationDto> listAllTeacherOccupations(HoisUserDetails user) {
         return teacherOccupationService.listAll(user.getSchoolId());
     }
 
@@ -191,7 +191,7 @@ public class SchoolController {
     }
 
     @PutMapping("/teacheroccupations/{id:\\d+}")
-    public TeacherOccupationDto updateTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) TeacherOccupation teacherOccupation, @Valid @RequestBody TeacherOccupationForm form) {
+    public TeacherOccupationDto saveTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) TeacherOccupation teacherOccupation, @Valid @RequestBody TeacherOccupationForm form) {
         UserUtil.assertIsSchoolAdmin(user, teacherOccupation.getSchool());
         return getTeacherOccupation(user, teacherOccupationService.save(teacherOccupation, form));
     }
@@ -203,7 +203,7 @@ public class SchoolController {
     }
 
     @GetMapping("/studyYears")
-    public List<StudyYearSearchDto> getAllStudyYears(HoisUserDetails user) {
+    public List<StudyYearSearchDto> getStudyYears(HoisUserDetails user) {
         return studyYearService.getStudyYears(user.getSchoolId());
     }
 
@@ -219,7 +219,7 @@ public class SchoolController {
     }
 
     @PutMapping("/studyYears/{id:\\d+}")
-    public StudyYearDto updateStudyYear(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyYear studyYear, @Valid @RequestBody StudyYearForm request) {
+    public StudyYearDto saveStudyYear(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyYear studyYear, @Valid @RequestBody StudyYearForm request) {
         UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
         return getStudyYear(studyYearService.save(studyYear, request));
     }
@@ -232,7 +232,7 @@ public class SchoolController {
     }
 
     @PutMapping("/studyYears/{year:\\d+}/studyPeriods/{id:\\d+}")
-    public StudyPeriodDto updateStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, 
+    public StudyPeriodDto saveStudyPeriod(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, 
             @WithVersionedEntity(value = "id", versionRequestBody = true) StudyPeriod studyPeriod, 
             @Valid @RequestBody StudyPeriodForm request) {
         UserUtil.assertIsSchoolAdmin(user, studyYear.getSchool());
@@ -255,7 +255,7 @@ public class SchoolController {
     }
 
     @PutMapping("/studyYears/{year:\\d+}/studyPeriodEvents/{id:\\d+}")
-    public StudyPeriodEventDto updateStudyPeriodEvent(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyPeriodEvent studyPeriodEvent, @Valid @RequestBody StudyPeriodEventForm request) {
+    public StudyPeriodEventDto saveStudyPeriodEvent(HoisUserDetails user, @WithEntity("year") StudyYear studyYear, @WithVersionedEntity(value = "id", versionRequestBody = true) StudyPeriodEvent studyPeriodEvent, @Valid @RequestBody StudyPeriodEventForm request) {
         UserUtil.assertSameSchool(user, studyYear.getSchool());
         return get(studyYearService.save(studyYear, studyPeriodEvent, request));
     }
@@ -278,7 +278,7 @@ public class SchoolController {
     }
 
     @PutMapping("/studyYearScheduleLegends")
-    public Map<String, ?> updateStudyYearScheduleLegends(HoisUserDetails user, @Valid @RequestBody SchoolUpdateStudyYearScheduleLegendsCommand legendsCmd) {
+    public Map<String, ?> updateLegends(HoisUserDetails user, @Valid @RequestBody SchoolUpdateStudyYearScheduleLegendsCommand legendsCmd) {
         UserUtil.assertIsSchoolAdmin(user);
         School school = getSchool(user);
         schoolService.updateLegends(school, legendsCmd);

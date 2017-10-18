@@ -6,9 +6,11 @@ import java.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
 import ee.hitsa.ois.domain.student.StudentGroup;
@@ -25,6 +27,8 @@ import ee.hitsa.ois.service.security.HoisUserDetailsService;
  * Methods are placed in alphabetical order.
  *
  * Remember that not all objects have cascade delete option when cleaning test data!
+ * 
+ * Should it be totally database-independent?
  */
 @Service
 public class TestData {
@@ -53,22 +57,49 @@ public class TestData {
         c.setJoint(Boolean.FALSE);
         c.setOccupation(Boolean.FALSE);
         c.setValidFrom(LocalDate.now());
+        
+        Classifier classifier = getClassifier();
 
-        c.setConsecution(classifierRepository.getOne("OPPEKAVA_TYPE_E"));
-        c.setStatus(classifierRepository.getOne("OPPEKAVA_STAATUS_S"));
-        c.setDraft(classifierRepository.getOne("OPPEKAVA_LOOMISE_VIIS_PUUDUB"));
-        c.setOrigStudyLevel(classifierRepository.getOne("OPPEASTE_511"));
+        c.setConsecution(classifier);
+        c.setStatus(classifier);
+        c.setDraft(classifier);
+        c.setOrigStudyLevel(classifier);
         c.setSchool(getSchool());
 
         return c;
     }
+    
+    public CurriculumVersion getHigherCurriculumVersion() {
+        CurriculumVersion cv = new CurriculumVersion();
+        cv.setId(Long.valueOf(-1));
+        cv.setCode(STRING);
+        cv.setStatus(getClassifier());
+        return cv;
+    }
+    
+    public Classifier getClassifier() {
+        Classifier c = new Classifier();
+        c.setCode(STRING);
+        c.setNameEt(STRING);
+        c.setNameEn(STRING);
+        c.setValue(STRING);
+        return c;
+    }
 
     public School getSchool() {
-        if(school == null) {
-            school = schoolRepository.getOne(hoisUserDetailsService.
-                    loadUserByUsername(TestConfiguration.USER_ID).getSchoolId());
-        }
-        return school;
+//        if(school == null) {
+//            school = schoolRepository.getOne(hoisUserDetailsService.
+//                    loadUserByUsername(TestConfiguration.USER_ID).getSchoolId());
+//        }
+//        return school;
+      if(school == null) {
+          school = new School();
+          school.setId(Long.valueOf(-1));
+          school.setNameEn(STRING);
+          school.setNameEt(STRING);
+          school.setCode(STRING);
+      }
+      return school;
     }
 
     public StudentGroup getStudentGroup(Curriculum curriculum) {

@@ -66,7 +66,7 @@ public class StudentGroupController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public StudentGroupDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentGroup studentGroup, @Valid @RequestBody StudentGroupForm form) {
+    public StudentGroupDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) StudentGroup studentGroup, @Valid @RequestBody StudentGroupForm form) {
         UserUtil.assertSameSchool(user, studentGroup.getSchool());
         return get(user, studentGroupService.save(user, studentGroup, form));
     }

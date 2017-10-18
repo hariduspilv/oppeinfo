@@ -22,12 +22,8 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     angular.extend($scope.application, savedApplication);
   }
 
-
   $scope.applicationEditView = false;
-  $scope.application = {
-    files: [],
-    status: 'AVALDUS_STAATUS_KOOST'
-  };
+  $scope.application = {files: [], status: 'AVALDUS_STAATUS_KOOST'};
 
   var entity = $route.current.locals.entity;
   if (angular.isDefined(entity)) {
@@ -42,8 +38,6 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       }
     });
   }
-
-
 
   $scope.studyPeriodView = function (studyPeriodId) {
     if (angular.isArray($scope.studyPeriods) && angular.isNumber(studyPeriodId)) {
@@ -64,11 +58,9 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
         }
       });
       return subjects.join(", ");
-    } else {
-      return "";
     }
+    return "";
   };
-
 
   function applicationFinm(student, loadFormDeferred) {
     if ($scope.isCreate === true) {
@@ -121,11 +113,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       }
       $scope.studyForms = filterStudyForms;
     };
-    Classifier.queryForDropdown({ mainClassCode: 'OPPEVORM' }, function (result) {
-      allStudyForms = result;
-      filterStudyForms();
-    });
-
+    allStudyForms = Classifier.queryForDropdown({ mainClassCode: 'OPPEVORM' }, filterStudyForms);
 
     $scope.newCurriculumVersionSelected = function () {
       var selectedCurriculumVersion = allCurriculumVersions.find(function (it) { return it.id === $scope.application.newCurriculumVersion.id; });
@@ -140,10 +128,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     if ($scope.isCreate === true) {
       $scope.application.isPeriod = true;
     }
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function (result) {
-      $scope.studyPeriods = result;
-      loadFormDeferred.resolve();
-    });
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, loadFormDeferred.resolve);
   }
 
   function applicationAkadk(loadFormDeferred, academicLeaveApplication) {
@@ -156,10 +141,7 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
       }
     }
 
-    QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function (result) {
-      $scope.studyPeriods = result;
-      loadFormDeferred.resolve();
-    });
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, loadFormDeferred.resolve);
   }
 
   function applicationValis(loadFormDeferred) {
@@ -212,19 +194,13 @@ angular.module('hitsaOis').controller('ApplicationController', function ($scope,
     }
 
     var promises = [];
-    var subjectsPromise = QueryUtils.endpoint('/students/' + $scope.application.student.id + '/subjects').query({}, function (result) {
-      $scope.studentSubjects = result;
-    }).$promise;
-    promises.push(subjectsPromise);
+    $scope.studentSubjects = QueryUtils.endpoint('/students/' + $scope.application.student.id + '/subjects').query({});
+    promises.push($scope.studentSubjects.$promise);
 
-    var periodsPromise = QueryUtils.endpoint('/autocomplete/studyPeriods').query({}, function (result) {
-      $scope.studyPeriods = result;
-    }).$promise;
-    promises.push(periodsPromise);
+    $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query({});
+    promises.push($scope.studyPeriods.$promise);
 
-    $q.all(promises).then(function () {
-      loadFormDeferred.resolve();
-    });
+    $q.all(promises).then(loadFormDeferred.resolve);
   }
 
   function applicationEksmat(loadFormDeferred) {

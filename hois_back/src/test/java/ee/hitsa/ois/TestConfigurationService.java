@@ -1,10 +1,9 @@
 package ee.hitsa.ois;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-import javax.persistence.criteria.Predicate;
+import javax.persistence.EntityManager;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.web.client.TestRestTemplate;
@@ -15,20 +14,21 @@ import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.PersonRepository;
-import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.service.security.HoisUserDetailsService;
+import ee.hitsa.ois.util.JpaQueryBuilder;
 
 @Service
 public class TestConfigurationService {
 
     @Autowired
-    private PersonRepository personRepository;
+    private EntityManager em;
     @Autowired
-    private UserRepository userRepository;
+    private PersonRepository personRepository;
     @Autowired
     private HoisUserDetailsService hoisUserDetailsService;
 
@@ -63,15 +63,11 @@ public class TestConfigurationService {
             throw new UsernameNotFoundException("No person present with idcode : " + userId);
         }
 
-        List<User> usersWithRole = userRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
-            filters.add(cb.equal(root.get("person").get("id"), person.getId()));
-            filters.add(cb.equal(root.get("role").get("code"), role.name()));
-            if(schoolId != null) {
-                filters.add(cb.equal(root.get("school").get("id"), schoolId));
-            }
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        });
+        JpaQueryBuilder<User> qb = new JpaQueryBuilder<>(User.class, "u").sort("id");
+        qb.requiredCriteria("u.person.id = :personId", "personId", person.getId());
+        qb.requiredCriteria("u.role.code = :role", "role", role);
+        qb.optionalCriteria("u.school.id = :schoolId", "schoolId", schoolId);
+        List<User> usersWithRole = qb.select(em).setMaxResults(1).getResultList();
 
         if (usersWithRole.isEmpty()) {
             throw new AssertionFailedException("Cannot find role " + role.name() + " for user " + userId);
@@ -83,6 +79,13 @@ public class TestConfigurationService {
             currentUser = usersWithRole.get(0);
             restTemplate.postForEntity("/changeUser", Collections.singletonMap("id", currentUser.getId()), Object.class);
         }
+    }
+
+    public List<School> personSchools(Role role) {
+        return em.createQuery("select u.school from User u where u.school.id is not null and u.role.code = ?1 and u.person.idcode = ?2 order by u.school.id", School.class)
+                .setParameter(1, role.name())
+                .setParameter(2, TestConfiguration.USER_ID)
+                .getResultList();
     }
 
     private void setHeaders(ResponseEntity<Object> changeUserResponse) {
@@ -100,8 +103,11 @@ public class TestConfigurationService {
         });
     }
 
+    public User getCurrentUser() {
+        return currentUser;
+    }
+
     public HoisUserDetails getHoisUserDetails() {
         return hoisUserDetailsService.getHoisUserDetails(currentUser);
     }
-
 }

@@ -92,10 +92,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     'SISSEKANNE_L': 'pink-300'
   };
   $scope.journalEntryTypes = {};
-  Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (response) {
-    response.forEach(function (it) {
-      $scope.journalEntryTypes[it.code] = it;
-    });
+  Classifier.queryForDropdown({ mainClassCode: 'SISSEKANNE' }, function (result) {
+    $scope.journalEntryTypes = Classifier.toMap(result);
   });
   $scope.getEntryColor = function (type) {
     return $scope.journalEntryTypeColors[type];
@@ -116,10 +114,8 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
     dialogScope.journalEntry.startLessonNr = $scope.formState.lessonInfo.startLessonNr;
     dialogScope.lessons = LESSONS.map(function (it) { return { nameEt: it, nameEn: it, id: it }; });
     dialogScope.journalEntry.lessons = $scope.formState.lessonInfo.lessons;
-    Classifier.queryForDropdown({ mainClassCode: 'PUUDUMINE' }, function (response) {
-      response.forEach(function (it) {
-        dialogScope.absenceOptions[it.code] = it;
-      });
+    Classifier.queryForDropdown({ mainClassCode: 'PUUDUMINE' }, function (result) {
+      dialogScope.absenceOptions = Classifier.toMap(result);
     });
   }
 
@@ -167,14 +163,14 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
       function setHasAcceptedAbsence(absences) {
 
         dialogScope.journalStudents.forEach(function(js){
-          js.hasAcceptedAbsence = absences != null && ArrayUtils.contains(absences, js.id);
+          js.hasAcceptedAbsence = absences !== null && ArrayUtils.contains(absences, js.id);
         });
       }
 
       dialogScope.hasAcceptedAbsence = function(row) {
         var js = dialogScope.journalEntryStudents[row.id];
         return js && js.absence === 'PUUDUMINE_V' || row.hasAcceptedAbsence;
-      }
+      };
 
       dialogScope.journalEntry = {};
       dialogScope.selectedCapacityTypes = {};
@@ -272,7 +268,7 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           $scope.$parent.journal.status = response.status;
         });
       });
-    }
+    };
 
     $scope.unconfirm = function() {
       dialogService.confirmDialog({ prompt: 'journal.prompt.unconfirm' }, function () {
@@ -283,5 +279,5 @@ angular.module('hitsaOis').controller('JournalEditController', function ($scope,
           $scope.$parent.journal.status = response.status;
         });
       });
-    }
+    };
 });

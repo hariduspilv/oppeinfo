@@ -39,7 +39,9 @@
           <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
             <td md-cell><a ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/view">{{row.name}}</a></td>
             <td md-cell>{{row.hours}}</td>
-            <td md-cell><a href=""></a></td>
+            <td md-cell>
+                <a ng-if="row.timetable" href="#/timetable/teacher/{{row.studyPeriod}}/{{row.id}}/{{row.timetable}}">{{'subjectStudyPeriod.timetable' | translate}}</a>
+              </td>
             <td md-cell>
                 <md-button md-no-ink class="md-primary change-button" ng-href="#/subjectStudyPeriods/teachers/{{row.id}}/{{criteria.studyPeriod}}/edit">{{'main.button.change' | translate}}
                     </md-button></td>

@@ -61,7 +61,7 @@ public class ApplicationController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public ApplicationDto update(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application, @Valid @RequestBody ApplicationForm applicationForm) {
+    public ApplicationDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Application application, @Valid @RequestBody ApplicationForm applicationForm) {
         if (!UserUtil.isSchoolAdmin(user, application.getStudent().getSchool()) && !UserUtil.isSame(user, application.getStudent())) {
             throw new ValidationFailedException(String.format("user %s is not allowed to update application %d", user.getUsername(), application.getId()));
         }
@@ -89,7 +89,7 @@ public class ApplicationController {
     }
 
     @GetMapping("student/{id:\\d+}/applicable")
-    public Map<ApplicationType, ApplicationApplicableDto> applicableApplications(HoisUserDetails user, @WithEntity(value = "id") Student student) {
+    public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(HoisUserDetails user, @WithEntity(value = "id") Student student) {
         if(!(UserUtil.isSame(user, student) || UserUtil.isSchoolAdmin(user, student.getSchool()))) {
             throw new ValidationFailedException(String.format("user %s is not allowed to view applicable", user.getUsername()));
         }

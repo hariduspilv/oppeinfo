@@ -62,15 +62,17 @@
 	</fieldset>
 	<div>&nbsp;</div>
 	<fieldset tabindex="2">
-		<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !allModulesHaveData()}">{{'module.modules' | translate}}</legend>
+    <legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !allModulesHaveData()}">{{'module.modules' | translate}}</legend>
 		<div layout="row" flex class="secondary-table-header">
-			<div flex="55">
+			<div flex="50">
 			  {{'module.implementationPlan.moduleName' | translate}}
 			</div>
 			<div flex="30">
+          &nbsp;&nbsp;
 			  {{'module.implementationPlan.moduleCapacity' | translate}}
 			</div>
 			<div flex="15">
+          &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
 			  {{'module.implementationPlan.moduleOK' | translate}}
 			</div>
 		</div>
@@ -79,8 +81,8 @@
 		<!--<div ng-repeat="(moduleTypeCode, moduleTypeModules) in modulesWithOutOccupation track by moduleTypeCode" layout="column">
 			<div class="occupation-header align-center">{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}</div>
 			<div layout="row" ng-repeat="module in moduleTypeModules.modules track by $index" layout-sm="column" layout-align-sm="start start" layout-align="start center" flex class="secondary-table-row">
-				<div flex="20">{{moduleTypeModules.moduleType[currentLanguageNameField()]}}</div>
-				<div flex="35"><a style="margin-left:2em;" class="md-primary" ng-click="openViewModuleDialog(module)">{{module[currentLanguageNameField()]}}</a></div>
+				<div flex="20">{{currentLanguageNameField(moduleTypeModules.moduleType)}}</div>
+				<div flex="35"><a style="margin-left:2em;" class="md-primary" ng-click="openViewModuleDialog(module)">{{currentLanguageNameField(module)}}</a></div>
 				<div flex="10">{{module.credits}} EKAP</div>
 				<div flex="20">
 				  <a class="md-primary" ng-click="openAddModuleDataDialog(module)" ng-if="!formState.readOnly">
@@ -93,16 +95,16 @@
 			</div>
 		</div>
 		<div ng-repeat="(occupationCode, occupationModuleTypes) in occupationModuleTypesModules track by occupationCode " layout="column">
-			<div class="occupation-header align-center">{{occupationModuleTypes.occupation[currentLanguageNameField()]}}</div>
+			<div class="occupation-header align-center">{{currentLanguageNameField(occupationModuleTypes.occupation)}}</div>
             <div layout="column">
               <div ng-repeat="(moduleTypeCode, moduleTypeModules) in occupationModuleTypes.moduleTypes track by moduleTypeCode" layout="column">
                 <div layout="column">
                   <div ng-repeat="module in moduleTypeModules.modules track by $index">
                     <div layout="row" layout-sm="column" layout-align-sm="start start" layout-align="start center" flex class="secondary-table-row">
-                      <div flex="20">{{moduleTypeModules.moduleType[currentLanguageNameField()]}}</div>
+                      <div flex="20">{{currentLanguageNameField(moduleTypeModules.moduleType)}}</div>
 					  <div flex="35">
                         <a class="md-primary" style="margin-left:2em;" ng-click="openViewModuleDialog(module)">
-                          {{module[currentLanguageNameField()]}}
+                          {{currentLanguageNameField(module)}}
                         </a>
                       </div>
                       <div flex="10">

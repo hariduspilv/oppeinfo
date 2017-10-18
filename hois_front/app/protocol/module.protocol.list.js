@@ -1,9 +1,18 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ModuleProtocolListController', function ($scope, $route, QueryUtils, DataUtils, Classifier, $q) {
+angular.module('hitsaOis').controller('ModuleProtocolListController', function ($scope, $route, QueryUtils, DataUtils, Classifier, $q, ArrayUtils) {
   $scope.auth = $route.current.locals.auth;
   $scope.search = {};
   $scope.criteria = {};
+
+  function canCreateProtocol() {
+    return ArrayUtils.contains($scope.auth.authorizedRoles, "ROLE_OIGUS_M_TEEMAOIGUS_MOODULPROTOKOLL");
+  }
+
+  $scope.formState = {
+    canCreateProtocol: canCreateProtocol()
+  };
+
   var clMapper = Classifier.valuemapper({ status: 'PROTOKOLL_STAATUS' });
   QueryUtils.createQueryForm($scope, '/moduleProtocols', {}, clMapper.objectmapper);
 

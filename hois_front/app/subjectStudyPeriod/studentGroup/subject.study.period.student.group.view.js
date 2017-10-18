@@ -1,6 +1,7 @@
 'use strict';
 
-angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewController', ['$scope', 'QueryUtils', 'Classifier', '$route', 'SspCapacities', function ($scope, QueryUtils, Classifier, $route, SspCapacities) {
+angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewController', ['$scope', 'QueryUtils', 'Classifier', '$route', 'SspCapacities',
+  function ($scope, QueryUtils, Classifier, $route, SspCapacities) {
 
     var studyPeriodId = parseInt($route.current.params.studyPeriodId);
     var studentGroup = parseInt($route.current.params.studentGroupId);
@@ -19,10 +20,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewControl
     });
 
     function getCurriculum() {
-        QueryUtils.endpoint('/subjectStudyPeriods/curriculum/' +  $scope.studentGroup.curriculum.id).get(function(response) {
-            $scope.curriculum = response;
-            getCurriculumStudyPeriod();
-        });
+      $scope.curriculum = QueryUtils.endpoint('/subjectStudyPeriods/studentGroups/curriculum/' +  $scope.studentGroup.curriculum.id).get(getCurriculumStudyPeriod);
     }
 
     function getCurriculumStudyPeriod() {
@@ -33,12 +31,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodStudentGroupViewControl
         };
     }
 
-    Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
-        $scope.capacityTypes = response;
-    });
-
-    QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId}).$promise.then(function(response) {
-        $scope.studyPeriod = response;
-    });
-
-}]);
+    $scope.capacityTypes = Classifier.queryForDropdown({mainClassCode: 'MAHT'});
+    $scope.studyPeriod = QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId});
+  }
+]);

@@ -48,7 +48,7 @@ public class BuildingController {
     }
 
     @PutMapping("/buildings/{id:\\d+}")
-    public BuildingDto updateBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Building building, @Valid @RequestBody BuildingForm form) {
+    public BuildingDto saveBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Building building, @Valid @RequestBody BuildingForm form) {
         UserUtil.assertIsSchoolAdmin(user, building.getSchool());
         return getBuilding(user, buildingService.save(building, form));
     }
@@ -63,7 +63,7 @@ public class BuildingController {
     @GetMapping("/rooms")
     public Page<RoomSearchDto> searchRooms(HoisUserDetails user, @Valid RoomSearchCommand searchCommand, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
-        return buildingService.findAllRooms(user.getSchoolId(), searchCommand, pageable);
+        return buildingService.searchRooms(user.getSchoolId(), searchCommand, pageable);
     }
 
     @GetMapping("/rooms/{id:\\d+}")
@@ -79,7 +79,7 @@ public class BuildingController {
     }
 
     @PutMapping("/rooms/{id:\\d+}")
-    public RoomDto updateRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Room room, @Valid @RequestBody RoomForm form) {
+    public RoomDto saveRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Room room, @Valid @RequestBody RoomForm form) {
         UserUtil.assertIsSchoolAdmin(user, room.getBuilding().getSchool());
         return getRoom(user, buildingService.save(user, room, form));
     }

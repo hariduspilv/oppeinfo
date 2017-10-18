@@ -10,9 +10,8 @@ angular.module('hitsaOis')
     $q.all(clMapper.promises).then($scope.loadData);
 
     if($scope.auth.isStudent()) {
-      Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK'}, function(result) {
-        $scope.types = result.filter(function(t) {return t.code !== CertificateType.TOEND_LIIK_MUU;});
-
+      $scope.types = Classifier.queryForDropdown({mainClassCode: 'TOEND_LIIK', filterValues: [CertificateType.TOEND_LIIK_MUU]}, function() {
+       // TODO use cheaper backend call to fetch student status only
         QueryUtils.endpoint('/students').get({id: $scope.auth.student}).$promise.then(function(response) {
           var status = response.status;
           var forbiddenTypes = CertificateUtil.getForbiddenTypes(status);
@@ -109,9 +108,7 @@ angular.module('hitsaOis')
       });
     }
 
-    QueryUtils.endpoint(baseUrl + "/signatories").query().$promise.then(function(response) {
-      $scope.signatories = response;
-    });
+    $scope.signatories = QueryUtils.endpoint(baseUrl + "/signatories").query();
 
     function loadContent() {
       if($scope.record.id) {

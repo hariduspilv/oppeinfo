@@ -12,7 +12,6 @@ import javax.persistence.criteria.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.CollectionUtils;
 
 import ee.hitsa.ois.domain.application.Application;
 import ee.hitsa.ois.enums.AcademicLeaveReason;
@@ -76,7 +75,7 @@ public class ApplicationUtil {
         });
 
         Map<Long, Application> academicLeaveRevocations;
-        if (CollectionUtils.isEmpty(previousSameTypeAcademicLeaves)) {
+        if (previousSameTypeAcademicLeaves.isEmpty()) {
             academicLeaveRevocations = Collections.emptyMap();
         } else {
             // FIXME this is probably wrong source - date can be different in directive

@@ -49,6 +49,7 @@ public class JobExecutorService {
     public void directiveJob() {
         handleJobs(job -> {
             directiveConfirmService.updateStudentStatus(job);
+            ehisDirectiveStudentService.updateStudentStatus(job);
         }, JobType.JOB_AKAD_KATK, JobType.JOB_AKAD_MINEK, JobType.JOB_AKAD_TULEK, JobType.JOB_VALIS_MINEK, JobType.JOB_VALIS_TULEK);
     }
 

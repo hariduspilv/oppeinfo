@@ -30,10 +30,10 @@ import ee.hitsa.ois.domain.curriculum.CurriculumSpeciality;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
-import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.report.CurriculumReport;
 import ee.hitsa.ois.service.AutocompleteService;
+import ee.hitsa.ois.service.CurriculumSearchService;
 import ee.hitsa.ois.service.CurriculumService;
 import ee.hitsa.ois.service.CurriculumValidationService;
 import ee.hitsa.ois.service.PdfService;
@@ -73,6 +73,8 @@ public class CurriculumController {
     @Autowired
     private CurriculumService curriculumService;
     @Autowired
+    private CurriculumSearchService curriculumSearchService;
+    @Autowired
     private PdfService pdfService;
     @Autowired
     private XmlService xmlService;
@@ -107,7 +109,7 @@ public class CurriculumController {
     @GetMapping
     public Page<CurriculumSearchDto> search(HoisUserDetails user, CurriculumSearchCommand curriculumSearchCommand,
             Pageable pageable) {
-        return curriculumService.search(user.getSchoolId(), curriculumSearchCommand, pageable);
+        return curriculumSearchService.search(user.getSchoolId(), curriculumSearchCommand, pageable);
     }
 
     @PostMapping
@@ -119,7 +121,7 @@ public class CurriculumController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public CurriculumDto update(HoisUserDetails user, @NotNull @Valid @RequestBody CurriculumForm curriculumForm,
+    public CurriculumDto save(HoisUserDetails user, @NotNull @Valid @RequestBody CurriculumForm curriculumForm,
             @WithEntity("id") Curriculum curriculum) {
         curriculumValidationService.assertSameOrJoinSchool(user, curriculum);
         UserUtil.assertIsSchoolAdmin(user);
@@ -152,7 +154,7 @@ public class CurriculumController {
         curriculumValidationService.assertSameOrJoinSchool(user, curriculum);
         UserUtil.assertIsSchoolAdmin(user);
         curriculumValidationService.validateCurriculum(curriculum);
-        return CurriculumDto.of(curriculumService.sendToEhis(curriculum));
+        return CurriculumDto.of(curriculumService.sendToEhis(user, curriculum));
     }
 
     @PutMapping("/updateFromEhis/{id:\\d+}")
@@ -202,7 +204,7 @@ public class CurriculumController {
     }
 
     @PutMapping("/{curriculumId:\\d+}/versions/{id:\\d+}")
-    public CurriculumVersionDto updateVersion(HoisUserDetails user,
+    public CurriculumVersionDto saveVersion(HoisUserDetails user,
             @WithEntity(value = "id") CurriculumVersion curriculumVersion,
             @Valid @RequestBody CurriculumVersionDto curriculumVersionDto) {
         curriculumValidationService.assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
@@ -219,7 +221,7 @@ public class CurriculumController {
         curriculumValidationService.assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
         UserUtil.assertIsSchoolAdmin(user);
         return CurriculumVersionDto.of(
-                curriculumService.setStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_C));
+                curriculumService.closeVersion(curriculumVersion));
     }
 
     @PutMapping("/{curriculumId:\\d+}/versions/confirm/{id:\\d+}")
@@ -228,8 +230,7 @@ public class CurriculumController {
         curriculumValidationService.assertSameOrJoinSchool(user, curriculumVersion.getCurriculum());
         UserUtil.assertIsSchoolAdmin(user);
         curriculumValidationService.validateCurriculumVersion(curriculumVersion);
-        return CurriculumVersionDto.of(
-                curriculumService.setStatus(curriculumVersion, CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K));
+        return CurriculumVersionDto.of(curriculumService.confirmVersion(curriculumVersion));
     }
 
     @PutMapping("/{curriculumId:\\d+}/versions/saveAndConfirm/{id:\\d+}")
@@ -296,9 +297,10 @@ public class CurriculumController {
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);
         curriculumService.deleteModule(module);
     }
+
     @Deprecated
     @PutMapping("/module/{id:\\d+}")
-    public CurriculumDto updateCurriculumModule(HoisUserDetails user, @NotNull @RequestBody CurriculumDto form,
+    public CurriculumDto saveCurriculumModule(HoisUserDetails user, @NotNull @RequestBody CurriculumDto form,
             @WithEntity("id") Curriculum curriculum) {
         UserUtil.assertIsSchoolAdmin(user);
         curriculumValidationService.assertCurriculumCanBeEdited(curriculum);

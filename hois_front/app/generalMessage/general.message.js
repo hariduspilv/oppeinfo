@@ -31,9 +31,7 @@ angular.module('hitsaOis').controller('GeneralMessageSearchController', ['$scope
       Classifier.setSelectedCodes($scope.roleDefs, $scope.record.targets || []);
     }
 
-    $scope.roleDefs = Classifier.queryForDropdown({mainClassCode: 'ROLL'}, function() {
-      $scope.roleDefs = $scope.roleDefs.filter(function(i) { return i.code !== 'ROLL_H' && i.code !== 'ROLL_P' && i.code !== 'ROLL_V'; });
-
+    $scope.roleDefs = Classifier.queryForDropdown({mainClassCode: 'ROLL', filterValues: ['ROLL_H', 'ROLL_P', 'ROLL_V']}, function() {
       var Endpoint = QueryUtils.endpoint(baseUrl);
       if(id) {
         $scope.record = Endpoint.get({id: id}, afterLoad);

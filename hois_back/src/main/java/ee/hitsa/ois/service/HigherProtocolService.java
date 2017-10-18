@@ -9,7 +9,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.regex.Pattern;
 
 import javax.persistence.EntityManager;
 import javax.persistence.criteria.Predicate;
@@ -26,7 +26,8 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.protocol.Protocol;
 import ee.hitsa.ois.domain.protocol.ProtocolHdata;
 import ee.hitsa.ois.domain.protocol.ProtocolStudent;
-import ee.hitsa.ois.domain.protocol.ProtocolStudentHistory;
+import ee.hitsa.ois.domain.school.School;
+import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
@@ -34,28 +35,23 @@ import ee.hitsa.ois.enums.DeclarationStatus;
 import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.enums.ProtocolType;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.ProtocolRepository;
-import ee.hitsa.ois.repository.ProtocolStudentRepository;
-import ee.hitsa.ois.repository.SchoolRepository;
-import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.SubjectStudyPeriodRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HigherProtocolGradeUtil;
 import ee.hitsa.ois.util.HigherProtocolUtil;
-import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.ProtocolUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
-import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolCreateForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSaveForm;
 import ee.hitsa.ois.web.commandobject.HigherProtocolSearchCommand;
 import ee.hitsa.ois.web.commandobject.HigherProtocolStudentSearchCommand;
+import ee.hitsa.ois.web.commandobject.ProtocolCalculateCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.HigherProtocolDto;
 import ee.hitsa.ois.web.dto.HigherProtocolSearchDto;
@@ -85,23 +81,15 @@ public class HigherProtocolService {
           + "where ph.type_code = '" + ProtocolType.PROTOKOLLI_LIIK_P.name() + "' "
           + "and ph.subject_study_period_id = ds.subject_study_period_id "
           + "and ps.student_id = s.id ) ";
+    
+    private static final Pattern GRADE_PATTERN = Pattern.compile("[0-5]");
 
     @Autowired
     private EntityManager em;
     @Autowired
     private ProtocolRepository protocolRepository;
     @Autowired
-    private ClassifierRepository classifierRepository;
-    @Autowired
-    private SchoolRepository schoolRepository;
-    @Autowired
-    private SubjectStudyPeriodRepository subjectStudyPeriodRepository;
-    @Autowired
-    private StudentRepository studentRepository;
-    @Autowired
     private StudyYearService studyYearService;
-    @Autowired
-    private ProtocolStudentRepository protocolStudentRepository;
 
     public Page<HigherProtocolSearchDto> search(HoisUserDetails user, HigherProtocolSearchCommand criteria,
             Pageable pageable) {
@@ -169,124 +157,80 @@ public class HigherProtocolService {
         Protocol protocol = new Protocol();
         protocol.setIsVocational(Boolean.FALSE);
         protocol.setProtocolNr(ProtocolUtil.generateProtocolNumber(em));
-        protocol.setSchool(schoolRepository.getOne(user.getSchoolId()));
-        protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
+        protocol.setSchool(em.getReference(School.class, user.getSchoolId()));
+        protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
 
         ProtocolHdata protocolHData = new ProtocolHdata();
-        protocolHData.setType(classifierRepository.getOne(form.getProtocolType()));
-        protocolHData.setSubjectStudyPeriod(subjectStudyPeriodRepository.getOne(form.getSubjectStudyPeriod()));
+        protocolHData.setType(em.getReference(Classifier.class, form.getProtocolType()));
+        protocolHData.setSubjectStudyPeriod(em.getReference(SubjectStudyPeriod.class, form.getSubjectStudyPeriod()));
         protocolHData.setProtocol(protocol);
         protocol.setProtocolHdata(protocolHData);
 
-        protocol.setProtocolStudents(form.getStudents().stream().map(studentId -> {
+        protocol.setProtocolStudents(StreamUtil.toMappedList(studentId -> {
             ProtocolStudent protocolStudent =  new ProtocolStudent();
-            protocolStudent.setStudent(studentRepository.getOne(studentId));
+            protocolStudent.setStudent(em.getReference(Student.class, studentId));
             protocolStudent.setProtocol(protocol);
             return protocolStudent;
-        }).collect(Collectors.toList()));
+        }, form.getStudents()));
 
-        return protocolRepository.save(protocol);
+        return EntityUtil.save(protocol, em);
     }
 
     public Protocol save(Protocol protocol, HigherProtocolSaveForm form) {
         updateProtocolStudents(protocol, form);
-        unconfirmProtocol(protocol);
-        return protocolRepository.save(protocol);
-    }
-
-    private void unconfirmProtocol(Protocol protocol) {
-        if(HigherProtocolUtil.isConfirmed(protocol)) {
-            protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
+        if(ProtocolUtil.confirmed(protocol)) {
+            protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_S.name()));
             protocol.setConfirmer(null);
             protocol.setConfirmDate(null);
         }
+        return EntityUtil.save(protocol, em);
     }
 
     public void updateProtocolStudents(Protocol protocol, HigherProtocolSaveForm form) {
         EntityUtil.bindEntityCollection(protocol.getProtocolStudents(), ProtocolStudent::getId,
                 // no protocol students created here
                 form.getProtocolStudents(), HigherProtocolStudentDto::getId, null, (dto, ps) -> {
-                    if (gradeChangedButNotRemoved(dto, ps)) {
+                    if (ProtocolUtil.gradeChangedButNotRemoved(dto, ps)) {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
-                        addHistory(ps);
-                        gradeStudent(ps, classifierRepository.getOne(dto.getGrade()));
-                    } else if (gradeRemoved(dto, ps)) {
+                        ProtocolUtil.addHistory(ps);
+                        Classifier grade = em.getReference(Classifier.class, dto.getGrade());
+                        ProtocolUtil.gradeStudent(ps, grade, getGradeMark(grade));
+                    } else if (ProtocolUtil.gradeRemoved(dto, ps)) {
                         HigherProtocolUtil.assertHasAddInfoIfProtocolConfirmed(dto, protocol);
-                        addHistory(ps);
-                        removeGrade(ps);
+                        ProtocolUtil.addHistory(ps);
+                        ProtocolUtil.removeGrade(ps);
                     }
                     ps.setAddInfo(dto.getAddInfo());
                 });
     }
-
-    private static void addHistory(ProtocolStudent ps) {
-        if(EntityUtil.getNullableCode(ps.getGrade()) != null) {
-            ProtocolStudentHistory history = new ProtocolStudentHistory();
-            history.setProtocolStudent(ps);
-            history.setAddInfo(ps.getAddInfo());
-            history.setGrade(ps.getGrade());
-            ps.getProtocolStudentHistories().add(history);
-        }
-    }
-
-    private static boolean gradeChangedButNotRemoved(HigherProtocolStudentDto dto, ProtocolStudent ps) {
-        return dto.getGrade() != null && !dto.getGrade().isEmpty() &&
-                !dto.getGrade().equals(EntityUtil.getNullableCode(ps.getGrade()));
-    }
-
-    private static boolean gradeRemoved(HigherProtocolStudentDto dto, ProtocolStudent ps) {
-        return dto.getGrade() == null || dto.getGrade().isEmpty() &&
-                EntityUtil.getNullableCode(ps.getGrade()) != null;
-    }
-
-    public void gradeStudent(ProtocolStudent ps, Classifier grade) {
+    
+    private static Short getGradeMark(Classifier grade) {
         Short gradeMark = null;
         String gradeValue = grade.getValue();
-
-        if(gradeValue.matches("[0-5]")) {
+        if(GRADE_PATTERN.matcher(gradeValue).matches()) {
             gradeMark = Short.valueOf(gradeValue);
         }
-
-        ps.setGradeMark(gradeMark);
-        ps.setGradeValue(gradeValue);
-        ps.setGrade(grade);
-        ps.setGradeDate(LocalDate.now());
-    }
-
-    public void removeGrade(ProtocolStudent ps) {
-        ps.setGrade(null);
-        ps.setGradeDate(LocalDate.now());
-        ps.setGradeMark(null);
-        ps.setGradeValue(null);
-    }
-
-    private void confirmProtocol(Protocol protocol, HoisUserDetails user) {
-        protocol.setStatus(classifierRepository.getOne(ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
-        protocol.setConfirmDate(LocalDate.now());
-        protocol.setConfirmer(user.getUsername());
+        return gradeMark;
     }
 
     public Protocol confirm(Protocol protocol, HoisUserDetails user) {
-        confirmProtocol(protocol, user);
-        return protocolRepository.save(protocol);
+        protocol.setStatus(em.getReference(Classifier.class, ProtocolStatus.PROTOKOLL_STAATUS_K.name()));
+        protocol.setConfirmDate(LocalDate.now());
+        protocol.setConfirmer(user.getUsername());
+
+        return EntityUtil.save(protocol, em);
     }
 
     public Protocol saveAndConfirm(HoisUserDetails user, Protocol protocol, HigherProtocolSaveForm form) {
         updateProtocolStudents(protocol, form);
-        confirmProtocol(protocol, user);
-        return protocolRepository.save(protocol);
+        return confirm(protocol, user);
     }
 
     public List<AutocompleteResult> getSubjectStudyPeriods(Long schoolId) {
         Long studyPeriod = studyYearService.getCurrentStudyPeriod(schoolId);
 
-        List<SubjectStudyPeriod> ssps = subjectStudyPeriodRepository.findAll((root, query, cb) -> {
-            return cb.equal(root.get("studyPeriod").get("id"), studyPeriod);
-        });
-        return subjectStudyPeriodsToAutocompleteResultList(ssps);
-    }
-
-    public List<AutocompleteResult> subjectStudyPeriodsToAutocompleteResultList(List<SubjectStudyPeriod> ssps) {
+        List<SubjectStudyPeriod> ssps = em.createQuery("select ssp from SubjectStudyPeriod ssp where ssp.studyPeriod.id = ?1", SubjectStudyPeriod.class)
+                .setParameter(1, studyPeriod).getResultList();
         return StreamUtil.toMappedList(ssp -> {
             Subject s = ssp.getSubject();
             String nameEt = SubjectUtil.subjectName(s.getCode(), s.getNameEt(), s.getCredits());
@@ -296,11 +240,10 @@ public class HigherProtocolService {
     }
 
     public List<StudentSearchDto> getStudents(Long schoolId, HigherProtocolStudentSearchCommand criteria) {
-
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(STUDENT_FROM);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(STUDENT_FROM);
 
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
-        qb.filter("d.status_code = '" + DeclarationStatus.OPINGUKAVA_STAATUS_K.name() + "'");
+        qb.requiredCriteria("d.status_code = :status", "status", DeclarationStatus.OPINGUKAVA_STAATUS_K);
         qb.requiredCriteria("ds.subject_study_period_id = :subjectStudyPeriodId",
                 "subjectStudyPeriodId", criteria.getSubjectStudyPeriod());
 
@@ -309,11 +252,8 @@ public class HigherProtocolService {
         } else {
             qb.filter(STUDENT_HAS_BASIC_PROTOCOL);
         }
-        List<?> result = qb.select(STUDENT_SELECT, em).getResultList();
-        return resultToStudentSearchDto(result);
-    }
 
-    private static List<StudentSearchDto> resultToStudentSearchDto(List<?> result) {
+        List<?> result = qb.select(STUDENT_SELECT, em).getResultList();
         return StreamUtil.toMappedList(r -> {
             StudentSearchDto dto = new StudentSearchDto();
             dto.setId(resultAsLong(r, 0));
@@ -329,7 +269,7 @@ public class HigherProtocolService {
     public List<ProtocolStudentResultDto> calculateGrades(ProtocolCalculateCommand command) {
         List<ProtocolStudentResultDto> calculatedResults = new ArrayList<>();
         for(Long protocolStudentId : command.getProtocolStudents()) {
-            ProtocolStudent ps = protocolStudentRepository.getOne(protocolStudentId);
+            ProtocolStudent ps = em.getReference(ProtocolStudent.class, protocolStudentId);
             HigherAssessment grade = HigherProtocolGradeUtil.calculateGrade(ps);
             calculatedResults.add(new ProtocolStudentResultDto(protocolStudentId, grade));
         }
@@ -340,9 +280,9 @@ public class HigherProtocolService {
         if(Boolean.TRUE.equals(dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getIsPracticeSubject())) {
 
             Set<Long> students = StreamUtil.toMappedSet(ps -> ps.getStudent().getId(), dto.getProtocolStudents());
-            JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from practice_journal pj join classifier c on c.code = pj.grade_code");
+            JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from practice_journal pj join classifier c on c.code = pj.grade_code");
 
-            qb.requiredCriteria("pj.student_id in(:studentId)", "studentId", students);
+            qb.requiredCriteria("pj.student_id in (:studentId)", "studentId", students);
             qb.requiredCriteria("pj.subject_id = :subjectId", "subjectId", dto.getSubjectStudyPeriodMidtermTaskDto().getSubjectStudyPeriod().getSubject().getId());
 
             List<?> data = qb.select("pj.student_id, c.value", em).getResultList();
@@ -353,8 +293,9 @@ public class HigherProtocolService {
 
             for(HigherProtocolStudentDto protocolStudent : dto.getProtocolStudents()) {
                 Long studentId = protocolStudent.getStudent().getId();
-                if(practiceResults.containsKey(studentId)) {
-                    protocolStudent.setPracticeResult(practiceResults.get(studentId));
+                String practiceResult = practiceResults.get(studentId);
+                if(practiceResult != null) {
+                    protocolStudent.setPracticeResult(practiceResult);
                 }
             }
         }

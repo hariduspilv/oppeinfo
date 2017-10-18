@@ -2,8 +2,6 @@ package ee.hitsa.ois.util;
 
 import java.util.Optional;
 
-import org.springframework.util.CollectionUtils;
-
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.service.security.HoisUserDetails;
@@ -34,13 +32,13 @@ public abstract class JournalValidationUtil extends JournalUtil {
     }
 
     public static void assertAddStudentsToJournal(HoisUserDetails user, Journal journal) {
-        if (user.isTeacher() && !CollectionUtils.isEmpty(journal.getJournalEntries())) {
+        if (user.isTeacher() && !journal.getJournalEntries().isEmpty()) {
             throw new ValidationFailedException("journal.messages.addingStudentIsNotAllowed");
         }
     }
 
     public static void assertRemoveStudentsFromJournal(HoisUserDetails user, Journal journal) {
-        if (user.isTeacher() && !CollectionUtils.isEmpty(journal.getJournalEntries())) {
+        if (user.isTeacher() && !journal.getJournalEntries().isEmpty()) {
             throw new ValidationFailedException("journal.messages.removingStudentIsNotAllowed");
         }
     }

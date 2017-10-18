@@ -310,9 +310,9 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
     //usage <md-button ng-click="back("#/someDefaultUrl", formObject)" class="md-raised">{{'main.button.back' | translate}}</md-button>
     //for confirm dialog to work when form.$setSubmitted() is used to submit the form, one has to call form.$setPristine() after successful update
     //by adding "_noback" to url parameter you can skip adding current url to history stack
-    $rootScope.back = function(defaultUrl, form) {
+    $rootScope.back = function(defaultUrl, form, prompt) {
       if (angular.isDefined(form) && form.$dirty === true ) {
-        dialogService.confirmDialog({prompt: 'main.messages.confirmFormDataNotSaved'}, function() {
+        dialogService.confirmDialog({prompt: prompt || 'main.messages.confirmFormDataNotSaved'}, function() {
           goBack(defaultUrl);
         });
       } else {

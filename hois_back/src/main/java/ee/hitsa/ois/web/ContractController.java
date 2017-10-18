@@ -64,7 +64,7 @@ public class ContractController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public ContractDto update(HoisUserDetails user,
+    public ContractDto save(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) Contract contract,
             @Valid @RequestBody ContractForm contractForm) {
         UserUtil.assertIsSchoolAdmin(user);

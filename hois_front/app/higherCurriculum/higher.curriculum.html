@@ -130,7 +130,7 @@
 					</md-input-container>
 					<md-input-container flex="50" flex-offset="5">
 					  <label>{{'curriculum.languageDescription' | translate}}</label>
-					  <textarea ng-model="curriculum.languageDescription" md-maxlength="20000" max-rows="10" ng-readonly="formState.readOnly"></textarea>
+					  <textarea ng-model="curriculum.languageDescription" md-maxlength="1000" max-rows="10" ng-readonly="formState.readOnly"></textarea>
 					</md-input-container>
 				</div>
 				<div layout="row" flex>
@@ -214,7 +214,7 @@
 			<div layout="row" flex="100">
 				<md-input-container flex="30" flex-sm="100" flex-xs="100">
 					<label>{{'curriculum.approvalDocumentNr' | translate}}</label>
-                    <input ng-model="curriculum.approvalDokNr" type="text" md-maxlength="100" ng-readonly="formState.readOnly">
+                    <input ng-model="curriculum.approvalDokNr" type="text" md-maxlength="50" ng-readonly="formState.readOnly">
                 </md-input-container>
 				<md-input-container flex="20" flex-offset="4">
 					<label>{{'curriculum.approvalDate' | translate}}</label>
@@ -228,7 +228,7 @@
 			<div layout="row" flex="100">
 				<md-input-container flex="30" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.accreditationDesision' | translate}}</label>
-                    <input ng-model="curriculum.accreditationResolution" type="text" md-maxlength="255" ng-readonly="formState.readOnly">
+                    <input ng-model="curriculum.accreditationResolution" type="text" md-maxlength="1000" ng-readonly="formState.readOnly">
                 </md-input-container>
                 <md-input-container flex="20" flex-offset="4">
                     <label>{{'curriculum.accreditationDate' | translate}}</label>
@@ -238,7 +238,7 @@
 			<div layout="row" flex="100">
 				<md-input-container  flex="30" flex-sm="100" flex-xs="100">
                     <label>{{'curriculum.accreditationDesisionNumber' | translate}}</label>
-                    <input ng-model="curriculum.accreditationNr" type="text" md-maxlength="255" ng-readonly="formState.readOnly">
+                    <input ng-model="curriculum.accreditationNr" type="text" md-maxlength="1000" ng-readonly="formState.readOnly">
                 </md-input-container>
                 <md-input-container  flex="20" flex-offset="4">
                     <label>{{'curriculum.accreditationValidityDate' | translate}}</label>
@@ -333,7 +333,7 @@
 				<div layout="column" flex ng-show="curriculum.joint" class="common-label">
 					<div layout="row" ng-repeat="item in curriculum.jointPartners | filter: filterEmptyJointPartners | orderBy: ['ehisSchool', 'nameEt']" class="align-center">
 						<div flex="5">&nbsp;</div>
-						<div ng-if="item.abroad">{{item[currentLanguageNameField()]}}</div>
+						<div ng-if="item.abroad">{{currentLanguageNameField(item)}}</div>
 						<div ng-if="!item.abroad"> <hois-classifier-value ng-model="item.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value></div>
 						<div flex="5">&nbsp;</div>
 						<div flex="5"><a class="remove nomargin" ng-click="removejointPartner(item)" ng-if="!formState.readOnly && !formState.notEditableBasicData">&times;</a></div>
@@ -408,7 +408,7 @@
             <div layout="column" flex ng-show="curriculum.joint" class="joint-data-small">
                 <div layout="row" ng-repeat="item in curriculum.jointPartners" class="align-center">
 					<div flex="5">&nbsp;</div>
-                    <div ng-if="item.abroad">{{item[currentLanguageNameField()]}}</div>
+                    <div ng-if="item.abroad">{{currentLanguageNameField(item)}}</div>
                     <div ng-if="!item.abroad"> <hois-classifier-value ng-model="item.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value></div>
 					<md-button class="remove nomargin" ng-click="removejointPartner(item)" ng-if="!formState.readOnly && !formState.notEditableBasicData">&times;</md-button>
                 </div>
@@ -458,7 +458,7 @@
 			<div ng-repeat = "item in curriculum.specialities | orderBy: currentLanguageNameField()" layout="column" >
 				<div layout = "row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">
 						<!--div flex="5">{{$index + 1}}</div-->
-					<div flex="35"><a ng-click="openAddSpecialtyDialog(item)" href="">{{item[currentLanguageNameField()]}}</a></div>
+					<div flex="35"><a ng-click="openAddSpecialtyDialog(item)" href="">{{currentLanguageNameField(item)}}</a></div>
 					<!--<div><a class="remove nomargin" ng-click="removeSpeciality(item)" ng-if="!formState.readOnly">&times;</a></div>-->
 				</div>
 			</div>
@@ -472,7 +472,7 @@
 			<div ng-repeat = "item in curriculum.grades | orderBy: currentLanguageNameField()" layout="column" ng-show="gradeRequired()">
 				<div layout = "row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">
 					<!--div flex="5">{{$index + 1}}</div-->
-                    <div flex="35"><a ng-click="openAddGradeDialog(item)" href="">{{item[currentLanguageNameField()]}}</a></div>
+                    <div flex="35"><a ng-click="openAddGradeDialog(item)" href="">{{currentLanguageNameField(item)}}</a></div>
                     <!--<div><a class="remove nomargin" ng-click="removeFromArray(curriculum.grades, item)" ng-if="!formState.readOnly">&times;</a></div>-->
                 </div>
 			</div>

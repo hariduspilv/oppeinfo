@@ -12,7 +12,6 @@ import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
-import javax.persistence.criteria.Predicate;
 import javax.transaction.Transactional;
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -24,7 +23,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
-import org.springframework.util.StringUtils;
 
 import ee.hitsa.ois.config.SaisProperties;
 import ee.hitsa.ois.domain.Classifier;
@@ -39,8 +37,10 @@ import ee.hitsa.ois.exception.BadConfigurationException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
+import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaQueryBuilder;
+import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionImportForm;
 import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionSearchCommand;
@@ -78,6 +78,8 @@ public class SaisAdmissionService {
     private CurriculumVersionRepository curriculumVersionRepository;
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private ClassifierService classifierService;
 
     @PostConstruct
     public void postConstruct() {
@@ -88,35 +90,16 @@ public class SaisAdmissionService {
         }
     }
 
-    public Page<SaisAdmissionSearchDto> search(HoisUserDetails user, SaisAdmissionSearchCommand criteria,
+    public Page<SaisAdmissionSearchDto> search(Long schoolId, SaisAdmissionSearchCommand criteria,
             Pageable pageable) {
-        return saisAdmissionRepository.findAll((root, query, cb) -> {
-            List<Predicate> filters = new ArrayList<>();
+        JpaQueryBuilder<SaisAdmission> qb = new JpaQueryBuilder<>(SaisAdmission.class, "sa").sort(pageable);
+        qb.optionalCriteria("sa.code = :code", "code", criteria.getCode());
+        qb.optionalCriteria("sa.curriculumVersion.id = :curriculumVersionId", "curriculumVersionId", criteria.getCurriculumVersion());
+        qb.optionalCriteria("sa.studyForm.code = :studyForm", "studyForm", criteria.getStudyForm());
+        qb.optionalCriteria("sa.fin.code = :fin", "fin", criteria.getFin());
+        qb.requiredCriteria("sa.curriculumVersion.curriculum.school.id = :schoolId", "schoolId", schoolId);
 
-            if (!StringUtils.isEmpty(criteria.getCode())) {
-                filters.add(cb.equal(root.get("code"), criteria.getCode()));
-            }
-
-            if (criteria.getCurriculumVersion() != null) {
-                filters.add(cb.equal(root.get("curriculumVersion").get("id"), criteria.getCurriculumVersion()));
-            }
-
-            if (!StringUtils.isEmpty(criteria.getStudyForm())) {
-                filters.add(cb.equal(root.get("studyForm").get("code"), criteria.getStudyForm()));
-            }
-
-            if (!StringUtils.isEmpty(criteria.getFin())) {
-                filters.add(cb.equal(root.get("fin").get("code"), criteria.getFin()));
-            }
-
-            filters.add(cb.equal(root.get("curriculumVersion").get("curriculum").get("school").get("id"), user.getSchoolId()));
-
-            return cb.and(filters.toArray(new Predicate[filters.size()]));
-        }, pageable).map(SaisAdmissionSearchDto::of);
-    }
-
-    public void delete(SaisAdmission saisAdmission) {
-        EntityUtil.deleteEntity(saisAdmission, em);
+        return JpaQueryUtil.pagingResult(qb, em, pageable).map(SaisAdmissionSearchDto::of);
     }
 
     public Page<SaisAdmissionSearchDto> saisImport(SaisAdmissionImportForm form, HoisUserDetails user) {
@@ -143,9 +126,9 @@ public class SaisAdmissionService {
     }
 
     private void processResponse(AdmissionExportResponse response, List<SaisAdmissionSearchDto> result, Long schoolId) {
-        Map<String, Classifier> oppekeelMap = StreamUtil.toMap(Classifier::getExtraval1, classifierRepository.findAllByMainClassCode(MainClassCode.OPPEKEEL.name()));
+        Map<String, Classifier> oppekeelMap = StreamUtil.toMap(Classifier::getExtraval1, classifierService.findAllByMainClassCode(MainClassCode.OPPEKEEL));
         // XXX maybe ignore values with getExtraval1 missing and when multiple items with same values, use first one
-        Map<String, Classifier> oppevormMap = StreamUtil.toMap(Classifier::getValue, classifierRepository.findAllByMainClassCode(MainClassCode.OPPEVORM.name()));
+        Map<String, Classifier> oppevormMap = StreamUtil.toMap(Classifier::getValue, classifierService.findAllByMainClassCode(MainClassCode.OPPEVORM));
 
         Classifier finallikasRe = classifierRepository.getOne(FinSource.FINALLIKAS_RE.name());
         Classifier finallikasRev = classifierRepository.getOne(FinSource.FINALLIKAS_REV.name());

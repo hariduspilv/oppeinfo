@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.service.JournalService;
+import ee.hitsa.ois.service.JournalUnconfirmedService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.JournalUtil;
@@ -42,8 +43,11 @@ import ee.hitsa.ois.web.dto.timetable.JournalEntryLessonInfoDto;
 import ee.hitsa.ois.web.dto.timetable.JournalEntryTableDto;
 import ee.hitsa.ois.web.dto.timetable.JournalSearchDto;
 import ee.hitsa.ois.web.dto.timetable.JournalStudentDto;
+import ee.hitsa.ois.web.dto.timetable.StudentJournalAbsenceDto;
 import ee.hitsa.ois.web.dto.timetable.StudentJournalDto;
-import ee.hitsa.ois.web.dto.timetable.StudentJournalEntryDto;
+import ee.hitsa.ois.web.dto.timetable.StudentJournalResultDto;
+import ee.hitsa.ois.web.dto.timetable.StudentJournalStudyListDto;
+import ee.hitsa.ois.web.dto.timetable.StudentJournalTaskListDto;
 
 @RestController
 @RequestMapping("/journals")
@@ -51,6 +55,8 @@ public class JournalController {
 
     @Autowired
     private JournalService journalService;
+    @Autowired
+    private JournalUnconfirmedService journalUnconfirmedService;
 
     @GetMapping
     public Page<JournalSearchDto> search(HoisUserDetails user, JournalSearchCommand command, Pageable pageable) {
@@ -62,8 +68,8 @@ public class JournalController {
     public JournalDto get(HoisUserDetails user, @WithEntity("id") Journal journal) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         JournalDto dto = JournalDto.of(journal);
-        dto.setCanBeConfirmed(JournalUtil.canBeConfirmed(user, journal));
-        dto.setCanBeUnconfirmed(JournalUtil.canBeUnconfirmed(user, journal));
+        dto.setCanBeConfirmed(Boolean.valueOf(JournalUtil.canBeConfirmed(user, journal)));
+        dto.setCanBeUnconfirmed(Boolean.valueOf(JournalUtil.canBeUnconfirmed(user, journal)));
         return dto;
     }
 
@@ -87,7 +93,7 @@ public class JournalController {
     }
 
     @GetMapping("/{id:\\d+}/journalEntry")
-    public Page<JournalEntryTableDto> journalEntries(HoisUserDetails user, @PathVariable("id") Long journalId, Pageable pageable) {
+    public Page<JournalEntryTableDto> journalTableEntries(HoisUserDetails user, @PathVariable("id") Long journalId, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return journalService.journalTableEntries(journalId, pageable);
     }
@@ -163,7 +169,7 @@ public class JournalController {
     @GetMapping("/{id:\\d+}/hasFinalEntry")
     public Map<String, Boolean> hasFinalEntry(HoisUserDetails user, @WithEntity("id") Journal journal)  {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        return Collections.singletonMap("hasFinalEntry", JournalUtil.hasFinalEntry(journal));
+        return Collections.singletonMap("hasFinalEntry", Boolean.valueOf(JournalUtil.hasFinalEntry(journal)));
     }
     
     @GetMapping("/{id:\\d+}/studentsWithAcceptedAbsence")
@@ -175,14 +181,56 @@ public class JournalController {
 
     @GetMapping("/studentJournals")
     public List<StudentJournalDto> studentJournals(HoisUserDetails user,  @RequestParam("studentId") Long studentId) {
-        //TODO: user rights control
-        return journalService.getStudentJournals(studentId);
-    }
-    
-    @GetMapping("/{id:\\d+}/studentJournal")
-    public StudentJournalDto studentJournals(HoisUserDetails user, @PathVariable("id") Long journalId, @RequestParam("studentId") Long studentId) {
-        //TODO: user rights control
-        return journalService.getStudentJournal(studentId, journalId);
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return journalService.studentJournals(studentId);
     }
 
+    @GetMapping("/{id:\\d+}/studentJournal")
+    public StudentJournalDto studentJournal(HoisUserDetails user, @PathVariable("id") Long journalId, @RequestParam("studentId") Long studentId) {
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return journalService.studentJournal(studentId, journalId);
+    }
+
+    @GetMapping("/studentJournalTasks")
+    public StudentJournalTaskListDto studentJournalTasks(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return journalService.studentJournalTasks(user.getSchoolId(), studentId);
+    }
+
+    @GetMapping("/studentJournalStudy")
+    public StudentJournalStudyListDto studentJournalStudy(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return journalService.studentJournalStudy(user.getSchoolId(), studentId);
+    }
+
+    /**
+     * 
+     * Used on home page
+     * 
+     * @return following information:     <br>
+     *  - number of unconfirmed journals which will expire in two weeks     <br>
+     *  - are there any unconfirmed journals already ended     <br>
+     *  - <b>null</b> when user is not supposed to see presence of unconfirmed journals 
+     *    (user is not teacher nor school admin)
+     */
+    @GetMapping("/unconfirmedJournalsInfo")
+    public Map<String, ?> unconfirmedJournalsInfo(HoisUserDetails user) {
+        if(!user.isSchoolAdmin() && !user.isTeacher()) {
+            return null;
+        }
+        return journalUnconfirmedService.getInfo(user);
+    }
+
+    @GetMapping("/studentJournalAbsences")
+    public List<StudentJournalAbsenceDto> studentAbsences(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return journalService.studentAbsences(user.getSchoolId(), studentId);
+    }
+    
+    @GetMapping("/studentJournalLastResults")
+    public List<StudentJournalResultDto> studentLastResults(HoisUserDetails user, @RequestParam("studentId") Long studentId) {
+        UserUtil.assertIsSchoolAdminOrStudentOrRepresentative(user);
+        return journalService.studentLastResults(user.getSchoolId(), studentId);
+    }
+    
 }

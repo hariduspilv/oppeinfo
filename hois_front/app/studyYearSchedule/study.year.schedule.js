@@ -12,10 +12,6 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
     $scope.weeks = [];
     $scope.studyYearSchedules = [];
 
-    QueryUtils.endpoint('/school/studyYearScheduleLegends').search().$promise.then(function(response){
-        $scope.legends = response.legends;
-    });
-
     QueryUtils.endpoint('/autocomplete/schooldepartments').query().$promise.then(function(response){
         $scope.schoolDepartments = response;
         if(ArrayUtils.isEmpty($scope.criteria.schoolDepartments)) {
@@ -41,19 +37,14 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
       }
     });
 
-
-  QueryUtils.endpoint('/studyYearSchedule/studentGroups').query().$promise.then(function(response){
-        $scope.studentGroups = response;
-    });
+    $scope.studentGroups = QueryUtils.endpoint('/studyYearSchedule/studentGroups').query();
 
     function selectCurrentStudyYear() {
         $scope.criteria.studyYear = DataUtils.getCurrentStudyYearOrPeriod($scope.studyYears);
         DataUtils.sortStudyYearsOrPeriods($scope.criteria.studyYear.studyPeriods);
     }
 
-    QueryUtils.endpoint('/studyYearSchedule/studyYears').query().$promise.then(function(response){
-        $scope.studyYears = response;
-    }).then(selectCurrentStudyYear);
+    $scope.studyYears = QueryUtils.endpoint('/studyYearSchedule/studyYears').query(selectCurrentStudyYear);
 
     $scope.$watch('criteria.studyYear', function() {
             if($scope.criteria.studyYear) {
@@ -156,6 +147,7 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
             return;
         }
         var DialogController = function (scope) {
+            scope.hasValue = schedule.studyYearScheduleLegend ? true : false;
             scope.studentGroup = studentGroup;
             scope.week = week;
             scope.legends = $scope.legends;

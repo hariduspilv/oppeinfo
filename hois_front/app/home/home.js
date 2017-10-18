@@ -50,6 +50,7 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
       $scope.loadGeneralMessages();
       $scope.loadUnreadMessages();
       chechIfHasUnacceptedAbsences();
+      checkUnconfirmedJournas();
     }
 
     if (AuthService.isAuthenticated()) {
@@ -62,6 +63,73 @@ angular.module('hitsaOis').controller('HomeController', ['$scope', 'School',
       QueryUtils.endpoint('/absences/hasUnaccepted').search().$promise.then(function(response){
         $scope.hasUnaccepdedAbsences = response.hasUnaccepted;
       });
+    }
+
+    function checkUnconfirmedJournas() {
+      QueryUtils.endpoint('/journals/unconfirmedJournalsInfo').search().$promise.then(function(response){
+        $scope.unconfirmedJournals = {
+          count: response.unconfirmedJournalCount,
+          anyFinished: response.hasEndedUnconfirmedJournals
+        };
+      });
+    }
+  }
+]).controller('StudentHomeController', ['$scope', 'QueryUtils', 'Session', 'AUTH_EVENTS',
+  function($scope, QueryUtils, Session, AUTH_EVENTS) {
+
+    function getStudentInformation() {
+      if (Session.studentId) {
+        $scope.sessionStudentId = Session.studentId;
+  
+        QueryUtils.endpoint('/journals/studentJournalTasks/').search({studentId: Session.studentId}).$promise.then(function (result) {
+          getTodayAndTomorrowDate();
+          sortTasksByDate(result.tasks.reverse());
+          $scope.testTaskTypes = ['SISSEKANNE_H', 'SISSEKANNE_L', 'SISSEKANNE_E', 'SISSEKANNE_I'];
+        });
+  
+        $scope.studentAbsences = QueryUtils.endpoint('/journals/studentJournalAbsences/').query({studentId: Session.studentId});
+        $scope.lastResults = QueryUtils.endpoint('/journals/studentJournalLastResults/').query({studentId: Session.studentId});
+      } else {
+        $scope.sessionStudentId = null;
+        $scope.tasks = [];
+        $scope.studentAbsences = [];
+        $scope.lastResults = [];
+      }
+    }
+    
+    function afterAuthentication() {
+      getStudentInformation();
+    }
+    
+    getStudentInformation();
+    $scope.$on(AUTH_EVENTS.userChanged, afterAuthentication);
+
+    function getTodayAndTomorrowDate() {
+      var today, tomorrow;
+      today = new Date();
+      today.setHours(0, 0, 0, 0);
+      tomorrow = new Date();
+      tomorrow.setDate(today.getDate() + 1);
+      tomorrow.setHours(0, 0, 0, 0);
+
+      $scope.todaysDate = today;
+      $scope.tomorrowsDate = tomorrow;
+    }
+
+    function sortTasksByDate(tasks) {
+      $scope.tasks = {todayTasks: [], tomorrowTasks: [], laterTasks: []};
+      for (var i = 0; i < tasks.length; i++) {
+        var taskDate = new Date(tasks[i].date);
+        taskDate.setHours(0, 0, 0, 0);
+
+        if (taskDate.getTime() === $scope.todaysDate.getTime()) {
+          $scope.tasks.todayTasks.push(tasks[i]);
+        } else if (taskDate.getTime() === $scope.tomorrowsDate.getTime()) {
+          $scope.tasks.tomorrowTasks.push(tasks[i]);
+        } else if (taskDate > $scope.tomorrowsDate) {
+          $scope.tasks.laterTasks.push(tasks[i]);
+        }
+      }
     }
   }
 ]);

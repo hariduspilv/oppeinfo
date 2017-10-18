@@ -20,6 +20,10 @@ angular.module('hitsaOis').filter('hoisDate', function ($filter) {
   return function (input) {
     return $filter('date')(input, 'dd.MM');
   };
+}).filter('hoisDayMonthTimeMin', function ($filter) {
+  return function (input) {
+    return $filter('date')(input, 'dd.MM HH:mm');
+  };
 }).filter('hoisTimestamp', function ($filter) {
   return function (input) {
     var formatter = $filter('date');

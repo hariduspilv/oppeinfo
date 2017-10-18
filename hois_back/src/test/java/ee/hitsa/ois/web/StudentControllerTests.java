@@ -1,10 +1,6 @@
 package ee.hitsa.ois.web;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
-import javax.persistence.criteria.Predicate;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -21,15 +17,12 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import ee.hitsa.ois.TestConfiguration;
 import ee.hitsa.ois.TestConfigurationService;
-import ee.hitsa.ois.domain.User;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.enums.EhisStudentDataType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.StudentRepository;
-import ee.hitsa.ois.repository.UserRepository;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisStudentForm;
 
@@ -43,8 +36,6 @@ public class StudentControllerTests {
     @Autowired
     private StudentRepository studentRepository;
     @Autowired
-    private UserRepository userRepository;
-    @Autowired
     private TestConfigurationService testConfigurationService;
     @Autowired
     private TestRestTemplate restTemplate;
@@ -55,14 +46,7 @@ public class StudentControllerTests {
     public void setUp() {
         Role role = Role.ROLL_A;
         if(student == null) {
-            List<School> userSchools = userRepository.findAll((root, query, cb) -> {
-                List<Predicate> filters = new ArrayList<>();
-                filters.add(cb.isNotNull(root.get("school").get("id")));
-                filters.add(cb.equal(root.get("role").get("code"), role.name()));
-                filters.add(cb.equal(root.get("person").get("idcode"), TestConfiguration.USER_ID));
-                return cb.and(filters.toArray(new Predicate[filters.size()]));
-            }).stream().map(User::getSchool).collect(Collectors.toList());
-
+            List<School> userSchools = testConfigurationService.personSchools(role);
             Assert.assertFalse(userSchools.isEmpty());
 
             student = studentRepository.findAll((root, query, cb) -> root.get("school").in(userSchools)).get(0);

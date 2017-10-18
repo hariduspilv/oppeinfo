@@ -110,3 +110,39 @@
     </fieldset>
   </div>
 </div>
+
+<div ng-if="result.foreignStudies.length > 0">
+  <div layout-padding>
+    <fieldset>
+      <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'ehis.student.result' | translate}}</legend>
+      <div flex>
+        <md-table-container>
+          <table md-table md-progress="result">
+            <thead md-head>
+            <tr md-row>
+              <th md-column >{{'ehis.student.name' | translate}}</th>
+              <th md-column >{{'ehis.student.idcode' | translate}}</th>
+              <th md-column >{{'ehis.student.curriculum' | translate}}</th>
+              <th md-column >{{'ehis.student.fromDate' | translate}}</th>
+              <th md-column >{{'ehis.student.toDate' | translate}}</th>
+              <th md-column >{{'ehis.student.error' | translate}}</th>
+              <th md-column >{{'ehis.student.message' | translate}}</th>
+            </tr>
+            </thead>
+            <tbody md-body>
+            <tr md-row ng-repeat="row in result.foreignStudies" ng-class-odd="'odd'" ng-class-even="'even'">
+              <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.name}}</a></td>
+              <td md-cell>{{::row.idcode}}</td>
+              <td md-cell>{{::row.curriculum}}</td>
+              <td md-cell>{{::row.fromDate}}</td>
+              <td md-cell>{{::row.toDate}}</td>
+              <td md-cell>{{row.error ? 'main.no' : 'main.yes' | translate}}</td>
+              <td md-cell>{{::row.message}}</td>
+            </tr>
+            </tbody>
+          </table>
+        </md-table-container>
+      </div>
+    </fieldset>
+  </div>
+</div>

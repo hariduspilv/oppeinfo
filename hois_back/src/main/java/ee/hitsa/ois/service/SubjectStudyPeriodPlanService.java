@@ -43,6 +43,7 @@ import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodPlanRepository;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
@@ -97,7 +98,7 @@ public class SubjectStudyPeriodPlanService {
         }, pageable).map(s -> SubjectStudyPeriodPlanSearchDtoContainer.of(s, criteria.getStudyPeriod()));
     }
 
-    public List<AutocompleteResult> curriculums (Long schoolId, CurriculumSearchCommand criteria){
+    public List<AutocompleteResult> curriculums(Long schoolId, CurriculumSearchCommand criteria) {
         List<Curriculum> curriculums = curriculumRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("school").get("id"), schoolId));
@@ -113,7 +114,6 @@ public class SubjectStudyPeriodPlanService {
                 .where(curriculumSubjectRoot.get("subject").get("id").in(criteria.getSubjects()));
                 filters.add(root.get("id").in(subjectsQuery));
             }
-            
             return cb.and(filters.toArray(new Predicate[filters.size()]));
         });
         return StreamUtil.toMappedList(AutocompleteResult::of, curriculums);
@@ -149,9 +149,7 @@ public class SubjectStudyPeriodPlanService {
     
     private void deleteDuplicates(SubjectStudyPeriodPlanDto form) {
         List<SubjectStudyPeriodPlan> deletedPlans = getDuplicates(SubjectStudyPeriodPlanUniqueCommand.of(form));
-        if(!CollectionUtils.isEmpty(deletedPlans)) {
-            subjectStudyPeriodPlanRepository.delete(deletedPlans);  // TODO: Use EntityUtil?
-        }
+        subjectStudyPeriodPlanRepository.delete(deletedPlans);  // TODO: Use EntityUtil?
     }
 
     private void updateCurriculums(SubjectStudyPeriodPlan plan, Set<Long> newCurriculums, Long schoolId) {
@@ -238,9 +236,7 @@ public class SubjectStudyPeriodPlanService {
 
     public Page<AutocompleteResult> getSubjectsOptions(Long schoolId, SubjectSearchCommand subjectSearchCommand,
             Pageable pageable) {
-        final String SELECT = "s.id, s.name_et, s.name_en, s.code, s.credits ";
-        final String FROM = " from subject s";
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(FROM).sort(pageable);
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject s").sort(pageable);
 
         qb.filter("s.status_code = '" + SubjectStatus.AINESTAATUS_K + "'");
         qb.requiredCriteria("s.school_id = :schoolId", "schoolId", schoolId);
@@ -257,14 +253,13 @@ public class SubjectStudyPeriodPlanService {
                 + "where cv.curriculum_id in(:curricula) and cvhms.subject_id = s.id) ", 
                 "curricula", subjectSearchCommand.getCurricula());
 
-        Page<Object[]> results = JpaQueryUtil.pagingResult(qb, SELECT, em, pageable);
+        Page<Object[]> results = JpaQueryUtil.pagingResult(qb, "s.id, s.name_et, s.name_en, s.code, s.credits", em, pageable);
         return results.map(r -> {
-
             String nameEt = resultAsString(r, 1);
             String nameEn = resultAsString(r, 2);
             String code = resultAsString(r, 3);
             BigDecimal credits = resultAsDecimal(r, 4);
-            
+
             return new AutocompleteResult(resultAsLong(r, 0), 
                     SubjectUtil.subjectName(code, nameEt, credits),
                     SubjectUtil.subjectName(code, nameEn, credits));

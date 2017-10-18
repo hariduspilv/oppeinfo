@@ -10,7 +10,7 @@
   <body>
     <table class="reporttable">
       <tr>
-        <td class="reporttableheader" colspan="2">{{ "report.statecurriculum.statecurriculum" | translate }} {{ content.nameEt }}</td>
+        <td class="reporttableheader" colspan="2">{{ content.nameEt }}</td>
       </tr>
       <tr>
         <td class="label">{{ "report.statecurriculum.iscedclass" | translate }}</td>
@@ -21,7 +21,7 @@
         <td class="label">{{ content.nameEt }}</td>
       </tr>
       <tr>
-        <td>{{ content.nameEn }}</td>
+        <td><p class="long-text"><i>{{ content.nameEn }}</i></p></td>
       </tr>
       <tr>
         <td class="label">{{ "report.statecurriculum.credits" | translate }}</td>
@@ -29,21 +29,21 @@
       </tr>
       <tr>
         <td class="label">{{ "report.curriculum.objectives" | translate }}</td>
-        <td><pre>{{ content.objectives }}</pre></td>
+        <td><p class="long-text">{{ content.objectives }}</p></td>
       </tr>
       <tr>
         <td class="label">{{ "report.curriculum.outcomes" | translate }}</td>
-        <td><pre>{{ content.outcomes }}</pre></td>
+        <td><p class="long-text">{{ content.outcomes }}</p></td>
       </tr>
       
 
       <tr>
         <td class="label">{{ "report.statecurriculum.admissionRequirements" | translate }}</td>
-        <td><pre>{{ content.admissionRequirements }}</pre></td>
+        <td><p class="long-text">{{ content.admissionRequirements }}</p></td>
       </tr>
       <tr>
         <td class="label">{{ "report.statecurriculum.graduationRequirements" | translate }}</td>
-        <td><pre>{{ content.graduationRequirements }}</pre></td>
+        <td><p class="long-text">{{ content.graduationRequirements }}</p></td>
       </tr>
       
       <tr>
@@ -94,8 +94,7 @@
 		<table class="reporttable reportsubtable">
 	        {% for module in content.modules %}
 	        <tr>
-				<td class="label">{{ "report.statecurriculum.module.module" | translate }} {{loop.index + 1}}: 
-				{{ module.name }} ({{ module.credits }} EKAP) {{ module.module }}</td>
+				<td class="label"><p class="long-text">{{ "report.statecurriculum.module.module" | translate }} {{loop.index + 1}}: {{ module.name }} ({{ module.credits }} EKAP) {{ module.module }}</p></td>
 			</tr>
 			<tr>
 				<td>
@@ -117,8 +116,8 @@
       
       <tr>
         <td colspan="2">
-        	<span class="label">{{ "report.statecurriculum.description" | translate }}</span>
-        	<pre>{{ content.description }}</pre>
+        	<span>{{ "report.statecurriculum.description" | translate }}</span>
+        	<p class="state-curriculum-very-long-text">{{ content.description }}</p>
         </td>
       </tr>
     </table>
@@ -129,29 +128,29 @@
     
     <table class="reporttable">
       <tr>
-        <td class="label">{{ "report.statecurriculum.module.nr" | translate }}</td>
-        <td class="label">{{ "report.statecurriculum.module.name" | translate }}</td>
-        <td class="label">{{ "report.statecurriculum.module.credits" | translate }}</td>
+        <td class="label state-curriculum-module-column1 center">{{ "report.statecurriculum.module.nr" | translate }}</td>
+        <td class="label state-curriculum-module-column2 center">{{ "report.statecurriculum.module.name" | translate }}</td>
+        <td class="label state-curriculum-module-column3 center">{{ "report.statecurriculum.module.credits" | translate }}</td>
       </tr>
       <tr>
-        <td>{{loop.index + 1}}</td>
-        <td>{{ module.name }}</td>
-        <td>{{ module.credits }}</td>
+        <td class="center">{{loop.index + 1}}</td>
+        <td class="center">{{ module.name }}</td>
+        <td class="center">{{ module.credits }} <b>EKAP</b></td>
       </tr>
       <tr>
         <td colspan="3">
         	<span class="label">{{ "report.statecurriculum.module.objectives" | translate }}</span>
-        	<pre>{{ module.objectives }}</pre>
+        	<p class="state-curriculum-very-long-text">{{ module.objectives }}</p>
         </td>
       </tr>
       <tr>
-        <td colspan="2">
+        <td colspan="2" class="align-top">
         	<span class="label">{{ "report.statecurriculum.module.outcomes" | translate }}</span>
-        	<pre>{{ module.outcomes }}</pre>
+        	<p class="long-text">{{ module.outcomes }}</p>
         </td>
-        <td>
+        <td class="align-top">
         	<span class="label">{{ "report.statecurriculum.module.assessments" | translate }}</span>
-        	<pre>{{ module.assessments }}</pre>
+        	<p class="long-text">{{ module.assessments }}</p>
         </td>
       </tr>
 	</table>

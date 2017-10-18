@@ -101,17 +101,24 @@ public class ClassifierControllerTests {
 		Assert.assertNotEquals(updatedClassifier.getInserted(), updatedClassifier.getChanged());
 	}
 
-	@Test
-	public void testSearch() {
-    	String uri = UriComponentsBuilder.fromUriString("/classifier").build().toUriString();
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+    @Test
+    public void testSearch() {
+        UriComponentsBuilder uri = UriComponentsBuilder.fromUriString("/classifier");
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-	}
 
-	@Test
-	public void testSearchTables() {
-    	String uri = UriComponentsBuilder.fromUriString("/classifier/heads").build().toUriString();
+        uri = UriComponentsBuilder.fromUriString("/classifier");
+        uri.queryParam("code", "code");
+        uri.queryParam("value", "value");
+        responseEntity = restTemplate.getForEntity(uri.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void testSearchTables() {
+        String uri = UriComponentsBuilder.fromUriString("/classifier/heads").build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

@@ -204,4 +204,15 @@ angular.module('hitsaOis').controller('ModuleProtocolController', function ($sco
       message.info('moduleProtocol.messages.calculated');
     });
   };
+
+  var Endpoint = QueryUtils.endpoint(endpoint);
+
+  $scope.delete = function() {
+    dialogService.confirmDialog({prompt: 'moduleProtocol.prompt.delete'}, function() {
+      new Endpoint($scope.protocol).$delete().then(function(){
+        message.info('moduleProtocol.messages.deleted');
+        $location.path(endpoint);
+      });
+    });
+  };
 });

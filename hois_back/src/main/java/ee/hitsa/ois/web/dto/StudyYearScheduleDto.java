@@ -17,7 +17,6 @@ public class StudyYearScheduleDto {
     @NotNull
     private Short weekNr;
 
-
     public static StudyYearScheduleDto of(StudyYearSchedule studyYearSchedule) {
         StudyYearScheduleDto dto = new StudyYearScheduleDto();
         dto.setId(EntityUtil.getId(studyYearSchedule));
@@ -34,7 +33,6 @@ public class StudyYearScheduleDto {
         this.studyPeriod = studyPeriodId;
         this.weekNr = weekNr;
     }
-
 
     public StudyYearScheduleDto() {
         // TODO Auto-generated constructor stub
@@ -84,30 +82,39 @@ public class StudyYearScheduleDto {
     public Long getId() {
         return id;
     }
+
     public void setId(Long id) {
         this.id = id;
     }
+
     public Long getStudentGroup() {
         return studentGroup;
     }
+
     public void setStudentGroup(Long studentGroup) {
         this.studentGroup = studentGroup;
     }
+
     public Long getStudyYearScheduleLegend() {
         return studyYearScheduleLegend;
     }
+
     public void setStudyYearScheduleLegend(Long studyYearScheduleLegend) {
         this.studyYearScheduleLegend = studyYearScheduleLegend;
     }
+
     public Long getStudyPeriod() {
         return studyPeriod;
     }
+
     public void setStudyPeriod(Long studyPeriod) {
         this.studyPeriod = studyPeriod;
     }
+
     public Short getWeekNr() {
         return weekNr;
     }
+
     public void setWeekNr(Short weekNr) {
         this.weekNr = weekNr;
     }

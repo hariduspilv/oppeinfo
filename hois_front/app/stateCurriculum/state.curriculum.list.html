@@ -51,7 +51,7 @@
         <div layout="row">
             <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
             <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-            <md-button class="md-raised" ng-href="#/stateCurriculum/new">{{'main.button.create' | translate}}</md-button>
+            <md-button class="md-raised" ng-href="#/stateCurriculum/new" ng-if="formState.canCreate">{{'main.button.create' | translate}}</md-button>
         </div>
 	  </fieldset>
      </form>
@@ -80,7 +80,7 @@
         <td md-cell>{{row.validThru | hoisDate}}</td>
         <td md-cell="status">{{currentLanguageNameField(row.status)}}</td>
         <td md-cell>
-            <md-button md-no-ink class="md-primary change-button"  ng-href="#/stateCurriculum/{{row.id}}/edit" ng-if="row.status.code === 'OPPEKAVA_STAATUS_S'">{{'main.button.change' | translate}}</md-button>
+            <md-button md-no-ink class="md-primary change-button"  ng-href="#/stateCurriculum/{{row.id}}/edit" ng-if="row.canChange">{{'main.button.change' | translate}}</md-button>
         </td>
     </tr>
     </tbody>

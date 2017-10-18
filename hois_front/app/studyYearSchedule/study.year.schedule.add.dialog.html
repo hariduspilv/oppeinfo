@@ -52,7 +52,7 @@
       </div>
     </md-dialog-content>
     <md-dialog-actions layout="row" layout-align="start center">
-      <md-button class="md-raised md-primary" ng-click="submit()">{{"main.button.save" | translate}}</md-button>
+      <md-button class="md-raised md-primary" ng-click="submit()">{{hasValue ? "main.button.change" : "main.button.add" | translate}}</md-button>
       <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
     </md-dialog-actions>
   </form>

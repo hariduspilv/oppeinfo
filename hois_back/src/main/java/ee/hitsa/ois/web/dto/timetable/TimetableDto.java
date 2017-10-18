@@ -19,6 +19,7 @@ public class TimetableDto {
     private String status;
     private List<String> roomCodes;
     private Boolean higher;
+    private Boolean editable = Boolean.FALSE;
 
     public Long getId() {
         return id;
@@ -114,6 +115,14 @@ public class TimetableDto {
 
     public void setHigher(Boolean higher) {
         this.higher = higher;
+    }
+
+    public Boolean getEditable() {
+        return editable;
+    }
+
+    public void setEditable(Boolean editable) {
+        this.editable = editable;
     }
 
 }

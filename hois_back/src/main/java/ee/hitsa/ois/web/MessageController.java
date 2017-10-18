@@ -41,7 +41,7 @@ public class MessageController {
     private MessageService messageService;
 
     @GetMapping("/received/mainPage")
-    public Page<MessageSearchDto> searchReceivedForMainPage(HoisUserDetails user, Pageable pageable) {
+    public Page<MessageSearchDto> show(HoisUserDetails user, Pageable pageable) {
         return messageService.show(user, pageable);
     }
 
@@ -51,7 +51,7 @@ public class MessageController {
     }
     
     @GetMapping("/sent/automatic")
-    public Page<MessageSearchDto> searchAutomaticSent(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
+    public Page<MessageSearchDto> searchSentAutomatic(HoisUserDetails user, @Valid MessageSearchCommand criteria, Pageable pageable) {
         return messageService.searchSentAutomatic(user.getSchoolId(), criteria, pageable);
     }
 
@@ -79,7 +79,7 @@ public class MessageController {
     }
 
     @GetMapping("/parents")
-    public List<MessageReceiverDto> getParents(StudentSearchCommand criteria) {
+    public List<MessageReceiverDto> getStudentRepresentatives(StudentSearchCommand criteria) {
         return messageService.getStudentRepresentatives(criteria);
     }
 

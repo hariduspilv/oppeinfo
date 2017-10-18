@@ -1,28 +1,19 @@
 <div class="ois-form-layout-padding ois-form-layout" ng-cloak>
   <div>
-    <form name="timetableForm" novalidate class="nomargin">
-
-      <div layout="row">
-        <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
-          <md-datepicker required ng-model="timetable.startDate" md-min-date="studyPeriodStartDate"
-                         md-max-date="timetable.endDate ? timetable.endDate : studyPeriodEndDate"
-                         md-placeholder="{{'main.from' | translate}}" md-date-filter="blockedFromDatesPredicate"
-                         disabled></md-datepicker>
-        </md-input-container>
-
-        <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
-          <md-datepicker required ng-model="timetable.endDate"
-                         md-min-date="timetable.startDate ? timetable.startDate : studyPeriodStartDate"
-                         md-max-date="studyPeriodEndDate" md-placeholder="{{'main.thru' | translate}}"
-                         md-date-filter="blockedThruDatesPredicate" disabled></md-datepicker>
-        </md-input-container>
+    <form name="timetableForm" novalidate class="nomargin form-readonly" layout="column">
+      <div layout="row" class="form-readonly">
+          <md-input-container flex="30">
+            <label class="textInput">{{'timetable.timetablePlan.timetablePeriod' | translate}}</label>
+            <hois-value value="(timetable.startDate | hoisDate) + '-'+(timetable.endDate | hoisDate)"/>
+          </md-input-container>
       </div>
+      <div flex-xs="0" flex-gt-xs="0" flex-gt-sm="50"></div>
 
       <div ng-repeat="curriculum in timetable.curriculums">
         <table md-table>
           <thead md-head>
           <tr md-row>
-            <th md-column>{{curriculum.curriculumCode}}</th>
+            <th md-column>{{currentLanguageNameField(curriculum)}}{{curriculum.curriculumCode}}, {{currentLanguageNameField(curriculum.curriculumStudyLevelCode)}}</th>
           </tr>
           </thead>
           <tbody md-body>
@@ -43,17 +34,22 @@
           </thead>
           <tbody md-body>
           <tr md-row ng-repeat="pair in timetable.pairs" ng-class-odd="'odd'" ng-class-even="'even'">
-            <td md-cell>{{pair.subjectCode}} {{pair.nameEt}} / {{pair.teacherNames}}</td>
+            <td md-cell><a href="#/timetable/{{timetable.id}}/{{timetable.higher ? 'createHigherPlan' : 'createVocationalPlan'}}">{{pair.code}} {{currentLanguageNameField(pair)}} / {{pair.teacherNames}}</a></td>
           </tr>
           </tbody>
         </table>
       </div>
 
     </form>
-    <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_S'" ng-href="#/timetable/{{timetable.id}}/confirm"
+
+    <md-button ng-if="timetable.editable && timetable.higher" md-no-ink class="md-primary change-button"
+      ng-href="#/timetable/{{::timetable.id}}/edit">{{'main.button.change' | translate}}
+    </md-button>
+
+    <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_S'" ng-click="confirm()"
                class="md-raised">{{'main.button.confirm' | translate}}
     </md-button>
-    <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_K'" ng-href="#/timetable/{{timetable.id}}/publicize"
+    <md-button ng-if="timetable.status === 'TUNNIPLAAN_STAATUS_K'" ng-click="publicize()"
                class="md-raised">{{'timetable.view.publicize' | translate}}
     </md-button>
     <md-button ng-href="#/timetable/timetableManagement" class="md-raised">{{'main.button.back' | translate}}

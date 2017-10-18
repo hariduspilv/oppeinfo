@@ -22,7 +22,6 @@ import ee.hitsa.ois.enums.StudyPeriodEventType;
 import ee.hitsa.ois.report.certificate.CertificateReport;
 import ee.hitsa.ois.report.certificate.CertificateReportSession;
 import ee.hitsa.ois.report.certificate.CertificateStudentResult;
-import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -45,7 +44,7 @@ public class CertificateContentService {
     @Autowired 
     private ProtocolService protocolService;
     @Autowired 
-    private ClassifierRepository classifierRepository;
+    private ClassifierService classifierService;
 
     public String generate(Student student, CertificateType type) {
         CertificateReport report = CertificateReport.of(student);
@@ -120,7 +119,7 @@ public class CertificateContentService {
     }
 
     private Map<String, Classifier> getVocationalGrades() {
-        List<Classifier> grades = classifierRepository.findAllByMainClassCode(MainClassCode.KUTSEHINDAMINE.name());
+        List<Classifier> grades = classifierService.findAllByMainClassCode(MainClassCode.KUTSEHINDAMINE);
         return StreamUtil.toMap(Classifier::getCode, grades);
     }
 

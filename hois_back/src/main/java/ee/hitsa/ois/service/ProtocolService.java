@@ -25,7 +25,7 @@ import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.enums.ProtocolStatus;
 import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.student.StudentVocationalResultModuleThemeDto;
@@ -38,7 +38,7 @@ public class ProtocolService {
     private EntityManager em;
 
     public BigDecimal vocationalTotalCreditsOnCurrentCurriculum(Student student) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from (select distinct on (cm.id) cm.id, credits from protocol_student ps " + "inner join protocol p on p.id = ps.protocol_id "
                         + "inner join protocol_vdata pvd on pvd.protocol_id = p.id "
                         + "inner join curriculum_version_omodule cvo on cvo.id = pvd.curriculum_version_omodule_id "
@@ -54,7 +54,7 @@ public class ProtocolService {
     }
 
     public BigDecimal vocationalWeightedAverageGrade(Student student) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from (select CAST(grade.value AS integer) as grade_value, sum(cvoyc.credits) as ekap from protocol_student ps "
                         + "inner join protocol_vdata pvd on pvd.protocol_id = ps.protocol_id " + "inner join protocol p on p.id = ps.protocol_id "
                         + "inner join classifier grade on grade.code = grade_code "
@@ -80,7 +80,7 @@ public class ProtocolService {
     }
 
     private Collection<StudentVocationalResultModuleThemeDto> vocationalResultsModuleResults(Student student) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from ("
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ("
                 + "select distinct on (cm.id) cm.id, cvo.id cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, cm.credits cm_credits, "
                 + "ps.grade_code ps_grade_code, p.confirm_date p_confirm_date, tp.id module_teacher_id, tp.firstname module_teacher_firstname, tp.lastname module_teacher_lastname, "
                 + "sy.year_code sy_year_code, sy.start_date sy_start_date "
@@ -126,7 +126,7 @@ public class ProtocolService {
     }
 
     private Collection<StudentVocationalResultModuleThemeDto> vocationalResultsThemeResults(Student student) {
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder("from ("
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ("
                 + "select distinct on (cvot.id, journal_teacher_id) cvot.id cvot_id, cvot.curriculum_version_omodule_id, cvot.name_et cvot_name_et, cvot.credits cvot_credits, jes.grade_code jes_grade_code, jes.grade_inserted jes_grade_inserted, "
                 + "tp.id journal_teacher_id, tp.firstname journal_teacher_firstname, tp.lastname journal_teacher_lastname,"
                 + "cvo.id cvo_id, cv.code cv_code, cm.name_et cm_name_et, mcl.name_et mcl_name_et, cm.name_en cm_name_en, mcl.name_en mcl_name_en, cm.credits cm_credits,"

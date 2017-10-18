@@ -16,14 +16,9 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectEditController',
     }
 
     if(studyPeriodId) {
-      QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId}).$promise.then(function(response) {
-        $scope.studyPeriod = response;
-      });
+      $scope.studyPeriod = QueryUtils.endpoint('/subjectStudyPeriods/studyPeriod').get({id: studyPeriodId});
     } else {
-      QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
-        $scope.studyPeriods = response;
-        setCurrentStudyPeriod();
-      });
+      $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(setCurrentStudyPeriod);
     }
 
     if(subject) {
@@ -35,19 +30,12 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectEditController',
               $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
             });
         });
-        QueryUtils.endpoint('/subjectStudyPeriods/subject/' + subject).get(function(result) {
-            $scope.subject = result;
-        });
-        Classifier.queryForDropdown({mainClassCode: 'MAHT'}, function(response){
-          $scope.capacityTypes = response;
-        });
+        $scope.subject = QueryUtils.endpoint('/subjectStudyPeriods/subject/' + subject).get();
     }
 
     function loadSubjects() {
       if($scope.record.studyPeriod) {
-        QueryUtils.endpoint('/subjectStudyPeriods/subjects/list/limited/' + $scope.record.studyPeriod).query(function(result) {
-          $scope.subjects = result;
-        });
+        $scope.subjects = QueryUtils.endpoint('/subjectStudyPeriods/subjects/list/limited/' + $scope.record.studyPeriod).query();
       }
     }
 
@@ -75,6 +63,7 @@ angular.module('hitsaOis').controller('SubjectStudyPeriodSubjectEditController',
           message.updateSuccess();
           $scope.record = response;
           $scope.capacitiesUtil.addEmptyCapacities($scope.capacityTypes);
+          $scope.subjectStudyPeriodSubjectEditForm.$setPristine();
       });
     };
 }]);

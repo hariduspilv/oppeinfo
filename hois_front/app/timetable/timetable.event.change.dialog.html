@@ -2,7 +2,7 @@
   <form name="dialogForm" ng-submit="dialogForm.$valid && submit()" novalidate ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2 flex>{{lesson.journalObject.name}}, {{lesson.journalObject.teacherNames.join(", ")}}, {{currentLanguageNameField(lessonCapacityName)}}</h2>
+        <h2 flex>{{lessonHeader}}, {{currentLanguageNameField(lessonCapacityName)}}</h2>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
         </md-button>

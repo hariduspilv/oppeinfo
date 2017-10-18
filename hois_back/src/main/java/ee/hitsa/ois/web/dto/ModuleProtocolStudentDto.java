@@ -8,6 +8,7 @@ import ee.hitsa.ois.domain.timetable.JournalStudent;
 import ee.hitsa.ois.enums.JournalEntryType;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.JournalUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.validation.ClassifierRestriction;
 
@@ -37,6 +38,7 @@ public class ModuleProtocolStudentDto {
                         .filter(jes -> JournalEntryType.SISSEKANNE_L.name()
                                 .equals(EntityUtil.getCode(jes.getJournalEntry().getEntryType())))
                         .filter(jes -> EntityUtil.getNullableCode(jes.getGrade()) != null)
+                        .filter(jes -> JournalUtil.filterJournalEntryStudentsByOccupationalModule(protocolStudent.getProtocol().getProtocolVdata().getCurriculumVersionOccupationModule(), jes))
                         .forEach(jes -> dto.getJournalResults()
                                 .add(new ModuleProtocolJournalResultDto(jes.getJournalEntry().getJournal().getId(),
                                         jes.getJournalEntry().getJournal().getNameEt(),

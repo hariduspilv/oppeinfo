@@ -2,7 +2,7 @@
   <form ng-cloak name="dialogForm">
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{"module.addToughtModule" | translate}}</h2>
+        <h2>{{formState.readOnly ? "module.viewToughtModule" : "module.addToughtModule" | translate}}</h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -16,14 +16,14 @@
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.occupationPartOccupationSpecialize' | translate}}</legend>
 				<div layout="column">
 				  <div ng-repeat="item in occupations | orderBy: 'occupation.' + currentLanguageNameField()">
-					<md-checkbox ng-model="occupationsSelected[item.occupation.code]" ng-change="validateOccupations()" aria-label="{{item.occupation[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
-					  {{item.occupation[currentLanguageNameField()]}}
+					<md-checkbox ng-model="occupationsSelected[item.occupation.code]" ng-change="validateOccupations()" aria-label="{{currentLanguageNameField(item.occupation)}}" ng-disabled="formState.readOnly">
+					  {{currentLanguageNameField(item.occupation)}}
 					</md-checkbox>
 					<div layout="column">
 						<div ng-repeat="partOccupation in item.partOccupations" flex layout="row">
 							<div flex="5">&nbsp;</div>
-							<md-checkbox ng-model="occupationsSelected[partOccupation.code]" ng-change="validateOccupations()" aria-label="{{partOccupation[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
-							  {{partOccupation[currentLanguageNameField()]}}
+							<md-checkbox ng-model="occupationsSelected[partOccupation.code]" ng-change="validateOccupations()" aria-label="{{currentLanguageNameField(partOccupation)}}" ng-disabled="formState.readOnly">
+							  {{currentLanguageNameField(partOccupation)}}
 							</md-checkbox>
 						 </div>
 					</div>
@@ -31,8 +31,8 @@
 					<div layout="column">
 					  <div ng-repeat="speciality in item.specialities"  layout="row">
 						<div flex="5">&nbsp;</div>
-							<md-checkbox ng-model="specialitiesSelected[speciality.code]" ng-change="validateOccupations()" aria-label="{{speciality[currentLanguageNameField()]}}" ng-disabled="formState.readOnly">
-							  {{speciality[currentLanguageNameField()]}}
+							<md-checkbox ng-model="specialitiesSelected[speciality.code]" ng-change="validateOccupations()" aria-label="{{currentLanguageNameField(speciality)}}" ng-disabled="formState.readOnly">
+							  {{currentLanguageNameField(speciality)}}
 							</md-checkbox>
 						</div>
 					</div>
@@ -137,8 +137,8 @@
           <md-input-container flex>
             <label>{{'module.competencesAquired' | translate}}</label>
             <md-select multiple="true" ng-model="module.competences" ng-disabled="module.module.code !== 'KUTSEMOODUL_P' || formState.readOnly || competences.length === 0">
-              <md-option ng-repeat="option in competences | orderBy: currentLanguageNameField() track by $index" ng-value="option.code" aria-label="{{option[currentLanguageNameField()]}}">
-                {{option[currentLanguageNameField()]}}</md-option>
+              <md-option ng-repeat="option in competences | orderBy: currentLanguageNameField() track by $index" ng-value="option.code" aria-label="{{currentLanguageNameField(option)}}">
+                {{currentLanguageNameField(option)}}</md-option>
             </md-select>
           </md-input-container>
           <br/>

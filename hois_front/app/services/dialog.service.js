@@ -7,9 +7,9 @@
  * # dialogService
  * Service in the hitsaOis.
  */
-angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils',
+angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 'message',
 
-  function ($mdDialog, ArrayUtils) {
+  function ($mdDialog, ArrayUtils, message) {
 
     var defaultConfirmDialogOptions = {accept: 'main.yes', cancel: 'main.no'};
 
@@ -24,9 +24,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils',
           $scope.removeFromArray = ArrayUtils.remove;
           $scope.currentLanguageNameField = $rootScope.currentLanguageNameField;
 
-          $scope.cancel = function() {
-            $mdDialog.hide();
-          };
+          $scope.cancel = $mdDialog.hide;
 
           $scope.submit = function() {
             var valid = true;
@@ -42,7 +40,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils',
               submitted = true;
               $mdDialog.hide();
             } else {
-              // console.log('dialog form invalid: ', $scope.dialogForm.$error);
+              message.error('main.messages.form-has-errors');
             }
           };
 
@@ -65,9 +63,7 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils',
       });
     };
 
-    this.hide = function() {
-      $mdDialog.hide();
-    };
+    this.hide = $mdDialog.hide;
 
     this.confirmDialog = function(options, callback) {
       $mdDialog.show({

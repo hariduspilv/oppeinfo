@@ -1,9 +1,7 @@
 package ee.hitsa.ois.web;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 
@@ -23,13 +21,11 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.Declaration;
 import ee.hitsa.ois.domain.DeclarationSubject;
 import ee.hitsa.ois.domain.student.Student;
-import ee.hitsa.ois.repository.DeclarationRepository;
 import ee.hitsa.ois.service.DeclarationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DeclarationUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
-import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.DeclarationSearchCommand;
 import ee.hitsa.ois.web.commandobject.DeclarationSubjectForm;
 import ee.hitsa.ois.web.commandobject.UsersSearchCommand;
@@ -43,26 +39,11 @@ public class DeclarationController {
 
     @Autowired
     private DeclarationService declarationService;
-    @Autowired
-    private DeclarationRepository declarationRepository;
 
     @GetMapping("/{id:\\d+}")
     public DeclarationDto get(HoisUserDetails user, @WithEntity("id") Declaration declaration) {
         UserUtil.assertCanViewStudent(user, declaration.getStudent());
-        DeclarationDto dto = DeclarationDto.of(declaration);
-        declarationService.setAreSubjectsDeclaredRepeatedy(dto.getSubjects(), declaration.getId());
-        dto.setCanBeChanged(Boolean.valueOf(DeclarationUtil.canChangeDeclaration(user, declaration)));
-        dto.setCanBeSetUnconfirmed(Boolean.valueOf(DeclarationUtil.canUnconfirmDeclaration(user, declaration)));
-        dto.setCanBeSetConfirmed(Boolean.valueOf(DeclarationUtil.canConfirmDeclaration(user, declaration)));
-        setSubjectsAreAssessed(dto);
-        return dto;
-    }
-
-    private void setSubjectsAreAssessed(DeclarationDto dto) {
-        Long studentId = dto.getStudent().getId();
-        for(DeclarationSubjectDto subject : dto.getSubjects()) {
-            subject.setIsAssessed(declarationRepository.subjectAssessed(studentId, subject.getSubjectStudyPeriod(), subject.getId()));
-        }
+        return declarationService.get(user, declaration);
     }
 
     @GetMapping
@@ -72,7 +53,7 @@ public class DeclarationController {
     }
 
     @GetMapping("/hasPrevious")
-    public Map<String, ?> checkIfStudentHasPreviousDeclarations(HoisUserDetails user) {
+    public Map<String, ?> studentHasPreviousDeclarations(HoisUserDetails user) {
         UserUtil.assertIsStudent(user);
         Map<String, Object> response = new HashMap<>();
         response.put("hasPrevious", Boolean.valueOf(declarationService.studentHasPreviousDeclarations(user.getStudentId())));
@@ -157,26 +138,13 @@ public class DeclarationController {
 
     @PostMapping("/subject")
     public DeclarationSubjectDto addSubject(HoisUserDetails user, @Valid @RequestBody DeclarationSubjectForm form) {
-
-        Declaration declaration = declarationRepository.getOne(form.getDeclaration());
-        DeclarationUtil.assertCanChangeDeclaration(user, declaration);
-
-        DeclarationSubjectDto dto = DeclarationSubjectDto.of(declarationService.addSubject(user, form));
-        declarationService.setAreSubjectsDeclaredRepeatedy(new HashSet<>(Arrays.asList(dto)), dto.getDeclaration());
-        return dto;
+        return declarationService.addSubject(user, form);
     }
 
     @DeleteMapping("/subject/{id:\\d+}")
     private void deleteSubject(HoisUserDetails user, @WithEntity("id") DeclarationSubject subject) {
         DeclarationUtil.assertCanChangeDeclaration(user, subject.getDeclaration());
-        assertSubjectNotAssessed(subject);
         declarationService.deleteSubject(subject);
-    }
-
-    private void assertSubjectNotAssessed(DeclarationSubject subject) {
-        if(declarationService.subjectAssessed(subject)) {
-            throw new ValidationFailedException("declaration.error.subjectDelete");
-        }
     }
 
     @GetMapping("/students")

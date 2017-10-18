@@ -2,7 +2,7 @@
   <form name="dialogForm" ng-cloak>
     <md-toolbar>
       <div class="md-toolbar-tools">
-        <h2>{{"module.dataInsertion" | translate}}</h2>
+        <h2 translate="module.occupationalModuleDataInsertion" translate-values="{{curriculumModule}}"></h2>
         <span flex></span>
         <md-button class="md-icon-button" ng-click="cancel()">
           <md-icon md-font-set="material-icons">close</md-icon>
@@ -21,12 +21,12 @@
             </div>
 
             <div ng-repeat="item in capacities track by item.code" layout="row" class="secondary-table-row">
-              <div flex="30">{{item[currentLanguageNameField()]}}</div>
+              <div flex="30">{{currentLanguageNameField(item)}}</div>
 
               <div flex="30">
                 <md-input-container flex>
                   <input ng-model="item.inputData.hours" type="number" min="0" max="999" pattern="^\d+$" aria-label="capacity hours" class="small-input"
-                    ng-required="item.inputData.contact!==undefined" ng-readonly="formState.readOnly || hasThemesWithCapacities">
+                   ng-readonly="formState.readOnly || hasThemesWithCapacities">
                 </md-input-container>
               </div>
               <div flex="40" layout="row">

@@ -12,21 +12,17 @@ angular.module('hitsaOis').controller('HigherProtocolSearchController', function
   var Endpoint = QueryUtils.endpoint(baseUrl);
 
   function setCurrentStudyPeriod() {
-    if($scope.criteria && $scope.studyPeriods && !$scope.criteria.studyPeriod) {
+    if($scope.criteria && !ArrayUtils.isEmpty($scope.studyPeriods) && !$scope.criteria.studyPeriod) {
         $scope.criteria.studyPeriod = DataUtils.getCurrentStudyYearOrPeriod($scope.studyPeriods).id;
     }
   }
 
-  QueryUtils.endpoint('/autocomplete/studyPeriods').query().$promise.then(function(response){
-      $scope.studyPeriods = response;
-      setCurrentStudyPeriod();
-      $scope.loadData();
+  $scope.studyPeriods = QueryUtils.endpoint('/autocomplete/studyPeriods').query(function() {
+    setCurrentStudyPeriod();
+    $scope.loadData();
   });
 
-  $scope.$watch('criteria.studyPeriod', function() {
-        setCurrentStudyPeriod();
-      }
-  );
+  $scope.$watch('criteria.studyPeriod', setCurrentStudyPeriod);
 
   $scope.openCreateProtocolDialog = function() {
     var DialogController = function (scope) {
@@ -35,9 +31,7 @@ angular.module('hitsaOis').controller('HigherProtocolSearchController', function
         students: []
       };
 
-      QueryUtils.endpoint(baseUrl + "/subjectStudyPeriods").query().$promise.then(function(response){
-        scope.subjectStudyPeriods = response;
-      });
+      scope.subjectStudyPeriods = QueryUtils.endpoint(baseUrl + "/subjectStudyPeriods").query();
 
       function getStudents() {
         if(scope.record.protocolType && scope.record.subjectStudyPeriod) {
@@ -69,6 +63,5 @@ angular.module('hitsaOis').controller('HigherProtocolSearchController', function
         });
       });
   };
-
 
 });

@@ -50,7 +50,8 @@
       <div>
         <md-button class="md-raised md-primary" type="submit" ng-if="protocol.canBeEdited">{{'main.button.save' | translate}}</md-button>
         <md-button class="md-raised" ng-click="addProtocolStudents()" ng-if="protocol.canBeEdited">{{'moduleProtocol.addStudents' | translate}}</md-button>
-        <md-button ng-show="formState.canConfirm===true" class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <md-button ng-if="formState.canConfirm===true" class="md-raised" ng-click="confirm()">{{'main.button.confirm' | translate}}</md-button>
+        <md-button ng-if="protocol.canBeDeleted" class="md-raised" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <md-button class="md-raised" ng-href="#/moduleProtocols">{{'main.button.back' | translate}}</md-button>
 
         <a ng-show="formState.protocolPdfUrl" ng-href="{{formState.protocolPdfUrl}}" target="_blank" class="md-button md-raised">{{'main.button.print' | translate}}</a>

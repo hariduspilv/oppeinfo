@@ -5,7 +5,6 @@ import java.util.List;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
-import javax.validation.Validator;
 import javax.validation.constraints.NotNull;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,21 +23,18 @@ import org.springframework.web.bind.annotation.RestController;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
 import ee.hitsa.ois.enums.CurriculumStatus;
-import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.report.StateCurriculumReport;
 import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.service.PdfService;
 import ee.hitsa.ois.service.StateCurriculumService;
+import ee.hitsa.ois.service.StateCurriculumValidationService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
+import ee.hitsa.ois.util.StateCurriculumUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.validation.StateCurriculumValidator;
-import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumModuleForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
@@ -58,51 +54,51 @@ public class StateCurriculumController {
     @Autowired
     private StateCurriculumRepository stateCurriculumRepository;
     @Autowired
-    private Validator validator;
-    @Autowired
     private PdfService pdfService;
+    @Autowired 
+    private StateCurriculumValidationService stateCurriculumValidationService;
 
     @GetMapping("/print/{id:\\d+}/stateCurriculum.pdf")
     public void print(@WithEntity("id") StateCurriculum stateCurriculum, HttpServletResponse response) throws IOException {
         HttpUtil.pdf(response, EntityUtil.getId(stateCurriculum) + ".pdf", pdfService.generate(StateCurriculumReport.TEMPLATE_NAME, new StateCurriculumReport(stateCurriculum)));
     }
+    
+    @GetMapping("/{id:\\d+}")
+    public StateCurriculumDto get(HoisUserDetails user, @WithEntity("id") StateCurriculum curriculum) {
+        StateCurriculumDto dto = StateCurriculumDto.of(curriculum);
+        dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, curriculum)));
+        return StateCurriculumDto.of(curriculum);
+    }
+    
+    @GetMapping
+    public Page<StateCurriculumSearchDto> search(HoisUserDetails user, StateCurriculumSearchCommand stateCurriculumSearchCommand, Pageable pageable) {
+        return stateCurriculumService.search(user, stateCurriculumSearchCommand, pageable);
+    }
 
     @PostMapping
     public StateCurriculumDto create(HoisUserDetails user, @Valid @RequestBody StateCurriculumForm stateCurriculumForm) {
-        UserUtil.assertIsMainAdmin(user);
-        assertNameIsUnique(null, stateCurriculumForm);
-        return get(stateCurriculumService.create(stateCurriculumForm));
+        StateCurriculumValidationService.assertCanCreate(user); 
+        stateCurriculumValidationService.assertNameIsUnique(null, stateCurriculumForm);
+        return get(user, stateCurriculumService.create(stateCurriculumForm));
     }
 
     @PutMapping("/{id:\\d+}")
-    public StateCurriculumDto update(HoisUserDetails user, @Valid @RequestBody StateCurriculumForm stateCurriculumForm, @WithEntity("id") StateCurriculum stateCurriculum) {
-       UserUtil.assertIsMainAdmin(user);
-       checkStatus(stateCurriculum);
-       assertNameIsUnique(stateCurriculum, stateCurriculumForm);
-       return get(stateCurriculumService.save(stateCurriculum, stateCurriculumForm));
+    public StateCurriculumDto save(HoisUserDetails user, @Valid @RequestBody StateCurriculumForm stateCurriculumForm, @WithEntity("id") StateCurriculum stateCurriculum) {
+       StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
+       stateCurriculumValidationService.assertNameIsUnique(stateCurriculum, stateCurriculumForm);
+       return get(user, stateCurriculumService.save(stateCurriculum, stateCurriculumForm));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, 
             @WithEntity("id") StateCurriculum stateCurriculum) {
-        UserUtil.assertIsMainAdmin(user);
-        checkStatus(stateCurriculum);
+        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
         stateCurriculumService.delete(stateCurriculum);
-    }
-
-    @GetMapping
-    public Page<StateCurriculumSearchDto> search(StateCurriculumSearchCommand stateCurriculumSearchCommand, Pageable pageable) {
-        return stateCurriculumService.search(stateCurriculumSearchCommand, pageable);
-    }
-
-    @GetMapping("/{id:\\d+}")
-    public StateCurriculumDto get(@WithEntity("id") StateCurriculum curriculum) {
-        return StateCurriculumDto.of(curriculum);
     }
 
     @GetMapping("/unique")
     public boolean isUnique(UniqueCommand command) {
-		return stateCurriculumService.isUnique(command);
+		return stateCurriculumValidationService.isUnique(command);
     }
 
     @GetMapping("/all")
@@ -113,8 +109,8 @@ public class StateCurriculumController {
     @PostMapping("/modules")
     public StateCurriculumModuleDto createModule(HoisUserDetails user, 
             @NotNull @Valid @RequestBody StateCurriculumModuleForm form) {
-        UserUtil.assertIsMainAdmin(user);
-        checkStatus(stateCurriculumRepository.getOne(form.getStateCurriculum()));
+        StateCurriculum sc = stateCurriculumRepository.getOne(form.getStateCurriculum());
+        StateCurriculumValidationService.assertCanChange(user, sc);
         return StateCurriculumModuleDto.of(stateCurriculumService.createModule(form));
     }
 
@@ -122,8 +118,7 @@ public class StateCurriculumController {
     public StateCurriculumModuleDto updateModule(HoisUserDetails user, 
             @NotNull @Valid @RequestBody StateCurriculumModuleForm form, 
             @WithEntity("id") StateCurriculumModule module) {
-        UserUtil.assertIsMainAdmin(user);
-        checkStatus(module.getStateCurriculum());
+        StateCurriculumValidationService.assertCanChange(user, module.getStateCurriculum());
         return StateCurriculumModuleDto.of(stateCurriculumService.updateModule(module, form));
     }
 
@@ -131,59 +126,30 @@ public class StateCurriculumController {
     public void deleteModule(HoisUserDetails user, 
             @WithVersionedEntity(value = "id", versionRequestParam = "version") 
     StateCurriculumModule module, @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsMainAdmin(user);
-        checkStatus(module.getStateCurriculum());
+        StateCurriculumValidationService.assertCanChange(user, module.getStateCurriculum());
         stateCurriculumService.deleteModule(module);
     }
 
     @PutMapping("/close/{id:\\d+}")
     public StateCurriculumDto close(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum) {
-       UserUtil.assertIsMainAdmin(user);
-       return get(stateCurriculumService.setStatus(stateCurriculum, CurriculumStatus.OPPEKAVA_STAATUS_C));
+        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
+       return get(user, stateCurriculumService.setStatus(stateCurriculum, CurriculumStatus.OPPEKAVA_STAATUS_C));
     }
 
     @PutMapping("/closeAndSave/{id:\\d+}")
     public StateCurriculumDto closeAndSave(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum,
             @NotNull @Valid @RequestBody StateCurriculumForm form) {
-       UserUtil.assertIsMainAdmin(user);
-       assertNameIsUnique(stateCurriculum, form);
-       return get(stateCurriculumService.setStatusAndSave(stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_C));
+       StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
+       stateCurriculumValidationService.assertNameIsUnique(stateCurriculum, form);
+       return get(user, stateCurriculumService.setStatusAndSave(stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_C));
     }
     
     @PutMapping("/confirmAndSave/{id:\\d+}")
     public StateCurriculumDto confirmAndSave(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum,
             @NotNull @Valid @RequestBody StateCurriculumForm form) {
-       UserUtil.assertIsMainAdmin(user);
-       validateStateCurriculumForm(form);
-       checkStatus(stateCurriculum);
-       assertNameIsUnique(stateCurriculum, form);
-       return get(stateCurriculumService.setStatusAndSave(stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_K));
-    }
-
-    private void assertNameIsUnique(StateCurriculum stateCurriculum, StateCurriculumForm stateCurriculumForm) {
-        Long id = EntityUtil.getNullableId(stateCurriculum);
-
-        UniqueCommand nameEtUnique = new UniqueCommand();
-        nameEtUnique.setId(id);
-        nameEtUnique.setParamName("nameEt");
-        nameEtUnique.setParamValue(stateCurriculumForm.getNameEt());
-
-        UniqueCommand nameEnUnique = new UniqueCommand();
-        nameEnUnique.setId(id);
-        nameEnUnique.setParamName("nameEn");
-        nameEnUnique.setParamValue(stateCurriculumForm.getNameEn());
-
-        if(!stateCurriculumService.isUnique(nameEtUnique) || !stateCurriculumService.isUnique(nameEnUnique)) {
-            throw new ValidationFailedException("stateCurriculum.error.unique.name");
-        }
-    }
-
-    public void checkStatus(StateCurriculum stateCurriculum) {
-        AssertionFailedException.throwIf(!ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_S, stateCurriculum.getStatus()), 
-                "Only state curriculums with status OPPEKAVA_STAATUS_S can be changed");
-    }
-
-    public void validateStateCurriculumForm(StateCurriculumForm stateCurriculumForm) {
-        ValidationFailedException.throwOnError(validator.validate(stateCurriculumForm, StateCurriculumValidator.Confirmed.class));
+       StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
+       stateCurriculumValidationService.validateStateCurriculumForm(form);
+       stateCurriculumValidationService.assertNameIsUnique(stateCurriculum, form);
+       return get(user, stateCurriculumService.setStatusAndSave(stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_K));
     }
 }

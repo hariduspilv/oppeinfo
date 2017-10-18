@@ -40,7 +40,7 @@ public class CurriculumUtil {
     }
 
     public static String moduleName(String moduleName, String moduleClassifierName, String curriculumCode) {
-        return moduleName + " - " + moduleClassifierName + ", " + curriculumCode;
+        return moduleName + " - " + moduleClassifierName + " (" + curriculumCode + ")";
     }
 
     public static String versionName(String versionCode, String curriculumName) {

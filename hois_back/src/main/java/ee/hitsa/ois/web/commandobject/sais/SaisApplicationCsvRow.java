@@ -174,20 +174,16 @@ public class SaisApplicationCsvRow {
     public void setEndDate(LocalDate endDate) {
         this.endDate = endDate;
     }
-
-
 }
 
 class SaisApplicationLocalDateDeserializer extends JsonDeserializer<LocalDate> {
 
-    private static final ThreadLocal<DateTimeFormatter> CSV_DATE_FORMATTER = ThreadLocal.withInitial(() -> {
-        return DateTimeFormatter.ofPattern("d.M.yyyy");
-    });
+    private static final DateTimeFormatter CSV_DATE_FORMATTER = DateTimeFormatter.ofPattern("d.M.yyyy");
 
     @Override
     public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) {
         try {
-            return LocalDate.parse(p.getText(), CSV_DATE_FORMATTER.get());
+            return LocalDate.parse(p.getText(), CSV_DATE_FORMATTER);
         } catch (@SuppressWarnings("unused") Exception e) {
             return null;
         }

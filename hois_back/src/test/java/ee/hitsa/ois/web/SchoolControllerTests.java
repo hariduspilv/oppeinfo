@@ -86,7 +86,7 @@ public class SchoolControllerTests {
 
     @Test
     public void get() {
-        testConfigurationService.userToRoleInSchool(Role.ROLL_P, null, restTemplate);
+        testConfigurationService.userToRole(Role.ROLL_P, restTemplate);
 
         ResponseEntity<Object> responseEntity = restTemplate
                 .getForEntity(String.format("/school/%d", MISSING_SCHOOL_ID), Object.class);
@@ -101,7 +101,7 @@ public class SchoolControllerTests {
 
     @Test
     public void search() {
-        testConfigurationService.userToRoleInSchool(Role.ROLL_P, null, restTemplate);
+        testConfigurationService.userToRole(Role.ROLL_P, restTemplate);
 
         String uri = UriComponentsBuilder.fromUriString("/school").queryParam("lang", "ET").build().toUriString();
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
@@ -230,13 +230,6 @@ public class SchoolControllerTests {
     @Test
     public void studyYears() {
         ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/studyYears", Object.class);
-        Assert.assertNotNull(responseEntity);
-        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
-    }
-
-    @Test
-    public void teacherOccupations() {
-        ResponseEntity<Object> responseEntity = restTemplate.getForEntity("/school/teacheroccupations/all", Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
     }

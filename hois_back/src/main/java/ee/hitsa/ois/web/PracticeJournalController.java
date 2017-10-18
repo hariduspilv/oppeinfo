@@ -82,7 +82,7 @@ public class PracticeJournalController {
     }
 
     @PutMapping("/{id:\\d+}")
-    public PracticeJournalDto update(HoisUserDetails user,
+    public PracticeJournalDto save(HoisUserDetails user,
             @WithVersionedEntity(value = "id", versionRequestBody = true) PracticeJournal practiceJournal,
             @Valid @RequestBody PracticeJournalForm practiceJournalForm) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
@@ -186,7 +186,4 @@ public class PracticeJournalController {
             return enterprise.getContactPersonName() + " (" + enterprise.getName() + ")";
         }
     }
-
 }
-
-

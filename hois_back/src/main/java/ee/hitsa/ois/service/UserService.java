@@ -27,7 +27,7 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.dto.UserProjection;
 import ee.hitsa.ois.web.dto.UserRolesDto;
@@ -41,7 +41,15 @@ public class UserService {
 
     public User createUser(StudentRepresentative representative) {
         User user = createUser(representative.getPerson(), representative.getStudent().getSchool(), Role.ROLL_L, LocalDate.now());
+        user.setStudent(representative.getStudent());
         return EntityUtil.save(user, em);
+    }
+
+    public void deleteUser(StudentRepresentative representative) {
+        User user = userFor(representative.getPerson(), EntityUtil.getId(representative.getStudent()), Role.ROLL_L);
+        if(user != null) {
+            EntityUtil.deleteEntity(user, em);
+        }
     }
 
     public void disableUser(Student student, LocalDate disabledDate) {
@@ -78,7 +86,7 @@ public class UserService {
 
     public List<UserProjection> findAllActiveUsers(Long personId) {
         // TODO c.name_et depends on parameter
-        JpaQueryUtil.NativeQueryBuilder qb = new JpaQueryUtil.NativeQueryBuilder(ACTIVE_FROM).sort("c.name_et", "s.code");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(ACTIVE_FROM).sort("c.name_et", "s.code");
 
         qb.requiredCriteria("u.person_id = :personId", "personId", personId);
         qb.filter("exists(select 1 from user_rights r where u.id = r.user_id)");
@@ -117,7 +125,7 @@ public class UserService {
                 return null;
             }
             idFilter = u -> id.equals(EntityUtil.getNullableId(u.getTeacher()));
-        } else if(Role.ROLL_T.equals(role)) {
+        } else if(Role.ROLL_T.equals(role) || Role.ROLL_L.equals(role)) {
             if(id == null) {
                 return null;
             }
@@ -150,7 +158,7 @@ public class UserService {
         }, data));
     }
 
-    private static String ACTIVE_FROM = "from user_ u " +
+    private static final String ACTIVE_FROM = "from user_ u " +
             "inner join classifier c on u.role_code = c.code " +
             "left outer join school s on u.school_id = s.id";
 }

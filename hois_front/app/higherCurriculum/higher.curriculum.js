@@ -418,8 +418,10 @@ angular.module('hitsaOis')
             scope.data =  angular.extend({}, editedSpecialty);
         }
         scope.maxCredits = $scope.curriculum.credits ? $scope.curriculum.credits : 0;
-        scope.readOnly = $scope.formState.readOnly;
-        scope.isNew = !angular.isDefined(editedSpecialty);
+        scope.formState = {
+          readOnly: $scope.formState.readOnly,
+          isNew: !angular.isDefined(editedSpecialty)
+        };
 
         scope.delete = function() {
           if(scope.data.addedToVersion) {
@@ -466,7 +468,11 @@ angular.module('hitsaOis')
     };
 
     $scope.openAddFileDialog = function () {
-      dialogService.showDialog('vocationalCurriculum/file.add.dialog.html', null, function (submitScope) {
+      dialogService.showDialog('vocationalCurriculum/file.add.dialog.html', function(scope){
+        scope.fileTypeCriteria = {
+          higher: true
+        };
+      }, function (submitScope) {
         var data = submitScope.data;
         data.sendEhis = false;
         data.ehis = false;

@@ -175,7 +175,8 @@ public class JobService {
 
     private void submitEhisSend(Directive directive) {
         // directive cancelling data is not sent to ehis (it's changed by hand in ehis)
-        if(!ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType())) {
+        // akad and akadk are sent when student status changes
+        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK)) {
             Job ehis = new Job();
             ehis.setSchool(directive.getSchool());
             ehis.setDirective(directive);
