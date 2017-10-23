@@ -77,7 +77,7 @@ public class EhisLogService {
         if(logentry instanceof WsEhisStudentLog) {
             Directive directive = ((WsEhisStudentLog) logentry).getDirective();
             if(directive != null) {
-                dto.setDirective(new AutocompleteResult(directive.getId(), directive.getHeadline(), null));
+                dto.setDirective(AutocompleteResult.of(directive));
             }
         } else if(logentry instanceof WsEhisTeacherLog) {
             dto.setTeacher(AutocompleteResult.of(((WsEhisTeacherLog) logentry).getTeacher()));

@@ -14,6 +14,7 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionHigherModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
+import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
 import ee.hitsa.ois.domain.sais.SaisAdmission;
 import ee.hitsa.ois.domain.school.School;
@@ -102,6 +103,10 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
     public static AutocompleteResult of(CurriculumVersionOccupationModuleTheme theme) {
         String nameEt = theme.getNameEt();
         return new AutocompleteResult(theme.getId(), nameEt, nameEt);
+    }
+
+    public static AutocompleteResult of(Directive directive) {
+        return new AutocompleteResult(directive.getId(), directive.getHeadline(), null);
     }
 
     public static AutocompleteResult of(DirectiveCoordinator coordinator) {

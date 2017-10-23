@@ -91,7 +91,7 @@ public class CurriculumValidationService {
         merCodeUniqueCommand.setId(id);
 
         if(!curriculumService.isCodeUnique(user.getSchoolId(), codeUniqueCommand) || 
-                !curriculumService.isMerCodeUnique(codeUniqueCommand)) {
+                !curriculumService.isMerCodeUnique(merCodeUniqueCommand)) {
             throw new ValidationFailedException("main.messages.error.mustBeUnique");
         }
     }

@@ -15,6 +15,9 @@ import ee.hitsa.ois.enums.HigherAssessment;
 import ee.hitsa.ois.enums.SubjectAssessment;
 
 public abstract class HigherProtocolGradeUtil {
+    
+    private static final int SCALE = 5;
+    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
 
     public static HigherAssessment calculateGrade(ProtocolStudent ps) {
         boolean isDistinctiveAssessment = isDistinctive(ps.getProtocol());
@@ -92,14 +95,14 @@ public abstract class HigherProtocolGradeUtil {
         BigDecimal maxPoints = result.getMidtermTask().getMaxPoints();
         BigDecimal threshold = BigDecimal.valueOf(result.getMidtermTask().getThresholdPercentage().longValue());
         BigDecimal points = result.getPoints();
-        return points.compareTo(maxPoints.multiply(threshold).divide(BigDecimal.valueOf(100))) >= 0;
+        return points.compareTo(maxPoints.multiply(threshold).divide(HUNDRED, SCALE, BigDecimal.ROUND_HALF_UP)) >= 0;
     }
 
     private static BigDecimal getTaskScore(MidtermTaskStudentResult result) {
         BigDecimal maxPoints = result.getMidtermTask().getMaxPoints();
         BigDecimal percenage = BigDecimal.valueOf(result.getMidtermTask().getPercentage().longValue());
         BigDecimal points = result.getPoints();
-        return points.divide(maxPoints).multiply(percenage);
+        return points.divide(maxPoints, SCALE, BigDecimal.ROUND_HALF_UP).multiply(percenage);
     }
 
     private static HigherAssessment getFinalGrade(int finalScore, boolean isDistinctiveAssessment) {

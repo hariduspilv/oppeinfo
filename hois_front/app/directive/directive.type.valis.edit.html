@@ -26,7 +26,7 @@
           </md-radio-group>
         </td>
         <td md-cell>
-          <hois-classifier-select ng-if="!row.isAbroad" ng-model="row.ehisSchool" main-classifier-code="EHIS_KOOL" model-value-attr="code" aria-label="{{'directive.student.school' | translate}}"></hois-classifier-select>
+          <hois-classifier-select ng-if="!row.isAbroad" ng-model="row.ehisSchool" model-value-attr="code" filter-values="[formState.school.ehisSchool]" main-classifier-code="EHIS_KOOL" aria-label="{{'directive.student.school' | translate}}"></hois-classifier-select>
           <input type="text" ng-if="row.isAbroad" ng-model="row.abroadSchool">
         </td>
         <td md-cell>

@@ -67,7 +67,7 @@ public class StateCurriculumController {
     public StateCurriculumDto get(HoisUserDetails user, @WithEntity("id") StateCurriculum curriculum) {
         StateCurriculumDto dto = StateCurriculumDto.of(curriculum);
         dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, curriculum)));
-        return StateCurriculumDto.of(curriculum);
+        return dto;
     }
     
     @GetMapping

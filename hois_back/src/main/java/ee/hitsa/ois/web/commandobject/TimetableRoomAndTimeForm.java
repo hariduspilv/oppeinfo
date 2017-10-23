@@ -5,8 +5,10 @@ import java.util.List;
 
 import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.validation.TimeRange;
 import ee.hitsa.ois.web.dto.RoomDto;
 
+@TimeRange(from = "startTime", thru = "endTime")
 public class TimetableRoomAndTimeForm {
     @NotNull
     private Long timetableEventId;

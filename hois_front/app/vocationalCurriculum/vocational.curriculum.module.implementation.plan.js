@@ -97,6 +97,7 @@ angular.module('hitsaOis')
     if (angular.isArray(curriculumEntity.occupations)) {
         curriculumEntity.occupations.forEach(function(it) {
           var occupation = {};
+          occupation.specialities = it.specialities;
           var promise = Classifier.get(it.occupation).$promise.then(function(classifier) {
             angular.extend(occupation, it, {occupation: classifier});
           });
@@ -109,22 +110,10 @@ angular.module('hitsaOis')
             angular.extend(occupation, {partOccupations: partOccupations});
           }).$promise;
           promises.push(partOccupationsPromise);
-
-          if (angular.isArray(it.specialities)) {
-            var specialityPromises = [];
-            it.specialities.forEach(function(specialityCode){
-              specialityPromises.push(Classifier.get(specialityCode).$promise);
-            });
-            var specialitiesPromise = $q.all(specialityPromises).then(function(specialities){
-              angular.extend(occupation, {specialities: specialities});
-            });
-            specialityPromises.push(specialitiesPromise);
-
-            promises.push($q.all(specialityPromises));
-          }
           occupations.push(occupation);
         });
     }
+
 
     var capacitiesPromise = Classifier.queryForDropdown({mainClassCode: 'MAHT', order: 'nameEt'}, function(response) {
       capacitiesData = response.filter(function(el){
@@ -350,10 +339,9 @@ angular.module('hitsaOis')
 
         dialogScope.curriculumModule = curriculumModule;
 
-        // FIXME
-        // dialogScope.curriculumModule.type = $scope.moduleTypes.find(function(el){
-        //   return el.code = dialogScope.curriculumModule.module;
-        // });
+        dialogScope.curriculumModule.type = $scope.moduleTypes.find(function(el){
+          return el.code === dialogScope.curriculumModule.module;
+        });
 
         var occupationModule = getModulesOccupationModule(curriculumModule);
         if (angular.isDefined(occupationModule)) {

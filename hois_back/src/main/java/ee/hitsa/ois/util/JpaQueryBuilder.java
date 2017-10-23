@@ -51,6 +51,12 @@ public class JpaQueryBuilder<T> extends JpaNativeQueryBuilder {
     }
 
     @Override
+    protected Object convertQueryParameter(Object value) {
+        // jpa ql query accepts LocalDate(Time) objects
+        return value;
+    }
+
+    @Override
     protected String propertyNameToQueryName(String value) {
         return value;
     }

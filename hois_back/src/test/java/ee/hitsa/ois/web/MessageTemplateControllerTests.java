@@ -1,7 +1,6 @@
 package ee.hitsa.ois.web;
 
 import java.time.LocalDate;
-import java.util.Arrays;
 
 import org.junit.After;
 import org.junit.Assert;
@@ -52,7 +51,7 @@ public class MessageTemplateControllerTests {
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString("/messageTemplate");
         uriBuilder.queryParam("valid", Boolean.TRUE);
         uriBuilder.queryParam("headline", "3211212");
-        uriBuilder.queryParam("type", Arrays.asList("TEATE_LIIK_AP_LOPP", "TEATE_LIIK_AV_KINNIT"));
+        uriBuilder.queryParam("type", "TEATE_LIIK_AP_LOPP", "TEATE_LIIK_AV_KINNIT");
         uriBuilder.queryParam("validFrom", "2016-12-31T22:00:00.000Z");
         uriBuilder.queryParam("validThru", "2017-01-31T22:00:00.000Z");
         uriBuilder.queryParam("sort", "type.nameEt,asc");

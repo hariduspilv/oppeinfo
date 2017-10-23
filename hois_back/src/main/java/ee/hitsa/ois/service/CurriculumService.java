@@ -136,7 +136,6 @@ public class CurriculumService {
             curriculum.setDraft(classifierRepository.getOne(curriculumForm.getDraft()));
             curriculum.setStateCurriculum(EntityUtil.getOptionalOne(StateCurriculum.class, 
                     curriculumForm.getStateCurriculum(), em));
-            updateModules(curriculum, curriculumForm.getModules());
         }
         setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_S);
         curriculum.setHigher(curriculumForm.getHigher());
@@ -157,6 +156,11 @@ public class CurriculumService {
       updateDepartments(curriculum, curriculumForm.getSchoolDepartments());
       updateLanguages(curriculum, curriculumForm.getStudyLanguages());
       updateJointPartners(curriculum, curriculumForm.getJointPartners());
+      
+      /*
+       * Required for updating list of occupations, if any was deleted 
+       */
+      updateModules(curriculum, curriculumForm.getModules());
       return curriculumRepository.save(curriculum);
     }
 
@@ -605,12 +609,16 @@ public class CurriculumService {
     public Curriculum sendToEhis(HoisUserDetails user, Curriculum curriculum) {
         // TODO enable when ehis sending is working
         // ehisCurriculumService.sendToEhis(user, curriculum);
+        // TODO handle return status
         curriculum.setEhisStatus(classifierRepository.findOne(CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_A.name()));
         curriculum.setEhisChanged(LocalDate.now());
         return EntityUtil.save(curriculum, em);
     }
 
-    public Curriculum updateFromEhis(Curriculum curriculum) {
+    public Curriculum updateFromEhis(HoisUserDetails user, Curriculum curriculum) {
+        // TODO enable when ehis sending is working
+        // ehisCurriculumService.updateFromEhis(user, curriculum);
+        // TODO handle return status
         setCurriculumStatus(curriculum, CurriculumStatus.OPPEKAVA_STAATUS_K);
         curriculum.setEhisStatus(classifierRepository.findOne(CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_R.name()));
         curriculum.setEhisChanged(LocalDate.now());

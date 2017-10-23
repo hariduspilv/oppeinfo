@@ -3,6 +3,7 @@ package ee.hitsa.ois.service.ekis;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.UUID;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 import javax.persistence.EntityManager;
@@ -18,6 +19,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Enterprise;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.WsEkisLog;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.directive.Directive;
 import ee.hitsa.ois.domain.directive.DirectiveCoordinator;
@@ -25,6 +27,7 @@ import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
+import ee.hitsa.ois.enums.CertificateStatus;
 import ee.hitsa.ois.enums.DirectiveType;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
@@ -52,7 +55,9 @@ public class EkisService {
     @Value("${ekis.endpoint}")
     protected String endpoint;
 
-    public Certificate registerCertificate(Certificate certificate) {
+    public Certificate registerCertificate(Long certificateId) {
+        Certificate certificate = em.getReference(Certificate.class, certificateId);
+
         RegisterCertificateRequest request = new RegisterCertificateRequest();
         request.setQguid(qguid());
         request.setEhisId(certificate.getSchool().getEhisSchool().getEhisValue());
@@ -68,11 +73,15 @@ public class EkisService {
 
         return withResponse(ekis.registerCertificate(ctx(), request), (result) -> {
             certificate.setWdId(Long.valueOf(result.getWdId()));
+            certificate.setCertificateNr(result.getRegno());
+            certificate.setStatus(em.getReference(Classifier.class, CertificateStatus.TOEND_STAATUS_V.name()));
             return save(certificate);
-        }, certificate.getSchool(), certificate);
+        }, certificate.getSchool(), certificate, l -> l.setCertificate(certificate));
     }
 
-    public Directive registerDirective(Directive directive) {
+    public Directive registerDirective(Long directiveId) {
+        Directive directive = em.getReference(Directive.class, directiveId);
+
         RegisterDirectiveRequest request = new RegisterDirectiveRequest();
         request.setQguid(qguid());
         request.setEhisId(ehisId(directive.getSchool()));
@@ -93,10 +102,12 @@ public class EkisService {
             // TODO how to identify missing value?
             directive.setWdId(Long.valueOf(result.getWdId()));
             return save(directive);
-        }, directive.getSchool(), directive);
+        }, directive.getSchool(), directive, l -> l.setDirective(directive));
     }
 
-    public Contract registerPracticeContract(Contract contract) {
+    public Contract registerPracticeContract(Long contractId) {
+        Contract contract = em.getReference(Contract.class, contractId);
+
         RegisterPracticeContractRequest request = new RegisterPracticeContractRequest();
         request.setQguid(qguid());
         request.setEhisId(ehisId(contract.getStudent().getSchool()));
@@ -112,7 +123,8 @@ public class EkisService {
         request.setStEmail(student.getEmail());
         request.setStCurricula(student.getCurriculumVersion().getCurriculum().getNameEt());
         request.setStForm(value(student.getStudyForm()));
-        // private String stCourse;
+        StudentGroup sg = student.getStudentGroup();
+        request.setStCourse(sg != null ? sg.getCourse().toString() : null);
         // request.setStEkap(contract.get);
         request.setStHours(contract.getHours() != null ? contract.getHours().toString() : null);
         request.setStModule(contract.getModule().getCurriculumModule().getNameEt());
@@ -131,7 +143,7 @@ public class EkisService {
         return withResponse(ekis.registerPracticeContract(ctx(), request), (result) -> {
             contract.setWdId(Long.valueOf(result.getWdId()));
             return save(contract);
-        }, contract.getStudent().getSchool(), contract);
+        }, contract.getStudent().getSchool(), contract, l -> l.setContract(contract));
     }
 
     protected <T extends BaseEntityWithId> T save(T entity) {
@@ -202,7 +214,7 @@ public class EkisService {
         return content;
     }
 
-    private <T, R> R withResponse(LogResult<T> result, Function<T, R> handler, School school, R errorValue) {
+    private <T, R> R withResponse(LogResult<T> result, Function<T, R> handler, School school, R errorValue, Consumer<WsEkisLog> logCustomizer) {
         LogContext log = result.getLog();
         try {
             if(!result.hasError()) {
@@ -211,7 +223,9 @@ public class EkisService {
         } catch (Exception e) {
             log.setError(e);
         } finally {
-            ekisLogService.insertLog(school, log);
+            WsEkisLog logRecord = new WsEkisLog();
+            logCustomizer.accept(logRecord);
+            ekisLogService.insertLog(logRecord, school, log);
         }
         return errorValue;
     }

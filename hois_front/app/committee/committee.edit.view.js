@@ -25,6 +25,7 @@ angular.module('hitsaOis').controller('CommitteeEditViewController', ['$scope', 
 
   function releaseButtons() {
     $scope.formState.waitingResponse = false;
+    $scope.committeeEditForm.$setPristine();
   }
 
     function blockButtons() {
@@ -33,10 +34,12 @@ angular.module('hitsaOis').controller('CommitteeEditViewController', ['$scope', 
 
   $scope.addMember = function() {
     $scope.record.members.push({isExternal: false, isChairman: false});
+    $scope.committeeEditForm.$setDirty();
   };
 
   $scope.removeMember = function(member) {
     ArrayUtils.remove($scope.record.members, member);
+    $scope.committeeEditForm.$setDirty();
   };
 
   function hasOneChairman() {

@@ -22,6 +22,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ImportResource;
 import org.springframework.core.convert.ConversionService;
 import org.springframework.core.convert.converter.ConverterRegistry;
 import org.springframework.data.domain.AuditorAware;
@@ -61,6 +62,7 @@ import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 @EnableCaching
 @EnableJpaAuditing
 @SpringBootApplication
+@ImportResource("classpath:cxf-config.xml")
 public class Application {
 
     @Autowired

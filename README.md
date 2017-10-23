@@ -1,4 +1,4 @@
-VERSIOON: 0.4.2/20171018
+VERSIOON: 0.4.3/20171023
 
 STRUKTUUR:
 ------------------------------------------------------
@@ -218,7 +218,7 @@ Tallinna Tervishoiu Kõrgkoolis on olemas üks kõrgharidusõppe õppekava
 NB! Automaatteadete saatmiseks ÕISi on tekitatud kasutaja Hõis Automaatteade, palume seda mitte kustutada
 	   
 
-EELDUS: ver. 0.4.1/20171006
+EELDUS: ver. 0.4.2/20171018
 ------------------------------------------------------
 1. Serveris on installeeritud (opsüsteem Linux, nt CentOS Linux 7.2.x):
 	   1. PostgreSQL v 9.5.x

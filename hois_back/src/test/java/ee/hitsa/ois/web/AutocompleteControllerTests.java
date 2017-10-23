@@ -337,4 +337,12 @@ public class AutocompleteControllerTests {
         Assert.assertNotNull(response);
         Assert.assertEquals(HttpStatus.OK, response.getStatusCode());
     }
+    
+    @Test
+    public void journalsAndSubjects() {
+        String uri = "/autocomplete/journalsAndSubjects";
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

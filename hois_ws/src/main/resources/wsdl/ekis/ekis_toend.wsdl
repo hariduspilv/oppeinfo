@@ -9,6 +9,7 @@
 					<xsd:element name="ois_id" type="xsd:string"/>
 					<xsd:element name="wd_id" type="xsd:int"/>
 					<xsd:element name="regno" minOccurs="0" type="xsd:string"/>
+					<xsd:element name="status" minOccurs="0" type="xsd:string"/>
 				</xsd:sequence>
 			</xsd:complexType>
 			<xsd:complexType name="content">
@@ -127,7 +128,7 @@
 	<binding name="wdoisBinding" type="tns:wdoisPortType">
 		<soap:binding style="rpc" transport="http://schemas.xmlsoap.org/soap/http"/>
 		<operation name="registerCertificate">
-			<soap:operation soapAction="https://kis-test.hm.ee/?page=ois2_toend/registerCertificate" style="rpc"/>
+			<soap:operation soapAction="" style="rpc"/>
 			<input>
 				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
@@ -136,7 +137,7 @@
 			</output>
 		</operation>
 		<operation name="registerDirective">
-			<soap:operation soapAction="https://kis-test.hm.ee/?page=ois2_kaskkiri/registerDirective" style="rpc"/>
+			<soap:operation soapAction="" style="rpc"/>
 			<input>
 				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
@@ -145,7 +146,7 @@
 			</output>
 		</operation>
 		<operation name="deleteDirective">
-			<soap:operation soapAction="https://kis-test.hm.ee/?page=ois2_kaskkiri/deleteDirective" style="rpc"/>
+			<soap:operation soapAction="" style="rpc"/>
 			<input>
 				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>
@@ -154,7 +155,7 @@
 			</output>
 		</operation>
 		<operation name="registerPracticeContract">
-			<soap:operation soapAction="https://kis-test.hm.ee/?page=ois2_praktika/registerPracticeContract" style="rpc"/>
+			<soap:operation soapAction="" style="rpc"/>
 			<input>
 				<soap:body use="literal" namespace="urn:ekis" encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
 			</input>

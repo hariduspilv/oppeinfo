@@ -64,9 +64,9 @@ public class JobExecutorService {
     public void ekisJob() {
         handleJobs(job -> {
             if(job.getDirective() != null) {
-                ekisService.registerDirective(job.getDirective());
+                ekisService.registerDirective(EntityUtil.getId(job.getDirective()));
             } else if(job.getContract() != null) {
-                ekisService.registerPracticeContract(job.getContract());
+                ekisService.registerPracticeContract(EntityUtil.getId(job.getContract()));
             }
         }, JobType.JOB_EKIS);
     }

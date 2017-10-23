@@ -162,7 +162,7 @@ public class CurriculumController {
         curriculumValidationService.assertSameOrJoinSchool(user, curriculum);
         UserUtil.assertIsSchoolAdmin(user);
         curriculumValidationService.validateCurriculum(curriculum);
-        return CurriculumDto.of(curriculumService.updateFromEhis(curriculum));
+        return CurriculumDto.of(curriculumService.updateFromEhis(user, curriculum));
     }
 
     @GetMapping("/unique/code")

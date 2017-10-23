@@ -2,4 +2,5 @@
   <md-nav-item md-nav-href="#/students/{{::studentId}}/main?_noback" name="student.main">{{'student.main' | translate}}</md-nav-item>
   <md-nav-item md-nav-href="#/students/{{::studentId}}/results?_noback" name="student.results">{{'student.results' | translate}}</md-nav-item>
   <md-nav-item md-nav-href="#/students/{{::studentId}}/documents?_noback" name="student.documents">{{'student.documents' | translate}}</md-nav-item>
+  <md-nav-item ng-if="auth.isAdmin()" md-nav-href="#/students/{{::studentId}}/timetable?_noback" name="student.timetable">{{'student.studentTimetable' | translate}}</md-nav-item>
 </md-nav-bar>

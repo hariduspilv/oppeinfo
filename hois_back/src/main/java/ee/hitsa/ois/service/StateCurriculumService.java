@@ -125,10 +125,6 @@ public class StateCurriculumService {
         });
     }
 
-    public void delete(StateCurriculum curriculum) {
-        EntityUtil.deleteEntity(curriculum, em);
-    }
-
     public List<StateCurriculum> searchAll(StateCurriculumSearchCommand command, Sort sort) {
         return stateCurriculumRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
@@ -226,5 +222,9 @@ public class StateCurriculumService {
     public StateCurriculum setStatusAndSave(StateCurriculum stateCurriculum, StateCurriculumForm form, CurriculumStatus status) {
         stateCurriculum.setStatus(classifierRepository.getOne(status.name()));
         return save(stateCurriculum, form);
+    }
+    
+    public void delete(StateCurriculum stateCurriculum) {
+        EntityUtil.deleteEntity(stateCurriculum, em);
     }
 }

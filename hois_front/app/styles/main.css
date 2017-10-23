@@ -1230,6 +1230,7 @@ td.bordered[md-cell] {
     border: 1px solid #CCC;
     text-align: center;
     vertical-align: middle;
+    cursor: move;
 }
 
 .timetable-higher-drag {
@@ -1252,6 +1253,10 @@ td.bordered[md-cell] {
   height: 30px;
   border-left: 1px solid #eee;
   border-right: 1px solid #eee;
+}
+
+.highlight-drop-area{
+  background-color: #F8BBD0;
 }
 
 .timetable-higher-drop-column {
@@ -1410,5 +1415,5 @@ md-grid-tile {
 }
 
 .unconfirmedFinishedJournals {
-  background-color: #ed9ebd;
+  background-color: #F8BBD0;
 }

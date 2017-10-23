@@ -68,13 +68,13 @@ public class EkisServiceTests {
         certificate.setType(type);
         certificate.setWhom("whom");
 
-        ekisService.registerCertificate(certificate);
+        // ekisService.registerCertificate(certificate);
     }
 
     // @Test
     public void registerDirective() {
         for(Directive directive : findDirectives()) {
-            ekisService.registerDirective(directive);
+            // ekisService.registerDirective(directive);
         }
     }
 
@@ -131,7 +131,7 @@ public class EkisServiceTests {
         contract.setSupervisorEmail("supervisor.name@dev.null");
         contract.setPracticePlan("Practice plan");
 
-        ekisService.registerPracticeContract(contract);
+        // ekisService.registerPracticeContract(contract);
     }
 
     private static School schoolForTesting() {

@@ -69,19 +69,19 @@
 		  </div>
           <md-input-container  flex>
             <label>{{'module.nameEt' | translate}}</label>
-            <input ng-model="module.nameEt" type="text" required ng-readonly="formState.readOnly">
+            <input ng-model="module.nameEt" type="text" md-maxlength="255" required ng-readonly="formState.readOnly">
           </md-input-container>
           <md-input-container  flex>
             <label>{{'module.nameEn' | translate}}</label>
-            <input ng-model="module.nameEn" type="text" ng-readonly="formState.readOnly">
+            <input ng-model="module.nameEn" type="text" md-maxlength="255" ng-readonly="formState.readOnly">
           </md-input-container>
           <md-input-container flex>
             <label>{{'module.objectivesEt' | translate}}</label>
-            <textarea ng-model="module.objectivesEt" md-maxlength="20000" max-rows="10" md-select-on-focus required ng-readonly="formState.readOnly"></textarea>
+            <textarea ng-model="module.objectivesEt" md-maxlength="10000" max-rows="10" md-select-on-focus required ng-readonly="formState.readOnly"></textarea>
           </md-input-container>
           <md-input-container flex>
             <label>{{'module.objectivesEn' | translate}}</label>
-            <textarea ng-model="module.objectivesEn" md-maxlength="20000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
+            <textarea ng-model="module.objectivesEn" md-maxlength="10000" max-rows="10" md-select-on-focus ng-readonly="formState.readOnly"></textarea>
           </md-input-container>
           <div flex>
          <fieldset tabindex="4">

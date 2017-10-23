@@ -364,6 +364,7 @@
       "dataexchange": {
         "label": "Andmevahetus",
         "ehisLogs": "EHISe andmevahetuse logi",
+        "ekisLogs": "EKISe andmevahetuse logi",
         "studentinfoExport": "Õppurid",
         "teacherinfoExportHigher": "Õppejõud",
         "teacherinfoExportVocational": "Pedagoogid"
@@ -612,7 +613,8 @@
         "content": "Sisu",
         "noTasks": "Antud nädalas puuduvad ülesanded"
       }
-    }
+    },
+    "studentTimetable": "Tunniplaan"
   },
   "subject": {
     "label": "Aine",
@@ -1536,8 +1538,8 @@
     "viewToughtModule": "Õpetatava mooduli vaatamine",
     "occupationPartOccupationSpecialize": "Kutse/spetsialiseerumine/osakutse",
     "type": "Mooduli liik",
-    "typeNameEt": "Mooduli liigi nimetue eesti keeles",
-    "typeNameEn": "Mooduli liigi nimetue inglise keeles",
+    "typeNameEt": "Mooduli liigi nimetus eesti keeles",
+    "typeNameEn": "Mooduli liigi nimetus inglise keeles",
     "addNewType": "Lisa uus mooduli liik",
     "nameEt": "Mooduli nimetus eesti keeles",
     "nameEn": "Mooduli nimetus inglise keeles",
@@ -1561,7 +1563,7 @@
     "overallEap": "Kokku EAP",
     "optionalModulesNumber": "Valikmoodulite arv õppekava täitmiseks",
     "dataInsertion": "Mooduli andmete sisestamine",
-    "occupationalModuleDataInsertion": "{{nameEt}} ({{type.nameEt}}, {{credits}} EKAP) andmete sisestamine",
+    "occupationalModuleDataInsertion": "Mooduli {{nameEt}} ({{type.nameEt}}, {{credits}} EKAP) andmete sisestamine",
     "capacityDistribution": "Mooduli mahu jaotus",
     "capacity": "Maht (tund)",
     "contactStudy": "Kontaktõpe",
@@ -1995,9 +1997,24 @@
       "duplicateroom": "Ruum on juba olemas",
       "showLessonTimes": "Näita tundide aegasid",
       "lessonTimes": "Tundide ajad",
-      "timeClash": "Aeg kattub teise tunniga või on väljaspool ajavahemikku"
+      "timeClash": "Aeg kattub teise tunniga või on väljaspool ajavahemikku",
+      "addForOtherGroups": "Kas lisada aine-õpetaja tund ka teistesse seotud rühmadesse?"
+    },
+    "timetableEvent": {
+      "name": "Sündmuse nimi",
+      "isRepeat": "Korduvsündmus",
+      "weekAmount": "Nädalate arv",
+      "repetition": "Kordus",
+      "teacher": "Õpetaja",
+      "room": "Ruum"
     },
     "subjectTeacherPairs": "Aine-õpetaja paarid",
+    "search": {
+      "teacher": "Õpetaja",
+      "studentGroup": "Õpperühm",
+      "room": "Ruum",
+      "name": "Aine/teema"
+    },
     "error": {
       "noPeriodTimetable": "Valitud perioodi kohta tunniplaan puudub"
     }
@@ -2194,6 +2211,23 @@
       "name": "Nimi",
       "message": "Teade",
       "response": "Tulemus:"
+    }
+  },
+  "ekis": {
+    "message": {
+      "directive": "Käskkiri",
+      "error": "Viga",
+      "insertedBy": "Kasutaja",
+      "registerCertificate": "Tõendid",
+      "registerPracticeContract": "Praktikalepingud",
+      "registerDirective": "Käskkirjad",
+      "message": "Selgitav tekst",
+      "name": "Sõnumi nimetus",
+      "onlyErrors": "Ainult sõnumid, mille saatmisel tekkis viga",
+      "request": "Sisend",
+      "response": "Väljund",
+      "sentDatesRange": "Saatmise kuupäevade vahemik",
+      "time": "Saatmise aeg"
     }
   },
   "absence": {
