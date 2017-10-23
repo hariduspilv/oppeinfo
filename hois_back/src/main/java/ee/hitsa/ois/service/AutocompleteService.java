@@ -7,12 +7,15 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
+import org.apache.commons.collections.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,9 +46,12 @@ import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
 import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.PersonLookupCommand;
 import ee.hitsa.ois.web.commandobject.RoomsAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -286,17 +292,19 @@ public class AutocompleteService {
         return StreamUtil.toMappedList(r -> new SchoolDepartmentResult(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLong(r, 3), resultAsString(r, 4)), data);
     }
 
-    public List<StudentGroupResult> studentGroups(Long schoolId, Boolean valid, Boolean higher) {
+    public List<StudentGroupResult> studentGroups(Long schoolId, StudentGroupAutocompleteCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(
                 "from student_group sg inner join curriculum c on sg.curriculum_id = c.id " +
                 "left outer join curriculum_version cv on sg.curriculum_version_id = cv.id");
 
         qb.requiredCriteria("sg.school_id = :schoolId", "schoolId", schoolId);
 
-        if(Boolean.TRUE.equals(valid)) {
+        if(Boolean.TRUE.equals(lookup.getValid())) {
             qb.requiredCriteria("(sg.valid_from is null or sg.valid_from <= :now) and (sg.valid_thru is null or sg.valid_thru >= :now)", "now", LocalDate.now());
         }
-        qb.optionalCriteria("c.is_higher = :higher", "higher", higher);
+        qb.optionalCriteria("c.is_higher = :higher", "higher", lookup.getHigher());
+        qb.optionalContains("sg.code",  "code", lookup.getName());
+        qb.sort("sg.code");
 
         List<?> data = qb.select("sg.id, sg.code, c.id as c_id, cv.id as cv_id, sg.study_form_code, sg.language_code", em).getResultList();
         return StreamUtil.toMappedList(r -> {
@@ -435,13 +443,14 @@ public class AutocompleteService {
         return JpaQueryUtil.pagingResult(qb, em, pageable).map(AutocompleteResult::of);
     }
 
-    public List<AutocompleteResult> journals(HoisUserDetails user, Long studyYear) {
+    public List<AutocompleteResult> journals(HoisUserDetails user, JournalAutocompleteCommand lookup) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal j");
         qb.requiredCriteria("j.school_id = :schoolId", "schoolId", user.getSchoolId());
         if (user.isTeacher()) {
             qb.requiredCriteria("j.id in (select jt.journal_id from journal_teacher jt where jt.teacher_id = :teacherId)", "teacherId", user.getTeacherId());
         }
-        qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", studyYear);
+        qb.optionalCriteria("j.study_year_id = :studyYearId", "studyYearId", lookup.getStudyYear());
+        qb.optionalContains("j.name_et",  "name_et", lookup.getName());
 
         List<?> data = qb.select("j.id, j.name_et", em).getResultList();
         return StreamUtil.toMappedList(r -> {
@@ -467,5 +476,35 @@ public class AutocompleteService {
             enterpriseResult.setContactPersonPhone(resultAsString(r, 4));
             return enterpriseResult;
         }, data);
+    }
+    
+    public List<AutocompleteResult> journalsAndSubjects(HoisUserDetails user, JournalAndSubjectAutocompleteCommand lookup) {        
+        JournalAutocompleteCommand journalLookup = new JournalAutocompleteCommand();
+        journalLookup.setStudyYear(lookup.getStudyYear());
+        if (lookup.getName() != null) {
+            journalLookup.setLang(lookup.getLang());
+            journalLookup.setName(lookup.getName());
+        }
+        List<AutocompleteResult> journalsList = journals(user, journalLookup);
+        
+        SubjectAutocompleteCommand subjectLookup = new SubjectAutocompleteCommand();
+        if (lookup.getName() != null) {
+            journalLookup.setLang(lookup.getLang());
+            subjectLookup.setName(lookup.getName());
+        }
+        subjectLookup.setPractice(lookup.getPractice());
+        List<AutocompleteResult> subjectsList = subjects(user.getSchoolId(), subjectLookup);
+        
+        List<AutocompleteResult> journalsAndSubjects = new ArrayList<>();
+        journalsAndSubjects.addAll(journalsList);
+        journalsAndSubjects.addAll(subjectsList);
+
+        if (lookup.getLang() == Language.EN) {
+            journalsAndSubjects.sort(Comparator.comparing(AutocompleteResult::getNameEn, String.CASE_INSENSITIVE_ORDER));
+        } else {
+            journalsAndSubjects.sort(Comparator.comparing(AutocompleteResult::getNameEt, String.CASE_INSENSITIVE_ORDER));
+        }
+        
+        return journalsAndSubjects;
     }
 }

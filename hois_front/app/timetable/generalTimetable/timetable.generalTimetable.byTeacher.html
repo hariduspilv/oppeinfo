@@ -8,12 +8,16 @@
     <md-nav-item md-nav-href="#/timetable/generalTimetableByRoom?_menu" name="room">{{'timetable.rooms' | translate}}</md-nav-item>
 </md-nav-bar>
 
+<div ng-controller="GeneralTimetableSearchController" ng-if="false">
+    <div ng-include="'timetable/generalTimetable/timetable.generalTimetable.search.html'"></div>
+</div>
+
 <div layout-padding>
     <div flex>
         <div ng-if="timetablesByTeachers">
             <md-grid-list ng-app="app" md-cols="5" md-gutter="1em" md-row-height="36px" flex>
                 <md-grid-tile ng-repeat="row in timetablesByTeachers" style="text-align: left;">
-                    <md-button class="md-raised md-primary" ng-click="showTeacherTimetable(shownStudyPeriodId, row.teacherId, shownTimetableId)">
+                    <md-button class="md-raised md-primary" ng-click="showTeacherWeek(shownStudyPeriodId, row.teacherId, shownTimetableId)">
                         {{row.lastname}}, {{row.firstname}}
                     </md-button>
                 </md-grid-tile>
@@ -23,13 +27,13 @@
 </div>
 
 <div ng-controller="TeacherTimetableViewController">
-    <div ng-include="'timetable/timetable.period.view.html'"></div>
+    <div ng-include="'timetable/timetable.week.view.html'"></div>
 </div>
 
 <div layout-padding>
     <div flex>
         <div ng-repeat="row in timetables track by $index">
-            <a ng-class="{shownTimetable: $index === shownTimetableIndex}" ng-click="showTimetablesByCurriculums(row.id, row.studyPeriodId)">
+            <a ng-class="{shownTimetable: $index === shownTimetableIndex}" ng-click="showTimetable(row.id, row.studyPeriodId)">
                     {{currentLanguageNameField(row)}} {{row.startDate | hoisDate}}-{{row.endDate | hoisDate}}
             </a>
         </div>

@@ -1,10 +1,13 @@
 package ee.hitsa.ois.web;
 
 import ee.hitsa.ois.service.ehis.EhisLogService;
+import ee.hitsa.ois.service.ekis.EkisLogService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisLogCommand;
 import ee.hitsa.ois.web.dto.EhisLogDto;
+import ee.hitsa.ois.web.dto.EkisLogDto;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -23,6 +26,8 @@ public class LogsController {
 
     @Autowired
     private EhisLogService ehisLogService;
+    @Autowired
+    private EkisLogService ekisLogService;
 
     @GetMapping("/ehis")
     public Page<EhisLogDto> ehisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
@@ -33,5 +38,17 @@ public class LogsController {
     @GetMapping("/ehis/{id:\\d+}")
     public EhisLogDto ehisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
         return ehisLogService.get(user, id, messageType);
+    }
+
+
+    @GetMapping("/ekis")
+    public Page<EkisLogDto> ekisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return ekisLogService.search(user.getSchoolId(), command, pageable);
+    }
+
+    @GetMapping("/ekis/{id:\\d+}")
+    public EkisLogDto ekisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
+        return ekisLogService.get(user, id, messageType);
     }
 }

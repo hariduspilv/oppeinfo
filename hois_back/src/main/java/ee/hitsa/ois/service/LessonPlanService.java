@@ -58,6 +58,7 @@ import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm.LessonPlanGroupForm;
 import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleForm;
@@ -249,12 +250,15 @@ public class LessonPlanService {
     public Map<String, ?> searchFormData(Long schoolId) {
         Map<String, Object> data = new HashMap<>();
         data.put("studyYears", autocompleteService.studyYears(schoolId));
-        data.put("studentGroups", autocompleteService.studentGroups(schoolId, Boolean.TRUE, Boolean.FALSE));
+        StudentGroupAutocompleteCommand studentGroupLookup = new StudentGroupAutocompleteCommand();
+        studentGroupLookup.setValid(Boolean.TRUE);
+        studentGroupLookup.setHigher(Boolean.FALSE);
+        data.put("studentGroups", autocompleteService.studentGroups(schoolId, studentGroupLookup));
         data.put("studentGroupMapping", studentgroupsWithLessonPlans(schoolId));
-        CurriculumVersionAutocompleteCommand lookup = new CurriculumVersionAutocompleteCommand();
-        lookup.setHigher(Boolean.FALSE);
-        lookup.setValid(Boolean.TRUE);
-        data.put("curriculumVersions", autocompleteService.curriculumVersions(schoolId, lookup));
+        CurriculumVersionAutocompleteCommand curriculumVersionLookup = new CurriculumVersionAutocompleteCommand();
+        curriculumVersionLookup.setHigher(Boolean.FALSE);
+        curriculumVersionLookup.setValid(Boolean.TRUE);
+        data.put("curriculumVersions", autocompleteService.curriculumVersions(schoolId, curriculumVersionLookup));
         return data;
     }
 

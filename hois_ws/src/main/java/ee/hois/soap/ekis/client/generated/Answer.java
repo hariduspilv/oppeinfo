@@ -20,6 +20,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="ois_id" type="{http://www.w3.org/2001/XMLSchema}string"/&gt;
  *         &lt;element name="wd_id" type="{http://www.w3.org/2001/XMLSchema}int"/&gt;
  *         &lt;element name="regno" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="status" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -32,7 +33,8 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "answer", propOrder = {
     "oisId",
     "wdId",
-    "regno"
+    "regno",
+    "status"
 })
 public class Answer {
 
@@ -41,6 +43,7 @@ public class Answer {
     @XmlElement(name = "wd_id")
     protected int wdId;
     protected String regno;
+    protected String status;
 
     /**
      * Gets the value of the oisId property.
@@ -104,6 +107,30 @@ public class Answer {
      */
     public void setRegno(String value) {
         this.regno = value;
+    }
+
+    /**
+     * Gets the value of the status property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link String }
+     *     
+     */
+    public String getStatus() {
+        return status;
+    }
+
+    /**
+     * Sets the value of the status property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link String }
+     *     
+     */
+    public void setStatus(String value) {
+        this.status = value;
     }
 
 }

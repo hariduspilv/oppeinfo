@@ -21,7 +21,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
     $scope.$watch('criteria.curriculum', function() {
       var curriculumId = $scope.criteria.curriculum ? $scope.criteria.curriculum.id : null;
       // store current selected value
-      $scope.formState.studyForm = $scope.criteria.studyForm;
+      $scope.formState.studyForm = $scope.criteria.studyForm || [];
 
       function afterCurriculumChange(result) {
         if(curriculumId) {
@@ -32,8 +32,8 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
           $scope.formState.curriculumVersions = $scope.formState.allCurriculumVersions;
         }
         $scope.formState.studyForms = result.studyForms || [];
-        // try to restore selected value
-        $scope.criteria.studyForm = $scope.formState.studyForms.indexOf($scope.formState.studyForm) !== -1 ? $scope.formState.studyForm : null;
+        // try to restore selected value(s)
+        $scope.criteria.studyForm = $scope.formState.studyForm.filter(function(it) { return $scope.formState.studyForms.indexOf(it) !== -1; });
 
         $scope.curriculumVersionChanged();
       }
@@ -42,7 +42,7 @@ angular.module('hitsaOis').controller('StudentGroupSearchController', ['$q', '$s
         QueryUtils.endpoint(baseUrl+'/curriculumdata').get({id: curriculumId}, afterCurriculumChange);
       } else {
         // curriculum cleared
-        afterCurriculumChange({});
+        afterCurriculumChange({studyForms: $scope.formState.allStudyForms.map(function(it) { return it.code;} )});
       }
     });
 

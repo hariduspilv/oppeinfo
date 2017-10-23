@@ -10,7 +10,6 @@ import ee.hitsa.ois.web.dto.RoomDto;
 
 public class TimetableEventHigherForm extends TimetableEventForm {
     private Long subjectStudyPeriod;
-    // if studentgroup is empty then it applies to all groups
     private Long studentGroupId;
     @NotNull
     private LocalDateTime startTime;
@@ -19,6 +18,7 @@ public class TimetableEventHigherForm extends TimetableEventForm {
     private String repeatCode;
     private RoomDto room;
     private Boolean isSubjectTeacherPair;
+    private Boolean isForAllGroups;
 
     public Long getSubjectStudyPeriod() {
         return subjectStudyPeriod;
@@ -68,12 +68,21 @@ public class TimetableEventHigherForm extends TimetableEventForm {
         this.room = room;
     }
 
-    public Boolean getIsSubjectTeacherPair() {
+    public Boolean isSubjectTeacherPair() {
         return isSubjectTeacherPair;
     }
 
     public void setIsSubjectTeacherPair(Boolean isSubjectTeacherPair) {
         this.isSubjectTeacherPair = isSubjectTeacherPair;
     }
+
+    public Boolean isForAllGroups() {
+        return isForAllGroups;
+    }
+
+    public void setIsForAllGroups(Boolean isForAllGroups) {
+        this.isForAllGroups = isForAllGroups;
+    }
+
 
 }

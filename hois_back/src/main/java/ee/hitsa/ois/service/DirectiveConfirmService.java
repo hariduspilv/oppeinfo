@@ -139,7 +139,6 @@ public class DirectiveConfirmService {
             throw new ValidationFailedException(allErrors);
         }
 
-        // TODO send to sais, if service returns no errors then update wdId with service return value and set status to kinnitamisel
         setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL);
         directive = EntityUtil.save(directive, em);
 
@@ -345,10 +344,12 @@ public class DirectiveConfirmService {
                     case KASKKIRI_ENNIST:
                         student.setStudyStart(original.getStudyStart());
                         student.setStudyEnd(original.getStudyEnd());
+                        student.setStatus(original.getStatus());
                         userService.disableUser(student, confirmDate);
                         break;
                     case KASKKIRI_LOPET:
                         student.setStudyEnd(null);
+                        student.setStatus(original.getStatus());
                         userService.enableUser(student, confirmDate);
                         break;
                     case KASKKIRI_VALIS:

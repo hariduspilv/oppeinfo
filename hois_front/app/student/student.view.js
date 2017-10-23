@@ -351,6 +351,27 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
         $scope.afterDirectivesLoad(result.directives);
       });
     });
+  }]).controller('StudentViewTimetableController', ['$scope', '$route', 'QueryUtils', 'GeneralTimetableUtils', function ($scope, $route, QueryUtils, GeneralTimetableUtils) {
+    $scope.generalTimetableUtils = new GeneralTimetableUtils();
+    $scope.studentId = ($route.current.locals.auth.isStudent() ? $route.current.locals.auth.student : $route.current.params.id);
+    $scope.currentNavItem = 'student.timetable';
+    $scope.auth = $route.current.locals.auth;
+
+    $scope.student = QueryUtils.endpoint('/students').get({ id: $scope.studentId });
+
+    QueryUtils.endpoint('/timetables/generalTimetables/').query().$promise.then(function (result) {
+      $scope.timetables = result;
+      $scope.weeks = $scope.generalTimetableUtils.getTimetablesWeeks(result);
+
+      $scope.shownWeekIndex = $scope.generalTimetableUtils.getCurrentWeekIndex($scope.weeks);
+      if ($scope.shownWeekIndex) {
+        var timetableIndex = $scope.weeks[$scope.shownWeekIndex].timetableIndex;
+        $scope.shownTimetableId = result[timetableIndex].id;
+        $scope.shownStudyPeriodId = result[timetableIndex].studyPeriodId;
+        $scope.shownTimetableIndex = timetableIndex;
+      }
+      $scope.shownTypeId = $scope.studentId;
+    });
   }]).controller('StudentEditController', ['$location', '$route', '$scope', 'message', 'QueryUtils', function ($location, $route, $scope, message, QueryUtils) {
     var id = $route.current.params.id;
 

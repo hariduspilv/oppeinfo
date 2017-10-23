@@ -31,7 +31,7 @@ public class MidtermTaskControllerTests {
 
     private static String ENDPOINT = "/midtermTasks";
     private static String TEXT = "MidtermTaskControllerTest";
-    private static Long SUBJECT_STUDY_PERIOD_ID = Long.valueOf(666);
+    private static Long SUBJECT_STUDY_PERIOD_ID = Long.valueOf(374);
 
     @Autowired
     private TestRestTemplate restTemplate;

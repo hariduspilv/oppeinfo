@@ -71,6 +71,10 @@ angular.module('hitsaOis')
               lookup.query(query, function (data) {
                 deferred.resolve(data);
               });
+            } else if(url === '/autocomplete/studentgroups') {
+              lookup.query(query, function (data) {
+                deferred.resolve(data);
+              });
             } else {
               lookup.search(query, function (data) {
                 deferred.resolve(data.content);

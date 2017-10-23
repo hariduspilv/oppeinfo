@@ -19,6 +19,14 @@ import ee.hitsa.ois.enums.VocationalGradeType;
 
 public abstract class ModuleProtocolGradeUtil {
     
+    private static final int SCALE = 5;
+    private static final BigDecimal HUNDRED = BigDecimal.valueOf(100);
+    /**
+     * Threshold for not distinctive assessment (A/MA).
+     * If average grade is equal to this or larger, then grade is positive (A)
+     */
+    private static final BigDecimal NOT_DISTINCTIVE_POSITIVE_THRESHOLD = BigDecimal.valueOf(2.5);
+    
     public static OccupationalGrade calculateGrade(ProtocolStudent ps) {
         boolean isDisinctive = isDistinctive(ps.getProtocol().getProtocolVdata());
         List<JournalStudent> journalStudents = getJournalStudents(ps);
@@ -77,7 +85,7 @@ public abstract class ModuleProtocolGradeUtil {
     }
     
     private static BigDecimal getProportion(JournalOccupationModuleTheme t) {
-        return t.getCurriculumVersionOccupationModuleTheme().getProportion().divide(BigDecimal.valueOf(100));
+        return t.getCurriculumVersionOccupationModuleTheme().getProportion().divide(HUNDRED, SCALE, BigDecimal.ROUND_HALF_UP);
     }
     
     private static Stream<JournalOccupationModuleTheme> getThemes(JournalEntryStudent jes) {
@@ -108,7 +116,7 @@ public abstract class ModuleProtocolGradeUtil {
     }
     
     public static boolean positiveNotDistinctiveGrade(BigDecimal average) {
-        return average.compareTo(BigDecimal.valueOf(2.5)) >= 0;
+        return average.compareTo(NOT_DISTINCTIVE_POSITIVE_THRESHOLD) >= 0;
     }
 
     public static OccupationalGrade distinctiveGrade(BigDecimal average) {

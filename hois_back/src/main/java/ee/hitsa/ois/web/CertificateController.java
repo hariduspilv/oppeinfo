@@ -27,6 +27,7 @@ import ee.hitsa.ois.service.CertificateService;
 import ee.hitsa.ois.service.CertificateValidationService;
 import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -115,7 +116,7 @@ public class CertificateController {
         certificateValidationService.validate(user, form);
         Certificate certificate = certificateService.create(user, form);
         // send to EKIS
-        return get(user, ekisService.registerCertificate(certificate));
+        return get(user, ekisService.registerCertificate(EntityUtil.getId(certificate)));
     }
 
     @PutMapping("/order/{id:\\d+}")

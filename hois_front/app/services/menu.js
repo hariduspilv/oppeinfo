@@ -302,6 +302,10 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.dataexchange.ehisLogs',
             url: "/ehis/logs?_menu"
+          },
+          {
+            name: 'main.menu.dataexchange.ekisLogs',
+            url: "/ekis/logs?_menu"
           }
         ]
       });
@@ -578,7 +582,10 @@ angular.module('hitsaOis')
         pages: [
           {
             name: 'main.menu.myStudyInformation.journal',
-            url: '/students/journals'
+            url: '/students/journals',
+            studyLevel: {
+              vocational: true
+            }
           },
           {
             name: 'main.menu.myStudyInformation.practiceJournal',

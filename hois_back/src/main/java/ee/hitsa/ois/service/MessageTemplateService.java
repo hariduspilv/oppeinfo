@@ -22,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.expression.EvaluationException;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
+import org.springframework.expression.spel.SpelParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.stereotype.Service;
 
@@ -136,7 +137,7 @@ public class MessageTemplateService {
         ExpressionParser spelParser = new SpelExpressionParser();
         try {
             spelParser.parseExpression(messageTemplate.getContent(), new TemplateParserContext()).getValue(data, String.class);
-        } catch(@SuppressWarnings("unused") EvaluationException e) {
+        } catch(@SuppressWarnings("unused") EvaluationException | SpelParseException | IllegalStateException e) {
             throw new ValidationFailedException("content", "messageTemplate.invalidcontent");
         }
     }

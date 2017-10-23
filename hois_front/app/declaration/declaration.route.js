@@ -22,7 +22,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
         }
       })
       .when('/declaration/current/edit', {
@@ -34,7 +34,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
         }
       })
       .when('/declarations/:id/edit', {
@@ -46,7 +46,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
         }
       })
     .when('/declaration/current/view', {
@@ -58,7 +58,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             auth: function (AuthResolver) { return AuthResolver.resolve(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
         }
       }).when('/declarations/previous', {
         templateUrl: 'declaration/declaration.student.search.html',
@@ -68,7 +68,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
         }
       }).when('/declarations/new', {
         templateUrl: 'declaration/declaration.new.html',
@@ -78,7 +78,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
             translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: {
-          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
+          authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPINGUKAVA]
         }
       });
 }]);

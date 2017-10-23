@@ -210,16 +210,16 @@
                     </div>
                 </div>
                 <!--SPETSKUTSETE MOODULID-->
-                <div ng-repeat = "speciality in occupation.specialities | orderBy: 'nameEt'" layout="column">
+                <div ng-repeat = "speciality in occupation.specialities | orderBy" layout="column">
                     <div class="occupation-header2 align-center">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: &nbsp;
                         <hois-classifier-value ng-model="speciality" main-classifier-code="SPETSKUTSE"></hois-classifier-value>
                     </div>
-                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality.code, modules) | orderBy: 'nameEt'" class="lowerBorder">
+                    <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality, modules) | orderBy: 'nameEt'" class="lowerBorder">
                         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
                             <div flex="5">&nbsp;</div>
                             <div flex="15">{{currentLanguageNameField(type)}}</div>
                             <div layout="column" flex="75">
-                                <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, speciality.code) | orderBy: 'nameEt'" layout="row" class="align-center">
+                                <div flex="100" ng-repeat="module in modules | filter: filterModulesByType(type.code, speciality) | orderBy: 'nameEt'" layout="row" class="align-center">
                                     <a flex="50" ng-click="openViewModuleDialog(module)" href="" ng-class="{invalid: vocationalCurriculumModuleImplementationPlanForm.$submitted && strictValidation() && !isModuleValid(module)}">{{currentLanguageNameField(module)}}</a>
                                     <span flex="15">{{module.credits}}&nbsp; EKAP</span>
                                     <div flex="30">

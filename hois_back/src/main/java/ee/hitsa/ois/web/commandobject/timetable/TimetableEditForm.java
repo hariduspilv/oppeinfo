@@ -6,8 +6,10 @@ import javax.validation.constraints.NotNull;
 
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.validation.ClassifierRestriction;
+import ee.hitsa.ois.validation.DateRange;
 import ee.hitsa.ois.validation.NotEmpty;
 
+@DateRange(from = "startDate", thru = "endDate")
 public class TimetableEditForm {
 
     private Long studyYear;

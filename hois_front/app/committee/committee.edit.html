@@ -71,7 +71,7 @@
     <div>
       <md-button class="md-raised md-primary" ng-click="save()" ng-disabled="formState.waitingResponse">{{'main.button.save' | translate}}</md-button>
       <md-button class="md-raised" ng-click="delete()" ng-disabled="formState.waitingResponse" ng-if="record.id">{{'main.button.delete' | translate}}</md-button>
-      <md-button class="md-raised" ng-href="#/committees">{{'main.button.back' | translate}}</md-button>
+      <md-button class="md-raised" ng-click="back('#/committees', committeeEditForm)">{{'main.button.back' | translate}}</md-button>
     </div>
   </form>
 </div>

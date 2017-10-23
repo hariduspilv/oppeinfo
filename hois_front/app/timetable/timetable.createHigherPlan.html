@@ -66,7 +66,10 @@
 
       <md-input-container flex="20" flex-offset="5">
         <label>{{'timetable.timetablePlan.repetition' | translate}}</label>
-        <hois-classifier-select ng-model="plan.repeatCode" model-value-attr="code" aria-label="repeatcode" main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS"></hois-classifier-select>
+        <hois-classifier-select ng-model="plan.repeatCode" 
+          model-value-attr="code" aria-label="repeatcode" 
+          main-classifier-code="TUNNIPLAAN_SYNDMUS_KORDUS">
+        </hois-classifier-select>
       </md-input-container>
     </div>
 
@@ -84,8 +87,9 @@
           <tbody md-body>
             <tr md-row ng-class-odd="'odd'" ng-class-even="'even'" id="timetable-planned">
               <td md-cell ng-repeat="capacity in plan.currentCapacitiesGrouped track by $index" id="timetable-planned-column">
-                <div ng-repeat="current in capacity" style="background-color: {{getColorBySubjectStudyPeriod(current.subjectStudyPeriod)}}" id="{{current.subjectStudyPeriod}}-{{current.capacityType}}"
-                  journal-id="{{current.subjectStudyPeriod}}" ois-drag capacity-type="{{current.capacityType}}" class="timetable-drag timetable-planned-capacity">
+                <div ng-repeat="current in capacity" style="background-color: {{getColorBySubjectStudyPeriod(current.subjectStudyPeriod)}}" 
+                  id="{{current.subjectStudyPeriod}}-{{current.capacityType}}" journal-id="{{current.subjectStudyPeriod}}"
+                  ois-drag capacity-type="{{current.capacityType}}" class="timetable-drag timetable-planned-capacity">
                   <span>{{current.subjectCode}}/{{getCapacityTypeValue(current.capacityType)}}</span>
                 </div>
               </td>
@@ -152,13 +156,24 @@
           </tr>
           <tr md-row ng-repeat="group in plan.currentStudentGroups" ng-class-odd="'odd'" ng-class-even="'even'">
             <td>{{group.code}}</td>
-            <td ng-repeat="lessonTime in group.currentLessons" colspan="{{lessonTime.colspan}}"
-                ng-attr-ois-higher-drop="{{plan.selectedGroup === group.dropdownValue}}" ng-class="(plan.selectedGroup === group.dropdownValue && plan.repeatCode && plan.lessonAmount) ? 'timetable-higher-drop':''" drop-fn="saveEvent(data)">
-              <div ng-if="lessonTime.id && lessonTime.colspan" ng-click="changeEvent(lessonTime)" ng-attr-ois-drag="{{plan.selectedGroup === group.dropdownValue}}" class="timetable-higher-drag" id="{{lessonTime.start}}-{{group.id}}" capacity-type="{{lessonTime.capacityType}}"
-                   style="background-color: {{getColorBySubjectStudyPeriod(lessonTime.subjectStudyPeriod)}}" old-event-id="{{lessonTime.id}}" title="{{ (lessonTime.clash ? 'timetable.timetablePlan.timeClash' : '') | translate}} "
-                   journal-id="{{lessonTime.subjectStudyPeriod}}">
-                <span style="{{lessonTime.clash ? 'color:red;font-weight: bold' : ''}}">{{lessonTime.subjectCode}}/{{getCapacityTypeValue(lessonTime.capacityType)}}</span>
-                <br><span style=";{{lessonTime.rooms ? '' : 'color:red;font-weight: bold;'}}">{{lessonTime.rooms ? getRoomCodes(lessonTime.rooms) : "?"}}</span>
+            <td ng-repeat="lessonTime in group.currentLessons" 
+              colspan="{{lessonTime.colspan}}"
+              ng-attr-ois-higher-drop="{{plan.selectedGroup === group.dropdownValue}}" 
+              ng-class="(plan.selectedGroup === group.dropdownValue && plan.repeatCode && plan.lessonAmount) ? 'timetable-higher-drop':''" 
+              drop-fn="saveEventAfterClashCheck(data)">
+              <div ng-if="lessonTime.id && lessonTime.colspan" 
+                ng-click="changeEvent(lessonTime)" ng-attr-ois-drag="{{plan.selectedGroup === group.dropdownValue}}" 
+                class="timetable-higher-drag" id="{{lessonTime.start}}-{{group.id}}" capacity-type="{{lessonTime.capacityType}}"
+                style="background-color: {{getColorBySubjectStudyPeriod(lessonTime.subjectStudyPeriod)}}" old-event-id="{{lessonTime.id}}" 
+                title="{{ (lessonTime.clash ? 'timetable.timetablePlan.timeClash' : '') | translate}} "
+                journal-id="{{lessonTime.subjectStudyPeriod}}">
+                <span style="{{lessonTime.clash ? 'color:red;font-weight: bold' : ''}}">
+                  {{lessonTime.subjectCode}}/{{getCapacityTypeValue(lessonTime.capacityType)}}
+                </span>
+                <br>
+                <span style=";{{lessonTime.rooms ? '' : 'color:red;font-weight: bold;'}}">
+                  {{lessonTime.rooms ? getRoomCodes(lessonTime.rooms) : "?"}}
+                </span>
               </div>
             </td>
           </tr>

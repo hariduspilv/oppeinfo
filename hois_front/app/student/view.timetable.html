@@ -1,0 +1,14 @@
+<div ng-cloak>
+    <div ng-if="student && student.isVocational===true" ng-include="'student/templates/view.navbar.vocational.tmpl.html'"></div>
+    <div ng-if="!student || student.isVocational===false" ng-include="'student/templates/view.navbar.higher.tmpl.html'"></div>
+</div>
+  
+<div layout-padding ng-cloak>
+    <div flex>
+        <div ng-controller="StudentTimetableViewController">
+            <div ng-include="'timetable/timetable.week.view.html'"></div>
+        </div>
+        <md-button ng-if="!auth.isStudent()" ng-click="back('#/students')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+    </div>
+</div>
+  

@@ -3,11 +3,13 @@ package ee.hitsa.ois.web.dto.timetable;
 import java.util.ArrayList;
 import java.util.List;
 
+import ee.hitsa.ois.web.dto.AutocompleteResult;
+
 public class HigherTimetableStudentGroupCapacityDto extends TimetableStudentGroupCapacityDto {
     private Long subjectStudyPeriod;
     private String subjectCode;
     private String subjectName;
-    private List<String> teacherNames = new ArrayList<>();
+    private List<AutocompleteResult> teachers = new ArrayList<>();
 
     public HigherTimetableStudentGroupCapacityDto(Long studentGroup, Long totalPlannedLessons, String capacityType,
             String subjectCode, String subjectName, Long subjectStudyPeriod) {
@@ -41,12 +43,12 @@ public class HigherTimetableStudentGroupCapacityDto extends TimetableStudentGrou
         this.subjectName = subjectName;
     }
 
-    public List<String> getTeacherNames() {
-        return teacherNames;
+    public List<AutocompleteResult> getTeachers() {
+        return teachers;
     }
 
-    public void setTeacherNames(List<String> teacherNames) {
-        this.teacherNames = teacherNames;
+    public void setTeachers(List<AutocompleteResult> teachers) {
+        this.teachers = teachers;
     }
 
 }

@@ -13,8 +13,23 @@ angular.module('hitsaOis')
       var CurriculumFileEndpoint;
 
       $scope.formState = {
-         readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1,
+         readOnly: $route.current.$$route.originalPath.indexOf("view") !== -1
       };
+
+      function blockButtons() {
+        $scope.formState.waitingResponse = true;
+      }
+
+      function releaseButtons() {
+        $scope.formState.waitingResponse = false;
+      }
+
+      /**
+       * When crud query fails, this converts dto back to model and releases buttons after that
+       */
+      function convertBackToModel(curriculum) {
+        mapDtoToModel(curriculum, $scope);
+      }
 
       var CurriculumEndpoint = QueryUtils.endpoint('/curriculum');
       var mapDtoToModel = function(response, scope) {
@@ -122,6 +137,7 @@ angular.module('hitsaOis')
 
       $q.all(promises).then(function() {
         angular.extend(scope.curriculum, curriculum);
+        releaseButtons();
       });
 
     };/*mapDtoToModel*/
@@ -237,6 +253,7 @@ angular.module('hitsaOis')
 
     //edit
     if (angular.isDefined($route.current.locals.entity)) {
+      blockButtons();
       mapDtoToModel($route.current.locals.entity, $scope);
       CurriculumFileEndpoint = QueryUtils.endpoint('/curriculum/' + $route.current.locals.entity.id + '/file');
 
@@ -248,6 +265,7 @@ angular.module('hitsaOis')
       });
     } else {
       // create
+      releaseButtons();
       angular.extend($scope.curriculum, defaultValues);
     }
 
@@ -507,6 +525,9 @@ angular.module('hitsaOis')
 
     };
 
+    /**
+     * Removes occupations from modules
+     */
     var updateModules = function() {
       var occupationCodes = {};
       if (angular.isArray($scope.curriculum.occupations)) {
@@ -526,22 +547,11 @@ angular.module('hitsaOis')
       }
 
       if(angular.isArray($scope.curriculum.modules)) {
-        var modulesToRemove = [];
-        $scope.curriculum.modules.forEach(function(it) {
-          if (angular.isArray(it.occupations) && it.occupations.length > 0){
-            for(var i = 0; i < it.occupations.length; i++) {
-              if (occupationCodes[it.occupations[i].code] !== true) {
-                modulesToRemove.push(it);
-                break;
-              }
-            }
-          }
+        $scope.curriculum.modules.forEach(function(m) {
+          m.occupations = m.occupations.filter(function(o){
+            return occupationCodes[o.code] === true;
+          });
         });
-
-        modulesToRemove.forEach(function(it) {
-          $scope.curriculum.modules.splice($scope.curriculum.modules.indexOf(it), 1);
-        });
-
       }
     };
 
@@ -1277,6 +1287,11 @@ angular.module('hitsaOis')
       return true;
     }
 
+    $scope.notAllModulesHaveOccupation = function() {
+      return $scope.vocationalCurriculumForm.$submitted && $scope.strictValidation() &&
+      ($scope.occupationRequired() || !ArrayUtils.isEmpty($scope.curriculum.occupations)) && !$scope.allModulesHaveOccupation();
+    }
+
     function save(messages) {
       if(!validationPassed(messages)) {
         return;
@@ -1286,13 +1301,17 @@ angular.module('hitsaOis')
       addSharedInformationToJointPartners();
       updateJointInfo();
 
+      blockButtons();
       var curriculum = new CurriculumEndpoint(mapModelToDto($scope.curriculum));
 
       if (angular.isDefined($scope.curriculum.id)) {
         curriculum.$update().then(function() {
           var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
           message.info(updateSuccess);
+          $scope.vocationalCurriculumForm.$setPristine();
           mapDtoToModel(curriculum, $scope);
+        }, function(){
+          convertBackToModel(curriculum);
         });
       } else {
         curriculum.newFiles = curriculum.files;
@@ -1300,7 +1319,10 @@ angular.module('hitsaOis')
         curriculum.$save().then(function() {
           message.info('main.messages.create.success');
           // $location.path('/vocationalCurriculum/'+curriculum.id+'/edit').search({_noback: true});
+          $scope.vocationalCurriculumForm.$setPristine();
           $location.path('/vocationalCurriculum/'+ curriculum.id + '/edit');
+        }, function(){
+          convertBackToModel(curriculum);
         });
       }
     }
@@ -1313,11 +1335,11 @@ angular.module('hitsaOis')
 
     $scope.delete = function() {
       dialogService.confirmDialog({prompt: 'curriculum.deleteconfirm'}, function() {
-        var curriculum = new CurriculumEndpoint(mapModelToDto($scope.curriculum));
-        curriculum.$delete().then(function() {
+        blockButtons();
+        new CurriculumEndpoint($scope.curriculum).$delete().then(function() {
           message.info('main.messages.delete.success');
           $location.path('/curriculum');
-        });
+        }, releaseButtons);
       });
     };
 
@@ -1402,12 +1424,22 @@ angular.module('hitsaOis')
       changeStatus(UpdateFromEhisEndpoint, {updateSuccess: 'curriculum.message.ehisStatusUpdated'});
     };
 
+    function updateStatus(response) {
+      $scope.curriculum.status = response.status;
+      $scope.curriculum.changedBy = response.changedBy;
+      $scope.curriculum.changed = response.changed;
+      $scope.curriculum.ehisChanged = response.ehisChanged;
+      $scope.curriculum.ehisStatus = response.ehisStatus;
+    }
+
     function changeStatus(StatusChangeEndpoint, messages) {
+      blockButtons();
       new StatusChangeEndpoint($scope.curriculum).$update().then(function(response){
         message.info(messages.updateSuccess);
-        mapDtoToModel(response, $scope);
+        updateStatus(response);
+        $scope.vocationalCurriculumForm.$setPristine();
         goToReadOnlyForm();
-      });
+      }, releaseButtons);
     }
 
     function goToReadOnlyForm() {

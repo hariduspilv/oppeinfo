@@ -1,6 +1,6 @@
 package ee.hitsa.ois.web.commandobject.timetable;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 public class TimetableEventSearchCommand {
@@ -11,12 +11,14 @@ public class TimetableEventSearchCommand {
     private Long studyPeriod;
     private List<Long> teachers;
     private Long room;
-    private LocalDate from;
-    private LocalDate thru;
+    private LocalDateTime from;
+    private LocalDateTime thru;
     private String otherTeacher;
     private String otherRoom;
     private Long timetable;
     private Long student;
+    private Boolean higher;
+    private Boolean vocational;
 
     public String getName() {
         return name;
@@ -66,19 +68,19 @@ public class TimetableEventSearchCommand {
         this.room = room;
     }
 
-    public LocalDate getFrom() {
+    public LocalDateTime getFrom() {
         return from;
     }
 
-    public void setFrom(LocalDate from) {
+    public void setFrom(LocalDateTime from) {
         this.from = from;
     }
 
-    public LocalDate getThru() {
+    public LocalDateTime getThru() {
         return thru;
     }
 
-    public void setThru(LocalDate thru) {
+    public void setThru(LocalDateTime thru) {
         this.thru = thru;
     }
 
@@ -114,4 +116,20 @@ public class TimetableEventSearchCommand {
         this.student = student;
     }
 
+    public Boolean getHigher() {
+        return higher;
+    }
+
+    public void setHigher(Boolean higher) {
+        this.higher = higher;
+    }
+
+    public Boolean getVocational() {
+        return vocational;
+    }
+
+    public void setVocational(Boolean vocational) {
+        this.vocational = vocational;
+    }
+    
 }

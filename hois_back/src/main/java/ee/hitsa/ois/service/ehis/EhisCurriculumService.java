@@ -32,15 +32,18 @@ import ee.hois.xroad.ehis.generated.OisFailid;
 import ee.hois.xroad.ehis.generated.OisKutsestandard;
 import ee.hois.xroad.ehis.generated.OisKutsestandardid;
 import ee.hois.xroad.ehis.generated.OisOppekava;
+import ee.hois.xroad.ehis.generated.OisOppekavaStaatus;
 import ee.hois.xroad.ehis.generated.OisOppekavad;
+import ee.hois.xroad.ehis.generated.OisOppekavadStaatus;
 import ee.hois.xroad.ehis.generated.OisOppekeeled;
 import ee.hois.xroad.ehis.generated.OisOsakutse;
 import ee.hois.xroad.ehis.generated.OisValisOAS;
 import ee.hois.xroad.ehis.generated.OisYhisOppekava;
 import ee.hois.xroad.ehis.generated.OiskutseSpetsialiseerumine;
 import ee.hois.xroad.ehis.generated.OppekavaOis;
+import ee.hois.xroad.ehis.generated.OppekavaStaatusOis;
 import ee.hois.xroad.ehis.service.EhisOisOppekavaResponse;
-import ee.hois.xroad.helpers.XRoadHeaderV4;
+import ee.hois.xroad.ehis.service.EhisOisOppekavaStaatusResponse;
 
 @Transactional
 @Service
@@ -125,11 +128,11 @@ public class EhisCurriculumService extends EhisService {
             occupations.setPuudubKehtivKutsestandard(Integer.valueOf(1));
         } else {
             for(CurriculumOccupation co : curriculum.getOccupations()) {
-                String occupationId = value(co.getOccupation());
+                String occupationId = EntityUtil.getNullableCode(co.getOccupation());
                 if(occupationId != null) {
                     Matcher m = OCCUPATION_ID_PREFIX.matcher(occupationId);
                     if(m.matches()) {
-                        occupationId = m.group(1);
+                        occupationId = value(co.getOccupation());
                         OisKutsestandard oisKutsestandard = new OisKutsestandard();
                         oisKutsestandard.setStandardReaId(new BigInteger(occupationId));
                         for(CurriculumOccupationSpeciality cos : co.getSpecialities()) {
@@ -141,11 +144,11 @@ public class EhisCurriculumService extends EhisService {
                         if(!higher) {
                             Set<String> partOccupationCodes = co.getOccupation().getChildConnects().stream().map(r -> EntityUtil.getCode(r.getClassifier())).collect(Collectors.toSet());
                             for(CurriculumOccupation cpo : curriculum.getOccupations()) {
-                                String partOccupationId = value(cpo.getOccupation());
+                                String partOccupationId = EntityUtil.getNullableCode(cpo.getOccupation());
                                 if(partOccupationId != null) {
                                     Matcher pm = PARTOCCUPATION_ID_PREFIX.matcher(partOccupationId);
                                     if(pm.matches() && partOccupationCodes.contains(partOccupationId)) {
-                                        partOccupationId = m.group(1);
+                                        partOccupationId = value(cpo.getOccupation());
                                         OisOsakutse oisOsakutse = new OisOsakutse();
                                         oisOsakutse.setOsakutseReaId(new BigInteger(partOccupationId));
                                         oisKutsestandard.getOsakutsed().add(oisOsakutse);
@@ -175,14 +178,9 @@ public class EhisCurriculumService extends EhisService {
         oppekavaOis.setKommentaar(curriculum.getDescription());
         oppekavad.getOppekava().add(oppekavaOis);
 
-        oisOppekavad(oisOppekava);
-    }
-
-    private void oisOppekavad(OisOppekava oisOppekava) {
-        XRoadHeaderV4 xRoadHeaderV4 = getXroadHeader();
-        EhisOisOppekavaResponse response = ehisClient.oisOppekava(xRoadHeaderV4, oisOppekava);
-
+        EhisOisOppekavaResponse response = ehisClient.oisOppekava(getXroadHeader(), oisOppekava);
         LogContext queryLog = response.getLog();
+        // TODO logging
         /*
         wsEhisStudentLog.setHasOtherErrors(Boolean.FALSE);
         wsEhisStudentLog.setHasXteeErrors(Boolean.valueOf(queryLog.getError() != null));
@@ -194,8 +192,28 @@ public class EhisCurriculumService extends EhisService {
         */
     }
 
+    public void updateFromEhis(HoisUserDetails userDetails, Curriculum curriculum) {
+        OisOppekavaStaatus oisOppekavaStaatus = new OisOppekavaStaatus();
+        oisOppekavaStaatus.setRegNumber(value2(curriculum.getSchool().getEhisSchool()));
+        Person person = em.getReference(Person.class, userDetails.getPersonId());
+        oisOppekavaStaatus.setKasutajaIk(person.getIdcode());
+        OisOppekavadStaatus oisOppekavadStaatus = new OisOppekavadStaatus();
+        oisOppekavaStaatus.setOppekavad(oisOppekavadStaatus);
+
+        OppekavaStaatusOis oppekavaStaatusOis = new OppekavaStaatusOis();
+        // FIXME why here string? Other places have as BigInteger
+        oppekavaStaatusOis.setOppekavaKood(curriculum.getMerCode());
+        // XXX create enum
+        oppekavaStaatusOis.setOperatsioon("kontrollimine");
+        oisOppekavadStaatus.getOisOppekava().add(oppekavaStaatusOis);
+
+        EhisOisOppekavaStaatusResponse response = ehisClient.oisOppekavaStaatus(getXroadHeader(), oisOppekavaStaatus);
+        LogContext queryLog = response.getLog();
+        // TODO logging
+    }
+
     private String fileUrl(OisFile file) {
-        return frontendBaseUrl + "/oisfile/get/" + file.getId();
+        return frontendBaseUrl + "oisfile/get/" + file.getId();
     }
 
     @Override

@@ -312,7 +312,7 @@
 		<div>&nbsp;</div>
 		<fieldset tabindex="6">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !modulesValid()}">{{'curriculum.modulesTought' | translate}}</legend>
-			<md-button class="md-raised" ng-click="openAddModuleDialog()" ng-if="!formState.readOnly && curriculum.id">{{'main.button.create' | translate}}</md-button>
+			<md-button class="md-raised" ng-click="openAddModuleDialog()" ng-if="!formState.readOnly && curriculum.id">{{'curriculum.addModule' | translate}}</md-button>
 
             <!--<div ng-if="strictValidation()">
                 <input style="display:none" type="number" readonly name="mainModuleCount" ng-model="validation.mainModuleCount" min="1"  />
@@ -364,7 +364,8 @@
 			</div>-->
 
             <!--MODULES WITHOUT OCCUPATIONS-->
-            <div class="occupation-header align-center">{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}
+            <div class="occupation-header align-center">
+              <span ng-class="{invalid: notAllModulesHaveOccupation()}">{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}</span>
             </div>
             <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules | orderBy: 'nameEt'" class="lowerBorder">
                 <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
@@ -722,13 +723,13 @@
     <div layout="row">
       <div ng-show="curriculum.status === STATUS.ENTERING">
         <div ng-show="!curriculum.id">
-          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-click="save()" ng-disabled="formState.waitingResponse">{{'main.button.save' | translate}}</md-button>
         </div>
         <div ng-show="curriculum.id && !formState.readOnly">
-          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="saveAndProceed()">{{'main.button.status.approving' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
-          <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-click="save()" ng-disabled="formState.waitingResponse">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="saveAndProceed()" ng-disabled="formState.waitingResponse">{{'main.button.status.approving' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="setStatusClosed()" ng-disabled="formState.waitingResponse">{{'main.button.status.close' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="delete()" ng-disabled="formState.waitingResponse">{{'main.button.delete' | translate}}</md-button>
         </div>
         <div ng-show="curriculum.id && formState.readOnly">
           <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
@@ -736,25 +737,25 @@
       </div>
       <div ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis">
         <div ng-show="!formState.readOnly">
-          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-          <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-click="save()" ng-disabled="formState.waitingResponse">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="delete()" ng-disabled="formState.waitingResponse">{{'main.button.delete' | translate}}</md-button>
         </div>
         <div ng-show="formState.readOnly">
           <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
-          <md-button class="md-raised md-default" ng-click="sendToEhis()">{{'main.button.sendToEhis' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="sendToEhis()" ng-disabled="formState.waitingResponse">{{'main.button.sendToEhis' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="setStatusClosed()" ng-disabled="formState.waitingResponse">{{'main.button.status.close' | translate}}</md-button>
         </div>
       </div>
       <div ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis">
-        <md-button class="md-raised md-default" ng-click="updateFromEhis()">{{'main.button.updateFromEhis' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="updateFromEhis()" ng-disabled="formState.waitingResponse">{{'main.button.updateFromEhis' | translate}}</md-button>
       </div>
       <div ng-show="curriculum.status === STATUS.VERIFIED">
         <div ng-show="!formState.readOnly">
-          <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+          <md-button class="md-raised md-primary" ng-click="save()" ng-disabled="formState.waitingResponse">{{'main.button.save' | translate}}</md-button>
         </div>
         <div ng-show="formState.readOnly">
           <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
-          <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="setStatusClosed()" ng-disabled="formState.waitingResponse">{{'main.button.status.close' | translate}}</md-button>
         </div>
       </div>
       <md-button class="md-raised md-default" ng-click="back('#/curriculum', vocationalCurriculumForm)">{{'main.button.back' | translate}}</md-button>

@@ -86,7 +86,7 @@ public class AutomaticMessageService {
     }
 
     public void sendMessageToStudentRepresentatives(MessageType type, Student student, Object dataBean, Message existingMessage, HoisUserDetails initiator) {
-        if(StudentUtil.hasRepresentatives(student)) {
+        if(!StudentUtil.hasRepresentatives(student)) {
             log.error("no representatives found to send message to");
             return;
         }

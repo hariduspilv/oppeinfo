@@ -17,6 +17,7 @@ import ee.hois.xroad.ehis.generated.LaeOppejoudResponse;
 import ee.hois.xroad.ehis.generated.LaePedagoogid;
 import ee.hois.xroad.ehis.generated.LaePedagoogidResponse;
 import ee.hois.xroad.ehis.generated.OisOppekava;
+import ee.hois.xroad.ehis.generated.OisOppekavaStaatus;
 import ee.hois.xroad.ehis.generated.OisResponse;
 import ee.hois.xroad.ehis.generated.OppeasutusList;
 import ee.hois.xroad.ehis.generated.OppejoudList;
@@ -74,6 +75,17 @@ public class EhisClient {
             return new EhisOisOppekavaResponse(ctx, resp.getInfoteated().getInfoteade());
         });
         return result != null ? result : new EhisOisOppekavaResponse(ctx, null);
+    }
+
+    public EhisOisOppekavaStaatusResponse oisOppekavaStaatus(XRoadHeaderV4 header, OisOppekavaStaatus oisOppekavaStaatus) {
+        EhisPortType port = initializePort(header);
+        LogContext ctx = ctx(port);
+
+        EhisOisOppekavaStaatusResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
+            OisResponse resp = port.oisOppekavaStaatus(oisOppekavaStaatus);
+            return new EhisOisOppekavaStaatusResponse(ctx, resp.getInfoteated().getInfoteade());
+        });
+        return result != null ? result : new EhisOisOppekavaStaatusResponse(ctx, null);
     }
 
     private EhisPortType initializePort(XRoadHeaderV4 header) {

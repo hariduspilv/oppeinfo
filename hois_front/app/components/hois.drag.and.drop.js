@@ -46,6 +46,16 @@ angular.module('hitsaOis').directive('oisDrop', function() {
           scope.dropFn({data: data});
         }
       });
+      element.on('dragenter', function(event) {
+        if(attrs.oisDrop === "true") {
+          this.classList.add("highlight-drop-area");
+        }
+      })
+      element.on('dragleave', function(event) {
+        if(attrs.oisDrop === "true") {
+          this.classList.remove("highlight-drop-area");
+        }
+      })
       element.bind('error', function() {
         if (attrs.onErrorSrc === '') {
           attrs.ngHide = true;
@@ -82,6 +92,16 @@ angular.module('hitsaOis').directive('oisHigherDrop', function() {
           scope.dropFn({data: data});
         }
       });
+      element.on('dragenter', function(event) {
+        if(attrs.oisHigherDrop === "true") {
+          this.classList.add("highlight-drop-area");
+        }
+      })
+      element.on('dragleave', function(event) {
+        if(attrs.oisHigherDrop === "true") {
+          this.classList.remove("highlight-drop-area");
+        }
+      })
       element.bind('error', function() {
         if (attrs.onErrorSrc === '') {
           attrs.ngHide = true;

@@ -12,9 +12,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.context.SpringBootTest.WebEnvironment;
 import org.springframework.test.context.junit4.SpringRunner;
 
+import ee.hitsa.ois.TestData;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
 import ee.hitsa.ois.report.CurriculumReport;
+import ee.hitsa.ois.report.StateCurriculumReport;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest(webEnvironment = WebEnvironment.MOCK)
@@ -22,6 +25,8 @@ public class PdfServiceTests {
 
     @Autowired
     private PdfService pdfService;
+    @Autowired
+    private TestData testData;
 
     @Test
     public void higherCurriculumPdf() {
@@ -33,6 +38,13 @@ public class PdfServiceTests {
         curriculum.setMerRegDate(LocalDate.now());
         /* data = */ pdfService.generate(CurriculumReport.TEMPLATE_NAME, new CurriculumReport(curriculumVersion));
         // toFile("highercurriculum.pdf", data);
+    }
+    
+    @Test
+    public void stateCurriculumPdf() {
+        StateCurriculum sc = testData.getStateCurriculum();
+        sc.getModules().add(testData.getStateCurriculumModule());
+        pdfService.generate(StateCurriculumReport.TEMPLATE_NAME, new StateCurriculumReport(sc));
     }
 
     private static void toFile(String name, byte[] data) {

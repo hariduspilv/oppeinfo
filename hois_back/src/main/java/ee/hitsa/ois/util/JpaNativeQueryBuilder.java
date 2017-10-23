@@ -69,7 +69,6 @@ public class JpaNativeQueryBuilder {
         if(value != null) {
             filter(criteria, name, value);
         }
-
     }
 
     public void optionalCriteria(String criteria, String name, String value, Function<String, String> adjuster) {
@@ -92,19 +91,19 @@ public class JpaNativeQueryBuilder {
 
     public void optionalCriteria(String criteria, String name, LocalDate value) {
         if(value != null) {
-            filter(criteria, name, parameterAsTimestamp(value));
+            filter(criteria, name, value);
         }
     }
 
     public void optionalCriteria(String criteria, String name, LocalDate value, Function<LocalDate, LocalDateTime> adjuster) {
         if(value != null) {
-            filter(criteria, name, parameterAsTimestamp(adjuster.apply(value)));
+            filter(criteria, name, adjuster.apply(value));
         }
     }
 
     public void optionalCriteria(String criteria, String name, LocalDateTime value) {
         if(value != null) {
-            filter(criteria, name, parameterAsTimestamp(value));
+            filter(criteria, name, value);
         }
     }
 
@@ -150,11 +149,11 @@ public class JpaNativeQueryBuilder {
     }
 
     public void requiredCriteria(String criteria, String name, LocalDate value) {
-        filter(criteria, name, value != null ? parameterAsTimestamp(value) : null);
+        filter(criteria, name, value);
     }
 
     public void requiredCriteria(String criteria, String name, LocalDateTime value) {
-        filter(criteria, name, value != null ? parameterAsTimestamp(value) : null);
+        filter(criteria, name, value);
     }
 
     public void requiredCriteria(String criteria, String name, Long value) {
@@ -251,13 +250,24 @@ public class JpaNativeQueryBuilder {
 
     protected void setQueryParameters(Query q, Map<String, Object> additionalParameters) {
         for(Map.Entry<String, Object> me : parameters.entrySet()) {
-            q.setParameter(me.getKey(), me.getValue());
+            q.setParameter(me.getKey(), convertQueryParameter(me.getValue()));
         }
         if(additionalParameters != null) {
             for(Map.Entry<String, Object> me : additionalParameters.entrySet()) {
-                q.setParameter(me.getKey(), me.getValue());
+                q.setParameter(me.getKey(), convertQueryParameter(me.getValue()));
             }
         }
+    }
+
+    protected Object convertQueryParameter(Object value) {
+        // jpa native query does not accept LocalDate(Time) objects
+        if(value instanceof LocalDate) {
+            return parameterAsTimestamp((LocalDate)value);
+        }
+        if(value instanceof LocalDateTime) {
+            return parameterAsTimestamp((LocalDateTime)value);
+        }
+        return value;
     }
 
     protected String propertyNameToQueryName(String value) {

@@ -2,6 +2,7 @@ package ee.hitsa.ois;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,10 @@ import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculum;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOccupation;
+import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.SchoolRepository;
@@ -67,6 +72,36 @@ public class TestData {
         c.setSchool(getSchool());
 
         return c;
+    }
+    
+    public StateCurriculum getStateCurriculum() {
+        StateCurriculum sc = new StateCurriculum();
+        sc.setNameEt(STRING);
+        sc.setNameEn(STRING);
+        sc.setAdmissionRequirementsEn(STRING);
+        sc.setAdmissionRequirementsEt(STRING);
+        sc.setChanged(LocalDateTime.now());
+        sc.setCredits(Long.valueOf(100));
+        sc.setIscedClass(getClassifier());
+        return sc;
+    }
+    
+    public StateCurriculumModule getStateCurriculumModule() {
+        StateCurriculumModule m = new StateCurriculumModule();
+        m.setNameEt(STRING);
+        m.setCredits(BigDecimal.ONE);
+        m.setModule(getClassifier());
+        
+        StateCurriculumModuleOutcome outcome = new StateCurriculumModuleOutcome();
+        outcome.setOutcomesEt(STRING);
+        outcome.setOutcomesEn(STRING);
+        outcome.setModule(m);
+        m.setOutcome(outcome);
+        
+        StateCurriculumModuleOccupation occupation = new StateCurriculumModuleOccupation();
+        occupation.setOccupation(getClassifier());
+        m.getModuleOccupations().add(occupation);
+        return m;
     }
     
     public CurriculumVersion getHigherCurriculumVersion() {

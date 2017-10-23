@@ -65,15 +65,20 @@ angular.module('hitsaOis').service('dialogService', ['$mdDialog', 'ArrayUtils', 
 
     this.hide = $mdDialog.hide;
 
-    this.confirmDialog = function(options, callback) {
+    this.confirmDialog = function(options, submitcallback, cancelcallback) {
       $mdDialog.show({
         controller: function($scope) {
           $scope.messages = angular.extend({}, defaultConfirmDialogOptions, options);
           $scope.accept = function() {
             $mdDialog.hide();
-            callback();
+            submitcallback();
           };
-          $scope.cancel = $mdDialog.hide;
+          $scope.cancel = function() {
+            $mdDialog.hide();
+            if(angular.isFunction(cancelcallback)) {
+              cancelcallback();
+            }
+          };
         },
         templateUrl: 'components/confirm.dialog.html',
         //dialog general behaviour is that clicking outside should not close dialog
