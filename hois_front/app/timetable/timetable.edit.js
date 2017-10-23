@@ -24,7 +24,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
         $scope.timetable.studyYears = null;
         $scope.timetable.currentStudyPeriod = null;
         $scope.timetable.studyPeriods = null;
-        
+
       });
     } else {
       $scope.timetable = new Endpoint();
@@ -132,7 +132,7 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
     }
 
     $scope.blockedThruDatesPredicate = function (date) {
-      if (blockedDates.length !== 0 && blockedDates.indexOf(date.getTime()) !== -1 || date.getTime() > lastDateForCurrentRange) {
+      if (blockedDates.length !== 0 && blockedDates.indexOf(date.getTime()) !== -1 || date.getTime() > $scope.studyPeriodEndDate) {
         return false;
       }
       return true;
@@ -179,13 +179,13 @@ angular.module('hitsaOis').controller('TimetableEditController', ['$scope', 'mes
 
     $scope.confirm = function() {
       QueryUtils.endpoint('/timetables/' + $scope.timetableId + '/confirm').put({}, function() {
-        $route.reload();    
+        $route.reload();
       });
     };
 
     $scope.publicize = function() {
       QueryUtils.endpoint('/timetables/' + $scope.timetableId + '/publicize').put({}, function() {
-        $route.reload();    
+        $route.reload();
       });
     };
   }

@@ -608,7 +608,7 @@ public class TimetableService {
             TimetableObject timetableObject = new TimetableObject();
             timetableObject
                     .setSubjectStudyPeriod(em.getReference(SubjectStudyPeriod.class, form.getSubjectStudyPeriod()));
-            if(isPair) {
+            if(!isPair) {
                 timetableObject.getTimetableObjectStudentGroups().add(createTimetableObjectStudentGroupForHigher(
                         timetableObject, studentGroupId));
             }
