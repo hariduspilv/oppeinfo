@@ -1118,6 +1118,9 @@ td.bordered[md-cell] {
   border-right: 1px rgba(0,0,0,.12) solid;
 }
 
+th.required::after {
+  content: ' *';
+}
 
 .lessonplan
 {
@@ -1225,11 +1228,14 @@ td.bordered[md-cell] {
 }
 
 .timetable-drag {
-    width: 55px;
-    height: 30px;
-    border: 1px solid #CCC;
-    text-align: center;
-    vertical-align: middle;
+  width: 55px;
+  height: 30px;
+  border: 1px solid #CCC;
+  text-align: center;
+  vertical-align: middle;
+}
+
+div[ois-drag="true"] {
     cursor: move;
 }
 
@@ -1239,6 +1245,11 @@ td.bordered[md-cell] {
   border: 1px solid #CCC;
   text-align: center;
   vertical-align: middle;
+  display: block;
+}
+
+.timetable-day {
+  display: inline;
 }
 
 .timetable-drop {
@@ -1249,7 +1260,6 @@ td.bordered[md-cell] {
 }
 
 .timetable-higher-drop {
-  width: 100%;
   height: 30px;
   border-left: 1px solid #eee;
   border-right: 1px solid #eee;
@@ -1410,10 +1420,25 @@ md-grid-tile {
   font-weight: 500;
 }
 
+.timetableIconButton {
+  height: inherit !important;
+  width: inherit !important;
+}
+
+.timetableIconButton > .material-icons.md-48{
+  font-size: 48px !important;
+  height: 48px !important;
+  width: 48px !important;
+}
+
 .one-row {
   white-space: nowrap;
 }
 
 .unconfirmedFinishedJournals {
   background-color: #F8BBD0;
+}
+
+.module-capacities td{
+  width: 200px;
 }

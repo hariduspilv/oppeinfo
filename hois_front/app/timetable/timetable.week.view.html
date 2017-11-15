@@ -1,4 +1,4 @@
-<div layout-padding ng-if="timetableId && studyPeriodId && typeId">
+<div layout-padding ng-if="(timetableId && studyPeriodId && typeId) || searchResultEvents">   
     <div layout="row" layout-align="center">
         <span ng-if="shownTimetableCurriculum">{{shownTimetableCurriculum.studentGroupCode}}, {{currentLanguageNameField(shownTimetableCurriculum)}}</span>
         <span ng-if="shownTeacher">{{shownTeacher.lastname}}, {{shownTeacher.firstname}}</span>
@@ -37,16 +37,22 @@
                 <div style="height:32px;text-align:center" md-colors="day.today ?  {background: 'accent-400'}:{}">{{'timetable.timetablePlan.' + day.name | translate}}<br>{{day.date | hoisDate}}</div>
                 <div layout="row">
                     <div flex ng-repeat="event in day.events track by $index" ng-style="{'height': event.rowHeight + 'px', 'top': event.top + 'px', 'z-index': $index}"
-                        style="padding: 0; border: 1px solid; position:absolute; overflow: hidden;width:calc(100% - 10px);" md-colors="{background: 'primary-100-0.8','border-color': 'primary-500'}"
+                        style="padding: 0; border: 1px solid; position:absolute; overflow: hidden;width:calc(100% - 10px);" 
+                        md-colors="event.public ? {background: 'primary-100-0.8','border-color': 'primary-500'} : {background: 'accent-100-0.8','border-color': 'accent-500'}"
                         class="timetableEvent">
                         <md-tooltip md-direction="bottom" style="margin: -18px; height: auto;">
-                            <div>{{event.timeStart}}-{{event.timeEnd}} {{currentLanguageNameField(event)}}</div>
-                            <div ng-repeat="room in event.rooms track by $index">{{room.code}}</div>
+                            <div ng-if="event.public">{{event.timeStart}}-{{event.timeEnd}} {{currentLanguageNameField(event)}}</div>
+                            <div ng-if="!event.public">{{event.timeStart}}-{{event.timeEnd}} {{'timetable.timetableEvent.occupied' | translate}}</div>
+                            <div ng-repeat="room in event.rooms track by $index">{{room.buildingCode}}-{{room.roomCode}}</div>
                             <div ng-repeat="teacher in event.teachers track by $index">{{teacher.name}}</div>
                             <div ng-repeat="studentGroup in event.studentGroups track by $index">{{studentGroup.code}}</div>
                             <div>{{event.studentGroup}}</div>
                         </md-tooltip>
-                        <div><span>{{event.timeStart}}-{{event.timeEnd}}</span><span> {{currentLanguageNameField(event)}}</span></div>
+                        <div>
+                            <span>{{event.timeStart}}-{{event.timeEnd}}</span>
+                            <span ng-if="event.public">{{currentLanguageNameField(event)}}</span>
+                            <span ng-if="!event.public">{{'timetable.timetableEvent.occupied' | translate}}</span>
+                        </div>
                         <div>
                             <span ng-repeat="teacher in event.teachers track by $index">
                                 <a ng-href="/#/timetable/teacher/{{::studyPeriodId}}/{{::teacher.id}}/{{::timetableId}}/{{::weekIndex}}">{{teacher.name}}</a>
@@ -55,7 +61,7 @@
                         </div>
                         <div>
                             <span ng-repeat="room in event.rooms track by $index">
-                                <a ng-href="/#/timetable/room/{{::studyPeriodId}}/{{::room.id}}/{{::timetableId}}/{{::weekIndex}}">{{room.code}}</a>
+                                <a ng-href="/#/timetable/room/{{::studyPeriodId}}/{{::room.id}}/{{::timetableId}}/{{::weekIndex}}">{{room.buildingCode}}-{{room.roomCode}}</a>
                                 {{$last ? '' : ', '}}
                             </span>
                         </div>
@@ -79,8 +85,12 @@
             </hois-collapsable-header>
             <div layout="column">
                 <div flex ng-repeat="event in day.events track by $index">
-                    <div style="border: 1px solid #e8e8e8;">
-                        <div><span style="font-weight: bold">{{event.timeStart}}-{{event.timeEnd}}</span><span> {{currentLanguageNameField(event)}}</span></div>
+                    <div style="border: 1px solid #e8e8e8; min-height: 80px;">
+                        <div>
+                            <span style="font-weight: bold">{{event.timeStart}}-{{event.timeEnd}}</span>
+                            <span ng-if="event.public">{{currentLanguageNameField(event)}}</span>
+                            <span ng-if="!event.public">{{'timetable.timetableEvent.occupied' | translate}}</span>
+                        </div>
                         <div>
                             <span ng-repeat="teacher in event.teachers track by $index">
                                 <a ng-href="/#/timetable/teacher/{{::studyPeriodId}}/{{::teacher.id}}/{{::timetableId}}">{{teacher.name}}</a>
@@ -89,7 +99,8 @@
                         </div>
                         <div>
                             <span ng-repeat="room in event.rooms track by $index">
-                                <a ng-href="/#/timetable/room/{{::studyPeriodId}}/{{::room.id}}/{{::timetableId}}">{{room.code}}</a>{{$last ? '' : ', '}}
+                                <a ng-href="/#/timetable/room/{{::studyPeriodId}}/{{::room.id}}/{{::timetableId}}">{{room.buildingCode}}-{{room.roomCode}}</a>
+                                {{$last ? '' : ', '}}
                             </span>
                         </div>
                         <div>
@@ -104,11 +115,19 @@
         </hois-collapsable>
         </span>
     </div>
-
+    
     <div ng-if="!(timetableEvents.length > 0)">
-        <div layout="row" layout-align="center">{{'timetable.error.noPeriodTimetable' | translate}}</div>
+        <div ng-if="!timetableSearch" layout="row" layout-align="center">{{'timetable.error.noPeriodTimetable' | translate}}</div>
+        <div ng-if="timetableSearch" layout="row" layout-align="center">{{'timetable.error.noSearchResults' | translate}}</div>
     </div>
+
+    <md-button class="md-icon-button timetableIconButton" ng-click="generateCalendar()">
+        <md-tooltip md-direction="bottom">{{'timetable.saveToCalendar' | translate}}</md-tooltip>
+        <md-icon md-font-set="material-icons md-primary md-48">event</md-icon>
+    </md-button>
+
     <md-button ng-if="directRoute" ng-click="back('#/timetable/generalTimetableByGroup')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+
 </div>
 
 <style>

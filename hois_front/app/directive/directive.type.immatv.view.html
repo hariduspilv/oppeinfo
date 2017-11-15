@@ -5,7 +5,7 @@
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
         <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
-        <th md-column>{{'directive.student.studyLoad' | translate}}</th>
+        <th md-column ng-if="formState.school.higher">{{'directive.student.studyLoad' | translate}}</th>
         <th md-column>{{'directive.student.studyForm' | translate}}</th>
         <th md-column>{{'directive.student.nominalStudyEnd' | translate}}</th>
         <th md-column>{{'directive.student.language' | translate}}</th>
@@ -22,7 +22,7 @@
         <td ng-if="!row.student" md-cell>{{::row.fullname}}</td>
         <td md-cell>{{::row.idcode}}</td>
         <td md-cell>{{currentLanguageNameField(row.newCurriculumVersion)}}</td>
-        <td md-cell>
+        <td md-cell ng-if="formState.school.higher">
           <hois-classifier-value ng-model="row.studyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
         </td>
         <td md-cell>

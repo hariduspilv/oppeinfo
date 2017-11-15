@@ -1,0 +1,48 @@
+<md-dialog aria-label="occupation add dialog" flex="40" flex-xs="100">
+  <form name="dialogForm" ng-cloak>
+    <md-toolbar>
+      <div class="md-toolbar-tools">
+        <h2>{{"occupation.addAquiredPartOccupation" | translate}}</h2>
+        <span flex></span>
+        <md-button class="md-icon-button" ng-click="cancel()">
+          <md-icon md-font-set="material-icons">close</md-icon>
+        </md-button>
+      </div>
+    </md-toolbar>
+
+    <md-dialog-content>
+      <span flex></span>
+      <div class="ois-form-layout" layout="column" layout-margin ng-cloak>
+        <div layout="column">
+          <md-input-container flex>
+            <label>{{'occupation.occupationStandard' | translate}}</label>
+            <!--<hois-classifier-select ng-model="occupation" main-classifier-code="KUTSE" required ng-disabled="formState.readOnly"></hois-classifier-select>-->
+            <md-select ng-model="occupation" required ng-disabled="formState.readOnly">
+              <md-option ng-value="option" ng-repeat="option in occupations | orderBy: currentLanguageNameField()">
+                {{ currentLanguageNameField(option) }}
+             </md-option>
+            </md-select>
+          </md-input-container>
+
+          <md-input-container flex>
+            <label>{{'occupation.aquiredPartOccupation' | translate}}</label>
+            <!--<hois-classifier-select ng-model="partOccupationAquired" main-classifier-code="OSAKUTSE" watch-model="occupation"
+                        connect-main-classifier-code="KUTSE" search-from-connect required ng-disabled="formState.readOnly"></hois-classifier-select>-->
+
+           <md-select ng-model="partOccupationAquired" required ng-disabled="formState.readOnly">
+              <md-option ng-value="option" ng-repeat="option in partOccupations | filter: filterPartOccupations | orderBy: currentLanguageNameField()">
+                {{ currentLanguageNameField(option) }}
+             </md-option>
+            </md-select>
+          </md-input-container>
+        </div>
+      </div>
+    </md-dialog-content>
+
+    <span flex></span>
+    <md-dialog-actions layout="row" layout-align="start center">
+      <md-button class="md-raised md-primary" ng-click="submit()" ng-if="!formState.readOnly">{{"main.button.add" | translate}}</md-button>
+      <md-button class="md-raised" ng-click="cancel()">{{"main.button.close" | translate}}</md-button>
+    </md-dialog-actions>
+  </form>
+</md-dialog>

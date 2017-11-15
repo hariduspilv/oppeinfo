@@ -64,6 +64,7 @@ angular.module('hitsaOis')
       $scope.classifier.id = $scope.classifier.code;    // required for using QueryUtils methods
       $scope.classifier.$update().then(function() {
             message.info('main.messages.create.success');
+            $scope.classifierForm.$setPristine();
           });
     }
 

@@ -5,7 +5,6 @@ public class RegisterPracticeContractRequest {
     private String qguid;
     private int ehisId;
     private String oisId;
-    private String createDate;
     private String manager;
     private String stIdCode;
     private String stFirstNames;
@@ -26,6 +25,10 @@ public class RegisterPracticeContractRequest {
     private String orgTutorTel;
     private String orgTutorEmail;
     private String programme;
+    private String startDate;
+    private String endDate;
+    private String schoolTutorId;
+    private String place;
 
     public String getQguid() {
         return qguid;
@@ -49,14 +52,6 @@ public class RegisterPracticeContractRequest {
 
     public void setOisId(String oisId) {
         this.oisId = oisId;
-    }
-
-    public String getCreateDate() {
-        return createDate;
-    }
-
-    public void setCreateDate(String createDate) {
-        this.createDate = createDate;
     }
 
     public String getManager() {
@@ -217,5 +212,37 @@ public class RegisterPracticeContractRequest {
 
     public void setProgramme(String programme) {
         this.programme = programme;
+    }
+
+    public String getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(String startDate) {
+        this.startDate = startDate;
+    }
+
+    public String getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(String endDate) {
+        this.endDate = endDate;
+    }
+
+    public String getSchoolTutorId() {
+        return schoolTutorId;
+    }
+
+    public void setSchoolTutorId(String schoolTutorId) {
+        this.schoolTutorId = schoolTutorId;
+    }
+
+    public String getPlace() {
+        return place;
+    }
+
+    public void setPlace(String place) {
+        this.place = place;
     }
 }

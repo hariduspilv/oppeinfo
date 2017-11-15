@@ -6,6 +6,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'studentGroup/student.group.list.html',
       controller: 'StudentGroupSearchController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_OPPERYHM]
       }
@@ -14,6 +15,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'studentGroup/student.group.edit.html',
       controller: 'StudentGroupEditController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
@@ -22,6 +24,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'studentGroup/student.group.edit.html',
       controller: 'StudentGroupEditController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
@@ -30,6 +33,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'studentGroup/student.group.view.html',
       controller: 'StudentGroupViewController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }

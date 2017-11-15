@@ -87,7 +87,8 @@ public class SaisApplication extends BaseEntityWithId {
 
     @Size(max = 50)
     private String saisId;
-
+    @Size(max = 50)
+    private String addressAds;
 
     @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "sais_application_id", nullable = false, updatable = false)
@@ -321,6 +322,13 @@ public class SaisApplication extends BaseEntityWithId {
         this.saisId = saisId;
     }
 
+    public String getAddressAds() {
+        return addressAds;
+    }
+
+    public void setAddressAds(String addressAds) {
+        this.addressAds = addressAds;
+    }
 
     public Set<SaisApplicationGraduatedSchool> getGraduatedSchools() {
         return graduatedSchools;

@@ -19,7 +19,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="CurriculumClassification" type="{http://sais2.x-road.ee/producer/}SAISClassification" minOccurs="0"/&gt;
+ *         &lt;element name="CurriculumClassification" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
  *         &lt;element name="DateModified" type="{http://www.w3.org/2001/XMLSchema}dateTime"/&gt;
  *         &lt;element name="CurriculumCode" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="Grade" type="{http://www.w3.org/2001/XMLSchema}int"/&gt;

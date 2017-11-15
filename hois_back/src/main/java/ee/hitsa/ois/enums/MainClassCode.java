@@ -19,6 +19,7 @@ public enum MainClassCode {
     EHIS_LEPING,
     EHIS_MOBIILSUS,
     EHIS_OPETAJA_KEEL,
+    EHIS_OPJ_KVAL,
     EHIS_ROK,
     EHIS_TAIEND_DOK,
     EHIS_TAIEND_OPPEAS,

@@ -8,10 +8,10 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectForm;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.UniqueCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectDto;
 import ee.hitsa.ois.web.dto.SubjectSearchDto;
@@ -95,7 +95,7 @@ public class SubjectController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Subject subject, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertSameSchool(user, subject.getSchool());
-        subjectService.delete(subject);
+        subjectService.delete(user, subject);
     }
     
     @GetMapping("/unique/code")

@@ -139,18 +139,16 @@
 						<hois-classifier-select ng-model="curriculum.fieldOfStudy" main-classifier-code="ISCED_SUUN" watch-model="curriculum.areaOfStudy"
               filter-values  search-from-connect connect-main-classifier-code="ISCED_VALD" criteria="{higher: true}" ng-disabled="!curriculum.areaOfStudy || formState.readOnly || formState.notEditableBasicData" model-value-attr="code"></hois-classifier-select>
 					</md-input-container>
-					<md-input-container flex="50" flex-offset="5" ng-if="auth.school && strictValidation()">
-						<label>{{'curriculum.structuralUnitResponsible' | translate}}</label>
-						<hois-school-department-select ng-model="curriculum.schoolDepartments" multiple required ng-disabled="formState.readOnly"></hois-school-department-select>
-					</md-input-container>
-					<md-input-container flex="50" flex-offset="5" ng-if="auth.school && !strictValidation()">
-						<label>{{'curriculum.structuralUnitResponsible' | translate}} *</label>
-						<hois-school-department-select ng-model="curriculum.schoolDepartments" multiple ng-disabled="formState.readOnly"></hois-school-department-select>
-					</md-input-container>
-					<md-input-container flex="50" flex-offset="5" ng-if="!auth.school">
-						<label>{{'curriculum.structuralUnitResponsible' | translate}}</label>
-						<hois-select ng-model="curriculum.schoolDepartments" multiple values="schoolDepartments"></hois-select>
-					</md-input-container>
+
+          <!-- hois-school-department-select was not used here as it set form $dirty after page load.
+          In addition, extra logic in providing options required -->
+					<md-input-container flex="50" flex-offset="5">
+           <label>
+             {{'curriculum.structuralUnitResponsible' | translate}} {{getStar()}}
+            </label>
+           <hois-select ng-model="curriculum.schoolDepartments" multiple values="schoolDepartments"
+           ng-required="strictValidation()" ng-disabled="formState.readOnly"></hois-select>
+          </md-input-container>
 				</div>
 			</fieldset>
 		</div>
@@ -247,25 +245,7 @@
 			</div>
 		</fieldset>
 		<div>&nbsp;</div>
-		<!--<fieldset tabindex="10">
-			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.statuses' | translate}}</legend>
-			<div layout="row" flex="100" class="top-margin form-readonly">
-				<md-input-container flex="30" flex-sm="100" flex-xs="100" class="readonly">
-                    <label class="label">{{'main.status' | translate}}</label>
-                    <hois-classifier-value ng-model="curriculum.status" main-classifier-code="OPPEKAVA_STAATUS"></hois-classifier-value>
-                </md-input-container>
-				<md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
-                    <label>{{'curriculum.statusInEhis' | translate}}</label>
-                    <hois-classifier-value ng-model="curriculum.ehisStatus" main-classifier-code="OPPEKAVA_EHIS_STAATUS"></hois-classifier-value>
-                </md-input-container>
-				<md-input-container flex="40" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
-                    <label>{{'curriculum.statusChangedDateInEhis' | translate}}</label>
-                    <hois-value value="curriculum.ehisChanged | hoisDate"></hois-value>
-                </md-input-container>
-			</div>
-		</fieldset>-->
-
-        <div>&nbsp;</div>
+    <div>&nbsp;</div>
 		<fieldset tabindex="10">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.statuses' | translate}}</legend>
 			<div layout="row" flex="100">
@@ -336,7 +316,7 @@
 						<div ng-if="item.abroad">{{currentLanguageNameField(item)}}</div>
 						<div ng-if="!item.abroad"> <hois-classifier-value ng-model="item.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value></div>
 						<div flex="5">&nbsp;</div>
-						<div flex="5"><a class="remove nomargin" ng-click="removejointPartner(item)" ng-if="!formState.readOnly && !formState.notEditableBasicData">&times;</a></div>
+						<div flex="5"><a class="remove nomargin" ng-click="removejointPartner(item)" ng-if="!formState.readOnly && !formState.notEditableBasicData && !item.hasSubjects">&times;</a></div>
 					</div>
 				</div>
 				<div layout="row" layout-sm="column" layout-xs="column" ng-show="curriculum.joint">
@@ -444,22 +424,9 @@
 		<fieldset tabindex="12">
 			<legend md-colors="{color: 'primary-800'}" ng-class="{invalid: strictValidation() && (!curriculum.specialities || curriculum.specialities.length === 0)}" class="md-title-small" >{{'curriculum.specialty.label' | translate}}</legend>
 			<md-button class="md-raised" ng-click="openAddSpecialtyDialog()" ng-show="!formState.readOnly">{{'curriculum.specialty.add' | translate}}</md-button>
-			<!--div layout="row" class="top-margin">
-                <h2 ng-class="{invalid: higherCurriculumForm.$submitted && curriculum.specialities.length == 0 && strictValidation()}">{{'curriculum.specialty.label' | translate}}</h2>
-				<md-button class="md-primary nomargin" ng-click="openAddSpecialtyDialog()" ng-show="!formState.readOnly">{{'curriculum.specialty.add' | translate}}</md-button>
-            </div-->
-
-				<!--div layout="row" class="occupation-header align-center">
-					<div flex="5">{{'curriculum.specialty.index' | translate}}</div>
-					<div flex="30">{{'curriculum.specialty.specialty' | translate}}</div>
-					<div></div>
-				</div-->
-
 			<div ng-repeat = "item in curriculum.specialities | orderBy: currentLanguageNameField()" layout="column" >
 				<div layout = "row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">
-						<!--div flex="5">{{$index + 1}}</div-->
 					<div flex="35"><a ng-click="openAddSpecialtyDialog(item)" href="">{{currentLanguageNameField(item)}}</a></div>
-					<!--<div><a class="remove nomargin" ng-click="removeSpeciality(item)" ng-if="!formState.readOnly">&times;</a></div>-->
 				</div>
 			</div>
 		</fieldset>
@@ -471,16 +438,14 @@
 
 			<div ng-repeat = "item in curriculum.grades | orderBy: currentLanguageNameField()" layout="column" ng-show="gradeRequired()">
 				<div layout = "row" class="occupation-row align-center" ng-class-odd="'odd'" ng-class-even="'even'">
-					<!--div flex="5">{{$index + 1}}</div-->
                     <div flex="35"><a ng-click="openAddGradeDialog(item)" href="">{{currentLanguageNameField(item)}}</a></div>
-                    <!--<div><a class="remove nomargin" ng-click="removeFromArray(curriculum.grades, item)" ng-if="!formState.readOnly">&times;</a></div>-->
                 </div>
 			</div>
 
 		</fieldset>
 
-		<div>&nbsp;</div>
-		<fieldset tabindex="11">
+		<div ng-if="curriculum.id">&nbsp;</div>
+		<fieldset tabindex="11" ng-if="curriculum.id">
 			<legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
 			<md-button class="md-raised" ng-click="openAddFileDialog()" ng-show="!formState.readOnly">{{'main.button.uploadFile' | translate}}</md-button>
             <table md-table class="secondary-table">
@@ -497,7 +462,6 @@
                     <tr md-row ng-repeat="file in curriculum.files | orderBy: 'oisFile.fname'" ng-class-odd="'odd'" ng-class-even="'even'">
                         <td md-cell>
                             {{file.oisFile.fname}}
-                            <!--<a ng-href="{{getUrl(file.oisFile)}}" target="_blank"><md-icon md-font-set="material-icons">file_download</md-icon></a>-->
                             <a ng-href="{{getUrl(file)}}" download><md-icon md-font-set="material-icons">file_download</md-icon></a>
                         </td>
                         <td md-cell>
@@ -545,40 +509,40 @@
               <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
             </div>
             <div ng-show="curriculum.id && !formState.readOnly">
-              <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-              <md-button class="md-raised" ng-click="saveAndProceed()">{{'main.button.status.approving' | translate}}</md-button>
-              <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
-              <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-click="save()" ng-if="curriculum.canChange">{{'main.button.save' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="saveAndProceed()" ng-if="curriculum.canChange && curriculum.canConfirm">{{'main.button.status.approving' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canChange && curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
+              <md-button class="md-raised md-default" ng-click="delete()" ng-if="curriculum.canDelete">{{'main.button.delete' | translate}}</md-button>
             </div>
             <div ng-show="curriculum.id && formState.readOnly">
-              <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
             </div>
           </div>
           <div ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis">
             <div ng-show="!formState.readOnly">
-              <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
-              <md-button class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-click="save()" ng-if="curriculum.canChange">{{'main.button.save' | translate}}</md-button>
+              <md-button class="md-raised md-default" ng-click="delete()" ng-if="curriculum.canDelete">{{'main.button.delete' | translate}}</md-button>
             </div>
             <div ng-show="formState.readOnly">
-              <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
-              <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="sendToEhis()">{{'main.button.sendToEhis' | translate}}</md-button>
-              <md-button class="md-raised" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
+              <md-button class="md-raised md-default" ng-click="sendToEhis()" ng-if="curriculum.canConfirm">{{'main.button.sendToEhis' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
             </div>
           </div>
           <div ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis">
-            <md-button class="md-raised md-default" ng-if="auth.isAdmin()" ng-click="updateFromEhis()">{{'main.button.updateFromEhis' | translate}}</md-button>
+            <md-button class="md-raised md-default" ng-click="updateFromEhis()" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhis' | translate}}</md-button>
           </div>
           <div ng-show="curriculum.status === STATUS.VERIFIED">
             <div ng-show="!formState.readOnly">
-              <md-button class="md-raised md-primary" ng-click="save()">{{'main.button.save' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-click="save()" ng-if="curriculum.canChange">{{'main.button.save' | translate}}</md-button>
             </div>
             <div ng-show="formState.readOnly">
-              <md-button class="md-raised md-primary" ng-if="auth.isAdmin()" ng-click="goToEditForm()">{{'main.button.change' | translate}}</md-button>
-              <md-button class="md-raised" ng-if="auth.isAdmin()" ng-click="setStatusClosed()">{{'main.button.status.close' | translate}}</md-button>
+              <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
+              <md-button class="md-raised" ng-click="setStatusClosed()" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
             </div>
           </div>
           <a href="{{formState.curriculumXmlUrl}}" target="_blank" class="md-button md-raised" ng-if="curriculum.id">XML</a>
-          <md-button class="md-raised md-default" ng-href="/#/curriculum">{{'main.button.back' | translate}}</md-button>
+          <md-button class="md-raised md-default" ng-click="back('#/curriculum', higherCurriculumForm)">{{'main.button.back' | translate}}</md-button>
         </div>
     </form>
 </div>

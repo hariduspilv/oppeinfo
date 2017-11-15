@@ -36,9 +36,14 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
 	@Column(nullable = false)
 	private String objectivesEt;
 	private String objectivesEn;
+	
+	private String assessmentsEt;
+	private String assessmentsEn;
 
 	@Column(nullable = false, name="is_practice")
 	private Boolean practice;
+	
+	private Boolean isAdditional;
 
 	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true)
 	@JoinColumn(name = "curriculum_module_id", nullable = false, updatable = false)
@@ -159,4 +164,27 @@ public class CurriculumModule extends BaseEntityWithId implements Translatable {
         this.curriculumVersionOccupationModules = curriculumVersionOccupationModules;
     }
 
+    public Boolean getIsAdditional() {
+        return isAdditional;
+    }
+
+    public void setIsAdditional(Boolean isAdditional) {
+        this.isAdditional = isAdditional;
+    }
+
+    public String getAssessmentsEt() {
+        return assessmentsEt;
+    }
+
+    public void setAssessmentsEt(String assessmentsEt) {
+        this.assessmentsEt = assessmentsEt;
+    }
+
+    public String getAssessmentsEn() {
+        return assessmentsEn;
+    }
+
+    public void setAssessmentsEn(String assessmentsEn) {
+        this.assessmentsEn = assessmentsEn;
+    }
 }

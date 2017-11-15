@@ -57,7 +57,7 @@ public class TimetableController {
     @GetMapping("/{id:\\d+}/view")
     public TimetableDto get(HoisUserDetails user, @WithEntity("id") Timetable timetable) {
         //UserUtil.assertIsSchoolAdmin(user);
-    	/* IKE TODO */
+        /* IKE TODO */
         return timetableService.getForView(timetable);
     }
  
@@ -178,7 +178,7 @@ public class TimetableController {
     
     @GetMapping("/generalTimetables")
     public List<GeneralTimetableDto> generalTimetables(HoisUserDetails user) {
-        return timetableService.generalTimetables(user.getSchoolId());
+        return timetableService.generalTimetables(user);
     }
     
     @GetMapping("/groupPeriodTimetables")

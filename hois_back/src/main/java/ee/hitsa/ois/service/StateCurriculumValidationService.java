@@ -31,6 +31,12 @@ public class StateCurriculumValidationService {
     @Autowired
     private Validator validator;
     
+    public static void assertCanView(HoisUserDetails user, StateCurriculum sc) {
+        if(!StateCurriculumUtil.canView(user, sc)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
     public static void assertCanChange(HoisUserDetails user, StateCurriculum sc) {
         if(!StateCurriculumUtil.canChange(user, sc)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
@@ -39,6 +45,24 @@ public class StateCurriculumValidationService {
     
     public static void assertCanCreate(HoisUserDetails user) {
         if(!StateCurriculumUtil.canCreate(user)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanConfirm(HoisUserDetails user, StateCurriculum sc) {
+        if(!StateCurriculumUtil.canConfirm(user, sc)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanClose(HoisUserDetails user, StateCurriculum sc) {
+        if(!StateCurriculumUtil.canClose(user, sc)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanDelete(HoisUserDetails user, StateCurriculum sc) {
+        if(!StateCurriculumUtil.canDelete(user, sc)) {
             throw new ValidationFailedException("main.messages.error.nopermission");
         }
     }

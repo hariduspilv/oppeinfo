@@ -18,6 +18,7 @@ import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriodTeacher;
 import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodStudentGroup;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.ValidationFailedException;
@@ -80,11 +81,12 @@ public class SubjectStudyPeriodService {
                 });
     }
 
-    public void delete(SubjectStudyPeriod subjectStudyPeriod) {
+    public void delete(HoisUserDetails user, SubjectStudyPeriod subjectStudyPeriod) {
         // See SubjectStudyPeriod.java for explanation
         if(!subjectStudyPeriod.getMidtermTasks().isEmpty()) {
             throw new ValidationFailedException("main.messages.record.referenced");
         }
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(subjectStudyPeriod, em);
     }
 }

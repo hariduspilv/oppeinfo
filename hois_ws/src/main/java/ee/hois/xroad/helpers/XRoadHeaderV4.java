@@ -58,22 +58,26 @@ public class XRoadHeaderV4 {
     }
 
     public LogContext logContext() {
-        String queryName = String.format("%s.%s.%s", service.getSubsystemCode(), service.getServiceCode(), service.getServiceVersion());
+        String queryName = String.format("%s.%s", service.getSubsystemCode(), service.getServiceCode());
+        String serviceVersion = service.getServiceVersion();
+        if(serviceVersion != null) {
+            queryName = queryName + ("." + serviceVersion);
+        }
         return new LogContext(getId(), queryName);
     }
 
     public static class Client {
-        private String xRoadInstantce;
+        private String xRoadInstance;
         private String memberClass;
         private String memberCode;
         private String subSystemCode;
 
-        public String getXRoadInstantce() {
-            return xRoadInstantce;
+        public String getXRoadInstance() {
+            return xRoadInstance;
         }
 
-        public void setXRoadInstantce(String xRoadInstantce) {
-            this.xRoadInstantce = xRoadInstantce;
+        public void setXRoadInstance(String xRoadInstance) {
+            this.xRoadInstance = xRoadInstance;
         }
 
         public String getMemberClass() {

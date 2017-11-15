@@ -57,6 +57,7 @@ import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.SaisApplicationRepository;
+import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -115,6 +116,8 @@ public class DirectiveService {
     // application statuses which can added to directive
     private static final List<String> APPLICATION_STATUS_FOR_DIRECTIVE = EnumUtil.toNameList(ApplicationStatus.AVALDUS_STAATUS_ESIT, ApplicationStatus.AVALDUS_STAATUS_YLEVAAT);
 
+    @Autowired
+    private EkisService ekisService;
     @Autowired
     private EntityManager em;
     @Autowired
@@ -370,11 +373,22 @@ public class DirectiveService {
     /**
      * Delete directive
      *
+     * @param user
      * @param directive
      * @throws EntityRemoveException if there are references to directive
      */
-    public void delete(Directive directive) {
+    public void delete(HoisUserDetails user, Directive directive) {
         assertModifyable(directive);
+        if(directive.getWdId() != null) {
+            // sent to EKIS, delete there too
+            Long directiveId = directive.getId();
+            ekisService.deleteDirective(directiveId);
+            /* realized in database using directive_id foreign key references directive(id) on delete set null
+            em.createNativeQuery("update ws_ekis_log set directive_id=null where directive_id=?1")
+                .setParameter(1, directiveId)
+                .executeUpdate(); */
+        }
+        EntityUtil.setUsername(user.getUsername(), em);
         // update possible applications as free for directives
         directive.getStudents().forEach(this::studentRemovedFromDirective);
         EntityUtil.deleteEntity(directive, em);
@@ -633,10 +647,12 @@ public class DirectiveService {
     /**
      * Delete directive coordinator
      *
+     * @param user
      * @param coordinator
      * @throws EntityRemoveException if there are references to directive coordinator
      */
-    public void delete(DirectiveCoordinator coordinator) {
+    public void delete(HoisUserDetails user, DirectiveCoordinator coordinator) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(coordinator, em);
     }
 
@@ -680,23 +696,12 @@ public class DirectiveService {
         if(StringUtils.hasText(idcode)) {
             // add new person if person idcode is not known
             Person person = personRepository.findByIdcode(idcode);
-            // FIXME should update existing person?
+            SaisApplication sais = directiveStudent.getSaisApplication();
             if(person == null) {
                 person = new Person();
                 person.setIdcode(idcode);
-                SaisApplication sais = directiveStudent.getSaisApplication();
                 if(sais != null) {
-                    // copy fields from sais application
-                    person.setFirstname(sais.getFirstname());
-                    person.setLastname(sais.getLastname());
-                    person.setBirthdate(sais.getBirthdate());
-                    person.setSex(sais.getSex());
-                    person.setForeignIdcode(sais.getForeignIdcode());
-                    person.setAddress(sais.getAddress());
-                    person.setPhone(sais.getPhone());
-                    person.setEmail(sais.getEmail());
-                    person.setCitizenship(sais.getCitizenship());
-                    person.setResidenceCountry(sais.getResidenceCountry());
+                    personFromSaisApplication(person, sais);
                 } else {
                     person.setFirstname(formStudent.getFirstname());
                     person.setLastname(formStudent.getLastname());
@@ -704,9 +709,27 @@ public class DirectiveService {
                     person.setSex(em.getReference(Classifier.class, EstonianIdCodeValidator.sexFromIdcode(idcode)));
                 }
                 person = EntityUtil.save(person, em);
+            } else if(sais != null) {
+                // update existing person from sais application
+                personFromSaisApplication(person, sais);
             }
             directiveStudent.setPerson(person);
         }
+    }
+
+    private static void personFromSaisApplication(Person person, SaisApplication sais) {
+        // copy fields from sais application
+        person.setFirstname(sais.getFirstname());
+        person.setLastname(sais.getLastname());
+        person.setBirthdate(sais.getBirthdate());
+        person.setSex(sais.getSex());
+        person.setForeignIdcode(sais.getForeignIdcode());
+        person.setAddress(sais.getAddress());
+        person.setPhone(sais.getPhone());
+        person.setEmail(sais.getEmail());
+        person.setCitizenship(sais.getCitizenship());
+        person.setResidenceCountry(sais.getResidenceCountry());
+        person.setAddressAds(sais.getAddressAds());
     }
 
     private DirectiveStudent createDirectiveStudent(Long studentId, Directive directive) {

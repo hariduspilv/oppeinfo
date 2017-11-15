@@ -50,7 +50,7 @@ public class AutocompleteControllerTests {
 
     @After
     public void cleanUp() {
-        schoolDepartmentService.delete(schoolDepartment);
+        schoolDepartmentService.delete(user, schoolDepartment);
     }
 
     @Test
@@ -128,6 +128,11 @@ public class AutocompleteControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
 
         uri = "/autocomplete/curriculumversions?higher=true";
+        responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uri = "/autocomplete/curriculumversions?languages=true";
         responseEntity = restTemplate.getForEntity(uri, Object.class);
         Assert.assertNotNull(responseEntity);
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());

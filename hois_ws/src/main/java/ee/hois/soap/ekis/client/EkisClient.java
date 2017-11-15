@@ -64,6 +64,16 @@ public class EkisClient {
         return new RegisterDirectiveResponse(ctx, result);
     }
 
+    public DeleteDirectiveResponse deleteDirective(EkisRequestContext requestCtx, DeleteDirectiveRequest request) {
+        WdoisPortType port = initializePort(requestCtx, request.getQguid(), "deleteDirective", "?page=ois2_kaskkiri");
+        LogContext ctx = ctx(port);
+
+        Answer result = SoapUtil.withExceptionHandler(ctx, () -> {
+            return port.deleteDirective(request.getQguid(), request.getOisId(), optional(null), request.getWdId());
+        });
+        return new DeleteDirectiveResponse(ctx, result);
+    }
+
     public RegisterPracticeContractResponse registerPracticeContract(EkisRequestContext requestCtx, RegisterPracticeContractRequest request) {
         WdoisPortType port = initializePort(requestCtx, request.getQguid(), "registerPracticeContract", "?page=ois2_praktika");
         LogContext ctx = ctx(port);
@@ -71,8 +81,6 @@ public class EkisClient {
         Answer result = SoapUtil.withExceptionHandler(ctx, () -> {
             return port.registerPracticeContract(request.getQguid(), request.getEhisId(),
                     request.getOisId(),
-                    // TODO remove?
-                    request.getCreateDate(),
                     request.getManager(), request.getStIdCode(),
                     request.getStFirstNames(), request.getStLastName(),
                     request.getStEmail(), request.getStCurricula(),
@@ -82,7 +90,9 @@ public class EkisClient {
                     request.getOrgCode(), request.getOrgContactName(),
                     optional(request.getOrgTel()), request.getOrgEmail(),
                     request.getOrgTutorName(), optional(request.getOrgTutorTel()),
-                    optional(request.getOrgTutorEmail()), request.getProgramme());
+                    optional(request.getOrgTutorEmail()), request.getProgramme(),
+                    request.getStartDate(), optional(request.getEndDate()),
+                    request.getSchoolTutorId(), request.getPlace());
         });
         return new RegisterPracticeContractResponse(ctx, result);
     }
@@ -92,6 +102,7 @@ public class EkisClient {
         Map<String, Object> context = ((BindingProvider) port).getRequestContext();
         context.put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, ctx.getEndpoint() + requestPath);
         context.put(SoapHandler.LOG_CONTEXT, new LogContext(id, queryName));
+        // context.put("org.apache.cxf.transport.local.LocalConduit.directDispatch", Boolean.TRUE);
         return port;
     }
 

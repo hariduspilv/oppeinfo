@@ -39,7 +39,7 @@
                          md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}'}" md-page-select></md-table-pagination>
 
     <br/>
-    <md-table-container ng-if="!auth.isTeacher() && !auth.isParent()">
+    <md-table-container ng-if="auth.isStudent()">
       <table md-table md-progress="applicationTypes.$promise">
         <thead md-head>
         <tr md-row>

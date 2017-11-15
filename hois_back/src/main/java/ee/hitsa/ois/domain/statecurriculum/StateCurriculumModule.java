@@ -10,7 +10,6 @@ import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
-import javax.persistence.OneToOne;
 
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 
@@ -29,14 +28,15 @@ public class StateCurriculumModule extends BaseEntityWithId {
 	private String objectivesEn;
 	private String assessmentsEt;
 	private String assessmentsEn;
+	private Boolean isAdditional;
 
 	@OneToMany(cascade=CascadeType.ALL, orphanRemoval=true)
 	@JoinColumn(name = "state_curriculum_module_id", nullable=false, updatable = false)
 	private Set<StateCurriculumModuleOccupation> moduleOccupations = new HashSet<>();
 
 	@JsonManagedReference
-	@OneToOne(mappedBy = "module", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY, orphanRemoval=true)
-	private StateCurriculumModuleOutcome outcome;
+    @OneToMany(mappedBy = "module", cascade = CascadeType.ALL, orphanRemoval = true)
+	private Set<StateCurriculumModuleOutcome> outcomes;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(nullable = false, updatable = false)
@@ -62,16 +62,15 @@ public class StateCurriculumModule extends BaseEntityWithId {
 		this.getModuleOccupations().addAll(moduleOccupations);
 	}
 	
-	public StateCurriculumModuleOutcome getOutcome() {
-		return outcome != null ? outcome : (outcome = new StateCurriculumModuleOutcome());
-	}
+	public Set<StateCurriculumModuleOutcome> getOutcomes() {
+        return outcomes != null ? outcomes : (outcomes = new HashSet<>());
+    }
 
-	public void setOutcome(StateCurriculumModuleOutcome outcome) {
-		this.outcome = outcome;
-		outcome.setModule(this);
-	}
+    public void setOutcomes(Set<StateCurriculumModuleOutcome> outcomes) {
+        this.outcomes = outcomes;
+    }
 
-	public Classifier getModule() {
+    public Classifier getModule() {
 		return module;
 	}
 
@@ -134,4 +133,12 @@ public class StateCurriculumModule extends BaseEntityWithId {
 	public String getNameEt() {
 		return nameEt;
 	}
+
+    public Boolean getIsAdditional() {
+        return isAdditional;
+    }
+
+    public void setIsAdditional(Boolean isAdditional) {
+        this.isAdditional = isAdditional;
+    }
 }

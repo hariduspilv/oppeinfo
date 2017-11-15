@@ -101,7 +101,7 @@ public class PersonController {
     @DeleteMapping("/{id:\\d+}")
     public void deletePerson(HoisUserDetails user, @WithEntity("id") Person person) {
         UserUtil.assertIsMainAdminOrSchoolAdmin(user);
-        personService.delete(person);
+        personService.delete(user, person);
     }
 
     @DeleteMapping("/{person:\\d+}/users/{id:\\d+}")
@@ -109,6 +109,6 @@ public class PersonController {
         UserUtil.assertIsMainAdminOrSchoolAdmin(userDetails);
         UserUtil.assertUserBelongsToPerson(user, person);
         UserUtil.assertCanUpdateUser(EntityUtil.getCode(user.getRole()));
-        personService.deleteUser(user);
+        personService.deleteUser(userDetails, user);
     }
 }

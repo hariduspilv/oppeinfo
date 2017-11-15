@@ -62,7 +62,13 @@ import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
 @EnableCaching
 @EnableJpaAuditing
 @SpringBootApplication
-@ImportResource("classpath:cxf-config.xml")
+@ImportResource({"classpath:cxf-config.xml"/*, 
+	"classpath*:/META-INF/net.shibboleth.idp/preconfig.xml",
+	"${idp.home}/system/conf/global-system.xml",
+	"classpath*:/META-INF/net.shibboleth.idp/config.xml",
+	"classpath*:/META-INF/net.shibboleth.idp/postconfig.xml",
+	"${idp.home}/system/conf/mvc-beans.xml", 
+	"${idp.home}/system/conf/webflow-config.xml"*/})
 public class Application {
 
     @Autowired
@@ -140,7 +146,7 @@ public class Application {
             jacksonObjectMapperBuilder.deserializerByType(LocalDate.class, new JsonDeserializer<LocalDate>() {
                 @Override
                 public LocalDate deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-                    LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneId.systemDefault());
+                    LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneOffset.UTC);
                     return localDateTime.toLocalDate();
                 }
             });
@@ -148,7 +154,7 @@ public class Application {
             jacksonObjectMapperBuilder.deserializerByType(LocalDateTime.class, new JsonDeserializer<LocalDateTime>() {
                 @Override
                 public LocalDateTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
-                    return LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneId.systemDefault());
+                    return LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneOffset.UTC);
                 }
             });
 
@@ -156,7 +162,7 @@ public class Application {
                 @Override
                 public LocalTime deserialize(JsonParser p, DeserializationContext ctxt) throws IOException, JsonProcessingException {
                     try {
-                        return LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneId.systemDefault()).toLocalTime();
+                        return LocalDateTime.ofInstant(Instant.parse(p.getText()), ZoneOffset.UTC).toLocalTime();
                     } catch (@SuppressWarnings("unused") Exception e) {}
                     return LocalTimeDeserializer.INSTANCE.deserialize(p, ctxt);
                 }
@@ -183,15 +189,21 @@ public class Application {
         public void addArgumentResolvers(List<HandlerMethodArgumentResolver> argumentResolvers) {
             argumentResolvers.add(new WithEntityMethodArgumentResolver(em));
             argumentResolvers.add(new HoisUserDetailsArgumentResolver());
+            
+            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.DurationToLongConverter());
+            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.StringToIPRangeConverter());
+            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.BooleanToPredicateConverter());
+            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.StringBooleanToPredicateConverter());
+            ((ConverterRegistry)conversionService).addConverter(new net.shibboleth.ext.spring.config.StringToResourceConverter());
 
             // ISO string to LocalDate
             ((ConverterRegistry)conversionService).addConverter(String.class, LocalDate.class, s -> {
-                LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(s), ZoneId.systemDefault());
+                LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(s), ZoneOffset.UTC);
                 return localDateTime.toLocalDate();
             });
             // ISO string to LocalDateTime
             ((ConverterRegistry)conversionService).addConverter(String.class, LocalDateTime.class, s -> {
-                LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(s), ZoneId.systemDefault());
+                LocalDateTime localDateTime = LocalDateTime.ofInstant(Instant.parse(s), ZoneOffset.UTC);
                 return localDateTime;
             });
             ((ConverterRegistry)conversionService).addConverter(String.class, EntityConnectionCommand.class, s -> {

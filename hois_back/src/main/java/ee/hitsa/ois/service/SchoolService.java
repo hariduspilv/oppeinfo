@@ -21,6 +21,7 @@ import ee.hitsa.ois.domain.school.StudyYearScheduleLegend;
 import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryBuilder;
@@ -96,7 +97,8 @@ public class SchoolService {
         return JpaQueryUtil.pagingResult(qb, em, pageable).map(SchoolDto::of);
     }
 
-    public void delete(School school) {
+    public void delete(HoisUserDetails user, School school) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(school, em);
     }
 
@@ -135,6 +137,15 @@ public class SchoolService {
                     "then true else false end as vocational", em).getSingleResult();
 
         return new SchoolType(resultAsBoolean(type, 0).booleanValue(), resultAsBoolean(type, 1).booleanValue());
+    }
+    
+    /**
+     * @param schoolId
+     * @return null if schoolId is null
+     */
+    public String getEhisSchool(Long schoolId) {
+        return schoolId != null ? 
+                em.getReference(School.class, schoolId).getEhisSchool().getCode() : null;
     }
 
     public static class SchoolType {

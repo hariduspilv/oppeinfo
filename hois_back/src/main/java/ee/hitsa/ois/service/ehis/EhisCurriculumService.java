@@ -2,6 +2,10 @@ package ee.hitsa.ois.service.ehis;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -9,6 +13,7 @@ import java.util.stream.Collectors;
 
 import javax.transaction.Transactional;
 
+import org.springframework.util.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -16,6 +21,7 @@ import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.OisFile;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.WsEhisCurriculumLog;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.domain.curriculum.CurriculumJointPartner;
@@ -26,9 +32,11 @@ import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hois.soap.LogContext;
 import ee.hois.xroad.ehis.generated.OisFail;
 import ee.hois.xroad.ehis.generated.OisFailid;
+import ee.hois.xroad.ehis.generated.OisInfoteade;
 import ee.hois.xroad.ehis.generated.OisKutsestandard;
 import ee.hois.xroad.ehis.generated.OisKutsestandardid;
 import ee.hois.xroad.ehis.generated.OisOppekava;
@@ -44,6 +52,7 @@ import ee.hois.xroad.ehis.generated.OppekavaOis;
 import ee.hois.xroad.ehis.generated.OppekavaStaatusOis;
 import ee.hois.xroad.ehis.service.EhisOisOppekavaResponse;
 import ee.hois.xroad.ehis.service.EhisOisOppekavaStaatusResponse;
+import ee.hois.xroad.helpers.XRoadHeaderV4;
 
 @Transactional
 @Service
@@ -51,10 +60,20 @@ public class EhisCurriculumService extends EhisService {
 
     private static final Pattern OCCUPATION_ID_PREFIX = Pattern.compile("^KUTSE_(\\d+)$");
     private static final Pattern PARTOCCUPATION_ID_PREFIX = Pattern.compile("^OSAKUTSE_(\\d+)$");
-    private static final String CURRICULUM_FILE_ID = "EHIS_FAIL_15773";
 
-    static final String OIS_OPPEKAVA_SERVICE_CODE = "oisOppekava";
+    private static final String OIS_OPPEKAVA_SERVICE_CODE = "oisOppekava";
     public static final String OIS_OPPEKAVA_SERVICE = "ehis."+ OIS_OPPEKAVA_SERVICE_CODE + ".v1";
+    private static final String OIS_OPPEKAVA_STAATUS_SERVICE_CODE = "oisOppekavaStaatus";
+    public static final String OIS_OPPEKAVA_STAATUS_SERVICE = "ehis."+ OIS_OPPEKAVA_STAATUS_SERVICE_CODE + ".v1";
+
+    private static final Map<String, String> CURRICULUM_STATUS_FROM_EHIS_STATUS = new HashMap<>();
+    static {
+        CURRICULUM_STATUS_FROM_EHIS_STATUS.put("OPPEKAVA_EHIS_STAATUS_R", "OPPEKAVA_STAATUS_K");
+        CURRICULUM_STATUS_FROM_EHIS_STATUS.put("OPPEKAVA_EHIS_STAATUS_X", "OPPEKAVA_STAATUS_C");
+        CURRICULUM_STATUS_FROM_EHIS_STATUS.put("OPPEKAVA_EHIS_STAATUS_S", "OPPEKAVA_STAATUS_S");
+        CURRICULUM_STATUS_FROM_EHIS_STATUS.put("OPPEKAVA_EHIS_STAATUS_M", "OPPEKAVA_STAATUS_M");
+        CURRICULUM_STATUS_FROM_EHIS_STATUS.put("OPPEKAVA_EHIS_STAATUS_L", "OPPEKAVA_STAATUS_M");
+    }
 
     @Value("${hois.frontend.baseUrl}")
     private String frontendBaseUrl;
@@ -164,7 +183,7 @@ public class EhisCurriculumService extends EhisService {
         oppekavaOis.setKutsestandardid(occupations);
         OisFailid oisFailid = new OisFailid();
         for(CurriculumFile cf : curriculum.getFiles()) {
-            if(!cf.isSendEhis() || !CURRICULUM_FILE_ID.equals(EntityUtil.getCode(cf.getEhisFile()))) {
+            if(!cf.isSendEhis()) {
                 continue;
             }
             OisFail oisFail = new OisFail();
@@ -179,17 +198,19 @@ public class EhisCurriculumService extends EhisService {
         oppekavad.getOppekava().add(oppekavaOis);
 
         EhisOisOppekavaResponse response = ehisClient.oisOppekava(getXroadHeader(), oisOppekava);
-        LogContext queryLog = response.getLog();
-        // TODO logging
-        /*
-        wsEhisStudentLog.setHasOtherErrors(Boolean.FALSE);
-        wsEhisStudentLog.setHasXteeErrors(Boolean.valueOf(queryLog.getError() != null));
+        logQuery(curriculum, response.getLog());
 
-        if(!response.hasError()) {
-            wsEhisStudentLog.setLogTxt(String.join(";", StreamUtil.nullSafeList(response.getResult())));
+        if(response.hasError()) {
+            throw new ValidationFailedException(response.getLog().getError().toString());
         }
-        return ehisLogService.insert(queryLog, wsEhisStudentLog);
-        */
+        // check service result
+        List<OisInfoteade> result = response.getResult();
+        if(result != null && !result.isEmpty()) {
+            OisInfoteade msg = response.getResult().get(0);
+            if(BigInteger.ZERO.compareTo(msg.getVeakood()) != 0) {
+                throw new ValidationFailedException(msg.getTeade());
+            }
+        }
     }
 
     public void updateFromEhis(HoisUserDetails userDetails, Curriculum curriculum) {
@@ -202,18 +223,68 @@ public class EhisCurriculumService extends EhisService {
 
         OppekavaStaatusOis oppekavaStaatusOis = new OppekavaStaatusOis();
         // FIXME why here string? Other places have as BigInteger
-        oppekavaStaatusOis.setOppekavaKood(curriculum.getMerCode());
+        String curriculumCode = curriculum.getMerCode();
+        oppekavaStaatusOis.setOppekavaKood(curriculumCode);
         // XXX create enum
         oppekavaStaatusOis.setOperatsioon("kontrollimine");
+        // TODO remove, for testing against mock server only
+        oppekavaStaatusOis.setKommentaar(curriculum.getDescription());
         oisOppekavadStaatus.getOisOppekava().add(oppekavaStaatusOis);
 
-        EhisOisOppekavaStaatusResponse response = ehisClient.oisOppekavaStaatus(getXroadHeader(), oisOppekavaStaatus);
-        LogContext queryLog = response.getLog();
-        // TODO logging
+        XRoadHeaderV4 header = getXroadHeader();
+        header.getService().setServiceCode(OIS_OPPEKAVA_STAATUS_SERVICE_CODE);
+        EhisOisOppekavaStaatusResponse response = ehisClient.oisOppekavaStaatus(header, oisOppekavaStaatus);
+        logQuery(curriculum, response.getLog());
+
+        if(response.hasError()) {
+            throw new ValidationFailedException(response.getLog().getError().toString());
+        }
+
+        List<OisInfoteade> msgs = response.getResult();
+        if(msgs != null && !msgs.isEmpty()) {
+            OisInfoteade msg = msgs.stream().filter(r -> r.getOppekavaKood() != null && r.getOppekavaKood().toString().equals(curriculumCode)).findFirst().orElse(null);
+            if(msg != null) {
+                if(BigInteger.ZERO.compareTo(msg.getVeakood()) != 0) {
+                    throw new ValidationFailedException(msg.getTeade());
+                }
+                String ehisStatus = msg.getOppekavaStaatus();
+                if(StringUtils.hasText(ehisStatus)) {
+                    Classifier es = em.createQuery("select c from Classifier c where c.mainClassCode = ?1 and c.value= ?2", Classifier.class)
+                            .setParameter(1, MainClassCode.OPPEKAVA_EHIS_STAATUS.name()).setParameter(2, ehisStatus).getResultList().stream().findFirst().orElse(null);
+
+                    if(es != null) {
+                        curriculum.setEhisStatus(es);
+                        curriculum.setEhisChanged(LocalDate.now());
+                        // set curriculum status
+                        String curriculumStatus = CURRICULUM_STATUS_FROM_EHIS_STATUS.get(EntityUtil.getCode(es));
+                        if(curriculumStatus != null) {
+                            curriculum.setStatus(em.getReference(Classifier.class, curriculumStatus));
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private void logQuery(Curriculum curriculum, LogContext logContext) {
+        WsEhisCurriculumLog log = new WsEhisCurriculumLog();
+        log.setSchool(curriculum.getSchool());
+        log.setCurriculum(curriculum);
+        log.setHasOtherErrors(Boolean.FALSE);
+        log.setHasXteeErrors(Boolean.valueOf(logContext.getError() != null));
+        ehisLogService.insert(logContext, log);
     }
 
     private String fileUrl(OisFile file) {
         return frontendBaseUrl + "oisfile/get/" + file.getId();
+    }
+
+    // TODO remove function - for mock test only
+    @Override
+    protected XRoadHeaderV4 getXroadHeader() {
+        XRoadHeaderV4 header = super.getXroadHeader();
+        header.setEndpoint("http://localhost:8087/services/ehis");
+        return header;
     }
 
     @Override

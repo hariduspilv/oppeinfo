@@ -88,6 +88,33 @@ angular
     };
   });
 
+  $httpProvider.interceptors.push(function($q, $rootScope) {
+    var postMethods = ['POST', 'PUT', 'DELETE'];
+    function showHideBusy(config, busy) {
+      if(postMethods.indexOf(config.method) !== -1) {
+        $rootScope.$emit('backendBusy', {busy: busy});
+      }
+    }
+
+    return {
+     'request': function(config) {
+       showHideBusy(config, true);
+       return config;
+     },
+     'response': function(response) {
+       showHideBusy(response.config, false);
+       return response;
+     },
+     'responseError': function(response) {
+       showHideBusy(response.config, false);
+       return $q.reject(response);
+     }
+    };
+  });
 }).config(function (CacheFactoryProvider) {
   angular.extend(CacheFactoryProvider.defaults, { maxAge: 60 * 60 * 1000, deleteOnExpire: 'passive'});
+}).run(function($rootScope, busyHandler) {
+  $rootScope.$on('backendBusy', function(event, data) {
+    busyHandler.handle(data);
+  });
 });

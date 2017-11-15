@@ -2,7 +2,6 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -18,7 +17,6 @@ import ee.hitsa.ois.domain.timetable.Journal;
 import ee.hitsa.ois.domain.timetable.JournalTeacher;
 import ee.hitsa.ois.domain.timetable.LessonPlan;
 import ee.hitsa.ois.domain.timetable.LessonPlanModule;
-import ee.hitsa.ois.enums.CapacityType;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.LessonPlanUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
@@ -235,14 +233,12 @@ public class LessonPlanDto extends LessonPlanForm {
 
         private final String nameEt;
         private final BigDecimal credits;
-        private final String hours;
+        private final Map<String, Short> hours;
 
         public LessonPlanModuleJournalThemeDto(CurriculumVersionOccupationModuleTheme theme) {
             nameEt = theme.getNameEt();
             credits = theme.getCredits();
-
-            Map<String, Short> capacityHours = StreamUtil.toMap(r -> EntityUtil.getCode(r.getCapacityType()), r -> r.getHours(), theme.getCapacities());
-            hours = Arrays.stream(CapacityType.values()).filter(ct -> capacityHours.containsKey(ct.name())).map(ct -> String.format("%s%s", ct.getId(), capacityHours.get(ct.name()))).collect(Collectors.joining("/"));
+            hours = StreamUtil.toMap(r -> EntityUtil.getCode(r.getCapacityType()), r -> r.getHours(), theme.getCapacities());
         }
 
         public String getNameEt() {
@@ -253,7 +249,7 @@ public class LessonPlanDto extends LessonPlanForm {
             return credits;
         }
 
-        public String getHours() {
+        public Map<String, Short> getHours() {
             return hours;
         }
     }

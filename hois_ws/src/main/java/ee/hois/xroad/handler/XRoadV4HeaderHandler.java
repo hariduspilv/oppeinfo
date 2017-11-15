@@ -52,7 +52,7 @@ public class XRoadV4HeaderHandler extends SoapHandler {
             SOAPElement memberCode = client.addChildElement(new QName(XROAD_IDENTIFIERS, "memberCode", "id"));
             SOAPElement subsystemCode = client.addChildElement(new QName(XROAD_IDENTIFIERS, "subsystemCode", "id"));
 
-            xRoadInstance.addTextNode(header.getClient().getXRoadInstantce());
+            xRoadInstance.addTextNode(header.getClient().getXRoadInstance());
             memberClass.addTextNode(header.getClient().getMemberClass());
             memberCode.addTextNode(header.getClient().getMemberCode());
             subsystemCode.addTextNode(header.getClient().getSubSystemCode());
@@ -66,14 +66,17 @@ public class XRoadV4HeaderHandler extends SoapHandler {
             SOAPElement serviceMemberCode = service.addChildElement(new QName(XROAD_IDENTIFIERS, "memberCode", "id"));
             SOAPElement serviceSubsystem = service.addChildElement(new QName(XROAD_IDENTIFIERS, "subsystemCode", "id"));
             SOAPElement serviceServiceCode = service.addChildElement(new QName(XROAD_IDENTIFIERS, "serviceCode", "id"));
-            SOAPElement serviceVersion = service.addChildElement(new QName(XROAD_IDENTIFIERS, "serviceVersion", "id"));
 
             serviceXRoadInstance.addTextNode(header.getService().getxRoadInstance());
             serviceMemberClass.addTextNode(header.getService().getMemberClass());
             serviceMemberCode.addTextNode(header.getService().getMemberCode());
             serviceSubsystem.addTextNode(header.getService().getSubsystemCode());
             serviceServiceCode.addTextNode(header.getService().getServiceCode());
-            serviceVersion.addTextNode(header.getService().getServiceVersion());
+
+            if(header.getService().getServiceVersion() != null) {
+                SOAPElement serviceVersion = service.addChildElement(new QName(XROAD_IDENTIFIERS, "serviceVersion", "id"));
+                serviceVersion.addTextNode(header.getService().getServiceVersion());
+            }
 
             if (header.getUserId() != null && !header.getUserId().isEmpty()) {
                 SOAPElement userId = soapHeader.addHeaderElement(new QName(XROAD_NAMESPACE, "userId", "xrd"));
@@ -81,7 +84,10 @@ public class XRoadV4HeaderHandler extends SoapHandler {
             }
 
             SOAPElement uuid = soapHeader.addHeaderElement(new QName(XROAD_NAMESPACE, "id", "xrd"));
-            uuid.addTextNode(UUID.randomUUID().toString());
+            if(header.getId() == null) {
+                header.setId(UUID.randomUUID().toString());
+            }
+            uuid.addTextNode(header.getId());
 
             SOAPElement protocolVersion = soapHeader.addHeaderElement(new QName(XROAD_NAMESPACE, "protocolVersion", "xrd"));
             protocolVersion.addTextNode(XRoadHeaderV4.getProtocolVersion());

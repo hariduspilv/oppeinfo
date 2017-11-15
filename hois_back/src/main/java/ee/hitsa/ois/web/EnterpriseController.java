@@ -43,7 +43,7 @@ public class EnterpriseController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Enterprise enterprise,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user);
-        enterpriseService.delete(enterprise);
+        enterpriseService.delete(user, enterprise);
     }
 
 }

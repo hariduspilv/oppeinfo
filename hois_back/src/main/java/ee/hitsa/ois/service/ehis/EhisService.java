@@ -93,6 +93,8 @@ public abstract class EhisService {
 
         if(!response.hasError()) {
             wsEhisStudentLog.setLogTxt(String.join(";", StreamUtil.nullSafeList(response.getResult())));
+        } else {
+            wsEhisStudentLog.setLogTxt(queryLog.getError().toString());
         }
         return ehisLogService.insert(queryLog, wsEhisStudentLog);
     }
@@ -181,6 +183,10 @@ public abstract class EhisService {
         return classifier != null ? classifier.getEhisValue() : null;
     }
 
+    protected static String name(Classifier classifier) {
+        return classifier != null ? classifier.getNameEt() : null;
+    }
+
     protected static String value(Classifier classifier) {
         return classifier != null ? classifier.getValue() : null;
     }
@@ -231,7 +237,7 @@ public abstract class EhisService {
 
     protected XRoadHeaderV4 getXroadHeader() {
         XRoadHeaderV4.Client client = new XRoadHeaderV4.Client();
-        client.setXRoadInstantce(clientXRoadInstance);
+        client.setXRoadInstance(clientXRoadInstance);
         client.setMemberClass(clientMemberClass);
         client.setMemberCode(clientMemberCode);
         client.setSubSystemCode(clientSubsystemCode);

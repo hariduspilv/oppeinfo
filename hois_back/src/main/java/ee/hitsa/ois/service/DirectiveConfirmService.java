@@ -52,7 +52,9 @@ import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.message.StudentDirectiveCreated;
+import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -71,11 +73,11 @@ public class DirectiveConfirmService {
     @Autowired
     private DirectiveService directiveService;
     @Autowired
+    private EkisService ekisService;
+    @Autowired
     private EntityManager em;
     @Autowired
     private EmailGeneratorService emailGeneratorService;
-    @Autowired
-    private JobService jobService;
     @Autowired
     private StudentService studentService;
     @Autowired
@@ -121,6 +123,10 @@ public class DirectiveConfirmService {
                 if(ds.getNominalStudyEnd() == null) {
                     allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "nominalStudyEnd"), "NotNull"));
                 }
+                // check by hand because it is required only in higher study
+                if(ds.getStudyLoad() == null && ds.getCurriculumVersion() != null && CurriculumUtil.isHigher(ds.getCurriculumVersion().getCurriculum())) {
+                    allErrors.add(new AbstractMap.SimpleImmutableEntry<>(propertyPath(rowNum, "studyLoad"), "NotNull"));
+                }
             } else if(DirectiveType.KASKKIRI_TYHIST.equals(directiveType)) {
                 // check that it's last modification of student
                 if(changedStudents.contains(EntityUtil.getId(ds.getStudent()))) {
@@ -139,10 +145,8 @@ public class DirectiveConfirmService {
             throw new ValidationFailedException(allErrors);
         }
 
-        setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL);
         directive = EntityUtil.save(directive, em);
-
-        jobService.sendToEkis(directive);
+        ekisService.registerDirective(EntityUtil.getId(directive));
         return directive;
     }
 
@@ -155,7 +159,7 @@ public class DirectiveConfirmService {
         log.info("directive {} rejected by ekis with reason {}", EntityUtil.getId(directive), rejectComment);
         setDirectiveStatus(directive, DirectiveStatus.KASKKIRI_STAATUS_KOOSTAMISEL);
         directive.setPreamble(preamble);
-        directive.setAddInfo(directive.getAddInfo() + " " + rejectComment);
+        directive.setAddInfo(directive.getAddInfo() != null ? (directive.getAddInfo() + " " + rejectComment) : rejectComment);
         return EntityUtil.save(directive, em);
     }
 

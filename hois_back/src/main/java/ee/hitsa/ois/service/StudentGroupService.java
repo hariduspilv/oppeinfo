@@ -1,6 +1,7 @@
 package ee.hitsa.ois.service;
 
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsInteger;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLocalDate;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
@@ -52,7 +53,7 @@ public class StudentGroupService {
 
     private static final String STUDENT_GROUP_LIST_SELECT =
             "sg.id, sg.code, sg.study_form_code, sg.course, curriculum.id as curriculum_id, "+
-            "curriculum.name_et, curriculum.name_en, "+
+            "curriculum.name_et, curriculum.name_en, sg.valid_from, sg.valid_thru, "+
             "(select count(*) from student s where s.student_group_id=sg.id and s.status_code in (:studentStatus))";
     private static final String STUDENT_GROUP_LIST_FROM =
             "from student_group sg inner join curriculum curriculum on sg.curriculum_id=curriculum.id "+
@@ -87,7 +88,9 @@ public class StudentGroupService {
             dto.setStudyForm(resultAsString(r, 2));
             dto.setCourse(resultAsInteger(r, 3));
             dto.setCurriculum(new AutocompleteResult(resultAsLong(r, 4), resultAsString(r, 5), resultAsString(r, 6)));
-            dto.setStudentCount(resultAsLong(r, 7));
+            dto.setValidFrom(resultAsLocalDate(r, 7));
+            dto.setValidThru(resultAsLocalDate(r, 8));
+            dto.setStudentCount(resultAsLong(r, 9));
             return dto;
         });
     }
@@ -153,7 +156,8 @@ public class StudentGroupService {
         return studentGroup;
     }
 
-    public void delete(StudentGroup studentGroup) {
+    public void delete(HoisUserDetails user, StudentGroup studentGroup) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(studentGroup, em);
     }
 

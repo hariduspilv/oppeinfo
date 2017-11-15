@@ -27,10 +27,12 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.teacher.TeacherOccupation;
 import ee.hitsa.ois.domain.timetable.LessonTimeBuilding;
 import ee.hitsa.ois.util.CurriculumUtil;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.util.Translatable;
 import ee.hitsa.ois.web.commandobject.EntityConnectionCommand;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumVersionResult;
 
 public class AutocompleteResult extends EntityConnectionCommand implements Translatable {
 
@@ -84,9 +86,12 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         return new AutocompleteResult(curriculumSpeciality.getId(), curriculumSpeciality);
     }
 
-    public static AutocompleteResult of(CurriculumVersion curriculumVersion) {
+    public static CurriculumVersionResult of(CurriculumVersion curriculumVersion) {
         Curriculum curriculum = curriculumVersion.getCurriculum();
-        return new AutocompleteResult(curriculumVersion.getId(), CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEt()), CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEn()));
+        return new CurriculumVersionResult(curriculumVersion.getId(),
+                CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEt()),
+                CurriculumUtil.versionName(curriculumVersion.getCode(), curriculum.getNameEn()),
+                null, null, null, Boolean.valueOf(CurriculumUtil.isVocational(curriculum)));
     }
 
     public static AutocompleteResult of(CurriculumVersionHigherModule module) {
@@ -98,11 +103,6 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
         return new AutocompleteResult(curriculumVersionOccupationModule.getId(),
                 CurriculumUtil.moduleName(curriculumModule.getNameEt(), curriculumModule.getModule().getNameEt(), curriculumModule.getCurriculum().getCode()),
                 CurriculumUtil.moduleName(curriculumModule.getNameEn(), curriculumModule.getModule().getNameEn(), curriculumModule.getCurriculum().getCode()));
-    }
-
-    public static AutocompleteResult of(CurriculumVersionOccupationModuleTheme theme) {
-        String nameEt = theme.getNameEt();
-        return new AutocompleteResult(theme.getId(), nameEt, nameEt);
     }
 
     public static AutocompleteResult of(Directive directive) {
@@ -183,5 +183,9 @@ public class AutocompleteResult extends EntityConnectionCommand implements Trans
 
     public static AutocompleteResult of(TeacherOccupation teacherOccupation) {
         return new AutocompleteResult(teacherOccupation.getId(), teacherOccupation.getOccupationEt(), teacherOccupation.getOccupationEn());
+    }
+
+    public static AutocompleteResult of(CurriculumVersionOccupationModuleTheme theme) {
+        return new AutocompleteResult(EntityUtil.getId(theme), theme.getNameEt(), theme.getNameEt());        
     }
 }

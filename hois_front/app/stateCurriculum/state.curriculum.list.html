@@ -32,12 +32,24 @@
                   filter-values search-from-connect connect-main-classifier-code="ISCED_SUUN" multiple></hois-classifier-select>
             </md-input-container>
         </div>
-        <div layout="row" layout-sm="column" layout-xs="column" class="top-margin">
-		  <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset-sm="0" class="top-margin">
+        <div layout="row" layout-sm="column" layout-xs="column" class="top-margin" ng-if="formState.canView">
+		        <md-input-container flex="30" flex-sm="100" flex-xs="100" flex-offset-sm="0" class="top-margin">
                 <label>{{'stateCurriculum.status' | translate}}</label>
                 <hois-classifier-select ng-model="criteria.status" model-value-attr="code" main-classifier-code="OPPEKAVA_STAATUS" multiple filter-values="filteredOutStatuses"></hois-classifier-select>
             </md-input-container>
             <md-input-container flex-offset="5" flex-offset-xs="0" flex-offset-sm="0" flex-sm="100" flex-xs="100">
+                <label>{{'stateCurriculum.enter.validFrom' | translate}}</label>
+                <md-datepicker ng-model="criteria.validFrom" md-open-on-focus>
+                </md-datepicker>
+            </md-input-container>
+            <md-input-container flex-sm="100" flex-xs="100" flex-offset="2" flex-offset-xs="0" flex-offset-sm="0">
+                <label>{{'stateCurriculum.enter.validThru' | translate}}</label>
+                <md-datepicker ng-model="criteria.validThru" md-open-on-focus>
+                </md-datepicker>
+            </md-input-container>
+        </div>
+        <div layout="row" layout-sm="column" layout-xs="column" class="top-margin" ng-if="!formState.canView">
+            <md-input-container flex-sm="100" flex-xs="100">
                 <label>{{'stateCurriculum.enter.validFrom' | translate}}</label>
                 <md-datepicker ng-model="criteria.validFrom" md-open-on-focus>
                 </md-datepicker>
@@ -62,13 +74,13 @@
     <table md-table md-progress="tabledata.$promise">
     <thead md-head md-order="criteria.order" md-on-reorder="loadData">
     <tr md-row>
-        <th md-column md-order-by="{{currentLanguageNameField()}}">{{'curriculum.name' | translate}}</th>
-        <th md-column md-order-by="ekrLevel">{{'stateCurriculum.EKR' | translate}}</th>
-        <th md-column md-order-by="credits">{{'stateCurriculum.credits' | translate}}</th>
-        <th md-column md-order-by="validFrom">{{'stateCurriculum.validFrom' | translate}}</th>
-        <th md-column md-order-by="validThru">{{'stateCurriculum.validThru' | translate}}</th>
-        <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'stateCurriculum.status' | translate}}</th>
-		<th></th>
+      <th md-column md-order-by="{{currentLanguageNameField()}}">{{'curriculum.name' | translate}}</th>
+      <th md-column md-order-by="ekrLevel">{{'stateCurriculum.EKR' | translate}}</th>
+      <th md-column md-order-by="credits">{{'stateCurriculum.credits' | translate}}</th>
+      <th md-column md-order-by="validFrom">{{'stateCurriculum.validFrom' | translate}}</th>
+      <th md-column md-order-by="validThru">{{'stateCurriculum.validThru' | translate}}</th>
+      <th md-column md-order-by="status.{{currentLanguageNameField()}}" ng-if="formState.canView">{{'stateCurriculum.status' | translate}}</th>
+		  <th></th>
     </tr>
     </thead>
     <tbody md-body>
@@ -78,7 +90,7 @@
         <td md-cell>{{row.credits}}</td>
         <td md-cell>{{row.validFrom | hoisDate}}</td>
         <td md-cell>{{row.validThru | hoisDate}}</td>
-        <td md-cell="status">{{currentLanguageNameField(row.status)}}</td>
+        <td md-cell="status" ng-if="formState.canView">{{currentLanguageNameField(row.status)}}</td>
         <td md-cell>
             <md-button md-no-ink class="md-primary change-button"  ng-href="#/stateCurriculum/{{row.id}}/edit" ng-if="row.canChange">{{'main.button.change' | translate}}</md-button>
         </td>

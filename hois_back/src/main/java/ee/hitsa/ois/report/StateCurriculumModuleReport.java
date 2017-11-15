@@ -11,7 +11,7 @@ public class StateCurriculumModuleReport {
     private final BigDecimal credits;
     private final List<String> occupations;
     private final String objectives; 
-    private final String outcomes;
+    private final List<String> outcomes;
     private final String assessments;
     private final String module;
 
@@ -22,7 +22,7 @@ public class StateCurriculumModuleReport {
         occupations = StreamUtil.toMappedList(o -> o.getOccupation().getNameEt(), 
                 stateCurriculumModule.getModuleOccupations());
         objectives = stateCurriculumModule.getObjectivesEt();
-        outcomes = stateCurriculumModule.getOutcome().getOutcomesEt();
+        outcomes = StreamUtil.toMappedList(o -> o.getOutcomesEt(), stateCurriculumModule.getOutcomes());
         assessments = stateCurriculumModule.getAssessmentsEt();
     }
     
@@ -32,7 +32,7 @@ public class StateCurriculumModuleReport {
     public String getObjectives() {
         return objectives;
     }
-    public String getOutcomes() {
+    public List<String> getOutcomes() {
         return outcomes;
     }
     public String getAssessments() {

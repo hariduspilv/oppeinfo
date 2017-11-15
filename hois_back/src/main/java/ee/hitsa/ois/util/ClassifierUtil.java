@@ -20,14 +20,33 @@ public class ClassifierUtil {
 
     public static final String COUNTRY_ESTONIA = "RIIK_EST";
 
-    public static boolean isEstonia(Classifier riik) {
-        return COUNTRY_ESTONIA.equals(EntityUtil.getCode(riik));
+    /**
+     * Does given classifier represent country with value Estonia?
+     * @param classifier can be null
+     * @return
+     */
+    public static boolean isEstonia(Classifier classifier) {
+        return COUNTRY_ESTONIA.equals(EntityUtil.getNullableCode(classifier));
     }
 
+    /**
+     * Is enum value equal to classifier?
+     * @param value
+     * @param classifier can be null
+     * @return
+     * @throws NullPointerException if value is null
+     */
     public static boolean equals(Enum<?> value, Classifier classifier) {
         return value.name().equals(EntityUtil.getNullableCode(classifier));
     }
 
+    /**
+     * Is classifer equal to one of enum values?
+     * @param classifier
+     * @param values
+     * @return
+     * @throws IllegalArgumentException if values are missing
+     */
     public static boolean oneOf(Classifier classifier, Enum<?>... values) {
         if(values.length == 0) {
             throw new IllegalArgumentException("At least one value is required");

@@ -1,7 +1,9 @@
 package ee.hitsa.ois.web;
 
 import java.io.IOException;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
@@ -48,7 +50,7 @@ import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
 @RestController
 @RequestMapping("/stateCurriculum")
 public class StateCurriculumController {
-
+    
     @Autowired
     private StateCurriculumService stateCurriculumService;
     @Autowired
@@ -59,15 +61,25 @@ public class StateCurriculumController {
     private StateCurriculumValidationService stateCurriculumValidationService;
 
     @GetMapping("/print/{id:\\d+}/stateCurriculum.pdf")
-    public void print(@WithEntity("id") StateCurriculum stateCurriculum, HttpServletResponse response) throws IOException {
+    public void print(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum, HttpServletResponse response) throws IOException {
+        StateCurriculumValidationService.assertCanView(user, stateCurriculum);
         HttpUtil.pdf(response, EntityUtil.getId(stateCurriculum) + ".pdf", pdfService.generate(StateCurriculumReport.TEMPLATE_NAME, new StateCurriculumReport(stateCurriculum)));
     }
     
     @GetMapping("/{id:\\d+}")
-    public StateCurriculumDto get(HoisUserDetails user, @WithEntity("id") StateCurriculum curriculum) {
-        StateCurriculumDto dto = StateCurriculumDto.of(curriculum);
-        dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, curriculum)));
-        return dto;
+    public StateCurriculumDto get(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum) {
+        StateCurriculumValidationService.assertCanView(user, stateCurriculum);
+        return stateCurriculumService.get(user, stateCurriculum);
+    }
+    
+    @GetMapping("/canCreate")
+    public Map<String, ?> canCreate(HoisUserDetails user) {
+        return Collections.singletonMap("canCreate", Boolean.valueOf(StateCurriculumUtil.canCreate(user)));
+    }
+    
+    @GetMapping("/canView")
+    public Map<String, ?> canView(HoisUserDetails user) {
+        return Collections.singletonMap("canView", Boolean.valueOf(StateCurriculumUtil.hasPermissionToView(user)));
     }
     
     @GetMapping
@@ -92,7 +104,7 @@ public class StateCurriculumController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, 
             @WithEntity("id") StateCurriculum stateCurriculum) {
-        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
+        StateCurriculumValidationService.assertCanDelete(user, stateCurriculum);
         stateCurriculumService.delete(stateCurriculum);
     }
 
@@ -132,7 +144,7 @@ public class StateCurriculumController {
 
     @PutMapping("/close/{id:\\d+}")
     public StateCurriculumDto close(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum) {
-        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
+        StateCurriculumValidationService.assertCanClose(user, stateCurriculum);
        return get(user, stateCurriculumService.setStatus(stateCurriculum, CurriculumStatus.OPPEKAVA_STAATUS_C));
     }
 
@@ -140,6 +152,7 @@ public class StateCurriculumController {
     public StateCurriculumDto closeAndSave(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum,
             @NotNull @Valid @RequestBody StateCurriculumForm form) {
        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
+       StateCurriculumValidationService.assertCanClose(user, stateCurriculum);
        stateCurriculumValidationService.assertNameIsUnique(stateCurriculum, form);
        return get(user, stateCurriculumService.setStatusAndSave(stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_C));
     }
@@ -148,6 +161,7 @@ public class StateCurriculumController {
     public StateCurriculumDto confirmAndSave(HoisUserDetails user, @WithEntity("id") StateCurriculum stateCurriculum,
             @NotNull @Valid @RequestBody StateCurriculumForm form) {
        StateCurriculumValidationService.assertCanChange(user, stateCurriculum);
+       StateCurriculumValidationService.assertCanConfirm(user, stateCurriculum);
        stateCurriculumValidationService.validateStateCurriculumForm(form);
        stateCurriculumValidationService.assertNameIsUnique(stateCurriculum, form);
        return get(user, stateCurriculumService.setStatusAndSave(stateCurriculum, form, CurriculumStatus.OPPEKAVA_STAATUS_K));

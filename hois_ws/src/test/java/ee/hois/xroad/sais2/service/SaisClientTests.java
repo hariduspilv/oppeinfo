@@ -3,6 +3,7 @@ package ee.hois.xroad.sais2.service;
 import java.time.LocalDate;
 import java.util.Date;
 import java.util.GregorianCalendar;
+import java.util.UUID;
 
 import javax.xml.datatype.DatatypeConfigurationException;
 import javax.xml.datatype.DatatypeFactory;
@@ -11,7 +12,7 @@ import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
-import ee.hois.xroad.helpers.XRoadHeader;
+import ee.hois.xroad.helpers.XRoadHeaderV4;
 import ee.hois.xroad.sais2.generated.AllAdmissionsExportRequest;
 import ee.hois.xroad.sais2.generated.AllAppsExportRequest;
 import ee.hois.xroad.sais2.generated.ArrayOfInt;
@@ -29,13 +30,7 @@ public class SaisClientTests {
 
     @Test
     public void testClassificationExport() {
-        XRoadHeader header = new XRoadHeader();
-        header.setConsumer("10239452");
-        header.setProducer("sais2");
-        header.setUserId("EE30101010007");
-        header.setId("3aed1ae3813eb7fbed9396fda70ca1215d3f3fe1");
-        header.setService("sais2.ClassificationsExport.v1");
-        header.setEndpoint("http://141.192.105.184/cgi-bin/consumer_proxy");
+        XRoadHeaderV4 header = header("ClassificationsExport", null);
 
         SaisClassificationResponse response = saisClient.classificationsExport(header);
         Assert.assertNull("expecting no errors", response.getLog().getError());
@@ -44,13 +39,7 @@ public class SaisClientTests {
 
     @Test
     public void testAdmissionExport() throws DatatypeConfigurationException {
-        XRoadHeader header = new XRoadHeader();
-        header.setConsumer("10239452");
-        header.setProducer("sais2");
-        header.setUserId("EE30101010007");
-        header.setId("3aed1ae3813eb7fbed9396fda70ca1215d3f3fe1");
-        header.setService("sais2.AllAdmissionsExport.v1");
-        header.setEndpoint("http://141.192.105.184/cgi-bin/consumer_proxy");
+        XRoadHeaderV4 header = header("AllAdmissionsExport", null);
 
         GregorianCalendar cal = new GregorianCalendar();
         AllAdmissionsExportRequest request = new AllAdmissionsExportRequest();
@@ -65,13 +54,7 @@ public class SaisClientTests {
 
     @Test
     public void testApplicationExport() throws DatatypeConfigurationException {
-        XRoadHeader header = new XRoadHeader();
-        header.setConsumer("10239452");
-        header.setProducer("sais2");
-        header.setUserId("EE30101010007");
-        header.setId("3aed1ae3813eb7fbed9396fda70ca1215d3f3fe1");
-        header.setService("sais2.AllApplicationsExport.v1");
-        header.setEndpoint("http://141.192.105.184/cgi-bin/consumer_proxy");
+        XRoadHeaderV4 header = header("AllApplicationsExport", null);
 
         GregorianCalendar cal = new GregorianCalendar();
         AllAppsExportRequest request = new AllAppsExportRequest();
@@ -86,5 +69,31 @@ public class SaisClientTests {
         SaisApplicationResponse response = saisClient.applicationsExport(header, request);
         Assert.assertNull("expecting no errors", response.getLog().getError());
         Assert.assertFalse("expecting some response", response.getLog().getIncomingXml() == null);
+    }
+
+    private static XRoadHeaderV4 header(String serviceCode, String serviceVersion) {
+        XRoadHeaderV4 header = new XRoadHeaderV4();
+
+        XRoadHeaderV4.Client client = new XRoadHeaderV4.Client();
+        client.setXRoadInstance("ee-test");
+        client.setMemberClass("COM");
+        client.setMemberCode("10239452");
+        client.setSubSystemCode("generic-consumer");
+        header.setClient(client);
+
+        XRoadHeaderV4.Service service = new XRoadHeaderV4.Service();
+        service.setxRoadInstance("ee-test");
+        service.setMemberClass("NGO");
+        service.setMemberCode("90005872");
+        service.setSubsystemCode("sais2");
+        service.setServiceCode(serviceCode);
+        service.setServiceVersion(serviceVersion);
+        header.setService(service);
+
+        header.setUserId("EE30101010007");
+        header.setId(UUID.randomUUID().toString());
+        header.setEndpoint("http://141.192.105.178/cgi-bin/consumer_proxy");
+
+        return header;
     }
 }

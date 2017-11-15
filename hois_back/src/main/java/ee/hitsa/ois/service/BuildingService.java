@@ -73,10 +73,12 @@ public class BuildingService {
     /**
      * Delete building
      *
+     * @param user
      * @param building
      * @throws EntityRemoveException if there are references to building
      */
-    public void delete(Building building) {
+    public void delete(HoisUserDetails user, Building building) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(building, em);
     }
 
@@ -164,10 +166,12 @@ public class BuildingService {
     /**
      * Delete room
      *
+     * @param user
      * @param room
      * @throws EntityRemoveException if there are references to room
      */
-    public void delete(Room room) {
+    public void delete(HoisUserDetails user, Room room) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(room, em);
     }
 }

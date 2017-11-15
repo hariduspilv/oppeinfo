@@ -134,8 +134,8 @@
               <td md-cell><a ng-href="/#/students/{{::row.studentId}}/main">{{::row.name}}</a></td>
               <td md-cell>{{::row.idcode}}</td>
               <td md-cell>{{::row.curriculum}}</td>
-              <td md-cell>{{::row.fromDate}}</td>
-              <td md-cell>{{::row.toDate}}</td>
+              <td md-cell>{{::row.fromDate | hoisDate}}</td>
+              <td md-cell>{{::row.toDate | hoisDate}}</td>
               <td md-cell>{{row.error ? 'main.no' : 'main.yes' | translate}}</td>
               <td md-cell>{{::row.message}}</td>
             </tr>

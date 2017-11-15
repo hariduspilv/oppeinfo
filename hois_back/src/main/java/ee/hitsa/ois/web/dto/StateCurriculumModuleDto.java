@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
+import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
@@ -13,7 +14,6 @@ import org.hibernate.validator.constraints.NotBlank;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModule;
-import ee.hitsa.ois.domain.statecurriculum.StateCurriculumModuleOutcome;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -45,28 +45,24 @@ public class StateCurriculumModuleDto extends VersionedCommand {
     private String assessmentsEt;
     @Size(max=20000)
     private String assessmentsEn;
+    /**
+     * It is not obligatory, but it is false by default
+     */
+    private Boolean isAdditional = Boolean.FALSE;
     
     @NotEmpty
     @ClassifierRestriction({MainClassCode.OSAKUTSE, MainClassCode.SPETSKUTSE, MainClassCode.KUTSE})
     private Set<String> moduleOccupations = new HashSet<>();
-    
-    @Size(max=4000)
-    private String outcomesEt;
-    @Size(max=4000)
-    private String outcomesEn;
 
+    @NotEmpty
+    @Valid
+    private Set<StateCurriculumModuleOutcomeDto> outcomes;
     
     public static StateCurriculumModuleDto of(StateCurriculumModule module) {
         StateCurriculumModuleDto dto = EntityUtil.bindToDto
-                (module, new StateCurriculumModuleDto(), "moduleOccupations", "outcomesEt", "outcomesEt", "outcome");
-
+                (module, new StateCurriculumModuleDto(), "moduleOccupations", "outcomes");
         dto.setModuleOccupations(StreamUtil.toMappedSet(o -> EntityUtil.getNullableCode(o.getOccupation()), module.getModuleOccupations()));
-        StateCurriculumModuleOutcome outcome = module.getOutcome();
-        if(outcome != null) {
-            dto.setOutcomesEt(outcome.getOutcomesEt());
-            dto.setOutcomesEn(outcome.getOutcomesEn());
-        }
-
+        dto.setOutcomes(StreamUtil.toMappedSet(StateCurriculumModuleOutcomeDto::of, module.getOutcomes()));
         return dto;
     }
 
@@ -150,19 +146,19 @@ public class StateCurriculumModuleDto extends VersionedCommand {
         this.moduleOccupations = moduleOccupations;
     }
 
-    public String getOutcomesEt() {
-        return outcomesEt;
+    public Set<StateCurriculumModuleOutcomeDto> getOutcomes() {
+        return outcomes != null ? outcomes : (outcomes = new HashSet<>());
     }
 
-    public void setOutcomesEt(String outcomesEt) {
-        this.outcomesEt = outcomesEt;
+    public void setOutcomes(Set<StateCurriculumModuleOutcomeDto> outcomes) {
+        this.outcomes = outcomes;
     }
-    
-    public String getOutcomesEn() {
-        return outcomesEn;
+
+    public Boolean getIsAdditional() {
+        return isAdditional;
     }
-    
-    public void setOutcomesEn(String outcomesEn) {
-        this.outcomesEn = outcomesEn;
+
+    public void setIsAdditional(Boolean isAdditional) {
+        this.isAdditional = isAdditional;
     }
 }

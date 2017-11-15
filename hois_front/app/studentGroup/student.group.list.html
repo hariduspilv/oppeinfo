@@ -62,6 +62,8 @@
 						<th md-column md-order-by="{{currentLanguage()==='en' ? 'studyForm.nameEn' : 'studyForm.nameEt'}}">{{'studentGroup.studyForm' | translate}}</th>
 						<th md-column md-numeric md-order-by="course">{{'studentGroup.course' | translate}}</th>
 						<th md-column md-numeric>{{'studentGroup.studentCount' | translate}}</th>
+						<th md-column md-order-by="validFrom">{{'main.validFrom' | translate}}</th>
+						<th md-column md-order-by="validThru">{{'main.validThru' | translate}}</th>
 						<th></th>
 					</tr>
 				</thead>
@@ -72,6 +74,8 @@
 						<td md-cell>{{currentLanguageNameField(row.studyForm)}}</td>
 						<td md-cell>{{::row.course}}</td>
 						<td md-cell>{{::row.studentCount}}</td>
+						<td md-cell>{{::row.validFrom | hoisDate}}</td>
+						<td md-cell>{{::row.validThru | hoisDate}}</td>
 						<td md-cell>
 							<md-button md-no-ink class="md-primary change-button" ng-href="#/studentgroups/{{::row.id}}/edit">{{'main.button.change' | translate}}</md-button>
 						</td>

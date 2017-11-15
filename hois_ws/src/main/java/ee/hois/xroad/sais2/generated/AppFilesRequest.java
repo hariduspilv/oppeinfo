@@ -24,7 +24,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="StatusChangeDateTo" type="{http://www.w3.org/2001/XMLSchema}dateTime"/&gt;
  *         &lt;element name="IdCode" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="StudyLevel" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="ApplicationStatusValues" type="{http://sais2.x-road.ee/producer/}ArrayOfString" minOccurs="0"/&gt;
+ *         &lt;element name="ApplicationStatusValues" type="{http://sais2.x-road.eu/}ArrayOfString" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;

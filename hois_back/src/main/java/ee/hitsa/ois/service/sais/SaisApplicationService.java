@@ -22,7 +22,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
@@ -72,11 +71,11 @@ import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.ClassifierUtil.ClassifierCache;
-import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
+import ee.hitsa.ois.util.SaisAdmissionUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.validation.EstonianIdCodeValidator;
 import ee.hitsa.ois.web.commandobject.sais.SaisApplicationClassifiersCsv;
@@ -88,10 +87,11 @@ import ee.hitsa.ois.web.dto.sais.SaisApplicationImportResultDto;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationImportedRowDto;
 import ee.hitsa.ois.web.dto.sais.SaisApplicationSearchDto;
 import ee.hois.soap.LogContext;
-import ee.hois.xroad.helpers.XRoadHeader;
+import ee.hois.xroad.helpers.XRoadHeaderV4;
 import ee.hois.xroad.sais2.generated.AllAppsExportRequest;
 import ee.hois.xroad.sais2.generated.Application;
 import ee.hois.xroad.sais2.generated.ApplicationFormData;
+import ee.hois.xroad.sais2.generated.ArrayOfCandidateAddress;
 import ee.hois.xroad.sais2.generated.ArrayOfInt;
 import ee.hois.xroad.sais2.generated.ArrayOfString;
 import ee.hois.xroad.sais2.generated.CandidateAddress;
@@ -100,6 +100,8 @@ import ee.hois.xroad.sais2.generated.CandidateGrade;
 import ee.hois.xroad.sais2.generated.CandidateStateExam;
 import ee.hois.xroad.sais2.generated.FormFieldOption;
 import ee.hois.xroad.sais2.generated.Kvp;
+import ee.hois.xroad.sais2.generated.ObjectFactory;
+import ee.hois.xroad.sais2.service.SaisApplicationResponse;
 import ee.hois.xroad.sais2.service.SaisClient;
 
 @Transactional
@@ -107,6 +109,7 @@ import ee.hois.xroad.sais2.service.SaisClient;
 public class SaisApplicationService {
     private static final Logger log = LoggerFactory.getLogger(MethodHandles.lookup().lookupClass());
     private static final String ESTONIAN = "ESTONIAN";
+    private static final String CONTACT_ADDR_VALUE = "1";
 
     private static final List<String> REVOKED_APPLICATION_STATUSES = EnumUtil.toNameList(SaisApplicationStatus.SAIS_AVALDUSESTAATUS_AL,
             SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TL, SaisApplicationStatus.SAIS_AVALDUSESTAATUS_TYH);
@@ -120,8 +123,6 @@ public class SaisApplicationService {
             "inner join classifier status on a.status_code = status.code "+
             "left join curriculum_version on curriculum_version.id = sais_admission.curriculum_version_id "+
             "left join curriculum on curriculum.id = curriculum_version.curriculum_id) as sais_application_dto";
-
-    private static final String SAIS_APPLICATION_SELECT = "id, application_nr, idcode, firstname, lastname, status_code, sais_admission_code, added_to_directive, school_id";
 
     private DatatypeFactory datatypeFactory;
     @Autowired
@@ -148,6 +149,7 @@ public class SaisApplicationService {
     private SaisProperties sp;
 
     private final CsvMapper csvMapper = new CsvMapper();
+    private final ObjectFactory objectFactory = new ObjectFactory();
 
     @PostConstruct
     public void postConstruct() {
@@ -181,7 +183,7 @@ public class SaisApplicationService {
           qb.optionalCriteria("status_code not in (:revokedStatus)", "revokedStatus", revokedStatuses);
         }
 
-        return JpaQueryUtil.pagingResult(qb, SAIS_APPLICATION_SELECT, em, pageable).map(r -> {
+        return JpaQueryUtil.pagingResult(qb, "id, application_nr, idcode, firstname, lastname, status_code, sais_admission_code, added_to_directive, school_id", em, pageable).map(r -> {
             SaisApplicationSearchDto dto = new SaisApplicationSearchDto();
             dto.setId(resultAsLong(r, 0));
             dto.setApplicationNr(resultAsString(r, 1));
@@ -357,7 +359,7 @@ public class SaisApplicationService {
         }
 
         //study load is only mandatory for higher education
-        if (saisApplication.getStudyLoad() == null && CurriculumUtil.isHigher(saisAdmission.getStudyLevel())) {
+        if (saisApplication.getStudyLoad() == null && SaisAdmissionUtil.isHigher(saisAdmission)) {
             failed.add(new SaisApplicationImportedRowDto(rowNr, messageForMissing + "õppekoormus."));
             return;
         }
@@ -498,22 +500,28 @@ public class SaisApplicationService {
     }
 
     public SaisApplicationImportResultDto importFromSais(SaisApplicationImportForm form, HoisUserDetails user) {
-        SaisApplicationImportResultDto dto = new SaisApplicationImportResultDto();
         ClassifierCache classifiers = new ClassifierCache(classifierService);
-        XRoadHeader xRoadHeader = getXroadHeader(user);
+        XRoadHeaderV4 xRoadHeader = getXroadHeader(user);
 
         Long schoolId = user.getSchoolId();
         AllAppsExportRequest request = null;
         try {
             request = getRequest(form, schoolId, classifiers);
         } catch(NumberFormatException e) {
-            LogContext logResult = xRoadHeader.logContext();
-            logResult.setError(e);
-            saisLogService.insertLog(logResult, schoolId, "Kooli reg. nr. lugemisel tekkis viga", true);
+            LogContext logContext = xRoadHeader.logContext();
+            logContext.setError(e);
+            saisLogService.insertLog(logContext, schoolId, "Kooli reg. nr. lugemisel tekkis viga", true);
         }
 
-        if(request != null) {
-            saisLogService.withResponse(saisClient.applicationsExport(xRoadHeader, request), schoolId, (result, logResult) -> {
+        return importPages(xRoadHeader, schoolId, request, classifiers);
+    }
+
+    private SaisApplicationImportResultDto importPages(XRoadHeaderV4 xRoadHeader, Long schoolId, AllAppsExportRequest request, ClassifierCache classifiers) {
+        SaisApplicationImportResultDto dto = new SaisApplicationImportResultDto();
+
+        while(request != null && request.getPage() != null) {
+            SaisApplicationResponse response = saisClient.applicationsExport(xRoadHeader, request);
+            saisLogService.withResponse(response, schoolId, (result, logContext) -> {
                 EstonianIdCodeValidator idCodeValidator = new EstonianIdCodeValidator();
                 Map<String, SaisAdmission> admissionMap = new HashMap<>();
 
@@ -526,25 +534,42 @@ public class SaisApplicationService {
                                     .setParameter(1, previousApplicationNrs).getResultList());
                 Map<Long, Long> prevDirectives = !previousApplications.isEmpty() ? directiveStudentsWithSaisApplication(previousApplications.values().stream().map(SaisApplication::getId).collect(Collectors.toList())) : null;
 
+                List<SaisApplicationImportedRowDto> failed = new ArrayList<>();
+                List<SaisApplicationImportedRowDto> successful = new ArrayList<>();
+
+                if(applications != null && !applications.isEmpty()) {
+                    // got applications, try next page
+                    request.setPage(objectFactory.createAllAppsExportRequestPage(Integer.valueOf(request.getPage().getValue().intValue() + 1)));
+                } else {
+                    request.setPage(null);
+                }
+
                 for(Application application : StreamUtil.nullSafeList(applications)) {
                     SaisApplication prevApp = previousApplications.get(application.getApplicationNumber());
                     if(prevApp != null && prevDirectives != null && prevDirectives.containsKey(prevApp.getId())) {
                         String error = String.format("Avaldusega nr %s on seotud käskkiri - seda ei uuendata.", application.getApplicationNumber());
-                        dto.getFailed().add(new SaisApplicationImportedRowDto(application.getApplicationNumber(), error));
+                        failed.add(new SaisApplicationImportedRowDto(application.getApplicationNumber(), error));
                     } else {
                         SaisApplicationImportedRowDto importedRow = processApplication(application, prevApp, classifiers, admissionMap, idCodeValidator);
                         if(importedRow.getMessage() == null || importedRow.getMessage().isEmpty()) {
-                            dto.getSuccessful().add(importedRow);
+                            successful.add(importedRow);
                         } else {
-                            dto.getFailed().add(importedRow);
+                            failed.add(importedRow);
                         }
                     }
                 }
-                List<SaisApplicationImportedRowDto> importResult = new ArrayList<>(dto.getFailed());
-                importResult.addAll(dto.getSuccessful());
+
+                dto.getFailed().addAll(failed);
+                dto.getSuccessful().addAll(successful);
+
+                List<SaisApplicationImportedRowDto> importResult = new ArrayList<>(failed);
+                importResult.addAll(successful);
                 return importResult.stream().collect(Collectors
                         .toMap(SaisApplicationImportedRowDto::getApplicationNr, SaisApplicationImportedRowDto::toString)).toString();
             });
+            if(response.hasError()) {
+                break;
+            }
         }
         return dto;
     }
@@ -596,16 +621,54 @@ public class SaisApplicationService {
             saisApplication.setForeignIdcode(application.getOtherIdNumber());
         }
 
-        StringBuilder address = new StringBuilder("");
-        for(CandidateAddress currAddress : application.getCandidateAddresses().getCandidateAddress()) {
-            if(currAddress != null) {
-                address.append(currAddress.getAddress());
-                address.append(currAddress.getPlaceOrCityPart().isEmpty() ?  "" : ", " + currAddress.getPlaceOrCityPart());
-                address.append(currAddress.getCity().isEmpty() ? "" : ", " + currAddress.getCity());
-                address.append(currAddress.getCounty().isEmpty() ? "" : ", " + currAddress.getCounty());
+        ArrayOfCandidateAddress addrArray = application.getCandidateAddresses();
+        if(addrArray != null && !addrArray.getCandidateAddress().isEmpty()) {
+            StringBuilder addrString = new StringBuilder();
+            // take contact address, if possible
+            CandidateAddress address = addrArray.getCandidateAddress().stream().filter(r -> r.getAddressType() != null && CONTACT_ADDR_VALUE.equals(r.getAddressType().getValue()))
+                    .findFirst().orElse(addrArray.getCandidateAddress().get(0));
+            if(StringUtils.hasText(address.getAddress())) {
+                addrString.append(address.getAddress());
             }
+            if(StringUtils.hasText(address.getStreet()) && StringUtils.hasText(address.getHouse())) {
+                if(addrString.length() > 0) {
+                    addrString.append(", ");
+                }
+                addrString.append(address.getStreet());
+                addrString.append(' ');
+                addrString.append(address.getHouse());
+                if(StringUtils.hasText(address.getApartment())) {
+                    addrString.append('-');
+                    addrString.append(address.getApartment());
+                }
+            }
+            if(StringUtils.hasText(address.getPlaceOrCityPart())) {
+                if(addrString.length() > 0) {
+                    addrString.append(", ");
+                }
+                addrString.append(address.getPlaceOrCityPart());
+            }
+            if(StringUtils.hasText(address.getCity())) {
+                if(addrString.length() > 0) {
+                    addrString.append(", ");
+                }
+                addrString.append(address.getCity());
+            }
+            if(StringUtils.hasText(address.getCounty())) {
+                if(addrString.length() > 0) {
+                    addrString.append(", ");
+                }
+                addrString.append(address.getCounty());
+            }
+            if(StringUtils.hasText(address.getPostalcode())) {
+                if(addrString.length() > 0) {
+                    addrString.append(", ");
+                }
+                addrString.append(address.getPostalcode());
+            }
+            saisApplication.setAddress(addrString.toString());
+            saisApplication.setAddressAds(address.getAdsAddressCode());
         }
-        saisApplication.setAddress(address.toString());
 
         String sexCode = EstonianIdCodeValidator.sexFromIdcode(application.getSexClassification().getValue());
         if (StringUtils.hasText(sexCode)) {
@@ -618,11 +681,8 @@ public class SaisApplicationService {
         saisApplication.setPoints(application.getApplicationTotalPoints());
         saisApplication.setCitizenship(classifiers.getByValue(application.getCitizenshipCountry().getValue(), MainClassCode.RIIK));
         saisApplication.setStudyLoad(classifiers.getByCode((Boolean.TRUE.equals(application.isIsFullLoad()) ? StudyLoad.OPPEKOORMUS_TAIS : StudyLoad.OPPEKOORMUS_OSA).name(), MainClassCode.OPPEKOORMUS));
-        if(application.getResidenceCountry() != null) {
-            saisApplication.setResidenceCountry(classifiers.getByValue(application.getResidenceCountry().getValue(), MainClassCode.RIIK));
-        } else {
-            saisApplication.setResidenceCountry(classifiers.getByCode(ClassifierUtil.COUNTRY_ESTONIA, MainClassCode.RIIK));
-        }
+        // XXX is this correct
+        saisApplication.setResidenceCountry(classifiers.getByCode(ClassifierUtil.COUNTRY_ESTONIA, MainClassCode.RIIK));
         saisApplication.setStudyForm(classifiers.getByValue(application.getStudyForm().getValue(), MainClassCode.OPPEVORM));
         saisApplication.setLanguage(saisAdmission.getLanguage());
 
@@ -742,16 +802,8 @@ public class SaisApplicationService {
         return null;
     }
 
-    private XRoadHeader getXroadHeader(HoisUserDetails user) {
-        XRoadHeader xRoadHeader = new XRoadHeader();
-
-        xRoadHeader.setConsumer(sp.getConsumer());
-        xRoadHeader.setEndpoint(sp.getEndpoint());
-        xRoadHeader.setProducer(sp.getProducer());
-        xRoadHeader.setUserId(sp.getUseridprefix() + em.getReference(Person.class, user.getPersonId()).getIdcode());
-        xRoadHeader.setId(UUID.randomUUID().toString());
-        xRoadHeader.setService("sais2.AllApplicationsExport.v1");
-        return xRoadHeader;
+    private XRoadHeaderV4 getXroadHeader(HoisUserDetails user) {
+        return sp.xroadHeader("AllApplicationsExport", em.getReference(Person.class, user.getPersonId()).getIdcode());
     }
 
     private AllAppsExportRequest getRequest(SaisApplicationImportForm form, Long schoolId, ClassifierCache classifiers) {
@@ -780,6 +832,7 @@ public class SaisApplicationService {
         Integer koolRegNr = Integer.valueOf(ehisSchool.getValue2());
         aoi.getInt().add(koolRegNr);
         request.setInstitutionRegCodes(aoi);
+        request.setPage(objectFactory.createAllAppsExportRequestPage(Integer.valueOf(0)));
         return request;
     }
 }

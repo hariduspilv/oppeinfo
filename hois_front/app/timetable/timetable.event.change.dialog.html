@@ -34,6 +34,9 @@
               <hois-time ng-model="lesson.endTime" placeholder="{{'main.timePlaceholder' | translate}}"></hois-time>
             </md-input-container>
           </div>
+          <div flex="100">
+                <md-checkbox layout="row" ng-model="teacher.isTeaching" ng-repeat="teacher in teachers">{{teacher.nameEt}}</md-checkbox>
+          </div>
         </div>
       </div>
     </md-dialog-content>

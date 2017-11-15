@@ -2,6 +2,7 @@ package ee.hitsa.ois.service.ehis;
 
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.transaction.Transactional;
@@ -85,7 +86,7 @@ public class EhisDirectiveStudentService extends EhisService {
 
     public void updateStudentStatus(Job job) {
         JobType jobType = JobType.valueOf(EntityUtil.getCode(job.getType()));
-        Directive directive = job.getDirective();
+        Directive directive = em.getReference(Directive.class, EntityUtil.getId(job.getDirective()));
 
         for (DirectiveStudent directiveStudent : directive.getStudents()) {
             if(Boolean.TRUE.equals(directiveStudent.getCanceled())) {
@@ -95,9 +96,6 @@ public class EhisDirectiveStudentService extends EhisService {
                 switch(jobType) {
                 case JOB_AKAD_MINEK:
                     startAcademicLeave(directiveStudent);
-                    break;
-                case JOB_AKAD_TULEK:
-                    endAcademicLeave(directiveStudent, false);
                     break;
                 case JOB_AKAD_KATK:
                     endAcademicLeave(directiveStudent, true);
@@ -131,11 +129,9 @@ public class EhisDirectiveStudentService extends EhisService {
     }
 
     private void changeStudyForm(DirectiveStudent directiveStudent) {
-        Student student = directiveStudent.getStudent();
-        if (!EntityUtil.getCode(student.getStudyForm()).equals(EntityUtil.getCode(directiveStudent.getStudyForm()))) {
+        if (!Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudentHistory().getStudyForm()), EntityUtil.getNullableCode(directiveStudent.getStudyForm()))) {
             Directive directive = directiveStudent.getDirective();
-
-            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(student);
+            KhlOppeasutusList khlOppeasutusList = getKhlOppeasutusList(directiveStudent.getStudent());
 
             KhlOppevormiMuutus khlOppevormiMuutus = new KhlOppevormiMuutus();
             khlOppevormiMuutus.setMuutusKp(date(directive.getConfirmDate()));
@@ -188,7 +184,7 @@ public class EhisDirectiveStudentService extends EhisService {
 
         khlOppeasutusList.getOppeasutus().get(0).getOppur().get(0).getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
-        if (!EntityUtil.getCode(directiveStudent.getStudyForm()).equals(EntityUtil.getCode(directiveStudent.getStudentHistory().getStudyForm()))) {
+        if (!Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudyForm()), EntityUtil.getNullableCode(directiveStudent.getStudentHistory().getStudyForm()))) {
             KhlOppur khlOppur = getKhlOppurMuutmine(student, true);
 
             KhlKorgharidusMuuda korgharidusMuuda = new KhlKorgharidusMuuda();
@@ -255,6 +251,8 @@ public class EhisDirectiveStudentService extends EhisService {
 
         KhlOppeasutusList khlOppeasutusList = new KhlOppeasutusList();
         KhlOppeasutus khlOppeasutus = new KhlOppeasutus();
+        String koolId = ehisValue(student.getSchool().getEhisSchool());
+        khlOppeasutus.setKoolId(koolId != null ? new BigInteger(koolId) : null);
         KhlOppur khlOppurOppekava = getKhlOppurMuutmine(student, false);
         khlOppeasutus.getOppur().add(khlOppurOppekava);
 
@@ -262,14 +260,15 @@ public class EhisDirectiveStudentService extends EhisService {
         khlOppurOppekava.getMuutmine().setKorgharidus(khlKorgharidusMuuda);
 
         KhlEnnistamine khlEnnistamine = new KhlEnnistamine();
+        khlEnnistamine.setUusOppekava(curriculumCode(student.getCurriculumVersion().getCurriculum()));
         khlEnnistamine.setMuutusKp(date(directive.getConfirmDate()));
 
         khlKorgharidusMuuda.setEnnistamine(khlEnnistamine);
 
         StudentHistory history = directiveStudent.getStudentHistory();
-        if (!EntityUtil.getCode(directiveStudent.getStudyForm()).equals(EntityUtil.getCode(history.getStudyForm())) ||
-                !EntityUtil.getCode(directiveStudent.getFinSpecific()).equals(EntityUtil.getCode(history.getFinSpecific())) ||
-                !EntityUtil.getCode(directiveStudent.getStudyLoad()).equals(EntityUtil.getCode(history.getStudyLoad()))) {
+        if (!Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudyForm()), EntityUtil.getNullableCode(history.getStudyForm())) ||
+            !Objects.equals(EntityUtil.getNullableCode(directiveStudent.getFinSpecific()), EntityUtil.getNullableCode(history.getFinSpecific())) ||
+            !Objects.equals(EntityUtil.getNullableCode(directiveStudent.getStudyLoad()), EntityUtil.getNullableCode(history.getStudyLoad()))) {
 
             KhlOppur khlOppurVormiMuutus = getKhlOppurMuutmine(student, true);
             KhlKorgharidusMuuda khlKorgharidusMuudaOppevorm = new KhlKorgharidusMuuda();
@@ -365,8 +364,8 @@ public class EhisDirectiveStudentService extends EhisService {
             // TODO replace with real data
             khlLyhiajaliseltValismaal.setAinepunkte(SUBJECT_POINTS);
             khlLyhiajaliseltValismaal.setNominaalajaPikendamine(BigInteger.ZERO);
-            khlLyhiajaliseltValismaal.setOppeasutuseNimi(Boolean.TRUE.equals(directiveStudent.getIsAbroad()) ? directiveStudent.getAbroadSchool() : ehisValue(directiveStudent.getEhisSchool()));
-            khlLyhiajaliseltValismaal.setKlSihtriik(ehisValue(directiveStudent.getCountry()));
+            khlLyhiajaliseltValismaal.setOppeasutuseNimi(Boolean.TRUE.equals(directiveStudent.getIsAbroad()) ? directiveStudent.getAbroadSchool() : name(directiveStudent.getEhisSchool()));
+            khlLyhiajaliseltValismaal.setKlSihtriik(value2(directiveStudent.getCountry()));
             khlLyhiajaliseltValismaal.setKlProgramm(ehisValue(directiveStudent.getAbroadProgramme()));
 
             KhlKorgharidusMuuda khlKorgharidusMuuda = new KhlKorgharidusMuuda();

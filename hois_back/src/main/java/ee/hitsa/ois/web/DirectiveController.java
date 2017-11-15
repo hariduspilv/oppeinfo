@@ -24,6 +24,7 @@ import ee.hitsa.ois.service.DirectiveConfirmService;
 import ee.hitsa.ois.service.DirectiveService;
 import ee.hitsa.ois.service.JobService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.HttpUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
@@ -83,7 +84,7 @@ public class DirectiveController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Directive directive, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         assertCanEditDirective(user, directive);
-        directiveService.delete(directive);
+        directiveService.delete(user, directive);
     }
 
     @PutMapping("/sendtoconfirm/{id:\\d+}")
@@ -97,7 +98,7 @@ public class DirectiveController {
     public DirectiveDto confirm(HoisUserDetails user, @WithEntity("id") Directive directive) {
         UserUtil.assertIsSchoolAdmin(user, directive.getSchool());
         // start requests after save has been successful
-        jobService.directiveConfirmed(directiveConfirmService.confirm(user.getUsername(), directive, LocalDate.now()));
+        jobService.directiveConfirmed(EntityUtil.getId(directiveConfirmService.confirm(user.getUsername(), directive, LocalDate.now())));
         return get(user, directive);
     }
 
@@ -140,7 +141,7 @@ public class DirectiveController {
     @DeleteMapping("/coordinators/{id:\\d+}")
     public void deleteCoordinator(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") DirectiveCoordinator coordinator, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, coordinator.getSchool());
-        directiveService.delete(coordinator);
+        directiveService.delete(user, coordinator);
     }
 
     private static void assertCanEditDirective(HoisUserDetails user, Directive directive) {

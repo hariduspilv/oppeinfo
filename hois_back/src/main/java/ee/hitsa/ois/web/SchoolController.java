@@ -106,7 +106,7 @@ public class SchoolController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") School school, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsMainAdmin(user);
-        schoolService.delete(school);
+        schoolService.delete(user, school);
     }
 
     @GetMapping("/{id:\\d+}/logo")
@@ -165,7 +165,7 @@ public class SchoolController {
     @DeleteMapping("/departments/{id:\\d+}")
     public void deleteSchoolDepartment(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") SchoolDepartment schoolDepartment, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, schoolDepartment.getSchool());
-        schoolDepartmentService.delete(schoolDepartment);
+        schoolDepartmentService.delete(user, schoolDepartment);
     }
 
     @GetMapping("/teacheroccupations")
@@ -199,7 +199,7 @@ public class SchoolController {
     @DeleteMapping("/teacheroccupations/{id:\\d+}")
     public void deleteTeacherOccupation(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") TeacherOccupation teacherOccupation, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, teacherOccupation.getSchool());
-        teacherOccupationService.delete(teacherOccupation);
+        teacherOccupationService.delete(user, teacherOccupation);
     }
 
     @GetMapping("/studyYears")
@@ -245,7 +245,7 @@ public class SchoolController {
         if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriod.getStudyYear()))) {
             throw new AssertionFailedException("Study year mismatch");
         }
-        studyYearService.delete(studyPeriod);
+        studyYearService.delete(user, studyPeriod);
     }
 
     @PostMapping("/studyYears/{id:\\d+}/studyPeriodEvents")
@@ -266,7 +266,7 @@ public class SchoolController {
         if (!EntityUtil.getId(studyYear).equals(EntityUtil.getId(studyPeriodEvent.getStudyYear()))) {
             throw new AssertionFailedException("Study year mismatch");
         }
-        studyYearService.delete(studyPeriodEvent);
+        studyYearService.delete(user, studyPeriodEvent);
     }
 
     @GetMapping("/studyYearScheduleLegends")

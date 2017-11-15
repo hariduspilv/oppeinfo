@@ -14,6 +14,7 @@ import java.util.Map;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
+import javax.transaction.Transactional.TxType;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -21,6 +22,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.BaseLog;
+import ee.hitsa.ois.domain.WsEhisCurriculumLog;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.WsEhisTeacherLog;
 import ee.hitsa.ois.domain.directive.Directive;
@@ -34,10 +36,12 @@ import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.EhisLogDto;
 import ee.hois.soap.LogContext;
 
-@Transactional
+@Transactional(TxType.REQUIRES_NEW)
 @Service
 public class EhisLogService {
 
+    private static final String CURRICULUM_QUERY = "oisOppekava";
+    private static final String CURRICULUM_STATUS_QUERY = "oisOppekavaStaatus";
     private static final String STUDENT_QUERY = "laeKorgharidus";
     private static final String TEACHER_QUERY_HIGHER = "laeOppejoud";
     private static final String TEACHER_QUERY_VOCATIONAL = "laePedagoogid";
@@ -57,6 +61,10 @@ public class EhisLogService {
     public EhisLogDto get(HoisUserDetails user, Long id, String messageType) {
         Class<? extends BaseLog> logentryClass;
         switch(messageType) {
+        case CURRICULUM_QUERY:
+        case CURRICULUM_STATUS_QUERY:
+            logentryClass = WsEhisCurriculumLog.class;
+            break;
         case STUDENT_QUERY:
             logentryClass = WsEhisStudentLog.class;
             break;
@@ -98,6 +106,16 @@ public class EhisLogService {
         String messageType = criteria.getMessageType();
         List<String> from = new ArrayList<>();
         Map<String, Object> parameters = new HashMap<>();
+        if((messageType == null && criteria.getTeacher() == null) || CURRICULUM_QUERY.equals(messageType)) {
+            qb = oisOppekavaQuery(schoolId, criteria);
+            from.add(qb.querySql("cl.id, cast('"+CURRICULUM_QUERY+"' as text) as ws_name, cl.inserted, cl.inserted_by, cl.has_xtee_errors, cl.has_other_errors, cl.log_txt, cast(null as text) as directive_nr, cast(null as text) as name_et, cast(null as text) as name_en", false));
+            parameters.putAll(qb.queryParameters());
+        }
+        if((messageType == null && criteria.getTeacher() == null) || CURRICULUM_STATUS_QUERY.equals(messageType)) {
+            qb = oisOppekavaStaatusQuery(schoolId, criteria);
+            from.add(qb.querySql("cl.id, cast('"+CURRICULUM_STATUS_QUERY+"' as text) as ws_name, cl.inserted, cl.inserted_by, cl.has_xtee_errors, cl.has_other_errors, cl.log_txt, cast(null as text) as directive_nr, cast(null as text) as name_et, cast(null as text) as name_en", false));
+            parameters.putAll(qb.queryParameters());
+        }
         if((messageType == null && criteria.getTeacher() == null) || STUDENT_QUERY.equals(messageType)) {
             qb = laeKorgharidusQuery(schoolId, criteria);
             from.add(qb.querySql("sl.id, cast('"+STUDENT_QUERY+"' as text) as ws_name, sl.inserted, sl.inserted_by, sl.has_xtee_errors, sl.has_other_errors, sl.log_txt, d.directive_nr, c.name_et, c.name_en", false));
@@ -127,26 +145,19 @@ public class EhisLogService {
                 directiveText(resultAsString(row, 7), resultAsString(row, 8), resultAsString(row, 9))));
     }
 
-    public WsEhisStudentLog insert(LogContext queryLog, WsEhisStudentLog wsEhisStudentLog) {
-        wsEhisStudentLog.setWsName(queryLog.getQueryName());
-        wsEhisStudentLog.setRequest(queryLog.getOutgoingXml());
-        wsEhisStudentLog.setResponse(queryLog.getIncomingXml());
-        em.persist(wsEhisStudentLog);
-        return wsEhisStudentLog;
-    }
-
-    public WsEhisTeacherLog insert(LogContext queryLog, WsEhisTeacherLog wsEhisTeacherLog) {
-        wsEhisTeacherLog.setRequest(queryLog.getOutgoingXml() != null ? queryLog.getOutgoingXml() : "Could not generate request");
-        wsEhisTeacherLog.setResponse(queryLog.getIncomingXml());
-        wsEhisTeacherLog.setWsName(queryLog.getQueryName());
-        em.persist(wsEhisTeacherLog);
-        return wsEhisTeacherLog;
+    public <T extends BaseLog> T insert(LogContext logCtx, T logRecord) {
+        logRecord.setWsName(logCtx.getQueryName());
+        logRecord.setRequest(logCtx.getOutgoingXml() != null ? logCtx.getOutgoingXml() : "Could not generate request");
+        logRecord.setResponse(logCtx.getIncomingXml());
+        em.persist(logRecord);
+        return logRecord;
     }
 
     private static JpaNativeQueryBuilder laeOppejoudQuery(Long schoolId, boolean higher, EhisLogCommand command) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_ehis_teacher_log tl");
 
-        qb.requiredCriteria("tl.ws_name = :teacherWsName", "teacherWsName", higher ?
+        String queryNameParam = higher ? "teacherWsHigherName" : "teacherWsVocationalName";
+        qb.requiredCriteria("tl.ws_name = :" + queryNameParam, queryNameParam, higher ?
                 EhisTeacherExportService.LAE_OPPEJOUD_SERVICE : EhisTeacherExportService.LAE_PEDAGOOGID_SERVICE);
         qb.requiredCriteria("tl.school_id = :schoolId", "schoolId", schoolId);
         qb.optionalCriteria("tl.inserted >= :startFrom", "startFrom", command.getFrom(), d -> LocalDateTime.of(d, LocalTime.MIN));
@@ -172,6 +183,36 @@ public class EhisLogService {
 
         if (Boolean.TRUE.equals(command.getErrors())) {
             qb.filter("(sl.has_xtee_errors = true or sl.has_other_errors = true)");
+        }
+
+        return qb;
+    }
+
+    private static JpaNativeQueryBuilder oisOppekavaQuery(Long schoolId, EhisLogCommand command) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_ehis_curriculum_log cl");
+
+        qb.requiredCriteria("cl.ws_name = :curriculumWsName", "curriculumWsName", EhisCurriculumService.OIS_OPPEKAVA_SERVICE);
+        qb.requiredCriteria("cl.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("cl.inserted >= :startFrom", "startFrom", command.getFrom(), d -> LocalDateTime.of(d, LocalTime.MIN));
+        qb.optionalCriteria("cl.inserted <= :startThru", "startThru", command.getThru(), d -> LocalDateTime.of(d, LocalTime.MAX));
+
+        if (Boolean.TRUE.equals(command.getErrors())) {
+            qb.filter("(cl.has_xtee_errors = true or cl.has_other_errors = true)");
+        }
+
+        return qb;
+    }
+
+    private static JpaNativeQueryBuilder oisOppekavaStaatusQuery(Long schoolId, EhisLogCommand command) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from ws_ehis_curriculum_log cl");
+
+        qb.requiredCriteria("cl.ws_name = :curriculumStatusWsName", "curriculumStatusWsName", EhisCurriculumService.OIS_OPPEKAVA_STAATUS_SERVICE);
+        qb.requiredCriteria("cl.school_id = :schoolId", "schoolId", schoolId);
+        qb.optionalCriteria("cl.inserted >= :startFrom", "startFrom", command.getFrom(), d -> LocalDateTime.of(d, LocalTime.MIN));
+        qb.optionalCriteria("cl.inserted <= :startThru", "startThru", command.getThru(), d -> LocalDateTime.of(d, LocalTime.MAX));
+
+        if (Boolean.TRUE.equals(command.getErrors())) {
+            qb.filter("(cl.has_xtee_errors = true or cl.has_other_errors = true)");
         }
 
         return qb;

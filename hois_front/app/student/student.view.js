@@ -319,7 +319,7 @@ angular.module('hitsaOis').controller('StudentViewMainController', ['$mdDialog',
       $scope.applications.$promise = QueryUtils.endpoint('/students/:studentId/applications').search(query, $scope.afterApplicationsLoad);
     };
 
-    if(!$scope.auth.isTeacher() && !$scope.auth.isParent()) {
+    if($scope.auth.isStudent()) {
       var Endpoint = QueryUtils.endpoint('/applications/student/' + $scope.studentId + '/applicable');
       $scope.applicationTypesApplicable = Endpoint.search();
       $scope.applicationTypes = Classifier.queryForDropdown({ mainClassCode: 'AVALDUS_LIIK' });

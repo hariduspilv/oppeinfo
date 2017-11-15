@@ -15,10 +15,11 @@ public class TimetableEventSearchCommand {
     private LocalDateTime thru;
     private String otherTeacher;
     private String otherRoom;
-    private Long timetable;
+    private List<Long> timetables;
     private Long student;
     private Boolean higher;
     private Boolean vocational;
+    private Long journalOrSubjectId;
 
     public String getName() {
         return name;
@@ -100,12 +101,12 @@ public class TimetableEventSearchCommand {
         this.otherRoom = otherRoom;
     }
 
-    public Long getTimetable() {
-        return timetable;
+    public List<Long> getTimetables() {
+        return timetables;
     }
 
-    public void setTimetable(Long timetable) {
-        this.timetable = timetable;
+    public void setTimetables(List<Long> timetables) {
+        this.timetables = timetables;
     }
     
     public Long getStudent() {
@@ -131,5 +132,13 @@ public class TimetableEventSearchCommand {
     public void setVocational(Boolean vocational) {
         this.vocational = vocational;
     }
+
+    public Long getJournalOrSubjectId() {
+        return journalOrSubjectId;
+        }
+
+    public void setJournalOrSubjectId(Long journalOrSubjectId) {
+        this.journalOrSubjectId = journalOrSubjectId;
+        }
     
 }

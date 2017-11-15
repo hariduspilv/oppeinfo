@@ -33,6 +33,10 @@ public class CurriculumJointPartnerDto extends VersionedCommand {
     @ClassifierRestriction(MainClassCode.EHIS_KOOL)
     private String ehisSchool;
     
+    /**
+     * User cannot delete joint partner, if subjects from this school have been added to any curriculum version
+     */
+    private Boolean hasSubjects;    
 
     public static CurriculumJointPartnerDto of(CurriculumJointPartner parnter) {
         return EntityUtil.bindToDto(parnter, new CurriculumJointPartnerDto());
@@ -100,5 +104,13 @@ public class CurriculumJointPartnerDto extends VersionedCommand {
 
     public void setEhisSchool(String ehisSchool) {
         this.ehisSchool = ehisSchool;
+    }
+
+    public Boolean getHasSubjects() {
+        return hasSubjects;
+    }
+
+    public void setHasSubjects(Boolean hasSubjects) {
+        this.hasSubjects = hasSubjects;
     }
 }

@@ -82,7 +82,6 @@
 		<part name="q_guid" type="xsd:string"/>
 		<part name="ehis_id" type="xsd:int"/>
 		<part name="ois_id" type="xsd:string"/>
-		<part name="create_date" type="xsd:string"/>
 		<part name="manager" type="xsd:string"/>
 		<part name="st_id_code" type="xsd:string"/>
 		<part name="st_first_names" type="xsd:string"/>
@@ -103,6 +102,10 @@
 		<part name="org_tutor_tel" type="xsd:string"/>
 		<part name="org_tutor_email" type="xsd:string"/>
 		<part name="programme" type="xsd:string"/>
+		<part name="start_date" type="xsd:string"/>
+		<part name="end_date" type="xsd:string"/>
+		<part name="school_tutor_id" type="xsd:string"/>
+		<part name="place" type="xsd:string"/>
 	</message>
 	<message name="registerPracticeContractResponse">
 		<part name="return" type="tns:answer"/>

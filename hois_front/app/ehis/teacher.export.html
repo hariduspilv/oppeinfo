@@ -30,7 +30,7 @@
       <div layout="row">
         <div flex="60">
           <md-checkbox ng-model="teacher.subjectData" class="md-primary">
-            {{'ehis.teacher.subjectData' | translate}}
+            {{(higher ? 'ehis.teacher.subjectData' : 'ehis.teacher.moduleData') | translate}}
           </md-checkbox>
         </div>
       </div>

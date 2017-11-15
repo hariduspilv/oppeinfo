@@ -21,10 +21,16 @@ public class CurriculumOccupationDto extends VersionedCommand {
     @NotNull
     private Boolean occupationGrant;
     private Set<String> specialities;
+    private Set<String> partOccupations;
 
     public static CurriculumOccupationDto of(CurriculumOccupation occupation) {
         CurriculumOccupationDto dto = EntityUtil.bindToDto(occupation, new CurriculumOccupationDto(), "specialities");
         dto.setSpecialities(StreamUtil.toMappedSet(o -> EntityUtil.getNullableCode(o.getSpeciality()), occupation.getSpecialities()));
+        
+        dto.setPartOccupations(StreamUtil.toMappedSet(c -> EntityUtil.getCode(c.getClassifier()),      
+            occupation.getOccupation().getChildConnects().stream()
+                .filter(c -> MainClassCode.OSAKUTSE.name().equals(c.getClassifier().getMainClassCode()))
+            ));
         return dto;
     }
 
@@ -58,5 +64,13 @@ public class CurriculumOccupationDto extends VersionedCommand {
 
     public void setSpecialities(Set<String> specialities) {
         this.specialities = specialities;
+    }
+
+    public Set<String> getPartOccupations() {
+        return partOccupations;
+    }
+
+    public void setPartOccupations(Set<String> partOccupations) {
+        this.partOccupations = partOccupations;
     }
 }

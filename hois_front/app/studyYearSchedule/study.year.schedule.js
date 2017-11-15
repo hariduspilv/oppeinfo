@@ -120,7 +120,9 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
     };
 
     $scope.getLegendById = function(legendId) {
-        return $scope.legends.find(function(el){return el.id === legendId; });
+        if(angular.isArray($scope.legends)) {
+            return $scope.legends.find(function(el){return el.id === legendId; });
+        }
     };
 
     function getNumberOfWeeks (schedule) {
@@ -153,7 +155,8 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
             scope.legends = $scope.legends;
             scope.data = {
                 weeks: getNumberOfWeeks(schedule),
-                legend: schedule.studyYearScheduleLegend
+                legend: schedule.studyYearScheduleLegend,
+                addInfo: schedule.addInfo
             };
             scope.translationData = {weeks: $scope.weeks.length - week.weekNr + 1};
         };
@@ -177,7 +180,8 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
                             studyYearScheduleLegend: submitScope.data.legend,
                             weekNr: week.weekNr + i,
                             studentGroup: studentGroup.id,
-                            studyPeriod: i === 0 ? week.studyPeriodId : $scope.getWeeksPeriod(week.weekNr + i)
+                            studyPeriod: i === 0 ? week.studyPeriodId : $scope.getWeeksPeriod(week.weekNr + i),
+                            addInfo: submitScope.data.addInfo
                         };
 
                         if(!schedulesEqual(oldSchedule, newSchedule)) {
@@ -194,7 +198,8 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
     function schedulesEqual(s1, s2) {
         return s1.studyYearScheduleLegend === s2.studyYearScheduleLegend &&
         s1.studentGroup === s2.studentGroup &&
-        s1.weekNr === s2.weekNr;
+        s1.weekNr === s2.weekNr &&
+        s1.addInfo === s2.addInfo;
     }
 
     $scope.getSchedule = function(studentGroupId, weekNr) {
@@ -205,7 +210,8 @@ angular.module('hitsaOis').controller('studyYearScheduleController', ['$scope', 
             schedule = {
                 studyYearScheduleLegend: null,
                 studentGroup: studentGroupId,
-                weekNr: weekNr
+                weekNr: weekNr,
+                addInfo: ""
             };
         }
         return schedule;

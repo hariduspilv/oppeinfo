@@ -46,7 +46,7 @@ public class EhisStudentService extends EhisService {
             List<EhisStudentReport.ForeignStudy> foreignStudies = new ArrayList<>();
             for (DirectiveStudent directiveStudent : findForeignStudents(schoolId, ehisStudentForm)) {
                 WsEhisStudentLog log = ehisDirectiveStudentService.foreignStudy(directiveStudent);
-                foreignStudies.add(EhisStudentReport.ForeignStudy.of(directiveStudent.getStudent(), log));
+                foreignStudies.add(EhisStudentReport.ForeignStudy.of(directiveStudent, log));
             }
             ehisStudentReport.setForeignStudies(foreignStudies);
             break;

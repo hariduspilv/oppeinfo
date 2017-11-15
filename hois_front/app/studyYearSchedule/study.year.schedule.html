@@ -71,11 +71,11 @@
                                 ng-if="!isPastStudyYear" was used, because in case of past study year, it should not become bold when clicked
                             -->
               <td ng-if="!isPastStudyYear" class="schedule weekCell" ng-repeat="week in weeks" ng-click="openAddScheduleDialog(sg, week, getSchedule(sg.id, week.weekNr))"
-                ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }">
+                ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }" title="{{getSchedule(sg.id, week.weekNr).addInfo}}">
                 {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
               </td>
               <td ng-if="isPastStudyYear" class="schedule weekCell" ng-repeat="week in weeks"
-                ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }">
+                ng-style="{ background: true ? getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).color : 'white' }" title="{{getSchedule(sg.id, week.weekNr).addInfo}}">
                 {{getLegendById(getSchedule(sg.id, week.weekNr).studyYearScheduleLegend).code}}
               </td>
             </tr>

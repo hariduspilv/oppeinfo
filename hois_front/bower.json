@@ -10,8 +10,8 @@
     "angular-route": "1.6.6",
     "angular-sanitize": "1.6.6",
     "angular-material": "1.1.5",
-    "angular-translate": "2.15.2",
-    "angular-translate-loader-static-files": "2.15.2",
+    "angular-translate": "2.16.0",
+    "angular-translate-loader-static-files": "2.16.0",
     "angular-material-data-table": "0.10.10",
     "lf-ng-md-file-input": "1.5.3",
     "moment": "2.18.1",
@@ -33,6 +33,6 @@
   "moduleName": "hitsaOis",
   "resolutions": {
     "angular": "^1.6.6",
-    "angular-translate": "2.15.2"
+    "angular-translate": "2.16.0"
   }
 }

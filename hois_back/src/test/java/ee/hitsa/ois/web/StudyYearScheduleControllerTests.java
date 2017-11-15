@@ -36,4 +36,20 @@ public class StudyYearScheduleControllerTests {
         Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
         Assert.assertNotNull(responseEntity.getBody());
     }
+
+    @Test
+    public void getStudentGroups() {
+        String uri = UriComponentsBuilder.fromUriString(BASE_URL + "/studentGroups").build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
+
+    @Test
+    public void getStudyYearsWithStudyPeriods() {
+        String uri = UriComponentsBuilder.fromUriString(BASE_URL + "/studyYears").build().toUriString();
+        ResponseEntity<Object> responseEntity = restTemplate.getForEntity(uri, Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+    }
 }

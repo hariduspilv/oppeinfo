@@ -11,11 +11,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
 
-import org.apache.commons.collections.ListUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,7 +46,6 @@ import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
 import ee.hitsa.ois.web.commandobject.AutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.ClassifierSearchCommand;
-import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.DirectiveCoordinatorAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAndSubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.JournalAutocompleteCommand;
@@ -54,6 +55,7 @@ import ee.hitsa.ois.web.commandobject.StudentAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.SubjectAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.ClassifierSelection;
 import ee.hitsa.ois.web.dto.EnterpriseResult;
@@ -101,11 +103,14 @@ public class AutocompleteService {
         qb.optionalCriteria("b.id in (:buildingIds)", "buildingIds", lookup.getBuildingIds());
         qb.sort("r.code");
 
-        List<?> data = qb.select("r.id, r.code", em).getResultList();
+        List<?> data = qb.select("r.id, r.code, r.seats", em).getResultList();
         /*Comparator.comparing(LessonPlanByTeacherSubjectDto::getNameEt, String.CASE_INSENSITIVE_ORDER)*/
         return StreamUtil.toMappedList(r -> {
-            String name = resultAsString(r, 1);
-            return new AutocompleteResult(resultAsLong(r, 0), name, name);
+            Long seats = resultAsLong(r, 2);
+            String code = resultAsString(r, 1);
+            String nameEt = seats != null ? code + " (kohti " + seats.toString() + ")" : code;
+            String nameEn = seats != null ? code + " (seats " + seats.toString() + ")" : code;
+            return new AutocompleteResult(resultAsLong(r, 0), nameEt, nameEn);
         }, data);
     }
 
@@ -169,7 +174,6 @@ public class AutocompleteService {
 
     public List<CurriculumVersionResult> curriculumVersions(Long schoolId, CurriculumVersionAutocompleteCommand lookup) {
         String from = "from curriculum_version cv inner join curriculum c on cv.curriculum_id = c.id "+
-            "inner join classifier sl on c.orig_study_level_code = sl.code "+
             "left outer join curriculum_study_form sf on cv.curriculum_study_form_id = sf.id";
 
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
@@ -186,12 +190,26 @@ public class AutocompleteService {
         qb.optionalCriteria("c.is_higher = :higher", "higher", lookup.getHigher());
         qb.optionalContains(Arrays.asList("c.name_et", "cv.code"), "name", lookup.getName());
 
-        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code, sl.value", em).getResultList();
-        return StreamUtil.toMappedList(r -> {
+        List<?> data = qb.select("cv.id, cv.code, c.name_et, c.name_en, c.id as curriculum_id, cv.school_department_id, sf.study_form_code, c.is_higher", em).getResultList();
+        List<CurriculumVersionResult> result = StreamUtil.toMappedList(r -> {
             String code = resultAsString(r, 1);
             return new CurriculumVersionResult(resultAsLong(r, 0), CurriculumUtil.versionName(code, resultAsString(r, 2)),
-                    CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsLong(r, 4), resultAsLong(r, 5), resultAsString(r, 6), Boolean.valueOf(CurriculumUtil.isVocational(resultAsString(r, 7))));
+                    CurriculumUtil.versionName(code, resultAsString(r, 3)), resultAsLong(r, 4), resultAsLong(r, 5), resultAsString(r, 6), Boolean.valueOf(!Boolean.TRUE.equals(resultAsBoolean(r, 7))));
         }, data);
+
+        if(Boolean.TRUE.equals(lookup.getLanguages())) {
+            // attach study languages
+            Set<Long> curriculumIds = result.stream().map(CurriculumVersionResult::getCurriculum).collect(Collectors.toSet());
+            if(!curriculumIds.isEmpty()) {
+                data = em.createNativeQuery("select csl.curriculum_id, csl.study_lang_code from curriculum_study_lang csl where csl.curriculum_id in ?1")
+                    .setParameter(1, curriculumIds).getResultList();
+                Map<Long, List<String>> curriculumLanguages = data.stream().collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> resultAsString(r, 1), Collectors.toList())));
+                for(CurriculumVersionResult r : result) {
+                    r.setStudyLang(curriculumLanguages.get(r.getCurriculum()));
+                }
+            }
+        }
+        return result;
     }
 
     public List<AutocompleteResult> curriculumVersionOccupationModules(Long curriculumVersionId) {
@@ -343,14 +361,11 @@ public class AutocompleteService {
             qb.requiredCriteria("s.nominal_study_end > :currentDate", "currentDate", LocalDate.now());
         }
         if (Boolean.TRUE.equals(lookup.getHigher())) {
-            // FIXME c.higher = true is maybe simpler way?
-            qb.requiredCriteria("exists (select c.id from curriculum c "
-                    + "inner join classifier osl on osl.code = c.orig_study_level_code "
-                    + "inner join curriculum_version cv on cv.curriculum_id = c.id "
-                    + "where s.curriculum_version_id = cv.id and "
-                    + "cast(substring(osl.value, 1, 1) as int) >= :higherLevelStudyStartCode)", "higherLevelStudyStartCode", Long.valueOf(String.valueOf(CurriculumUtil.SCHOOL_STUDY_LEVEL)));
+            qb.filter("exists (select c.id from curriculum c "
+                    + "join curriculum_version cv on cv.curriculum_id = c.id "
+                    + "where cv.id = s.curriculum_version_id "
+                    + "and c.is_higher = true )");
         }
-
         List<?> data = qb.select("s.id, p.firstname, p.lastname, p.idcode", em).setMaxResults(MAX_ITEM_COUNT).getResultList();
         return StreamUtil.toMappedList(r -> {
             String name = PersonUtil.fullnameAndIdcode(resultAsString(r, 1), resultAsString(r, 2), resultAsString(r, 3));
@@ -487,6 +502,11 @@ public class AutocompleteService {
         }
         List<AutocompleteResult> journalsList = journals(user, journalLookup);
         
+        // Change journal ids to negative to differentiate between journal and subject ids
+        for (AutocompleteResult journal : journalsList) {
+            journal.setId(-journal.getId());
+        }
+        
         SubjectAutocompleteCommand subjectLookup = new SubjectAutocompleteCommand();
         if (lookup.getName() != null) {
             journalLookup.setLang(lookup.getLang());
@@ -499,11 +519,9 @@ public class AutocompleteService {
         journalsAndSubjects.addAll(journalsList);
         journalsAndSubjects.addAll(subjectsList);
 
-        if (lookup.getLang() == Language.EN) {
-            journalsAndSubjects.sort(Comparator.comparing(AutocompleteResult::getNameEn, String.CASE_INSENSITIVE_ORDER));
-        } else {
-            journalsAndSubjects.sort(Comparator.comparing(AutocompleteResult::getNameEt, String.CASE_INSENSITIVE_ORDER));
-        }
+        journalsAndSubjects.sort(Comparator.comparing(
+                Language.EN.equals(lookup.getLang()) ? AutocompleteResult::getNameEn : AutocompleteResult::getNameEt,
+                String.CASE_INSENSITIVE_ORDER));
         
         return journalsAndSubjects;
     }

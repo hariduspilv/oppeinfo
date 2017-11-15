@@ -1,9 +1,10 @@
 
 package ee.hois.xroad.sais2.generated;
 
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -18,7 +19,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="response" type="{http://x-road.ee/xsd/x-road.xsd}MethodList" minOccurs="0"/&gt;
+ *         &lt;element name="response" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -31,21 +32,21 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "", propOrder = {
     "response"
 })
-@XmlRootElement(name = "listMethodsResponse", namespace = "http://x-road.ee/xsd/x-road.xsd")
+@XmlRootElement(name = "listMethodsResponse")
 public class ListMethodsResponse {
 
-    @XmlElement(namespace = "http://x-road.ee/xsd/x-road.xsd")
-    protected MethodList response;
+    @XmlElementRef(name = "response", type = JAXBElement.class, required = false)
+    protected JAXBElement<String> response;
 
     /**
      * Gets the value of the response property.
      * 
      * @return
      *     possible object is
-     *     {@link MethodList }
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
      *     
      */
-    public MethodList getResponse() {
+    public JAXBElement<String> getResponse() {
         return response;
     }
 
@@ -54,10 +55,10 @@ public class ListMethodsResponse {
      * 
      * @param value
      *     allowed object is
-     *     {@link MethodList }
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
      *     
      */
-    public void setResponse(MethodList value) {
+    public void setResponse(JAXBElement<String> value) {
         this.response = value;
     }
 

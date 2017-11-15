@@ -166,11 +166,13 @@ public class PersonService {
         return saveUser(userForm, user);
     }
 
-    public void deleteUser(User user) {
+    public void deleteUser(HoisUserDetails userDetails, User user) {
+        EntityUtil.setUsername(userDetails.getUsername(), em);
         EntityUtil.deleteEntity(user, em);
     }
 
-    public void delete(Person person) {
+    public void delete(HoisUserDetails user, Person person) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(person, em);
     }
 }

@@ -113,7 +113,8 @@ public class GeneralMessageService {
         return EntityUtil.save(generalMessage, em);
     }
 
-    public void delete(GeneralMessage generalMessage) {
+    public void delete(HoisUserDetails user, GeneralMessage generalMessage) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(generalMessage, em);
     }
 }

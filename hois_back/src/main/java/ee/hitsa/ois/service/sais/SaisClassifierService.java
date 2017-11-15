@@ -5,7 +5,6 @@ import static ee.hitsa.ois.util.JpaQueryUtil.resultAsString;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.UUID;
 
 import javax.persistence.EntityManager;
 import javax.transaction.Transactional;
@@ -26,7 +25,7 @@ import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.sais.SaisClassifierSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisClassifierSearchDto;
-import ee.hois.xroad.helpers.XRoadHeader;
+import ee.hois.xroad.helpers.XRoadHeaderV4;
 import ee.hois.xroad.sais2.generated.ClassificationTypeItem;
 import ee.hois.xroad.sais2.generated.ClassificationItem;
 import ee.hois.xroad.sais2.generated.Kvp;
@@ -70,7 +69,7 @@ public class SaisClassifierService {
     }
 
     public Page<SaisClassifierSearchDto> importFromSais(SaisClassifierSearchCommand criteria, Pageable pageable, HoisUserDetails user) {
-        XRoadHeader xRoadHeader = getXroadHeader(user);
+        XRoadHeaderV4 xRoadHeader = getXroadHeader(user);
 
         saisLogService.withResponse(saisClient.classificationsExport(xRoadHeader), null, (result, logResult) -> {
             saisClassifierRepository.deleteAllInBatch();
@@ -109,16 +108,7 @@ public class SaisClassifierService {
         return list(criteria, pageable);
     }
 
-    private XRoadHeader getXroadHeader(HoisUserDetails user) {
-        XRoadHeader xRoadHeader = new XRoadHeader();
-
-        xRoadHeader.setConsumer(sp.getConsumer());
-        xRoadHeader.setEndpoint(sp.getEndpoint());
-        xRoadHeader.setProducer(sp.getProducer());
-        xRoadHeader.setUserId(sp.getUseridprefix() + em.getReference(Person.class, user.getPersonId()).getIdcode());
-        xRoadHeader.setId(UUID.randomUUID().toString());
-        xRoadHeader.setService("sais2.ClassificationsExport.v1");
-
-        return xRoadHeader;
+    private XRoadHeaderV4 getXroadHeader(HoisUserDetails user) {
+        return sp.xroadHeader("ClassificationsExport", em.getReference(Person.class, user.getPersonId()).getIdcode());
     }
 }

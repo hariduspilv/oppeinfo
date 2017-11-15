@@ -398,10 +398,7 @@ public abstract class EntityUtil {
     }
 
     /**
-     * try to delete entity, catching data integrity violation exception.
-     * As there is no easy way to know from exception which of delete or update operation was tried,
-     * we are using simple helper for delete to map data integrity violation to another exception.
-     * Usually we get exception only when data is flushed to database, so here we flush it manually.
+     * Try to delete entity, catching data integrity violation exception.
      *
      * @param entity
      * @param em
@@ -412,7 +409,11 @@ public abstract class EntityUtil {
     }
 
     /**
-     * try to delete entity, catching data integrity violation exception. With customizable error code.
+     * Try to delete entity, catching data integrity violation exception. With customizable error code.
+     * As there is no easy way to know from exception which of delete or update operation was tried,
+     * we are using simple helper for delete to map data integrity violation to another exception.
+     * Usually we get exception only when data is flushed to database, so here we flush it manually.
+     *
      * @param entity
      * @param em
      * @param errorCode
@@ -428,6 +429,17 @@ public abstract class EntityUtil {
                 throw new EntityRemoveException(errorCode, cause);
             }
             throw e;
+        }
+    }
+
+    /**
+     * Set username in database. Used in audit trigger for delete operations
+     * @param username
+     * @param em
+     */
+    public static void setUsername(String username, EntityManager em) {
+        if(username != null) {
+            em.createNativeQuery("select set_config('hois.username', ?1, true)").setParameter(1, username).getResultList();
         }
     }
 

@@ -52,11 +52,11 @@ public class BuildingControllerTests {
     public void cleanUp() {
         testConfigurationService.setSessionCookie(null);
         if(roomId != null) {
-            buildingService.delete(em.getReference(Room.class, roomId));
+            buildingService.delete(testConfigurationService.getHoisUserDetails(), em.getReference(Room.class, roomId));
             roomId = null;
         }
         if(buildingId != null) {
-            buildingService.delete(em.getReference(Building.class, buildingId));
+            buildingService.delete(testConfigurationService.getHoisUserDetails(), em.getReference(Building.class, buildingId));
             buildingId = null;
         }
     }

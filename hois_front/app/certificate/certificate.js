@@ -22,11 +22,11 @@ angular.module('hitsaOis')
       });
     }
   }
-]).controller('CertificateStudentOrderController', ['$scope', 'Classifier', 'QueryUtils', '$route', '$location', 'message',
-  function ($scope, Classifier, QueryUtils, $route, $location, message) {
+]).controller('CertificateStudentOrderController', ['$scope', 'Classifier', 'QueryUtils', '$route', '$location', 'dialogService', 'message',
+  function ($scope, Classifier, QueryUtils, $route, $location, dialogService, message) {
 
     var baseUrl = '/certificate';
-    var Endpoint = QueryUtils.endpoint(baseUrl);
+    var Endpoint = QueryUtils.endpoint(baseUrl + '/order');
 
     $scope.record = new Endpoint({type: $route.current.params.typeCode});
 
@@ -40,9 +40,12 @@ angular.module('hitsaOis')
         message.error('main.messages.form-has-errors');
         return;
       }
-      $scope.record.$save().then(function() {
-        message.info('main.messages.create.success');
-        $location.path(baseUrl +'/' + $scope.record.id + '/view');
+
+      dialogService.confirmDialog({prompt: 'certificate.ekisconfirm'}, function() {
+        $scope.record.$save().then(function() {
+          message.info('main.messages.create.success');
+          $location.path(baseUrl +'/' + $scope.record.id + '/view');
+        });
       });
     };
   }
@@ -202,13 +205,20 @@ angular.module('hitsaOis')
       if(!validationPassed()) {
         return;
       }
-      setSignatoryName();
-      var record = new OrderEndpoint($scope.record);
-      if($scope.record.id) {
-        record.$update(afterLoad).then(message.updateSuccess);
-      } else {
-        record.$save().then(afterCreation);
-      }
+      dialogService.confirmDialog({prompt: 'certificate.ekisconfirm'}, function() {
+        setSignatoryName();
+        function toViewForm(record) {
+          $location.path(baseUrl +'/' + record.id + '/view');
+        }
+        var record = new OrderEndpoint($scope.record);
+        if($scope.record.id) {
+          record.$update(toViewForm).then(message.updateSuccess);
+        } else {
+          record.$save(toViewForm).then(function() {
+            message.info('main.messages.create.success');
+          });
+        }
+      });
     };
 
     $scope.delete = function() {

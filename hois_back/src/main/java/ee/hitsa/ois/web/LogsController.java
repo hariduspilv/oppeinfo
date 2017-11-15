@@ -2,11 +2,14 @@ package ee.hitsa.ois.web;
 
 import ee.hitsa.ois.service.ehis.EhisLogService;
 import ee.hitsa.ois.service.ekis.EkisLogService;
+import ee.hitsa.ois.service.sais.SaisLogService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.web.commandobject.ehis.EhisLogCommand;
+import ee.hitsa.ois.web.commandobject.sais.SaisLogCommand;
 import ee.hitsa.ois.web.dto.EhisLogDto;
 import ee.hitsa.ois.web.dto.EkisLogDto;
+import ee.hitsa.ois.web.dto.sais.SaisLogDto;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
@@ -28,6 +31,8 @@ public class LogsController {
     private EhisLogService ehisLogService;
     @Autowired
     private EkisLogService ekisLogService;
+    @Autowired
+    private SaisLogService saisLogService;
 
     @GetMapping("/ehis")
     public Page<EhisLogDto> ehisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
@@ -40,7 +45,6 @@ public class LogsController {
         return ehisLogService.get(user, id, messageType);
     }
 
-
     @GetMapping("/ekis")
     public Page<EkisLogDto> ekisSearch(HoisUserDetails user, @Valid EhisLogCommand command, Pageable pageable) {
         UserUtil.assertIsSchoolAdmin(user);
@@ -50,5 +54,16 @@ public class LogsController {
     @GetMapping("/ekis/{id:\\d+}")
     public EkisLogDto ekisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
         return ekisLogService.get(user, id, messageType);
+    }
+
+    @GetMapping("/sais")
+    public Page<SaisLogDto> saisSearch(HoisUserDetails user, @Valid SaisLogCommand command, Pageable pageable) {
+        UserUtil.assertIsSchoolAdmin(user);
+        return saisLogService.search(user.getSchoolId(), command, pageable);
+    }
+
+    @GetMapping("/sais/{id:\\d+}")
+    public SaisLogDto saisGet(HoisUserDetails user, @PathVariable("id") Long id, @NotNull @RequestParam("messageType") String messageType) {
+        return saisLogService.get(user, id, messageType);
     }
 }

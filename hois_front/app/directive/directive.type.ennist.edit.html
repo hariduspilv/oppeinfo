@@ -5,10 +5,10 @@
         <th md-column>{{'directive.student.fullname' | translate}}</th>
         <th md-column>{{'directive.student.idcode' | translate}}</th>
         <th md-column>{{'directive.student.curriculumVersion' | translate}}</th>
-        <th md-column>{{'directive.student.studentGroup' | translate}}</th>
-        <th md-column>{{'directive.student.studyLoad' | translate}}</th>
+        <th md-column class="required">{{'directive.student.studentGroup' | translate}}</th>
+        <th md-column ng-if="formState.school.higher">{{'directive.student.studyLoad' | translate}}</th>
         <th md-column>{{'directive.student.studyForm' | translate}}</th>
-        <th md-column>{{'directive.student.nominalStudyEnd' | translate}}</th>
+        <th md-column class="required">{{'directive.student.nominalStudyEnd' | translate}}</th>
         <th md-column>{{'directive.student.fin' | translate}}</th>
         <th md-column>{{'directive.student.finSpecific' | translate}}</th>
         <th md-column>{{'directive.student.language' | translate}}</th>
@@ -23,8 +23,8 @@
         <td md-cell>
           <hois-select ng-model="row.studentGroup" values="formState.studentGroupMap[row.oldCurriculumVersion.id]" aria-label="{{'directive.student.studentGroup' | translate}}"></hois-select>
         </td>
-        <td md-cell>
-          <hois-classifier-value ng-model="row.oldStudyLoad" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
+        <td md-cell ng-if="formState.school.higher">
+          <hois-classifier-value ng-model="row.oldStudyLoad" criteria="{higher: true}" main-classifier-code="OPPEKOORMUS"></hois-classifier-value>
         </td>
         <td md-cell>
           <hois-classifier-value ng-model="row.oldStudyForm" main-classifier-code="OPPEVORM"></hois-classifier-value>

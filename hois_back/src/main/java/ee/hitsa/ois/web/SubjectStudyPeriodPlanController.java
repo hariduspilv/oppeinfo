@@ -27,10 +27,10 @@ import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
-import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanUniqueCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.StudyPeriodDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanDto;
@@ -73,7 +73,7 @@ public class SubjectStudyPeriodPlanController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") SubjectStudyPeriodPlan plan, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         AssertionFailedException.throwIf(!user.isSchoolAdmin(),
                 "Only school administrator can delete subjectStudyPeriodPlan");  
-        subjectStudyPeriodPlanService.delete(user.getSchoolId(), plan);
+        subjectStudyPeriodPlanService.delete(user, plan);
     }
 
     @GetMapping("/exists")

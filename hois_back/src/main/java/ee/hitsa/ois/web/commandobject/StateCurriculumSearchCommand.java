@@ -1,6 +1,7 @@
 package ee.hitsa.ois.web.commandobject;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 import ee.hitsa.ois.validation.DateRange;
@@ -43,7 +44,7 @@ public class StateCurriculumSearchCommand extends SearchCommand {
 	}
 
 	public List<String> getStatus() {
-		return status;
+		return status != null ? status : (status = new ArrayList<>());
 	}
 
 	public void setStatus(List<String> statusCode) {

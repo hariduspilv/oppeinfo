@@ -29,9 +29,9 @@ import ee.hitsa.ois.service.StudentResultHigherService;
 import ee.hitsa.ois.service.StudentService;
 import ee.hitsa.ois.service.ehis.EhisStudentService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
-import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StudentAbsenceValidationUtil;
+import ee.hitsa.ois.util.StudentUtil;
 import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.WithEntity;
 import ee.hitsa.ois.util.WithVersionedEntity;
@@ -100,7 +100,7 @@ public class StudentController {
     @DeleteMapping("/{studentId:\\d+}/absences/{id:\\d+}")
     public void deleteAbsence(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudentAbsence absence, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         StudentAbsenceValidationUtil.assertCanEdit(user, absence);
-        studentService.delete(absence);
+        studentService.delete(user, absence);
     }
 
     /**
@@ -117,7 +117,7 @@ public class StudentController {
         // TODO correct sorting
         result.put("applications", applications(user, student, new PageRequest(0, pagesize, null, "inserted")));
         result.put("directives", directives(user, student, new PageRequest(0, pagesize, null, "headline")));
-        result.put("student", Collections.singletonMap("isVocational", Boolean.valueOf(CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum()))));
+        result.put("student", Collections.singletonMap("isVocational", Boolean.valueOf(StudentUtil.isVocational(student))));
         return result;
     }
 

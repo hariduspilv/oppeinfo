@@ -148,7 +148,7 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
     } else {
       contract.$save().then(function () {
         message.info('main.messages.create.success');
-        $location.path('/contracts/' + contract.id + '/edit');
+        $location.url('/contracts/' + contract.id + '/edit?_noback');
       });
     }
   };
@@ -164,11 +164,19 @@ angular.module('hitsaOis').controller('ContractEditController', function ($scope
   };
 
   $scope.sendToEkis = function () {
-     $scope.save(function () {
-      var EkisEndpoint = QueryUtils.endpoint('/contracts/sendToEkis/' + $scope.contract.id);
-      new EkisEndpoint().$save().then(function (contract) {
-        message.info('contract.messages.sendToEkis.success');
-        entityToForm(contract);
+    $scope.contractForm.$setSubmitted();
+    if(!$scope.contractForm.$valid) {
+      message.error('main.messages.form-has-errors');
+      return;
+    }
+
+    dialogService.confirmDialog({ prompt: 'contract.ekisconfirm' }, function () {
+      $scope.save(function () {
+        var EkisEndpoint = QueryUtils.endpoint('/contracts/sendToEkis/' + $scope.contract.id);
+        new EkisEndpoint().$save().then(function (contract) {
+          message.info('contract.messages.sendToEkis.success');
+          $location.url('/contracts/' + contract.id + '/view?_noback');
+        });
       });
     });
   };

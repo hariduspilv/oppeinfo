@@ -5,8 +5,8 @@ import java.util.HashSet;
 import java.util.Set;
 
 import ee.hitsa.ois.domain.sais.SaisApplication;
-import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.SaisAdmissionUtil;
 import ee.hitsa.ois.util.StreamUtil;
 
 public class SaisApplicationDto {
@@ -40,7 +40,7 @@ public class SaisApplicationDto {
         dto.getGraduatedSchools().addAll(StreamUtil.toMappedList(SaisApplicationGraduatedSchoolDto::of, saisApplication.getGraduatedSchools()));
         dto.getGrades().addAll(StreamUtil.toMappedList(SaisApplicationGradeDto::of, saisApplication.getGrades()));
         dto.getOtherData().addAll(StreamUtil.toMappedList(SaisApplicationOtherDataDto::of, saisApplication.getOtherData()));
-        dto.setIsHigher(Boolean.valueOf(CurriculumUtil.isHigher(saisApplication.getSaisAdmission().getStudyLevel())));
+        dto.setIsHigher(Boolean.valueOf(SaisAdmissionUtil.isHigher(saisApplication.getSaisAdmission())));
         return dto;
     }
 

@@ -28,13 +28,19 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.Student;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.enums.CertificateStatus;
+import ee.hitsa.ois.enums.CertificateType;
+import ee.hitsa.ois.enums.ContractStatus;
+import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.util.PersonUtil;
 import ee.hitsa.ois.util.StreamUtil;
-import ee.hois.soap.LogContext;
+import ee.hitsa.ois.util.StudentUtil;
+import ee.hitsa.ois.util.Translatable;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hois.soap.LogResult;
+import ee.hois.soap.ekis.client.DeleteDirectiveRequest;
 import ee.hois.soap.ekis.client.EkisClient;
 import ee.hois.soap.ekis.client.EkisRequestContext;
 import ee.hois.soap.ekis.client.RegisterCertificateRequest;
@@ -46,15 +52,27 @@ import ee.hois.soap.ekis.client.generated.Content;
 @Service
 public class EkisService {
 
+    // XXX we send 0 as missing wd_id value
+    private static final int MISSING_WD_ID = 0;
+
     @Autowired
     private EkisClient ekis;
     @Autowired
     private EkisLogService ekisLogService;
     @Autowired
+    private PersonRepository personRepository;
+    @Autowired
     protected EntityManager em;
     @Value("${ekis.endpoint}")
     protected String endpoint;
 
+    /**
+     * Send register certificate request to EKIS
+     *
+     * @param certificateId
+     * @return certificate with status updated, certificate nr and wd_id set
+     * @throws ValidationFailedException if there was an error
+     */
     public Certificate registerCertificate(Long certificateId) {
         Certificate certificate = em.getReference(Certificate.class, certificateId);
 
@@ -62,13 +80,20 @@ public class EkisService {
         request.setQguid(qguid());
         request.setEhisId(certificate.getSchool().getEhisSchool().getEhisValue());
         request.setOisId(certificate.getId().toString());
-        Person person = certificate.getStudent().getPerson();
+
+        Person person;
+        if(CertificateType.isOther(EntityUtil.getCode(certificate.getType())) && certificate.getStudent() == null) {
+            person = personRepository.findByIdcode(certificate.getOtherIdcode());
+        } else {
+            person = certificate.getStudent().getPerson();
+        }
         request.setStudent(person.getFullname());
         request.setEmail(person.getEmail());
+
         request.setSubject(certificate.getHeadline());
         request.setBody(certificate.getContent());
         request.setItemCreator(certificate.getSignatoryIdcode());
-        request.setType(certificate.getType().getValue());
+        request.setType(value(certificate.getType()));
         request.setInstitution(certificate.getWhom());
 
         return withResponse(ekis.registerCertificate(ctx(), request), (result) -> {
@@ -79,6 +104,13 @@ public class EkisService {
         }, certificate.getSchool(), certificate, l -> l.setCertificate(certificate));
     }
 
+    /**
+     * Send register directive request to EKIS
+     *
+     * @param directiveId
+     * @return directive with status update and wd_id set
+     * @throws ValidationFailedException if there was an error
+     */
     public Directive registerDirective(Long directiveId) {
         Directive directive = em.getReference(Directive.class, directiveId);
 
@@ -88,23 +120,49 @@ public class EkisService {
         request.setOisId(directive.getId().toString());
         request.setDirectiveType(value(directive.getType()));
         request.setTitle(directive.getHeadline());
-        request.setItemCreator(PersonUtil.idcodeFromFullnameAndIdcode(directive.getInsertedBy()));
-        request.setCreateTime(date(directive.getInserted()));
-        // TODO is this right?
         DirectiveCoordinator manager = directive.getDirectiveCoordinator();
+        // XXX item creator same as manager
+        request.setItemCreator(manager != null ? manager.getIdcode() : null);
+        request.setCreateTime(date(directive.getInserted()));
         request.setManager(manager != null ? manager.getIdcode() : null);
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
         request.setContent(StreamUtil.toMappedList(ds -> studentForRegisterDirective(directiveType, ds), directive.getStudents()));
-        // TODO how to identify missing value?
-        request.setWdId(directive.getWdId() != null ? directive.getWdId().intValue() : 0);
+        request.setWdId(directive.getWdId() != null ? directive.getWdId().intValue() : MISSING_WD_ID);
 
         return withResponse(ekis.registerDirective(ctx(), request), (result) -> {
-            // TODO how to identify missing value?
             directive.setWdId(Long.valueOf(result.getWdId()));
+            directive.setStatus(em.getReference(Classifier.class, DirectiveStatus.KASKKIRI_STAATUS_KINNITAMISEL.name()));
             return save(directive);
         }, directive.getSchool(), directive, l -> l.setDirective(directive));
     }
 
+    /**
+     * send delete directive request to EKIS
+     *
+     * @param directiveId
+     * @throws ValidationFailedException if there was an error
+     */
+    public void deleteDirective(Long directiveId) {
+        Directive directive = em.getReference(Directive.class, directiveId);
+
+        DeleteDirectiveRequest request = new DeleteDirectiveRequest();
+        request.setQguid(qguid());
+        request.setOisId(directive.getId().toString());
+        request.setWdId(directive.getWdId().intValue());
+
+        withResponse(ekis.deleteDirective(ctx(), request), (result) -> {
+            // do nothing
+            return null;
+        }, directive.getSchool(), directive, l -> {});
+    }
+
+    /**
+     * send register practice contract request to EKIS
+     *
+     * @param directiveId
+     * @return contract with status updated and wd_id set
+     * @throws ValidationFailedException if there was an error
+     */
     public Contract registerPracticeContract(Long contractId) {
         Contract contract = em.getReference(Contract.class, contractId);
 
@@ -112,8 +170,7 @@ public class EkisService {
         request.setQguid(qguid());
         request.setEhisId(ehisId(contract.getStudent().getSchool()));
         request.setOisId(contract.getId().toString());
-        request.setCreateDate(date(contract.getInserted()));
-        request.setManager(contract.getContractCoordinator().getIdcode());
+        request.setManager(contract.getContractCoordinator() != null ? contract.getContractCoordinator().getIdcode() : null);
 
         Student student = contract.getStudent();
         Person person = student.getPerson();
@@ -122,26 +179,33 @@ public class EkisService {
         request.setStLastName(person.getLastname());
         request.setStEmail(student.getEmail());
         request.setStCurricula(student.getCurriculumVersion().getCurriculum().getNameEt());
-        request.setStForm(value(student.getStudyForm()));
+        request.setStForm(student.getStudyForm() != null ? student.getStudyForm().getNameEt() : null);
         StudentGroup sg = student.getStudentGroup();
         request.setStCourse(sg != null ? sg.getCourse().toString() : null);
-        // request.setStEkap(contract.get);
+        request.setStEkap(contract.getCredits() != null ? contract.getCredits().toString() : null);
         request.setStHours(contract.getHours() != null ? contract.getHours().toString() : null);
-        request.setStModule(contract.getModule().getCurriculumModule().getNameEt());
+
+        Translatable module = StudentUtil.isHigher(student) ? contract.getSubject() : contract.getModule().getCurriculumModule();
+        request.setStModule(module != null ? module.getNameEt() : null);
 
         Enterprise enterprise = contract.getEnterprise();
         request.setOrgName(enterprise.getName());
         request.setOrgCode(enterprise.getRegCode());
-        request.setOrgContactName(enterprise.getContactPersonName());
-        request.setOrgTel(enterprise.getContactPersonPhone());
-        request.setOrgEmail(enterprise.getContactPersonEmail());
+        request.setOrgContactName(contract.getContactPersonName());
+        request.setOrgTel(contract.getContactPersonPhone());
+        request.setOrgEmail(contract.getContactPersonEmail());
         request.setOrgTutorName(contract.getSupervisorName());
         request.setOrgTutorTel(contract.getSupervisorPhone());
         request.setOrgTutorEmail(contract.getSupervisorEmail());
         request.setProgramme(contract.getPracticePlan());
+        request.setStartDate(date(contract.getStartDate()));
+        request.setEndDate(date(contract.getEndDate()));
+        request.setSchoolTutorId(contract.getContractCoordinator() != null ? contract.getContractCoordinator().getIdcode() : null);
+        request.setPlace(contract.getPracticePlace());
 
         return withResponse(ekis.registerPracticeContract(ctx(), request), (result) -> {
             contract.setWdId(Long.valueOf(result.getWdId()));
+            contract.setStatus(em.getReference(Classifier.class, ContractStatus.LEPING_STAATUS_Y.name()));
             return save(contract);
         }, contract.getStudent().getSchool(), contract, l -> l.setContract(contract));
     }
@@ -168,12 +232,14 @@ public class EkisService {
             content.setReason(value(ds.getReason()));
             break;
         case KASKKIRI_ENNIST:
-            content.setLoad(value(ds.getStudyLoad()));
-            content.setForm(value(ds.getStudyForm()));
-            content.setCurricula(curriculum(ds));
+            // only student group is edited, take other values from student
+            Student student = ds.getStudent();
+            content.setLoad(value(student.getStudyLoad()));
+            content.setForm(value(student.getStudyForm()));
+            content.setCurricula(curriculum(student));
             content.setGroup(studentGroup(ds));
-            content.setFinsource(value(ds.getFin()));
-            content.setLang(value(ds.getLanguage()));
+            content.setFinsource(value(student.getFin()));
+            content.setLang(value(student.getLanguage()));
             break;
         case KASKKIRI_FINM:
             content.setFinsource(value(ds.getFin()));
@@ -206,7 +272,7 @@ public class EkisService {
         case KASKKIRI_VALIS:
             content.setStartDate(periodStart(ds));
             content.setEndDate(periodEnd(ds));
-            // TODO väliskool
+            content.setOuterschool(Boolean.TRUE.equals(ds.getIsAbroad()) ? ds.getAbroadSchool() : (ds.getEhisSchool() != null ? ds.getEhisSchool().getNameEt() : null));
             break;
         default:
             break;
@@ -215,23 +281,31 @@ public class EkisService {
     }
 
     private <T, R> R withResponse(LogResult<T> result, Function<T, R> handler, School school, R errorValue, Consumer<WsEkisLog> logCustomizer) {
-        LogContext log = result.getLog();
         try {
             if(!result.hasError()) {
                 return handler.apply(result.getResult());
             }
         } catch (Exception e) {
-            log.setError(e);
+            result.getLog().setError(e);
         } finally {
             WsEkisLog logRecord = new WsEkisLog();
             logCustomizer.accept(logRecord);
-            ekisLogService.insertLog(logRecord, school, log);
+            ekisLogService.insertLog(logRecord, school, result.getLog());
+
+            if(result.hasError()) {
+                throw new ValidationFailedException(result.getLog().getError().toString());
+            }
         }
         return errorValue;
     }
 
     private static String curriculum(DirectiveStudent ds) {
         CurriculumVersion cv = ds.getCurriculumVersion();
+        return cv != null ? cv.getCode() : null;
+    }
+
+    private static String curriculum(Student student) {
+        CurriculumVersion cv = student.getCurriculumVersion();
         return cv != null ? cv.getCode() : null;
     }
 

@@ -2,8 +2,8 @@
 
 angular.module('hitsaOis').factory('Classifier', ['$q', '$resource', 'config', 'CacheFactory', 'QueryUtils',
   function ($q, $resource, config, CacheFactory, QueryUtils) {
-	// qrunt jshint gives Missing 'new' prefix when invoking a constructor
-    CacheFactory('classifierCache');
+
+    new CacheFactory('classifierCache');
 
     function Classifier() {
     }

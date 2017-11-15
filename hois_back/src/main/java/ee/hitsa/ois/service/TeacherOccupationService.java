@@ -57,7 +57,8 @@ public class TeacherOccupationService {
         return EntityUtil.save(teacherOccupation, em);
     }
 
-    public void delete(TeacherOccupation teacherOccupation) {
+    public void delete(HoisUserDetails user, TeacherOccupation teacherOccupation) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(teacherOccupation, em);
     }
 }

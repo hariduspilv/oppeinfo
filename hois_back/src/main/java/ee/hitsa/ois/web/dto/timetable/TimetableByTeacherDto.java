@@ -2,28 +2,17 @@ package ee.hitsa.ois.web.dto.timetable;
 
 import java.util.List;
 
-public class TimetableByTeacherDto {
+public class TimetableByTeacherDto extends TimetableByDto {
     private final Long teacherId;
     private final String firstname;
     private final String lastname;
-    private final GeneralTimetableDto generalTimetable;
-    private final List<TimetableEventSearchDto> timetableEvents;
     
-    public TimetableByTeacherDto(Long teacherId, String firstname, String lastname, GeneralTimetableDto generalTimetable,
-            List<TimetableEventSearchDto> timetableEvents) {
+    public TimetableByTeacherDto(GeneralTimetableDto generalTimetable, List<TimetableEventSearchDto> timetableEvents,
+            Long teacherId, String firstname, String lastname) {
+        super(generalTimetable, timetableEvents);
         this.teacherId = teacherId;
         this.firstname = firstname;
         this.lastname = lastname;
-        this.generalTimetable = generalTimetable;
-        this.timetableEvents = timetableEvents;
-    }
-    
-    public GeneralTimetableDto getGeneralTimetable() {
-        return generalTimetable;
-    }
-    
-    public List<TimetableEventSearchDto> getTimetableEvents() {
-        return timetableEvents;
     }
     
     public Long getTeacherId() {

@@ -34,6 +34,7 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.repository.TeacherOccupationRepository;
 import ee.hitsa.ois.repository.TeacherRepository;
+import ee.hitsa.ois.service.ehis.EhisTeacherExportService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -53,6 +54,8 @@ public class TeacherService {
 
     @Autowired
     private ClassifierRepository classifierRepository;
+    @Autowired
+    private EhisTeacherExportService ehisTeacherExportService;
     @Autowired
     private EntityManager em;
     @Autowired
@@ -104,6 +107,12 @@ public class TeacherService {
         return TeacherDto.of(teacher);
     }
 
+    public TeacherDto sendToEhis(HoisUserDetails user, Teacher teacher, TeacherForm teacherForm) {
+        TeacherDto dto = save(user, teacher, teacherForm);
+        ehisTeacherExportService.exportToEhis(teacher);
+        return dto;
+    }
+
     public Page<TeacherSearchDto> search(TeacherSearchCommand criteria, Pageable pageable) {
         return teacherRepository.findAll((root, query, cb) -> {
             List<Predicate> filters = new ArrayList<>();
@@ -151,7 +160,8 @@ public class TeacherService {
         }, pageable).map(TeacherSearchDto::of);
     }
 
-    public void delete(Teacher teacher) {
+    public void delete(HoisUserDetails user, Teacher teacher) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(teacher, em);
     }
 
@@ -165,7 +175,8 @@ public class TeacherService {
         return TeacherDto.of(EntityUtil.save(teacher, em));
     }
 
-    public void delete(TeacherContinuingEducation continuingEducation) {
+    public void delete(HoisUserDetails user, TeacherContinuingEducation continuingEducation) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(continuingEducation, em);
     }
 
@@ -174,15 +185,18 @@ public class TeacherService {
         return TeacherDto.of(EntityUtil.save(teacher, em));
     }
 
-    public void delete(TeacherQualification qualification) {
+    public void delete(HoisUserDetails user, TeacherQualification qualification) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(qualification, em);
     }
 
-    public void delete(TeacherMobility teacherMobility) {
+    public void delete(HoisUserDetails user, TeacherMobility teacherMobility) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(teacherMobility, em);
     }
 
-    public void delete(TeacherPositionEhis teacherPositionEhis) {
+    public void delete(HoisUserDetails user, TeacherPositionEhis teacherPositionEhis) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(teacherPositionEhis, em);
     }
 

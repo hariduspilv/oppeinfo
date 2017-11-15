@@ -39,12 +39,42 @@ public class UserService {
     @Autowired
     private EntityManager em;
 
+    /**
+     * Create user for logged in user without any roles in ois
+     *
+     * @param person
+     * @return
+     */
+    public User createUser(Person person) {
+        if(!em.contains(person)) {
+            person = em.merge(person);
+        }
+        Role guest = Role.ROLL_X;
+        User user = userFor(person, null, guest);
+        if(user == null) {
+            user = createUser(person, null, guest, LocalDate.now());
+            em.persist(user);
+        }
+        return user;
+    }
+
+    /**
+     * Create user for given representative
+     *
+     * @param representative
+     * @return
+     */
     public User createUser(StudentRepresentative representative) {
         User user = createUser(representative.getPerson(), representative.getStudent().getSchool(), Role.ROLL_L, LocalDate.now());
         user.setStudent(representative.getStudent());
         return EntityUtil.save(user, em);
     }
 
+    /**
+     * Delete user for given representative
+     *
+     * @param representative
+     */
     public void deleteUser(StudentRepresentative representative) {
         User user = userFor(representative.getPerson(), EntityUtil.getId(representative.getStudent()), Role.ROLL_L);
         if(user != null) {
@@ -52,10 +82,22 @@ public class UserService {
         }
     }
 
+    /**
+     * Disable user for given student
+     *
+     * @param student
+     * @param disabledDate
+     */
     public void disableUser(Student student, LocalDate disabledDate) {
         disableUser(student.getPerson(), student.getId(), Role.ROLL_T, disabledDate);
     }
 
+    /**
+     * Enable user for given student
+     *
+     * @param student
+     * @param enabledDate
+     */
     public void enableUser(Student student, LocalDate enabledDate) {
         User user = userFor(student.getPerson(), student.getId(), Role.ROLL_T);
         if(user == null) {
@@ -68,10 +110,22 @@ public class UserService {
         }
     }
 
+    /**
+     * Disable user for given teacher
+     *
+     * @param teacher
+     * @param disabledDate
+     */
     public void disableUser(Teacher teacher, LocalDate disabledDate) {
         disableUser(teacher.getPerson(), teacher.getId(), Role.ROLL_O, disabledDate);
     }
 
+    /**
+     * Enable user for given teacher
+     *
+     * @param teacher
+     * @param enabledDate
+     */
     public void enableUser(Teacher teacher, LocalDate enabledDate) {
         User user = userFor(teacher.getPerson(), teacher.getId(), Role.ROLL_O);
         if(user == null) {
@@ -84,18 +138,30 @@ public class UserService {
         }
     }
 
+    /**
+     * Find all active users for given person
+     *
+     * @param personId
+     * @return
+     */
     public List<UserProjection> findAllActiveUsers(Long personId) {
         // TODO c.name_et depends on parameter
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(ACTIVE_FROM).sort("c.name_et", "s.code");
 
         qb.requiredCriteria("u.person_id = :personId", "personId", personId);
-        qb.filter("exists(select 1 from user_rights r where u.id = r.user_id)");
+        qb.requiredCriteria("(u.role_code = :guestRole or exists(select 1 from user_rights r where u.id = r.user_id))", "guestRole", Role.ROLL_X);
         qb.validNowCriteria("u.valid_from", "u.valid_thru");
 
         List<?> resultList = qb.select("u.id, s.code, u.role_code", em).getResultList();
-        return StreamUtil.toMappedList(r -> new UserProjection(
+        List<UserProjection> users = StreamUtil.toMappedList(r -> new UserProjection(
                 resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2)
         ), resultList);
+
+        // return ROLE_X only if it's single role person does have
+        if(users.size() <= 1) {
+            return users;
+        }
+        return users.stream().filter(r -> !Role.ROLL_X.name().equals(r.getRole())).collect(Collectors.toList());
     }
 
     public UserRolesDto rolesDefaults() {

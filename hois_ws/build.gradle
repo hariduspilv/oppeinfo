@@ -6,22 +6,45 @@
  * user guide available at https://docs.gradle.org/3.5/userguide/java_library_plugin.html
  */
 
+buildscript {
+    repositories {
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath 'no.nils:wsdl2java:0.10'
+    }
+}
+
 // Apply the java-library plugin to add support for Java Library
 apply plugin: 'java-library'
 apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
+apply plugin: 'no.nils.wsdl2java'
+apply plugin: 'findbugs'
+apply plugin: 'pmd'
+
+afterEvaluate {
+   compileJava.dependsOn.remove wsdl2java
+}
 
 // In this section you declare where to find the dependencies of your project
 repositories {
     // Use jcenter for resolving your dependencies.
     // You can declare any Maven/Ivy/file repository here.
     jcenter()
+    mavenCentral()
 }
-
 
 // todo clean
 dependencies {
+    compile('org.slf4j:slf4j-api:1.7.25')
+    compile('org.slf4j:log4j-over-slf4j:1.7.25')
+    compile('log4j:log4j:1.2.17')
+
+    testCompile('org.slf4j:slf4j-simple:1.7.25')
+
     // Use JUnit test framework
     testImplementation 'junit:junit:4.12'
 }
@@ -32,4 +55,32 @@ jar {
         include '**/*.xml'
         include '**/*.wsdl'
     }
+}
+
+wsdl2java {
+    generatedWsdlDir = file("build/generated-sources")  // target directory for generated source code
+    wsdlDir = file("src/main/resources")
+    wsdlsToGenerate = [//  2d-array of cxf-parameters and wsdls
+                ['-bareMethods', '-p', 'ee.hois.xroad.ehis.generated', 'src/main/resources/wsdl/ehis/ehis.wsdl'],
+                ['-bareMethods', '-p', 'ee.hois.soap.ekis.service.generated', 'src/main/resources/wsdl/ekis/ekis.wsdl'],
+                ['-bareMethods', '-p', 'ee.hois.soap.ekis.client.generated', 'src/main/resources/wsdl/ekis/ekis_toend.wsdl'],
+                ['-bareMethods', '-b', 'src/main/resources/wsdl/sais/sais3wsdlbindingfile.xml', '-p', 'ee.hois.xroad.sais2.generated', 'src/main/resources/wsdl/sais/sais3.wsdl'],
+                ['-bareMethods', '-p', 'ee.hois.xroad.rtip.generated', 'src/main/resources/wsdl/rtip/Z_EMPLOEES.wsdl'],
+                ['-bareMethods', '-p', 'ee.hois.soap.dds.generated', 'src/main/resources/wsdl/dds/dds_literal.wsdl']
+   ]
+}
+
+wsdl2javaExt {
+    cxfVersion = "3.1.13"
+}
+
+tasks.withType(FindBugs) {
+    reports {
+        xml.enabled false
+        html.enabled true
+    }
+    ignoreFailures true
+}
+pmd {
+    ignoreFailures true
 }

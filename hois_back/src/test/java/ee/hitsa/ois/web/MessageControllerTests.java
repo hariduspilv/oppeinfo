@@ -132,7 +132,7 @@ public class MessageControllerTests {
         // There is no need to test update as we do not edit sent messages
         
         // delete
-        messageService.delete(em.getReference(Message.class, id));
+        messageService.delete(testConfigurationService.getHoisUserDetails(), em.getReference(Message.class, id));
     }
 
     @Test

@@ -61,11 +61,11 @@ public class DirectiveControllerTests {
     public void cleanUp() {
         testConfigurationService.setSessionCookie(null);
         if(coordinatorId != null) {
-            directiveService.delete(em.getReference(DirectiveCoordinator.class, coordinatorId));
+            directiveService.delete(testConfigurationService.getHoisUserDetails(), em.getReference(DirectiveCoordinator.class, coordinatorId));
             coordinatorId = null;
         }
         if(directiveId != null) {
-            directiveService.delete(em.getReference(Directive.class, directiveId));
+            directiveService.delete(testConfigurationService.getHoisUserDetails(), em.getReference(Directive.class, directiveId));
             directiveId = null;
         }
     }

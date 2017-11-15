@@ -51,9 +51,9 @@ public class JwtAuthorizationFilter extends BasicAuthenticationFilter {
             HoisUserDetails hoisUserDetails = hoisUserDetailsService.loadUserByUsername(username);
             if (hoisUserDetails != null) {
                 PreAuthenticatedAuthenticationToken token = null;
-                if (LoginMethod.ID_CARD.name().equals(loginMethod)) {
+                if (LoginMethod.LOGIN_TYPE_I.name().equals(loginMethod)) {
                     token = new EstonianIdCardAuthenticationToken(username);
-                    hoisUserDetails.setLoginMethod(LoginMethod.ID_CARD);
+                    hoisUserDetails.setLoginMethod(LoginMethod.LOGIN_TYPE_I);
                 } else {
                     token = new PreAuthenticatedAuthenticationToken(username, username);
                 }

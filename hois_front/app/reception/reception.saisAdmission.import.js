@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ReceptionSaisAdmissionImportController', function ($scope, message, QueryUtils, $mdDialog, Classifier) {
+angular.module('hitsaOis').controller('ReceptionSaisAdmissionImportController', function ($scope, message, QueryUtils, Classifier) {
   $scope.successEmpty = true;
   $scope.failEmpty = true;
   $scope.importAdmissions = function() {
@@ -23,22 +23,9 @@ angular.module('hitsaOis').controller('ReceptionSaisAdmissionImportController', 
           }
         }
         message.info('reception.admission.importFinished');
-        $mdDialog.hide();
-      }).catch($mdDialog.hide);
-
-      var parentEl = angular.element(document.body);
-      $mdDialog.show({
-        parent: parentEl,
-        template: 
-            '<md-dialog style="background-color:transparent;box-shadow:none">' +
-            '<div layout="row" layout-sm="column" layout-align="center center" aria-label="wait" style="height:120px;">'+
-            '<md-progress-circular class="md-hue-2" md-diameter="80px" class="loader"></md-progress-circular>'+
-            '</div>' +
-            '</md-dialog>'
-        });
+      });
     } else {
       message.error('main.messages.form-has-errors');
     }
   };
-  
 });

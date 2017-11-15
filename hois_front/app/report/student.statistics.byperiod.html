@@ -21,7 +21,8 @@
 
         <md-input-container flex="50" flex-offset="5">
           <label>{{'report.studentstatisticsbyperiod.result' | translate}}</label>
-          <md-select ng-model="criteria.result" required>
+          <md-select ng-model="criteria.result">
+            <md-option md-option-empty></md-option>
             <md-option value="OPPURSTAATUS_A">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_A' | translate}}</md-option>
             <md-option value="OPPURSTAATUS_K">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_K' | translate}}</md-option>
             <md-option value="OPPURSTAATUS_L">{{'report.studentstatisticsbyperiod.OPPURSTAATUS_L' | translate}}</md-option>

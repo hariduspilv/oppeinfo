@@ -203,7 +203,7 @@ public class PracticeJournalService {
         changedPracticeJournal.setTheme(EntityUtil.getOptionalOne(CurriculumVersionOccupationModuleTheme.class, practiceJournalForm.getTheme(), em));
         changedPracticeJournal.setTeacher(EntityUtil.getOptionalOne(Teacher.class, practiceJournalForm.getTeacher(), em));
         changedPracticeJournal.setSubject(EntityUtil.getOptionalOne(Subject.class, practiceJournalForm.getSubject(), em));
-        return practiceJournalRepository.save(changedPracticeJournal);
+        return EntityUtil.save(changedPracticeJournal, em);
     }
 
     private void assertValidationRules(PracticeJournalForm practiceJournalForm) {
@@ -216,11 +216,12 @@ public class PracticeJournalService {
         }
     }
 
-    public void delete(PracticeJournal practiceJournal) {
+    public void delete(HoisUserDetails user, PracticeJournal practiceJournal) {
         if (hasPracticeEnded(practiceJournal)) {
             throw new ValidationFailedException("practiceJournal.messages.deletionNotAllowedPracticeHasEnded");
         }
-        practiceJournalRepository.delete(practiceJournal);
+        EntityUtil.setUsername(user.getUsername(), em);
+        EntityUtil.deleteEntity(practiceJournal, em);
 
     }
 
@@ -229,7 +230,7 @@ public class PracticeJournalService {
         assertStudentSaveEntries(practiceJournal);
         EntityUtil.bindToEntity(practiceJournalEntriesStudentForm, practiceJournal, "practiceJournalEntries");
         updatePracticeJournalStudentEntries(practiceJournal, practiceJournalEntriesStudentForm);
-        return practiceJournalRepository.save(practiceJournal);
+        return EntityUtil.save(practiceJournal, em);
     }
 
     private static void updatePracticeJournalStudentEntries(PracticeJournal practiceJournal,
@@ -247,7 +248,7 @@ public class PracticeJournalService {
                 "practiceJournalEntries", "practiceJournalFiles");
         updatePracticeJournalTeacherEntries(practiceJournal, practiceJournalEntriesTeacherForm);
         updatePracticeJournalFiles(practiceJournal, practiceJournalEntriesTeacherForm);
-        return practiceJournalRepository.save(practiceJournal);
+        return EntityUtil.save(practiceJournal, em);
     }
 
     public PracticeJournal saveEntriesSupervisor(PracticeJournal practiceJournal,
@@ -257,7 +258,7 @@ public class PracticeJournalService {
                 "practiceJournalEntries", "practiceJournalFiles");
         updatePracticeJournalSupervisorEntries(practiceJournal, practiceJournalEntriesSupervisorForm);
         updatePracticeJournalSupervisorFiles(practiceJournal, practiceJournalEntriesSupervisorForm);
-        return practiceJournalRepository.save(practiceJournal);
+        return EntityUtil.save(practiceJournal, em);
     }
 
     private static void updatePracticeJournalSupervisorFiles(PracticeJournal practiceJournal,

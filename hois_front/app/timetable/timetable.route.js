@@ -90,9 +90,9 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_TUNNIPLAAN]
       }
     })
-    .when('/timetable/generalTimetableByStudent', {
-      templateUrl: 'timetable/generalTimetable/timetable.generalTimetable.byStudent.html',
-      controller: 'GeneralTimetableByStudentController',
+    .when('/timetable/personalGeneralTimetable', {
+      templateUrl: 'timetable/generalTimetable/timetable.generalTimetable.personal.html',
+      controller: 'PersonalGeneralTimetableController',
       controllerAs: 'controller',
       resolve: {
         translationLoaded: function ($translate) {

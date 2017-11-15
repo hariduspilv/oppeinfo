@@ -74,7 +74,7 @@ public class StudentGroupController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") StudentGroup studentGroup, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertSameSchool(user, studentGroup.getSchool());
-        studentGroupService.delete(studentGroup);
+        studentGroupService.delete(user, studentGroup);
     }
 
     @GetMapping("/curriculumdata/{id:\\d+}")

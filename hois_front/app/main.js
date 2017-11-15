@@ -2,7 +2,7 @@
 
 angular.module('hitsaOis')
   .controller('MainController', function ($window, $scope, $translate, $location, Menu, AuthService, $mdSidenav,  $mdMedia,
-    $mdUtil, $rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer, Session, $mdDialog) {
+    $mdUtil, $rootScope, $mdDateLocale, $filter, $timeout, USER_ROLES, dialogService, config, $httpParamSerializer, Session, $mdDialog, ArrayUtils) {
     $rootScope.state = {};
     var self = this;
 
@@ -274,6 +274,7 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
       var backUrl = oldUrl.substring(oldUrl.indexOf('#'), oldUrl.length);
       history.push(backUrl);
     }
+
     function goBack(defaultUrl) {
       var backUrlFromHistory = history.pop();
       var backUrl = backUrlFromHistory || defaultUrl;
@@ -298,6 +299,18 @@ $scope.shouldLeftBeOpen = $mdMedia('gt-sm');
         if(angular.isDefined(condition) && !condition(lastUrl)) {
             history.push(lastUrl);
         }
+    };
+
+    $rootScope.previosFormIsNewForm = function() {
+      if(ArrayUtils.isEmpty(history)) {
+        return false;
+      }
+      var lastUrl = history[history.length - 1];
+      // sometimes lastUrl is undefined
+      if(!lastUrl) {
+          return false;
+      }
+      return lastUrl.indexOf('new') === lastUrl.length - 3;
     };
 
     $rootScope.$on('$locationChangeSuccess', function(event, newUrl, oldUrl) {

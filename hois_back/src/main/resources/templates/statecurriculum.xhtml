@@ -146,7 +146,9 @@
       <tr>
         <td colspan="2" class="align-top">
         	<span class="label">{{ "report.statecurriculum.module.outcomes" | translate }}</span>
-        	<p class="long-text">{{ module.outcomes }}</p>
+        	{% for outcome in module.outcomes %}
+        	<p class="long-text">{{ outcome }}</p>
+        	{% endfor %}
         </td>
         <td class="align-top">
         	<span class="label">{{ "report.statecurriculum.module.assessments" | translate }}</span>

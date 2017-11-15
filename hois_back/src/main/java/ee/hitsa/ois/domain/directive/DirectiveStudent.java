@@ -39,7 +39,7 @@ public class DirectiveStudent extends BaseEntityWithId implements Period {
     @NotNull(groups = {Akad.class, Eksmat.class})
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier reason;
-    @NotNull(groups = {Immat.class, Okoorm.class})
+    @NotNull(groups = {Okoorm.class}) // Immat is checked by hand (only higher)
     @ManyToOne(fetch = FetchType.LAZY)
     private Classifier studyLoad;
     @NotNull(groups = {Immat.class, Lopet.class, Okava.class})

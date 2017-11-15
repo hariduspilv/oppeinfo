@@ -166,7 +166,7 @@ angular.module('hitsaOis').controller('TimetableLessonTimeController', function 
     ArrayUtils.remove(lessonTimes, lessonTime);
   };
   $scope.calculateAcademicHours = function(startTime, endTime) {
-    var value = window.Math.floor((endTime-startTime)/2700000.0);
+    var value = Math.round(((endTime - startTime) / 2700000.0) * 100) / 100;
     return value >= 0 ? value : 0;
   };
   $scope.buildingChanged = function(building, block) {

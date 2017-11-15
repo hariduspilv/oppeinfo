@@ -5,6 +5,8 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 
+import javax.xml.datatype.XMLGregorianCalendar;
+
 public class DateUtils {
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("dd.MM.yyyy");
@@ -55,5 +57,9 @@ public class DateUtils {
 
     public static LocalDate periodEnd(Period p) {
         return Boolean.TRUE.equals(p.getIsPeriod()) ? p.getStudyPeriodEnd().getEndDate() : p.getEndDate();
+    }
+
+    public static LocalDate toLocalDate(XMLGregorianCalendar cal) {
+        return cal.toGregorianCalendar().toZonedDateTime().toLocalDate();
     }
 }

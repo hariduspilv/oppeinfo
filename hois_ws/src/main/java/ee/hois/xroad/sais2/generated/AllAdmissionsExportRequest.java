@@ -19,7 +19,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="InstitutionRegCodes" type="{http://sais2.x-road.ee/producer/}ArrayOfInt" minOccurs="0"/&gt;
+ *         &lt;element name="InstitutionRegCodes" type="{http://sais2.x-road.eu/}ArrayOfInt" minOccurs="0"/&gt;
  *         &lt;element name="CreateDateFrom" type="{http://www.w3.org/2001/XMLSchema}dateTime"/&gt;
  *         &lt;element name="CreateDateTo" type="{http://www.w3.org/2001/XMLSchema}dateTime"/&gt;
  *         &lt;element name="ModifyDateFrom" type="{http://www.w3.org/2001/XMLSchema}dateTime"/&gt;

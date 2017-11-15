@@ -209,7 +209,8 @@ public class MessageService {
         }
     }
 
-    public void delete(Message message) {
+    public void delete(HoisUserDetails user, Message message) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(message, em);
     }
 

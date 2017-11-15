@@ -1,9 +1,16 @@
 'use strict';
 
-angular.module('hitsaOis').controller('EhisLogsController', ['$mdDialog', '$scope', 'QueryUtils',
-  function ($mdDialog, $scope, QueryUtils) {
+angular.module('hitsaOis').controller('EhisLogsController', ['$mdDialog', '$scope', 'QueryUtils', 'Session',
+  function ($mdDialog, $scope, QueryUtils, Session) {
 
-    $scope.messageTypes = ['laeKorgharidus', 'laeOppejoud', 'laePedagoogid'];
+	var school = Session.school || {};
+    $scope.messageTypes = ['laeKorgharidus', 'oisOppekava', 'oisOppekavaStaatus'];
+    if(school.higher) {
+      $scope.messageTypes.push('laeOppejoud');
+    }
+    if(school.vocational) {
+      $scope.messageTypes.push('laePedagoogid');
+    }
 
     var baseUrl = '/logs/ehis';
     QueryUtils.createQueryForm($scope, baseUrl, {order: '-inserted'});

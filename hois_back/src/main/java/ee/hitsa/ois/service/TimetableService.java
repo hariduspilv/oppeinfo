@@ -37,7 +37,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.domain.Sort.Direction;
 import org.springframework.stereotype.Service;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Room;
 import ee.hitsa.ois.domain.StudyPeriod;
 import ee.hitsa.ois.domain.StudyYear;
@@ -45,8 +44,8 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.student.StudentGroup;
 import ee.hitsa.ois.domain.subject.Subject;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
+import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.domain.timetable.Journal;
-import ee.hitsa.ois.domain.timetable.JournalRoom;
 import ee.hitsa.ois.domain.timetable.LessonTime;
 import ee.hitsa.ois.domain.timetable.Timetable;
 import ee.hitsa.ois.domain.timetable.TimetableEvent;
@@ -64,6 +63,7 @@ import ee.hitsa.ois.service.SchoolService.SchoolType;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.PersonUtil;
@@ -116,6 +116,10 @@ public class TimetableService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private XlsService xlsService;
+    
+    private static final List<String> publicTimetables = EnumUtil.toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P);
+    private static final List<String> adminAndTeacherTimetables = EnumUtil
+            .toNameList(TimetableStatus.TUNNIPLAAN_STAATUS_P, TimetableStatus.TUNNIPLAAN_STAATUS_K);
 
     public TimetableDto get(HoisUserDetails user, Timetable timetable) {
         TimetableDto dto = new TimetableDto();
@@ -167,12 +171,12 @@ public class TimetableService {
     }
 
     public Timetable confirm(Timetable timetable) {
-        timetable = setStatus(timetable, TimetableStatus.TUNNIPLAAN_STAATUS_K);
+        setStatus(timetable, TimetableStatus.TUNNIPLAAN_STAATUS_K);
         return EntityUtil.save(timetable, em);
     }
 
     public Timetable publicize(Timetable timetable) {
-        timetable = setStatus(timetable, TimetableStatus.TUNNIPLAAN_STAATUS_P);
+        setStatus(timetable, TimetableStatus.TUNNIPLAAN_STAATUS_P);
         return EntityUtil.save(timetable, em);
     }
 
@@ -253,6 +257,7 @@ public class TimetableService {
                 data);
         if (!timetableEventTimes.isEmpty()) {
             timetableEventTimes = addRoomsListToEvents(timetableEventTimes);
+            timetableEventTimes = addTeachersListToEvents(timetableEventTimes);
         }
         
         Map<Long, List<TimetableEventDto>> eventsByStudentGroups = timetableEventTimes.stream()
@@ -299,7 +304,7 @@ public class TimetableService {
         TimetableObject timetableObject = saveVocationalTimetableObject(timetable, journal, studentGroups);
         LessonTime lessonTime = em.getReference(LessonTime.class, form.getLessonTime());
         TimetableEvent timetableEvent = saveVocationalTimetableEvent(timetableObject, lessonTime, form);
-        saveVocationalTimetableEventTime(timetableEvent);
+        saveVocationalTimetableEventTime(timetableEvent, journal);
         return EntityUtil.save(timetable, em);
     }
 
@@ -307,7 +312,7 @@ public class TimetableService {
         Map<String, Object> data = new HashMap<>();
         Timetable currTimetable = em.getReference(Timetable.class, timetableId);
         Long prevTimetable = findPreviousTimetable(currTimetable);
-        if(prevTimetable != null) {
+        if (prevTimetable != null) {
             List<TimetableDifferenceExcelDto> difference = getTimetableDifferenceForExcel(
                     Arrays.asList(prevTimetable, EntityUtil.getId(currTimetable)), EntityUtil.getId(currTimetable),
                     prevTimetable);
@@ -392,7 +397,31 @@ public class TimetableService {
                 Collectors.mapping(r -> PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)),
                         Collectors.toList())));
     }
-    
+
+    private List<TimetableEventDto> addTeachersListToEvents(List<TimetableEventDto> timetableEvents) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event_teacher tett"
+                + " inner join timetable_event_time tet on tet.id = tett.timetable_event_time_id"
+                + " inner join teacher t on t.id = tett.teacher_id"
+                + " inner join person p on p.id = t.person_id");
+
+        qb.requiredCriteria("tet.id in (:timetableEventIds)", "timetableEventIds",
+                timetableEvents.stream().map(r -> r.getId()).collect(Collectors.toSet()));
+
+        List<?> data = qb.select("tet.id, t.id as teacher_id", em).getResultList();
+
+        Map<Long, List<Long>> teachersByTimetableEventTimes = data.stream().collect(Collectors
+                .groupingBy(r -> resultAsLong(r, 0), Collectors.mapping(r -> resultAsLong(r, 1), Collectors.toList())));
+
+        for (TimetableEventDto dto : timetableEvents) {
+            List<Long> teachers = teachersByTimetableEventTimes.get(dto.getId());
+            if(teachers != null) {
+                dto.setTeachers(teachers);
+            }
+        }
+
+        return timetableEvents;
+    }
+
     private Map<Long, List<AutocompleteResult>> getTeachersForSubjectStudyPeriods(Set<Long> subjectStudyPeriods) {
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from subject_study_period ssp"
                 + " inner join subject_study_period_teacher sspt on sspt.subject_study_period_id = ssp.id"
@@ -426,7 +455,7 @@ public class TimetableService {
         return copyTimetable;
     }
     
-    public static void copyTimetableObjects(Timetable timetable, Timetable copyTimetable) {
+    private static void copyTimetableObjects(Timetable timetable, Timetable copyTimetable) {
         Map<Long, TimetableObject> copyObjectsByJournal = StreamUtil.toMap(r -> EntityUtil.getId(r.getJournal()), copyTimetable.getTimetableObjects());
         for(TimetableObject originalObject : timetable.getTimetableObjects()) {
             TimetableObject copyObject = copyObjectsByJournal.get(EntityUtil.getId(originalObject.getJournal()));
@@ -448,7 +477,7 @@ public class TimetableService {
         }
     }
     
-    public static void copyTimetableEvents(Timetable timetable, Timetable copyTimetable) {
+    private static void copyTimetableEvents(Timetable timetable, Timetable copyTimetable) {
         Map<Long, TimetableObject> copyObjectsByJournal = StreamUtil.toMap(r -> EntityUtil.getId(r.getJournal()), copyTimetable.getTimetableObjects());
         List<TimetableEvent> events = timetable.getTimetableObjects().stream().flatMap(currObj -> currObj.getTimetableEvents().stream()).collect(Collectors.toList());
         long daysBetween = ChronoUnit.DAYS.between(timetable.getStartDate(), copyTimetable.getStartDate());
@@ -468,7 +497,7 @@ public class TimetableService {
         }
     }
     
-    public static void copyTimetableEventTime(TimetableEvent event, TimetableEvent copyEvent) {
+    private static void copyTimetableEventTime(TimetableEvent event, TimetableEvent copyEvent) {
         TimetableEventTime copyTet = new TimetableEventTime();
         copyTet.setStart(copyEvent.getStart());
         copyTet.setEnd(copyEvent.getEnd());
@@ -480,7 +509,7 @@ public class TimetableService {
         copyEvent.getTimetableEventTimes().add(copyTet);
     }
     
-    public static void copyTimetableEventRooms(TimetableEventTime time, TimetableEventTime copyTime) {
+    private static void copyTimetableEventRooms(TimetableEventTime time, TimetableEventTime copyTime) {
         for(TimetableEventRoom room : time.getTimetableEventRooms()) {
             TimetableEventRoom copyRoom = new TimetableEventRoom();
             copyRoom.setRoom(room.getRoom());
@@ -489,7 +518,7 @@ public class TimetableService {
         }
     }
     
-    public static void copyTimetableEventTeachers(TimetableEventTime time, TimetableEventTime copyTime) {
+    private static void copyTimetableEventTeachers(TimetableEventTime time, TimetableEventTime copyTime) {
         for(TimetableEventTeacher teacher : time.getTimetableEventTeachers()) {
             TimetableEventTeacher copyTeacher = new TimetableEventTeacher();
             copyTeacher.setTeacher(teacher.getTeacher());
@@ -539,19 +568,58 @@ public class TimetableService {
         }
         return timetableEvent;
     }
+    
+    /*public Map<String, Boolean> checkForRoomAndTeacherClashes(TimetableClashForm form) {
+        Boolean update = form.getTimetableEventTimeId() != null ? Boolean.TRUE : Boolean.FALSE;
+        if(Boolean.TRUE.equals(form.getHigher())) {
+            return checkHigherClashes(form, update);
+        }
+        return checkVocationalClashes(form, update);
+    }
+    
+     private Map<String, Boolean> checkHigherClashes(TimetableClashForm form, Boolean update) {
+        if(Boolean.TRUE.equals(update)) {
+            TimetableEventTime timetableEventTime = em.getReference(TimetableEventTime.class, form.getTimetableEventTimeId());
+        }
+        return null;
+    }
+    
+    private Map<String, Boolean> checkVocationalClashes(TimetableClashForm form, Boolean update) {
+        if(Boolean.TRUE.equals(update)) {
+            TimetableEventTime timetableEventTime = em.getReference(TimetableEventTime.class, form.getTimetableEventTimeId());
+        }
+        return null;
+    }*/
+    
+    private void addRoomsToTimetableEventTime(TimetableEventTime timetableEventTime, List<Long> rooms) {
+        for(Long room : rooms) {
+            TimetableEventRoom timetableEventRoom = new TimetableEventRoom();
+            timetableEventRoom.setRoom(em.getReference(Room.class, room));
+            timetableEventRoom.setTimetableEventTime(timetableEventTime);
+            timetableEventTime.getTimetableEventRooms().add(timetableEventRoom);
+        }
+    }
+    
+    private void addTeachersToTimetableEvent(TimetableEventTime timetableEventTime, List<Teacher> teachers) {
+        for(Teacher teacher : teachers) {
+            TimetableEventTeacher timetableEventTeacher = new TimetableEventTeacher();
+            timetableEventTeacher.setTeacher(em.getReference(Teacher.class, EntityUtil.getId(teacher)));
+            timetableEventTeacher.setTimetableEventTime(timetableEventTime);
+            timetableEventTime.getTimetableEventTeachers().add(timetableEventTeacher);
+        }
+    }
 
     private void saveHigherTimetableEventTimes(Timetable timetable, TimetableEvent timetableEvent, TimetableEventHigherForm form) {
         List<TimetableEventTime> timetableEventTimes = timetableEvent.getTimetableEventTimes();
+        List<Teacher> teachers = StreamUtil.toMappedList(it -> it.getTeacher(), timetableEvent.getTimetableObject().getSubjectStudyPeriod().getTeachers());
         timetableEventTimes.clear();
         TimetableEventTime timetableEventTime = new TimetableEventTime();
         timetableEventTime.setStart(timetableEvent.getStart());
         timetableEventTime.setEnd(timetableEvent.getEnd());
         if(form.getRoom() != null) {
-            TimetableEventRoom timetableEventRoom = new TimetableEventRoom();
-            timetableEventRoom.setRoom(em.getReference(Room.class, form.getRoom().getId()));
-            timetableEventRoom.setTimetableEventTime(timetableEventTime);
-            timetableEventTime.getTimetableEventRooms().add(timetableEventRoom);
+            addRoomsToTimetableEventTime(timetableEventTime, Arrays.asList(form.getRoom().getId()));
         }
+        addTeachersToTimetableEvent(timetableEventTime, teachers);
         timetableEventTimes.add(timetableEventTime);
         long daysToAdd;
         if (ClassifierUtil.equals(TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_P, timetableEvent.getRepeat())) {
@@ -571,12 +639,9 @@ public class TimetableService {
             currentTimetableEventTime.setStart(currentStart);
             currentTimetableEventTime.setEnd(currentEnd);
             if(form.getRoom() != null) {
-                //TODO try
-                TimetableEventRoom timetableEventRoom = new TimetableEventRoom();
-                timetableEventRoom.setRoom(em.getReference(Room.class, form.getRoom().getId()));
-                timetableEventRoom.setTimetableEventTime(timetableEventTime);
-                currentTimetableEventTime.getTimetableEventRooms().add(timetableEventRoom);
+                addRoomsToTimetableEventTime(currentTimetableEventTime, Arrays.asList(form.getRoom().getId()));
             }
+            addTeachersToTimetableEvent(currentTimetableEventTime, teachers);
             timetableEventTimes.add(currentTimetableEventTime);
             currentStart = currentStart.plusDays(daysToAdd);
             currentEnd = currentEnd.plusDays(daysToAdd);
@@ -679,6 +744,14 @@ public class TimetableService {
                             timetableEventRoom.setTimetableEventTime(timetableEventTime);
                             return timetableEventRoom;
                         });
+                List<TimetableEventTeacher> oldTeachers = currentTime.getTimetableEventTeachers();
+                EntityUtil.bindEntityCollection(oldTeachers, r -> EntityUtil.getId(r.getTeacher()), form.getTeachers(),
+                        r -> r, id -> {
+                            TimetableEventTeacher timetableEventTeacher = new TimetableEventTeacher();
+                            timetableEventTeacher.setTeacher(em.getReference(Teacher.class, id));
+                            timetableEventTeacher.setTimetableEventTime(timetableEventTime);
+                            return timetableEventTeacher;
+                        });
                 currentTime.setStart(currentTime.getStart().withHour(form.getStartTime().getHour())
                         .withMinute(form.getStartTime().getMinute()));
                 currentTime.setEnd(currentTime.getEnd().withHour(form.getEndTime().getHour())
@@ -700,23 +773,19 @@ public class TimetableService {
         return timetable;
     }
 
-    private static TimetableEventTime saveVocationalTimetableEventTime(TimetableEvent timetableEvent) {
+    private TimetableEventTime saveVocationalTimetableEventTime(TimetableEvent timetableEvent, Journal journal) {
         TimetableEventTime timetableEventTime;
-        if (timetableEvent.getTimetableEventTimes().isEmpty()) {
+        if(timetableEvent.getTimetableEventTimes().isEmpty()) {
             timetableEventTime = new TimetableEventTime();
-            timetableEventTime.setTimetableEvent(timetableEvent);
-            timetableEvent.getTimetableEventTimes().add(timetableEventTime);
-            for(JournalRoom room : timetableEvent.getTimetableObject().getJournal().getJournalRooms()) {
-                TimetableEventRoom timetableRoom = new TimetableEventRoom();
-                timetableRoom.setRoom(room.getRoom());
-                timetableRoom.setTimetableEventTime(timetableEventTime);
-                timetableEventTime.getTimetableEventRooms().add(timetableRoom);
-            }
         } else {
-            // only for lower level of education, if is_higher and we want to
-            // use the same function it will have to be changed
             timetableEventTime = timetableEvent.getTimetableEventTimes().get(0);
         }
+        timetableEventTime.setTimetableEvent(timetableEvent);
+        timetableEvent.getTimetableEventTimes().add(timetableEventTime);
+        addRoomsToTimetableEventTime(timetableEventTime, journal.getJournalRooms().stream()
+                .map(it -> EntityUtil.getId(it.getRoom())).collect(Collectors.toList()));
+        addTeachersToTimetableEvent(timetableEventTime,
+                StreamUtil.toMappedList(it -> it.getTeacher(), journal.getJournalTeachers()));
         timetableEventTime.setStart(timetableEvent.getStart());
         timetableEventTime.setEnd(timetableEvent.getEnd());
         return timetableEventTime;
@@ -833,7 +902,7 @@ public class TimetableService {
         return wrappedData;
     }
 
-    private List<TimetableManagementSearchDto> addMissingDatesToBlocked(StudyPeriod sp,
+    private static List<TimetableManagementSearchDto> addMissingDatesToBlocked(StudyPeriod sp,
             List<TimetableManagementSearchDto> data) {
         LocalDate currentStart = sp.getStartDate();
         LocalDate currentEnd = sp.getStartDate();
@@ -1107,22 +1176,29 @@ public class TimetableService {
                 + " as current_week_hours, jct.capacity_type_code";
         List<?> data = qb.select(select, em).getResultList();
 
-        Map<Long, Map<String, AllocatedLessons>> allocatedCapacities = getAllocatedLessonsForByJournalByStudentGroupAndCapacity(
-                timetable);
         List<TimetableStudentGroupCapacityDto> result = StreamUtil
                 .toMappedList(r -> new TimetableStudentGroupCapacityDto(resultAsLong(r, 2), resultAsLong(r, 0),
                         resultAsLong(r, 1), resultAsLong(r, 3), resultAsString(r, 4)), data);
-
-        for (TimetableStudentGroupCapacityDto dto : result) {
-            Map<String, AllocatedLessons> groupAllocatedLessons = allocatedCapacities.get(dto.getJournal());
-            if (groupAllocatedLessons != null) {
-                AllocatedLessons currentLessons = groupAllocatedLessons
-                        .get(dto.getStudentGroup() + "/" + dto.getCapacityType());
-                if (currentLessons != null) {
-                    dto.setTotalAllocatedLessons(currentLessons.getTotalAllocated());
-                    dto.setLessonsLeft(Long.valueOf(dto.getThisPlannedLessons().longValue()
-                            - currentLessons.getCurrentWeekAllocated().longValue()));
-                    dto.setCapacityType(currentLessons.getCapacityType());
+        if(!timetable.getTimetableObjects().isEmpty()) {
+            Map<Long, Map<String, AllocatedLessons>> allocatedCapacities = getAllocatedLessonsForByJournalByStudentGroupAndCapacity(
+                    timetable);
+            for (TimetableStudentGroupCapacityDto dto : result) {
+                Map<String, AllocatedLessons> groupAllocatedLessons = allocatedCapacities.get(dto.getJournal());
+                if (groupAllocatedLessons != null) {
+                    AllocatedLessons currentLessons = groupAllocatedLessons
+                            .get(dto.getStudentGroup() + "/" + dto.getCapacityType());
+                    if (currentLessons != null) {
+                        dto.setTotalAllocatedLessons(currentLessons.getTotalAllocated());
+                        dto.setLessonsLeft(Long.valueOf(dto.getThisPlannedLessons().longValue()
+                                - currentLessons.getCurrentWeekAllocated().longValue()));
+                        dto.setTotalLessonsLeft(Long.valueOf(
+                                dto.getTotalPlannedLessons().longValue() - dto.getTotalAllocatedLessons().longValue()));
+                        dto.setCapacityType(currentLessons.getCapacityType());
+                    } else {
+                        dto.setTotalAllocatedLessons(Long.valueOf(0));
+                        dto.setTotalLessonsLeft(Long.valueOf(
+                                dto.getTotalPlannedLessons().longValue() - dto.getTotalAllocatedLessons().longValue()));
+                    }
                 }
             }
         }
@@ -1131,27 +1207,28 @@ public class TimetableService {
 
     private Map<Long, Map<String, AllocatedLessons>> getAllocatedLessonsForByJournalByStudentGroupAndCapacity(
             Timetable timetable) {
-        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te INNER JOIN timetable_object too"
-                + " ON too.id = te.timetable_object_id INNER JOIN timetable_object_student_group tsog"
-                + " ON tsog.timetable_object_id = too.id");
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from timetable_event te inner join timetable_object too"
+                + " on too.id = te.timetable_object_id inner join timetable_object_student_group tsog"
+                + " on tsog.timetable_object_id = too.id inner join timetable t on t.id = too.timetable_id");
 
-        qb.requiredCriteria("too.timetable_id = :timetableId", "timetableId", EntityUtil.getId(timetable));
-
-        qb.groupBy(
-                "too.journal_id, tsog.student_group_id, too.id, too.timetable_id, te.capacity_type_code having count(te) > 0");
-
-        String select = "tsog.student_group_id, too.journal_id, too.id, too.timetable_id, count(te) as current_week_allocated"
-                + ", (select count(te2) from timetable_event te2 inner join timetable_object too2 on too2.id = te2.timetable_object_id"
-                + " inner join timetable_object_student_group tsog2 on tsog2.timetable_object_id = too2.id where too2.journal_id = too.journal_id"
-                + " and tsog2.student_group_id = tsog.student_group_id and te2.capacity_type_code = te.capacity_type_code) as total_allocated"
-                + ", te.capacity_type_code";
+        qb.requiredCriteria("t.study_period_id = :studyPeriodId", "studyPeriodId", EntityUtil.getId(timetable.getStudyPeriod()));
+        //get the student group ids from timetable
+        qb.requiredCriteria("tsog.student_group_id in (:studentGroupIds)", "studentGroupIds",
+                StreamUtil.toMappedSet(tsog -> EntityUtil.getId(tsog.getStudentGroup()), StreamUtil
+                        .toMappedList(to -> to.getTimetableObjectStudentGroups(), timetable.getTimetableObjects())
+                        .stream().flatMap(List::stream).collect(Collectors.toList())));
+        String groupBy = "too.journal_id, tsog.student_group_id, te.capacity_type_code";
+        qb.parameter("timetableId", EntityUtil.getId(timetable));
+        
+        qb.groupBy(groupBy);
+        String select = groupBy + ", count(*) filter (where too.timetable_id = :timetableId ) as current_allocated, count(*) as total_allocated";
 
         List<?> data = qb.select(select, em).getResultList();
 
         return data.stream()
-                .collect(Collectors.groupingBy(r -> resultAsLong(r, 1), Collectors.toMap(
-                        r -> resultAsLong(r, 0).toString() + "/" + resultAsString(r, 6),
-                        r -> new AllocatedLessons(resultAsLong(r, 4), resultAsLong(r, 5), resultAsString(r, 6)))));
+                .collect(Collectors.groupingBy(r -> resultAsLong(r, 0), Collectors.toMap(
+                        r -> resultAsLong(r, 1).toString() + "/" + resultAsString(r, 2),
+                        r -> new AllocatedLessons(resultAsLong(r, 3), resultAsLong(r, 4), resultAsString(r, 2)))));
     }
 
     private List<TimetableJournalDto> getJournalsForPlanning(List<Long> studentGroupIds, Timetable timetable) {
@@ -1174,16 +1251,18 @@ public class TimetableService {
                     "from journal_teacher jt inner join teacher t on t.id = jt.teacher_id inner join person p on p.id = t.person_id");
             qb.requiredCriteria("jt.journal_id in (:journalIds)", "journalIds",
                     journals.stream().map(TimetableJournalDto::getId).collect(Collectors.toList()));
-            select = "jt.journal_id, p.firstName, p.lastName";
+            select = "jt.journal_id, p.firstName, p.lastName, t.id as teacher_id";
             data = qb.select(select, em).getResultList();
-            Map<Long, List<String>> teachersByJournals = data.stream()
+            Map<Long, List<AutocompleteResult>> teachersByJournals = data.stream()
                     .collect(Collectors.groupingBy(r -> resultAsLong(r, 0),
-                            Collectors.mapping(r -> PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2)),
+                            Collectors.mapping(r -> new AutocompleteResult(resultAsLong(r, 3)
+                                    , PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2))
+                                    , PersonUtil.fullname(resultAsString(r, 1), resultAsString(r, 2))),
                                     Collectors.toList())));
             for (TimetableJournalDto journal : journals) {
-                List<String> teacherNames = teachersByJournals.get(journal.getId());
-                if (teacherNames != null) {
-                    journal.getTeacherNames().addAll(teacherNames);
+                List<AutocompleteResult> teachers = teachersByJournals.get(journal.getId());
+                if (teachers != null) {
+                    journal.getTeachers().addAll(teachers);
                 }
             }
         }
@@ -1229,9 +1308,9 @@ public class TimetableService {
                 r -> new TimetableEventDto(resultAsLong(r, 0), resultAsLocalDateTime(r, 1), resultAsLocalDateTime(r, 2),
                         resultAsInteger(r, 3), resultAsString(r, 4), resultAsLong(r, 5), resultAsLong(r, 6)),
                 data);
-
         if (!result.isEmpty()) {
             result = addRoomsListToEvents(result);
+            result = addTeachersListToEvents(result);
         }
 
         return result;
@@ -1272,15 +1351,23 @@ public class TimetableService {
         return result;
     }
 
-    public List<GeneralTimetableDto> generalTimetables(Long schoolId) {
+    public List<GeneralTimetableDto> generalTimetables(HoisUserDetails user) {
+        Long schoolId = user.getSchoolId();
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
 
         if (studyYear != null) {
             Query q = em.createNativeQuery("select tt.id, tt.start_date, tt.end_date, tt.study_period_id, sp.name_et, sp.name_en"
                     + " from timetable tt" + " join study_period sp on tt.study_period_id=sp.id"
-                    + " where tt.school_id=?1 and sp.study_year_id=?2" + " order by 2");
+                    + " where tt.school_id=?1 and sp.study_year_id=?2 and tt.status_code in (:shownStatusCodes)" 
+                    + " order by 2");
             q.setParameter(1, schoolId);
             q.setParameter(2, studyYear.getId());
+            
+            if (user.isMainAdmin() || user.isSchoolAdmin() || user.isTeacher()) {
+                q.setParameter("shownStatusCodes", adminAndTeacherTimetables);
+            } else {
+                q.setParameter("shownStatusCodes", publicTimetables);
+            }
 
             List<?> data = q.getResultList();
             return StreamUtil.toMappedList(r -> new GeneralTimetableDto((Object[]) r), data);

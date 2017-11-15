@@ -71,7 +71,8 @@ public class StudyYearService {
         return EntityUtil.save(studyYear, em);
     }
 
-    public void delete(StudyPeriod studyPeriod) {
+    public void delete(HoisUserDetails user, StudyPeriod studyPeriod) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(studyPeriod, em);
     }
 
@@ -120,7 +121,8 @@ public class StudyYearService {
         return EntityUtil.save(studyPeriodEvent, em);
     }
 
-    public void delete(StudyPeriodEvent studyPeriodEvent) {
+    public void delete(HoisUserDetails user, StudyPeriodEvent studyPeriodEvent) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(studyPeriodEvent, em);
     }
 

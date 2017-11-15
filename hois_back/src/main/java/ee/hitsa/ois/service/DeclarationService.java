@@ -214,11 +214,11 @@ public class DeclarationService {
         return !q.setMaxResults(1).getResultList().isEmpty();
     }
 
-    public void deleteSubject(DeclarationSubject subject) {
+    public void deleteSubject(HoisUserDetails user, DeclarationSubject subject) {
         if(subjectAssessed(subject)) {
             throw new ValidationFailedException("declaration.error.subjectDelete");
         }
-
+        EntityUtil.setUsername(user.getUsername(), em);
         deleteFromProtocol(subject);
         EntityUtil.deleteEntity(subject, em);
     }
@@ -227,7 +227,6 @@ public class DeclarationService {
         Long studentId = EntityUtil.getId(subject.getDeclaration().getStudent());
         Long subjectStudyPeriodId = EntityUtil.getId(subject.getSubjectStudyPeriod());
         List<ProtocolStudent> list = protocolStudentRepository.findAll((root, query, cb) -> {
-            
             List<Predicate> filters = new ArrayList<>();
             filters.add(cb.equal(root.get("student").get("id"), studentId));
             Subquery<Long> protocolHdataQuery = query.subquery(Long.class);
@@ -461,7 +460,8 @@ public class DeclarationService {
         }
     }
 
-    public void delete(Declaration declaration) {
+    public void delete(HoisUserDetails user, Declaration declaration) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(declaration, em);
     }
 

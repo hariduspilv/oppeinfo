@@ -80,6 +80,13 @@
         </md-input-container>
       </div>
 
+      <div layout="row" layout-sm="column" layout-xs="column">
+        <md-input-container flex="45">
+          <label class="textInput">{{'report.student.finSpecific' | translate}}</label>
+          <hois-classifier-select ng-model="criteria.finSpecific" model-value-attr="code" main-classifier-code="FINTAPSUSTUS"></hois-classifier-select>
+        </md-input-container>
+      </div>
+
       <div layout="row">
         <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
         <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>

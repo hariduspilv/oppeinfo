@@ -15,16 +15,21 @@ public class TimetableEventSearchDto {
     private List<TimetableEventSearchTeacherDto> teachers;
     private List<TimetableEventSearchRoomDto> rooms;
     private List<TimetableEventSearchGroupDto> studentGroups;
+    private Boolean considerBreak;
     private Boolean singleEvent;
+    private Boolean publicEvent;
 
-    public TimetableEventSearchDto(Long id, String nameEt, String nameEn, LocalDate date, LocalTime timeStart, LocalTime timeEnd, Boolean singleEvent) {
+    public TimetableEventSearchDto(Long id, String nameEt, String nameEn, LocalDate date, LocalTime timeStart,
+            LocalTime timeEnd, Boolean considerBreak, Boolean singleEvent) {
         this.id = id;
         this.nameEt = nameEt;
         this.nameEn = nameEn;
         this.date = date;
         this.timeStart = timeStart;
         this.timeEnd = timeEnd;
+        this.considerBreak = considerBreak;
         this.singleEvent = singleEvent;
+        this.publicEvent = Boolean.TRUE;
     }
 
     public Long getId() {
@@ -98,6 +103,14 @@ public class TimetableEventSearchDto {
     public void setStudentGroups(List<TimetableEventSearchGroupDto> studentGroups) {
         this.studentGroups = studentGroups;
     }
+    
+    public Boolean getConsiderBreak() {
+        return considerBreak;
+    }
+
+    public void setConsiderBreak(Boolean considerBreak) {
+        this.considerBreak = considerBreak;
+    }
 
     public Boolean getSingleEvent() {
         return singleEvent;
@@ -107,4 +120,12 @@ public class TimetableEventSearchDto {
         this.singleEvent = singleEvent;
     }
 
+    public Boolean getPublicEvent() {
+        return publicEvent;
+    }
+
+    public void setPublicEvent(Boolean publicEvent) {
+        this.publicEvent = publicEvent;
+    }
+    
 }

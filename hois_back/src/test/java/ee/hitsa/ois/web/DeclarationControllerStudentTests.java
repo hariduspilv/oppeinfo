@@ -92,6 +92,6 @@ public class DeclarationControllerStudentTests {
         getStudentsCurrentDeclaration();
 
         // delete
-        declarationService.delete(em.getReference(Declaration.class, id));
+        declarationService.delete(testConfigurationService.getHoisUserDetails(), em.getReference(Declaration.class, id));
     }
 }

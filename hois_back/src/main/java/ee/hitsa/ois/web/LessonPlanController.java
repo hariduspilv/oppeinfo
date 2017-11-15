@@ -116,6 +116,6 @@ public class LessonPlanController {
     @DeleteMapping("/journals/{id:\\d+}")
     public void deleteJournal(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Journal journal, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, journal.getSchool());
-        lessonPlanService.deleteJournal(journal);
+        lessonPlanService.deleteJournal(user, journal);
     }
 }

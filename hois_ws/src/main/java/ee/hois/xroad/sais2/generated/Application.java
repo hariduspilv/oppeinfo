@@ -2,9 +2,11 @@
 package ee.hois.xroad.sais2.generated;
 
 import java.math.BigDecimal;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -26,17 +28,16 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="ShowNameInRanking" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
  *         &lt;element name="FirstName" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="LastName" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="SexClassification" type="{http://sais2.x-road.ee/producer/}SAISClassification" minOccurs="0"/&gt;
+ *         &lt;element name="SexClassification" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
  *         &lt;element name="IdCode" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="OtherIdNumber" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="ImportApplicationId" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="ImportAppInstitutionRegNr" type="{http://www.w3.org/2001/XMLSchema}int"/&gt;
  *         &lt;element name="IsImported" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
- *         &lt;element name="CitizenshipCountry" type="{http://sais2.x-road.ee/producer/}SAISClassification" minOccurs="0"/&gt;
- *         &lt;element name="SecondaryCitizenshipCountry" type="{http://sais2.x-road.ee/producer/}SAISClassification" minOccurs="0"/&gt;
- *         &lt;element name="ResidenceCountry" type="{http://sais2.x-road.ee/producer/}SAISClassification" minOccurs="0"/&gt;
- *         &lt;element name="ResidencePermitType" type="{http://sais2.x-road.ee/producer/}SAISClassification" minOccurs="0"/&gt;
- *         &lt;element name="ResidencePermitNr" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *         &lt;element name="CitizenshipCountry" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
+ *         &lt;element name="SecondaryCitizenshipCountry" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
+ *         &lt;element name="ResidencePermitType" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
+ *         &lt;element name="ResidencePermitNumber" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="ResidencyPermitExpireDate" type="{http://www.w3.org/2001/XMLSchema}dateTime" minOccurs="0"/&gt;
  *         &lt;element name="ApplicationTotalPoints" type="{http://www.w3.org/2001/XMLSchema}decimal"/&gt;
  *         &lt;element name="ApplicationCriteriaPoints" type="{http://www.w3.org/2001/XMLSchema}decimal"/&gt;
@@ -47,15 +48,15 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="Email" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="Phone" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="DateModified" type="{http://www.w3.org/2001/XMLSchema}dateTime"/&gt;
- *         &lt;element name="ApplicationStatus" type="{http://sais2.x-road.ee/producer/}SAISClassification" minOccurs="0"/&gt;
+ *         &lt;element name="ApplicationStatus" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
  *         &lt;element name="IsFullLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
- *         &lt;element name="StudyForm" type="{http://sais2.x-road.ee/producer/}SAISClassification" minOccurs="0"/&gt;
+ *         &lt;element name="StudyForm" type="{http://sais2.x-road.eu/}SAISClassification" minOccurs="0"/&gt;
  *         &lt;element name="ApplicationNumber" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="CandidateEducations" type="{http://sais2.x-road.ee/producer/}ArrayOfCandidateEducation" minOccurs="0"/&gt;
- *         &lt;element name="CandidateStateExams" type="{http://sais2.x-road.ee/producer/}ArrayOfCandidateStateExam" minOccurs="0"/&gt;
- *         &lt;element name="ApplicationFormData" type="{http://sais2.x-road.ee/producer/}ArrayOfApplicationFormData" minOccurs="0"/&gt;
- *         &lt;element name="CandidateIntLangTests" type="{http://sais2.x-road.ee/producer/}ArrayOfCandidateIntTest" minOccurs="0"/&gt;
- *         &lt;element name="CandidateAddresses" type="{http://sais2.x-road.ee/producer/}ArrayOfCandidateAddress" minOccurs="0"/&gt;
+ *         &lt;element name="CandidateEducations" type="{http://sais2.x-road.eu/}ArrayOfCandidateEducation" minOccurs="0"/&gt;
+ *         &lt;element name="CandidateStateExams" type="{http://sais2.x-road.eu/}ArrayOfCandidateStateExam" minOccurs="0"/&gt;
+ *         &lt;element name="ApplicationFormData" type="{http://sais2.x-road.eu/}ArrayOfApplicationFormData" minOccurs="0"/&gt;
+ *         &lt;element name="CandidateIntLangTests" type="{http://sais2.x-road.eu/}ArrayOfCandidateIntTest" minOccurs="0"/&gt;
+ *         &lt;element name="CandidateAddresses" type="{http://sais2.x-road.eu/}ArrayOfCandidateAddress" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -80,9 +81,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "isImported",
     "citizenshipCountry",
     "secondaryCitizenshipCountry",
-    "residenceCountry",
     "residencePermitType",
-    "residencePermitNr",
+    "residencePermitNumber",
     "residencyPermitExpireDate",
     "applicationTotalPoints",
     "applicationCriteriaPoints",
@@ -133,15 +133,12 @@ public class Application {
     protected SAISClassification citizenshipCountry;
     @XmlElement(name = "SecondaryCitizenshipCountry")
     protected SAISClassification secondaryCitizenshipCountry;
-    @XmlElement(name = "ResidenceCountry")
-    protected SAISClassification residenceCountry;
     @XmlElement(name = "ResidencePermitType")
     protected SAISClassification residencePermitType;
-    @XmlElement(name = "ResidencePermitNr")
-    protected String residencePermitNr;
-    @XmlElement(name = "ResidencyPermitExpireDate")
-    @XmlSchemaType(name = "dateTime")
-    protected XMLGregorianCalendar residencyPermitExpireDate;
+    @XmlElement(name = "ResidencePermitNumber")
+    protected String residencePermitNumber;
+    @XmlElementRef(name = "ResidencyPermitExpireDate", type = JAXBElement.class, required = false, namespace = "http://sais2.x-road.eu/")
+    protected JAXBElement<XMLGregorianCalendar> residencyPermitExpireDate;
     @XmlElement(name = "ApplicationTotalPoints", required = true, nillable = true)
     protected BigDecimal applicationTotalPoints;
     @XmlElement(name = "ApplicationCriteriaPoints", required = true, nillable = true)
@@ -510,30 +507,6 @@ public class Application {
     }
 
     /**
-     * Gets the value of the residenceCountry property.
-     * 
-     * @return
-     *     possible object is
-     *     {@link SAISClassification }
-     *     
-     */
-    public SAISClassification getResidenceCountry() {
-        return residenceCountry;
-    }
-
-    /**
-     * Sets the value of the residenceCountry property.
-     * 
-     * @param value
-     *     allowed object is
-     *     {@link SAISClassification }
-     *     
-     */
-    public void setResidenceCountry(SAISClassification value) {
-        this.residenceCountry = value;
-    }
-
-    /**
      * Gets the value of the residencePermitType property.
      * 
      * @return
@@ -558,27 +531,27 @@ public class Application {
     }
 
     /**
-     * Gets the value of the residencePermitNr property.
+     * Gets the value of the residencePermitNumber property.
      * 
      * @return
      *     possible object is
      *     {@link String }
      *     
      */
-    public String getResidencePermitNr() {
-        return residencePermitNr;
+    public String getResidencePermitNumber() {
+        return residencePermitNumber;
     }
 
     /**
-     * Sets the value of the residencePermitNr property.
+     * Sets the value of the residencePermitNumber property.
      * 
      * @param value
      *     allowed object is
      *     {@link String }
      *     
      */
-    public void setResidencePermitNr(String value) {
-        this.residencePermitNr = value;
+    public void setResidencePermitNumber(String value) {
+        this.residencePermitNumber = value;
     }
 
     /**
@@ -586,10 +559,10 @@ public class Application {
      * 
      * @return
      *     possible object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
      *     
      */
-    public XMLGregorianCalendar getResidencyPermitExpireDate() {
+    public JAXBElement<XMLGregorianCalendar> getResidencyPermitExpireDate() {
         return residencyPermitExpireDate;
     }
 
@@ -598,10 +571,10 @@ public class Application {
      * 
      * @param value
      *     allowed object is
-     *     {@link XMLGregorianCalendar }
+     *     {@link JAXBElement }{@code <}{@link XMLGregorianCalendar }{@code >}
      *     
      */
-    public void setResidencyPermitExpireDate(XMLGregorianCalendar value) {
+    public void setResidencyPermitExpireDate(JAXBElement<XMLGregorianCalendar> value) {
         this.residencyPermitExpireDate = value;
     }
 

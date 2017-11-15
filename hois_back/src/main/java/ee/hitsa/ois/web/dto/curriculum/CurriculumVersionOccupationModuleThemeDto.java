@@ -8,6 +8,7 @@ import javax.validation.Valid;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotNull;
+import javax.validation.constraints.Size;
 
 import org.hibernate.validator.constraints.NotBlank;
 
@@ -24,6 +25,8 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
     @NotBlank
     private String nameEt;
+    @NotNull
+    private Long module;
 
     @NotNull
     @Min(0)
@@ -38,6 +41,7 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
     @Min(0)
     @Max(999)
     private BigDecimal proportion;
+    @Size(max=10000)
     private String subthemes;
     @Min(0)
     @Max(10000)
@@ -45,15 +49,16 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
     @ClassifierRestriction(MainClassCode.KUTSEHINDAMISVIIS)
     private String assessment;
-
+    @Size(max=10000)
     private String totalGradeDescription;
+    @Size(max=10000)
     private String passDescription;
+    @Size(max=10000)
     private String grade3Description;
+    @Size(max=10000)
     private String grade4Description;
+    @Size(max=10000)
     private String grade5Description;
-
-//    @Valid
-//    private Set<CurriculumVersionOccupationModuleOutcomeDto> outcomes;
     private Set<Long> outcomes;
 
     @Valid
@@ -64,9 +69,8 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
                 "capacities", "outcomes");
 
         dto.setCapacities(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleThemeCapacityDto::of, theme.getCapacities()));
-//        dto.setOutcomes(StreamUtil.toMappedSet(CurriculumVersionOccupationModuleOutcomeDto::of, theme.getOutcomes()));
         dto.setOutcomes(StreamUtil.toMappedSet(o -> EntityUtil.getId(o.getOutcome()), theme.getOutcomes()));
-
+        dto.setModule(EntityUtil.getId(theme.getModule()));
         return dto;
     }
 
@@ -200,5 +204,13 @@ public class CurriculumVersionOccupationModuleThemeDto extends VersionedCommand 
 
     public void setGrade5Description(String grade5Description) {
         this.grade5Description = grade5Description;
+    }
+
+    public Long getModule() {
+        return module;
+    }
+
+    public void setModule(Long module) {
+        this.module = module;
     }
 }

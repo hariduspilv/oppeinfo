@@ -2,8 +2,7 @@ package ee.hitsa.ois.web.dto.curriculum;
 
 import ee.hitsa.ois.domain.curriculum.CurriculumFile;
 import ee.hitsa.ois.util.EntityUtil;
-import ee.hitsa.ois.web.commandobject.CurriculumFileForm;
-import ee.hitsa.ois.web.commandobject.CurriculumFileUpdateDto;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumFileForm;
 import ee.hitsa.ois.web.dto.OisFileDto;
 
 public class CurriculumFileDto extends CurriculumFileForm {

@@ -168,7 +168,7 @@
         <md-button ng-if="contract.status !== 'LEPING_STAATUS_Y'" class="md-raised md-primary" type="submit">{{'main.button.save' | translate}}</md-button>
         <md-button ng-if="contract.id && (contract.status === 'LEPING_STAATUS_Y' || contract.status === 'LEPING_STAATUS_S')" class="md-raised md-default" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
         <md-button class="md-raised md-default" ng-click="back('#/contracts/')">{{'main.button.back' | translate}}</md-button>
-        <md-button ng-if="contract.id && contract.status === 'LEPING_STAATUS_S'" class="md-raised md-default" ng-click="contractForm.$valid && sendToEkis()">{{'main.button.sendToEkis' | translate}}</md-button>
+        <md-button ng-if="contract.id && contract.status === 'LEPING_STAATUS_S'" class="md-raised md-default" ng-click="sendToEkis()">{{'main.button.sendToEkis' | translate}}</md-button>
       </div>
     </form>
   </div>

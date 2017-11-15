@@ -26,4 +26,12 @@ public class StudentApplicationRejectedMessage extends StudentMessage {
     public String getReason() {
         return reason;
     }
+
+    public String getAvalduseLiik() {
+        return type;
+    }
+
+    public String getPohjendus() {
+        return reason;
+    }
 }

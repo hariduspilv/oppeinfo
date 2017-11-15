@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.Enterprise;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.commandobject.EnterpriseForm;
 import ee.hitsa.ois.web.dto.EnterpriseDto;
@@ -27,7 +28,8 @@ public class EnterpriseService {
         return EntityUtil.save(enterprise, em);
     }
 
-    public void delete(Enterprise enterprise) {
+    public void delete(HoisUserDetails user, Enterprise enterprise) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(enterprise, em);
     }
 }

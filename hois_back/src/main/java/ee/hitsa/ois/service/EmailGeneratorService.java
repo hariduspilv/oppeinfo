@@ -94,6 +94,7 @@ public class EmailGeneratorService {
      */
     private static String normalize(String text) {
         String name = Normalizer.normalize(text, Normalizer.Form.NFD).replaceAll("\\p{InCombiningDiacriticalMarks}+", "");
+        name = name.trim().replaceAll("\\s+", ".");
         return INVALID_EMAIL_NAME_SYMBOLS.matcher(name).replaceAll("").toLowerCase();
     }
 }

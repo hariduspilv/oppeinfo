@@ -79,7 +79,7 @@ public class StudentRepresentativeController {
         if(!UserUtil.canEditStudentRepresentative(user, representative)) {
             throw new AssertionFailedException("User cannot delete student representative");
         }
-        studentRepresentativeService.delete(representative);
+        studentRepresentativeService.delete(user, representative);
     }
 
     @GetMapping("/applications")

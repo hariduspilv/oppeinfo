@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController', function ($scope, Classifier, QueryUtils, $mdDialog, message) {
+angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController', function ($scope, Classifier, QueryUtils, message) {
   $scope.statusList = Classifier.queryForDropdown({mainClassCode: 'SAIS_AVALDUSESTAATUS', order: 'code'});
   $scope.statusList.$promise.then(function() {
     Classifier.setSelectedCodes($scope.statusList, ['SAIS_AVALDUSESTAATUS_T']);
@@ -19,19 +19,7 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationImportController'
         $scope.successful = result.successful;
         $scope.result = true;
         message.info('reception.application.importFinished');
-        $mdDialog.hide();
-      }).catch($mdDialog.hide);
-
-      var parentEl = angular.element(document.body);
-      $mdDialog.show({
-        parent: parentEl,
-        template: 
-            '<md-dialog style="background-color:transparent;box-shadow:none">' +
-            '<div layout="row" layout-sm="column" layout-align="center center" aria-label="wait" style="height:120px;">'+
-            '<md-progress-circular class="md-hue-2" md-diameter="80px" class="loader"></md-progress-circular>'+
-            '</div>' +
-            '</md-dialog>'
-        });
+      });
     } else {
       message.error('reception.application.form-has-errors');
     }

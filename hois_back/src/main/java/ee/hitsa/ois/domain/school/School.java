@@ -58,6 +58,7 @@ public class School extends BaseEntityWithId implements Translatable {
     private String phone;
     private String emailDomain;
     private Boolean generateUserEmail;
+    private String rtipSchoolCode;
 
     @JsonIgnore
     @OneToMany(mappedBy = "school", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -170,5 +171,13 @@ public class School extends BaseEntityWithId implements Translatable {
         if(studyYearScheduleLegends != null) {
             getStudyYearScheduleLegends().addAll(studyYearScheduleLegends);
         }
+    }
+
+    public String getRtipSchoolCode() {
+        return rtipSchoolCode;
+    }
+
+    public void setRtipSchoolCode(String rtipSchoolCode) {
+        this.rtipSchoolCode = rtipSchoolCode;
     }
 }

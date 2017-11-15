@@ -3,7 +3,7 @@ package ee.hitsa.ois.domain.statecurriculum;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
-import javax.persistence.OneToOne;
+import javax.persistence.ManyToOne;
 import javax.persistence.Table;
 
 import ee.hitsa.ois.domain.BaseEntityWithId;
@@ -15,8 +15,8 @@ public class StateCurriculumModuleOutcome extends BaseEntityWithId {
 	private String outcomesEt;
 	private String outcomesEn;
 	
-	@OneToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "state_curriculum_module_id", nullable = false, updatable = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
+    @JoinColumn(name = "state_curriculum_module_id", nullable = false, updatable = false)
 	private StateCurriculumModule module;
 
 	public StateCurriculumModule getModule() {

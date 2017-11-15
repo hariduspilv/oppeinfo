@@ -39,12 +39,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           curriculum: function(QueryUtils, $route) {
-            return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
-          },
-          copy: function($routeParams) {
-            return $routeParams.versionCopy;
+            return QueryUtils.endpoint('/curriculumVersion/curriculum').get({id: $route.current.params.id}).$promise;
           }
         },
         data: authorizedRoles
@@ -54,12 +50,8 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           curriculum: function(QueryUtils, $route) {
-            return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
-          },
-          copy: function($routeParams) {
-            return $routeParams.versionCopy;
+            return QueryUtils.endpoint('/curriculumVersion/curriculum').get({id: $route.current.params.id}).$promise;
           }
         },
         data: authorizedRoles
@@ -69,13 +61,57 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
         controllerAs: 'controller',
         resolve: {
           translationLoaded: function($translate) { return $translate.onReady(); },
-          auth: function (AuthResolver) { return AuthResolver.resolve(); },
           curriculum: function(QueryUtils, $route) {
-            return QueryUtils.endpoint('/curriculum').get({id: $route.current.params.id}).$promise;
-          },
-          copy: function($routeParams) {
-            return $routeParams.versionCopy;
+            return QueryUtils.endpoint('/curriculumVersion/curriculum').get({id: $route.current.params.id}).$promise;
           }
+        },
+        data: authorizedRoles
+      }).when('/higherCurriculum/:curriculumId/version/:versionId/module/new', {
+        templateUrl: 'higherCurriculum/version/higher.module.edit.html',
+        controller: 'HigherModuleController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); }
+        },
+        data: authorizedRoles
+      }).when('/higherCurriculum/:curriculumId/version/:versionId/module/:id/edit', {
+        templateUrl: 'higherCurriculum/version/higher.module.edit.html',
+        controller: 'HigherModuleController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); }
+        },
+        data: authorizedRoles
+      }).when('/higherCurriculum/:curriculumId/version/:versionId/module/:id/view', {
+        templateUrl: 'higherCurriculum/version/higher.module.view.html',
+        controller: 'HigherModuleController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); }
+        },
+        data: authorizedRoles
+      }).when('/higherCurriculum/:curriculumId/version/:versionId/minorSpeciality/new', {
+        templateUrl: 'higherCurriculum/version/minor.speciality.edit.html',
+        controller: 'MinorSpecialityController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); }
+        },
+        data: authorizedRoles
+      }).when('/higherCurriculum/:curriculumId/version/:versionId/minorSpeciality/:id/edit', {
+        templateUrl: 'higherCurriculum/version/minor.speciality.edit.html',
+        controller: 'MinorSpecialityController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); }
+        },
+        data: authorizedRoles
+      }).when('/higherCurriculum/:curriculumId/version/:versionId/minorSpeciality/:id/view', {
+        templateUrl: 'higherCurriculum/version/minor.speciality.view.html',
+        controller: 'MinorSpecialityController',
+        controllerAs: 'controller',
+        resolve: {
+          translationLoaded: function($translate) { return $translate.onReady(); }
         },
         data: authorizedRoles
       });

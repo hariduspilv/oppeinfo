@@ -1,0 +1,560 @@
+<div class="ois-form-layout-padding ois-form-layout" ng-cloak>
+    <form name="vocationalCurriculumForm" layout="column" >
+   <div layout="row" layout-sm="column" layout-xs="column">
+     <div layout="column" flex="30" flex-sm="100" flex-xs="100">
+       <fieldset tabindex="1">
+         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.draft' | translate}}*</legend>
+         <md-input-container flex="70" flex-sm="100" flex-xs="100" flex-offset="5" flex-offset-xs="0" flex-offset-sm="0">
+           <md-radio-group ng-model="curriculum.draft" name="draft" required class="md-primary" ng-disabled="curriculum.id || (curriculum.draft && (curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK' || curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_KOOL') || curriculum.nameEt)">
+           <md-radio-button value="OPPEKAVA_LOOMISE_VIIS_KUTSE" aria-label="OPPEKAVA LOOMISE VIIS KUTSE">{{draftOptions["OPPEKAVA_LOOMISE_VIIS_KUTSE"][$root.currentLanguageNameField()]}}</md-radio-button>
+           <md-radio-button value="OPPEKAVA_LOOMISE_VIIS_TOOANDJA" aria-label="OPPEKAVA LOOMISE VIIS TOOANDJA">{{draftOptions["OPPEKAVA_LOOMISE_VIIS_TOOANDJA"][$root.currentLanguageNameField()]}}</md-radio-button>
+           <md-radio-button value="OPPEKAVA_LOOMISE_VIIS_KOOL" aria-label="OPPEKAVA LOOMISE VIIS KOOL">{{draftOptions["OPPEKAVA_LOOMISE_VIIS_KOOL"][$root.currentLanguageNameField()]}}</md-radio-button>
+           <md-radio-button value="OPPEKAVA_LOOMISE_VIIS_RIIKLIK" aria-label="OPPEKAVA LOOMISE VIIS RIIKLIK">{{draftOptions["OPPEKAVA_LOOMISE_VIIS_RIIKLIK"][$root.currentLanguageNameField()]}}</md-radio-button>
+           </md-radio-group>
+                   <p class="invalid" ng-if="vocationalCurriculumForm.$submitted && !curriculum.draft">{{'main.messages.error.inputFieldIsRequired' | translate}}</p>
+         </md-input-container>
+       </fieldset>
+       <div>&nbsp;</div>
+       <fieldset tabindex="2" layout="column" >
+         <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.nameTitle' | translate}}</legend>
+         <md-input-container flex="100">
+           <label>{{'curriculum.nameEt' | translate}}</label>
+           <input name="nameEt" ng-model="curriculum.nameEt" type="text" required readonly md-maxlength="255">
+         </md-input-container>
+         <md-input-container flex="100">
+           <label>{{'curriculum.nameEn' | translate}}</label>
+           <input ng-model="curriculum.nameEn" type="text" required readonly md-maxlength="255">
+         </md-input-container>
+         <md-input-container flex="100">
+           <label>{{'curriculum.nameRu' | translate}}</label>
+           <input ng-model="curriculum.nameRu" type="text" readonly md-maxlength="255">
+         </md-input-container>
+       </fieldset>
+     </div>
+
+     <fieldset tabindex="3" flex="66" flex-offset="4" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.mainData' | translate}}</legend>
+       <div layout="row" flex>
+         <md-input-container layout="row" flex="45">
+           <hois-classifier-radio layout="row" name="consecution" ng-model="curriculum.consecution" model-value-attr="code" main-classifier-code="OPPEKAVA_TYPE"
+             filter-values watch-model="curriculum.origStudyLevel" connect-main-classifier-code="OPPEASTE" search-from-connect select-first-value default-value="OPPEKAVA_TYPE_E" required disabled></hois-classifier-radio>
+         </md-input-container>
+         <div md-colors="{color: 'warn-A400'}"  ng-if="vocationalCurriculumForm.$submitted" ng-messages="vocationalCurriculumForm.consecution.$error">
+           <div ng-message="required">{{'main.messages.error.inputFieldIsRequired' | translate}}</div>
+         </div>
+         <md-input-container flex="50" flex-offset="5">
+           <label>{{'curriculum.code' | translate}}</label>
+           <input ng-model="curriculum.code" name="code" type="text" required readonly md-maxlength="25">
+         </md-input-container>
+       </div>
+       <div layout="row" flex>
+                 <div flex="45">
+                     <md-checkbox ng-model="curriculum.joint" aria-label="Is vocational" class="md-primary" disabled>
+                         {{'curriculum.isJoint' | translate}}
+                     </md-checkbox>
+                 </div>
+         <md-input-container flex="50" flex-offset="5">
+           <label>{{'curriculum.merCode' | translate}}</label>
+           <input ng-model="curriculum.merCode" name="merCode" type="text" readonly md-maxlength="10">
+         </md-input-container>
+       </div>
+       <!-- uus -->
+       <div layout="row" flex>
+                 <div flex="45">
+         <md-checkbox ng-model="curriculum.occupation" ng-click="isOccupationChanged()" aria-label="Is vocational" ng-hide="isDraftEmployerSupportLetter" disabled>
+           {{'curriculum.occupationIsAcquired' | translate}}
+         </md-checkbox>
+                 </div>
+         <md-input-container flex="50" flex-offset="5">
+           <label>{{'curriculum.credits' | translate}}</label>
+           <input ng-model="curriculum.credits" name="credits" type="number" min="0" max="999" pattern="^\d+(\.\d{1})?$" required readonly>
+                     <div ng-messages="vocationalCurriculumForm.credits.$error" ng-show="vocationalCurriculumForm.credits.$dirty">
+                         <div ng-message="min">
+                             {{'main.messages.error.positive' | translate}}
+                         </div>
+                             <div ng-message="max">
+                             {{'curriculum.error.max999' | translate}}
+                         </div>
+                         <div ng-message="pattern">
+                             {{'stateCurriculum.error.decimalPresision' | translate}}
+                         </div>
+                     </div>
+         </md-input-container>
+       </div>
+       <div layout="row" flex>
+         <md-input-container flex="45">
+            <label>{{'curriculum.studyLevel' | translate}}</label>
+           <hois-classifier-select ng-model="curriculum.origStudyLevel" model-value-attr="code" main-classifier-code="OPPEASTE"
+             show-only-values="schoolOrigStudyLevel" required disabled></hois-classifier-select>
+         </md-input-container>
+         <div layout="row" flex="50" flex-offset="5">
+           <md-input-container  flex="50">
+             <input ng-model="curriculum.studyPeriodYears" name="studyPeriodYears" type="number" placeholder="{{'curriculum.studyPeriod' | translate}} {{'main.years' | translate}}" required min="0" max="{{maxStydyYears.max}}" pattern="^\d+$" readonly>
+            </md-input-container>
+              <md-input-container  flex="45" flex-offset="5">
+             <input ng-model="curriculum.studyPeriodMonths" name="studyPeriodMonths" type="number" placeholder="{{'main.months' | translate}}" min="0" max="11" pattern="^\d+$" readonly>
+             </md-input-container>
+          </div>
+       </div>
+       <div layout="row" flex>
+         <md-input-container flex="45">
+           <label>{{'curriculum.ekrLevel' | translate}}</label>
+           <hois-classifier-select ng-model="curriculum.ekrLevel" main-classifier-code="EKR" watch-model="curriculum.origStudyLevel"
+             filter-values connect-main-classifier-code="EKR" select-first-value disabled></hois-classifier-select>
+         </md-input-container>
+         <md-input-container flex="50" flex-offset="5">
+           <label>{{'curriculum.studyForm' | translate}}</label>
+           <hois-classifier-select multiple="true" ng-model="curriculum.studyForms" model-value-attr="code" main-classifier-code="OPPEVORM" criteria="{vocational: true}" required disabled></hois-classifier-select>
+         </md-input-container>
+       </div>
+         <div layout="row" flex>
+         <md-input-container  flex="45">
+           <label>{{'curriculum.educationLevel' | translate}}</label>
+           <hois-classifier-select ng-model="curriculum.educationLevel" main-classifier-code="HARIDUSTASE" watch-model="curriculum.origStudyLevel"
+             filter-values connect-main-classifier-code="HARIDUSTASE" select-first-value disabled></hois-classifier-select>
+         </md-input-container>
+         <md-input-container flex="50" flex-offset="5">
+           <label>{{'curriculum.studyLanguage' | translate}}</label>
+           <hois-classifier-select multiple="true" ng-model="curriculum.studyLanguages" model-value-attr="code" main-classifier-code="OPPEKEEL" criteria="{vocational: true}" required disabled></hois-classifier-select>
+         </md-input-container>
+         </div>
+       <div layout="row" flex>
+         <md-input-container flex="45">
+           <label>{{'curriculum.areaOfStudy' | translate}}</label>
+           <hois-classifier-select ng-model="curriculum.areaOfStudy" model-value-attr="code" main-classifier-code="ISCED_VALD" criteria="{vocational: true}" required disabled></hois-classifier-select>
+         </md-input-container>
+          <!-- hois-school-department-select was not used here as it set form $dirty after page load.
+          In addition, extra logic in providing options required -->
+					<md-input-container flex="50" flex-offset="5">
+            <label>
+              {{'curriculum.structuralUnitResponsible' | translate}} {{getStar()}}
+              </label>
+            <hois-select ng-model="curriculum.schoolDepartments" multiple values="schoolDepartments"
+            ng-required="strictValidation()" disabled></hois-select>
+          </md-input-container>
+       </div>
+       <div layout="row" flex>
+         <md-input-container flex="45">
+           <label>{{'curriculum.fieldOfStudy' | translate}}</label>
+           <hois-classifier-select ng-model="curriculum.fieldOfStudy" model-value-attr="code" main-classifier-code="ISCED_SUUN" criteria="{vocational: true}" watch-model="curriculum.areaOfStudy"
+             filter-values search-from-connect connect-main-classifier-code="ISCED_VALD" required disabled></hois-classifier-select>
+         </md-input-container>
+         <md-input-container flex="50" flex-offset="5" ng-show="curriculum.draft === 'OPPEKAVA_LOOMISE_VIIS_RIIKLIK'">
+           <label>{{'curriculum.ehisRokClassifier' | translate}}</label>
+           <hois-classifier-select ng-model="curriculum.stateCurrClass"  model-value-attr="code" main-classifier-code="EHIS_ROK" disabled></hois-classifier-select>
+         </md-input-container>
+       </div>
+       <div layout="row" flex>
+         <md-input-container flex="45">
+           <label>{{'curriculum.group' | translate}}</label>
+           <hois-classifier-select ng-model="curriculum.iscedClass" model-value-attr="code" main-classifier-code="ISCED_RYHM" criteria="{vocational: true}" watch-model="curriculum.fieldOfStudy"
+             filter-values search-from-connect connect-main-classifier-code="ISCED_SUUN" required disabled></hois-classifier-select>
+         </md-input-container>
+       </div>
+     </fieldset>
+   </div>
+   <div>&nbsp;</div>
+     <fieldset tabindex="4">
+     <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.commonData' | translate}}</legend>
+     <div layout="column">
+       <md-input-container flex>
+         <label>{{'curriculum.studyOutcomesEt' | translate}}{{getStar()}}</label>
+         <textarea ng-model="curriculum.outcomesEt" md-maxlength="20000" dfs md-select-on-focus ng-required="strictValidation()" readonly></textarea>
+       </md-input-container>
+       <md-input-container flex>
+         <label>{{'curriculum.studyOutcomesEn' | translate}}</label>
+         <textarea ng-model="curriculum.outcomesEn" md-maxlength="20000" max-rows="10" md-select-on-focus readonly></textarea>
+       </md-input-container>
+       <md-input-container flex>
+         <label>{{'curriculum.structure' | translate}}{{getStar()}}</label>
+         <textarea ng-model="curriculum.structure" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="strictValidation()" readonly></textarea>
+       </md-input-container>
+       <md-input-container flex>
+         <label>{{'curriculum.admissionRequirementsEt' | translate}}{{getStar()}}</label>
+         <textarea ng-model="curriculum.admissionRequirementsEt" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="strictValidation()" readonly></textarea>
+       </md-input-container>
+       <md-input-container flex>
+         <label>{{'curriculum.admissionRequirementsEn' | translate}}</label>
+         <textarea ng-model="curriculum.admissionRequirementsEn" md-maxlength="20000" max-rows="10" md-select-on-focus readonly></textarea>
+       </md-input-container>
+       <md-input-container flex>
+         <label>{{'curriculum.graduationRequirementsEt' | translate}}{{getStar()}}</label>
+         <textarea ng-model="curriculum.graduationRequirementsEt" md-maxlength="20000" max-rows="10" md-select-on-focus ng-required="strictValidation()" readonly></textarea>
+       </md-input-container>
+       <md-input-container flex>
+         <label>{{'curriculum.graduationRequirementsEn' | translate}}</label>
+         <textarea ng-model="curriculum.graduationRequirementsEn" md-maxlength="20000" max-rows="10" md-select-on-focus readonly></textarea>
+       </md-input-container>
+       <md-input-container flex>
+         <label>{{'curriculum.basesOfDraft' | translate}}</label>
+         <textarea ng-model="curriculum.draftText" md-maxlength="4000" max-rows="10" md-select-on-focus readonly></textarea>
+       </md-input-container>
+       <md-input-container flex>
+         <label>{{'curriculum.specialityOpportunities' | translate}}</label>
+         <textarea ng-model="curriculum.specialization" md-maxlength="4000" max-rows="10" md-select-on-focus readonly></textarea>
+       </md-input-container>
+     </div>
+   </fieldset>
+     <div>&nbsp;</div>
+     <fieldset tabindex="5" ng-hide="isDraftEmployerSupportLetter">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && occupationRequired() && strictValidation() && curriculum.occupations.length === 0}">{{'curriculum.occupationsPartOccupationsAcquired' | translate}}</legend>
+
+       <div layout="column">
+         <div ng-if="vocationalCurriculumForm.$submitted && occupationRequired() && strictValidation()">
+           <input style="display:none" type="number" readonly name="occupationsLength" ng-model="validation.occupationsLength" min="1"/>
+           <div md-colors="{color: 'warn-A400'}" ng-messages="vocationalCurriculumForm.occupationsLength.$error">
+           <div ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
+           </div>
+         </div>
+       </div>
+       <table md-table class="secondary-table">
+         <thead md-head>
+           <tr md-row>
+             <th md-column>{{'curriculum.occupationTable.order' | translate}}</th>
+             <th md-column ng-show="curriculum.occupation">{{'curriculum.occupationTable.occupation' | translate}}</th>
+             <th md-column ng-show="!curriculum.occupation">{{'curriculum.occupationTable.partOccupation' | translate}}</th>
+             <th md-column ng-show="curriculum.occupation">{{'curriculum.occupationTable.partOccupations' | translate}}</th>
+             <th md-column ng-show="curriculum.occupation">{{'curriculum.occupationTable.speciality' | translate}}</th>
+             <th md-column></th>
+             <th md-column></th>
+           </tr>
+         </thead>
+         <tbody md-body>
+           <tr md-row ng-repeat="item in curriculum.occupations | orderBy: 'occupation.nameEt'" ng-class-odd="'odd'" ng-class-even="'even'">
+             <td md-cell>{{$index + 1}}</td>
+             <td md-cell>
+         <a href="" ng-click="curriculum.occupation ? openOccupationDialog(item) : openPartOccupationsDialog(item)">{{currentLanguageNameField(item.occupation)}}</a></td>
+             <td md-cell><span ng-hide="!curriculum.occupation" ng-repeat="partOccupation in item.partOccupations">{{currentLanguageNameField(partOccupation)}}{{$last ? '' : ', '}}</span></td>
+             <td md-cell><span ng-hide="!curriculum.occupation || !item.specialities || item.specialities.length == 0" ng-repeat="speciality in item.specialities track by $index">
+                   {{currentLanguageNameField(speciality)}}{{$last ? '' : ', '}}</span></td>
+             <td md-cell><span ng-hide="!curriculum.occupation || !item.occupationGrant">{{'occupation.hasOccupationGrant' | translate}}</span></td>
+             <td md-cell ></td>
+           </tr>
+         </tbody>
+       </table>
+     </fieldset>
+
+
+     <div>&nbsp;</div>
+     <fieldset tabindex="6">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !modulesValid()}">{{'curriculum.modulesTought' | translate}}</legend>
+
+             <!--MODULES WITHOUT OCCUPATIONS-->
+             <div class="occupation-header align-center">
+               <span ng-class="{invalid: notAllModulesHaveOccupation()}">{{'module.modulesWithoutPartOccupationOccuaptionSpecialization' | translate}}</span>
+             </div>
+             <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutEmptyModules | orderBy: 'nameEt'" class="lowerBorder">
+                 <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                     <div flex="5">&nbsp;</div>
+                     <div flex="20">{{currentLanguageNameField(type)}}</div>
+                     <div layout="column" flex="75">
+                         <div flex="100" ng-repeat="module in curriculum.modules | filter: filterEmptyModulesByType(type.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
+                             <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                             <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+
+              <!--KUTSETE/OSAKUTSETE MOODULID-->
+             <div ng-repeat="occupation in curriculum.occupations | orderBy: 'occupation.nameEt'" layout="column">
+                 <div class="occupation-header align-center">
+                     <span ng-show="curriculum.occupation" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(occupation.occupation.code) || !isOccutationsCreditsValid(occupation))}">{{'stateCurriculum.enter.occupation.occupation' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
+                     <span ng-show="!curriculum.occupation" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(occupation.occupation.code) || !isOccutationsCreditsValid(occupation))}">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}:&nbsp; {{currentLanguageNameField(occupation.occupation)}}</span>
+                 </div>
+                 <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(occupation.occupation.code, curriculum.modules) | orderBy: 'nameEt'" class="lowerBorder">
+                     <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                         <div flex="5">&nbsp;</div>
+                         <div flex="20">{{currentLanguageNameField(type)}}</div>
+                         <div layout="column" flex="75">
+                             <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, occupation.occupation.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
+                                 <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                                 <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+                 <!--OSAKUTSETE MOODULID-->
+                 <div ng-repeat = "partOccupation in occupation.partOccupations | orderBy: 'nameEt'" layout="column">
+                     <div class="occupation-header2 align-center"> <span ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !occupationHasPModule(partOccupation.code)}">{{'stateCurriculum.enter.occupation.partial' | translate}} {{$index + 1}}: {{currentLanguageNameField(partOccupation)}}</span></div>
+                     <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(partOccupation.code, curriculum.modules) | orderBy: 'nameEt'" class="lowerBorder">
+                         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                             <div flex="5">&nbsp;</div>
+                             <div flex="20">{{currentLanguageNameField(type)}}</div>
+                             <div layout="column" flex="75">
+                                 <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, partOccupation.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
+                                     <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                                     <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+                 <!--SPETSKUTSETE MOODULID-->
+                 <div ng-repeat = "speciality in occupation.specialities | orderBy: 'nameEt'" layout="column">
+                     <div class="occupation-header2 align-center"><span ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && (!occupationHasPModule(speciality.code) || !isSpetsOccupationValid(speciality, occupation))}">{{'stateCurriculum.enter.occupation.specialty' | translate}} {{$index + 1}}: {{currentLanguageNameField(speciality)}}</span></div>
+                     <div layout="column" ng-repeat="type in moduleTypes | filter: filterTypesWithoutModules(speciality.code, curriculum.modules) | orderBy: 'nameEt'" class="lowerBorder">
+                         <div layout="row" flex="100" class="occupation-row align-center border-bottom odd">
+                             <div flex="5">&nbsp;</div>
+                             <div flex="20">{{currentLanguageNameField(type)}}</div>
+                             <div layout="column" flex="75">
+                                 <div flex="100" ng-repeat="module in curriculum.modules | filter: filterModulesByType(type.code, speciality.code) | orderBy: 'nameEt' track by $index" layout="row" class="align-center">
+                                     <a flex="30" ng-click="openAddModuleDialog(module)" href="">{{currentLanguageNameField(module)}}</a>
+                                     <span flex="10">{{module.credits}}&nbsp; EKAP</span>
+                                 </div>
+                             </div>
+                         </div>
+                     </div>
+                 </div>
+             </div>
+
+
+     </fieldset>
+     <div>&nbsp;</div>
+     <fieldset tabindex="7">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.additionalInfo' | translate}}</legend>
+       <md-input-container flex="10">
+         <label>{{'curriculum.optionalStudyCredits' | translate}}{{getStar()}}</label>
+         <input name="vocationalCredits" type="number" ng-model="curriculum.optionalStudyCredits" ng-required="strictValidation()" aria-label="optional credits" min="0" max="999" pattern="^\d+(\.\d{1})?$" readonly>
+         <div ng-messages="vocationalCurriculumForm.vocationalCredits.$error" ng-show="vocationalCurriculumForm.vocationalCredits.$dirty">
+             <div ng-message="min">
+                 {{'main.messages.error.positive' | translate}}
+             </div>
+             <div ng-message="max">
+                 {{'curriculum.error.max999' | translate}}
+             </div>
+             <div ng-message="pattern">
+                 {{'stateCurriculum.error.decimalPresision' | translate}}
+             </div>
+         </div>
+       </md-input-container>
+       <div layout="column">
+         <md-input-container flex>
+           <label>{{'curriculum.practiceDescription' | translate}}</label>
+           <textarea ng-model="curriculum.practiceDescription" md-maxlength="20000" max-rows="2" md-select-on-focus readonly></textarea>
+         </md-input-container>
+         <md-input-container flex>
+           <label>{{'curriculum.finalExamShortDescription' | translate}}</label>
+           <textarea ng-model="curriculum.finalExamDescription" md-maxlength="4000" max-rows="2" md-select-on-focus readonly></textarea>
+          </md-input-container>
+          <md-input-container flex>
+           <label>{{'curriculum.optionalStudyOpportunities' | translate}}</label>
+           <textarea ng-model="curriculum.optionalStudyDescription" md-maxlength="4000" max-rows="2" md-select-on-focus readonly></textarea>
+         </md-input-container>
+         <md-input-container flex>
+           <label>{{'curriculum.contactPerson' | translate}}</label>
+           <input ng-model="curriculum.contactPerson" type="text" readonly md-maxlength="1000">
+         </md-input-container>
+         <md-input-container flex>
+           <label>{{'main.notes' | translate}}</label>
+           <textarea ng-model="curriculum.description" md-maxlength="20000" max-rows="2" md-select-on-focus readonly></textarea>
+         </md-input-container>
+       </div>
+     </fieldset>
+
+     <div ng-show="curriculum.joint">&nbsp;</div>
+     <fieldset tabindex="8" ng-show="curriculum.joint">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.jointInfo' | translate}}</legend>
+       <div layout="column">
+         <div layout="row" layout-align="start start" ng-show="curriculum.joint">
+           <label class="md-required common-label" flex="30">{{'curriculum.jointSchool' | translate}}</label>
+
+           <md-radio-group ng-model="curriculum.abroad" flex="50" layout="row" class="align-center" ng-change="clearJointPartnersFields()" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4" disabled>
+             <md-radio-button ng-value="false" aria-label="{{ 'curriculum.estonianEducationalInstitute' | translate }}">
+               {{ 'curriculum.estonianEducationalInstitute' | translate }}
+             </md-radio-button>
+             <md-radio-button ng-value="true" aria-label="{{ 'curriculum.jointPartnerAbroadSchool' | translate }}">
+               {{ 'curriculum.foreignEducationalInstitute' | translate }}
+             </md-radio-button>
+           </md-radio-group>
+         </div>
+
+         <div layout="row" flex="100"  ng-show="curriculum.joint" >
+           <md-input-container flex="64" ng-hide="curriculum.abroad">
+             <label>{{'curriculum.estonianEducationalInstitute' | translate}}&nbsp;*</label>
+             <hois-classifier-select ng-model="curriculum.jointPartnerEhisSchool" main-classifier-code="EHIS_KOOL"
+             filter-values="curriculum.jointPartners" by-property="ehisSchool" model-value-attr="code" disabled></hois-classifier-select>
+           </md-input-container>
+           <md-input-container ng-hide="!curriculum.abroad" flex="30" >
+             <label>{{'school.name' | translate}}&nbsp;*</label>
+             <input ng-model="curriculum.jointPartnerForeignNameEt" type="text" md-maxlength="100" readonly>
+           </md-input-container>
+           <md-input-container ng-hide="!curriculum.abroad" flex="30" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
+             <label>{{'school.nameEn' | translate}}&nbsp;*</label>
+             <input ng-model="curriculum.jointPartnerForeignNameEn" type="text" md-maxlength="100" readonly>
+           </md-input-container>
+           <md-button class="md-raised" ng-click="addJointPartner()" ng-disabled="(!curriculum.jointPartnerForeignNameEt || !curriculum.jointPartnerForeignNameEn) && !curriculum.jointPartnerEhisSchool">{{'main.button.add' | translate}}</md-button>
+         </div>
+
+         <input ng-if="curriculum.joint && strictValidation()" style="display:none" type="number" readonly name="jointPartnersLength" ng-model="validation.jointPartnersLength" min="1"  />
+         <div md-colors="{color: 'warn-A400'}" ng-messages="vocationalCurriculumForm.jointPartnersLength.$error">
+           <div ng-if="vocationalCurriculumForm.$submitted" ng-message="min">{{'main.messages.error.atLeastOneShouldBeAdded' | translate}}</div>
+         </div>
+
+         <div layout="column" flex ng-show="curriculum.joint" class="common-label">
+           <div layout="row" ng-repeat="item in curriculum.jointPartners | filter: filterEmptyJointPartners | orderBy: ['ehisSchool', 'nameEt']" class="align-center">
+             <div flex="5">&nbsp;</div>
+             <div ng-if="item.abroad">{{currentLanguageNameField(item)}}</div>
+             <div ng-if="!item.abroad"> <hois-classifier-value ng-model="item.ehisSchool" main-classifier-code="EHIS_KOOL"></hois-classifier-value></div>
+             <div flex="5">&nbsp;</div>
+             <div flex="5"></div>
+           </div>
+         </div>
+         <div layout="row" layout-sm="column" layout-xs="column" ng-show="curriculum.joint">
+           <md-input-container  flex="30"  ng-if="curriculum.joint">
+             <label>{{'curriculum.jointMentor' | translate}}{{getStar()}}</label>
+              <hois-classifier-select ng-model="curriculum.jointMentor" main-classifier-code="EHIS_KOOL"
+              model-value-attr="code" show-only-values="selectedJointPartners" ng-required="strictValidation()" disabled></hois-classifier-select>
+           </md-input-container>
+           <md-input-container   flex="66" flex-offset="4">
+             <label>{{'curriculum.jointResponsible' | translate}}</label>
+             <input ng-model="curriculum.supervisor" type="text" md-maxlength="100" readonly>
+           </md-input-container>
+         </div>
+         <md-input-container flex="100">
+           <label>{{'curriculum.jointAgreementInfoEt' | translate}}{{getStar()}}</label>
+           <textarea ng-model="curriculum.contractEt" md-maxlength="1000" max-rows="10" md-select-on-focus ng-required="curriculum.joint && strictValidation()" readonly></textarea>
+         </md-input-container>
+         <md-input-container  flex="100">
+           <label>{{'curriculum.jointAgreementInfoEn' | translate}}{{getStar()}}</label>
+           <textarea ng-model="curriculum.contractEn" md-maxlength="1000" max-rows="10" md-select-on-focus ng-required="curriculum.joint && strictValidation()" readonly></textarea>
+         </md-input-container>
+       </div>
+     </fieldset>
+
+     <div>&nbsp;</div>
+     <fieldset tabindex="9">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.approvalInfo' | translate}}</legend>
+       <div layout="row" flex="100">
+         <md-input-container flex="30" flex-sm="100" flex-xs="100">
+           <label>{{'curriculum.approvalDocumentNr' | translate}}</label>
+           <input ng-model="curriculum.approvalDokNr" type="text" readonly md-maxlength="50">
+         </md-input-container>
+         <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
+           <label>{{'curriculum.approvalDate' | translate}}</label>
+           <md-datepicker ng-model="curriculum.approval" md-open-on-focus disabled></md-datepicker>
+         </md-input-container>
+       </div>
+     </fieldset>
+
+     <div>&nbsp;</div>
+     <fieldset tabindex="10">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'curriculum.statuses' | translate}}</legend>
+       <div layout="row" flex="100">
+         <md-input-container  flex="30" flex-sm="100" flex-xs="100">
+           <label>{{'main.validFrom' | translate}}{{getStar()}}</label>
+           <md-datepicker ng-model="curriculum.validFrom" md-open-on-focus ng-required="strictValidation()" disabled></md-datepicker>
+         </md-input-container>
+         <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
+           <label>{{'main.validTo' | translate}}</label>
+           <md-datepicker ng-model="curriculum.validThru" md-min-date="curriculum.validFrom" md-open-on-focus disabled></md-datepicker>
+         </md-input-container>
+       </div>
+       <div layout="row" flex="100" class="top-margin form-readonly">
+         <md-input-container flex="30" flex-sm="100" flex-xs="100" class="readonly">
+                     <label class="label">{{'main.status' | translate}}</label>
+                     <hois-classifier-value ng-model="curriculum.status" main-classifier-code="OPPEKAVA_STAATUS"></hois-classifier-value>
+                 </md-input-container>
+         <md-input-container flex="20" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="4">
+                     <label>{{'curriculum.statusInEhis' | translate}}</label>
+                     <hois-classifier-value ng-model="curriculum.ehisStatus" main-classifier-code="OPPEKAVA_EHIS_STAATUS"></hois-classifier-value>
+                 </md-input-container>
+         <md-input-container flex="40" flex-sm="100" flex-xs="100" flex-offset-xs="0" flex-offset-sm="0" flex-offset="5">
+                     <label>{{'curriculum.statusChangedDateInEhis' | translate}}</label>
+           <hois-value value="curriculum.ehisChanged | hoisDate"></hois-value>
+                 </md-input-container>
+       </div>
+       <div layout="row" flex="100">
+         <a ng-show="!!stateCurriculumId" ng-href="/#/stateCurriculum/{{stateCurriculumId}}/edit" class="md-primary">{{'curriculum.referenceToStateCurriculum' | translate}}</a>
+       </div>
+     </fieldset>
+
+     <div>&nbsp;</div>
+     <fieldset tabindex="11">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'main.relatedFiles' | translate}}</legend>
+       <table md-table class="secondary-table">
+         <thead md-head>
+         <tr md-row>
+           <th md-column><span>{{'file.nameAndFile' | translate}}</span></th>
+           <th md-column><span>{{'file.creationLocation' | translate}}</span></th>
+           <th md-column>{{'file.type' | translate}}</th>
+           <th md-column>{{'curriculum.sendToEhis' | translate}}</th>
+           <th md-column></th>
+         </tr>
+         </thead>
+         <tbody md-body>
+         <tr md-row ng-repeat="file in curriculum.files | orderBy: 'oisFile.fname'" ng-class-odd="'odd'" ng-class-even="'even'">
+           <td md-cell>
+           {{file.oisFile.fname}}
+           <a ng-href="{{getUrl(file)}}" download><md-icon md-font-set="material-icons">file_download</md-icon></a>
+           </td>
+           <td md-cell>
+           {{file.ehis ? 'EHIS' : 'ÕIS'}}
+           </td>
+           <td md-cell>
+           <hois-classifier-value ng-model="file.ehisFile" main-classifier-code="EHIS_FAIL"></hois-classifier-value>
+           </td>
+           <td md-cell>
+           <md-checkbox ng-model="file.sendEhis" aria-label="send to ehis" disabled></md-checkbox>
+           </td>
+           <td md-cell>
+           </td>
+         </tr>
+         </tbody>
+       </table>
+     </fieldset>
+
+     <div>&nbsp;</div>
+     <fieldset tabindex="12" ng-if="curriculum.id > 0">
+       <legend md-colors="{color: 'primary-800'}" class="md-title-small" ng-class="{invalid: vocationalCurriculumForm.$submitted && strictValidation() && !hasVerifiedVersions()}">{{'curriculum.moduleImplementationPlans' | translate}}</legend>
+       <md-button class="md-raised" ng-click="goToVersionNewForm()" ng-show="versionCanBeAdded()">{{'main.button.create' | translate}}</md-button>
+       <md-table-container>
+         <table md-table md-progress="promise" class="secondary-table">
+           <thead md-head md-order="query.order">
+             <tr md-row>
+               <th md-column>{{'module.implementationPlan.code' | translate}}</th>
+               <th md-column>{{'main.status' | translate}}</th>
+             </tr>
+           </thead>
+           <tbody md-body>
+             <tr md-row ng-repeat="moduleImplementationPlan in curriculum.versions | orderBy: 'code'">
+               <td md-cell>
+                 <a href="" class="md-primary" ng-click="goToImplementationPlanForm(moduleImplementationPlan)">{{moduleImplementationPlan.code}}</a>
+               </td>
+               <td md-cell><hois-classifier-value ng-model="moduleImplementationPlan.status" main-classifier-code="OPPEKAVA_VERSIOON_STAATUS"></hois-classifier-value></td>
+             </tr>
+           </tbody>
+         </table>
+       </md-table-container>
+     </fieldset>
+
+     <hois-created-modified object="curriculum"></hois-created-modified>
+     <div>
+     </div>
+   </form>
+     <div layout="row">
+       <div ng-show="curriculum.status === STATUS.ENTERING">
+       <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
+       </div>
+       <div ng-show="curriculum.status === STATUS.PROCEEDING && !formState.sentToEhis">
+        <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
+        <md-button class="md-raised md-default" ng-click="sendToEhis()" ng-disabled="formState.waitingResponse" ng-if="curriculum.canConfirm">{{'main.button.sendToEhis' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="setStatusClosed()" ng-disabled="formState.waitingResponse" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
+       </div>
+       <div ng-show="curriculum.status === STATUS.PROCEEDING && formState.sentToEhis">
+         <md-button class="md-raised md-default" ng-click="updateFromEhis()" ng-disabled="formState.waitingResponse" ng-if="curriculum.canConfirm">{{'main.button.updateFromEhis' | translate}}</md-button>
+       </div>
+       <div ng-show="curriculum.status === STATUS.VERIFIED">
+          <md-button class="md-raised md-primary" ng-click="goToEditForm()" ng-if="curriculum.canChange">{{'main.button.change' | translate}}</md-button>
+          <md-button class="md-raised" ng-click="setStatusClosed()" ng-disabled="formState.waitingResponse" ng-if="curriculum.canClose">{{'main.button.status.close' | translate}}</md-button>
+       </div>
+       <md-button class="md-raised md-default" ng-click="back('#/curriculum')">{{'main.button.back' | translate}}</md-button>
+     </div>
+ </div>
+
+
+ <style>
+   .lowerBorder {
+     border-bottom: solid 1px #E0E0E0;
+   }
+ </style>

@@ -1,8 +1,10 @@
 
 package ee.hois.xroad.sais2.generated;
 
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -16,6 +18,9 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType&gt;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
+ *       &lt;sequence&gt;
+ *         &lt;element name="response" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
+ *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
  * &lt;/complexType&gt;
@@ -24,9 +29,37 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "")
-@XmlRootElement(name = "testSystemResponse", namespace = "http://x-road.ee/xsd/x-road.xsd")
+@XmlType(name = "", propOrder = {
+    "response"
+})
+@XmlRootElement(name = "testSystemResponse")
 public class TestSystemResponse {
 
+    @XmlElementRef(name = "response", type = JAXBElement.class, required = false)
+    protected JAXBElement<String> response;
+
+    /**
+     * Gets the value of the response property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
+     */
+    public JAXBElement<String> getResponse() {
+        return response;
+    }
+
+    /**
+     * Sets the value of the response property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link JAXBElement }{@code <}{@link String }{@code >}
+     *     
+     */
+    public void setResponse(JAXBElement<String> value) {
+        this.response = value;
+    }
 
 }

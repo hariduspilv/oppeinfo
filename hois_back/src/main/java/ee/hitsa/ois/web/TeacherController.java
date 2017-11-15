@@ -80,65 +80,72 @@ public class TeacherController {
 
     @PostMapping
     public TeacherDto create(@Valid @RequestBody TeacherForm teacherForm, HoisUserDetails user) {
+        UserUtil.assertIsSchoolAdmin(user);
         return teacherService.create(user, teacherForm);
     }
 
     @PutMapping("/{id:\\d+}")
     public TeacherDto save(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Teacher teacher, @Valid @RequestBody TeacherForm teacherForm) {
-        UserUtil.assertSameSchool(user, teacher.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, teacher.getSchool());
         return teacherService.save(user, teacher, teacherForm);
+    }
+
+    @PutMapping("/{id:\\d+}/sendToEhis")
+    public TeacherDto sendToEhis(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestBody = true) Teacher teacher, @Valid @RequestBody TeacherForm teacherForm) {
+        UserUtil.assertIsSchoolAdmin(user, teacher.getSchool());
+        return teacherService.sendToEhis(user, teacher, teacherForm);
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Teacher teacher,  @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertSameSchool(user, teacher.getSchool());
-        teacherService.delete(teacher);
+        UserUtil.assertIsSchoolAdmin(user, teacher.getSchool());
+        teacherService.delete(user, teacher);
     }
 
     @PutMapping("/{id:\\d+}/continuingEducations")
     public TeacherDto saveContinuingEducations(HoisUserDetails user, @WithEntity(value = "id") Teacher teacher, @Valid @RequestBody TeacherContinuingEducationFormWrapper teacherContinuingEducationForms) {
-        UserUtil.assertSameSchool(user, teacher.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, teacher.getSchool());
         return teacherService.saveContinuingEducations(teacher, teacherContinuingEducationForms.getContinuingEducations());
     }
 
     @PutMapping("/{id:\\d+}/qualifications")
     public TeacherDto saveQualifications(HoisUserDetails user, @WithEntity(value = "id") Teacher teacher, @Valid @RequestBody TeacherQualificationFromWrapper teacherQualificationFroms) {
-        UserUtil.assertSameSchool(user, teacher.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, teacher.getSchool());
         return teacherService.saveQualifications(teacher, teacherQualificationFroms.getQualifications());
     }
 
     @PutMapping("/{id:\\d+}/mobilities")
     public TeacherDto saveMobilities(HoisUserDetails user, @WithEntity(value = "id") Teacher teacher, @Valid @RequestBody TeacherMobilityFormWrapper mobilityForms) {
-        UserUtil.assertSameSchool(user, teacher.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, teacher.getSchool());
         return teacherService.saveMobilities(teacher, mobilityForms.getMobilities());
     }
 
     @DeleteMapping("/{teacherId:\\d+}/continuingEducations/{id:\\d+}")
     public void deleteContinuingEducation(HoisUserDetails user, @WithEntity(value = "teacherId") Teacher teacher, @WithEntity(value = "id") TeacherContinuingEducation continuingEducation) {
-        UserUtil.assertSameSchool(user, teacher.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, teacher.getSchool());
         TeacherUtil.assertContinuingEducationBelongsToTeacher(continuingEducation, teacher);
-        teacherService.delete(continuingEducation);
+        teacherService.delete(user, continuingEducation);
     }
 
     @DeleteMapping("/{teacherId:\\d+}/qualifications/{id:\\d+}")
     public void deleteQualification(HoisUserDetails user, @WithEntity(value = "teacherId") Teacher teacher, @WithEntity(value = "id") TeacherQualification qualification) {
         UserUtil.assertSameSchool(user, teacher.getSchool());
         TeacherUtil.assertQualificationBelongsToTeacher(qualification, teacher);
-        teacherService.delete(qualification);
+        teacherService.delete(user, qualification);
     }
 
     @DeleteMapping("/{teacherId:\\d+}/mobilities/{id:\\d+}")
     public void deleteMobilities(HoisUserDetails user, @WithEntity(value = "teacherId") Teacher teacher, @WithEntity(value = "id")TeacherMobility teacherMobility) {
-        UserUtil.assertSameSchool(user, teacher.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, teacher.getSchool());
         TeacherUtil.assertMobilityBelongsToTeacher(teacherMobility, teacher);
-        teacherService.delete(teacherMobility);
+        teacherService.delete(user, teacherMobility);
     }
 
     @DeleteMapping("/{teacherId:\\d+}/ehisPositions/{id:\\d+}")
     public void deleteEhisPosition(HoisUserDetails user, @WithEntity(value = "teacherId") Teacher teacher, @WithEntity(value = "id")TeacherPositionEhis teacherPositionEhis) {
-        UserUtil.assertSameSchool(user, teacher.getSchool());
+        UserUtil.assertIsSchoolAdmin(user, teacher.getSchool());
         TeacherUtil.assertEhisPositionBelongsToTeacher(teacherPositionEhis, teacher);
-        teacherService.delete(teacherPositionEhis);
+        teacherService.delete(user, teacherPositionEhis);
     }
 
     @PostMapping("/exportToEhis/higher")

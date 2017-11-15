@@ -3,6 +3,7 @@ package ee.hitsa.ois;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashSet;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -96,7 +97,8 @@ public class TestData {
         outcome.setOutcomesEt(STRING);
         outcome.setOutcomesEn(STRING);
         outcome.setModule(m);
-        m.setOutcome(outcome);
+        m.setOutcomes(new HashSet<>());
+        m.getOutcomes().add(outcome);
         
         StateCurriculumModuleOccupation occupation = new StateCurriculumModuleOccupation();
         occupation.setOccupation(getClassifier());

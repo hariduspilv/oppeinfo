@@ -1,11 +1,11 @@
 package ee.hitsa.ois.service.ehis;
 
-import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.lang.invoke.MethodHandles;
 import java.math.BigInteger;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -20,7 +20,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import ee.hitsa.ois.domain.Classifier;
+import ee.hitsa.ois.domain.ClassifierConnect;
 import ee.hitsa.ois.domain.Person;
+import ee.hitsa.ois.domain.StudyYear;
 import ee.hitsa.ois.domain.WsEhisTeacherLog;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
 import ee.hitsa.ois.domain.curriculum.CurriculumModule;
@@ -33,10 +36,14 @@ import ee.hitsa.ois.domain.teacher.TeacherContinuingEducation;
 import ee.hitsa.ois.domain.teacher.TeacherMobility;
 import ee.hitsa.ois.domain.teacher.TeacherPositionEhis;
 import ee.hitsa.ois.domain.teacher.TeacherQualification;
+import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.service.StudyYearService;
+import ee.hitsa.ois.util.ClassifierUtil;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.StreamUtil;
+import ee.hitsa.ois.validation.ValidationFailedException;
 import ee.hitsa.ois.web.commandobject.ehis.EhisTeacherExportForm;
 import ee.hitsa.ois.web.dto.EhisTeacherExportResultDto;
 import ee.hois.soap.LogContext;
@@ -76,13 +83,53 @@ public class EhisTeacherExportService extends EhisService {
     @Autowired
     private StudyYearService studyYearService;
 
+    /**
+     * Exports teachers to ehis based on form data
+     * @param schoolId
+     * @param higher
+     * @param form
+     * @return
+     */
     public List<EhisTeacherExportResultDto> exportToEhis(Long schoolId, boolean higher, EhisTeacherExportForm form) {
-        List<EhisTeacherExportResultDto> resultList = new ArrayList<>();
+        Set<Long> schoolTeachers = form.isAllDates() ? activeTeacherIds(schoolId, higher) : changedTeacherIds(schoolId, higher, form);
+        List<RequestObject> requests = createRequests(schoolId, schoolTeachers, higher, form);
+        return sendRequests(requests, higher);
+    }
 
-        for (RequestObject request : createRequests(schoolId, higher, form)) {
+    /**
+     * Export all data of single teacher to ehis
+     * @param teacher
+     * @throws ValidationFailedException if export fails
+     */
+    public void exportToEhis(Teacher teacher) {
+        List<Long> teacherId = Collections.singletonList(teacher.getId());
+        EhisTeacherExportForm form = new EhisTeacherExportForm();
+        form.setSubjectData(true);
+        Long schoolId = EntityUtil.getId(teacher.getSchool());
+
+        if(Boolean.TRUE.equals(teacher.getIsHigher())) {
+            List<RequestObject> requests = createRequests(schoolId, teacherId, true, form);
+            EhisTeacherExportResultDto result = sendRequests(requests, true).get(0);
+            if(result.isError()) {
+                throw new ValidationFailedException(result.getMessage());
+            }
+        }
+        if(Boolean.TRUE.equals(teacher.getIsVocational())) {
+            List<RequestObject> requests = createRequests(schoolId, teacherId, false, form);
+            EhisTeacherExportResultDto result = sendRequests(requests, false).get(0);
+            if(result.isError()) {
+                throw new ValidationFailedException(result.getMessage());
+            }
+        }
+    }
+
+    private List<EhisTeacherExportResultDto> sendRequests(List<RequestObject> requests, boolean higher) {
+        List<EhisTeacherExportResultDto> resultList = new ArrayList<>();
+        for (RequestObject request : requests) {
             LogContext queryLog;
             WsEhisTeacherLog wsEhisTeacherLog = new WsEhisTeacherLog();
             XRoadHeaderV4 xRoadHeader = getXroadHeader();
+            boolean error = false;
             if(request.getError() == null) {
                 EhisResponse<List<String>> response;
                 if(higher) {
@@ -93,44 +140,55 @@ public class EhisTeacherExportService extends EhisService {
                 }
                 queryLog = response.getLog();
                 if(!response.hasError()) {
+                    // errors are reported as success. If any of item has magic string Viga! then consider result as error
+                    wsEhisTeacherLog.setHasXteeErrors(Boolean.valueOf(StreamUtil.nullSafeList(response.getResult()).stream().anyMatch(r -> r != null && r.contains("Viga!"))));
                     wsEhisTeacherLog.setLogTxt(String.join(";", StreamUtil.nullSafeList(response.getResult())));
                 } else {
                     wsEhisTeacherLog.setHasXteeErrors(Boolean.TRUE);
+                    wsEhisTeacherLog.setLogTxt(queryLog.getError().toString());
+                    error = true;
                 }
             } else {
                 queryLog = xRoadHeader.logContext();
                 wsEhisTeacherLog.setHasOtherErrors(Boolean.TRUE);
                 wsEhisTeacherLog.setLogTxt(request.getError());
+                error = true;
             }
             wsEhisTeacherLog.setTeacher(request.getTeacher());
             wsEhisTeacherLog.setSchool(request.getTeacher().getSchool());
             ehisLogService.insert(queryLog, wsEhisTeacherLog);
 
-            resultList.add(new EhisTeacherExportResultDto(request.getTeacher().getPerson().getFullname(), wsEhisTeacherLog.getLogTxt()));
+            resultList.add(new EhisTeacherExportResultDto(request.getTeacher().getPerson().getFullname(), wsEhisTeacherLog.getLogTxt(), error));
         }
         return resultList;
     }
 
-    private List<RequestObject> createRequests(Long schoolId, boolean higher, EhisTeacherExportForm form) {
-        List<RequestObject> result = new ArrayList<>();
-        Set<Long> schoolTeachers = getTeacherIds(schoolId, higher, form);
+    private List<RequestObject> createRequests(Long schoolId, Collection<Long> schoolTeachers, boolean higher, EhisTeacherExportForm form) {
         if(schoolTeachers.isEmpty()) {
-            return result;
+            return Collections.emptyList();
         }
 
         List<Long> periods = new ArrayList<>();
-        if(higher && form.isSubjectData()) {
-            Long periodId = studyYearService.getCurrentStudyPeriod(schoolId);
-            if(periodId != null) {
-                periods.add(periodId);
-            }
-            periodId = studyYearService.getPreviousStudyPeriod(schoolId);
-            if(periodId != null) {
-                periods.add(periodId);
+        if(form.isSubjectData()) {
+            if(higher) {
+                Long periodId = studyYearService.getCurrentStudyPeriod(schoolId);
+                if(periodId != null) {
+                    periods.add(periodId);
+                }
+                periodId = studyYearService.getPreviousStudyPeriod(schoolId);
+                if(periodId != null) {
+                    periods.add(periodId);
+                }
+            } else {
+                StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
+                if(studyYear != null) {
+                    periods.add(EntityUtil.getId(studyYear));
+                }
             }
         }
 
-        List<TeacherSubject> subjects = higher ? teacherSubjects(schoolTeachers, periods) : teacherModules(schoolTeachers);
+        List<RequestObject> result = new ArrayList<>();
+        List<TeacherSubject> subjects = higher ? teacherSubjects(schoolTeachers, periods) : teacherModules(schoolTeachers, periods);
         Map<Long, List<TeacherSubject>> subjectByTeacher = subjects.stream().collect(Collectors.groupingBy(TeacherSubject::getTeacherId));
 
         List<Teacher> teachers = em.createQuery("select t from Teacher t where t.id in ?1", Teacher.class)
@@ -217,10 +275,10 @@ public class EhisTeacherExportService extends EhisService {
             resultList.add(ametikoht);
 
             // group curriculums by subject id
-            Map<Long, List<Long>> subjects = StreamUtil.nullSafeList(teacherSubjects).stream().collect(
-                    Collectors.groupingBy(TeacherSubject::getSubjectId, Collectors.mapping(TeacherSubject::getCurriculumId, Collectors.toList())));
+            Map<Long, Set<Long>> subjects = StreamUtil.nullSafeList(teacherSubjects).stream().collect(
+                    Collectors.groupingBy(TeacherSubject::getSubjectId, Collectors.mapping(TeacherSubject::getCurriculumId, Collectors.toSet())));
 
-            for (Map.Entry<Long, List<Long>> tws : subjects.entrySet()) {
+            for (Map.Entry<Long, Set<Long>> tws : subjects.entrySet()) {
                 Oppeaine oppeaine = new Oppeaine();
                 Subject subject = em.getReference(Subject.class, tws.getKey());
                 oppeaine.setNimetus(subject.getNameEt());
@@ -244,7 +302,7 @@ public class EhisTeacherExportService extends EhisService {
         for (TeacherQualification hoisQualification : teacher.getTeacherQualification()) {
             OppejoudKvalifikatsioon oKvalifikatsioon = new OppejoudKvalifikatsioon();
             oKvalifikatsioon.setKlKvalifikatsioon(ehisValue(hoisQualification.getQualification()));
-            oKvalifikatsioon.setKlKvalifikatsioonNimetus(ehisValue(hoisQualification.getQualification()));
+            oKvalifikatsioon.setKlKvalifikatsioonNimetus(ehisValue(hoisQualification.getQualificationName()));
             if (EHIS_KVALIFIKATSIOON_NIMI_MUU.equals(code(hoisQualification.getQualificationName()))) {
                 oKvalifikatsioon.setKvalifikatsioonNimetusMuu(hoisQualification.getQualificationOther());
             }
@@ -295,8 +353,8 @@ public class EhisTeacherExportService extends EhisService {
             ametikoht.setVastavusKval(yesNo(position.getMeetsQualification()));
             ametikoht.setKlassiJuhataja(yesNo(position.getIsClassTeacher()));
 
-            for(TeacherSubject module : StreamUtil.nullSafeList(modules)) {
-                CurriculumVersionOccupationModule omodule = em.getReference(CurriculumVersionOccupationModule.class, module.getCurriculumVersionOmoduleId());
+            for(Long moduleId : StreamUtil.toMappedSet(TeacherSubject::getCurriculumVersionOmoduleId, modules)) {
+                CurriculumVersionOccupationModule omodule = em.getReference(CurriculumVersionOccupationModule.class, moduleId);
                 PedagoogAine aine = new PedagoogAine();
                 CurriculumModule cm = omodule.getCurriculumModule();
                 aine.setAineNimetus(cm.getNameEt());
@@ -322,7 +380,7 @@ public class EhisTeacherExportService extends EhisService {
         // pedagoogTaiendkoolitus
         for(TeacherContinuingEducation e : teacher.getTeacherContinuingEducation()) {
             PedagoogTaiendkoolitus koolitus = new PedagoogTaiendkoolitus();
-            koolitus.setTaiendOppeas(e.getSchool() != null ? code(e.getSchool()) : e.getOtherSchool());
+            koolitus.setTaiendOppeas(e.getSchool() != null ? e.getSchool().getNameEt() : e.getOtherSchool());
             koolitus.setKlTaiendDoc(ehisValue(e.getDiploma()));
             koolitus.setTaiendDocKp(date(e.getDiplomaDate()));
             koolitus.setKlTaiendValdkond(ehisValue(e.getField()));
@@ -337,9 +395,13 @@ public class EhisTeacherExportService extends EhisService {
         for(TeacherQualification q : teacher.getTeacherQualification()) {
             PedagoogTasemekoolitus koolitus = new PedagoogTasemekoolitus();
             koolitus.setKlKvalDok(ehisValue(q.getQualification()));
-            koolitus.setKlKval(ehisValue(q.getQualificationName()));
+            if(q.getQualification() != null) {
+                ClassifierConnect c = q.getQualification().getClassifierConnects().stream().filter(r -> MainClassCode.EHIS_OPJ_KVAL.name().equals(r.getMainClassifierCode())).findFirst().orElse(null);
+                Classifier qualification = c != null ? c.getConnectClassifier() : null;
+                koolitus.setKlKval(ehisValue(qualification));
+            }
             koolitus.setKlRiik(value2(q.getState()));
-            koolitus.setTasemeOppeas(ehisValue(q.getSchool()));
+            koolitus.setTasemeOppeas(ClassifierUtil.isEstonia(q.getState()) ? name(q.getSchool()) : q.getSchoolOther());
             koolitus.setKlHaridustase(ehisValue(q.getStudyLevel()));
             koolitus.setTasemeDokNr(q.getDiplomaNr());
             koolitus.setTasemeLopetKp(date(q.getEndDate()));
@@ -353,38 +415,43 @@ public class EhisTeacherExportService extends EhisService {
         return oppeasutus;
     }
 
-    private Set<Long> getTeacherIds(Long schoolId, boolean higher, EhisTeacherExportForm form) {
-        JpaNativeQueryBuilder qb;
-        if (form.isAllDates()) {
-            qb = new JpaNativeQueryBuilder("from teacher t");
+    private Set<Long> changedTeacherIds(Long schoolId, boolean higher, EhisTeacherExportForm form) {
+        String from = "from teacher t left join teacher_position_ehis tpe on tpe.teacher_id = t.id and tpe.is_vocational = :is_vocational"
+                    + " left join teacher_qualification tq on tq.teacher_id = t.id";
+        String changed = "t.changed between :dateFrom and :dateTo or tpe.changed between :dateFrom and :dateTo"
+                    + " or tq.changed between :dateFrom and :dateTo";
+
+        if(higher) {
+            from += " left outer join teacher_mobility tm on tm.teacher_id = t.id";
+            changed += " or tm.changed between :dateFrom and :dateTo";
         } else {
-            qb = new JpaNativeQueryBuilder(
-                    "from teacher t left join teacher_mobility tm on tm.teacher_id = t.id"
-                            + " left join teacher_position_ehis tpe on tpe.teacher_id = t.id"
-                            + " left join teacher_qualification tq on tq.teacher_id = t.id");
+            from += " left outer join teacher_continuing_education tce on tce.teacher_id = t.id";
+            changed += " or tce.changed between :dateFrom and :dateTo";
         }
 
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
         qb.requiredCriteria("t.school_id = :school", "school", schoolId);
-        if(higher) {
-            qb.filter("t.is_higher = true");
-        } else {
-            qb.filter("t.is_vocational = true");
-        }
-        if(form.isAllDates()) {
-            qb.filter("t.is_active = true");
-        } else {
-            qb.parameter("dateTo", parameterAsTimestamp(form.getChangeDateTo().atStartOfDay()));
-            qb.parameter("dateFrom", parameterAsTimestamp(form.getChangeDateFrom().atStartOfDay()));
-            String filter = "(t.changed between :dateFrom and :dateTo or tm.changed between :dateFrom and :dateTo "
-                    + "or tpe.changed between :dateFrom and :dateTo or tq.changed between :dateFrom and :dateTo)";
-            qb.filter(filter);
-        }
+        qb.filter(higher ? "t.is_higher = true" : "t.is_vocational = true");
+        qb.filter("(" + changed + ")");
+        qb.parameter("is_vocational", Boolean.valueOf(!higher));
+        qb.parameter("dateFrom", DateUtils.firstMomentOfDay(form.getChangeDateFrom()));
+        qb.parameter("dateTo", DateUtils.lastMomentOfDay(form.getChangeDateTo()));
 
         List<?> result = qb.select("t.id", em).getResultList();
         return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
     }
 
-    private List<TeacherSubject> teacherSubjects(Set<Long> teachers, List<Long> periods) {
+    private Set<Long> activeTeacherIds(Long schoolId, boolean higher) {
+        JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from teacher t");
+        qb.requiredCriteria("t.school_id = :school", "school", schoolId);
+        qb.filter("t.is_active = true");
+        qb.filter(higher ? "t.is_higher = true" : "t.is_vocational = true");
+
+        List<?> result = qb.select("t.id", em).getResultList();
+        return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
+    }
+
+    private List<TeacherSubject> teacherSubjects(Collection<Long> teachers, List<Long> periods) {
         if(periods.isEmpty()) {
             return Collections.emptyList();
         }
@@ -404,12 +471,17 @@ public class EhisTeacherExportService extends EhisService {
                 r -> new TeacherSubject(resultAsLong(r, 0), null, resultAsLong(r, 1), resultAsLong(r, 2)), result);
     }
 
-    private List<TeacherSubject> teacherModules(Set<Long> teachers) {
+    private List<TeacherSubject> teacherModules(Collection<Long> teachers, List<Long> periods) {
+        if(periods.isEmpty()) {
+            return Collections.emptyList();
+        }
+
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from journal_teacher jt inner join journal j on jt.journal_id = j.id "
                 + "inner join journal_omodule_theme jot on jot.journal_id = j.id "
                 + "inner join curriculum_version_omodule_theme cvot on cvot.id = jot.curriculum_version_omodule_theme_id");
 
         qb.requiredCriteria("jt.teacher_id in (:teachers)", "teachers", teachers);
+        qb.requiredCriteria("j.study_year_id in (:studyYears)", "studyYears", periods);
         List<?> result = qb.select("cvot.curriculum_version_omodule_id, jt.teacher_id", em).getResultList();
         return StreamUtil.toMappedList(
                 r -> new TeacherSubject(null, resultAsLong(r, 0), resultAsLong(r, 1), null), result);

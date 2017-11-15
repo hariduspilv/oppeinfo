@@ -3,6 +3,7 @@ package ee.hitsa.ois.service;
 import static ee.hitsa.ois.util.JpaQueryUtil.resultAsLong;
 
 import java.lang.invoke.MethodHandles;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -16,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
@@ -31,6 +33,7 @@ import ee.hitsa.ois.enums.MessageStatus;
 import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.BadConfigurationException;
+import ee.hitsa.ois.service.MessageTemplateService.HoisReflectivePropertyAccessor;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.DataUtil;
 import ee.hitsa.ois.util.EntityUtil;
@@ -169,11 +172,15 @@ public class AutomaticMessageService {
         Long schoolId = EntityUtil.getId(school);
         MessageTemplate template = messageTemplateService.findValidTemplate(type, schoolId);
         if (template == null) {
-            throw new BadConfigurationException("main.messages.error.configuration.missingAutomaticMessageTempalate", DataUtil.asMap("template", type.name(), "school", schoolId));
+            Classifier templateName = em.getReference(Classifier.class, type.name());
+            throw new BadConfigurationException("main.messages.error.configuration.missingAutomaticMessageTemplate",
+                    DataUtil.asMap("template", templateName != null ? templateName.getNameEt() : type.name()));
         }
 
         try {
-            String content = spelParser.parseExpression(template.getContent(), new TemplateParserContext()).getValue(dataBean, String.class);
+            StandardEvaluationContext ctx = new StandardEvaluationContext(dataBean);
+            ctx.setPropertyAccessors(Arrays.asList(new HoisReflectivePropertyAccessor()));
+            String content = spelParser.parseExpression(template.getContent(), new TemplateParserContext()).getValue(ctx, String.class);
             Message message = new Message();
             message.setSubject(template.getHeadline());
             message.setContent(content);

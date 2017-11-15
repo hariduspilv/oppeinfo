@@ -21,6 +21,7 @@ import ee.hitsa.ois.domain.Committee;
 import ee.hitsa.ois.domain.CommitteeMember;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.teacher.Teacher;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -151,7 +152,8 @@ public class CommitteeService {
         }, members);
     }
 
-    public void delete(Committee committee) {
+    public void delete(HoisUserDetails user, Committee committee) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(committee, em);
     }
 }

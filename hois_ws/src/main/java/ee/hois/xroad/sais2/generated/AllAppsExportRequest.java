@@ -1,9 +1,11 @@
 
 package ee.hois.xroad.sais2.generated;
 
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementRef;
 import javax.xml.bind.annotation.XmlSchemaType;
 import javax.xml.bind.annotation.XmlType;
 import javax.xml.datatype.XMLGregorianCalendar;
@@ -19,13 +21,14 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="InstitutionRegCodes" type="{http://sais2.x-road.ee/producer/}ArrayOfInt" minOccurs="0"/&gt;
+ *         &lt;element name="InstitutionRegCodes" type="{http://sais2.x-road.eu/}ArrayOfInt" minOccurs="0"/&gt;
  *         &lt;element name="AdmissionId" type="{http://microsoft.com/wsdl/types/}guid"/&gt;
  *         &lt;element name="StatusChangeDateFrom" type="{http://www.w3.org/2001/XMLSchema}dateTime"/&gt;
  *         &lt;element name="StatusChangeDateTo" type="{http://www.w3.org/2001/XMLSchema}dateTime"/&gt;
  *         &lt;element name="IdCode" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="StudyLevel" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="ApplicationStatusValues" type="{http://sais2.x-road.ee/producer/}ArrayOfString" minOccurs="0"/&gt;
+ *         &lt;element name="ApplicationStatusValues" type="{http://sais2.x-road.eu/}ArrayOfString" minOccurs="0"/&gt;
+ *         &lt;element name="Page" type="{http://www.w3.org/2001/XMLSchema}int" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
@@ -42,7 +45,8 @@ import javax.xml.datatype.XMLGregorianCalendar;
     "statusChangeDateTo",
     "idCode",
     "studyLevel",
-    "applicationStatusValues"
+    "applicationStatusValues",
+    "page"
 })
 public class AllAppsExportRequest {
 
@@ -62,6 +66,8 @@ public class AllAppsExportRequest {
     protected String studyLevel;
     @XmlElement(name = "ApplicationStatusValues")
     protected ArrayOfString applicationStatusValues;
+    @XmlElementRef(name = "Page", type = JAXBElement.class, required = false, namespace = "http://sais2.x-road.eu/")
+    protected JAXBElement<Integer> page;
 
     /**
      * Gets the value of the institutionRegCodes property.
@@ -229,6 +235,30 @@ public class AllAppsExportRequest {
      */
     public void setApplicationStatusValues(ArrayOfString value) {
         this.applicationStatusValues = value;
+    }
+
+    /**
+     * Gets the value of the page property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link JAXBElement }{@code <}{@link Integer }{@code >}
+     *     
+     */
+    public JAXBElement<Integer> getPage() {
+        return page;
+    }
+
+    /**
+     * Sets the value of the page property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link JAXBElement }{@code <}{@link Integer }{@code >}
+     *     
+     */
+    public void setPage(JAXBElement<Integer> value) {
+        this.page = value;
     }
 
 }

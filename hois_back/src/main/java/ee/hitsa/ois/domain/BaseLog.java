@@ -4,12 +4,9 @@ import java.time.LocalDateTime;
 
 import javax.persistence.Column;
 import javax.persistence.EntityListeners;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
-import javax.persistence.JoinColumn;
-import javax.persistence.ManyToOne;
 import javax.persistence.MappedSuperclass;
 
 import org.springframework.data.annotation.CreatedBy;
@@ -26,9 +23,6 @@ public abstract class BaseLog {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne(optional = false, fetch = FetchType.LAZY)
-    @JoinColumn(nullable = false, updatable = false)
-    private School school;
     @Column(nullable = false, updatable = false)
     private String wsName;
     @Column(nullable = false, updatable = false)
@@ -50,13 +44,7 @@ public abstract class BaseLog {
         this.id = id;
     }
 
-    public School getSchool() {
-        return school;
-    }
-
-    public void setSchool(School school) {
-        this.school = school;
-    }
+    public abstract School getSchool();
 
     public String getWsName() {
         return wsName;

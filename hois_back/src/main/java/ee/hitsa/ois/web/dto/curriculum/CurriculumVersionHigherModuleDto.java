@@ -27,6 +27,9 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
     @Size(max = 255)
     private String nameEt;
 
+    @NotNull
+    private Long curriculumVersion;
+
     @NotBlank
     @Size(max = 255)
     private String nameEn;
@@ -65,22 +68,50 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
 
     private Set<CurriculumVersionElectiveModuleDto> electiveModules;
 
+    /**
+     * These are actually curriculum version specialties.
+     * Used for saving
+     */
     @NotEmpty(groups = {HigherModule.class})
     private Set<Long> specialitiesReferenceNumbers;
+    
+    /**
+     * Used for displaying modules by specialties on curriculum version form
+     */
+    private Set<Long> curriculumSpecialities;
+    
+
+    public static CurriculumVersionHigherModuleDto onlyId(CurriculumVersionHigherModule module) {
+        CurriculumVersionHigherModuleDto dto = new CurriculumVersionHigherModuleDto();
+        dto.setId(EntityUtil.getId(module));
+        return dto;
+    }
+    
+
+    public static CurriculumVersionHigherModuleDto credits(CurriculumVersionHigherModule module) {
+        CurriculumVersionHigherModuleDto dto = new CurriculumVersionHigherModuleDto();
+        dto.setId(EntityUtil.getId(module));
+        
+        dto.setCompulsoryStudyCredits(module.getCompulsoryStudyCredits());
+        dto.setTotalCredits(module.getTotalCredits());
+        return dto;
+    }
 
     public static CurriculumVersionHigherModuleDto of(CurriculumVersionHigherModule module) {
         CurriculumVersionHigherModuleDto dto = EntityUtil.bindToDto(module, new CurriculumVersionHigherModuleDto(),
-                "electiveModules", "specialities", "subjects");
-
+                "electiveModules", "specialities", "subjects", "curriculumVersion");
+        dto.setCurriculumVersion(EntityUtil.getId(module.getCurriculumVersion()));
         dto.setElectiveModules(StreamUtil.toMappedSet(CurriculumVersionElectiveModuleDto::of, module.getElectiveModules()));
         dto.setSubjects(StreamUtil.toMappedSet(s -> CurriculumVersionHigherModuleSubjectDto.of(s), module.getSubjects()));
         if(!Boolean.TRUE.equals(module.getMinorSpeciality())) {
             dto.setSpecialitiesReferenceNumbers(StreamUtil.toMappedSet(m ->
+            EntityUtil.getId(m.getSpeciality()), module.getSpecialities()));
+            dto.setCurriculumSpecialities(StreamUtil.toMappedSet(m ->
             EntityUtil.getId(m.getSpeciality().getCurriculumSpeciality()), module.getSpecialities()));
         }
         return dto;
     }
-
+    
     public Set<Long> getSpecialitiesReferenceNumbers() {
         return specialitiesReferenceNumbers != null ? specialitiesReferenceNumbers : (specialitiesReferenceNumbers = new HashSet<>());
     }
@@ -225,4 +256,19 @@ public class CurriculumVersionHigherModuleDto extends VersionedCommand {
         this.electiveModules = electiveModules;
     }
 
+    public Long getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(Long curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
+    }
+
+    public Set<Long> getCurriculumSpecialities() {
+        return curriculumSpecialities;
+    }
+
+    public void setCurriculumSpecialities(Set<Long> curriculumSpecialities) {
+        this.curriculumSpecialities = curriculumSpecialities;
+    }
 }

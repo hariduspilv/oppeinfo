@@ -1,14 +1,11 @@
 package ee.hitsa.ois.service.sais;
 
 import java.lang.invoke.MethodHandles;
-import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Map;
-import java.util.UUID;
 
 import javax.annotation.PostConstruct;
 import javax.persistence.EntityManager;
@@ -39,6 +36,7 @@ import ee.hitsa.ois.repository.CurriculumVersionRepository;
 import ee.hitsa.ois.repository.SaisAdmissionRepository;
 import ee.hitsa.ois.service.ClassifierService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.JpaQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -46,7 +44,7 @@ import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionImportForm;
 import ee.hitsa.ois.web.commandobject.sais.SaisAdmissionSearchCommand;
 import ee.hitsa.ois.web.dto.sais.SaisAdmissionSearchDto;
 import ee.hois.soap.LogContext;
-import ee.hois.xroad.helpers.XRoadHeader;
+import ee.hois.xroad.helpers.XRoadHeaderV4;
 import ee.hois.xroad.sais2.generated.Admission;
 import ee.hois.xroad.sais2.generated.AdmissionExportResponse;
 import ee.hois.xroad.sais2.generated.AdmissionTuition;
@@ -104,7 +102,7 @@ public class SaisAdmissionService {
 
     public Page<SaisAdmissionSearchDto> saisImport(SaisAdmissionImportForm form, HoisUserDetails user) {
         List<SaisAdmissionSearchDto> importResult = new ArrayList<>();
-        XRoadHeader xRoadHeader = getXroadHeader(user);
+        XRoadHeaderV4 xRoadHeader = getXroadHeader(user);
 
         Long schoolId = user.getSchoolId();
         AllAdmissionsExportRequest request = null;
@@ -176,10 +174,8 @@ public class SaisAdmissionService {
             if(saisAdmission.getFin() == null) {
                 saisAdmission.setFin(finallikasRev);
             }
-            Date startDate = admission.getAdmissionPeriodStart().toGregorianCalendar().getTime();
-            Date endDate = admission.getAdmissionPeriodEnd().toGregorianCalendar().getTime();
-            saisAdmission.setPeriodStart(LocalDateTime.ofInstant(startDate.toInstant(), ZoneId.systemDefault()).toLocalDate());
-            saisAdmission.setPeriodEnd(LocalDateTime.ofInstant(endDate.toInstant(), ZoneId.systemDefault()).toLocalDate());
+            saisAdmission.setPeriodStart(DateUtils.toLocalDate(admission.getAdmissionPeriodStart()));
+            saisAdmission.setPeriodEnd(DateUtils.toLocalDate(admission.getAdmissionPeriodEnd()));
 
             if(admission.isIsPartialLoad()) {
                 saisAdmission.setStudyLoad(oppekoormusOsa);
@@ -204,21 +200,13 @@ public class SaisAdmissionService {
                 log.info("couldn't map studyform for admission with code {}, using default value {}", saisAdmission.getCode(), DEFAULT_OPPEVORM);
                 saisAdmission.setStudyForm(oppevormMap.get(DEFAULT_OPPEVORM));
             }
+            saisAdmission.setPlaces(admission.getAdmissionCount());
             result.add(SaisAdmissionSearchDto.of(saisAdmissionRepository.save(saisAdmission)));
         }
     }
 
-    private XRoadHeader getXroadHeader(HoisUserDetails user) {
-        XRoadHeader xRoadHeader = new XRoadHeader();
-
-        xRoadHeader.setConsumer(sp.getConsumer());
-        xRoadHeader.setEndpoint(sp.getEndpoint());
-        xRoadHeader.setProducer(sp.getProducer());
-        xRoadHeader.setUserId(sp.getUseridprefix() + em.getReference(Person.class, user.getPersonId()).getIdcode());
-        xRoadHeader.setId(UUID.randomUUID().toString());
-        // TODO configurable
-        xRoadHeader.setService("sais2.AllAdmissionsExport.v1");
-        return xRoadHeader;
+    private XRoadHeaderV4 getXroadHeader(HoisUserDetails user) {
+        return sp.xroadHeader("AllAdmissionsExport", em.getReference(Person.class, user.getPersonId()).getIdcode());
     }
 
     private AllAdmissionsExportRequest getRequest(SaisAdmissionImportForm form, HoisUserDetails user) {

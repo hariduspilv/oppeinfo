@@ -16,6 +16,7 @@ public class StudyYearScheduleDto {
     private Long studyPeriod;
     @NotNull
     private Short weekNr;
+    private String addInfo;
 
     public static StudyYearScheduleDto of(StudyYearSchedule studyYearSchedule) {
         StudyYearScheduleDto dto = new StudyYearScheduleDto();
@@ -24,6 +25,7 @@ public class StudyYearScheduleDto {
         dto.setStudyYearScheduleLegend(EntityUtil.getId(studyYearSchedule.getStudyYearScheduleLegend()));
         dto.setStudyPeriod(EntityUtil.getId(studyYearSchedule.getStudyPeriod()));
         dto.setWeekNr(studyYearSchedule.getWeekNr());
+        dto.setAddInfo(studyYearSchedule.getAddInfo());
         return dto;
     }
 
@@ -39,8 +41,8 @@ public class StudyYearScheduleDto {
     }
 
     /*
-     * Equals and hashCode should be computed by studentGroup, studyPeriod, and weekNr.
-     * They are generated automatically.
+     * Equals and hashCode should be computed by studentGroup, studyPeriod, and
+     * weekNr. They are generated automatically.
      */
     @Override
     public int hashCode() {
@@ -118,4 +120,13 @@ public class StudyYearScheduleDto {
     public void setWeekNr(Short weekNr) {
         this.weekNr = weekNr;
     }
+
+    public String getAddInfo() {
+        return addInfo;
+    }
+
+    public void setAddInfo(String addInfo) {
+        this.addInfo = addInfo;
+    }
+
 }

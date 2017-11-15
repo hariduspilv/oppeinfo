@@ -4,6 +4,7 @@ import java.security.Principal;
 import java.util.Date;
 import java.util.Map;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,8 +44,8 @@ public class AuthenticationController {
 
     @RequestMapping("/user")
     @ResponseBody
-    public AuthenticatedUser user(Principal principal) {
-        return principal != null ? userDetailsService.authenticatedUser(principal) : null;
+    public AuthenticatedUser user(HttpServletRequest request, Principal principal) {
+        return principal != null ? userDetailsService.authenticatedUser(request, principal) : null;
     }
 
     @CrossOrigin
@@ -56,7 +57,7 @@ public class AuthenticationController {
         if (principal != null) {
             String token = Jwts.builder()
                     .setSubject(((EstonianIdCardAuthenticationToken)principal).getPrincipal().toString())
-                    .claim(hoisJwtProperties.getClaimLoginMethod(), LoginMethod.ID_CARD.name())
+                    .claim(hoisJwtProperties.getClaimLoginMethod(), LoginMethod.LOGIN_TYPE_I.name())
                     .setExpiration(new Date(System.currentTimeMillis() + 60_000))
                     .signWith(SignatureAlgorithm.HS512, hoisJwtProperties.getSecret())
                     .compact();
@@ -65,7 +66,7 @@ public class AuthenticationController {
     }
 
     @PostMapping("/changeUser")
-    public AuthenticatedUser updateUser(Principal principal, @RequestBody Map<String, Long> json) {
+    public AuthenticatedUser updateUser(HttpServletRequest request, Principal principal, @RequestBody Map<String, Long> json) {
         Long id = json.get("id");
 
         if (principal != null && id != null) {
@@ -84,7 +85,7 @@ public class AuthenticationController {
 
             SecurityContextHolder.getContext().setAuthentication(auth);
 
-            return user(SecurityContextHolder.getContext().getAuthentication());
+            return user(request, SecurityContextHolder.getContext().getAuthentication());
         }
         return null;
     }

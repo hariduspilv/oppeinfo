@@ -111,7 +111,8 @@ public class StudentRepresentativeService {
         return representative;
     }
 
-    public void delete(StudentRepresentative representative) {
+    public void delete(HoisUserDetails user, StudentRepresentative representative) {
+        EntityUtil.setUsername(user.getUsername(), em);
         // TODO if there is StudentRepresentativeApplication, change it's status too?
         userService.deleteUser(representative);
         EntityUtil.deleteEntity(representative, em);

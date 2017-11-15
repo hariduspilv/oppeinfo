@@ -278,6 +278,6 @@
   </div>
 
   <md-button ng-href="#/teachers" class="md-raised">{{'main.button.back' | translate}}</md-button>
-  <md-button ng-href="#/teachers" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
+  <md-button ng-if="teacher.id" ng-click="sendToEhis()" class="md-raised">{{'main.button.sendToEhis' | translate}}</md-button>
   <md-button ng-if="teacher.id" ng-click="delete()" class="md-raised">{{'main.button.delete' | translate}}</md-button>
 </md-content>

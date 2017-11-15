@@ -6,6 +6,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'generalMessage/general.message.list.html',
       controller: 'GeneralMessageSearchController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_YLDTEADE]
       }
@@ -14,6 +15,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'generalMessage/general.message.edit.html',
       controller: 'GeneralMessageEditController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
@@ -22,6 +24,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'generalMessage/general.message.edit.html',
       controller: 'GeneralMessageEditController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
@@ -30,6 +33,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'generalMessage/general.message.view.html',
       controller: 'GeneralMessageViewController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }

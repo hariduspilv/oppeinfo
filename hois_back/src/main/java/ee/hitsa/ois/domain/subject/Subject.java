@@ -19,9 +19,10 @@ import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.domain.school.SchoolDepartment;
 import ee.hitsa.ois.domain.subject.studyperiod.SubjectStudyPeriod;
 import ee.hitsa.ois.domain.timetable.SubjectStudyPeriodPlan;
+import ee.hitsa.ois.util.Translatable;
 
 @Entity
-public class Subject extends BaseEntityWithId {
+public class Subject extends BaseEntityWithId implements Translatable {
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(updatable = false, nullable = false)
@@ -104,6 +105,7 @@ public class Subject extends BaseEntityWithId {
         this.code = code;
     }
 
+    @Override
     public String getNameEt() {
         return nameEt;
     }
@@ -112,6 +114,7 @@ public class Subject extends BaseEntityWithId {
         this.nameEt = nameEt;
     }
 
+    @Override
     public String getNameEn() {
         return nameEn;
     }

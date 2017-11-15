@@ -3,7 +3,8 @@
 angular.module('hitsaOis').controller('EkisLogsController', ['$mdDialog', '$scope', 'QueryUtils',
   function ($mdDialog, $scope, QueryUtils) {
 
-    $scope.messageTypes = ['registerDirective', 'registerCertificate', 'registerPracticeContract'];
+    $scope.messageTypes = ['registerDirective', 'deleteDirective', 'registerCertificate', 'registerPracticeContract',
+      'enforceContract', 'enforceDirective', 'rejectDirective'];
 
     var baseUrl = '/logs/ekis';
     QueryUtils.createQueryForm($scope, baseUrl, {order: '-inserted'});

@@ -18,7 +18,7 @@ import javax.xml.bind.annotation.XmlType;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
  *         &lt;element name="Id" type="{http://microsoft.com/wsdl/types/}guid"/&gt;
- *         &lt;element name="Name" type="{http://sais2.x-road.ee/producer/}ArrayOfKvp" minOccurs="0"/&gt;
+ *         &lt;element name="Name" type="{http://sais2.x-road.eu/}ArrayOfKvp" minOccurs="0"/&gt;
  *         &lt;element name="EHISCode" type="{http://www.w3.org/2001/XMLSchema}int"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;

@@ -13,8 +13,8 @@ import ee.hitsa.ois.enums.FinSource;
 import ee.hitsa.ois.enums.FinSpecific;
 import ee.hitsa.ois.enums.StudyLoad;
 import ee.hitsa.ois.util.ClassifierUtil;
-import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
+import ee.hitsa.ois.util.SaisAdmissionUtil;
 import ee.hitsa.ois.web.commandobject.directive.DirectiveForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
@@ -239,7 +239,7 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         dto.setSaisApplication(application.getId());
 
         // finSpecific default value
-        boolean higher = CurriculumUtil.isHigher(application.getSaisAdmission().getStudyLevel());
+        boolean higher = SaisAdmissionUtil.isHigher(application.getSaisAdmission());
         FinSpecific s;
         if(FinSource.isFree(dto.getFin())) {
             s = higher ? FinSpecific.FINTAPSUSTUS_Y : FinSpecific.FINTAPSUSTUS_R;
@@ -256,6 +256,9 @@ public class DirectiveStudentDto extends DirectiveForm.DirectiveFormStudent {
         setPersonData(student.getPerson(), dto);
 
         switch(directiveType) {
+        case KASKKIRI_AKAD:
+            dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));
+            break;
         case KASKKIRI_ENNIST:
             dto.setStudentGroup(EntityUtil.getNullableId(student.getStudentGroup()));
             dto.setOldCurriculumVersion(AutocompleteResult.of(student.getCurriculumVersion()));

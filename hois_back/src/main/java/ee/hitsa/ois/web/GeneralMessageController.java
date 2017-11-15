@@ -64,6 +64,6 @@ public class GeneralMessageController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") GeneralMessage generalMessage, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, generalMessage.getSchool());
-        generalMessageService.delete(generalMessage);
+        generalMessageService.delete(user, generalMessage);
     }
 }

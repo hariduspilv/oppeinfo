@@ -103,6 +103,7 @@ public class StudyYearScheduleService {
         schedule.setStudyYearScheduleLegend(legend);
 
         schedule.setWeekNr(dto.getWeekNr());
+        schedule.setAddInfo(dto.getAddInfo());
         return schedule;
     }
 

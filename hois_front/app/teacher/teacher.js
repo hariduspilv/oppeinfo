@@ -119,18 +119,32 @@
 
       $scope.update = function () {
         $scope.teacherForm.$setSubmitted();
-        if ($scope.teacherForm.$valid) {
-          if ($scope.teacher.id) {
-            $scope.teacher.$update().then(afterLoad).then(message.updateSuccess);
-          } else {
-            $scope.teacher.$save().then(function (response) {
-              message.info('main.messages.create.success');
-              $location.path(baseUrl + '/' + response.id + '/edit');
-            });
-          }
-        } else {
-            message.error('main.messages.form-has-errors');
+        if (!$scope.teacherForm.$valid) {
+          message.error('main.messages.form-has-errors');
+          return;
         }
+        if ($scope.teacher.id) {
+          $scope.teacher.$update().then(afterLoad).then(message.updateSuccess);
+        } else {
+          $scope.teacher.$save().then(function (response) {
+            message.info('main.messages.create.success');
+            $location.url(baseUrl + '/' + response.id + '/edit?_noback');
+          });
+        }
+      };
+
+      $scope.sendToEhis = function() {
+        $scope.teacherForm.$setSubmitted();
+        if (!$scope.teacherForm.$valid) {
+          message.error('main.messages.form-has-errors');
+          return;
+        }
+        dialogService.confirmDialog({ prompt: 'teacher.ehisconfirm' }, function () {
+          QueryUtils.endpoint(baseUrl + '/' + $scope.teacher.id + '/sendToEhis').put({}, $scope.teacher).$promise.then(function() {
+            message.info('teacher.sentToEhis');
+            $location.url(baseUrl + '/' + $scope.teacher.id + '/edit?_noback');
+          });
+        });
       };
 
       $scope.deleteEhisPosition = function (ehisPosition) {

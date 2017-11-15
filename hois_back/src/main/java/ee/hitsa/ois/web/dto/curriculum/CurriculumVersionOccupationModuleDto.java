@@ -23,6 +23,7 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     @NotNull
     @Min(1)
     private Long curriculumModule;
+    private Long curriculumVersion;
 
     private Long id;
 
@@ -57,6 +58,13 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
     private Set<CurriculumVersionOccupationModuleThemeDto> themes;
     @Valid
     private Set<CurriculumVersionOccupationModuleYearCapacityDto> yearCapacities;
+    
+    public static CurriculumVersionOccupationModuleDto forCurriculumVersionForm(CurriculumVersionOccupationModule module) {
+        CurriculumVersionOccupationModuleDto dto = new CurriculumVersionOccupationModuleDto();
+        dto.setId(module.getId());
+        dto.setCurriculumModule(EntityUtil.getId(module.getCurriculumModule()));
+        return dto;
+    }
 
     public static CurriculumVersionOccupationModuleDto of(CurriculumVersionOccupationModule module) {
         CurriculumVersionOccupationModuleDto dto = EntityUtil.bindToDto(module, new CurriculumVersionOccupationModuleDto(),
@@ -212,5 +220,13 @@ public class CurriculumVersionOccupationModuleDto extends VersionedCommand {
 
     public void setYearCapacities(Set<CurriculumVersionOccupationModuleYearCapacityDto> yearCapacities) {
         this.yearCapacities = yearCapacities;
+    }
+
+    public Long getCurriculumVersion() {
+        return curriculumVersion;
+    }
+
+    public void setCurriculumVersion(Long curriculumVersion) {
+        this.curriculumVersion = curriculumVersion;
     }
 }

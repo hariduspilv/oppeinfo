@@ -190,7 +190,8 @@ public class StudentService {
         return EntityUtil.save(absence, em);
     }
 
-    public void delete(StudentAbsence absence) {
+    public void delete(HoisUserDetails user, StudentAbsence absence) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(absence, em);
     }
 

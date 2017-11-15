@@ -2,19 +2,25 @@ package ee.hitsa.ois.web.dto.timetable;
 
 public class TimetableEventSearchRoomDto {
     private final Long id;
-    private final String code;
+    private final String roomCode;
+    private final String buildingCode;
     
-    public TimetableEventSearchRoomDto(Long id, String code) {
+    public TimetableEventSearchRoomDto(Long id, String roomCode, String buildingCode) {
         this.id = id;
-        this.code = code;
+        this.roomCode = roomCode;
+        this.buildingCode = buildingCode;
     }
 
     public Long getId() {
         return id;
     }
 
-    public String getCode() {
-        return code;
+    public String getRoomCode() {
+        return roomCode;
+    }
+    
+    public String getBuildingCode() {
+        return buildingCode;
     }
     
 }

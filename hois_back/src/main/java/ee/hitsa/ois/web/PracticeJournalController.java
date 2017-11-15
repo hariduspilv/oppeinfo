@@ -94,7 +94,7 @@ public class PracticeJournalController {
             @WithVersionedEntity(value = "id", versionRequestParam = "version") PracticeJournal practiceJournal,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
-        practiceJournalService.delete(practiceJournal);
+        practiceJournalService.delete(user, practiceJournal);
     }
 
     @GetMapping("studentPracticeModules/{studentId:\\d+}")

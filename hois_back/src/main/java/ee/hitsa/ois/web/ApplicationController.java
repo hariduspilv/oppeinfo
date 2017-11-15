@@ -77,7 +77,7 @@ public class ApplicationController {
                 Boolean.TRUE.equals(application.getNeedsRepresentativeConfirm())) {
             throw new ValidationFailedException(String.format("user %s is not allowed to delete application %d with status %s", user.getUsername(), application.getId(), status.name()));
         }
-        applicationService.delete(application);
+        applicationService.delete(user, application);
     }
 
     @GetMapping("/student/{id:\\d+}/validAcademicLeave")

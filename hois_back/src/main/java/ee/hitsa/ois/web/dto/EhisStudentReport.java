@@ -3,8 +3,10 @@ package ee.hitsa.ois.web.dto;
 import ee.hitsa.ois.domain.WsEhisStudentLog;
 import ee.hitsa.ois.domain.directive.DirectiveStudent;
 import ee.hitsa.ois.domain.student.Student;
+import ee.hitsa.ois.util.DateUtils;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 
 public class EhisStudentReport {
@@ -110,14 +112,36 @@ public class EhisStudentReport {
     }
 
     public static class ForeignStudy extends StudentReport {
-        public static ForeignStudy of(Student student, WsEhisStudentLog log) {
+        private LocalDate fromDate;
+        private LocalDate toDate;
+
+        public static ForeignStudy of(DirectiveStudent ds, WsEhisStudentLog log) {
             ForeignStudy foreignStudy = new ForeignStudy();
-            foreignStudy.fill(student, log);
+            foreignStudy.fill(ds.getStudent(), log);
+
+            foreignStudy.setFromDate(DateUtils.periodStart(ds));
+            foreignStudy.setToDate(DateUtils.periodEnd(ds));
 
             foreignStudy.setError(Boolean.valueOf(Boolean.TRUE.equals(log.getHasOtherErrors()) || Boolean.TRUE.equals(log.getHasXteeErrors())));
             foreignStudy.setMessage(log.getLogTxt());
 
             return foreignStudy;
+        }
+
+        public LocalDate getFromDate() {
+            return fromDate;
+        }
+
+        public void setFromDate(LocalDate fromDate) {
+            this.fromDate = fromDate;
+        }
+
+        public LocalDate getToDate() {
+            return toDate;
+        }
+
+        public void setToDate(LocalDate toDate) {
+            this.toDate = toDate;
         }
     }
 

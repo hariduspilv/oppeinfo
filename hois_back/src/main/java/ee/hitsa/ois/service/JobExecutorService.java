@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.enums.JobType;
 import ee.hitsa.ois.service.ehis.EhisDirectiveStudentService;
-import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.util.EntityUtil;
 
 /**
@@ -34,17 +33,21 @@ public class JobExecutorService {
     @Autowired
     private EhisDirectiveStudentService ehisDirectiveStudentService;
     @Autowired
-    private EkisService ekisService;
-    @Autowired
     private JobService jobService;
 
+    /**
+     * Handler for practice contract ended jobs
+     */
     @Scheduled(cron = "${hois.jobs.contract.cron}")
     public void contractJob() {
         handleJobs(job -> {
-            contractService.endContract(job);
+            contractService.endContract(EntityUtil.getId(job.getContract()));
         }, JobType.JOB_PRAKTIKALEPING_KEHTETU);
     }
 
+    /**
+     * Handler for student status change jobs caused by directives
+     */
     @Scheduled(cron = "${hois.jobs.directive.cron}")
     public void directiveJob() {
         handleJobs(job -> {
@@ -53,6 +56,9 @@ public class JobExecutorService {
         }, JobType.JOB_AKAD_KATK, JobType.JOB_AKAD_MINEK, JobType.JOB_AKAD_TULEK, JobType.JOB_VALIS_MINEK, JobType.JOB_VALIS_TULEK);
     }
 
+    /**
+     * Handler for EHIS jobs
+     */
     @Scheduled(cron = "${hois.jobs.ehis.cron}")
     public void ehisJob() {
         handleJobs(job -> {
@@ -60,17 +66,23 @@ public class JobExecutorService {
         }, JobType.JOB_EHIS);
     }
 
+    /**
+     * Handler for EKIS jobs
+     */
     @Scheduled(cron = "${hois.jobs.ekis.cron}")
     public void ekisJob() {
         handleJobs(job -> {
-            if(job.getDirective() != null) {
-                ekisService.registerDirective(EntityUtil.getId(job.getDirective()));
-            } else if(job.getContract() != null) {
-                ekisService.registerPracticeContract(EntityUtil.getId(job.getContract()));
-            }
+            // XXX do nothing for now
         }, JobType.JOB_EKIS);
     }
 
+    /**
+     * Job execution wrapper.
+     * If actual handler returns without exception, job is marked as done, otherwise failed (and exception is logged).
+     *
+     * @param handler
+     * @param types
+     */
     private void handleJobs(Consumer<Job> handler, JobType... types) {
         for(Job job : jobService.findExecutableJobs(types)) {
             try {

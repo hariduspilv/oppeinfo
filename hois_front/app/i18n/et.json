@@ -86,7 +86,7 @@
         "integer": "Peab olema täisarv!",
         "estonianIdcode": "Isikukood ei vasta standardile",
         "configuration": {
-          "missingAutomaticMessageTempalate": "Süsteemis on puudu automaatse teate mall {{template}} koolile {{school}}"
+          "missingAutomaticMessageTemplate": "Süsteemis on puudu automaatse teate mall {{template}}"
         },
         "nopermission": "Vajalikud õigused puuduvad"
       },
@@ -365,6 +365,7 @@
         "label": "Andmevahetus",
         "ehisLogs": "EHISe andmevahetuse logi",
         "ekisLogs": "EKISe andmevahetuse logi",
+        "saisLogs": "SAISi andmevahetuse logi",
         "studentinfoExport": "Õppurid",
         "teacherinfoExportHigher": "Õppejõud",
         "teacherinfoExportVocational": "Pedagoogid"
@@ -439,6 +440,18 @@
   "generalTimetable": {
     "curriculum": "Õppekava",
     "studentGroups": "Õpperühm(ad)"
+  },
+  "sais": {
+    "message": {
+      "error": "Viga",
+      "insertedBy": "Kasutaja",
+      "name": "Sõnumi nimetus",
+      "onlyErrors": "Ainult sõnumid, mille saatmisel tekkis viga",
+      "request": "Sisend",
+      "response": "Väljund",
+      "sentDatesRange": "Saatmise kuupäevade vahemik",
+      "time": "Saatmise aeg"
+    }
   },
   "student": {
     "label": "Õppur",
@@ -566,7 +579,6 @@
       "missing": "Tulemused puuduvad",
       "higher": {
         "curriculumVersion": "Õppekava versioon",
-        "totalCredits": "",
         "consideredCredits": "Kokku / õppekava täitmisel arvesse võetud EAP",
         "mandatorySubjects": "Kohustuslikud ained",
         "optionalSubjects": "Valikained",
@@ -679,6 +691,9 @@
     "generateUserEmail": "E-posti automaatne genereerimine uuele kasutajale",
     "id": "ID",
     "label": "Õppeasutus",
+    "error": {
+      "ehisSchoolMissing": "Puudub seos EHISe kooliga"
+    },
     "missing": {
       "emailDomain": "Õppeasutuse e-posti domeen puudub"
     },
@@ -768,12 +783,14 @@
     "directiveCoordinator": "Kellele suunatud",
     "directiveNr": "Dokumendi number",
     "duplicatecancel": "Tühistamise käskkiri on juba olemas",
+    "ekisconfirm": "Kas oled kindel, et soovid käskkirja kinnitamisele saata?",
     "headline": "Pealkiri",
     "inserted": "Koostamise kuupäev",
     "insertedBy": "Koostaja",
     "insertedFrom": "Koostamise kp alates",
     "insertedThru": "Koostamise kp kuni",
     "missingstudents": "Käskkirjal pole õppureid",
+    "newperson": "Uus isik",
     "nostudentsfound": "Õppureid ei leitud",
     "preamble": "Preambula",
     "sendToConfirm": "Saada kinnitamisele",
@@ -872,6 +889,7 @@
     "subjects": "Õppeained",
     "teacher": "Õpetaja",
     "total": "Kokku",
+    "planned": "Ettenähtud",
     "isConfirmer": "olen kinnitaja",
     "isFiller": "olen täitja ",
     "room": "Ruumid",
@@ -949,6 +967,7 @@
     "validThru": "Kehtivuse lõppkuupäev"
   },
   "certificate": {
+    "ekisconfirm": "Kas oled kindel, et soovid tõendit tellida?",
     "type": "Tõendi liik",
     "headline": "Pealkiri",
     "studentName": "Õppuri nimi",
@@ -1057,6 +1076,7 @@
         "outcomeLabelEn": "Õpiväljundid inglise keeles"
       },
       "module": {
+        "isAdditional": "Lisamoodul",
         "modules": "Õpetatavad moodulid",
         "add": "Lisa moodul",
         "occupation": "Kutse/spetsialiseerumine/osakutse",
@@ -1291,7 +1311,9 @@
       "cannotBeDeleted": "Ei saa olla kustutatud",
       "cannotBeEdited": "Ei saa olla muudetud",
       "themeCreditsAndHoursMismatch": "Teema EKAP-de arv ei vasta tundide arvule",
-      "themeCapacitiesAndHoursMismatch": "Teema mahu jaotus ei vasta teema mahule (tundides)"
+      "themeCapacitiesAndHoursMismatch": "Teema mahu jaotus ei vasta teema mahule (tundides)",
+      "noSuchStudyLevel": "Kool pole seotud vastava õppetasemega",
+      "noSubject": "Vähemalt üks õppeaine peab olema lisatud"
     },
     "prompt": {
       "deleteJointPartner": "Selle õppeasutuse ained on lisatud õppekavasse. Kas oled kindel, et soovid partnerülikooli kustutada?",
@@ -1299,7 +1321,11 @@
       "hasOccupations": "Õppekava on seotud kutsetega. Soovid neid kustutada?",
       "hasSubOccupations": "Õppekava on seotud osakutsetega. Soovid neid kustutada? ",
       "deleteImplementationPlan": "Kas oled kindel, et soovid rakenduskava kustutada?",
-      "goToVersionForm": "Veendu, et õppekava andmed on salvestatud. Kas soovid jätkata?"
+      "deleteTheme": "Kas oled kindel, et soovid mooduli teema kustutada?",
+      "goToVersionForm": "Veendu, et õppekava andmed on salvestatud. Kas soovid jätkata?",
+      "occupationModuleCapacitiesMismatch": "Mooduli mahu jaotus tundides ei klapi kokku mooduli EKAP mahuga, kas soovid jätkata?",
+      "occupationModuleYearCapacitiesMismatch": "Mooduli mahu jaotus õppeaastate lõikes ei klapi kokku mooduli EKAP mahuga, kas soovid jätkata?",
+      "capacitiesAndYearCapacitiesMismatch": "Mooduli mahu jaotus tundides ja õppeaastate lõikes ei klapi kokku mooduli EKAP mahuga, kas soovid jätkata?"
     },
     "success": {
       "verified": "Õppekava on kinnitatud",
@@ -1384,8 +1410,10 @@
     "label": "Õpetaja",
     "data": "Põhiandmed",
     "deleteConfirm": "Kas oled kindel, et soovid õpetaja kustutada?",
+    "ehisconfirm": "Kas oled kindel, et soovid õpetaja andmed EHISesse saata?",
     "email": "E-posti aadress",
     "phone": "Kontakttelefon",
+    "sentToEhis": "Õpetaja on EHISesse saadetud",
     "studyPeriodLoad": "Õppeperioodi koormus",
     "studyYearLoad": "Õppeaasta koormus",
     "person": {
@@ -1572,6 +1600,7 @@
     "learningMethods": "Mooduli õppemeetodid",
     "assessmentMethodsAndTasks": "Mooduli hindamismeetodid ja ülesanded",
     "assessmentType": "Mooduli hindamisviis",
+    "noAssessment": "Ei hinnata",
     "totalGradeDescription": "Kokkuvõtva hinde kujunemine",
     "gradeAssessments": "Hindamiskriteeriumid",
     "grade3Description": "\"3\" saamise tingimus",
@@ -1613,6 +1642,9 @@
       "moduleOK": "Korras?"
     },
     "messages": {
+      "prompt": {
+        "delete": "Kas oled kindel, et soovid mooduli kustutada?"
+      },
       "error": {
         "atLeastOneMainModuleIsRequired": "Vähemalt üks põhiõpingute  moodul peab olema lisatud",
         "moduleCreditAmountMustBeExactAsCurriculums": "Moodulite mahtude summa ühe kutse lõikes peab olema võrdne õppekava kogu mahuga"
@@ -1922,6 +1954,7 @@
     "week": "nädal",
     "studyType": "Õppetöö liik",
     "durationInWeeks": "Kestvus nädalates",
+    "addInfo": "Kommentaar",
     "error": {
       "minWeeks": "Minimaalne õppetöö kestvus on 1 nädal",
       "maxWeeks": "Õppeaasta lõppuni on jäänud {{weeks}} nädalat"
@@ -1998,7 +2031,8 @@
       "showLessonTimes": "Näita tundide aegasid",
       "lessonTimes": "Tundide ajad",
       "timeClash": "Aeg kattub teise tunniga või on väljaspool ajavahemikku",
-      "addForOtherGroups": "Kas lisada aine-õpetaja tund ka teistesse seotud rühmadesse?"
+      "addForOtherGroups": "Kas lisada aine-õpetaja tund ka teistesse seotud rühmadesse?",
+      "displayPeriodLessons": "Kuva perioodi tunnid"
     },
     "timetableEvent": {
       "name": "Sündmuse nimi",
@@ -2006,17 +2040,21 @@
       "weekAmount": "Nädalate arv",
       "repetition": "Kordus",
       "teacher": "Õpetaja",
-      "room": "Ruum"
+      "room": "Ruum",
+      "occupied": "Kinni"
     },
     "subjectTeacherPairs": "Aine-õpetaja paarid",
     "search": {
+      "label": "Otsing",
       "teacher": "Õpetaja",
       "studentGroup": "Õpperühm",
       "room": "Ruum",
-      "name": "Aine/teema"
+      "subject": "Aine/teema"
     },
+    "saveToCalendar": "Salvesta kalendrisse",
     "error": {
-      "noPeriodTimetable": "Valitud perioodi kohta tunniplaan puudub"
+      "noPeriodTimetable": "Valitud perioodi kohta tunniplaan puudub",
+      "noSearchResults": "Otsingutingimustele vastavaid kirjeid ei leitud"
     }
   },
   "journal": {
@@ -2173,6 +2211,8 @@
       "laePedagoogid": "Pedagoogide andmed",
       "message": "Selgitav tekst",
       "name": "Sõnumi nimetus",
+      "oisOppekava": "Õppekavad",
+      "oisOppekavaStaatus": "Õppekava staatused",
       "onlyErrors": "Ainult sõnumid, mille saatmisel tekkis viga",
       "request": "Sisend",
       "response": "Väljund",
@@ -2184,6 +2224,7 @@
     },
     "student": {
       "dataType": "Saadetavad andmed",
+      "fromDate": "Alates",
       "sendToEhis": "Saada EHISesse",
       "sentDatesRange": "Andmete saatmise kuupäevade vahemik",
       "CURRICULA_FULFILMENT": "Õppekava täitmine",
@@ -2199,13 +2240,15 @@
       "message": "Teade",
       "docNr": "Lõpudokumendi number",
       "cumLaude": "cum laude",
-      "academicNr": "Akadeemilise õiendi nr"
+      "academicNr": "Akadeemilise õiendi nr",
+      "toDate": "Kuni"
     },
     "teacher": {
       "radioData": "Andmete valik",
       "allData": "Kõik andmed",
       "changedData": "Muutused",
       "importRange": "Muutuste kuupäevade vahemik",
+      "moduleData": "Õpetamiste info edastamine",
       "subjectData": "Õppeainete info edastamine",
       "sendToEhis": "Saada andmed EHISesse",
       "name": "Nimi",
@@ -2215,12 +2258,16 @@
   },
   "ekis": {
     "message": {
+      "deleteDirective": "Käskkirja kustutamine",
       "directive": "Käskkiri",
+      "enforceContract": "Praktikalepingu kinnitamine",
+      "enforceDirective": "Käskkirja kinnitamine",
       "error": "Viga",
       "insertedBy": "Kasutaja",
       "registerCertificate": "Tõendid",
       "registerPracticeContract": "Praktikalepingud",
       "registerDirective": "Käskkirjad",
+      "rejectDirective": "Käskkirja tagasilükkamine",
       "message": "Selgitav tekst",
       "name": "Sõnumi nimetus",
       "onlyErrors": "Ainult sõnumid, mille saatmisel tekkis viga",
@@ -2357,6 +2404,7 @@
   "contract": {
     "startFrom": "Alguskuupäev alates",
     "startThru": "Alguskuupäev kuni",
+    "ekisconfirm": "Kas oled kindel, et soovid saata EKISesse?",
     "endFrom": "Lõpukuupäev alates",
     "endThru": "Lõpukuupäev kuni",
     "validity": "Lepingu kehtivus",

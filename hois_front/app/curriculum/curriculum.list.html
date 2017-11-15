@@ -133,7 +133,7 @@
 		</div>
 
       </div>
-      <div layout="row" layout-sm="column" layout-xs="column" >
+      <div layout="row" layout-sm="column" layout-xs="column" ng-if="canView">
           <md-input-container flex="45" flex-sm="100" flex-xs="100">
               <label>{{'main.status' | translate}}</label>
                <hois-classifier-select ng-model="criteria.status" multiple main-classifier-code="OPPEKAVA_STAATUS" model-value-attr="code"></hois-classifier-select>
@@ -159,8 +159,8 @@
       <div layout="row">
           <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
           <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
-          <md-button class="md-raised" ng-if="auth.school.vocational && auth.isAdmin()" ng-href="#/vocationalCurriculum/new">{{'main.button.insertVocationalCurriculum' | translate}}</md-button>
-          <md-button class="md-raised" ng-if="auth.school.higher && auth.isAdmin()" ng-href="#/higherCurriculum/new">{{'main.button.insertHigherCurriculum' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="auth.school.vocational && canCreate" ng-href="#/vocationalCurriculum/new">{{'main.button.insertVocationalCurriculum' | translate}}</md-button>
+          <md-button class="md-raised" ng-if="auth.school.higher && canCreate" ng-href="#/higherCurriculum/new">{{'main.button.insertHigherCurriculum' | translate}}</md-button>
       </div>
 	  </fieldset>
   </form>
@@ -177,7 +177,7 @@
         <th md-column md-order-by="credits">{{'curriculum.creditsEapEkap' | translate}}</th>
         <th md-column md-order-by="validFrom">{{'stateCurriculum.validFrom' | translate}}</th>
         <th md-column md-order-by="validThru">{{'stateCurriculum.validThru' | translate}}</th>
-        <th md-column md-order-by="status.{{currentLanguageNameField()}}">{{'stateCurriculum.status' | translate}}</th>
+        <th md-column md-order-by="status.{{currentLanguageNameField()}}" ng-if="canView">{{'stateCurriculum.status' | translate}}</th>
         <th></th>
     </tr>
     </thead>
@@ -189,9 +189,9 @@
         <td md-cell>{{::row.credits}}</td>
         <td md-cell>{{row.validFrom | hoisDate}}</td>
         <td md-cell>{{row.validThru | hoisDate}}</td>
-        <td md-cell>{{currentLanguageNameField(row.status)}}</td>
+        <td md-cell ng-if="canView">{{currentLanguageNameField(row.status)}}</td>
         <td md-cell>
-            <md-button md-no-ink class="md-primary change-button" ng-if="auth.isAdmin() && canBeEdited(row)" ng-click="edit(row)">{{'main.button.change' | translate}}</md-button>
+            <md-button md-no-ink class="md-primary change-button" ng-if="row.canChange" ng-click="edit(row)">{{'main.button.change' | translate}}</md-button>
         </td>
     </tr>
     </tbody>

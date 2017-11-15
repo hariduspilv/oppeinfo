@@ -84,7 +84,7 @@
         </md-input-container>
 
         <md-input-container class="md-block">
-          <label class="textInput">{{'directive.directiveCoordinator' | translate}}</label>
+          <label class="textInput md-required">{{'directive.directiveCoordinator' | translate}}</label>
           <hois-select ng-model="record.directiveCoordinator" name="directiveCoordinator" type="directivecoordinator" criteria="{isDirective: true}"></hois-select>
         </md-input-container>
 
@@ -106,7 +106,7 @@
           <md-button class="md-raised md-primary" ng-click="update()">{{'main.button.save' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="sendToConfirm()">{{'directive.sendToConfirm' | translate}}</md-button>
           <md-button class="md-raised" ng-if="record.id" ng-click="delete()">{{'main.button.delete' | translate}}</md-button>
-          <md-button ng-click="back('#/directives')" class="md-raised">{{'main.button.back' | translate}}</md-button>
+          <md-button ng-click="back('#/directives', directiveForm)" class="md-raised">{{'main.button.back' | translate}}</md-button>
         </div>
       </div>
     </form>

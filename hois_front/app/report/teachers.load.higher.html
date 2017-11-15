@@ -9,7 +9,7 @@
 
         <md-input-container flex="50" flex-offset="5" flex-sm="100" flex-xs="100">
           <label class="textInput">{{'report.teachersload.studyPeriod' | translate}}</label>
-          <hois-select ng-model="criteria.studyPeriod" values="formState.studyPeriods"></hois-select>
+          <hois-select ng-model="criteria.studyPeriod" values="criteria.studyYear ? formState.studyPeriods[criteria.studyYear] : formState.allStudyPeriods"></hois-select>
         </md-input-container>
       </div>
 

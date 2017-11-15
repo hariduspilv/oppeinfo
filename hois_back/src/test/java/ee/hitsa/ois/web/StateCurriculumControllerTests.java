@@ -173,8 +173,6 @@ public class StateCurriculumControllerTests {
         stateCurriculumDto.setStatus(CurriculumStatus.OPPEKAVA_STAATUS_S.name());
 
         module = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn().equals("StateCurriculumControllerTestNameEn")).findFirst().get();
-        module.setOutcomesEt(NAME + "2");
-        module.setOutcomesEn(NAME + "2");
         module.setNameEt(NAME + "2");
         module.setModule("KUTSEMOODUL_P");
 
@@ -203,8 +201,6 @@ public class StateCurriculumControllerTests {
         module = stateCurriculumDto.getModules().stream().filter(m -> m.getNameEn() != null && m.getNameEn().equals("StateCurriculumControllerTestNameEn")).findFirst().get();
 
         Assert.assertTrue(module.getNameEt().equals(NAME + "2"));
-        Assert.assertTrue(module.getOutcomesEt().equals(NAME + "2"));
-        Assert.assertTrue(module.getOutcomesEn().equals(NAME + "2"));
         Assert.assertTrue(module.getModule().equals("KUTSEMOODUL_P"));
         Assert.assertTrue(module.getVersion().equals(Long.valueOf(1)));
 
@@ -300,7 +296,6 @@ public class StateCurriculumControllerTests {
         dto.setAssessmentsEt(NAME);
         dto.setModule("KUTSEMOODUL_Y");
         dto.setCredits(BigDecimal.valueOf(1));
-        dto.setOutcomesEt(NAME);
         Set<String> moduleOccupations = new HashSet<>();
         moduleOccupations.add("KUTSE_10578607");
         dto.setModuleOccupations(moduleOccupations);

@@ -125,4 +125,46 @@ angular.module('hitsaOis').factory('QueryUtils', ['config', '$resource', '$route
     };
 
     return {getQueryParams: getQueryParams, clearQueryParams: clearQueryParams, createQueryForm: createQueryForm, endpoint: endpoint};
-}]);
+}]).factory('busyHandler', ['$mdDialog',
+  function ($mdDialog) {
+    var requests = 0;
+    return {handle: function(params) {
+      if(params.busy) {
+        requests++;
+        if(requests === 1) {
+          var parentEl = angular.element(document.body);
+          $mdDialog.show({
+            parent: parentEl,
+            template:
+              '<md-dialog style="background-color:transparent;box-shadow:none">' +
+              '<div layout="row" layout-sm="column" layout-align="center center" aria-label="wait" style="height:120px;">'+
+              '<md-progress-circular class="md-hue-2 loader" md-diameter="80px"></md-progress-circular>'+
+              '</div>' +
+              '</md-dialog>'
+          });
+        }
+      } else {
+        requests--;
+        if(requests === 0) {
+          $mdDialog.hide();
+        }
+      }
+    }};
+  }
+]);
+
+(function() {
+  function pad(number) {
+    if (number < 10) {
+      return '0' + number;
+    }
+    return number;
+  }
+
+  Date.prototype.toISOString = function() {
+    return this.getFullYear() +
+      '-' + pad(this.getMonth() + 1) + '-' + pad(this.getDate()) +
+      'T' + pad(this.getHours()) + ':' + pad(this.getMinutes()) + ':' + pad(this.getSeconds()) +
+      '.' + (this.getMilliseconds() / 1000).toFixed(3).slice(2, 5) + 'Z';
+  };
+}());

@@ -83,7 +83,7 @@ public class ContractController {
                 && !ClassifierUtil.equals(ContractStatus.LEPING_STAATUS_S, contract.getStatus())) {
             throw new ValidationFailedException("contract.messages.deletionOnlyAllowedForStatusSAndY");
         }
-        contractService.delete(contract);
+        contractService.delete(user, contract);
     }
 
     @GetMapping("studentPracticeModules/{studentId:\\d+}")

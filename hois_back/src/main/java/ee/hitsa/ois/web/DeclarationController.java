@@ -144,7 +144,7 @@ public class DeclarationController {
     @DeleteMapping("/subject/{id:\\d+}")
     private void deleteSubject(HoisUserDetails user, @WithEntity("id") DeclarationSubject subject) {
         DeclarationUtil.assertCanChangeDeclaration(user, subject.getDeclaration());
-        declarationService.deleteSubject(subject);
+        declarationService.deleteSubject(user, subject);
     }
 
     @GetMapping("/students")

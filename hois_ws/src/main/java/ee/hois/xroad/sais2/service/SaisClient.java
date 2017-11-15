@@ -3,75 +3,69 @@ package ee.hois.xroad.sais2.service;
 import java.util.Map;
 
 import javax.xml.ws.BindingProvider;
-import javax.xml.ws.Holder;
 
 import ee.hois.soap.LogContext;
 import ee.hois.soap.SoapHandler;
 import ee.hois.soap.SoapUtil;
-import ee.hois.xroad.helpers.XRoadHeader;
-import ee.hois.xroad.sais2.generated.AdmissionExportResponse;
+import ee.hois.xroad.helpers.XRoadHeaderV4;
+import ee.hois.xroad.sais2.generated.AllAdmissionsExport;
 import ee.hois.xroad.sais2.generated.AllAdmissionsExportRequest;
+import ee.hois.xroad.sais2.generated.AllAdmissionsExportResponse;
+import ee.hois.xroad.sais2.generated.AllApplicationsExport;
+import ee.hois.xroad.sais2.generated.AllApplicationsExportResponse;
 import ee.hois.xroad.sais2.generated.AllAppsExportRequest;
-import ee.hois.xroad.sais2.generated.AppExportResponse;
-import ee.hois.xroad.sais2.generated.ClassificationExport;
-import ee.hois.xroad.sais2.generated.EmptyParameters;
-import ee.hois.xroad.sais2.generated.XRoad;
+import ee.hois.xroad.sais2.generated.ClassificationsExport;
+import ee.hois.xroad.sais2.generated.ClassificationsExportResponse;
+import ee.hois.xroad.sais2.generated.XRoadV6;
 import ee.hois.xroad.sais2.generated.XRoadSoap;
 
 public class SaisClient {
 
     private static final String WSDL = "/wsdl/sais/sais3.wsdl";
 
-    private final XRoad service = new XRoad(SaisClient.class.getResource(WSDL));
+    private final XRoadV6 service = new XRoadV6(SaisClient.class.getResource(WSDL));
 
-    public SaisClassificationResponse classificationsExport(XRoadHeader xRoadHeader) {
+    public SaisClassificationResponse classificationsExport(XRoadHeaderV4 xRoadHeader) {
         XRoadSoap port = initializePort(xRoadHeader);
         LogContext ctx = ctx(port);
 
-        ClassificationExport result = SoapUtil.withExceptionHandler(ctx, () -> {
-            Holder<EmptyParameters> request = new Holder<>(new EmptyParameters());
-            Holder<ClassificationExport> response = new Holder<>();
-
-            port.classificationsExport(request, response);
-            return response.value;
+        ClassificationsExportResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
+            ClassificationsExport request = new ClassificationsExport();
+            return port.classificationsExport(request);
         });
-        return new SaisClassificationResponse(ctx, result);
+        return new SaisClassificationResponse(ctx, result != null ? result.getResponse() : null);
     }
 
-    public SaisAdmissionResponse admissionsExport(XRoadHeader xRoadHeader, AllAdmissionsExportRequest requestValue) {
+    public SaisAdmissionResponse admissionsExport(XRoadHeaderV4 xRoadHeader, AllAdmissionsExportRequest requestValue) {
         XRoadSoap port = initializePort(xRoadHeader);
         LogContext ctx = ctx(port);
 
-        AdmissionExportResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
-            Holder<AllAdmissionsExportRequest> request = new Holder<>(requestValue);
-            Holder<AdmissionExportResponse> response = new Holder<>();
-
-            port.allAdmissionsExport(request, response);
-            return response.value;
+        AllAdmissionsExportResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
+            AllAdmissionsExport request = new AllAdmissionsExport();
+            request.setRequest(requestValue);
+            return port.allAdmissionsExport(request);
         });
-        return new SaisAdmissionResponse(ctx, result);
+        return new SaisAdmissionResponse(ctx, result != null ? result.getResponse() : null);
     }
 
-    public SaisApplicationResponse applicationsExport(XRoadHeader xRoadHeader, AllAppsExportRequest requestValue) {
+    public SaisApplicationResponse applicationsExport(XRoadHeaderV4 xRoadHeader, AllAppsExportRequest requestValue) {
         XRoadSoap port = initializePort(xRoadHeader);
         LogContext ctx = ctx(port);
 
-        AppExportResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
-            Holder<AllAppsExportRequest> request = new Holder<>(requestValue);
-            Holder<AppExportResponse> response = new Holder<>();
-
-            port.allApplicationsExport(request, response);
-            return response.value;
+        AllApplicationsExportResponse result = SoapUtil.withExceptionHandler(ctx, () -> {
+            AllApplicationsExport request = new AllApplicationsExport();
+            request.setRequest(requestValue);
+            return port.allApplicationsExport(request);
         });
 
-        return new SaisApplicationResponse(ctx, result);
+        return new SaisApplicationResponse(ctx, result != null ? result.getResponse() : null);
     }
 
-    private XRoadSoap initializePort(XRoadHeader header) {
+    private XRoadSoap initializePort(XRoadHeaderV4 header) {
         XRoadSoap port = service.getXRoadSoap();
         Map<String, Object> context = ((BindingProvider) port).getRequestContext();
         context.put(BindingProvider.ENDPOINT_ADDRESS_PROPERTY, header.getEndpoint());
-        context.put(XRoadHeader.XROAD_HEADER, header);
+        context.put(XRoadHeaderV4.XROAD_HEADER, header);
         context.put(SoapHandler.LOG_CONTEXT, header.logContext());
         return port;
     }

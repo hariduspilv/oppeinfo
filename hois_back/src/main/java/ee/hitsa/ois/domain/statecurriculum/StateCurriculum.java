@@ -66,7 +66,7 @@ public class StateCurriculum extends BaseEntityWithId implements Translatable {
     private Set<Curriculum> curricula;
 
     public Set<Curriculum> getCurricula() {
-        return curricula;
+        return curricula != null ? curricula : (curricula = new HashSet<>());
     }
 
     public void setCurricula(Set<Curriculum> curricula) {

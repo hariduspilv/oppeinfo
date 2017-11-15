@@ -1,18 +1,20 @@
 'use strict';
 
-angular.module('hitsaOis').directive('oisDrag', function() {
+angular.module('hitsaOis').directive('oisDrag', function () {
   return {
     restrict: 'A',
-    link: function(scope, element) {
-      element.prop('draggable', true);
-      element.on('dragstart', function(event) {
-        if(event.target.attributes.getNamedItem('old-event-id') !== null) {
+    link: function (scope, element, attr) {
+      attr.$observe('oisDrag', function (draggable) {
+        element.prop('draggable', draggable === "true");
+      });
+      element.on('dragstart', function (event) {
+        if (event.target.attributes.getNamedItem('old-event-id') !== null) {
           event.dataTransfer.setData('oldEventId', event.target.attributes.getNamedItem('old-event-id').value);
         }
-        if(event.target.attributes.getNamedItem('capacity-type') !== null) {
+        if (event.target.attributes.getNamedItem('capacity-type') !== null) {
           event.dataTransfer.setData('capacityType', event.target.attributes.getNamedItem('capacity-type').value);
         }
-        if(event.target.attributes.getNamedItem('journal-id') !== null) {
+        if (event.target.attributes.getNamedItem('journal-id') !== null) {
           event.dataTransfer.setData('journalId', event.target.attributes.getNamedItem('journal-id').value);
         }
         event.dataTransfer.setData('elementId', event.target.id);
@@ -21,42 +23,45 @@ angular.module('hitsaOis').directive('oisDrag', function() {
   };
 });
 
-angular.module('hitsaOis').directive('oisDrop', function() {
+angular.module('hitsaOis').directive('oisDrop', function () {
   return {
-    restrict : 'A',
-    scope : { dropFn: '&', param2: '&', index: '&', oldEventId: '&' },
-    link : function(scope, element, attrs) {
-      element.on('dragover', function(event) {
-        if(attrs.oisDrop === "true" && this.childElementCount === 0) {
+    restrict: 'A',
+    scope: {
+      dropFn: '&',
+      indexValue: '@',
+    },
+    link: function (scope, element, attrs) {
+      element.on('dragover', function (event) {
+        if (attrs.oisDrop === "true") {
           event.preventDefault();
         }
       });
-      element.on('drop', function(event) {
-        if(attrs.oisDrop === "true") {
+      element.on('drop', function (event) {
+        if (attrs.oisDrop === "true") {
           event.preventDefault();
           var data = {};
           data.id = event.dataTransfer.getData("elementId");
           data.journalId = event.dataTransfer.getData("journalId");
           data.oldEventId = event.dataTransfer.getData("oldEventId");
           data.capacityType = event.dataTransfer.getData("capacityType");
-          if(event.target.attributes.getNamedItem('index-value') !== null) {
-            data.index = event.target.attributes.getNamedItem('index-value').value;
-          }
+          data.index = scope.indexValue;
           event.target.appendChild(document.getElementById(data.id));
-          scope.dropFn({data: data});
+          scope.dropFn({
+            data: data
+          });
         }
       });
-      element.on('dragenter', function(event) {
-        if(attrs.oisDrop === "true") {
+      element.on('dragenter', function () {
+        if (attrs.oisDrop === "true") {
           this.classList.add("highlight-drop-area");
         }
-      })
-      element.on('dragleave', function(event) {
-        if(attrs.oisDrop === "true") {
+      });
+      element.on('dragleave', function () {
+        if (attrs.oisDrop === "true") {
           this.classList.remove("highlight-drop-area");
         }
-      })
-      element.bind('error', function() {
+      });
+      element.bind('error', function () {
         if (attrs.onErrorSrc === '') {
           attrs.ngHide = true;
         } else if (attrs.src !== attrs.onErrorSrc) {
@@ -67,42 +72,43 @@ angular.module('hitsaOis').directive('oisDrop', function() {
   };
 });
 
-angular.module('hitsaOis').directive('oisHigherDrop', function() {
+angular.module('hitsaOis').directive('oisHigherDrop', function () {
   return {
-    restrict : 'A',
-    scope : { dropFn: '&', param2: '&', index: '&', oldEventId: '&' },
-    link : function(scope, element, attrs) {
-      element.on('dragover', function(event) {
-        if(attrs.oisHigherDrop === "true" && this.childElementCount === 0) {
+    restrict: 'A',
+    scope: {
+      dropFn: '&',
+    },
+    link: function (scope, element, attrs) {
+      element.on('dragover', function (event) {
+        if (attrs.oisHigherDrop === "true" && this.childElementCount === 0) {
           event.preventDefault();
         }
       });
-      element.on('drop', function(event) {
-        if(attrs.oisHigherDrop === "true") {
+      element.on('drop', function (event) {
+        if (attrs.oisHigherDrop === "true") {
           event.preventDefault();
           var data = {};
           data.id = event.dataTransfer.getData("elementId");
           data.journalId = event.dataTransfer.getData("journalId");
           data.oldEventId = event.dataTransfer.getData("oldEventId");
           data.capacityType = event.dataTransfer.getData("capacityType");
-          if(event.target.attributes.getNamedItem('index-value') !== null) {
-            data.index = event.target.attributes.getNamedItem('index-value').value;
-          }
           event.target.appendChild(document.getElementById(data.id).cloneNode(true));
-          scope.dropFn({data: data});
+          scope.dropFn({
+            data: data
+          });
         }
       });
-      element.on('dragenter', function(event) {
-        if(attrs.oisHigherDrop === "true") {
+      element.on('dragenter', function () {
+        if (attrs.oisHigherDrop === "true") {
           this.classList.add("highlight-drop-area");
         }
-      })
-      element.on('dragleave', function(event) {
-        if(attrs.oisHigherDrop === "true") {
+      });
+      element.on('dragleave', function () {
+        if (attrs.oisHigherDrop === "true") {
           this.classList.remove("highlight-drop-area");
         }
-      })
-      element.bind('error', function() {
+      });
+      element.bind('error', function () {
         if (attrs.onErrorSrc === '') {
           attrs.ngHide = true;
         } else if (attrs.src !== attrs.onErrorSrc) {

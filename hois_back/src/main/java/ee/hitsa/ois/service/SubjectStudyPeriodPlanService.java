@@ -42,15 +42,16 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.CurriculumRepository;
 import ee.hitsa.ois.repository.SubjectRepository;
 import ee.hitsa.ois.repository.SubjectStudyPeriodPlanRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.util.SubjectUtil;
-import ee.hitsa.ois.web.commandobject.CurriculumSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanSearchCommand;
 import ee.hitsa.ois.web.commandobject.SubjectStudyPeriodPlanUniqueCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumSearchCommand;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanCapacityDto;
 import ee.hitsa.ois.web.dto.SubjectStudyPeriodPlanDto;
@@ -190,7 +191,8 @@ public class SubjectStudyPeriodPlanService {
         capacity.setPlan(plan);
     }
 
-    public void delete(Long schoolId, SubjectStudyPeriodPlan plan) {
+    public void delete(HoisUserDetails user, SubjectStudyPeriodPlan plan) {
+        Long schoolId = user.getSchoolId();
         StudyPeriod studyPeriod = plan.getStudyPeriod();
         AssertionFailedException.throwIf(studyPeriod.getEndDate().isBefore(LocalDate.now()),
                 "Past subjectStudyPeriods cannot be deleted");
@@ -198,6 +200,7 @@ public class SubjectStudyPeriodPlanService {
         AssertionFailedException.throwIf(!EntityUtil.getId(studyPeriod.getStudyYear().getSchool()).equals(schoolId),
                 "User and SubjectStudyPeriodsPlan's schools does not match");
 
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(plan, em);
     }
 

@@ -18,6 +18,7 @@ import javax.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.util.JpaQueryUtil;
@@ -28,8 +29,10 @@ import ee.hitsa.ois.domain.timetable.TimetableEvent;
 import ee.hitsa.ois.domain.timetable.TimetableEventRoom;
 import ee.hitsa.ois.domain.timetable.TimetableEventTeacher;
 import ee.hitsa.ois.domain.timetable.TimetableEventTime;
+import ee.hitsa.ois.enums.Language;
 import ee.hitsa.ois.enums.TimetableEventRepeat;
 import ee.hitsa.ois.repository.ClassifierRepository;
+import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
@@ -38,12 +41,14 @@ import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.TeacherAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableEventSearchCommand;
 import ee.hitsa.ois.web.commandobject.timetable.TimetableSingleEventForm;
+import ee.hitsa.ois.web.dto.AutocompleteResult;
 import ee.hitsa.ois.web.dto.timetable.GeneralTimetableCurriculumDto;
 import ee.hitsa.ois.web.dto.timetable.GeneralTimetableDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByRoomDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByStudentDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableByTeacherDto;
+import ee.hitsa.ois.web.dto.timetable.TimetableCalendarDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchGroupDto;
 import ee.hitsa.ois.web.dto.timetable.TimetableEventSearchRoomDto;
@@ -55,6 +60,8 @@ public class TimetableEventService {
 
     @Autowired
     private AutocompleteService autocompleteService;
+    @Autowired
+    private TimetableGenerationService timetableGenerationService;
     @Autowired
     private EntityManager em;
     @Autowired
@@ -79,10 +86,33 @@ public class TimetableEventService {
         te.setStart(form.getDate().atTime(form.getStartTime()));
         te.setEnd(form.getDate().atTime(form.getEndTime()));
         te.setName(form.getName());
-        te.setConsiderBreak(Boolean.TRUE);
-        te.setRepeatCode(classifierRepository.getOne(form.getRepeatCode()));
+        te.setConsiderBreak(Boolean.FALSE);
+        te.setRepeatCode(Boolean.TRUE.equals(form.getRepeat()) ? classifierRepository.getOne(form.getRepeatCode())
+                : classifierRepository.getOne(TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_EI.name()));
         addTimetableEventTimes(te, form);
         return EntityUtil.save(te, em);
+    }
+
+    private void addRoomsToTimetableEvent(TimetableEventTime timetableEventTime, TimetableSingleEventForm form) {
+        if (form.getRooms() != null) {
+            for (AutocompleteResult room : form.getRooms()) {
+                TimetableEventRoom timetableEventRoom = new TimetableEventRoom();
+                timetableEventRoom.setRoom(em.getReference(Room.class, room.getId()));
+                timetableEventRoom.setTimetableEventTime(timetableEventTime);
+                timetableEventTime.getTimetableEventRooms().add(timetableEventRoom);
+            }
+        }
+    }
+
+    private void addTeachersToTimetableEvent(TimetableEventTime timetableEventTime, TimetableSingleEventForm form) {
+        if (form.getTeachers() != null) {
+            for (AutocompleteResult teacher : form.getTeachers()) {
+                TimetableEventTeacher timetableEventTeacher = new TimetableEventTeacher();
+                timetableEventTeacher.setTeacher(em.getReference(Teacher.class, teacher.getId()));
+                timetableEventTeacher.setTimetableEventTime(timetableEventTime);
+                timetableEventTime.getTimetableEventTeachers().add(timetableEventTeacher);
+            }
+        }
     }
     
     private void addTimetableEventTimes(TimetableEvent te, TimetableSingleEventForm form) {
@@ -91,12 +121,8 @@ public class TimetableEventService {
         TimetableEventTime timetableEventTime = new TimetableEventTime();
         timetableEventTime.setStart(te.getStart());
         timetableEventTime.setEnd(te.getEnd());
-        if(form.getRoom() != null) {
-            TimetableEventRoom timetableEventRoom = new TimetableEventRoom();
-            timetableEventRoom.setRoom(em.getReference(Room.class, form.getRoom().getId()));
-            timetableEventRoom.setTimetableEventTime(timetableEventTime);
-            timetableEventTime.getTimetableEventRooms().add(timetableEventRoom);
-        }
+        addRoomsToTimetableEvent(timetableEventTime, form);
+        addTeachersToTimetableEvent(timetableEventTime, form);
         timetableEventTimes.add(timetableEventTime);
         long daysToAdd;
         if (ClassifierUtil.equals(TimetableEventRepeat.TUNNIPLAAN_SYNDMUS_KORDUS_P, te.getRepeat())) {
@@ -115,115 +141,184 @@ public class TimetableEventService {
             TimetableEventTime currentTimetableEventTime = new TimetableEventTime();
             currentTimetableEventTime.setStart(currentStart);
             currentTimetableEventTime.setEnd(currentEnd);
-            if(form.getRoom() != null) {
-                TimetableEventRoom timetableEventRoom = new TimetableEventRoom();
-                timetableEventRoom.setRoom(em.getReference(Room.class, form.getRoom().getId()));
-                timetableEventRoom.setTimetableEventTime(timetableEventTime);
-                currentTimetableEventTime.getTimetableEventRooms().add(timetableEventRoom);
-            }
-            if(form.getTeacher() != null) {
-                TimetableEventTeacher timetableEventTeacher = new TimetableEventTeacher();
-                timetableEventTeacher.setTeacher(em.getReference(Teacher.class, form.getTeacher().getId()));
-                timetableEventTeacher.setTimetableEventTime(timetableEventTime);
-                currentTimetableEventTime.getTimetableEventTeachers().add(timetableEventTeacher);
-            }
+            addRoomsToTimetableEvent(currentTimetableEventTime, form);
+            addTeachersToTimetableEvent(currentTimetableEventTime, form);
             timetableEventTimes.add(currentTimetableEventTime);
             currentStart = currentStart.plusDays(daysToAdd);
             currentEnd = currentEnd.plusDays(daysToAdd);
         }
     }
 
-    public TimetableByGroupDto groupTimetableForWeek(TimetableEventSearchCommand command) {
+    /**
+     * Get group's timetable for view.
+     * @param command
+     * @return timetable with timetable's curriculum and events
+     */
+    public TimetableByGroupDto groupTimetable(TimetableEventSearchCommand command) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(command);
         String select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(subj.name_en, te.name, j.name_et) as name_en,"
-                + " tet.start, tet.end, te.consider_break";
+                + " tet.start, tet.end, te.consider_break, (case when tobj.id is null then true else false end) as single_event";
         qb.sort("tet.start,tet.end");
         List<?> eventResult = qb.select(select, em).getResultList();
         List<TimetableEventSearchDto> eventResultList = StreamUtil
                 .toMappedList(r -> new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
                         resultAsLocalDateTime(r, 3).toLocalDate(), resultAsLocalDateTime(r, 3).toLocalTime(), resultAsLocalDateTime(r, 4).toLocalTime(),
-                        resultAsBoolean(r, 5)), eventResult);
+                        resultAsBoolean(r, 5), resultAsBoolean(r, 6)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+        eventResultList = filterTimetableSingleEvents(eventResultList);
         
         GeneralTimetableCurriculumDto generalTimetableCurriculum = getGeneralTimetableCurriculum(command.getStudentGroups().get(0));
-        GeneralTimetableDto generalTimetable = getGeneralTimetable(command.getTimetable());
+        GeneralTimetableDto generalTimetable = getGeneralTimetable(command);
         
-        return new TimetableByGroupDto(generalTimetableCurriculum, generalTimetable, eventResultList);
+        return new TimetableByGroupDto(generalTimetable, eventResultList, generalTimetableCurriculum);
     }
     
-    public TimetableByTeacherDto teacherTimetableForWeek(TimetableEventSearchCommand command) {
+    /**
+     * Get teacher's timetable for view.
+     * @param command
+     * @return TimetableByTeacherDto
+     */
+    public TimetableByTeacherDto teacherTimetable(TimetableEventSearchCommand command) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(command);
         String select = "distinct tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(subj.name_en, te.name, j.name_et) as name_en,"
-                + " tet.start, tet.end, te.consider_break";
+                + " tet.start, tet.end, te.consider_break, (case when tobj.id is null then true else false end) as single_event";
         qb.sort("tet.start,tet.end");
 
         List<?> eventResult = qb.select(select, em).getResultList();
         List<TimetableEventSearchDto> eventResultList = StreamUtil
                 .toMappedList(r -> new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
                         resultAsLocalDateTime(r, 3).toLocalDate(), resultAsLocalDateTime(r, 3).toLocalTime(), resultAsLocalDateTime(r, 4).toLocalTime(),
-                        resultAsBoolean(r, 5)), eventResult);
+                        resultAsBoolean(r, 5), resultAsBoolean(r, 6)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+        eventResultList = filterTimetableSingleEvents(eventResultList);
 
-        GeneralTimetableDto generalTimetable = getGeneralTimetable(command.getTimetable());
+        GeneralTimetableDto generalTimetable = getGeneralTimetable(command);
 
         Query q = em.createNativeQuery("select t.id, p.firstname, p.lastname from teacher t inner join person p on t.person_id=p.id where t.id=?1");
         q.setParameter(1, command.getTeachers().get(0));
         Object teacher = q.getSingleResult();
 
-        return new TimetableByTeacherDto(resultAsLong(teacher, 0), resultAsString(teacher, 1), resultAsString(teacher, 2), generalTimetable, eventResultList);
+        return new TimetableByTeacherDto(generalTimetable, eventResultList, resultAsLong(teacher, 0), resultAsString(teacher, 1), resultAsString(teacher, 2));
     }
     
-    public TimetableByStudentDto studentTimetableForWeek(TimetableEventSearchCommand command) {
+    /**
+     * Get student's timetable for view.
+     * @param command
+     * @return TimetableByStudentDto
+     */
+    public TimetableByStudentDto studentTimetable(TimetableEventSearchCommand command) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(command);
         String select = "distinct tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(subj.name_en, te.name, j.name_et) as name_en,"
-                + " tet.start, tet.end, te.consider_break";
+                + " tet.start, tet.end, te.consider_break, (case when tobj.id is null then true else false end) as single_event";
         qb.sort("tet.start,tet.end");
 
         List<?> eventResult = qb.select(select, em).getResultList();
         List<TimetableEventSearchDto> eventResultList = StreamUtil
                 .toMappedList(r -> new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
                         resultAsLocalDateTime(r, 3).toLocalDate(), resultAsLocalDateTime(r, 3).toLocalTime(), resultAsLocalDateTime(r, 4).toLocalTime(),
-                        resultAsBoolean(r, 5)), eventResult);
+                        resultAsBoolean(r, 5), resultAsBoolean(r, 6)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+        eventResultList = filterTimetableSingleEvents(eventResultList);
 
-        GeneralTimetableDto generalTimetable = getGeneralTimetable(command.getTimetable());
+        GeneralTimetableDto generalTimetable = getGeneralTimetable(command);
 
         Query studentQuery = em.createNativeQuery("select s.id, p.firstname, p.lastname from student s inner join person p on s.person_id=p.id where s.id=?1");
         studentQuery.setParameter(1, command.getStudent());
         Object student = studentQuery.getSingleResult();
 
-        return new TimetableByStudentDto(resultAsLong(student, 0), resultAsString(student, 1), resultAsString(student, 2), generalTimetable, eventResultList);
+        return new TimetableByStudentDto(generalTimetable, eventResultList, resultAsLong(student, 0), resultAsString(student, 1), resultAsString(student, 2));
     }
     
-    public TimetableByRoomDto roomTimetableForWeek(TimetableEventSearchCommand command) {
+    /**
+     * Get room's timetable for view.
+     * @param command
+     * @return timetable with room's info and timetable's events
+     */
+    public TimetableByRoomDto roomTimetable(TimetableEventSearchCommand command) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(command);
         String select = "distinct tet.id, coalesce(te.name, j.name_et, subj.name_et) as nameEt, coalesce(subj.name_en, te.name, j.name_et) as nameEn,"
-                + " tet.start, tet.end, te.consider_break";
+                + " tet.start, tet.end, te.consider_break, (case when tobj.id is null then true else false end) as single_event";
         qb.sort("tet.start,tet.end");
 
         List<?> eventResult = qb.select(select, em).getResultList();
         List<TimetableEventSearchDto> eventResultList = StreamUtil
                 .toMappedList(r -> new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
                         resultAsLocalDateTime(r, 3).toLocalDate(), resultAsLocalDateTime(r, 3).toLocalTime(), resultAsLocalDateTime(r, 4).toLocalTime(),
-                        resultAsBoolean(r, 5)), eventResult);
+                        resultAsBoolean(r, 5), resultAsBoolean(r, 6)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
+        eventResultList = filterTimetableSingleEvents(eventResultList);
         
-        GeneralTimetableDto generalTimetable = getGeneralTimetable(command.getTimetable());
+        GeneralTimetableDto generalTimetable = getGeneralTimetable(command);
         
         Query q = em.createNativeQuery("select r.id, r.code as roomCode, b.code as buildingCode from room r inner join building b on r.building_id=b.id where r.id=?1");
         q.setParameter(1, command.getRoom());
         Object room = q.getSingleResult();
         
-        return new TimetableByRoomDto(resultAsLong(room, 0), resultAsString(room, 1), resultAsString(room, 2), generalTimetable, eventResultList);
+        return new TimetableByRoomDto(generalTimetable, eventResultList, resultAsLong(room, 0), resultAsString(room, 1), resultAsString(room, 2));
     }
     
-    private GeneralTimetableDto getGeneralTimetable(Long timetableId) {
-        Query generalTimetableQuery = em.createNativeQuery("select tt.id, tt.start_date, tt.end_date, tt.study_period_id, sp.name_et, sp.name_en"
-                + " from timetable tt join study_period sp on tt.study_period_id=sp.id where tt.id =?1");
-        generalTimetableQuery.setParameter(1, timetableId);
-        Object generalTimetableresult = generalTimetableQuery.getSingleResult();
+    private static List<TimetableEventSearchDto> filterTimetableSingleEvents(List<TimetableEventSearchDto> events) {
+        List<TimetableEventSearchDto> filteredEvents = events;
+        HoisUserDetails user = HoisUserDetails.fromPrincipal(SecurityContextHolder.getContext().getAuthentication());
         
-        return new GeneralTimetableDto((Object[]) generalTimetableresult);
+        if(user != null) {
+            if (!user.isSchoolAdmin() && !user.isTeacher()) {
+                filteredEvents = hideSingleEventsData(events);
+            } else if (user.isTeacher()) {
+                filteredEvents = hideOtherTeachersSingleEventsData(events, user.getTeacherId());
+            }
+        } else {
+            filteredEvents = hideSingleEventsData(events);
+        }
+        return filteredEvents;
+    }
+    
+    private static List<TimetableEventSearchDto> hideSingleEventsData(List<TimetableEventSearchDto> events) {
+        for (TimetableEventSearchDto event : events) {
+            if (Boolean.TRUE.equals(event.getSingleEvent())) {
+                hideSingleEventData(event);
+            }
+        }
+        return events;
+    }
+    
+    private static List<TimetableEventSearchDto> hideOtherTeachersSingleEventsData(List<TimetableEventSearchDto> events, Long teacherId) {
+        for (TimetableEventSearchDto event : events) {
+            if (Boolean.TRUE.equals(event.getSingleEvent()) && !isTeachersEvent(event.getTeachers(), teacherId)) {
+                hideSingleEventData(event);
+            }
+        }
+        return events;
+    }
+    
+    private static void hideSingleEventData(TimetableEventSearchDto event) {
+        event.setNameEn(null);
+        event.setNameEt(null);
+        event.setRooms(null);
+        event.setTeachers(null);
+        event.setStudentGroups(null);
+        event.setPublicEvent(Boolean.FALSE);
+    }
+    
+    private static boolean isTeachersEvent(List<TimetableEventSearchTeacherDto> eventTeachers, Long teacherId) {
+        for (TimetableEventSearchTeacherDto eventTeacher : eventTeachers) {
+            if (eventTeacher.getId().equals(teacherId)) {
+                return true;
+            }
+        }
+        return false;
+    }
+    
+    private GeneralTimetableDto getGeneralTimetable(TimetableEventSearchCommand command) {
+        GeneralTimetableDto generalTimetable = null;
+        if (command.getTimetables() != null) {
+            Query generalTimetableQuery = em.createNativeQuery("select tt.id, tt.start_date, tt.end_date, tt.study_period_id, sp.name_et, sp.name_en"
+                    + " from timetable tt join study_period sp on tt.study_period_id=sp.id where tt.id =?1");
+            generalTimetableQuery.setParameter(1, command.getTimetables().get(0));
+            Object generalTimetableresult = generalTimetableQuery.getSingleResult(); 
+            generalTimetable = new GeneralTimetableDto((Object[]) generalTimetableresult);
+        }
+        return generalTimetable;
     }
     
     private GeneralTimetableCurriculumDto getGeneralTimetableCurriculum(Long studentGroupId) {
@@ -246,10 +341,10 @@ public class TimetableEventService {
                 + " left join (subject_study_period ssp"
                 + " inner join subject subj on subj.id = ssp.subject_id) on ssp.id = tobj.subject_study_period_id";
                 
-        if (criteria.getStudent() != null && criteria.getVocational()) {
+        if (criteria.getStudent() != null && Boolean.TRUE.equals(criteria.getVocational())) {
             from += " left join  journal_student js  on js.journal_id=j.id"
                     + " left join student s on s.id=js.student_id";
-        } else if (criteria.getStudent() != null && criteria.getHigher()) {
+        } else if (criteria.getStudent() != null && Boolean.TRUE.equals(criteria.getHigher())) {
             from += " left join declaration_subject decls on decls.subject_study_period_id=ssp.id"
                     + " left join declaration decl on decls.declaration_id=decl.id"
                     + " left join student s on decl.student_id=s.id";
@@ -263,13 +358,8 @@ public class TimetableEventService {
         qb.optionalCriteria("te.name = :name", "name", criteria.getName());
         qb.optionalCriteria("tet.start >= :start", "start", criteria.getFrom());
         qb.optionalCriteria("tet.end <= :end", "end", criteria.getThru());
-        qb.optionalCriteria("t.id = :timetable", "timetable", criteria.getTimetable());
+        qb.optionalCriteria("(t.id in (:timetable) or tobj.id is null)", "timetable", criteria.getTimetables());
         qb.optionalCriteria("s.id = :student", "student", criteria.getStudent());
-        
-        /*if(Boolean.TRUE.equals(criteria.getSingleEvent())) {
-            qb.filter("te.timetable_object_id is null");
-        }*/
-
 
         //TODO: param query
         if (criteria.getTeachers() != null && !criteria.getTeachers().isEmpty()) {
@@ -293,6 +383,14 @@ public class TimetableEventService {
 
         qb.optionalCriteria("tet.other_teacher = :otherTeacher", "otherTeacher", criteria.getOtherTeacher());
         qb.optionalCriteria("tet.other_room = :otherRoom", "otherRoom", criteria.getOtherRoom());
+        
+        if (criteria.getJournalOrSubjectId() != null) {
+            if (criteria.getJournalOrSubjectId().longValue() > 0) {
+                qb.optionalCriteria("subj.id = :subjectId", "subjectId", criteria.getJournalOrSubjectId());
+            } else {
+                qb.optionalCriteria("j.id = :journalId", "journalId", Long.valueOf(-criteria.getJournalOrSubjectId().longValue()));
+            }
+        }
         return qb;
     }
 
@@ -308,11 +406,11 @@ public class TimetableEventService {
 
             for (TimetableEventSearchDto dto : timetableEventTimes) {
                 dto.setTeachers(
-                        StreamUtil.toMappedList(r -> new TimetableEventSearchTeacherDto(r.getObjectId(), r.getValue()), teachersByTimetableEventTime.get(dto.getId())));
+                        StreamUtil.toMappedList(r -> new TimetableEventSearchTeacherDto(r.getObjectId(), r.getFirstValue()), teachersByTimetableEventTime.get(dto.getId())));
                 dto.setRooms(
-                        StreamUtil.toMappedList(r -> new TimetableEventSearchRoomDto(r.getObjectId(), r.getValue()), roomsByTimetableEventTime.get(dto.getId())));
+                        StreamUtil.toMappedList(r -> new TimetableEventSearchRoomDto(r.getObjectId(), r.getFirstValue(), r.getSecondValue()), roomsByTimetableEventTime.get(dto.getId())));
                 dto.setStudentGroups(
-                        StreamUtil.toMappedList(r -> new TimetableEventSearchGroupDto(r.getObjectId(), r.getValue()), groupsByTimetableEventTime.get(dto.getId())));
+                        StreamUtil.toMappedList(r -> new TimetableEventSearchGroupDto(r.getObjectId(), r.getFirstValue()), groupsByTimetableEventTime.get(dto.getId())));
             }
         }
     }
@@ -320,44 +418,55 @@ public class TimetableEventService {
     public Page<TimetableEventSearchDto> search(TimetableEventSearchCommand criteria, Pageable pageable) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria);
         qb.sort(pageable);
-        qb.filter("1 = 0");
+        //qb.filter("1 = 0");
         String select;
-        if(Boolean.TRUE.equals(criteria.getSingleEvent())) {
-            select = "tet.id, te.name as name_et, te.name as name_en, tet.start, tet.end, te.consider_break";
+        if (Boolean.TRUE.equals(criteria.getSingleEvent())) {
+            select = "tet.id, te.name as name_et, te.name as name_en, tet.start, tet.end, te.consider_break,"
+                    + " case when tobj.id is null then true else false end as closed_event";
         } else {
-            select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(subj.name_en, te.name, j.name_et) as name_en, tet.start, tet.end, te.consider_break";
+            select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(subj.name_en, te.name, j.name_et) as name_en,"
+                    + " tet.start, tet.end, te.consider_break, (case when tobj.id is null then true else false end) as single_event";
         }
         Page<TimetableEventSearchDto> result = JpaQueryUtil.pagingResult(qb, select, em, pageable).map(r -> {
-            return new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), resultAsLocalDateTime(r, 3).toLocalDate(), 
-                    resultAsLocalDateTime(r, 3).toLocalTime(), resultAsLocalDateTime(r, 4).toLocalTime(), resultAsBoolean(r, 5));
+            return new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
+                    resultAsLocalDateTime(r, 3).toLocalDate(), resultAsLocalDateTime(r, 3).toLocalTime(),
+                    resultAsLocalDateTime(r, 4).toLocalTime(), resultAsBoolean(r, 5), resultAsBoolean(r, 6));
         });
         setRoomsTeachersAndGroupsForSearchDto(result.getContent());
         return result;
     }
     
+    /**
+     * Timetable events search
+     * @param criteria
+     * @return list of timetable events
+     */
     public List<TimetableEventSearchDto> searchTimetable(TimetableEventSearchCommand criteria) {
         JpaNativeQueryBuilder qb = getTimetableEventTimeQuery(criteria);
 
-        String select = "tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(subj.name_en, te.name, j.name_et) as name_en, tet.start, tet.end, te.consider_break";
+        String select = "distinct tet.id, coalesce(te.name, j.name_et, subj.name_et) as name_et, coalesce(subj.name_en, te.name, j.name_et) as name_en,"
+                + " tet.start, tet.end, te.consider_break, (case when tobj.id is null then true else false end) as single_event";
         List<?> eventResult = qb.select(select, em).getResultList();
         
-        List<TimetableEventSearchDto> eventResultList = StreamUtil.toMappedList(r -> new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2), 
-                resultAsLocalDateTime(r, 3).toLocalDate(), resultAsLocalDateTime(r, 3).toLocalTime(), resultAsLocalDateTime(r, 4).toLocalTime(), resultAsBoolean(r, 5)), eventResult);
+        List<TimetableEventSearchDto> eventResultList = StreamUtil.toMappedList(
+                r -> new TimetableEventSearchDto(resultAsLong(r, 0), resultAsString(r, 1), resultAsString(r, 2),
+                        resultAsLocalDateTime(r, 3).toLocalDate(), resultAsLocalDateTime(r, 3).toLocalTime(),
+                        resultAsLocalDateTime(r, 4).toLocalTime(), resultAsBoolean(r, 5), resultAsBoolean(r, 6)), eventResult);
         setRoomsTeachersAndGroupsForSearchDto(eventResultList);
         return eventResultList;
     }
 
     private Map<Long, List<ResultObject>> getTeachersByTimetableEventTime(List<Long> tetIds) {
         String from = "from timetable_event_time tem " + 
-        		"JOIN timetable_event te on tem.timetable_event_id=te.id " + 
-        		"join timetable_object tob on te.timetable_object_id=tob.id " + 
-        		"left join journal jj on tob.journal_id=jj.id " + 
-        		"left join journal_teacher jt on jj.id=jt.journal_id " + 
-        		"left join timetable_event_teacher tet on tem.id=tet.timetable_event_time_id " + 
-        	    "left join subject_study_period ssp on ssp.id=tob.subject_study_period_id " +
-        	    "left join subject_study_period_teacher sspt on sspt.subject_study_period_id=ssp.id " +
-        		"inner join teacher t  on t.id = COALESCE(tet.teacher_id, jt.teacher_id, sspt.teacher_id) " +
-        		"inner join person p on p.id = t.person_id  ";
+                "join timetable_event te on tem.timetable_event_id=te.id " + 
+                "left join timetable_object tob on te.timetable_object_id=tob.id " + 
+                "left join journal jj on tob.journal_id=jj.id " + 
+                "left join journal_teacher jt on jj.id=jt.journal_id " + 
+                "left join timetable_event_teacher tet on (tem.id=tet.timetable_event_time_id and tet.teacher_id=jt.teacher_id) or tem.id=tet.timetable_event_time_id " + 
+                "left join subject_study_period ssp on ssp.id=tob.subject_study_period_id " +
+                "left join subject_study_period_teacher sspt on sspt.subject_study_period_id=ssp.id " +
+                "inner join teacher t  on t.id = COALESCE(tet.teacher_id, jt.teacher_id, sspt.teacher_id) " +
+                "inner join person p on p.id = t.person_id  ";
         // TODO add ordering by teacher name
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
@@ -371,14 +480,19 @@ public class TimetableEventService {
     }
 
     private Map<Long, List<ResultObject>> getRoomsByTimetableEventTime(List<Long> tetIds) {
-        String from = "from timetable_event_room ter" + " inner join room r on r.id = ter.room_id";
+        String from = "from timetable_event_room ter" 
+                + " inner join room r on r.id = ter.room_id"
+                + " inner join building b on b.id = r.building_id";
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(from);
 
         qb.requiredCriteria("ter.timetable_event_time_id in (:tetIds)", "tetIds", tetIds);
 
-        List<?> queryResult = qb.select("ter.timetable_event_time_id, r.id as roomId, r.code", em).getResultList();
+        List<?> queryResult = qb
+                .select("ter.timetable_event_time_id, r.id as roomId, r.code as room_code, b.code as building_code", em)
+                .getResultList();
+        
         List<ResultObject> resultObjects = StreamUtil
-                .toMappedList(r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1), resultAsString(r, 2)), queryResult);
+                .toMappedList(r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1), resultAsString(r, 2), resultAsString(r, 3)), queryResult);
         return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
     }
     
@@ -397,16 +511,79 @@ public class TimetableEventService {
                 .toMappedList(r -> new ResultObject(resultAsLong(r, 0), resultAsLong(r, 1), resultAsString(r, 2)), queryResult);
         return resultObjects.stream().collect(Collectors.groupingBy(r -> r.getTimetableEventId()));
     }
+    
+    /**
+     * Generate iCalendar for group timetable
+     * @param command
+     * @param lang
+     * @return calendar filename and iCalendar format calendar as a string
+     */
+    public TimetableCalendarDto getGroupCalendar(TimetableEventSearchCommand command, Language lang) {
+        TimetableByGroupDto groupTimetable = groupTimetable(command);
+        return timetableGenerationService.getICal(groupTimetable, lang);
+    }
+    
+    /**
+     * Generate iCalendar for teacher timetable
+     * @param command
+     * @param lang
+     * @return calendar filename and iCalendar format calendar as a string
+     */
+    public TimetableCalendarDto getTeacherCalendar(TimetableEventSearchCommand command, Language lang) {
+        TimetableByTeacherDto teacherTimetable = teacherTimetable(command);
+        return timetableGenerationService.getICal(teacherTimetable, lang);
+    }
+    
+    /**
+     * Generate iCalendar for room timetable
+     * @param command
+     * @param lang
+     * @return calendar filename and iCalendar format calendar as a string
+     */
+    public TimetableCalendarDto getRoomCalendar(TimetableEventSearchCommand command, Language lang) {
+        TimetableByRoomDto roomTimetable = roomTimetable(command);
+        return timetableGenerationService.getICal(roomTimetable, lang);
+    }
+    
+    /**
+     * Generate iCalendar for student timetable
+     * @param command
+     * @param lang
+     * @return calendar filename and iCalendar format calendar as a string
+     */
+    public TimetableCalendarDto getStudentCalendar(TimetableEventSearchCommand command, Language lang) {
+        TimetableByStudentDto studentTimetable = studentTimetable(command);
+        return timetableGenerationService.getICal(studentTimetable, lang);
+    }
+    
+    /**
+     * Generate iCalendar for search result
+     * @param command
+     * @param lang
+     * @return calendar filename and iCalendar format calendar as a string
+     */
+    public TimetableCalendarDto getSearchCalendar(TimetableEventSearchCommand command, Language lang) {
+        List<TimetableEventSearchDto> searchResult = searchTimetable(command);
+        return timetableGenerationService.getICal(searchResult, lang);
+    }
 
     private static class ResultObject {
         private Long timetableEventId;
         private Long objectId;
-        private String value;
+        private String firstValue;
+        private String secondValue;
 
-        public ResultObject(Long tetId, Long objectId, String value) {
+        public ResultObject(Long tetId, Long objectId, String firstValue) {
             this.timetableEventId = tetId;
             this.objectId = objectId;
-            this.value = value;
+            this.firstValue = firstValue;
+        }
+        
+        public ResultObject(Long tetId, Long objectId, String firstValue, String secondValue) {
+            this.timetableEventId = tetId;
+            this.objectId = objectId;
+            this.firstValue = firstValue;
+            this.secondValue = secondValue;
         }
 
         public Long getTimetableEventId() {
@@ -417,8 +594,12 @@ public class TimetableEventService {
             return objectId;
         }
 
-        public String getValue() {
-            return value;
+        public String getFirstValue() {
+            return firstValue;
+        }
+        
+        public String getSecondValue() {
+            return secondValue;
         }
     }
 

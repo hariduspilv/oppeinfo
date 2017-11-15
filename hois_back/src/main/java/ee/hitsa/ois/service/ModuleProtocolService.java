@@ -398,7 +398,8 @@ public class ModuleProtocolService {
         return confirmedProtocol;
     }
 
-    public void delete(Protocol protocol) {
+    public void delete(HoisUserDetails user, Protocol protocol) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(protocol, em);
     }
 

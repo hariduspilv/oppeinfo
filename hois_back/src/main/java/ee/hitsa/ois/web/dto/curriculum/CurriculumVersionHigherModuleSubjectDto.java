@@ -25,7 +25,7 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
     private String ehisSchoolCode;
     private BigDecimal credits;
     private String code;
-    
+
     public static CurriculumVersionHigherModuleSubjectDto of (Subject subject) {
         CurriculumVersionHigherModuleSubjectDto dto = new CurriculumVersionHigherModuleSubjectDto();
         dto.setNameEt(subject.getNameEt());
@@ -38,7 +38,24 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
 
         return dto;
     }
-    
+
+    /**
+     * Options for adding to minor specialty.
+     * Difference with the method below is absence of elective module
+     */
+    public static CurriculumVersionHigherModuleSubjectDto forOptions(CurriculumVersionHigherModuleSubject subject) {
+        CurriculumVersionHigherModuleSubjectDto dto = new CurriculumVersionHigherModuleSubjectDto();
+        
+        dto.setSubjectId(subject.getSubject().getId());
+        dto.setNameEt(subject.getSubject().getNameEt());
+        dto.setNameEn(subject.getSubject().getNameEn());
+        dto.setCredits(subject.getSubject().getCredits());
+        dto.setCode(subject.getSubject().getCode());
+        dto.setSchoolCode(subject.getSubject().getSchool().getCode());
+        dto.setEhisSchoolCode(EntityUtil.getCode(subject.getSubject().getSchool().getEhisSchool()));
+        return dto;
+    }
+
     public static CurriculumVersionHigherModuleSubjectDto of(CurriculumVersionHigherModuleSubject subject) {
         CurriculumVersionHigherModuleSubjectDto dto = 
                 EntityUtil.bindToDto(subject, new CurriculumVersionHigherModuleSubjectDto(), "subject", "electiveModule");
@@ -51,6 +68,37 @@ public class CurriculumVersionHigherModuleSubjectDto extends VersionedCommand {
         dto.setEhisSchoolCode(EntityUtil.getCode(subject.getSubject().getSchool().getEhisSchool()));
         dto.setElectiveModule(EntityUtil.getNullableId(subject.getElectiveModule()));
         return dto;
+    }
+
+    /**
+     * Required for avoiding duplicates in options for minor specialty
+     */
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + ((subjectId == null) ? 0 : subjectId.hashCode());
+        return result;
+    }
+
+    /**
+     * Required for avoiding duplicates in options for minor specialty
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj)
+            return true;
+        if (obj == null)
+            return false;
+        if (getClass() != obj.getClass())
+            return false;
+        CurriculumVersionHigherModuleSubjectDto other = (CurriculumVersionHigherModuleSubjectDto) obj;
+        if (subjectId == null) {
+            if (other.subjectId != null)
+                return false;
+        } else if (!subjectId.equals(other.subjectId))
+            return false;
+        return true;
     }
 
     public String getSchoolCode() {

@@ -2,48 +2,149 @@ package ee.hitsa.ois.util;
 
 import java.math.BigDecimal;
 
-import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.domain.curriculum.CurriculumVersion;
+import ee.hitsa.ois.enums.CurriculumEhisStatus;
+import ee.hitsa.ois.enums.CurriculumStatus;
+import ee.hitsa.ois.enums.CurriculumVersionStatus;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
+import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.validation.ValidationFailedException;
 
 public class CurriculumUtil {
     public static final BigDecimal HOURS_PER_EKAP = BigDecimal.valueOf(26);
-    public static final char SCHOOL_STUDY_LEVEL = '5';
 
     public static boolean isHigher(Curriculum curriculum) {
-        return isHigher(curriculum.getOrigStudyLevel());
-    }
-
-    public static boolean isHigher(Classifier studyLevel) {
-        return isHigher(studyLevel.getValue());
-    }
-
-    /**
-     *  Magic value here is 500(also contains weird values such as 7R)
-     */
-    public static boolean isHigher(String studyLevelValue) {
-        return studyLevelValue != null && studyLevelValue.length() >  0 && studyLevelValue.charAt(0) >= SCHOOL_STUDY_LEVEL;
+        return Boolean.TRUE.equals(curriculum.getHigher());
     }
 
     public static boolean isVocational(Curriculum curriculum) {
-        return isVocational(curriculum.getOrigStudyLevel());
+        return Boolean.FALSE.equals(curriculum.getHigher());
     }
-
-    public static boolean isVocational(Classifier studyLevel) {
-        return isVocational(studyLevel.getValue());
-    }
-
-    /**
-     *  Magic value here is 500
-     */
-    public static boolean isVocational(String studyLevelValue) {
-        return studyLevelValue != null && studyLevelValue.length() >  0 && studyLevelValue.charAt(0) < SCHOOL_STUDY_LEVEL;
-    }
-
+    
     public static String moduleName(String moduleName, String moduleClassifierName, String curriculumCode) {
         return moduleName + " - " + moduleClassifierName + " (" + curriculumCode + ")";
     }
 
     public static String versionName(String versionCode, String curriculumName) {
         return versionCode+" "+curriculumName;
+    }
+    
+    public static boolean basicDataCanBeEdited(Curriculum c) {
+        return !ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, c.getStatus());
+    }
+    
+    public static boolean sameOrJointSchool(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        if(UserUtil.isSameSchool(user, curriculum.getSchool())) {
+            return true;
+        }
+        return userEhisShool != null && Boolean.TRUE.equals(curriculum.getJoint()) && curriculum.getJointPartners().stream()
+                .anyMatch(p -> userEhisShool.equals(EntityUtil.getNullableCode(p.getEhisSchool())));
+    }
+    
+    
+//    User rights 
+    
+    /**
+     * For filtering curriculum search results. Corresponding schools are already considered
+     */
+    public static boolean canView(HoisUserDetails user) {
+        return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA);
+    }
+    
+    /**
+     * Anybody can view confirmed curricula
+     */
+    public static boolean canView(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        return ClassifierUtil.equals(CurriculumStatus.OPPEKAVA_STAATUS_K, curriculum.getStatus()) || 
+                user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+                && sameOrJointSchool(user, userEhisShool, curriculum);
+    }
+    
+    public static boolean canView(HoisUserDetails user, String userEhisShool, CurriculumVersion version) {
+        return ClassifierUtil.equals(CurriculumVersionStatus.OPPEKAVA_VERSIOON_STAATUS_K, version.getStatus()) || 
+                user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_V, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+                && sameOrJointSchool(user, userEhisShool, version.getCurriculum());
+    }
+    
+    public static boolean canCreate(HoisUserDetails user) {
+        return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEKAVA);
+    }
+    
+    public static boolean canChange(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+                && sameOrJointSchool(user, userEhisShool, curriculum);
+    }
+    
+    public static boolean canConfirm(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        return user.isSchoolAdmin() && UserUtil.hasPermission(user, Permission.OIGUS_K, PermissionObject.TEEMAOIGUS_OPPEKAVA)
+                && sameOrJointSchool(user, userEhisShool, curriculum);
+    }
+    
+    public static boolean canClose(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        return canConfirm(user, userEhisShool, curriculum);
+    }
+    
+    public static boolean canDelete(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        return canChange(user, userEhisShool, curriculum);
+    }
+    
+    /**
+     * Method is intended to be used on curriculum search form. 
+     * No need to check whether user is from the same or partner school, 
+     * as only correspondent curricula appear in search results.
+     */
+    public static boolean canBeEdited(HoisUserDetails user, String status, String ehisStatus) {
+        return user.isSchoolAdmin() && 
+                UserUtil.hasPermission(user, Permission.OIGUS_M, PermissionObject.TEEMAOIGUS_OPPEKAVA) && 
+                (CurriculumStatus.OPPEKAVA_STAATUS_S.name().equals(status) || 
+                CurriculumStatus.OPPEKAVA_STAATUS_M.name().equals(status)) &&
+                !CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_A.name().equals(ehisStatus) &&
+                !CurriculumEhisStatus.OPPEKAVA_EHIS_STAATUS_M.name().equals(ehisStatus);
+    }
+    
+//  User rights validation
+    
+    public static void assertCanView(HoisUserDetails user, String userEhisShool, CurriculumVersion version) {
+        if(!canView(user, userEhisShool, version)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanView(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        if(!canView(user, userEhisShool, curriculum)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanCreate(HoisUserDetails user) {
+        if(!canCreate(user)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+
+    public static void assertCanChange(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        if(!canChange(user, userEhisShool, curriculum)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanConfirm(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        if(!canConfirm(user, userEhisShool, curriculum)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanClose(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        if(!canClose(user, userEhisShool, curriculum)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
+    }
+    
+    public static void assertCanDelete(HoisUserDetails user, String userEhisShool, Curriculum curriculum) {
+        if(!canDelete(user, userEhisShool, curriculum)) {
+            throw new ValidationFailedException("main.messages.error.nopermission");
+        }
     }
 }

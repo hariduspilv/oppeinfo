@@ -5,6 +5,7 @@ import static ee.hitsa.ois.util.JpaQueryUtil.propertyContains;
 import java.lang.invoke.MethodHandles;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
 
@@ -19,11 +20,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.expression.EvaluationException;
+import org.springframework.expression.ExpressionException;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.common.TemplateParserContext;
-import org.springframework.expression.spel.SpelParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.expression.spel.support.ReflectivePropertyAccessor;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.stereotype.Service;
 
 import ee.hitsa.ois.domain.MessageTemplate;
@@ -64,7 +66,8 @@ public class MessageTemplateService {
         return EntityUtil.save(messageTemplate, em);
     }
 
-    public void delete(MessageTemplate messageTemplate) {
+    public void delete(HoisUserDetails user, MessageTemplate messageTemplate) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(messageTemplate, em);
     }
 
@@ -136,9 +139,35 @@ public class MessageTemplateService {
         Object data = type.getDataBean() != null ? BeanUtils.instantiateClass(type.getDataBean()) : null;
         ExpressionParser spelParser = new SpelExpressionParser();
         try {
-            spelParser.parseExpression(messageTemplate.getContent(), new TemplateParserContext()).getValue(data, String.class);
-        } catch(@SuppressWarnings("unused") EvaluationException | SpelParseException | IllegalStateException e) {
+            StandardEvaluationContext ctx = new StandardEvaluationContext(data);
+            ctx.setPropertyAccessors(Arrays.asList(new HoisReflectivePropertyAccessor()));
+            spelParser.parseExpression(messageTemplate.getContent(), new TemplateParserContext()).getValue(ctx, String.class);
+        } catch(@SuppressWarnings("unused") ExpressionException | IllegalStateException e) {
             throw new ValidationFailedException("content", "messageTemplate.invalidcontent");
+        }
+    }
+
+    public static class HoisReflectivePropertyAccessor extends ReflectivePropertyAccessor {
+
+        @Override
+        protected String getPropertyMethodSuffix(String propertyName) {
+            return super.getPropertyMethodSuffix(toCamelCase(propertyName));
+        }
+
+        // TODO utility function
+        private static String toCamelCase(String value) {
+            StringBuilder sb = new StringBuilder();
+            for(int i = 0, cnt = value.length(); i < cnt; i++) {
+                char ch = value.charAt(i);
+                if(ch == '_') {
+                    if(++i < cnt) {
+                        sb.append(Character.toUpperCase(value.charAt(i)));
+                    }
+                } else {
+                    sb.append(Character.toLowerCase(ch));
+                }
+            }
+            return sb.toString();
         }
     }
 }

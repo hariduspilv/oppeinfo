@@ -38,40 +38,41 @@
             <textarea ng-model="data.outcomesEn" md-maxlength="20000" max-rows="10" ng-readonly="readOnly"></textarea>
           </md-input-container>
           <div flex>
-          <fieldset>
-            <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
-            <div layout="row" layout-sm="column" layout-xs="column" ng-show="!readOnly">
-              <md-input-container flex>
-                <label>{{'module.optionalNameEt' | translate}}</label>
-                <input ng-model="optionalNameEt" type="text" md-maxlength="255">
-              </md-input-container>
-              <md-input-container flex>
-                <label>{{'module.optionalNameEn' | translate}}</label>
-                <input ng-model="optionalNameEn" type="text" md-maxlength="255">
-              </md-input-container>
-              <md-button class="md-icon-button" ng-click="addElectiveModule()" ng-if="!editingElectiveModule" ng-disabled="!optionalNameEt || !optionalNameEn">
-                <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">add</md-icon>
-              </md-button>
-              <md-button class="md-icon-button" ng-click="finishEditElectiveModule()" ng-if="editingElectiveModule" ng-disabled="!optionalNameEt || !optionalNameEn">
-                <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">done</md-icon>
-              </md-button>
-            </div>
-            <div ng-repeat="electiveModule in data.electiveModules | orderBy: currentLanguageNameField()" class="secondary-table-row"
-              flex layout="row">
-              <div flex="95">
-                <a ng-if="!readOnly" href="" ng-click="editElectiveModule(electiveModule)">{{currentLanguageNameField(electiveModule)}}</a>
-                <p ng-if="readOnly">{{currentLanguageNameField(electiveModule)}}</p>
+            <fieldset>
+              <legend md-colors="{color: 'primary-800'}" class="md-title-small">{{'module.optionals' | translate}}</legend>
+              <div layout="row" layout-sm="column" layout-xs="column" ng-show="!readOnly">
+                <md-input-container flex>
+                  <label>{{'module.optionalNameEt' | translate}}</label>
+                  <input ng-model="optionalNameEt" type="text" md-maxlength="255">
+                </md-input-container>
+                <md-input-container flex>
+                  <label>{{'module.optionalNameEn' | translate}}</label>
+                  <input ng-model="optionalNameEn" type="text" md-maxlength="255">
+                </md-input-container>
+                <md-button class="md-icon-button" ng-click="addElectiveModule()" ng-if="!editingElectiveModule" ng-disabled="!optionalNameEt || !optionalNameEn">
+                  <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">add</md-icon>
+                </md-button>
+                <md-button class="md-icon-button" ng-click="finishEditElectiveModule()" ng-if="editingElectiveModule" ng-disabled="!optionalNameEt || !optionalNameEn">
+                  <md-icon ng-class="'md-primary md-hue-2'" md-font-set="material-icons">done</md-icon>
+                </md-button>
               </div>
-              <div>
-                <a ng-if="!readOnly" flex="5" class="remove nomargin" ng-click="deleteElectiveModule(electiveModule)">&times;</a>
+              <div ng-repeat="electiveModule in data.electiveModules | orderBy: currentLanguageNameField()" class="secondary-table-row"
+                flex layout="row">
+                <div flex="95">
+                  <a ng-if="!readOnly" href="" ng-click="editElectiveModule(electiveModule)">{{currentLanguageNameField(electiveModule)}}</a>
+                  <p ng-if="readOnly">{{currentLanguageNameField(electiveModule)}}</p>
+                </div>
+                <div>
+                  <a ng-if="!readOnly" flex="5" class="remove nomargin" ng-click="deleteElectiveModule(electiveModule)">&times;</a>
+                </div>
               </div>
-            </div>
-          </fieldset>
-        </div>
+            </fieldset>
+          </div>
           <div>&nbsp;</div>
           <md-input-container>
             <label>{{'module.optionalModulesNumber' | translate}}</label>
-            <input name="electiveModulesNumber" ng-model="data.electiveModulesNumber" type="number" required min="0" max="999" pattern="^\d+$" ng-readonly="readOnly">
+            <input name="electiveModulesNumber" ng-model="data.electiveModulesNumber" type="number" required min="0" max="999" pattern="^\d+$"
+              ng-readonly="readOnly">
             <!--max="{{data.electiveModules.length}}" -->
             <div ng-messages="dialogForm.electiveModulesNumber.$error" ng-show="dialogForm.electiveModulesNumber.$dirty">
               <div ng-message="min">
@@ -88,64 +89,64 @@
               </div>
             </div>
           </md-input-container>
-<div>
-          <fieldset>
-            <legend md-colors="{color: 'primary-800'}" ng-class="{invalid: dialogForm.$submitted && data.subjects.length == 0}" class="md-title-small">{{'curriculum.version.subjects' | translate}}&nbsp;*</legend>
-            <md-input-container hide>
-              <input ng-model="data.subjectAdded" type="text" required md-maxlength="255" aria-label="Just for validation">
-            </md-input-container>
-            <div layout="row">
-              <md-input-container flex>
-                <label>{{'curriculum.version.subjectsName' | translate}}</label>
-                <!--TODO: required, multiple-->
-                <md-select ng-model="data.selectedSubject" ng-change="addSubject()" ng-disabled="readOnly">
-                  <md-option ng-repeat="option in subjects | orderBy: 'code'" ng-value="option">
-                    {{option.code}} - {{currentLanguageNameField(option)}}
-                    <!--<span ng-if="myEhisSchool !== option.ehisSchoolCode">{{option.schoolCode}}</span>-->
-                  </md-option>
-                </md-select>
+          <div>
+            <fieldset>
+              <legend md-colors="{color: 'primary-800'}" ng-class="{invalid: dialogForm.$submitted && data.subjects.length == 0}" class="md-title-small">{{'curriculum.version.subjects' | translate}}&nbsp;*</legend>
+              <md-input-container hide>
+                <input ng-model="data.subjectAdded" type="text" required md-maxlength="255" aria-label="Just for validation">
               </md-input-container>
-            </div>
-            <table md-table class="secondary-table" ng-show="data.subjects.length > 0">
-              <thead md-head>
-                <tr md-row>
-                  <th md-column>{{'curriculum.version.subjectsName' | translate}}</th>
-                  <th md-column>EAP</th>
-                  <th md-column>{{'module.optionalSubject' | translate}}</th>
-                  <th md-column>{{'module.linkOptional' | translate}}</th>
-                  <th md-column></th>
-                </tr>
-              </thead>
-              <tbody md-body>
-                <tr md-row ng-repeat="subject in data.subjects | orderBy: 'code'">
-                  <td md-cell>{{subject.code}} - {{currentLanguageNameField(subject)}}</td>
-                  <td md-cell>{{subject.credits}}</td>
-                  <td md-cell>
-                    <md-checkbox ng-model="subject.optional" aria-label="subject is mandatory" ng-change="setCompulsoryStudyCredits(subject)"
-                      ng-disabled="readOnly"></md-checkbox>
-                  </td>
-                  <td md-cell>
-                    <div ng-if="subject.optional && data.electiveModules.length > 0" layout="row">
-                      <md-input-container flex>
-                        <label>{{'module.optional' | translate}}</label>
-                        <md-select ng-model="subject.electiveModule" ng-disabled="readOnly">
-                          <md-option ng-value="null">
-                          </md-option>
-                          <md-option ng-repeat="option in data.electiveModules | orderBy: 'nameEt'" ng-value="option.referenceNumber">
-                            {{currentLanguageNameField(option)}}
-                          </md-option>
-                        </md-select>
-                      </md-input-container>
-                    </div>
-                  </td>
-                  <td md-cell>
-                    <md-button flex="20" class="remove nomargin" ng-click="removeSubject(subject)" ng-if="!readOnly">&times;</md-button>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </fieldset>
-        </div>
+              <div layout="row">
+                <md-input-container flex>
+                  <label>{{'curriculum.version.subjectsName' | translate}}</label>
+                  <!--TODO: required, multiple-->
+                  <md-select ng-model="data.selectedSubject" ng-change="addSubject()" ng-disabled="readOnly">
+                    <md-option ng-repeat="option in subjects | orderBy: 'code'" ng-value="option">
+                      {{option.code}} - {{currentLanguageNameField(option)}}
+                      <!--<span ng-if="myEhisSchool !== option.ehisSchoolCode">{{option.schoolCode}}</span>-->
+                    </md-option>
+                  </md-select>
+                </md-input-container>
+              </div>
+              <table md-table class="secondary-table" ng-show="data.subjects.length > 0">
+                <thead md-head>
+                  <tr md-row>
+                    <th md-column>{{'curriculum.version.subjectsName' | translate}}</th>
+                    <th md-column>EAP</th>
+                    <th md-column>{{'module.optionalSubject' | translate}}</th>
+                    <th md-column>{{'module.linkOptional' | translate}}</th>
+                    <th md-column></th>
+                  </tr>
+                </thead>
+                <tbody md-body>
+                  <tr md-row ng-repeat="subject in data.subjects | orderBy: 'code'">
+                    <td md-cell>{{subject.code}} - {{currentLanguageNameField(subject)}}</td>
+                    <td md-cell>{{subject.credits}}</td>
+                    <td md-cell>
+                      <md-checkbox ng-model="subject.optional" aria-label="subject is mandatory" ng-change="setCompulsoryStudyCredits(subject)"
+                        ng-disabled="readOnly"></md-checkbox>
+                    </td>
+                    <td md-cell>
+                      <div ng-if="subject.optional && data.electiveModules.length > 0" layout="row">
+                        <md-input-container flex>
+                          <label>{{'module.optional' | translate}}</label>
+                          <md-select ng-model="subject.electiveModule" ng-disabled="readOnly">
+                            <md-option ng-value="null">
+                            </md-option>
+                            <md-option ng-repeat="option in data.electiveModules | orderBy: 'nameEt'" ng-value="option.referenceNumber">
+                              {{currentLanguageNameField(option)}}
+                            </md-option>
+                          </md-select>
+                        </md-input-container>
+                      </div>
+                    </td>
+                    <td md-cell>
+                      <md-button flex="20" class="remove nomargin" ng-click="removeSubject(subject)" ng-if="!readOnly">&times;</md-button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </fieldset>
+          </div>
 
           <div>&nbsp;</div>
 

@@ -5,14 +5,14 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationListController', 
   QueryUtils.createQueryForm($scope, '/saisApplications', { order: 'applicationNr' }, clMapper.objectmapper);
   $scope.loadData();
 
-  function showImportResultDialog(file) {
-    dialogService.showDialog('reception/reception.saisApplication.import.result.dialog.html', function (dialogScope) {
-      QueryUtils.endpoint('/saisApplications/importCsv').save({ file: file }, function (result) {
+  function doImport(file) {
+    QueryUtils.endpoint('/saisApplications/importCsv').save({ file: file }, function (result) {
+      dialogService.showDialog('reception/reception.saisApplication.import.result.dialog.html', function (dialogScope) {
         dialogScope.result = result;
-      });
-    }, null, function() {
-      $scope.loadData();
-    }, { clickOutsideToClose: false });
+      }, null, function() {
+        $scope.loadData();
+      }, { clickOutsideToClose: false });
+    });
   }
 
   $scope.importFromCsvFile = function () {
@@ -20,7 +20,7 @@ angular.module('hitsaOis').controller('ReceptionSaisApplicationListController', 
       var data = submittedDialogScope.data;
       oisFileService.getFromLfFile(data.file[0], function (file) {
         dialogService.hide();
-        showImportResultDialog(file);
+        doImport(file);
       });
     });
   };

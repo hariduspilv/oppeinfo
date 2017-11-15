@@ -43,10 +43,8 @@ import ee.hitsa.ois.enums.CurriculumVersionStatus;
 import ee.hitsa.ois.enums.HigherModuleType;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.repository.CurriculumRepository;
-import ee.hitsa.ois.web.commandobject.CurriculumForm;
-import ee.hitsa.ois.web.dto.OisFileDto;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumForm;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumDto;
-import ee.hitsa.ois.web.dto.curriculum.CurriculumFileDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumGradeDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumJointPartnerDto;
 import ee.hitsa.ois.web.dto.curriculum.CurriculumModuleDto;
@@ -608,7 +606,7 @@ public class CurriculumControllerTests {
         curriculumForm.setValidFrom(validFrom);
         curriculumForm.setStudyLanguages(Sets.newLinkedHashSet("OPPEKEEL_et_en", "OPPEKEEL_et_ru"));
         curriculumForm.setIscedClass("ISCED_RYHM_0812");
-        curriculumForm.setVersions(new HashSet<>());
+//        curriculumForm.setVersions(new HashSet<>());
         curriculumForm.setJoint(Boolean.FALSE);
         return curriculumForm;
     }
@@ -616,11 +614,6 @@ public class CurriculumControllerTests {
     private static void setCollections(CurriculumForm curriculumForm) {
         curriculumForm.setSchoolDepartments(Sets.newLinkedHashSet(Long.valueOf(1), Long.valueOf(3)));
         curriculumForm.setStudyForms(Sets.newLinkedHashSet("OPPEVORM_K", "OPPEVORM_MS"));
-
-        Set<CurriculumFileDto> files = new HashSet<>();
-        files.add(getCurriculumFileDto());
-        files.add(getCurriculumFileDto());
-        curriculumForm.setNewFiles(files);
 
         Set<CurriculumGradeDto> grades = new HashSet<>();
         grades.add(getCurriculumGradeDto());
@@ -643,19 +636,6 @@ public class CurriculumControllerTests {
         curriculumForm.setOccupations(occupations);
 
         curriculumForm.setModules(Sets.newLinkedHashSet(getCurriculumModuleDto(), getCurriculumModuleDto()));
-    }
-
-    private static CurriculumFileDto getCurriculumFileDto() {
-        CurriculumFileDto dto = new CurriculumFileDto();
-        dto.setEhis(Boolean.FALSE);
-        dto.setSendEhis(Boolean.FALSE);
-        dto.setEhisFile("EHIS_FAIL_17884");
-        OisFileDto oisFile = new OisFileDto();
-        oisFile.setFname(NAME);
-        oisFile.setFtype(NAME);
-        oisFile.setFdata(new byte[]{1, 2, 3});
-        dto.setOisFile(oisFile);
-        return dto;
     }
 
     private static CurriculumSpecialityDto getCurriculumSpecialityDto() {

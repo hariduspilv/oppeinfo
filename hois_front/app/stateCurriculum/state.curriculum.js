@@ -17,7 +17,8 @@ angular.module('hitsaOis')
         modules: [],
         occupations: [],
         validFrom: new Date(),
-        optionalStudyCredits: 0
+        optionalStudyCredits: 0,
+        canChange: true
     };
     var baseUrl = '/stateCurriculum';
     var Endpoint = QueryUtils.endpoint(baseUrl);
@@ -240,7 +241,9 @@ angular.module('hitsaOis')
     function getCreditsOfRepeatingModules(occupation) {
         var sum = 0;
         var osakutsed = getOccupationsSubOccupations(occupation, 'OSAKUTSE');
-        var modules = $scope.stateCurriculum.modules;
+        var modules = $scope.stateCurriculum.modules.filter(function(m){
+          return !m.isAdditional;
+        });
         for(var i = 0; i < modules.length; i++) {
             var commonPart = ArrayUtils.intersection(modules[i].moduleOccupations, osakutsed);
             if(commonPart.length === 0) {
@@ -327,7 +330,7 @@ angular.module('hitsaOis')
         return $scope.stateCurriculum.modules.filter(function(m){
             return ArrayUtils.includes(m.moduleOccupations, occupation);
         }).reduce(function(total, val){
-                return total + val.credits;
+                return val.isAdditional ? 0 : total + val.credits;
         }, 0);
     }
 
@@ -447,14 +450,17 @@ angular.module('hitsaOis')
     $scope.openAddModuleDialog = function (editingModule) {
         var DialogController = function (scope) {
             if (editingModule) {
-                scope.data = angular.extend({}, editingModule);
+                scope.data = angular.copy(editingModule);
             } else {
                 scope.data = {
-                    moduleOccupations: []
+                    moduleOccupations: [],
+                    outcomes: []
                 };
             }
 
             scope.editing = angular.isDefined(editingModule);
+            scope.isEditingOutcome = false;
+            scope.editedOutcome = null;
 
             /**
              * Module cannot be simultaneously in occupation and its spets-occupation
@@ -471,6 +477,34 @@ angular.module('hitsaOis')
                     }
                 }
                 return true;
+            };
+
+            scope.addOutcome = function() {
+              if (angular.isString(scope.data.outcomesEt) && scope.data.outcomesEt !== '') {
+                  scope.data.outcomes.push({outcomesEt: scope.data.outcomesEt, outcomesEn: scope.data.$$routeoutcomesEn});
+                  scope.data.outcomesEt = undefined;
+                  scope.data.outcomesEn = undefined;
+                }
+            };
+
+            scope.editOutcome = function(outcome) {
+              scope.isEditingOutcome = true;
+              scope.editedOutcome = outcome;
+              scope.data.outcomesEt = outcome.outcomesEt;
+              scope.data.outcomesEn = outcome.outcomesEn;
+            };
+
+
+            scope.saveOutcome = function() {
+              if (angular.isString(scope.data.outcomesEt) && scope.data.outcomesEt !== '') {
+                  scope.isEditingOutcome = false;
+
+                  scope.editedOutcome.outcomesEt = scope.data.outcomesEt;
+                  scope.editedOutcome.outcomesEn = scope.data.outcomesEn;
+
+                  scope.data.outcomesEt = undefined;
+                  scope.data.outcomesEn = undefined;
+                }
             };
 
             scope.delete = function() {
@@ -514,12 +548,36 @@ angular.module('hitsaOis')
             };
             scope.validateOccupations();
 
+            scope.changeOccupation = function(occupation) {
+              if(occupation.selected) {
+                scope.data.moduleOccupations.push(occupation.code);
+              } else {
+                ArrayUtils.remove(scope.data.moduleOccupations, occupation.code);
+              }
+              scope.validateOccupations();
+            };
+
+
             scope.readOnly = $scope.formState.readOnly;
-            scope.occupations = $scope.stateCurriculum.occupations;
-            $scope.stateCurriculum.occupations.forEach(function(o){
-                var list = $scope.subOccupations[o].map(function(e){return e.code;});
-                scope.occupations = scope.occupations.concat(list);
+
+            scope.occupations = $scope.stateCurriculum.occupations.map(function(stateCurriculumOccupation){
+
+              var subOccupations = $scope.subOccupations[stateCurriculumOccupation];
+              subOccupations.forEach(function(s){
+                s.selected = isSelected(s.code);
+              });
+
+              return {
+                code: stateCurriculumOccupation,
+                selected: isSelected(stateCurriculumOccupation),
+                subOccupations:  subOccupations
+              };
             });
+
+            function isSelected(occupationCode) {
+              return ArrayUtils.includes(scope.data.moduleOccupations, occupationCode);
+            }
+
             scope.allowedModuleTypes = [$scope.MODULE_TYPE.BASIC, $scope.MODULE_TYPE.GENERAL];
         };
         dialogService.showDialog('stateCurriculum/state.curriculum.module.add.dialog.html', DialogController,

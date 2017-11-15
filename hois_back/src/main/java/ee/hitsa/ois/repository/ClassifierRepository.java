@@ -27,4 +27,6 @@ public interface ClassifierRepository extends JpaRepository<Classifier, String> 
 	List<Classifier> findAreasOfStudyByGroupOfStudy(String code);
 
     Classifier findByValueAndMainClassCode(String value, String mainClassCode);
+    
+    List<Classifier> findAllByMainClassCode(String mainClassCode);
 }

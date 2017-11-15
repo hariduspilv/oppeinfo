@@ -20,7 +20,7 @@ import javax.xml.bind.annotation.XmlType;
  *         &lt;element name="Id" type="{http://microsoft.com/wsdl/types/}guid"/&gt;
  *         &lt;element name="Name" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="Description" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
- *         &lt;element name="Classifications" type="{http://sais2.x-road.ee/producer/}ArrayOfClassificationItem" minOccurs="0"/&gt;
+ *         &lt;element name="Classifications" type="{http://sais2.x-road.eu/}ArrayOfClassificationItem" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;

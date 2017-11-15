@@ -2,8 +2,8 @@ package ee.hitsa.ois.web.dto.curriculum;
 
 import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
-import javax.validation.constraints.NotNull;
 
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleCapacity;
 import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.util.EntityUtil;
@@ -19,16 +19,36 @@ public class CurriculumVersionOccupationModuleCapacityDto extends VersionedComma
     @ClassifierRestriction(MainClassCode.MAHT)
     private String capacityType;
 
-    @NotNull
+    /**
+     * Null values are filtered in back end
+     */
+//    @NotNull
     @Min(0)
     @Max(10000)
     private Short hours;
 
     private Boolean contact = Boolean.FALSE;
+    
+    /**
+     * Name of capacity type
+     * ClassifierSelection was not used as it cannot be deserialized
+     */
+    private String nameEt;
+    private String nameEn;
 
     public static CurriculumVersionOccupationModuleCapacityDto of(CurriculumVersionOccupationModuleCapacity capacity) {
         CurriculumVersionOccupationModuleCapacityDto dto =
                 EntityUtil.bindToDto(capacity, new CurriculumVersionOccupationModuleCapacityDto());
+        dto.setNameEt(capacity.getCapacityType().getNameEt());
+        dto.setNameEn(capacity.getCapacityType().getNameEn());
+        return dto;
+    }
+    
+    public static CurriculumVersionOccupationModuleCapacityDto empty(Classifier capacityType) {
+        CurriculumVersionOccupationModuleCapacityDto dto = new CurriculumVersionOccupationModuleCapacityDto();
+        dto.setCapacityType(EntityUtil.getCode(capacityType));
+        dto.setNameEt(capacityType.getNameEt());
+        dto.setNameEn(capacityType.getNameEn());
         return dto;
     }
 
@@ -64,4 +84,19 @@ public class CurriculumVersionOccupationModuleCapacityDto extends VersionedComma
         this.contact = contact;
     }
 
+    public String getNameEt() {
+        return nameEt;
+    }
+
+    public void setNameEt(String nameEt) {
+        this.nameEt = nameEt;
+    }
+
+    public String getNameEn() {
+        return nameEn;
+    }
+
+    public void setNameEn(String nameEn) {
+        this.nameEn = nameEn;
+    }
 }

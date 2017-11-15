@@ -1,6 +1,6 @@
 'use strict';
 
-angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'message', 'QueryUtils', '$mdDialog', function ($scope, message, QueryUtils, $mdDialog) {
+angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'message', 'QueryUtils', function ($scope, message, QueryUtils) {
 
   var CURRICULA_FULFILMENT = 'CURRICULA_FULFILMENT';
   var FOREIGN_STUDY = 'FOREIGN_STUDY';
@@ -29,17 +29,11 @@ angular.module('hitsaOis').controller('StudentEhisController', ['$scope', 'messa
     if($scope.studentExportForm.$valid) {
       QueryUtils.endpoint('/students/ehisStudentExport').save($scope.criteria).$promise.then(function(result) {
         message.info('ehis.messages.exportFinished');
-        $mdDialog.hide();
         $scope.result = result;
-      }).catch($mdDialog.hide);
+      });
     } else {
       message.error('main.messages.form-has-errors');
     }
-    var parentEl = angular.element(document.body);
-    $mdDialog.show({
-      parent: parentEl,
-      templateUrl: 'ehis/progress.dialog.html'
-    });
   };
 }
 ]);

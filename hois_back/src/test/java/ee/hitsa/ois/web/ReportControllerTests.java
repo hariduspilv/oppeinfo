@@ -77,6 +77,7 @@ public class ReportControllerTests {
     @Test
     public void studentStatistics() {
         String url = "/reports/students/statistics";
+
         UriComponentsBuilder uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("result", MainClassCode.FINALLIKAS.name());
         uriBuilder.queryParam("date", "2017-01-01T00:00:00.000Z");
@@ -94,6 +95,12 @@ public class ReportControllerTests {
 
         uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("result", MainClassCode.OPPURSTAATUS.name());
+
+        responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uriBuilder = UriComponentsBuilder.fromUriString(url);
 
         responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);
@@ -133,6 +140,12 @@ public class ReportControllerTests {
 
         uriBuilder = UriComponentsBuilder.fromUriString(url);
         uriBuilder.queryParam("result", StudentStatus.OPPURSTAATUS_L.name());
+
+        responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
+        Assert.assertNotNull(responseEntity);
+        Assert.assertEquals(HttpStatus.OK, responseEntity.getStatusCode());
+
+        uriBuilder = UriComponentsBuilder.fromUriString(url);
 
         responseEntity = restTemplate.getForEntity(uriBuilder.build().toUriString(), Object.class);
         Assert.assertNotNull(responseEntity);

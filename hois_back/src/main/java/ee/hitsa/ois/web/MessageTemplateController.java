@@ -62,7 +62,7 @@ public class MessageTemplateController {
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") MessageTemplate messageTemplate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, messageTemplate.getSchool());
-        messageTemplateService.delete(messageTemplate);
+        messageTemplateService.delete(user, messageTemplate);
     }
 
     @GetMapping("/usedTypeCodes")

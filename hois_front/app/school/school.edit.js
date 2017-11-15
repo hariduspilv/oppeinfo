@@ -45,6 +45,10 @@ angular.module('hitsaOis').controller('SchoolEditController', ['$scope', '$route
         message.error("main.messages.form-has-errors");
         return;
       }
+      if(!$scope.school.ehisSchool) {
+        message.error("school.error.ehisSchoolMissing");
+        return;
+      }
 
       var msg = $scope.school.id ? 'main.messages.update.success' : 'main.messages.create.success';
       function afterSave() {

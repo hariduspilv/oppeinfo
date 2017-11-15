@@ -1,30 +1,41 @@
 package ee.hitsa.ois.service.security;
 
+import static ee.hitsa.ois.util.JpaQueryUtil.parameterAsTimestamp;
+import static ee.hitsa.ois.util.JpaQueryUtil.resultAsBoolean;
+
 import java.security.Principal;
+import java.time.LocalDateTime;
 import java.util.List;
 
 import javax.persistence.EntityManager;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.web.authentication.logout.LogoutHandler;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import ee.hitsa.ois.auth.LoginMethod;
+import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Person;
 import ee.hitsa.ois.domain.User;
+import ee.hitsa.ois.domain.UserSessions;
 import ee.hitsa.ois.domain.school.School;
 import ee.hitsa.ois.repository.PersonRepository;
 import ee.hitsa.ois.service.SchoolService;
 import ee.hitsa.ois.service.UserService;
-import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.UserProjection;
 
 @Transactional
 @Service
-public class HoisUserDetailsService implements UserDetailsService {
+public class HoisUserDetailsService implements UserDetailsService, LogoutHandler {
 
     @Autowired
     private EntityManager em;
@@ -62,7 +73,7 @@ public class HoisUserDetailsService implements UserDetailsService {
         return new HoisUserDetails(user, userRoles);
     }
 
-    public AuthenticatedUser authenticatedUser(Principal principal) {
+    public AuthenticatedUser authenticatedUser(HttpServletRequest request, Principal principal) {
         HoisUserDetails userDetails = HoisUserDetails.fromPrincipal(principal);
         User user = em.getReference(User.class, userDetails.getUserId());
         AuthenticatedUser authenticatedUser = new AuthenticatedUser(user, sessionTimeoutInSeconds);
@@ -73,21 +84,20 @@ public class HoisUserDetailsService implements UserDetailsService {
             SchoolService.SchoolType type = schoolService.schoolType(school.getId());
             authenticatedSchool = new AuthenticatedSchool(school.getId(), type.isHigher(), type.isVocational(), EntityUtil.getCode(school.getEhisSchool()));
             if(user.getStudent() != null) {
-                // take from curriculum version.orig_study_level classifier value field
-                List<?> level = em.createNativeQuery("select cl.value from curriculum c " +
-                        "join classifier cl on cl.code = c.orig_study_level_code " +
-                        "join curriculum_version cv on c.id = cv.curriculum_id " +
-                        "join student s on s.curriculum_version_id = cv.id where s.id = ?1").setParameter(1, user.getStudent()).setMaxResults(1).getResultList();
-                if(!level.isEmpty()) {
-                    String origStudyLevel = (String)level.get(0);
-                    authenticatedUser.setVocational(Boolean.valueOf(CurriculumUtil.isVocational(origStudyLevel)));
-                    authenticatedUser.setHigher(Boolean.valueOf(CurriculumUtil.isHigher(origStudyLevel)));
-                }
-            } else {
+                List<?> isHigher = em.createNativeQuery("select c.is_higher "
+                        + "from student s "
+                        + "join curriculum_version cv on s.curriculum_version_id = cv.id "
+                        + "join curriculum c on c.id = cv.curriculum_id "
+                        + "where s.id = ?1"
+                        + "").setParameter(1, user.getStudent()).setMaxResults(1).getResultList();
+                  Boolean higher = resultAsBoolean(isHigher.get(0), 0);
+                  authenticatedUser.setVocational(Boolean.valueOf(Boolean.FALSE.equals(higher)));
+                  authenticatedUser.setHigher(Boolean.valueOf(Boolean.TRUE.equals(higher)));
+              } else {
                 // take values from school
                 authenticatedUser.setVocational(Boolean.valueOf(type.isVocational()));
                 authenticatedUser.setHigher(Boolean.valueOf(type.isHigher()));
-            }
+              }
         }
         authenticatedUser.setSchool(authenticatedSchool);
         authenticatedUser.setAuthorizedRoles(userDetails.getAuthorities());
@@ -95,6 +105,34 @@ public class HoisUserDetailsService implements UserDetailsService {
         authenticatedUser.setUsers(userService.findAllActiveUsers(user.getPerson().getId()));
         authenticatedUser.setLoginMethod(userDetails.getLoginMethod());
 
+        // log login information
+        UserSessions login = new UserSessions();
+        login.setPerson(user.getPerson());
+        login.setUser(user);
+        LoginMethod loginMethod = userDetails.getLoginMethod();
+        if(loginMethod == null) {
+            loginMethod = LoginMethod.LOGIN_TYPE_K;
+        }
+        login.setType(em.getReference(Classifier.class, loginMethod.name()));
+        login.setIpAddress(request.getRemoteAddr());
+        String userAgent = request.getHeader("User-Agent");
+        login.setUserBrowser(userAgent != null ? userAgent : "missing User-Agent header");
+        HttpSession session = request.getSession(false);
+        login.setSessionId(session != null ? session.getId() : "no session");
+        em.persist(login);
+
         return authenticatedUser;
+    }
+
+    @Override
+    public void logout(HttpServletRequest request, HttpServletResponse response, Authentication authentication) {
+        HttpSession session = request.getSession(false);
+        if(session != null) {
+            // mark session as ended
+            em.createNativeQuery("update user_sessions set ended = ?1 where session_id = ?2")
+                .setParameter(1, parameterAsTimestamp(LocalDateTime.now()))
+                .setParameter(2, session.getId())
+                .executeUpdate();
+        }
     }
 }

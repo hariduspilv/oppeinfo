@@ -70,7 +70,7 @@ public class SubjectStudyPeriodController {
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") 
     SubjectStudyPeriod subjectStudyPeriod, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         SubjectStudyPeriodValidationUtil.assertCanUpdate(user, subjectStudyPeriod);
-        subjectStudyPeriodService.delete(subjectStudyPeriod);
+        subjectStudyPeriodService.delete(user, subjectStudyPeriod);
     }
     
     @GetMapping("/teacher/{id:\\d+}")

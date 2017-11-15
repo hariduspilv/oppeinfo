@@ -11,6 +11,7 @@ import org.springframework.context.annotation.Configuration;
 import ee.hitsa.ois.services.EkisSoapService;
 import ee.hois.soap.ekis.client.EkisClient;
 import ee.hois.xroad.ehis.service.EhisClient;
+import ee.hois.xroad.rtip.service.RtipClient;
 import ee.hois.xroad.sais2.service.SaisClient;
 
 /**
@@ -60,6 +61,16 @@ public class ServicesConfiguration {
     @Bean
     public EkisClient ekisClient() {
         return new EkisClient();
+    }
+
+    /**
+     * Rtip client
+     *
+     * @return
+     */
+    @Bean
+    public RtipClient rtipClient() {
+        return new RtipClient();
     }
 
     /**

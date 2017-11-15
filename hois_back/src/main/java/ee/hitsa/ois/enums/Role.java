@@ -12,5 +12,7 @@ public enum Role {
     /** External expert */
     ROLL_V, 
     /** Teacher */
-    ROLL_O
+    ROLL_O,
+    /** Identified person without any other role */
+    ROLL_X
 }

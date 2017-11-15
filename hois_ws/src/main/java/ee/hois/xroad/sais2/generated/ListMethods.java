@@ -3,6 +3,7 @@ package ee.hois.xroad.sais2.generated;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
+import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -16,6 +17,9 @@ import javax.xml.bind.annotation.XmlType;
  * &lt;complexType&gt;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
+ *       &lt;sequence&gt;
+ *         &lt;element name="request" type="{http://sais2.x-road.eu/}listMethodsRequest"/&gt;
+ *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;
  * &lt;/complexType&gt;
@@ -24,9 +28,37 @@ import javax.xml.bind.annotation.XmlType;
  * 
  */
 @XmlAccessorType(XmlAccessType.FIELD)
-@XmlType(name = "")
-@XmlRootElement(name = "listMethods", namespace = "http://x-road.ee/xsd/x-road.xsd")
+@XmlType(name = "", propOrder = {
+    "request"
+})
+@XmlRootElement(name = "listMethods")
 public class ListMethods {
 
+    @XmlElement(required = true)
+    protected ListMethodsRequest request;
+
+    /**
+     * Gets the value of the request property.
+     * 
+     * @return
+     *     possible object is
+     *     {@link ListMethodsRequest }
+     *     
+     */
+    public ListMethodsRequest getRequest() {
+        return request;
+    }
+
+    /**
+     * Sets the value of the request property.
+     * 
+     * @param value
+     *     allowed object is
+     *     {@link ListMethodsRequest }
+     *     
+     */
+    public void setRequest(ListMethodsRequest value) {
+        this.request = value;
+    }
 
 }

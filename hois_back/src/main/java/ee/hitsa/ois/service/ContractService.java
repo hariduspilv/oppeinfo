@@ -27,7 +27,6 @@ import org.springframework.stereotype.Service;
 import ee.hitsa.ois.domain.Classifier;
 import ee.hitsa.ois.domain.Contract;
 import ee.hitsa.ois.domain.Enterprise;
-import ee.hitsa.ois.domain.Job;
 import ee.hitsa.ois.domain.PracticeJournal;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModule;
 import ee.hitsa.ois.domain.curriculum.CurriculumVersionOccupationModuleTheme;
@@ -42,6 +41,7 @@ import ee.hitsa.ois.enums.MessageType;
 import ee.hitsa.ois.enums.OccupationalGrade;
 import ee.hitsa.ois.exception.HoisException;
 import ee.hitsa.ois.message.PracticeJournalUniqueUrlMessage;
+import ee.hitsa.ois.service.ekis.EkisService;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.CurriculumUtil;
@@ -68,9 +68,9 @@ public class ContractService {
     @Autowired
     private AutomaticMessageService automaticMessageService;
     @Autowired
-    private EntityManager em;
+    private EkisService ekisService;
     @Autowired
-    private JobService jobService;
+    private EntityManager em;
     @Autowired
     private StudyYearService studyYearService;
     @Autowired
@@ -254,16 +254,22 @@ public class ContractService {
         return EntityUtil.save(changedContract, em);
     }
 
-    public void delete(Contract contract) {
+    public void delete(HoisUserDetails user, Contract contract) {
+        EntityUtil.setUsername(user.getUsername(), em);
+        // delete also practice journal(s)
+        List<PracticeJournal> journals = em.createQuery("select pj from PracticeJournal pj where pj.contract.id = ?1", PracticeJournal.class)
+                .setParameter(1, EntityUtil.getId(contract)).getResultList();
+        for(PracticeJournal pj : journals) {
+            EntityUtil.deleteEntity(pj, em);
+        }
+
         EntityUtil.deleteEntity(contract, em);
     }
 
     public Contract sendToEkis(HoisUserDetails user, Contract contract) {
-        setContractStatus(contract, ContractStatus.LEPING_STAATUS_Y);
         EntityUtil.save(createPracticeJournal(contract, user.getSchoolId()), em);
         contract = EntityUtil.save(contract, em);
-
-        jobService.sendToEkis(contract);
+        ekisService.registerPracticeContract(EntityUtil.getId(contract));
         return contract;
     }
 
@@ -275,8 +281,8 @@ public class ContractService {
         return EntityUtil.save(contract, em);
     }
 
-    public void endContract(Job job) {
-        Contract contract = job.getContract();
+    public void endContract(Long contractId) {
+        Contract contract = em.getReference(Contract.class, contractId);
         if(contract.getEndDate() != null && contract.getEndDate().isBefore(LocalDate.now())) {
             setContractStatus(contract, ContractStatus.LEPING_STAATUS_L);
             EntityUtil.save(contract, em);

@@ -43,6 +43,11 @@ public class AcademicCalendarService {
         return StreamUtil.toMappedList(r -> new AcademicCalendarEventDto((Object[])r), data);
     }
 
+    /**
+     * Get academic calendar for view.
+     * @param schoolId
+     * @return study year code and academic calendar events
+     */
     public AcademicCalendarDto academicCalendar(Long schoolId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
         if (studyYear != null) {

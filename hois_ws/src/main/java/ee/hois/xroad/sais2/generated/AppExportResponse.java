@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="Applications" type="{http://sais2.x-road.ee/producer/}ArrayOfApplication" minOccurs="0"/&gt;
+ *         &lt;element name="Applications" type="{http://sais2.x-road.eu/}ArrayOfApplication" minOccurs="0"/&gt;
  *         &lt;element name="TotalCount" type="{http://www.w3.org/2001/XMLSchema}int" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;

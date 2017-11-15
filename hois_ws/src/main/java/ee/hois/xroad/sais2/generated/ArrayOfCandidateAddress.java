@@ -19,7 +19,7 @@ import javax.xml.bind.annotation.XmlType;
  *   &lt;complexContent&gt;
  *     &lt;restriction base="{http://www.w3.org/2001/XMLSchema}anyType"&gt;
  *       &lt;sequence&gt;
- *         &lt;element name="CandidateAddress" type="{http://sais2.x-road.ee/producer/}CandidateAddress" maxOccurs="unbounded" minOccurs="0"/&gt;
+ *         &lt;element name="CandidateAddress" type="{http://sais2.x-road.eu/}CandidateAddress" maxOccurs="unbounded" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;

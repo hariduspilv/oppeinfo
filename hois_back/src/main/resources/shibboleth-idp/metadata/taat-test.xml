@@ -1,0 +1,64 @@
+<?xml version="1.0"?>
+<md:EntitiesDescriptor xmlns:md="urn:oasis:names:tc:SAML:2.0:metadata" validUntil="2017-11-15T13:20:01Z" cacheDuration="PT6H" ID="_50935d09f4518bd0148558fe50f39388793b40b3"><ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+  <ds:SignedInfo>
+    <ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+     <ds:SignatureMethod Algorithm="http://www.w3.org/2001/04/xmldsig-more#rsa-sha256"/>
+     <ds:Reference URI="#_50935d09f4518bd0148558fe50f39388793b40b3">
+       <ds:Transforms>
+         <ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"/>
+         <ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"/>
+       </ds:Transforms>
+       <ds:DigestMethod Algorithm="http://www.w3.org/2001/04/xmlenc#sha256"/>
+      <ds:DigestValue>r9nPQl5uDhaRRmqS+avAtRnZRuxHXqTlFefiReUiLio=</ds:DigestValue>
+    </ds:Reference>
+  </ds:SignedInfo>
+  <ds:SignatureValue>MIHwQgPQkIkm8PAE+7f1ndgyaZX+5zXJ1K516E3FX4EDs2eTydJy3yU0KrJf88lwis7/VovMBEzs6xCkttKhEsXzTGMokg0R7J26IK1tP+a7y5cBgtkoH93sfeiCTJz6F9proAG83hZQ1YQ6PEqQYwThcgW9XGDFe/tjxoyTmlGtLcmSA++kmLOyma7TrphjAU1R+AE8YGjPt0wz7SZaSXJX/kdU7A4sZ4J8ntVegNefDFAs874e5MnudrFVXlsGEvOmKnAWgsNkctqOpWVkaOz88UwuWS/+BE83J4MLQN8gT7xra5OM/QJ+hCx0CaaZYkDv961nltwe8d6IgpcIfg==</ds:SignatureValue>
+<ds:KeyInfo><ds:X509Data><ds:X509Certificate>MIID9TCCAt2gAwIBAgIJAKl5Wu2tVcZeMA0GCSqGSIb3DQEBCwUAMIGQMQswCQYD
+VQQGEwJFRTERMA8GA1UECAwIVGFydHVtYWExDjAMBgNVBAcMBVRhcnR1MQ4wDAYD
+VQQKDAVFRU5ldDEcMBoGA1UECwwTU2VydmljZXMgRGVwYXJ0bWVudDERMA8GA1UE
+AwwIVEFBVC1JbnQxHTAbBgkqhkiG9w0BCQEWDmVlbmV0QGVlbmV0LmVlMB4XDTE0
+MTIxNzIzNTgyN1oXDTI0MTIxNDIzNTgyN1owgZAxCzAJBgNVBAYTAkVFMREwDwYD
+VQQIDAhUYXJ0dW1hYTEOMAwGA1UEBwwFVGFydHUxDjAMBgNVBAoMBUVFTmV0MRww
+GgYDVQQLDBNTZXJ2aWNlcyBEZXBhcnRtZW50MREwDwYDVQQDDAhUQUFULUludDEd
+MBsGCSqGSIb3DQEJARYOZWVuZXRAZWVuZXQuZWUwggEiMA0GCSqGSIb3DQEBAQUA
+A4IBDwAwggEKAoIBAQC0VvGMtFAI5DCUS0NvZauOGpXhhACfudS3qCbEtT/pKcmp
+wGmdJhomhWk/mLumBcbmtaqvttOoaAmvsrehHkl0jNkvkxYhBvCDDile9OG7IBOA
+ssMd+4thbjWclR5QEXXYbAKo9eIlNDDr+qK0NnEIKPpoJK7OzUFJe1FW0RuvgC5n
+jlhkl/NkCpuIlZG2c9FxpB7ISsF3xG0z6b2Bp+O3/9Hw/bWEwfaSWS84OZwnqSIx
+IT3CW6jAJWfVM/rKO086/dA9R9PCydNbimr1wa+dVxFRKjGoa4Gi/1YR0NOH5+XN
+zJ9WIw1mKzfHjMduZ77I560tOHS9C5dj74PK0W9tAgMBAAGjUDBOMB0GA1UdDgQW
+BBSmT2h90oTf1J1r7YuGFc1akkUdFTAfBgNVHSMEGDAWgBSmT2h90oTf1J1r7YuG
+Fc1akkUdFTAMBgNVHRMEBTADAQH/MA0GCSqGSIb3DQEBCwUAA4IBAQB9vMUHKOqv
+jgnje8XeaD0ssE6hNnjgXysEqWiczYpP6r5iY6w3qro/c9UWP3xP7lxuCrKY7NOA
+hATbFoIUkA54sMo2c2zQeXVeObWRq52X9wPk0dx7rs1FVdEDogZg7nwLfwX+a4BI
+kH4lNpXDzd2QeP3hhml+GIHVaGvTCV7214wGyIku6ukNleIKNTOaox4r+1j/Hgfl
+6CtEtfFSFsbFJrXtVV7MlPoaJiLvPHALhan6VYWmPPD2wIToE0TPH74IGCs7fQmS
+rBXaBzN7djihbCXkKNrU4vFUgNaEVzDcbr/G7cdOKgkv1ECAha140MMJ0dtJZCQg
+gD//o/MdFiEp
+</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature><md:Extensions><mdrpi:PublicationInfo xmlns:mdrpi="urn:oasis:names:tc:SAML:metadata:rpi" creationInstant="2017-11-08T13:20:01Z" publisher="http://taat.edu.ee"/></md:Extensions><md:EntityDescriptor xmlns:ds="http://www.w3.org/2000/09/xmldsig#" entityID="https://reos.taat.edu.ee/module.php/saml/sp/metadata.php/TAAT">
+  <md:SPSSODescriptor protocolSupportEnumeration="urn:oasis:names:tc:SAML:1.1:protocol urn:oasis:names:tc:SAML:2.0:protocol">
+    <md:KeyDescriptor use="signing">
+      <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:X509Data>
+          <ds:X509Certificate>MIID5zCCAs+gAwIBAgIJALdksz+EJwoIMA0GCSqGSIb3DQEBCwUAMIGJMQswCQYDVQQGEwJFRTERMA8GA1UECAwIVGFydHVtYWExDjAMBgNVBAcMBVRhcnR1MQ4wDAYDVQQKDAVFRU5ldDENMAsGA1UECwwEVEFBVDEZMBcGA1UEAwwQcmVvcy50YWF0LmVkdS5lZTEdMBsGCSqGSIb3DQEJARYOZWVuZXRAZWVuZXQuZWUwHhcNMTYwMjE2MTIyMDUxWhcNMTkwMjE1MTIyMDUxWjCBiTELMAkGA1UEBhMCRUUxETAPBgNVBAgMCFRhcnR1bWFhMQ4wDAYDVQQHDAVUYXJ0dTEOMAwGA1UECgwFRUVOZXQxDTALBgNVBAsMBFRBQVQxGTAXBgNVBAMMEHJlb3MudGFhdC5lZHUuZWUxHTAbBgkqhkiG9w0BCQEWDmVlbmV0QGVlbmV0LmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr791eXNuO4oh6ndnM9qeP4+GtXlxSZNXpxuB032YCMLSDM15LLhPBX9htk/xB98QOzZ3f1mIpvlDPxrk34m3L7qKRaeOs9Yyn66d0wLb0zIm7NGEJd0P8ay1QdoTF6Ms6q1clmGqe8xuLO6mzWGeO00eDRBlvHKC3fcKeHnjK3qV9+Oqo5nmoC2TgQVF90gIinYGEoJ1zlSj20SCWtEmtjlc42S0kzPTsyhej7KfX5h969J8ess4N3t+i00Lewx8RJgCOVlRg4wi8AZb5M9bg5GtJ9RUGpO4OIfNr2m2zL8AuV5/Ao+WwIToQEYwKL8KwHiGXTsekOhzqW5IAxLdsQIDAQABo1AwTjAdBgNVHQ4EFgQUoUTGcAZkKyleofCS2m2uC540oJIwHwYDVR0jBBgwFoAUoUTGcAZkKyleofCS2m2uC540oJIwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAceeww+/paDZqd3omnx9BLAgkOrjfpNjyvuVLPXvqhMyev6SN+fDZ+fyMwcHFmDF/0jXoCfNhPAs7t04Fl6pwuSvJl8XysIR2pzgkDUErIanaGeJu0rceNxGhOPCjY/M6YvErtc0uYxdSG0KGtsOjWTxg5Cjpdj470dbBsPlzY0bLvUobH36a2Zu2NOnqS88h5vG4IsCe83oMU0d1MkULeq3iaDyLDTs0JZtFj6Xqhlz5yrkcbt5roihsdZ5AV38bk24e8RzdPCOlpIFTffvpfdZa8ql8iVcDVffxDLwfIgTb+EADdDy5Wwe3L45xIINJcvmvuT7Kt8su5sGgI73yuA==</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
+    <md:KeyDescriptor use="encryption">
+      <ds:KeyInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#">
+        <ds:X509Data>
+          <ds:X509Certificate>MIID5zCCAs+gAwIBAgIJALdksz+EJwoIMA0GCSqGSIb3DQEBCwUAMIGJMQswCQYDVQQGEwJFRTERMA8GA1UECAwIVGFydHVtYWExDjAMBgNVBAcMBVRhcnR1MQ4wDAYDVQQKDAVFRU5ldDENMAsGA1UECwwEVEFBVDEZMBcGA1UEAwwQcmVvcy50YWF0LmVkdS5lZTEdMBsGCSqGSIb3DQEJARYOZWVuZXRAZWVuZXQuZWUwHhcNMTYwMjE2MTIyMDUxWhcNMTkwMjE1MTIyMDUxWjCBiTELMAkGA1UEBhMCRUUxETAPBgNVBAgMCFRhcnR1bWFhMQ4wDAYDVQQHDAVUYXJ0dTEOMAwGA1UECgwFRUVOZXQxDTALBgNVBAsMBFRBQVQxGTAXBgNVBAMMEHJlb3MudGFhdC5lZHUuZWUxHTAbBgkqhkiG9w0BCQEWDmVlbmV0QGVlbmV0LmVlMIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAr791eXNuO4oh6ndnM9qeP4+GtXlxSZNXpxuB032YCMLSDM15LLhPBX9htk/xB98QOzZ3f1mIpvlDPxrk34m3L7qKRaeOs9Yyn66d0wLb0zIm7NGEJd0P8ay1QdoTF6Ms6q1clmGqe8xuLO6mzWGeO00eDRBlvHKC3fcKeHnjK3qV9+Oqo5nmoC2TgQVF90gIinYGEoJ1zlSj20SCWtEmtjlc42S0kzPTsyhej7KfX5h969J8ess4N3t+i00Lewx8RJgCOVlRg4wi8AZb5M9bg5GtJ9RUGpO4OIfNr2m2zL8AuV5/Ao+WwIToQEYwKL8KwHiGXTsekOhzqW5IAxLdsQIDAQABo1AwTjAdBgNVHQ4EFgQUoUTGcAZkKyleofCS2m2uC540oJIwHwYDVR0jBBgwFoAUoUTGcAZkKyleofCS2m2uC540oJIwDAYDVR0TBAUwAwEB/zANBgkqhkiG9w0BAQsFAAOCAQEAceeww+/paDZqd3omnx9BLAgkOrjfpNjyvuVLPXvqhMyev6SN+fDZ+fyMwcHFmDF/0jXoCfNhPAs7t04Fl6pwuSvJl8XysIR2pzgkDUErIanaGeJu0rceNxGhOPCjY/M6YvErtc0uYxdSG0KGtsOjWTxg5Cjpdj470dbBsPlzY0bLvUobH36a2Zu2NOnqS88h5vG4IsCe83oMU0d1MkULeq3iaDyLDTs0JZtFj6Xqhlz5yrkcbt5roihsdZ5AV38bk24e8RzdPCOlpIFTffvpfdZa8ql8iVcDVffxDLwfIgTb+EADdDy5Wwe3L45xIINJcvmvuT7Kt8su5sGgI73yuA==</ds:X509Certificate>
+        </ds:X509Data>
+      </ds:KeyInfo>
+    </md:KeyDescriptor>
+    <md:SingleLogoutService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Redirect" Location="https://reos.taat.edu.ee/module.php/saml/sp/saml2-logout.php/TAAT"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-POST" Location="https://reos.taat.edu.ee/module.php/saml/sp/saml2-acs.php/TAAT" index="0"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:1.0:profiles:browser-post" Location="https://reos.taat.edu.ee/module.php/saml/sp/saml1-acs.php/TAAT" index="1"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:2.0:bindings:HTTP-Artifact" Location="https://reos.taat.edu.ee/module.php/saml/sp/saml2-acs.php/TAAT" index="2"/>
+    <md:AssertionConsumerService Binding="urn:oasis:names:tc:SAML:1.0:profiles:artifact-01" Location="https://reos.taat.edu.ee/module.php/saml/sp/saml1-acs.php/TAAT/artifact" index="3"/>
+  </md:SPSSODescriptor>
+  <md:ContactPerson contactType="technical">
+    <md:GivenName>Administrator</md:GivenName>
+    <md:EmailAddress>eenet@eenet.ee</md:EmailAddress>
+  </md:ContactPerson>
+</md:EntityDescriptor></md:EntitiesDescriptor>

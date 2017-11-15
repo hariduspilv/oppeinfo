@@ -306,6 +306,10 @@ angular.module('hitsaOis')
           {
             name: 'main.menu.dataexchange.ekisLogs',
             url: "/ekis/logs?_menu"
+          },
+          {
+            name: 'main.menu.dataexchange.saisLogs',
+            url: "/sais/logs?_menu"
           }
         ]
       });
@@ -404,7 +408,7 @@ angular.module('hitsaOis')
         pages: [
           {
             name: 'main.menu.timetableAndEvents.timetable',
-            url: "/timetable/generalTimetableByGroup"
+            url: "/timetable/personalGeneralTimetable?_menu"
           },
           {
             name: 'main.menu.timetableAndEvents.events',
@@ -561,7 +565,7 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
-        url: '/timetable/generalTimetableByStudent?_menu'
+        url: '/timetable/personalGeneralTimetable?_menu'
       });
 
       sections.push({
@@ -640,7 +644,18 @@ angular.module('hitsaOis')
       });
     }
 
-    function getExternalExpertSections() {}
+    function getExternalExpertSections() {
+      sections.push({
+        name: 'main.menu.curriculum.label',
+        type: 'toggle',
+        pages: [
+          {
+            name: 'main.menu.curriculum.stateCurriculums',
+            url: "/stateCurriculum?_menu"
+          },
+        ]
+      });
+    }
 
     function getParentSections() {
       sections.push({
@@ -661,7 +676,7 @@ angular.module('hitsaOis')
       sections.push({
         name: 'main.menu.timetableLink.label',
         type: 'link',
-        url: '/timetable/generalTimetableByStudent?_menu'
+        url: '/timetable/personalGeneralTimetable?_menu'
       });
 
       sections.push({

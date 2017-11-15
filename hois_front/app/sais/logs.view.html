@@ -1,0 +1,72 @@
+<div layout-padding>
+  <div flex>
+    <form ng-submit="loadData()" layout="column" name="saisLogForm">
+      <div flex>
+        <div layout="row">
+          <md-input-container flex="45" flex-md="100" flex-sm="100" flex-xs="100">
+            <label>{{'sais.message.name' | translate}}</label>
+            <md-select ng-model="criteria.messageType">
+              <md-option md-option-empty></md-option>
+              <md-option ng-repeat="val in messageTypes" ng-value="val">
+                {{'sais.message.' + val | translate}}
+              </md-option>
+            </md-select>
+          </md-input-container>
+
+          <div flex="50" flex-offset="5">
+            <label class="textInput">{{'sais.message.sentDatesRange' | translate}}</label>
+            <md-input-container flex="25" flex-md="100" flex-sm="100" flex-xs="100">
+              <md-datepicker ng-model="criteria.from" md-max-date="criteria.thru"
+                             md-placeholder="{{'main.from' | translate}}"></md-datepicker>
+            </md-input-container>
+            <md-input-container flex flex-offset="5">
+              <md-datepicker ng-model="criteria.thru" md-min-date="criteria.from"
+                             md-placeholder="{{'main.thru' | translate}}"></md-datepicker>
+            </md-input-container>
+          </div>
+        </div>
+
+        <div layout="row">
+          <md-checkbox flex="45" ng-model="criteria.errors" aria-label="show only errors">
+            {{'sais.message.onlyErrors' | translate}}
+          </md-checkbox>
+        </div>
+      </div>
+
+      <div layout="row">
+        <md-button type="submit" class="md-raised md-primary">{{'main.button.search' | translate}}</md-button>
+        <md-button class="md-raised" ng-click="clearCriteria()">{{'main.button.clear' | translate}}</md-button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div layout-padding>
+  <div flex>
+    <md-table-container>
+      <table md-table md-progress="tabledata.$promise">
+        <thead md-head md-order="criteria.order" md-on-reorder="loadData">
+          <tr md-row>
+            <th md-column>{{'sais.message.name' | translate}}</th>
+            <th md-column md-order-by="inserted">{{'sais.message.time' | translate}}</th>
+            <th md-column>{{'sais.message.error' | translate}}</th>
+            <th md-column>{{'sais.message.insertedBy' | translate}}</th>
+          </tr>
+        </thead>
+        <tbody md-body>
+          <tr md-row ng-repeat="row in tabledata.content" ng-class-odd="'odd'" ng-class-even="'even'">
+            <td md-cell>
+              <a md-no-ink class="md-primary" ng-click="logentry(row)">{{::('sais.message.' + row.wsName) | translate}}</a>
+            </td>
+            <td md-cell>{{::row.inserted | hoisDateTime}}</td>
+            <td md-cell>{{row.error ? 'main.yes' : 'main.no' | translate}}</td>
+            <td md-cell>{{::row.insertedBy}}</td>
+          </tr>
+        </tbody>
+      </table>
+    </md-table-container>
+    <md-table-pagination md-limit="criteria.size" md-limit-options="[10, 20, 50]"
+                         md-page="criteria.page" md-total="{{tabledata.totalElements}}" md-on-paginate="loadData"
+                         md-label="{page: '{{'main.page' | translate}}:', rowsPerPage: '{{'main.rowPerPage' | translate}}:', of: '{{'main.of' | translate}}' }" md-page-select></md-table-pagination>
+  </div>
+</div>

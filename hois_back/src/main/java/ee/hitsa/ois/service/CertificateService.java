@@ -133,7 +133,8 @@ public class CertificateService {
         return EntityUtil.save(certificate, em);
     }
 
-    public void delete(Certificate certificate) {
+    public void delete(HoisUserDetails user, Certificate certificate) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(certificate, em);
     }
 

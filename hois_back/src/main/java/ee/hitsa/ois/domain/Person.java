@@ -35,6 +35,7 @@ public class Person extends BaseEntityWithId {
     private String postcode;
     private String email;
     private LocalDate birthdate;
+    private String addressAds;
     @OneToMany(mappedBy = "person")
     private Set<User> users;
 
@@ -102,6 +103,14 @@ public class Person extends BaseEntityWithId {
         this.language = language;
     }
 
+    public String getNativeLanguage() {
+        return nativeLanguage;
+    }
+
+    public void setNativeLanguage(String nativeLanguage) {
+        this.nativeLanguage = nativeLanguage;
+    }
+
     public String getPhone() {
         return phone;
     }
@@ -150,20 +159,20 @@ public class Person extends BaseEntityWithId {
         this.birthdate = birthdate;
     }
 
+    public String getAddressAds() {
+        return addressAds;
+    }
+
+    public void setAddressAds(String addressAds) {
+        this.addressAds = addressAds;
+    }
+
     public Set<User> getUsers() {
         return users;
     }
 
     public void setUsers(Set<User> users) {
         this.users = users;
-    }
-
-    public String getNativeLanguage() {
-        return nativeLanguage;
-    }
-
-    public void setNativeLanguage(String nativeLanguage) {
-        this.nativeLanguage = nativeLanguage;
     }
 
     @Transient

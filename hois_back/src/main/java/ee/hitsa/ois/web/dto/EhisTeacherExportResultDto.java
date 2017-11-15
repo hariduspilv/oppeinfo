@@ -1,28 +1,25 @@
 package ee.hitsa.ois.web.dto;
 
 public class EhisTeacherExportResultDto {
-    String fullName;
-    String message;
-    
-    public EhisTeacherExportResultDto(String fullName, String message) {
+    private final String fullName;
+    private final String message;
+    private final boolean error;
+
+    public EhisTeacherExportResultDto(String fullName, String message, boolean error) {
         this.fullName = fullName;
         this.message = message;
+        this.error = error;
     }
 
     public String getFullName() {
         return fullName;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
     public String getMessage() {
         return message;
     }
 
-    public void setMessage(String message) {
-        this.message = message;
+    public boolean isError() {
+        return error;
     }
-
 }

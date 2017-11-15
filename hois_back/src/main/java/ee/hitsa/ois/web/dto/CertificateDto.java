@@ -1,7 +1,5 @@
 package ee.hitsa.ois.web.dto;
 
-import java.math.BigInteger;
-
 import ee.hitsa.ois.domain.Certificate;
 import ee.hitsa.ois.enums.CertificateStatus;
 import ee.hitsa.ois.util.ClassifierUtil;
@@ -12,7 +10,7 @@ public class CertificateDto extends CertificateForm {
     
     private Long id;
     private String wdUrl;
-    private BigInteger wdId;
+    private Long wdId;
     private String certificateNr;
     private boolean canBeChanged;
     private boolean canViewFromEkis;
@@ -33,11 +31,11 @@ public class CertificateDto extends CertificateForm {
         this.wdUrl = wdUrl;
     }
 
-    public BigInteger getWdId() {
+    public Long getWdId() {
         return wdId;
     }
 
-    public void setWdId(BigInteger wdId) {
+    public void setWdId(Long wdId) {
         this.wdId = wdId;
     }
 

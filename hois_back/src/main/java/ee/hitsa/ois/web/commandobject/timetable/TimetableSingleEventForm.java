@@ -2,19 +2,20 @@ package ee.hitsa.ois.web.commandobject.timetable;
 
 import java.time.LocalDate;
 import java.time.LocalTime;
+import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class TimetableSingleEventForm {
-    //TODO: Validation is missing
+    // TODO: Validation is missing
     private LocalDate date;
     private LocalTime startTime;
     private LocalTime endTime;
     private String name;
     private Boolean repeat;
     private String repeatCode;
-    private AutocompleteResult room;
-    private AutocompleteResult teacher;
+    private List<AutocompleteResult> rooms;
+    private List<AutocompleteResult> teachers;
     private Long weekAmount;
 
     public LocalDate getDate() {
@@ -65,20 +66,20 @@ public class TimetableSingleEventForm {
         this.repeatCode = repeatCode;
     }
 
-    public AutocompleteResult getRoom() {
-        return room;
+    public List<AutocompleteResult> getRooms() {
+        return rooms;
     }
 
-    public void setRoom(AutocompleteResult room) {
-        this.room = room;
+    public void setRooms(List<AutocompleteResult> rooms) {
+        this.rooms = rooms;
     }
 
-    public AutocompleteResult getTeacher() {
-        return teacher;
+    public List<AutocompleteResult> getTeachers() {
+        return teachers;
     }
 
-    public void setTeacher(AutocompleteResult teacher) {
-        this.teacher = teacher;
+    public void setTeachers(List<AutocompleteResult> teachers) {
+        this.teachers = teachers;
     }
 
     public Long getWeekAmount() {

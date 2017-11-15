@@ -11,11 +11,18 @@ import ee.hitsa.ois.domain.teacher.Teacher;
 import ee.hitsa.ois.enums.ApplicationStatus;
 import ee.hitsa.ois.enums.DirectiveStatus;
 import ee.hitsa.ois.enums.DirectiveType;
+import ee.hitsa.ois.enums.Permission;
+import ee.hitsa.ois.enums.PermissionObject;
 import ee.hitsa.ois.enums.Role;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 
 public abstract class UserUtil {
+    
+    public static boolean hasPermission(HoisUserDetails user, Permission permission, PermissionObject object) {
+        String s = "ROLE_" + permission.name() + "_" + object.name();
+        return user.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(s));
+    }
 
     public static boolean canSubmitApplication(HoisUserDetails user, Application application) {
         if(ClassifierUtil.equals(ApplicationStatus.AVALDUS_STAATUS_KOOST, application.getStatus())) {
@@ -125,6 +132,10 @@ public abstract class UserUtil {
         }
         return false;
     }
+    
+    public static boolean isMainAdminOrExternalExpert(HoisUserDetails user) {
+        return user.isMainAdmin() || user.isExternalExpert();
+    }
 
     /**
      * Is given user teacher in given school?
@@ -138,6 +149,11 @@ public abstract class UserUtil {
     
     public static boolean isSchoolAdminOrStudent(HoisUserDetails user, School school) {
         return isSchoolAdmin(user, school) || isStudent(user, school);
+    }
+    
+    public static boolean isSameSchool(HoisUserDetails user, School school) {
+        Long schoolId = user.getSchoolId();
+        return schoolId != null && schoolId.equals(EntityUtil.getNullableId(school));
     }
 
     public static void assertSameSchool(HoisUserDetails user, School school) {

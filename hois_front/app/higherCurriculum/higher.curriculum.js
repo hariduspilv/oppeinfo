@@ -45,24 +45,14 @@ angular.module('hitsaOis')
       validFrom: new Date()
     };
 
-    if(!$scope.auth.school) {
-        $scope.schoolDepartments = QueryUtils.endpoint('/autocomplete/schooldepartments').query();
-    }
-
     // --- Get and Set Data
     $scope.studyLevels = [];
     function getAllowedStudyLevels() {
-        if($scope.auth.school) {
-            QueryUtils.endpoint('/school/studyLevels').search().$promise.then(function(response) {
-                $scope.studyLevels = response.studyLevels.filter(isHigherStudyLevel);
-            });
-        }
+      QueryUtils.endpoint('/curriculum/studyLevels').query({curriculum: id, isHigher: true}).$promise.then(function(response) {
+          $scope.studyLevels = response;
+      });
     }
     getAllowedStudyLevels();
-
-    function isHigherStudyLevel(studyLevelCode) {
-        return parseInt(studyLevelCode.substring(studyLevelCode.length - 3)) >= 500;
-    }
 
     $scope.areasOfStudy = [];
     $scope.getAreasOfStudy = function(listOfGroupsChanged) {
@@ -102,6 +92,8 @@ angular.module('hitsaOis')
     }
     getCurriculum();
 
+    getSchoolDepartmentOptions();
+
     function setVariablesForExistingCurriculum() {
         DataUtils.convertStringToDates($scope.curriculum, ["validFrom", "validThru", "approval", "ehisChanged", "accreditationDate", "accreditationValidDate", "merRegDate"]);
         setStudyPeriod();
@@ -138,6 +130,7 @@ angular.module('hitsaOis')
     }
 
     $scope.removejointPartner = function(deletedPartner) {
+
         dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
             ArrayUtils.remove($scope.curriculum.jointPartners, deletedPartner);
             if(!deletedPartner.abroad) {
@@ -145,24 +138,11 @@ angular.module('hitsaOis')
                 if($scope.curriculum.jointMentor === deletedPartner.ehisSchool) {
                     $scope.curriculum.jointMentor = undefined;
                 }
-                deletePartersSubjects(deletedPartner.ehisSchool);
             }
+            $scope.higherCurriculumForm.$setDirty();
+            getSchoolDepartmentOptions();
         });
     };
-
-    // TODO: removal in iteration
-    function deletePartersSubjects(partnersEhisSchool) {
-        $scope.curriculum.versions.forEach(function(v){
-            v.modules.forEach(function(m){
-                var removedSubjects = m.subjects.filter(function(s){
-                    return s.ehisSchoolCode === partnersEhisSchool;
-                });
-                removedSubjects.forEach(function(rs){
-                    $scope.deleteSubject(m, rs);
-                });
-            });
-        });
-    }
 
     // --- Validation
 
@@ -266,6 +246,7 @@ angular.module('hitsaOis')
           var updateSuccess = messages && messages.updateSuccess ? messages.updateSuccess : 'main.messages.create.success';
           message.info(updateSuccess);
           setVariablesForExistingCurriculum();
+          $scope.higherCurriculumForm.$setPristine();
         });
       } else {
         $scope.curriculum.newFiles = $scope.curriculum.files;
@@ -314,13 +295,19 @@ angular.module('hitsaOis')
 
     function getEhisSchoolsSelection() {
         $scope.jointPartnersEhisSchools = [];
-        $scope.myEhisSchool = Session.school ? Session.school.ehisSchool : null;
+        $scope.myEhisSchool = $scope.curriculum.id ? $scope.curriculum.ehisSchool : Session.school.ehisSchool;
         $scope.jointPartnersEhisSchools.push($scope.myEhisSchool);
         $scope.curriculum.jointPartners.forEach(function(e){
             if(e.ehisSchool) {
                 $scope.jointPartnersEhisSchools.push(e.ehisSchool);
             }
         });
+    }
+
+    function getSchoolDepartmentOptions() {
+      QueryUtils.endpoint('/curriculum/schoolDepartments').query({ehisShools: $scope.jointPartnersEhisSchools, curriculum: id}).$promise.then(function(response){
+        $scope.schoolDepartments = response;
+      });
     }
 
     $scope.addJointPartner = function () {
@@ -340,6 +327,7 @@ angular.module('hitsaOis')
         }
         $scope.curriculum.jointPartners.push(jointPartner);
         $scope.clearJointPartnersFields();
+        getSchoolDepartmentOptions();
     };
 
     var addSharedInformationToJointPartners = function () {
@@ -384,6 +372,7 @@ angular.module('hitsaOis')
         });
         } else {
           ArrayUtils.remove(list, editedItem);
+          $scope.higherCurriculumForm.$setDirty();
         }
         scope.cancel();
       });
@@ -409,6 +398,7 @@ angular.module('hitsaOis')
         } else {
             list.push(data);
         }
+        $scope.higherCurriculumForm.$setDirty();
       }
     }
 
@@ -430,6 +420,7 @@ angular.module('hitsaOis')
           }
           deleteListItem($scope.curriculum.specialities, scope, editedSpecialty,
             QueryUtils.endpoint('/curriculum/' + $scope.curriculum.id + '/speciality'));
+            $scope.higherCurriculumForm.$setDirty()
         };
       };
 
@@ -468,7 +459,7 @@ angular.module('hitsaOis')
     };
 
     $scope.openAddFileDialog = function () {
-      dialogService.showDialog('vocationalCurriculum/file.add.dialog.html', function(scope){
+      dialogService.showDialog('curriculum/dialog/file.add.dialog.html', function(scope){
         scope.fileTypeCriteria = {
           higher: true
         };
@@ -478,15 +469,11 @@ angular.module('hitsaOis')
         data.ehis = false;
         data.oisFile = oisFileService.getFromLfFile(data.file[0], function(file) {
             data.oisFile = file;
-            if(CurriculumFileEndpoint) {
-              var newFile = new CurriculumFileEndpoint(data);
-              newFile.$save().then(function(response){
-                message.info('main.messages.create.success');
-                $scope.curriculum.files.push(response);
-              });
-            } else {
-              $scope.curriculum.files.push(data);
-            }
+            var newFile = new CurriculumFileEndpoint(data);
+            newFile.$save().then(function(response){
+              message.info('main.messages.create.success');
+              $scope.curriculum.files.push(response);
+            });
         });
       });
     };
@@ -494,12 +481,10 @@ angular.module('hitsaOis')
     $scope.deleteFile = function(file) {
         dialogService.confirmDialog({prompt: 'curriculum.itemDeleteConfirm'}, function() {
             ArrayUtils.remove($scope.curriculum.files, file);
-            if(CurriculumFileEndpoint) {
-              var deletedFile = new CurriculumFileEndpoint(file);
-              deletedFile.$delete().then(function () {
-                message.info('main.messages.delete.success');
-              });
-            }
+            var deletedFile = new CurriculumFileEndpoint(file);
+            deletedFile.$delete().then(function () {
+              message.info('main.messages.delete.success');
+            });
         });
     };
 
@@ -558,6 +543,7 @@ angular.module('hitsaOis')
         message.info(messages.updateSuccess);
         setVariablesForExistingCurriculum();
         goToReadOnlyForm();
+        $scope.higherCurriculumForm.$setPristine();
       });
     }
 
@@ -606,7 +592,7 @@ angular.module('hitsaOis')
     };
 
     $scope.versionCanBeAdded = function() {
-        return $scope.curriculum && (
+        return $scope.curriculum && $scope.curriculum.canChange && (
             $scope.curriculum.status === Curriculum.STATUS.ENTERING && !$scope.formState.readOnly ||
             $scope.curriculum.status === Curriculum.STATUS.PROCEEDING ||
             $scope.curriculum.status === Curriculum.STATUS.VERIFIED

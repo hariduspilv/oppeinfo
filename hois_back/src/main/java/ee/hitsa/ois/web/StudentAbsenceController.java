@@ -28,25 +28,25 @@ public class StudentAbsenceController {
     private StudentAbsenceService studentAbsenceService;
     
     @GetMapping("/{id:\\d+}")
-    private StudentAbsenceDto get(HoisUserDetails user, @WithEntity("id") StudentAbsence studentAbsence) {
+    public StudentAbsenceDto get(HoisUserDetails user, @WithEntity("id") StudentAbsence studentAbsence) {
         UserUtil.assertIsSchoolAdminOrTeacher(user, studentAbsence.getStudent().getSchool());
         return StudentAbsenceDto.of(studentAbsence);
     }
     
     @GetMapping
-    private Page<StudentAbsenceDto> search(HoisUserDetails user, StudentAbsenceSearchCommand criteria, Pageable pageable) {
+    public Page<StudentAbsenceDto> search(HoisUserDetails user, StudentAbsenceSearchCommand criteria, Pageable pageable) {
         UserUtil.assertIsSchoolAdminOrTeacher(user);
         return studentAbsenceService.search(user, criteria, pageable);
     }
     
     @PutMapping("/accept/{id:\\d+}")
-    private StudentAbsenceDto accept(HoisUserDetails user, @WithEntity("id") StudentAbsence studentAbsence) {
+    public StudentAbsenceDto accept(HoisUserDetails user, @WithEntity("id") StudentAbsence studentAbsence) {
         StudentAbsenceValidationUtil.assertCanAccept(user, studentAbsence);
         return get(user, studentAbsenceService.accept(studentAbsence));
     }
     
     @GetMapping("/hasUnaccepted")
-    private Map<String, Boolean> hasUnaccepted(HoisUserDetails user) {
+    public Map<String, Boolean> hasUnaccepted(HoisUserDetails user) {
         return Collections.singletonMap("hasUnaccepted", Boolean.valueOf((user.isSchoolAdmin() || user.isTeacher()) 
                 && studentAbsenceService.hasUnaccepted(user)));
     }

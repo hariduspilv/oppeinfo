@@ -15,6 +15,7 @@ public class TimetableRoomAndTimeForm {
     private LocalTime startTime;
     private LocalTime endTime;
     private List<RoomDto> rooms;
+    private List<Long> teachers;
 
     public Long getTimetableEventId() {
         return timetableEventId;
@@ -46,6 +47,14 @@ public class TimetableRoomAndTimeForm {
 
     public void setRooms(List<RoomDto> rooms) {
         this.rooms = rooms;
+    }
+
+    public List<Long> getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(List<Long> teachers) {
+        this.teachers = teachers;
     }
 
 }

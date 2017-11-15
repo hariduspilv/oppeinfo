@@ -11,6 +11,7 @@ public class TimetableEventDto {
     private LocalDateTime end;
     private Integer lessonNr;
     private List<AutocompleteResult> rooms;
+    private List<Long> teachers;
     private Long journal;
     private Long subjectStudyPeriod;
     private Long studentGroup;
@@ -93,6 +94,14 @@ public class TimetableEventDto {
 
     public void setRooms(List<AutocompleteResult> rooms) {
         this.rooms = rooms;
+    }
+
+    public List<Long> getTeachers() {
+        return teachers;
+    }
+
+    public void setTeachers(List<Long> teachers) {
+        this.teachers = teachers;
     }
 
     public Long getJournal() {

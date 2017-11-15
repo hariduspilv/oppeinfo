@@ -26,6 +26,7 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.enums.StudentStatus;
 import ee.hitsa.ois.exception.AssertionFailedException;
 import ee.hitsa.ois.util.DateUtils;
+import ee.hitsa.ois.util.EnumUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StreamUtil;
@@ -101,6 +102,8 @@ public class ReportService {
                 groupingField = "sh.study_form_code";
             } else if(MainClassCode.OPPURSTAATUS.name().equals(criteria.getResult())) {
                 groupingField = "sh.status_code";
+            } else if(criteria.getResult() == null) {
+                groupingField = null;
             } else {
                 throw new AssertionFailedException("Unknown result classifier");
             }
@@ -130,39 +133,50 @@ public class ReportService {
         // load grouped by value counts of given classifier
         if(!result.getContent().isEmpty()) {
             String groupingField;
-            DirectiveType directiveType;
+            List<String> directiveTypes;
             if(StudentStatus.OPPURSTAATUS_K.name().equals(criteria.getResult())) {
                 groupingField = "ds.reason_code";
-                directiveType = DirectiveType.KASKKIRI_EKSMAT;
+                directiveTypes = EnumUtil.toNameList(DirectiveType.KASKKIRI_EKSMAT);
             } else if(StudentStatus.OPPURSTAATUS_A.name().equals(criteria.getResult())) {
                 groupingField = "ds.reason_code";
-                directiveType = DirectiveType.KASKKIRI_AKAD;
+                directiveTypes = EnumUtil.toNameList(DirectiveType.KASKKIRI_AKAD);
             } else if(StudentStatus.OPPURSTAATUS_L.name().equals(criteria.getResult())) {
                 groupingField = "cast(ds.is_cum_laude as varchar)";
-                directiveType = DirectiveType.KASKKIRI_LOPET;
+                directiveTypes = EnumUtil.toNameList(DirectiveType.KASKKIRI_LOPET);
+            } else if(criteria.getResult() == null) {
+                groupingField = null;
+                directiveTypes = EnumUtil.toNameList(DirectiveType.KASKKIRI_EKSMAT, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_LOPET);
             } else {
                 throw new AssertionFailedException("Unknown result classifier");
             }
 
             Map<Long, StudentStatisticsDto> cs = StreamUtil.toMap(StudentStatisticsDto::getId, result.getContent());
 
+            String grouping = "cv.curriculum_id";
+            if(groupingField != null) {
+                grouping = grouping + ", " + groupingField;
+            }
             JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from directive_student ds " +
                     "inner join directive d on ds.directive_id = d.id " +
                     "inner join student_history sh on ds.student_history_id = sh.id " +
-                    "inner join curriculum_version cv on sh.curriculum_version_id = cv.id")
-                    .groupBy(String.format("cv.curriculum_id, %s", groupingField));
+                    "inner join curriculum_version cv on sh.curriculum_version_id = cv.id").groupBy(grouping);
+
             qb.requiredCriteria("cv.curriculum_id in (:curriculum)", "curriculum", cs.keySet());
 
             qb.requiredCriteria("d.school_id = :schoolId", "schoolId", schoolId);
-            qb.requiredCriteria("d.type_code = :directiveType", "directiveType", directiveType);
+            qb.requiredCriteria("d.type_code in(:directiveType)", "directiveType", directiveTypes);
             qb.requiredCriteria("d.status_code = :directiveStatus", "directiveStatus", DirectiveStatus.KASKKIRI_STAATUS_KINNITATUD);
             qb.optionalCriteria("d.confirm_date >= :validFrom", "validFrom", criteria.getFrom());
             qb.optionalCriteria("d.confirm_date <= :validThru", "validThru", criteria.getThru());
             // check for directive cancellation for given student
             qb.filter("ds.canceled = false");
 
-            List<?> data = qb.select(String.format("cv.curriculum_id, %s, count(*)", groupingField), em).getResultList();
-            loadStatisticCounts(cs, data, false);
+            List<?> data = qb.select(grouping + ", count(*)", em).getResultList();
+            if(groupingField == null) {
+                loadCounts(cs, data);
+            } else {
+                loadStatisticCounts(cs, data, false);
+            }
         }
 
         return result;
@@ -302,16 +316,24 @@ public class ReportService {
     }
 
     private void loadStudentStatistics(Map<Long, StudentStatisticsDto> curriculums, String groupingField, StudentStatisticsCommand criteria, boolean filterResult) {
+        String grouping = "cv.curriculum_id";
+        if(groupingField != null) {
+            grouping = grouping + ", " + groupingField;
+        }
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder("from student_history sh inner join curriculum_version cv on sh.curriculum_version_id = cv.id")
-                .groupBy(String.format("cv.curriculum_id, %s", groupingField));
+                .groupBy(grouping);
         qb.requiredCriteria("cv.curriculum_id in (:curriculum)", "curriculum", curriculums.keySet());
         qb.requiredCriteria("sh.status_code in (:status)", "status", StudentStatus.STUDENT_STATUS_ACTIVE);
 
         qb.optionalCriteria("(sh.valid_thru is null or sh.valid_thru >= :validFrom)", "validFrom", criteria.getDate(), DateUtils::firstMomentOfDay);
         qb.optionalCriteria("sh.valid_from <= :validThru", "validThru", criteria.getDate(), DateUtils::lastMomentOfDay);
 
-        List<?> data = qb.select(String.format("cv.curriculum_id, %s, count(*)", groupingField), em).getResultList();
-        loadStatisticCounts(curriculums, data, filterResult);
+        List<?> data = qb.select(grouping + ", count(*)", em).getResultList();
+        if(groupingField == null) {
+            loadCounts(curriculums, data);
+        } else {
+            loadStatisticCounts(curriculums, data, filterResult);
+        }
     }
 
     private static void loadStatisticCounts(Map<Long, StudentStatisticsDto> curriculums, List<?> data, boolean filterResult) {
@@ -325,6 +347,14 @@ public class ReportService {
                     dto.getResultFilter().add(group);
                 }
             }
+        }
+    }
+
+    private static void loadCounts(Map<Long, StudentStatisticsDto> curriculums, List<?> data) {
+        for(Object r : data) {
+            Long curriculumId = resultAsLong(r, 0);
+            StudentStatisticsDto dto = curriculums.get(curriculumId);
+            dto.getResult().put("count", resultAsLong(r, 1));
         }
     }
 }

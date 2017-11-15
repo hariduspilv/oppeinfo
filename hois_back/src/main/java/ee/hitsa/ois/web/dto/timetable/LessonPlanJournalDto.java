@@ -13,6 +13,7 @@ import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
+import ee.hitsa.ois.web.dto.CurriculumVersionOccupationModuleThemeResult;
 
 public class LessonPlanJournalDto extends LessonPlanJournalForm {
 
@@ -20,7 +21,7 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
     private Long studentGroupId;
     private String studentGroupCode;
     private Long lessonPlan;
-    private List<AutocompleteResult> themes;
+    private List<CurriculumVersionOccupationModuleThemeResult> themes;
 
     public static LessonPlanJournalDto of(Journal journal, LessonPlanModule lessonPlanModule) {
         LessonPlanJournalDto dto = EntityUtil.bindToDto(journal, new LessonPlanJournalDto(), "journalRooms");
@@ -42,7 +43,7 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
         }
         dto.setJournalTeachers(StreamUtil.nullSafeList(journal.getJournalTeachers()).stream().map(LessonPlanJournalForm.LessonPlanJournalTeacherForm::of).sorted(Comparator.comparing(r -> ((AutocompleteResult)r.getTeacher()).getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
         dto.setLessonPlan(EntityUtil.getId(lessonPlanModule.getLessonPlan()));
-        dto.setThemes(lessonPlanModule.getCurriculumVersionOccupationModule().getThemes().stream().map(AutocompleteResult::of).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
+        dto.setThemes(lessonPlanModule.getCurriculumVersionOccupationModule().getThemes().stream().map(it -> new CurriculumVersionOccupationModuleThemeResult(it)).sorted(Comparator.comparing(r -> r.getNameEt(), String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList()));
         dto.setJournalRooms(StreamUtil.toMappedList(r -> new AutocompleteResult(EntityUtil.getId(r.getRoom()), r.getRoom().getCode(), r.getRoom().getCode()), journal.getJournalRooms()));
         return dto;
     }
@@ -79,11 +80,11 @@ public class LessonPlanJournalDto extends LessonPlanJournalForm {
         this.lessonPlan = lessonPlan;
     }
 
-    public List<AutocompleteResult> getThemes() {
+    public List<CurriculumVersionOccupationModuleThemeResult> getThemes() {
         return themes;
     }
 
-    public void setThemes(List<AutocompleteResult> themes) {
+    public void setThemes(List<CurriculumVersionOccupationModuleThemeResult> themes) {
         this.themes = themes;
     }
 }

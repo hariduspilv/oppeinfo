@@ -66,9 +66,8 @@ public class CommitteeController {
     public void delete(HoisUserDetails user, 
             @WithVersionedEntity(value = "id", versionRequestParam = "version") Committee committee, 
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
-        UserUtil.assertIsSchoolAdminOrTeacher(user);
-        UserUtil.assertSameSchool(user, committee.getSchool());
-        committeeService.delete(committee);
+        UserUtil.assertIsSchoolAdminOrTeacher(user, committee.getSchool());
+        committeeService.delete(user, committee);
     }
 
     @GetMapping("/members")

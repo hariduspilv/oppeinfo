@@ -19,24 +19,14 @@ public class StateCurriculumDto extends StateCurriculumForm {
     private Set<CurriculumSearchDto> curricula;
     private String status;
     private Boolean canChange;
-
+    private Boolean canConfirm;
+    private Boolean canClose;
+    private Boolean canDelete;
+    
     public static StateCurriculumDto of(StateCurriculum stateCurriculum) {
         StateCurriculumDto dto = EntityUtil.bindToDto(stateCurriculum, new StateCurriculumDto(), "modules", "occupations");
         dto.getModules().addAll(StreamUtil.toMappedList(StateCurriculumModuleDto::of, stateCurriculum.getModules()));
         dto.setOccupations(StreamUtil.toMappedSet(occupation -> EntityUtil.getNullableCode(occupation.getOccupation()), stateCurriculum.getOccupations()));
-        dto.setCurricula(StreamUtil.toMappedSet(c -> {
-            CurriculumSearchDto curriculumDto = new CurriculumSearchDto();
-            curriculumDto.setId(EntityUtil.getId(c));
-            curriculumDto.setNameEt(c.getNameEt());
-            curriculumDto.setNameEn(c.getNameEn());
-            curriculumDto.setCredits(c.getCredits());
-            curriculumDto.setStatus(EntityUtil.getCode(c.getStatus()));
-            curriculumDto.setSchool(AutocompleteResult.of(c.getSchool()));
-            curriculumDto.setValidFrom(c.getValidFrom());
-            curriculumDto.setValidThru(c.getValidThru());
-            curriculumDto.setOrigStudyLevel(EntityUtil.getCode(c.getOrigStudyLevel()));
-            return curriculumDto;
-        }, stateCurriculum.getCurricula()));
         return dto;
     }
 
@@ -102,5 +92,29 @@ public class StateCurriculumDto extends StateCurriculumForm {
 
     public void setCanChange(Boolean canChange) {
         this.canChange = canChange;
+    }
+
+    public Boolean getCanConfirm() {
+        return canConfirm;
+    }
+
+    public void setCanConfirm(Boolean canConfirm) {
+        this.canConfirm = canConfirm;
+    }
+
+    public Boolean getCanClose() {
+        return canClose;
+    }
+
+    public void setCanClose(Boolean canClose) {
+        this.canClose = canClose;
+    }
+
+    public Boolean getCanDelete() {
+        return canDelete;
+    }
+
+    public void setCanDelete(Boolean canDelete) {
+        this.canDelete = canDelete;
     }
 }

@@ -51,7 +51,6 @@ import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
 import ee.hitsa.ois.util.ApplicationUtil;
 import ee.hitsa.ois.util.ClassifierUtil;
-import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
@@ -238,10 +237,12 @@ public class ApplicationService {
     /**
      * Delete student application
      *
+     * @param user
      * @param application
      * @throws EntityRemoveExceptionif there are references to application
      */
-    public void delete(Application application) {
+    public void delete(HoisUserDetails user, Application application) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(application, em);
     }
 
@@ -314,7 +315,7 @@ public class ApplicationService {
 
     public Map<ApplicationType, ApplicationApplicableDto> applicableApplicationTypes(Student student) {
         List<ApplicationType> existingApplications = existingApplicationsTypes(EntityUtil.getId(student));
-        boolean isHigher = CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum());
+        boolean isHigher = StudentUtil.isHigher(student);
         Map<ApplicationType, ApplicationApplicableDto> result = new HashMap<>();
         rulesByApplicationType(student, existingApplications, isHigher, result);
         rulesByApplicationClassifier(isHigher, result);

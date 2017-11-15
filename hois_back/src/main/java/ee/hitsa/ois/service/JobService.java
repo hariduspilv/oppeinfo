@@ -2,7 +2,6 @@ package ee.hitsa.ois.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -24,6 +23,7 @@ import ee.hitsa.ois.util.ClassifierUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.EnumUtil;
+import ee.hitsa.ois.util.StreamUtil;
 
 /**
  * Job handling service.
@@ -39,7 +39,14 @@ public class JobService {
     @Autowired
     private EntityManager em;
 
-    public void contractConfirmed(Contract contract) {
+    /**
+     * Practice contract confirmed by EKIS.
+     * If there is end date for contract, submit job to mark contract as "ended".
+     *
+     * @param contractId
+     */
+    public void contractConfirmed(Long contractId) {
+        Contract contract = em.getReference(Contract.class, contractId);
         if(contract.getEndDate() != null) {
             Job ehis = new Job();
             Student student = contract.getStudent();
@@ -51,25 +58,15 @@ public class JobService {
         }
     }
 
-    public void sendToEkis(Contract contract) {
-        Job ekis = new Job();
-        Student student = contract.getStudent();
-        ekis.setSchool(student.getSchool());
-        ekis.setStudent(student);
-        ekis.setContract(contract);
-        ekis.setJobTime(LocalDateTime.now());
-        submitJob(JobType.JOB_EKIS, ekis);
-    }
-
-    public void sendToEkis(Directive directive) {
-        Job ekis = new Job();
-        ekis.setSchool(directive.getSchool());
-        ekis.setDirective(directive);
-        ekis.setJobTime(LocalDateTime.now());
-        submitJob(JobType.JOB_EKIS, ekis);
-    }
-
-    public void directiveConfirmed(Directive directive) {
+    /**
+     * Directive confirmed by EKIS.
+     * Submit jobs to send directive data to EHIS and change student status on required dates
+     * If directive is cancel directive, cancel possible jobs of canceled directive.
+     *
+     * @param directiveId
+     */
+    public void directiveConfirmed(Long directiveId) {
+        Directive directive = em.getReference(Directive.class, directiveId);
         submitEhisSend(directive);
 
         DirectiveType directiveType = DirectiveType.valueOf(EntityUtil.getCode(directive.getType()));
@@ -80,7 +77,7 @@ public class JobService {
 
             if(DirectiveType.KASKKIRI_AKAD.equals(canceledType)) {
                 cancelJobs(AKAD_JOB_TYPES, directive);
-            } else if(DirectiveType.KASKKIRI_AKAD.equals(canceledType)) {
+            } else if(DirectiveType.KASKKIRI_AKADK.equals(canceledType)) {
                 cancelJobs(AKADK_JOB_TYPES, directive);
             } else if(DirectiveType.KASKKIRI_VALIS.equals(canceledType)) {
                 cancelJobs(VALIS_JOB_TYPES, directive);
@@ -107,6 +104,12 @@ public class JobService {
         }
     }
 
+    /**
+     * Find all jobs which are ready to execute.
+     *
+     * @param types
+     * @return list of jobs
+     */
     public List<Job> findExecutableJobs(JobType... types) {
         List<String> typeNames = EnumUtil.toNameList(types);
         return em.createQuery("select j from Job j where j.status.code = ?1 and j.type.code in ?2 and j.jobTime <= ?3", Job.class)
@@ -116,11 +119,23 @@ public class JobService {
             .getResultList();
     }
 
+    /**
+     * Mark job as failed.
+     *
+     * @param job
+     * @return job
+     */
     public Job jobFailed(Job job) {
         setJobStatus(job, JobStatus.JOB_STATUS_VIGA);
         return em.merge(job);
     }
 
+    /**
+     * Mark job as done.
+     *
+     * @param job
+     * @return job
+     */
     public Job jobDone(Job job) {
         setJobStatus(job, JobStatus.JOB_STATUS_TAIDETUD);
         return em.merge(job);
@@ -129,6 +144,7 @@ public class JobService {
     private void submitAkadJob(DirectiveStudent ds) {
         Directive directive = ds.getDirective();
 
+        // student goes to academic leave, change status O -> A
         Job job = new Job();
         job.setSchool(directive.getSchool());
         job.setDirective(directive);
@@ -136,6 +152,7 @@ public class JobService {
         job.setJobTime(DateUtils.periodStart(ds).atStartOfDay());
         submitJob(JobType.JOB_AKAD_MINEK, job);
 
+        // student comes back from academic leave, change status A -> O
         job = new Job();
         job.setSchool(directive.getSchool());
         job.setDirective(directive);
@@ -147,6 +164,7 @@ public class JobService {
     private void submitAkadkJob(DirectiveStudent ds) {
         Directive directive = ds.getDirective();
 
+        // student cancels academic leave, change status A -> O
         Job job = new Job();
         job.setSchool(directive.getSchool());
         job.setDirective(directive);
@@ -158,6 +176,7 @@ public class JobService {
     private void submitValisJob(DirectiveStudent ds) {
         Directive directive = ds.getDirective();
 
+        // student will be foreign student, change status O -> V
         Job job = new Job();
         job.setSchool(directive.getSchool());
         job.setDirective(directive);
@@ -165,6 +184,7 @@ public class JobService {
         job.setJobTime(DateUtils.periodStart(ds).atStartOfDay());
         submitJob(JobType.JOB_VALIS_MINEK, job);
 
+        // student is back, change status V -> O
         job = new Job();
         job.setSchool(directive.getSchool());
         job.setDirective(directive);
@@ -174,12 +194,14 @@ public class JobService {
     }
 
     private void submitEhisSend(Directive directive) {
-        // directive cancelling data is not sent to ehis (it's changed by hand in ehis)
+        // cancelling directive is not sent to ehis (it's changed manually in ehis)
         // akad and akadk are sent when student status changes
-        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK)) {
+        // valis and lopetamine are sent manually
+        if(!ClassifierUtil.oneOf(directive.getType(), DirectiveType.KASKKIRI_TYHIST, DirectiveType.KASKKIRI_AKAD, DirectiveType.KASKKIRI_AKADK, DirectiveType.KASKKIRI_LOPET, DirectiveType.KASKKIRI_VALIS)) {
             Job ehis = new Job();
             ehis.setSchool(directive.getSchool());
             ehis.setDirective(directive);
+            // ASAP
             ehis.setJobTime(LocalDateTime.now());
             submitJob(JobType.JOB_EHIS, ehis);
         }
@@ -196,14 +218,21 @@ public class JobService {
     }
 
     private void cancelJobs(List<String> types, Directive directive) {
-        List<Long> studentIds = directive.getStudents().stream().map(r -> EntityUtil.getId(r.getStudent())).collect(Collectors.toList());
+        List<Long> studentIds = StreamUtil.toMappedList(r -> EntityUtil.getId(r.getStudent()), directive.getStudents());
         if(!studentIds.isEmpty()) {
-            Query q = em.createNativeQuery("update job set status_code = :newStatus where type_code in :types and student_id in :studentIds and status_code = :oldStatus and directive_id = :directiveId");
+            boolean canceled = ClassifierUtil.equals(DirectiveType.KASKKIRI_TYHIST, directive.getType());
+            String sql = "update job set status_code = :newStatus where type_code in :types and student_id in :studentIds and status_code = :oldStatus";
+            if(canceled) {
+                sql += " and directive_id = :directiveId";
+            }
+            Query q = em.createNativeQuery(sql);
             q.setParameter("types", types);
             q.setParameter("newStatus", JobStatus.JOB_STATUS_TYHISTATUD.name());
             q.setParameter("oldStatus", JobStatus.JOB_STATUS_VALMIS.name());
             q.setParameter("studentIds", studentIds);
-            q.setParameter("directiveId", EntityUtil.getId(directive));
+            if(canceled) {
+                q.setParameter("directiveId", EntityUtil.getId(directive.getCanceledDirective()));
+            }
             q.executeUpdate();
         }
     }

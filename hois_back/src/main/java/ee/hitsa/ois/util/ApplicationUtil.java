@@ -126,7 +126,7 @@ public class ApplicationUtil {
             assertPeriod(application, 3, 0);
         } else if (AcademicLeaveReason.AKADPUHKUS_POHJUS_O.name().equals(reason)) {
             // TODO: algusega mitte varem kui esimese õppeaasta teisest semestrist
-            if (!CurriculumUtil.isHigher(application.getStudent().getCurriculumVersion().getCurriculum())) {
+            if (!StudentUtil.isHigher(application.getStudent())) {
                 throw new ValidationFailedException("application.messages.studentIsNotHigher");
             }
 

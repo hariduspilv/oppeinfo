@@ -524,6 +524,11 @@ public class JournalService {
         return StreamUtil.toMappedSet(r -> resultAsLong(r, 0), result);
     }
 
+    /**
+     * Get student journals for view
+     * @param studentId
+     * @return list of student journals with student's absences
+     */
     public List<StudentJournalDto> studentJournals(Long studentId) {
         Query q = em.createNativeQuery("select j.id, j.name_et, j.study_year_id, sy.year_code,"
                 + " count(case jes.absence_code when 'PUUDUMINE_H' then 1 else null end) as puudumine_h,"
@@ -541,6 +546,13 @@ public class JournalService {
         return StreamUtil.toMappedList(r -> new StudentJournalDto((Object[])r), data);
     }
     
+    
+    /**
+     * Get student journal for view
+     * @param studentId
+     * @param journalId
+     * @return student journal with student's absences
+     */
     public StudentJournalDto studentJournal(Long studentId, Long journalId) {
         Query q = em.createNativeQuery("select j.id, j.name_et, j.study_year_id, sy.year_code,"
                 + " count(case jes.absence_code when 'PUUDUMINE_H' then 1 else null end) as puudumine_h,"
@@ -608,6 +620,12 @@ public class JournalService {
         return entries;
     }
     
+    /**
+     * Get student's journal tasks for view.
+     * @param schoolId
+     * @param studentId
+     * @return study year info and a list of student's journal tasks
+     */
     public StudentJournalTaskListDto studentJournalTasks(Long schoolId, Long studentId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
 
@@ -629,6 +647,12 @@ public class JournalService {
         return new StudentJournalTaskListDto(studyYear, StreamUtil.toMappedList(r -> new StudentJournalTaskDto((Object[]) r), data));
     }
 
+    /**
+     * Get student's study entries for view.
+     * @param schoolId
+     * @param studentId
+     * @return study year info and a list of student's study entries
+     */
     public StudentJournalStudyListDto studentJournalStudy(Long schoolId, Long studentId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
 
@@ -644,6 +668,12 @@ public class JournalService {
         return new StudentJournalStudyListDto(studyYear, StreamUtil.toMappedList(r -> new StudentJournalStudyDto((Object[]) r), data));
     }
 
+    /**
+     * Get student's last 30 absences for view.
+     * @param schoolId
+     * @param studentId
+     * @return list of student's absences
+     */
     public List<StudentJournalAbsenceDto> studentAbsences(Long schoolId, Long studentId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
 
@@ -670,6 +700,12 @@ public class JournalService {
     
     //StudentJournalResultDto
     
+    /**
+     * Get student's last 10 results for view.
+     * @param schoolId
+     * @param studentId
+     * @return list of student's last results
+     */
     public List<StudentJournalResultDto> studentLastResults(Long schoolId, Long studentId) {
         StudyYear studyYear = studyYearService.getCurrentStudyYear(schoolId);
 

@@ -27,9 +27,11 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
         return acc;
       }, {});
 
-      for (var i = 0; result.groups.length > i; i++) {
-        result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: result.groups[i].curriculumVersion});
-        result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule});
+      if(angular.isArray(result.groups)) {
+        for (var i = 0; result.groups.length > i; i++) {
+          result.groups[i].group.modules = QueryUtils.endpoint('/autocomplete/curriculumversionomodules').query({curriculumVersionId: result.groups[i].curriculumVersion});
+          result.groups[i].group.themes = QueryUtils.endpoint('/autocomplete/curriculumversionomodulethemes').query({curriculumVersionOmoduleId: result.groups[i].curriculumVersionOccupationModule});
+        }
       }
     });
 
@@ -91,6 +93,16 @@ angular.module('hitsaOis').controller('LessonplanJournalEditController', ['$reso
         return;
       }
       $scope.record.journalOccupationModuleThemes.push(themeId);
+      //check the capacities of the added theme
+      var capacities = $scope.formState.themes.find(function(theme) {
+        return theme.id === themeId;
+      }).capacities;
+      var formsateCaps = $scope.formState.capacityTypes.filter(function(currCap) {
+        return capacities.indexOf(currCap.code) !== -1;
+      });
+      formsateCaps.forEach(function(it) {
+        it._selected = true;
+      });
       $scope.formState.theme = null;
     };
 

@@ -26,7 +26,11 @@ public class StudentUtil {
     }
     
     public static boolean isHigher(Student student) {
-        return Boolean.TRUE.equals(student.getCurriculumVersion().getCurriculum().getHigher());
+        return CurriculumUtil.isHigher(student.getCurriculumVersion().getCurriculum());
+    }
+    
+    public static boolean isVocational(Student student) {
+        return CurriculumUtil.isVocational(student.getCurriculumVersion().getCurriculum());
     }
     
     public static boolean hasQuit(Student student) {

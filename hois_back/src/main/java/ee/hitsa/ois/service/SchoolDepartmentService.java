@@ -121,7 +121,8 @@ public class SchoolDepartmentService {
         return EntityUtil.save(schoolDepartment, em);
     }
 
-    public void delete(SchoolDepartment schoolDepartment) {
+    public void delete(HoisUserDetails user, SchoolDepartment schoolDepartment) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(schoolDepartment, em);
     }
 

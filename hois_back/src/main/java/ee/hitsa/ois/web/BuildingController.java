@@ -56,7 +56,7 @@ public class BuildingController {
     @DeleteMapping("/buildings/{id:\\d+}")
     public void deleteBuilding(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Building building, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, building.getSchool());
-        buildingService.delete(building);
+        buildingService.delete(user, building);
     }
 
     // room: search/get/save/update/delete
@@ -87,6 +87,6 @@ public class BuildingController {
     @DeleteMapping("/rooms/{id:\\d+}")
     public void deleteRoom(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Room room, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         UserUtil.assertIsSchoolAdmin(user, room.getBuilding().getSchool());
-        buildingService.delete(room);
+        buildingService.delete(user, room);
     }
 }

@@ -92,11 +92,7 @@ public class CertificateController {
 
     @PostMapping
     public CertificateDto create(HoisUserDetails user, @Valid @RequestBody CertificateForm form) {
-        if(user.isStudent()) {
-            form.setStudent(user.getStudentId());
-            certificateService.setSignatory(form, user.getSchoolId());
-        }
-        certificateValidationService.assertCanCreate(user, form);
+        UserUtil.assertIsSchoolAdmin(user);
         certificateValidationService.validate(user, form);
         return get(user, certificateService.create(user, form));
     }
@@ -112,7 +108,13 @@ public class CertificateController {
 
     @PostMapping("/order")
     public CertificateDto createAndOrder(HoisUserDetails user, @Valid @RequestBody CertificateForm form) {
-        UserUtil.assertIsSchoolAdmin(user);
+        if(user.isStudent()) {
+            form.setStudent(user.getStudentId());
+            certificateService.setSignatory(form, user.getSchoolId());
+        } else {
+            UserUtil.assertIsSchoolAdmin(user);
+        }
+        certificateValidationService.assertCanCreate(user, form);
         certificateValidationService.validate(user, form);
         Certificate certificate = certificateService.create(user, form);
         // send to EKIS
@@ -125,14 +127,15 @@ public class CertificateController {
             @Valid @RequestBody CertificateForm form) {
         certificateValidationService.assertCanChange(user, certificate);
         certificateValidationService.validate(user, form);
-        // TODO: send to EKIS
-        return get(user, certificateService.save(user, certificate, form));
+        certificate = certificateService.save(user, certificate, form);
+        // send to EKIS
+        return get(user, ekisService.registerCertificate(EntityUtil.getId(certificate)));
     }
 
     @DeleteMapping("/{id:\\d+}")
     public void delete(HoisUserDetails user, @WithVersionedEntity(value = "id", versionRequestParam = "version") Certificate certificate, @SuppressWarnings("unused") @RequestParam("version") Long version) {
         certificateValidationService.assertCanChange(user, certificate);
-        certificateService.delete(certificate);
+        certificateService.delete(user, certificate);
     }
 
     @GetMapping("/otherStudent")

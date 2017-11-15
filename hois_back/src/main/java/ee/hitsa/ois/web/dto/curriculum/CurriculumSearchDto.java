@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+import ee.hitsa.ois.domain.curriculum.Curriculum;
+import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.web.dto.AutocompleteResult;
 
 public class CurriculumSearchDto {
@@ -22,6 +24,7 @@ public class CurriculumSearchDto {
     private List<Long> departments;
     private String code;
     private String merCode;
+    private Boolean canChange;
 
     public CurriculumSearchDto() {
     }
@@ -42,6 +45,20 @@ public class CurriculumSearchDto {
         this.ehisStatus = ehisStatus;
         this.code = code;
         this.merCode = merCode;
+    }
+    
+    public static CurriculumSearchDto forStateCurriculumForm(Curriculum curriculum) {
+        CurriculumSearchDto dto = new CurriculumSearchDto();
+        dto.setId(EntityUtil.getId(curriculum));
+        dto.setNameEt(curriculum.getNameEt());
+        dto.setNameEn(curriculum.getNameEn());
+        dto.setCredits(curriculum.getCredits());
+        dto.setStatus(EntityUtil.getCode(curriculum.getStatus()));
+        dto.setSchool(AutocompleteResult.of(curriculum.getSchool()));
+        dto.setValidFrom(curriculum.getValidFrom());
+        dto.setValidThru(curriculum.getValidThru());
+        dto.setOrigStudyLevel(EntityUtil.getCode(curriculum.getOrigStudyLevel()));
+        return dto;
     }
 
     public String getCode() {
@@ -154,5 +171,13 @@ public class CurriculumSearchDto {
 
     public void setSchool(AutocompleteResult school) {
         this.school = school;
+    }
+
+    public Boolean getCanChange() {
+        return canChange;
+    }
+
+    public void setCanChange(Boolean canChange) {
+        this.canChange = canChange;
     }
 }

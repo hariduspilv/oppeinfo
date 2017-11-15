@@ -106,7 +106,7 @@ public class ModuleProtocolController {
             @WithVersionedEntity(value = "id", versionRequestParam = "version") Protocol protocol,
             @SuppressWarnings("unused") @RequestParam("version") Long version) {
         ModuleProtocolValidationUtil.assertCanDelete(user, protocol);
-        moduleProtocolService.delete(protocol);
+        moduleProtocolService.delete(user, protocol);
     }
 
     @GetMapping("occupationModules/{curriculumVersionId:\\d+}")

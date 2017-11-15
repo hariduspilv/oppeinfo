@@ -1,5 +1,6 @@
 package ee.hitsa.ois.web.dto.student;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import ee.hitsa.ois.web.dto.AutocompleteResult;
@@ -13,10 +14,10 @@ public class StudentGroupSearchDto {
     private Integer course;
     private Long studentCount;
     private List<Long> schoolDepartments;
-    /**
-     * Planned number of hours in studyPeriod
-     */
+    // Planned number of hours in studyPeriod
     private Long hours;
+    private LocalDate validFrom;
+    private LocalDate validThru;
 
     public Long getId() {
         return id;
@@ -80,5 +81,21 @@ public class StudentGroupSearchDto {
 
     public void setHours(Long hours) {
         this.hours = hours;
+    }
+
+    public LocalDate getValidFrom() {
+        return validFrom;
+    }
+
+    public void setValidFrom(LocalDate validFrom) {
+        this.validFrom = validFrom;
+    }
+
+    public LocalDate getValidThru() {
+        return validThru;
+    }
+
+    public void setValidThru(LocalDate validThru) {
+        this.validThru = validThru;
     }
 }

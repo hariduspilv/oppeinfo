@@ -32,16 +32,21 @@ import ee.hitsa.ois.enums.MainClassCode;
 import ee.hitsa.ois.repository.ClassifierRepository;
 import ee.hitsa.ois.repository.StateCurriculumRepository;
 import ee.hitsa.ois.service.security.HoisUserDetails;
+import ee.hitsa.ois.util.CurriculumUtil;
 import ee.hitsa.ois.util.DateUtils;
 import ee.hitsa.ois.util.EntityUtil;
 import ee.hitsa.ois.util.JpaNativeQueryBuilder;
 import ee.hitsa.ois.util.JpaQueryUtil;
 import ee.hitsa.ois.util.StateCurriculumUtil;
+import ee.hitsa.ois.util.StreamUtil;
 import ee.hitsa.ois.web.commandobject.StateCurriculumForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumModuleForm;
 import ee.hitsa.ois.web.commandobject.StateCurriculumSearchCommand;
+import ee.hitsa.ois.web.dto.StateCurriculumDto;
 import ee.hitsa.ois.web.dto.StateCurriculumModuleDto;
+import ee.hitsa.ois.web.dto.StateCurriculumModuleOutcomeDto;
 import ee.hitsa.ois.web.dto.StateCurriculumSearchDto;
+import ee.hitsa.ois.web.dto.curriculum.CurriculumSearchDto;
 
 @Transactional
 @Service
@@ -53,6 +58,8 @@ public class StateCurriculumService {
     private ClassifierRepository classifierRepository;
     @Autowired
     private EntityManager em;
+    @Autowired
+    private SchoolService schoolService;
 
     private static final String FROM = "from state_curriculum as sc "
             + "inner join classifier status on status.code = sc.status_code";  // only for sorting by classifier's name
@@ -72,6 +79,11 @@ public class StateCurriculumService {
      * StateCurriculumSearchDto can also be simplified: iscedClass and large constructor can be removed
      */
     public Page<StateCurriculumSearchDto> search(HoisUserDetails user, StateCurriculumSearchCommand criteria, Pageable pageable) {
+        
+        if(!StateCurriculumUtil.hasPermissionToView(user)) {
+            criteria.getStatus().add(CurriculumStatus.OPPEKAVA_STAATUS_K.name());
+        }
+        
         JpaNativeQueryBuilder qb = new JpaNativeQueryBuilder(FROM).sort(pageable);
 
         String fieldName = Language.EN.equals(criteria.getLang()) ? "sc.name_en" : "sc.name_et";
@@ -110,19 +122,34 @@ public class StateCurriculumService {
         qb.optionalCriteria("sc.valid_thru <= :validThru", "validThru", criteria.getValidThru(), DateUtils::lastMomentOfDay);
 
         Page<Object[]> results = JpaQueryUtil.pagingResult(qb, SELECT, em, pageable);
-        return results.map(r -> {
-            StateCurriculumSearchDto dto = new StateCurriculumSearchDto();
-            dto.setId(resultAsLong(r, 0));
-            dto.setNameEt(resultAsString(r, 1));
-            dto.setNameEn(resultAsString(r, 2));
-            dto.setValidFrom(resultAsLocalDate(r, 3));
-            dto.setValidThru(resultAsLocalDate(r, 4));
-            dto.setCredits(resultAsLong(r, 5));
-            dto.setStatus(resultAsString(r, 6));
-            dto.setEkrLevel(resultAsString(r, 7));
-            dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, dto.getStatus())));
-            return dto;
-        });
+        return results.map(r -> resultToSearchDto(user, r));
+    }
+    
+    private static StateCurriculumSearchDto resultToSearchDto(HoisUserDetails user,  Object r) {
+        StateCurriculumSearchDto dto = new StateCurriculumSearchDto();
+        dto.setId(resultAsLong(r, 0));
+        dto.setNameEt(resultAsString(r, 1));
+        dto.setNameEn(resultAsString(r, 2));
+        dto.setValidFrom(resultAsLocalDate(r, 3));
+        dto.setValidThru(resultAsLocalDate(r, 4));
+        dto.setCredits(resultAsLong(r, 5));
+        dto.setStatus(resultAsString(r, 6));
+        dto.setEkrLevel(resultAsString(r, 7));
+        dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, dto.getStatus())));
+        return dto;
+    }
+
+    public StateCurriculumDto get(HoisUserDetails user, StateCurriculum stateCurriculum) {
+        StateCurriculumDto dto = StateCurriculumDto.of(stateCurriculum);
+        dto.setCanChange(Boolean.valueOf(StateCurriculumUtil.canChange(user, stateCurriculum)));
+        dto.setCanConfirm(Boolean.valueOf(StateCurriculumUtil.canConfirm(user, stateCurriculum)));
+        dto.setCanClose(Boolean.valueOf(StateCurriculumUtil.canClose(user, stateCurriculum)));
+        dto.setCanDelete(Boolean.valueOf(StateCurriculumUtil.canDelete(user, stateCurriculum)));
+        
+        dto.setCurricula(StreamUtil.toMappedSet(CurriculumSearchDto::forStateCurriculumForm, 
+                stateCurriculum.getCurricula().stream().filter(
+                        c -> CurriculumUtil.canView(user, schoolService.getEhisSchool(user.getSchoolId()), c))));
+        return dto;
     }
 
     public List<StateCurriculum> searchAll(StateCurriculumSearchCommand command, Sort sort) {
@@ -160,12 +187,29 @@ public class StateCurriculumService {
     }
 
     private void updateModule(StateCurriculumModuleDto dto, StateCurriculumModule module) {
-        EntityUtil.bindToEntity(dto, module, classifierRepository, "outcome", "moduleOccupations");
-        StateCurriculumModuleOutcome outcome = module.getOutcome();
-        outcome.setOutcomesEt(dto.getOutcomesEt());
-        outcome.setOutcomesEn(dto.getOutcomesEn());
+        EntityUtil.bindToEntity(dto, module, classifierRepository, "outcomes", "moduleOccupations");
+        updateModuleOutcomes(module, dto.getOutcomes());
+        updateModuleOccupations(module, dto.getModuleOccupations());
+    }
+
+    private void updateModuleOutcomes(StateCurriculumModule module, Set<StateCurriculumModuleOutcomeDto> outcomes) {
+        EntityUtil.bindEntityCollection(module.getOutcomes(), StateCurriculumModuleOutcome::getId, outcomes, 
+                StateCurriculumModuleOutcomeDto::getId, dto -> createOutcome(module, dto), this::updateOutcome);
+    }
+    
+    public StateCurriculumModuleOutcome createOutcome(StateCurriculumModule module, StateCurriculumModuleOutcomeDto dto) {
+        StateCurriculumModuleOutcome outcome = new StateCurriculumModuleOutcome();
         outcome.setModule(module);
-        EntityUtil.bindEntityCollection(module.getModuleOccupations(), o -> EntityUtil.getCode(o.getOccupation()), dto.getModuleOccupations(), occupation -> {
+        updateOutcome(dto, outcome);
+        return outcome;
+    }
+
+    public void updateOutcome(StateCurriculumModuleOutcomeDto dto, StateCurriculumModuleOutcome grade) {
+        EntityUtil.bindToEntity(dto, grade);
+    }
+    
+    private void updateModuleOccupations(StateCurriculumModule module, Set<String> moduleOccupations) {
+        EntityUtil.bindEntityCollection(module.getModuleOccupations(), o -> EntityUtil.getCode(o.getOccupation()), moduleOccupations, occupation -> {
             Classifier c = EntityUtil.validateClassifier(classifierRepository.getOne(occupation),
                     MainClassCode.KUTSE, MainClassCode.OSAKUTSE, MainClassCode.SPETSKUTSE);
 

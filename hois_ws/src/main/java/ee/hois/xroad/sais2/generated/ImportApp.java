@@ -41,7 +41,7 @@ import javax.xml.datatype.XMLGregorianCalendar;
  *         &lt;element name="StudyFormCode" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="ApplicationNumber" type="{http://www.w3.org/2001/XMLSchema}string" minOccurs="0"/&gt;
  *         &lt;element name="IsFullLoad" type="{http://www.w3.org/2001/XMLSchema}boolean"/&gt;
- *         &lt;element name="CandidateEducations" type="{http://sais2.x-road.ee/producer/}ArrayOfCandidateEducationItem" minOccurs="0"/&gt;
+ *         &lt;element name="CandidateEducations" type="{http://sais2.x-road.eu/}ArrayOfCandidateEducationItem" minOccurs="0"/&gt;
  *       &lt;/sequence&gt;
  *     &lt;/restriction&gt;
  *   &lt;/complexContent&gt;

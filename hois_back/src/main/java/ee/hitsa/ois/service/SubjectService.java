@@ -193,7 +193,8 @@ public class SubjectService {
         }, pageable).map(SubjectSearchDto::of);
     }
 
-    public void delete(Subject subject) {
+    public void delete(HoisUserDetails user, Subject subject) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(subject, em);
     }
 

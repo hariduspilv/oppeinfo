@@ -9,8 +9,12 @@
 
     // FIXME: oppesuund is lost when returning to page
 
+
     function getListOfStudyLevels() {
-        if($scope.auth.isExternalExpert()) {
+       /*
+        * Let other users without school to watch this form, not only External expert
+        */
+        if(!$scope.auth.school) {
             $scope.school = {
                 higher: true,
                 vocational: true
@@ -29,6 +33,15 @@
         }
     }
     getListOfStudyLevels();
+
+
+    QueryUtils.endpoint('/curriculum/canView').search().$promise.then(function(response){
+      $scope.canView = response.canView;
+    });
+
+    QueryUtils.endpoint('/curriculum/canCreate').search().$promise.then(function(response){
+      $scope.canCreate = response.canCreate;
+    });
 
     $scope.areasOfStudy = true;
 
@@ -58,11 +71,6 @@
       }
     };
 
-    $scope.canBeEdited = function (curriculum){
-        return curriculum.status.code !== 'OPPEKAVA_STAATUS_C' && curriculum.status.code !== 'OPPEKAVA_STAATUS_K' && curriculum.ehisStatus !== 'OPPEKAVA_EHIS_STAATUS_A' && curriculum.ehisStatus !== 'OPPEKAVA_EHIS_STAATUS_M';
-    };
-
-
     $scope.$watch('criteria.iscedClassCode', function () {
       if($scope.criteria.iscedClassCode && !$scope.criteria.iscedSuun && $scope.criteria.iscedVald) {
         $scope.criteria.iscedVald = undefined;
@@ -74,5 +82,5 @@
         $scope.criteria.curriculumGroup = undefined;
       }
     });
-    
+
 }]);

@@ -57,8 +57,8 @@ import ee.hitsa.ois.util.UserUtil;
 import ee.hitsa.ois.util.LessonPlanUtil.LessonPlanCapacityMapper;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanJournalForm.LessonPlanGroupForm;
-import ee.hitsa.ois.web.commandobject.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.StudentGroupAutocompleteCommand;
+import ee.hitsa.ois.web.commandobject.curriculum.CurriculumVersionAutocompleteCommand;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanCreateForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm;
 import ee.hitsa.ois.web.commandobject.timetable.LessonPlanForm.LessonPlanModuleForm;
@@ -403,7 +403,8 @@ public class LessonPlanService {
             EntityUtil.getId(p.getCurriculumVersionOccupationModule()).equals(cvom)).findFirst().orElse(null);
     }
 
-    public void deleteJournal(Journal journal) {
+    public void deleteJournal(HoisUserDetails user, Journal journal) {
+        EntityUtil.setUsername(user.getUsername(), em);
         EntityUtil.deleteEntity(journal, em);
     }
 

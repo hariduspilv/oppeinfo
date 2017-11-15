@@ -18,9 +18,10 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
     })
     .when('/directives', {
       templateUrl: 'directive/list.html',
-      controller: 'SimpleListController',
+      controller: 'DirectiveListController',
       controllerAs: 'controller',
       resolve: {
+        translationLoaded: function($translate) { return $translate.onReady(); },
         clMapping: function() { return {type: 'KASKKIRI', status: 'KASKKIRI_STAATUS'}; },
         params: function() { return {order: '-inserted'}; },
         url: function() { return '/directives'; }
@@ -33,6 +34,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'directive/directive.edit.html',
       controller: 'DirectiveEditController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
@@ -41,6 +43,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'directive/directive.edit.html',
       controller: 'DirectiveEditController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
@@ -49,6 +52,7 @@ angular.module('hitsaOis').config(['$routeProvider', 'USER_ROLES', function ($ro
       templateUrl: 'directive/directive.view.html',
       controller: 'DirectiveViewController',
       controllerAs: 'controller',
+      resolve: { translationLoaded: function($translate) { return $translate.onReady(); } },
       data: {
         authorizedRoles: [USER_ROLES.ROLE_OIGUS_V_TEEMAOIGUS_A]
       }
